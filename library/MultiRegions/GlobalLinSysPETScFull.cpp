@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -134,51 +133,82 @@ namespace Nektar
          * Solve the linear system using a full global matrix system.
          */
         void GlobalLinSysPETScFull::v_Solve(
-                    const Array<OneD, const NekDouble>  &pInput,
-                          Array<OneD,       NekDouble>  &pOutput,
+                    const Array<OneD, const NekDouble>  &pLocInput,
+                          Array<OneD,       NekDouble>  &pLocOutput,
                     const AssemblyMapSharedPtr &pLocToGloMap,
                     const Array<OneD, const NekDouble>  &pDirForcing)
         {
-            bool dirForcCalculated = (bool) pDirForcing.num_elements();
+            std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
+            bool dirForcCalculated = (bool) pDirForcing.size();
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
-            Array<OneD, NekDouble> tmp(nGlobDofs), tmp2;
+            int nLocDofs  = pLocToGloMap->GetNumLocalCoeffs();
 
-            int nDirTotal = nDirDofs;
-            m_expList.lock()->GetComm()->GetRowComm()->AllReduce(
-                nDirTotal, LibUtilities::ReduceSum);
+            m_locToGloMap = pLocToGloMap; // required for DoMatrixMultiply
             
-            if(nDirTotal)
+            Array<OneD, NekDouble> tmp(nLocDofs);
+            Array<OneD, NekDouble> tmp1(nLocDofs);
+            Array<OneD, NekDouble> global(nGlobDofs,0.0);
+
+            expList->GetComm()->GetRowComm()->AllReduce(
+                nDirDofs, LibUtilities::ReduceSum);
+            
+            if(nDirDofs)
             {
                 // calculate the dirichlet forcing
                 if(dirForcCalculated)
                 {
-                    Vmath::Vsub(nGlobDofs,
-                                pInput.get(),      1,
-                                pDirForcing.get(), 1,
-                                tmp.get(),         1);
+                    // assume pDirForcing is in local space
+                    ASSERTL0(pDirForcing.size() >= nLocDofs,
+                             "DirForcing is not of sufficient size. Is it in local space?");
+                    Vmath::Vsub(nLocDofs, pLocInput, 1,
+                                pDirForcing, 1,tmp1, 1);
                 }
                 else
                 {
                     // Calculate the dirichlet forcing and substract it
                     // from the rhs
-                    m_expList.lock()->GeneralMatrixOp(
-                        m_linSysKey, pOutput, tmp, eGlobal);
+                    expList->GeneralMatrixOp(
+                                 m_linSysKey, pLocOutput, tmp);
 
-                    Vmath::Vsub(nGlobDofs, 
-                                pInput.get(), 1,
-                                tmp.get(),    1,
-                                tmp.get(),    1);
+                    // Apply robin boundary conditions to the solution.
+                    for(auto &r : m_robinBCInfo) // add robin mass matrix
+                    {
+                        RobinBCInfoSharedPtr rBC;
+                        Array<OneD, NekDouble> tmploc;
+                        
+                        int n  = r.first;
+                        
+                        int offset = expList->GetCoeff_Offset(n);
+                        LocalRegions::ExpansionSharedPtr vExp = expList->GetExp(n);
+                        
+                        // add local matrix contribution
+                        for(rBC = r.second;rBC; rBC = rBC->next)
+                        {
+                            vExp->AddRobinEdgeContribution(rBC->m_robinID,
+                                                           rBC->m_robinPrimitiveCoeffs,
+                                                           pLocOutput + offset,
+                                                           tmploc = tmp + offset);
+                        }
+                    }
+
+                    Vmath::Vsub(nLocDofs, pLocInput, 1, tmp, 1, tmp1, 1);
                 }
 
-                Array<OneD, NekDouble> out(nGlobDofs,0.0);
-                SolveLinearSystem(nGlobDofs, tmp, out, pLocToGloMap, nDirDofs);
-                Vmath::Vadd(nGlobDofs-nDirDofs,    &out    [nDirDofs], 1,
-                            &pOutput[nDirDofs], 1, &pOutput[nDirDofs], 1);
+                pLocToGloMap->Assemble(tmp1,tmp);
+
+                SolveLinearSystem(nGlobDofs,tmp, global, pLocToGloMap, nDirDofs);
+
+                pLocToGloMap->GlobalToLocal(global,tmp);
+
+                // Add back initial and boundary condition
+                Vmath::Vadd(nLocDofs, tmp, 1, pLocOutput, 1, pLocOutput, 1);
             }
             else
             {
-                SolveLinearSystem(nDirDofs, pInput, pOutput, pLocToGloMap);
+                pLocToGloMap->Assemble(pLocInput,tmp);
+                SolveLinearSystem(nGlobDofs, tmp,global, pLocToGloMap);
+                pLocToGloMap->GlobalToLocal(global,pLocOutput);
             }
         }
 
@@ -195,9 +225,19 @@ namespace Nektar
         {
             std::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
 
+            int nLocDofs = m_locToGloMap->GetNumLocalCoeffs();
+            
+            Array<OneD, NekDouble> tmp  (nLocDofs);
+            Array<OneD, NekDouble> tmp1 (nLocDofs);
+
+            m_locToGloMap->GlobalToLocal(input,tmp);
+            
             // Perform matrix-vector operation A*d_i
-            expList->GeneralMatrixOp(
-                m_linSysKey, input, output, eGlobal);
+            expList->GeneralMatrixOp(m_linSysKey, tmp,tmp1);
+
+            m_locToGloMap->Assemble(tmp1,output);
+            
         }
+        
     }
 }

@@ -46,6 +46,10 @@ IF( NEKTAR_USE_VTK )
     ENDIF()
     
     INCLUDE (${VTK_USE_FILE})
+
+    # Force VTK headers to be treated as system headers.
+    INCLUDE_DIRECTORIES(SYSTEM ${VTK_INCLUDE_DIRS})
+
     MARK_AS_ADVANCED(VTK_DIR)
     ADD_DEFINITIONS(-DNEKTAR_USING_VTK)
 ENDIF( NEKTAR_USE_VTK )

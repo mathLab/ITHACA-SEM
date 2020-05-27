@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,10 +33,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MMFSolver/EquationSystems/MMFMaxwell.h>
+
+#include <boost/core/ignore_unused.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string.hpp>
 #include <iomanip>
 #include <iostream>
 
+#include <LibUtilities/BasicUtils/Timer.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SolverUtils/MMFSystem.h>
 
@@ -45,7 +48,7 @@
 
 namespace Nektar
 {
-Gs::string MMFMaxwell::className =
+std::string MMFMaxwell::className =
     SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
         "MMFMaxwell", MMFMaxwell::create, "MMFMaxwell equation.");
 
@@ -251,8 +254,8 @@ void MMFMaxwell::v_InitObject()
             radvec = ComputeRadCloak(m_CloakNlayer);
             ComputeMaterialOpticalCloak(radvec, m_epsvec, m_muvec, false);
 
-            Gs::cout << "*** rad = [ " << Vmath::Vmax(nq, radvec, 1) << " , "
-                     << Vmath::Vmin(nq, radvec, 1) << " ) " << Gs::endl;
+            std::cout << "*** rad = [ " << Vmath::Vmax(nq, radvec, 1) << " , "
+                      << Vmath::Vmin(nq, radvec, 1) << " ) " << std::endl;
         }
         break;
 
@@ -263,10 +266,10 @@ void MMFMaxwell::v_InitObject()
             radvec            = ComputeRadCloak();
             ComputeMaterialOpticalCloak(radvec, m_epsvec, m_muvec, true);
 
-            Gs::cout << "*** rad = [ " << Vmath::Vmax(nq, radvec, 1) << " , "
-                     << Vmath::Vmin(nq, radvec, 1) << " ) " << Gs::endl;
-            Gs::cout << "*** wp2 = [ " << Vmath::Vmax(nq, m_wp2, 1) << " , "
-                     << Vmath::Vmin(nq, m_wp2, 1) << " ) " << Gs::endl;
+            std::cout << "*** rad = [ " << Vmath::Vmax(nq, radvec, 1) << " , "
+                      << Vmath::Vmin(nq, radvec, 1) << " ) " << std::endl;
+            std::cout << "*** wp2 = [ " << Vmath::Vmax(nq, m_wp2, 1) << " , "
+                      << Vmath::Vmin(nq, m_wp2, 1) << " ) " << std::endl;
         }
         break;
 
@@ -318,17 +321,17 @@ void MMFMaxwell::v_InitObject()
     mu2max = Vmath::Vmax(nq, m_muvec[1], 1);
     mu3max = Vmath::Vmax(nq, m_muvec[2], 1);
 
-    Gs::cout << "muvec0 = " << RootMeanSquare(m_muvec[0])
-             << ", muvec1 = " << RootMeanSquare(m_muvec[1]) << Gs::endl;
+    std::cout << "muvec0 = " << RootMeanSquare(m_muvec[0])
+              << ", muvec1 = " << RootMeanSquare(m_muvec[1]) << std::endl;
 
-    Gs::cout << "*** epsvec1 = [ " << eps1min << " , " << eps1max
-             << " ], epsvec2 = [ " << eps2min << " , " << eps2max
-             << " ], epsvec3 = [ " << eps3min << " , " << eps3max << " ] "
-             << Gs::endl;
-    Gs::cout << "*** muvec1 = [ " << mu1min << " , " << mu1max
-             << " ], muvec2 = [ " << mu2min << " , " << mu2max
-             << " ], muvec3 = [ " << mu3min << " , " << mu3max << " ] "
-             << Gs::endl;
+    std::cout << "*** epsvec1 = [ " << eps1min << " , " << eps1max
+              << " ], epsvec2 = [ " << eps2min << " , " << eps2max
+              << " ], epsvec3 = [ " << eps3min << " , " << eps3max << " ] "
+              << std::endl;
+    std::cout << "*** muvec1 = [ " << mu1min << " , " << mu1max
+              << " ], muvec2 = [ " << mu2min << " , " << mu2max
+              << " ], muvec3 = [ " << mu3min << " , " << mu3max << " ] "
+              << std::endl;
 
     NekDouble dtFactor;
     switch (m_PolType)
@@ -360,8 +363,8 @@ void MMFMaxwell::v_InitObject()
         }
         break;
     }
-    Gs::cout << "*** dt factor proportional to varepsilon * mu is " << dtFactor
-             << Gs::endl;
+    std::cout << "*** dt factor proportional to varepsilon * mu is " << dtFactor
+              << std::endl;
 
     // Compute m_Zim and m_Yim
     ComputeZimYim(m_epsvec, m_muvec);
@@ -398,14 +401,14 @@ void MMFMaxwell::v_InitObject()
     mu2max = Vmath::Vmax(nq, m_negmuvecminus1[1], 1);
     mu3max = Vmath::Vmax(nq, m_negmuvecminus1[2], 1);
 
-    Gs::cout << "*** negepsvecminus1 = [ " << eps1min << " , " << eps1max
-             << " ], negepsvecminus1 = [ " << eps2min << " , " << eps2max
-             << " ], negepsvecminus1 = [ " << eps3min << " , " << eps3max
-             << " ] " << Gs::endl;
-    Gs::cout << "*** negmuvecminus1 = [ " << mu1min << " , " << mu1max
-             << " ], negmuvecminus1 = [ " << mu2min << " , " << mu2max
-             << " ], negmuvecminus1 = [ " << mu3min << " , " << mu3max << " ] "
-             << Gs::endl;
+    std::cout << "*** negepsvecminus1 = [ " << eps1min << " , " << eps1max
+              << " ], negepsvecminus1 = [ " << eps2min << " , " << eps2max
+              << " ], negepsvecminus1 = [ " << eps3min << " , " << eps3max
+              << " ] " << std::endl;
+    std::cout << "*** negmuvecminus1 = [ " << mu1min << " , " << mu1max
+              << " ], negmuvecminus1 = [ " << mu2min << " , " << mu2max
+              << " ], negmuvecminus1 = [ " << mu3min << " , " << mu3max << " ] "
+              << std::endl;
 
     // Compute de^m/dt \cdot e^k
     if (m_AddRotation)
@@ -449,7 +452,7 @@ void MMFMaxwell::v_DoSolve()
     int i, nchk = 1;
     int nq         = GetTotPoints();
     int nvariables = 0;
-    int nfields    = m_fields.num_elements();
+    int nfields    = m_fields.size();
 
     if (m_intVariables.empty())
     {
@@ -476,8 +479,7 @@ void MMFMaxwell::v_DoSolve()
     }
 
     // Initialise time integration scheme
-    m_intSoln =
-        m_intScheme->InitializeScheme(m_timestep, fields, m_time, m_ode);
+    m_intSoln = m_intScheme->InitializeScheme( m_timestep, fields, m_time, m_ode );
 
     // Check uniqueness of checkpoint output
     ASSERTL0((m_checktime == 0.0 && m_checksteps == 0) ||
@@ -500,7 +502,7 @@ void MMFMaxwell::v_DoSolve()
 
     int cntap = 0;
     Array<OneD, NekDouble> Ezantipod;
-    int indxantipod;
+    int indxantipod = 0;
 
     switch (m_SourceType)
     {
@@ -521,7 +523,7 @@ void MMFMaxwell::v_DoSolve()
                 rad = sqrt((x[i] + m_Psx) * (x[i] + m_Psx) +
                            (y[i] + m_Psy) * (y[i] + m_Psy) +
                            (z[i] + m_Psz) * (z[i] + m_Psz));
-                Gs::cout << "rad" << rad << Gs::endl;
+                std::cout << "rad" << rad << std::endl;
                 if (rad < Tol)
                 {
                     indxantipod = i;
@@ -552,8 +554,8 @@ void MMFMaxwell::v_DoSolve()
                 }
             }
 
-            Gs::cout << "*** Area of Planar Source = "
-                     << m_fields[0]->PhysIntegral(m_SourceVector) << Gs::endl;
+            std::cout << "*** Area of Planar Source = "
+                      << m_fields[0]->PhysIntegral(m_SourceVector) << std::endl;
         }
         break;
 
@@ -562,7 +564,7 @@ void MMFMaxwell::v_DoSolve()
     }
 
     int cntpml = 0;
-    int P1indx, P2indx, P3indx;
+    int P1indx = 0, P2indx = 0, P3indx = 0;
     Array<OneD, NekDouble> P1;
     Array<OneD, NekDouble> P2;
     Array<OneD, NekDouble> P3;
@@ -622,10 +624,10 @@ void MMFMaxwell::v_DoSolve()
         fields = m_intScheme->TimeIntegrate(step, m_timestep, m_intSoln, m_ode);
         timer.Stop();
 
-        /*Gs::cout << typeid(m_intSoln->GetValue(0)).name() << Gs::endl;
+        /*std::cout << typeid(m_intSoln->GetValue(0)).name() << std::endl;
         for (int i=0; i< Ntot; ++i)
         {
-            Gs::cout << "[" << i << "] = " << inarray[i] <<Gs::endl;
+            std::cout << "[" << i << "] = " << inarray[i] <<std::endl;
             reval = reval + inarray[i]*inarray[i];
         }*/
 
@@ -637,13 +639,13 @@ void MMFMaxwell::v_DoSolve()
         // Write out status information
         if (m_session->GetComm()->GetRank() == 0 && !((step + 1) % m_infosteps))
         {
-            Gs::cout << "Steps: " << std::setw(8) << Gs::left << step + 1 << " "
-                     << "Time: " << std::setw(12) << Gs::left << m_time;
+            std::cout << "Steps: " << std::setw(8) << std::left << step + 1 << " "
+                      << "Time: " << std::setw(12) << std::left << m_time;
 
-            Gs::stringstream ss;
+            std::stringstream ss;
             ss << cpuTime / 60.0 << " min.";
-            Gs::cout << " CPU Time: " << std::setw(8) << Gs::left << ss.str()
-                     << Gs::endl;
+            std::cout << " CPU Time: " << std::setw(8) << std::left << ss.str()
+                      << std::endl;
 
             cpuTime = 0.0;
         }
@@ -691,7 +693,7 @@ void MMFMaxwell::v_DoSolve()
             m_fields[m_intVariables[i]]->SetPhysState(false);
         }
         // for (i = 0; i < nq; ++i)
-        //  Gs::cout << m_fields[0][0][i] <<Gs::endl;
+        //  std::cout << m_fields[0][0][i] <<std::endl;
 
         // Write out checkpoint files
         if ((m_checksteps && step && !((step + 1) % m_checksteps)) ||
@@ -712,15 +714,15 @@ void MMFMaxwell::v_DoSolve()
 
             Energy[indx] = ComputeEnergyDensity(fields);
 
-            Gs::cout << "|EHr|: F1 = " << RootMeanSquare(fields[0])
-                     << ", F2 = " << RootMeanSquare(fields[1])
-                     << ", F3 = " << RootMeanSquare(fields[2])
-                     << ", Energy = " << Energy[indx] << Gs::endl;
+            std::cout << "|EHr|: F1 = " << RootMeanSquare(fields[0])
+                      << ", F2 = " << RootMeanSquare(fields[1])
+                      << ", F3 = " << RootMeanSquare(fields[2])
+                      << ", Energy = " << Energy[indx] << std::endl;
             if (nfields > 3)
             {
-                Gs::cout << "|DBr|: D1 = " << RootMeanSquare(fields[3])
-                         << ", D2 = " << RootMeanSquare(fields[4])
-                         << ", D3 = " << RootMeanSquare(fields[5]) << Gs::endl;
+                std::cout << "|DBr|: D1 = " << RootMeanSquare(fields[3])
+                          << ", D2 = " << RootMeanSquare(fields[4])
+                          << ", D3 = " << RootMeanSquare(fields[5]) << std::endl;
 
                 int nTraceNumPoints = GetTraceNpoints();
                 int totbdryexp =
@@ -758,7 +760,7 @@ void MMFMaxwell::v_DoSolve()
                     id2 = m_fields[0]->GetTrace()->GetPhys_Offset(
                         m_fields[0]
                             ->GetTraceMap()
-                            ->GetBndCondCoeffsToGlobalCoeffsMap(cnt + e));
+                            ->GetBndCondIDToGlobalTraceID(cnt + e));
 
                     Vmath::Vcopy(npts, &E1Fwd[id2], 1, &E1Fwdloc[0], 1);
                     Vmath::Vcopy(npts, &E2Fwd[id2], 1, &E2Fwdloc[0], 1);
@@ -784,9 +786,9 @@ void MMFMaxwell::v_DoSolve()
                     }
                 }
 
-                Gs::cout << "At PEC, Max. E1 = " << E1atPEC
-                         << ", E2 = " << E2atPEC << ", H3 =  " << H3atPEC
-                         << Gs::endl;
+                std::cout << "At PEC, Max. E1 = " << E1atPEC
+                          << ", E2 = " << E2atPEC << ", H3 =  " << H3atPEC
+                          << std::endl;
             }
 
             if (m_SourceType == ePointSource)
@@ -811,21 +813,21 @@ void MMFMaxwell::v_DoSolve()
     // Print out summary statistics
     if (m_session->GetComm()->GetRank() == 0)
     {
-        Gs::cout << "Time-integration  : " << intTime << "s" << Gs::endl;
+        std::cout << "Time-integration  : " << intTime << "s" << std::endl;
 
-        Gs::cout << "TimeSeries = " << Gs::endl;
+        std::cout << "TimeSeries = " << std::endl;
         for (int i = 0; i < m_steps / m_checksteps; ++i)
         {
-            Gs::cout << TimeSeries[i] << ", ";
+            std::cout << TimeSeries[i] << ", ";
         }
-        Gs::cout << Gs::endl << Gs::endl;
+        std::cout << std::endl << std::endl;
 
-        Gs::cout << "Energy Density = " << Gs::endl;
+        std::cout << "Energy Density = " << std::endl;
         for (int i = 0; i < m_steps / m_checksteps; ++i)
         {
-            Gs::cout << Energy[i] << ", ";
+            std::cout << Energy[i] << ", ";
         }
-        Gs::cout << Gs::endl << Gs::endl;
+        std::cout << std::endl << std::endl;
 
         if (m_PrintoutSurfaceCurrent)
         {
@@ -834,36 +836,36 @@ void MMFMaxwell::v_DoSolve()
 
         if (m_SourceType == ePointSource)
         {
-            Gs::cout << "Ez at antipod = " << Gs::endl;
+            std::cout << "Ez at antipod = " << std::endl;
             for (int i = 0; i < m_steps / m_checksteps; ++i)
             {
-                Gs::cout << Ezantipod[i] << ", ";
+                std::cout << Ezantipod[i] << ", ";
             }
-            Gs::cout << Gs::endl << Gs::endl;
+            std::cout << std::endl << std::endl;
         }
 
         if (m_TestPML)
         {
-            Gs::cout << "P1 = " << Gs::endl;
+            std::cout << "P1 = " << std::endl;
             for (int i = 0; i < m_steps / m_checksteps; ++i)
             {
-                Gs::cout << P1[i] << ", ";
+                std::cout << P1[i] << ", ";
             }
-            Gs::cout << Gs::endl << Gs::endl;
+            std::cout << std::endl << std::endl;
 
-            Gs::cout << "P2 = " << Gs::endl;
+            std::cout << "P2 = " << std::endl;
             for (int i = 0; i < m_steps / m_checksteps; ++i)
             {
-                Gs::cout << P2[i] << ", ";
+                std::cout << P2[i] << ", ";
             }
-            Gs::cout << Gs::endl << Gs::endl;
+            std::cout << std::endl << std::endl;
 
-            Gs::cout << "P3 = " << Gs::endl;
+            std::cout << "P3 = " << std::endl;
             for (int i = 0; i < m_steps / m_checksteps; ++i)
             {
-                Gs::cout << P3[i] << ", ";
+                std::cout << P3[i] << ", ";
             }
-            Gs::cout << Gs::endl << Gs::endl;
+            std::cout << std::endl << std::endl;
         }
     }
 
@@ -892,7 +894,7 @@ void MMFMaxwell::DoOdeRhs(
     Array<OneD, Array<OneD, NekDouble>> &outarray, const NekDouble time)
 {
     int i;
-    int nvar    = inarray.num_elements();
+    int nvar    = inarray.size();
     int ncoeffs = GetNcoeffs();
     int nq      = GetTotPoints();
 
@@ -1174,8 +1176,8 @@ void MMFMaxwell::AddGreenDerivCompensate(
     Array<OneD, Array<OneD, NekDouble>> &outarray)
 {
     // routine works for both primitive and conservative formulations
-    int ncoeffs = outarray[0].num_elements();
-    int nq      = physarray[0].num_elements();
+    int ncoeffs = outarray[0].size();
+    int nq      = physarray[0].size();
 
     Array<OneD, NekDouble> tmp(nq);
     Array<OneD, NekDouble> tmpc(ncoeffs);
@@ -1322,7 +1324,9 @@ void MMFMaxwell::DoOdeProjection(
     const Array<OneD, const Array<OneD, NekDouble>> &inarray,
     Array<OneD, Array<OneD, NekDouble>> &outarray, const NekDouble time)
 {
-    int var = inarray.num_elements();
+    boost::ignore_unused(time);
+
+    int var = inarray.size();
 
     // SetBoundaryConditions(time);
 
@@ -1337,8 +1341,10 @@ void MMFMaxwell::v_SetInitialConditions(const NekDouble initialtime,
                                         bool dumpInitialConditions,
                                         const int domain)
 {
+    boost::ignore_unused(domain);
+
     int nq   = GetTotPoints();
-    int nvar = m_fields.num_elements();
+    int nvar = m_fields.size();
 
     switch (m_TestMaxwellType)
     {
@@ -1511,10 +1517,10 @@ Array<OneD, NekDouble> MMFMaxwell::TestMaxwell1D(const NekDouble time,
     }
 
     // Generate A^k and B^k
-    Gs::complex<double> im = sqrt(Gs::complex<double>(-1));
-    Gs::complex<double> A1, A2, B1, B2;
-    Gs::complex<double> Ak, Bk, nk;
-    Gs::complex<double> Ec, Hc;
+    std::complex<double> im = sqrt(std::complex<double>(-1));
+    std::complex<double> A1, A2, B1, B2;
+    std::complex<double> Ak, Bk, nk;
+    std::complex<double> Ec, Hc;
 
     A1 = m_n2 * cos(m_n2 * omega) / (m_n1 * cos(m_n1 * omega));
     A2 = exp(-1.0 * im * omega * (m_n1 + m_n2));
@@ -1947,8 +1953,7 @@ void MMFMaxwell::Printout_SurfaceCurrent(
     for (int e = 0; e < totbdryexp; ++e)
     {
         id2 = m_fields[0]->GetTrace()->GetPhys_Offset(
-            m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(cnt +
-                                                                          e));
+            m_fields[0]->GetTraceMap()->GetBndCondIDToGlobalTraceID(cnt +                      e));
 
         Vmath::Vcopy(npts, &phiFwd[id2], 1, &Jphi[e * npts], 1);
         Vmath::Vcopy(npts, &radFwd[id2], 1, &Jrad[e * npts], 1);
@@ -1959,22 +1964,22 @@ void MMFMaxwell::Printout_SurfaceCurrent(
     // Vmath::Vvtvp(totnpts, tmpi, 1, tmpi, 1, Jcurrent, 1, Jcurrent, 1);
     // Vmath::Vsqrt(totnpts, Jcurrent, 1, Jcurrent, 1);
 
-    Gs::cout << "========================================================"
-             << Gs::endl;
+    std::cout << "========================================================"
+             << std::endl;
 
-    Gs::cout << "phi = " << Gs::endl;
+    std::cout << "phi = " << std::endl;
     for (int i = 0; i < totnpts; ++i)
     {
-        Gs::cout << Jphi[i] << ", ";
+        std::cout << Jphi[i] << ", ";
     }
-    Gs::cout << Gs::endl << Gs::endl;
+    std::cout << std::endl << std::endl;
 
-    Gs::cout << "J = " << Gs::endl;
+    std::cout << "J = " << std::endl;
     for (int i = 0; i < totnpts; ++i)
     {
-        Gs::cout << Jcurrent[i] << ", ";
+        std::cout << Jcurrent[i] << ", ";
     }
-    Gs::cout << Gs::endl << Gs::endl;
+    std::cout << std::endl << std::endl;
 }
 
 Array<OneD, NekDouble> MMFMaxwell::ComputeSurfaceCurrent(
@@ -2171,11 +2176,11 @@ void MMFMaxwell::GenerateSigmaPML(const NekDouble PMLthickness,
         break;
     }
 
-    Gs::cout << "*** sigma1 = [ " << Vmath::Vmin(nq, &SigmaPML[0][0], 1)
-             << " , " << Vmath::Vmax(nq, &SigmaPML[0][0], 1)
-             << " ] , sigma2 = [ " << Vmath::Vmin(nq, &SigmaPML[1][0], 1)
-             << " , " << Vmath::Vmax(nq, &SigmaPML[1][0], 1) << " ] "
-             << Gs::endl;
+    std::cout << "*** sigma1 = [ " << Vmath::Vmin(nq, &SigmaPML[0][0], 1)
+              << " , " << Vmath::Vmax(nq, &SigmaPML[0][0], 1)
+              << " ] , sigma2 = [ " << Vmath::Vmin(nq, &SigmaPML[1][0], 1)
+              << " , " << Vmath::Vmax(nq, &SigmaPML[1][0], 1) << " ] "
+              << std::endl;
 }
 
 NekDouble MMFMaxwell::ComputeEnergyDensity(
@@ -2296,6 +2301,8 @@ void MMFMaxwell::ComputeMaterialOpticalCloak(
     Array<OneD, Array<OneD, NekDouble>> &epsvec,
     Array<OneD, Array<OneD, NekDouble>> &muvec, const bool Dispersion)
 {
+    boost::ignore_unused(muvec, Dispersion);
+
     int nq = GetNpoints();
 
     // Cloaking metamaterial
@@ -2329,8 +2336,8 @@ void MMFMaxwell::ComputeMaterialOpticalCloak(
     m_fields[0]->GenerateElementVector(m_ElemtGroup1, 1.0, 0.0, Cloakregion);
 
     ExactCloakArea = ExactCloakArea - (m_fields[0]->PhysIntegral(Cloakregion));
-    Gs::cout << "*** Error of Cloakregion area = " << ExactCloakArea
-             << Gs::endl;
+    std::cout << "*** Error of Cloakregion area = " << ExactCloakArea
+              << std::endl;
 
     NekDouble ratio;
 
@@ -2388,8 +2395,8 @@ void MMFMaxwell::ComputeMaterialMicroWaveCloak(
     }
 
     ExactCloakArea = ExactCloakArea - (m_fields[0]->PhysIntegral(Cloakregion));
-    Gs::cout << "*** Error of Cloakregion area = " << ExactCloakArea
-             << Gs::endl;
+    std::cout << "*** Error of Cloakregion area = " << ExactCloakArea
+              << std::endl;
 
     epsvec[0] = Array<OneD, NekDouble>(nq, 1.0);
     epsvec[1] = Array<OneD, NekDouble>(nq, 1.0);
@@ -2557,7 +2564,7 @@ void MMFMaxwell::Checkpoint_TotalFieldOutput(
     const int n, const NekDouble time,
     const Array<OneD, const Array<OneD, NekDouble>> &fieldphys)
 {
-    int nvar    = m_fields.num_elements();
+    int nvar    = m_fields.size();
     int nq      = m_fields[0]->GetTotPoints();
     int ncoeffs = m_fields[0]->GetNcoeffs();
 
@@ -2589,7 +2596,7 @@ void MMFMaxwell::Checkpoint_TotalFieldOutput(
 void MMFMaxwell::Checkpoint_PlotOutput(
     const int n, const Array<OneD, const Array<OneD, NekDouble>> &fieldphys)
 {
-    int nvar    = m_fields.num_elements();
+    int nvar    = m_fields.size();
     int nq      = m_fields[0]->GetTotPoints();
     int ncoeffs = m_fields[0]->GetNcoeffs();
 
@@ -2625,7 +2632,7 @@ void MMFMaxwell::Checkpoint_TotPlotOutput(
     const int n, const NekDouble time,
     const Array<OneD, const Array<OneD, NekDouble>> &fieldphys)
 {
-    int nvar    = m_fields.num_elements();
+    int nvar    = m_fields.size();
     int nq      = m_fields[0]->GetTotPoints();
     int ncoeffs = m_fields[0]->GetNcoeffs();
 
@@ -2679,7 +2686,9 @@ void MMFMaxwell::Checkpoint_EDFluxOutput(
     const int n, const NekDouble time,
     const Array<OneD, const Array<OneD, NekDouble>> &fieldphys)
 {
-    int nvar    = m_fields.num_elements();
+    boost::ignore_unused(time);
+
+    int nvar    = m_fields.size();
     int nq      = m_fields[0]->GetTotPoints();
     int ncoeffs = m_fields[0]->GetNcoeffs();
 
@@ -2729,7 +2738,9 @@ void MMFMaxwell::Checkpoint_EnergyOutput(
     const int n, const NekDouble time,
     const Array<OneD, const Array<OneD, NekDouble>> &fieldphys)
 {
-    int nvar    = m_fields.num_elements();
+    boost::ignore_unused(time);
+
+    int nvar    = m_fields.size();
     int nq      = m_fields[0]->GetTotPoints();
     int ncoeffs = m_fields[0]->GetNcoeffs();
 
@@ -2859,7 +2870,7 @@ Array<OneD, NekDouble> MMFMaxwell::EvaluateCoriolis()
 void MMFMaxwell::AddCoriolis(Array<OneD, Array<OneD, NekDouble>> &physarray,
                              Array<OneD, Array<OneD, NekDouble>> &outarray)
 {
-    int nq = physarray[0].num_elements();
+    int nq = physarray[0].size();
 
     Array<OneD, NekDouble> tmp(nq);
 
@@ -3015,7 +3026,6 @@ Array<OneD, NekDouble> MMFMaxwell::ComputeRadCloak(const int CloakNlayer)
 
     Array<OneD, NekDouble> radvec(nq);
 
-    NekDouble Cloakradmin;
     for (int i = 0; i < nq; ++i)
     {
         switch (m_MMFdir)
@@ -3034,8 +3044,6 @@ Array<OneD, NekDouble> MMFMaxwell::ComputeRadCloak(const int CloakNlayer)
                     radvec[i] =
                         sqrt(x0[i] * x0[i] / la / la + x1[i] * x1[i] / lb / lb);
                 }
-
-                Cloakradmin = 1.0;
             }
             break;
 
@@ -3043,7 +3051,6 @@ Array<OneD, NekDouble> MMFMaxwell::ComputeRadCloak(const int CloakNlayer)
             {
                 radvec[i] = sqrt(2.0 * x0[i] * x0[i] +
                                  x1[i] * x1[i] * x1[i] * x1[i] + x1[i] * x1[i]);
-                Cloakradmin = 1.0;
             }
             break;
 
@@ -3051,7 +3058,6 @@ Array<OneD, NekDouble> MMFMaxwell::ComputeRadCloak(const int CloakNlayer)
             {
                 radvec[i] = sqrt(3.0 * x0[i] * x0[i] +
                                  x1[i] * x1[i] * x1[i] * x1[i] - x1[i] * x1[i]);
-                Cloakradmin = sqrt(2.0);
             }
             break;
 
@@ -3133,12 +3139,12 @@ void MMFMaxwell::v_GenerateSummary(SolverUtils::SummaryList &s)
 }
 void MMFMaxwell::print_MMF(Array<OneD, Array<OneD, NekDouble>> &inarray)
 {
-    int Ntot = inarray.num_elements();
+    int Ntot = inarray.size();
 
     NekDouble reval = 0.0;
     for (int i = 0; i < Ntot; ++i)
     {
-        Gs::cout << "[" << i << "] = " << inarray[2][i] << Gs::endl;
+        std::cout << "[" << i << "] = " << inarray[2][i] << std::endl;
         // reval = reval + inarray[i]*inarray[i];
     }
     reval = sqrt(reval / Ntot);

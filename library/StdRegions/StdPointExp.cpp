@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Definition of a Point expansion 
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <StdRegions/StdPointExp.h>
 
@@ -80,6 +81,7 @@ namespace Nektar
                                       Array<OneD, NekDouble> &coords_1,
                                       Array<OneD, NekDouble> &coords_2)
         {
+            boost::ignore_unused(coords_1, coords_2);
             Blas::Dcopy(GetNumPoints(0),(m_base[0]->GetZ()).get(),
                         1,&coords_0[0],1);
         }
@@ -137,7 +139,7 @@ namespace Nektar
             else
             {
                 int nInteriorDofs = m_ncoeffs-2;
-                int offset;
+                int offset = 0;
 				
                 switch(m_base[0]->GetBasisType())
                 {
@@ -226,6 +228,7 @@ namespace Nektar
 											   const Array<OneD, const NekDouble>& inarray,
 											   Array<OneD, NekDouble> & outarray)
 		{
+            boost::ignore_unused(dir);
             ASSERTL1(dir >= 0 && dir < 1,"input dir is out of range");
             v_IProductWRTBase(m_base[0]->GetDbdata(),inarray,outarray,1);
         }
@@ -235,6 +238,7 @@ namespace Nektar
                                                    Array<OneD, NekDouble> &outarray,
                                                    bool multiplybyweights)
         {
+            boost::ignore_unused(multiplybyweights);
             v_IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
         }
 		

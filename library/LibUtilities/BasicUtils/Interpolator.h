@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -94,12 +93,15 @@ public:
                  NekDouble filtWidth = 0.0,
                  int maxPts          = 1000)
         : m_method(method), m_filtWidth(filtWidth), m_maxPts(maxPts),
-          m_coordId(coordId){};
+          m_coordId(coordId)
+    {
+    }
 
     /// Compute interpolation weights without doing any interpolation
     LIB_UTILITIES_EXPORT void CalcWeights(
         const LibUtilities::PtsFieldSharedPtr ptsInField,
-        LibUtilities::PtsFieldSharedPtr &ptsOutField);
+        LibUtilities::PtsFieldSharedPtr &ptsOutField,
+        bool reuseTree = false);
 
     /// Interpolate from a pts field to a pts field
     LIB_UTILITIES_EXPORT void Interpolate(
@@ -184,7 +186,7 @@ private:
     std::shared_ptr<PtsRtree> m_rtree;
     /// Interpolation weights for each neighbour.
     /// Structure: m_weights[physPtIdx][neighbourIdx]
-    Array<TwoD, float> m_weights;
+    Array<TwoD, NekDouble> m_weights;
     /// Indices of the relevant neighbours for each physical point.
     /// Structure: m_neighInds[ptIdx][neighbourIdx]
     Array<TwoD, unsigned int> m_neighInds;

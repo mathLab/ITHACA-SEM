@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -134,7 +133,8 @@ int main(int argc, char *argv[])
 
     // Temporary directory to create and in which to conduct test
     const fs::path tmpDir = fs::current_path()
-        / fs::path("tmp_" + specFileStem);
+        / fs::path("tmp_" + specFileStem + "_" 
+                          + fs::unique_path("%%%%%%").string());
 
     // The current directory
     const fs::path startDir = fs::current_path();
@@ -228,64 +228,109 @@ int main(int argc, char *argv[])
                 cerr << "  - " << source << " -> " << dest << endl;
             }
 
-            fs::copy(source, dest);
-
-            // If source is a directory, then only directory name is
-            // created, so call copy again to copy files.
             if (fs::is_directory(source))
             {
+                fs::copy_directory(source, dest);
+                // If source is a directory, then only directory name is
+                // created, so call copy again to copy files.
                 for (const auto& dirEnt :
                          fs::recursive_directory_iterator{source})
                 {
                     fs::path newdest = dest / dirEnt.path().filename();
-                    fs::copy(dirEnt.path(), newdest);
+                    fs::copy_file(dirEnt.path(), newdest);
                 }
             }
+	    else
+            {
+                fs::copy_file(source, dest);
+	    }
         }
 
         // If we're Python, copy script too.
 
-        // Construct test command to run. If in debug mode, append "-g"
-        // Output from stdout and stderr are directed to the files output.out
-        // and output.err, respectively.
+        // Construct test command to run. Output from stdout and stderr are
+        // directed to the files output.out and output.err, respectively.
+
+        bool pythonAdded = false, mpiAdded = false;
+        for (unsigned int i = 0; i < file.GetNumCommands(); ++i)
+        {
+            Command cmd = file.GetCommand(i);
+            if (cmd.m_pythonTest && !pythonAdded)
+            {
+                // Prepend Python to very start of command.
+                command = "PYTHONPATH=\"@CMAKE_BINARY_DIR@\" " + command;
+                pythonAdded = true;
+            }
 
 #ifdef NEKTAR_TEST_FORCEMPIEXEC
 #else
-        if (file.GetNProcesses() > 1)
+            if (cmd.m_processes > 1 || file.GetNumCommands() > 1)
 #endif
-        {
-            command += "@MPIEXEC@ @MPIEXEC_NUMPROC_FLAG@ "
-                    + boost::lexical_cast<string>(file.GetNProcesses())
-                    + " ";
-            if (std::string("@NEKTAR_TEST_USE_HOSTFILE@") == "ON")
             {
-                command += " -hostfile hostfile ";
-                system("echo 'localhost slots=12' > hostfile");
+                if (mpiAdded)
+                {
+                    continue;
+                }
+
+                command += "\"@MPIEXEC@\" ";
+                if (std::string("@NEKTAR_TEST_USE_HOSTFILE@") == "ON")
+                {
+                    command += "-hostfile hostfile ";
+                    if (system("echo 'localhost slots=12' > hostfile"))
+                    {
+                        cerr << "Unable to write 'hostfile' in path '"
+                             << fs::current_path() << endl;
+                        status = 1;
+                    }
+                }
+
+                if (file.GetNumCommands() > 1)
+                {
+                    command += "--tag-output ";
+                }
+
+                mpiAdded = true;
             }
         }
 
-        fs::path execPath = startDir / file.GetExecutable();
-        if (!fs::exists(execPath))
+        // Parse commands.
+        for (unsigned int i = 0; i < file.GetNumCommands(); ++i)
         {
-            ASSERTL0(!file.IsPythonTest(), "Python script not found.");
-            execPath = file.GetExecutable();
-        }
+            Command cmd = file.GetCommand(i);
 
-        if (file.IsPythonTest())
-        {
-            command += "PYTHONPATH=\"@CMAKE_BINARY_DIR@\" ";
-            command += "@PYTHON_EXECUTABLE@ ";
-        }
+            // If running with multiple commands simultaneously, separate with
+            // colon.
+            if (i > 0)
+            {
+                command += " : ";
+            }
 
-        command += PortablePath(execPath);
-        command += " ";
-        command += file.GetParameters();
-        command += " 1>output.out 2>output.err";
+            // Add -n where appropriate.
+            if (file.GetNumCommands() > 1 || cmd.m_processes > 1)
+            {
+                command += "@MPIEXEC_NUMPROC_FLAG@ ";
+                command += std::to_string(cmd.m_processes) + " ";
+            }
 
-        // override command if specified
-        if (file.GetCommand() != "")
-        {
-            command = file.GetCommand();
+            // Look for executable or Python script.
+            fs::path execPath = startDir / cmd.m_executable;
+            if (!fs::exists(execPath))
+            {
+                ASSERTL0(!cmd.m_pythonTest, "Python script not found.");
+                execPath = cmd.m_executable;
+            }
+
+            // Prepend script name with Python executable path if this is a
+            // Python test.
+            if (cmd.m_pythonTest)
+            {
+                command += "@PYTHON_EXECUTABLE@ ";
+            }
+
+            command += PortablePath(execPath);
+            command += " ";
+            command += cmd.m_parameters;
+            command += " 1>output.out 2>output.err";
         }
 
         status = 0;

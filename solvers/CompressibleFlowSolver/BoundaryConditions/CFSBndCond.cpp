@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -75,6 +74,8 @@ CFSBndCond::CFSBndCond(const LibUtilities::SessionReaderSharedPtr& pSession,
     // Create auxiliary object to convert variables
     m_varConv = MemoryManager<VariableConverter>::AllocateSharedPtr(
                 m_session, m_spacedim);
+    
+    m_diffusionAveWeight = 1.0;
 }
 
 /**
@@ -90,6 +91,23 @@ void CFSBndCond::Apply(
             const NekDouble                                    &time)
 {
     v_Apply(Fwd, physarray, time);
+}
+
+/**
+ * @ brief Newly added bc should specify this virtual function
+ * if the Bwd/value in m_bndCondExpansions is the target value like Direchlet 
+ * bc weight should be 1.0.
+ * if some average Fwd and Bwd/value in m_bndCondExpansions 
+ * is the target value like WallViscousBC weight should be 0.5.
+ */
+void CFSBndCond::v_ApplyBwdWeight()
+{
+    NekDouble weight = m_diffusionAveWeight;
+    size_t nVariables = m_fields.size();
+    for (int i=0;i < nVariables; ++i)
+    {
+        m_fields[i]->SetBndCondBwdWeight(m_bcRegion, weight);
+    }
 }
 
 }

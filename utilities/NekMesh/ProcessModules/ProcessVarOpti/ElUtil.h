@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -40,6 +39,11 @@
 
 #include <NekMeshUtils/Module/Module.h>
 
+#include <LibUtilities/BasicUtils/PtsField.h>
+#include <LibUtilities/BasicUtils/Interpolator.h>
+
+typedef Nektar::LibUtilities::PtsFieldSharedPtr PtsFieldSharedPtr;
+
 namespace Nektar
 {
 namespace Utilities
@@ -61,16 +65,16 @@ public:
     ElUtil(ElementSharedPtr e, DerivUtilSharedPtr d,
            ResidualSharedPtr, int n, int o);
 
-    ElUtilJob *GetJob();
+    ElUtilJob *GetJob(bool update = false);
 
     int GetId()
     {
         return m_el->GetId();
     }
 
-    //leaving these varibles as public for sake of efficency 
+    // Leaving these varibles as public for sake of efficiency
     std::vector<std::vector<NekDouble *> > nodes;
-    std::vector<Array<OneD, NekDouble> > maps, mapsStd;
+    std::vector<std::vector<NekDouble> > maps, mapsStd;
 
     void Evaluate();
     void InitialMinJac();
@@ -95,6 +99,14 @@ public:
         return m_minJac;
     }
 
+    void SetScaling(LibUtilities::Interpolator interp)
+    {
+        m_interp = interp;
+        UpdateMapping();
+    }
+
+    void UpdateMapping();
+
 private:
 
     void MappingIdealToRef();
@@ -108,22 +120,34 @@ private:
     NekDouble m_scaledJac;
     NekDouble m_minJac;
 
+    PtsFieldSharedPtr m_interpField;
+    LibUtilities::Interpolator m_interp;
+
     DerivUtilSharedPtr m_derivUtil;
     ResidualSharedPtr m_res;
+
+    // Initial maps
+    std::vector<std::vector<NekDouble>> m_maps, m_mapsStd;
 };
 typedef std::shared_ptr<ElUtil> ElUtilSharedPtr;
 
 class ElUtilJob : public Thread::ThreadJob
 {
 public:
-    ElUtilJob(ElUtil* e) : el(e) {}
+    ElUtilJob(ElUtil* e, bool update) : el(e), m_update(update) {}
 
     void Run()
     {
         el->Evaluate();
+
+        if (m_update)
+        {
+            el->UpdateMapping();
+        }
     }
 private:
     ElUtil* el;
+    bool m_update;
 };
 
 }

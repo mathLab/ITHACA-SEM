@@ -1,0 +1,26 @@
+<NEKTAR>
+    <MESHING>
+
+        <INFORMATION>
+            <I PROPERTY="CADFile" VALUE="2d_bl.geo" />
+            <I PROPERTY="MeshType" VALUE="2DBndLayer" />
+        </INFORMATION>
+
+        <PARAMETERS>
+            <P PARAM="MinDelta" VALUE="0.5"    />
+            <P PARAM="MaxDelta" VALUE="10.0"     />
+            <P PARAM="EPS"      VALUE="0.01"     />
+
+            <P PARAM="Order"    VALUE="4"       />
+
+            <P PARAM="BndLayerSurfaces"  VALUE="1-4" />
+            <P PARAM="BndLayerThickness"  VALUE="0.5" />
+
+        </PARAMETERS>
+
+        <BOOLPARAMETERS>
+            <P VALUE="SmoothBndLayer" />
+        </BOOLPARAMETERS>
+
+    </MESHING>
+</NEKTAR>

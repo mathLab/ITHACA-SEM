@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -157,7 +156,7 @@ int main(int argc, char *argv[])
     }
 
     ASSERTL1(util, "Unknown shape type!");
-    const int nPoints = r.num_elements();
+    const int nPoints = r.size();
     const int dim = (shape == eTriangle || shape == eQuadrilateral) ? 2 : 3;
 
     if (vm.count("integral"))

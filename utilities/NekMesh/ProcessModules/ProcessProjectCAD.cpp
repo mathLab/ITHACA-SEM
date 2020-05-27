@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -41,6 +40,7 @@
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
@@ -76,6 +76,8 @@ bool ProcessProjectCAD::findAndProject(bgi::rtree<boxI, bgi::quadratic<16> > &rt
                                        Array<OneD, NekDouble> in,
                                        int &surf)
 {
+    boost::ignore_unused(surf);
+
     point q(in[0], in[1], in[2]);
     vector<boxI> result;
     rtree.query(bgi::intersects(q), back_inserter(result));
@@ -499,13 +501,13 @@ void ProcessProjectCAD::Process()
         vector<CADSurfSharedPtr> v2 = (*i)->m_n2->GetCADSurfs();
 
         vector<int> vi1, vi2;
-        for (int i = 0; i < v1.size();i++)
+        for (size_t j = 0; j < v1.size(); ++j)
         {
-            vi1.push_back(v1[i]->GetId());
+            vi1.push_back(v1[j]->GetId());
         }
-        for (int i = 0; i < v2.size();i++)
+        for (size_t j = 0; j < v2.size(); ++j)
         {
-            vi2.push_back(v2[i]->GetId());
+            vi2.push_back(v2[j]->GetId());
         }
 
         sort(vi1.begin(), vi1.end());

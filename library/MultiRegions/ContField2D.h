@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -105,39 +104,36 @@ namespace Nektar
             /// expansion modes \f$\phi_n^e(\boldsymbol{x})\f$.
             inline void IProductWRTBase(
                             const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD, NekDouble> &outarray,
-                                CoeffState coeffstate = eLocal);
+                            Array<OneD, NekDouble> &outarray);
 
             /// Performs the global forward transformation of a function
             /// \f$f(\boldsymbol{x})\f$, subject to the boundary conditions
             /// specified.
-            MULTI_REGIONS_EXPORT void FwdTrans(const Array<OneD, const NekDouble> &inarray,
-                                Array<OneD,      NekDouble> &outarray,
-                                CoeffState coeffstate = eLocal);
+            MULTI_REGIONS_EXPORT void FwdTrans(const Array<OneD,
+                                               const NekDouble> &inarray,
+                                               Array<OneD,NekDouble> &outarray);
 
             /// Performs the backward transformation of the spectral/hp
             /// element expansion.
             inline void BwdTrans(
                             const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate = eLocal);
+                            Array<OneD,       NekDouble> &outarray);
 
             /// Multiply a solution by the inverse mass matrix.
             MULTI_REGIONS_EXPORT void MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,  NekDouble> &outarray,
-                                CoeffState coeffstate = eLocal);
+                                Array<OneD,  NekDouble> &outarray);
 
             /// Solves the two-dimensional Laplace equation, subject to the
             /// boundary conditions specified.
-            MULTI_REGIONS_EXPORT void LaplaceSolve(const Array<OneD, const NekDouble> &inarray,
-                                    Array<OneD,       NekDouble> &outarray,
-                              const Array<OneD, const NekDouble> &dirForcing
-                                                        = NullNekDouble1DArray,
-                              const Array<OneD,       Array<OneD,NekDouble> >&
-                                    variablecoeffs = NullNekDoubleArrayofArray,
-                              NekDouble time = 0.0,
-                                CoeffState coeffstate = eLocal);
+            MULTI_REGIONS_EXPORT void LaplaceSolve(
+                                const Array<OneD, const NekDouble> &inarray,
+                                Array<OneD, NekDouble> &outarray,
+                                const Array<OneD, const NekDouble> &dirForcing
+                                   = NullNekDouble1DArray,
+                                const Array<OneD,  Array<OneD,NekDouble> >&
+                                variablecoeffs = NullNekDoubleArrayofArray,
+                                NekDouble time = 0.0);
 
 
             /// Compute the eigenvalues of the linear advection operator.
@@ -219,15 +215,13 @@ namespace Nektar
             /// Template method virtual forwarder for FwdTrans().
             MULTI_REGIONS_EXPORT virtual void v_BwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate);
+                                Array<OneD,       NekDouble> &outarray);
 
 
             /// Template method virtual forwarder for FwdTrans().
             MULTI_REGIONS_EXPORT virtual void v_FwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate);
+                                Array<OneD,       NekDouble> &outarray);
 
             /// Template method virtual forwarded for SmoothField().
             MULTI_REGIONS_EXPORT virtual void v_SmoothField(
@@ -236,15 +230,13 @@ namespace Nektar
             /// Template method virtual forwarder for MultiplyByInvMassMatrix().
             MULTI_REGIONS_EXPORT virtual void v_MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate);
+                                Array<OneD,       NekDouble> &outarray);
 
             /// Solves the two-dimensional Helmholtz equation, subject to the
             /// boundary conditions specified.
             MULTI_REGIONS_EXPORT virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
-                    const FlagList &flags,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
                     const MultiRegions::VarFactorsMap &varfactors,
@@ -257,8 +249,7 @@ namespace Nektar
             virtual void v_GeneralMatrixOp(
                    const GlobalMatrixKey             &gkey,
                    const Array<OneD,const NekDouble> &inarray,
-                   Array<OneD,      NekDouble> &outarray,
-                   CoeffState coeffstate);
+                   Array<OneD,      NekDouble> &outarray);
 
             // Solve the linear advection problem assuming that m_coeffs
             // vector contains an intial estimate for solution
@@ -266,7 +257,6 @@ namespace Nektar
                                               const Array<OneD, const NekDouble> &inarray,
                                               Array<OneD, NekDouble> &outarray,
                                               const NekDouble lambda,
-                                              CoeffState coeffstate = eLocal,
                                               const Array<OneD, const NekDouble>&
                                               dirForcing = NullNekDouble1DArray);
 
@@ -276,7 +266,6 @@ namespace Nektar
                                               const Array<OneD, const NekDouble> &inarray,
                                               Array<OneD, NekDouble> &outarray,
                                               const NekDouble lambda,
-                                              CoeffState coeffstate = eLocal,
                                               const Array<OneD, const NekDouble>&
                                               dirForcing = NullNekDouble1DArray);
 
@@ -378,34 +367,10 @@ namespace Nektar
          */
         inline void ContField2D::IProductWRTBase(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD, NekDouble> &outarray,
-                                CoeffState coeffstate)
+                                Array<OneD, NekDouble> &outarray)
 
         {
-            if(coeffstate == eGlobal)
-            {
-                bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(
-                                                StdRegions::eIProductWRTBase);
-
-                if(doGlobalOp)
-                {
-                    GlobalMatrixKey gkey(StdRegions::eIProductWRTBase,
-                                         m_locToGloMap);
-                    GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
-                    mat->Multiply(inarray,outarray);
-                    m_locToGloMap->UniversalAssemble(outarray);
-                }
-                else
-                {
-                    Array<OneD, NekDouble> wsp(m_ncoeffs);
-                    IProductWRTBase_IterPerExp(inarray,wsp);
-                    Assemble(wsp,outarray);
-                }
-            }
-            else
-            {
-                IProductWRTBase_IterPerExp(inarray,outarray);
-            }
+            IProductWRTBase_IterPerExp(inarray,outarray);
         }
 
         /**
@@ -424,31 +389,9 @@ namespace Nektar
          */
         inline void ContField2D::BwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate)
+                                Array<OneD,       NekDouble> &outarray)
         {
-            if(coeffstate == eGlobal)
-            {
-                bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(
-                                                        StdRegions::eBwdTrans);
-
-                if(doGlobalOp)
-                {
-                    GlobalMatrixKey gkey(StdRegions::eBwdTrans,m_locToGloMap);
-                    GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
-                    mat->Multiply(inarray,outarray);
-                }
-                else
-                {
-                    Array<OneD, NekDouble> wsp(m_ncoeffs);
-                    GlobalToLocal(inarray,wsp);
-                    BwdTrans_IterPerExp(wsp,outarray);
-                }
-            }
-            else
-            {
-                BwdTrans_IterPerExp(inarray,outarray);
-            }
+            BwdTrans_IterPerExp(inarray,outarray);
         }
 
         inline const Array<OneD,const MultiRegions::ExpListSharedPtr>&

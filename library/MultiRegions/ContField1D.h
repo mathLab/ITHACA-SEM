@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -79,21 +78,20 @@ namespace Nektar
 
             /// Perform global forward transformation of a function \f$f(x)\f$,
             //  subject to the boundary conditions specified.
-            MULTI_REGIONS_EXPORT void FwdTrans(      const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,      NekDouble> &outarray,
-                                CoeffState coeffstate = eLocal);
+            MULTI_REGIONS_EXPORT void FwdTrans(const Array<OneD,
+                                               const NekDouble> &inarray,
+                                               Array<OneD,NekDouble> &outarray);
 
             /// This function performs the backward transformation of the
             /// spectral/hp element expansion.
-            MULTI_REGIONS_EXPORT void BwdTrans(      const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate = eLocal);
+            MULTI_REGIONS_EXPORT void BwdTrans(const Array<OneD,
+                                               const NekDouble> &inarray,
+                                               Array<OneD,NekDouble> &outarray);
 
             ///
             MULTI_REGIONS_EXPORT void MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate = eLocal);
+                                Array<OneD,       NekDouble> &outarray);
 
             /// Return the boundary conditions expansion.
             // inline
@@ -124,15 +122,13 @@ namespace Nektar
             /// respect to all <em>global</em> expansion modes
             /// \f$\phi_n^e(x)\f$.
             MULTI_REGIONS_EXPORT void IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD, NekDouble> &outarray,
-                                CoeffState coeffstate = eLocal);
+                                                      Array<OneD, NekDouble> &outarray);
 
             /// Calculates the result of the multiplication of a global matrix
             /// of type specified by \a mkey with a vector given by \a inarray.
             MULTI_REGIONS_EXPORT void GeneralMatrixOp(const GlobalMatrixKey             &gkey,
                                 const Array<OneD,const NekDouble> &inarray,
-                                      Array<OneD,      NekDouble> &outarray,
-                                CoeffState coeffstate = eLocal);
+                                Array<OneD,      NekDouble> &outarray);   
 
         protected:
             /// (A shared pointer to) the object which contains all the required
@@ -140,12 +136,6 @@ namespace Nektar
             /// of freedom.
             AssemblyMapCGSharedPtr m_locToGloMap;
 
-
-            /// A enum list declaring how to interpret coeffs,
-            /// i.e. eLocal, eHybrid or eGlobal
-            CoeffState m_coeffState;
-
-            /// (A shared pointer to) a list which collects all the global
             /// matrices being assembled, such that they should be constructed
             /// only once.
             GlobalMatrixMapShPtr            m_globalMat;
@@ -171,13 +161,11 @@ namespace Nektar
             /// Perform a forward transform
             virtual void v_FwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate);
+                                Array<OneD,       NekDouble> &outarray);
 
             virtual void v_MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate);
+                                Array<OneD,       NekDouble> &outarray);
 
             /// Impose the Dirichlet Boundary Conditions on outarray 
             MULTI_REGIONS_EXPORT virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
@@ -205,7 +193,6 @@ namespace Nektar
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
-                    const FlagList &flags,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
                     const MultiRegions::VarFactorsMap &varfactors,
@@ -217,21 +204,18 @@ namespace Nektar
 
             virtual void v_BwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate);
+                                Array<OneD,       NekDouble> &outarray);
 
             virtual void v_IProductWRTBase(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate);
+                                Array<OneD,       NekDouble> &outarray);
 
             /// Calculates the result of the multiplication of a global matrix
             /// of type specified by \a mkey with a vector given by \a inarray.
             virtual void v_GeneralMatrixOp(
                                 const GlobalMatrixKey             &gkey,
                                 const Array<OneD,const NekDouble> &inarray,
-                                      Array<OneD,      NekDouble> &outarray,
-                                CoeffState coeffstate);
+                                Array<OneD,      NekDouble> &outarray);
 
             virtual void v_ClearGlobalLinSysManager(void);
 

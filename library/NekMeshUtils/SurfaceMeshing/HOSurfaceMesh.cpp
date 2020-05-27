@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -269,7 +268,7 @@ void HOSurfaceMesh::Process()
                     // need to pull the solution out of opti
                     ti = opti->GetSolution();
                 }
-                vector<pair<CADSurfSharedPtr, CADOrientation::Orientation>> s =
+                vector<pair<weak_ptr<CADSurf>, CADOrientation::Orientation>> s =
                     c->GetAdjSurf();
 
                 for (int k = 1; k < m_mesh->m_nummode - 1; k++)
@@ -281,8 +280,9 @@ void HOSurfaceMesh::Process()
                     nn->SetCADCurve(c, ti[k]);
                     for (int m = 0; m < s.size(); m++)
                     {
-                        Array<OneD, NekDouble> uv = s[m].first->locuv(loc);
-                        nn->SetCADSurf(s[m].first, uv);
+                        Array<OneD, NekDouble> uv =
+                            s[m].first.lock()->locuv(loc);
+                        nn->SetCADSurf(s[m].first.lock(), uv);
                     }
 
                     honodes[k - 1] = nn;

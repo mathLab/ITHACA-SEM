@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -103,7 +102,7 @@ namespace Nektar
          * constructs the mapping array (contained in #m_locToGloMap) for the
          * transformation between local elemental level and global level, it
          * calculates the total number global expansion coefficients
-         * \f$\hat{u}_n\f$. 
+         * \f$\hat{u}_n\f$.
          * The constructor also discretises the boundary conditions, specified
          * by the argument \a bcs, by expressing them in terms of the
          * coefficient of the expansion on  the boundary.
@@ -191,24 +190,19 @@ namespace Nektar
          *
          * @param   inarray     Discrete \f$f(x)\f$.
          * @param   outarray    Storage for result.
-         * @param   coeffstate
          */
         void ContField1D::FwdTrans(const Array<OneD, const NekDouble> &inarray,
-                                   Array<OneD,       NekDouble> &outarray,
-                                   CoeffState coeffstate)
+                                   Array<OneD,       NekDouble> &outarray)
         {
+
             // Inner product of forcing
             Array<OneD,NekDouble> wsp(m_ncoeffs);
-            IProductWRTBase(inarray,wsp,eGlobal);
-            
+            IProductWRTBase(inarray,wsp);
+
             // Solve the system
             GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
 
             GlobalSolve(key,wsp,outarray);
-            if(coeffstate == eLocal)
-            {
-                GlobalToLocal(outarray,outarray);
-            }
         }
 
 
@@ -229,62 +223,22 @@ namespace Nektar
          */
         void ContField1D::BwdTrans(
                                 const Array<OneD, const NekDouble>  &inarray,
-                                Array<OneD,       NekDouble>  &outarray,
-                                CoeffState coeffstate)
+                                Array<OneD,       NekDouble>  &outarray)
         {
-            Array<OneD, NekDouble> tmpinarray;
-            if(coeffstate != eLocal)
-            {
-                tmpinarray = Array<OneD, NekDouble>(inarray);
-                GlobalToLocal(inarray,tmpinarray);
-            }
-            else
-            {
-                tmpinarray = inarray;
-            }
 
-            BwdTrans_IterPerExp(tmpinarray,outarray);
+            BwdTrans_IterPerExp(inarray,outarray);
         }
 
-        
+
         /**
          *
          */
         void ContField1D::MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate)
+                                Array<OneD,       NekDouble> &outarray)
         {
             GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
-            if(coeffstate == eGlobal)
-            {
-                if(inarray.data() == outarray.data())
-                {
-                    Array<OneD, NekDouble> tmp(inarray);
-                    GlobalSolve(key,tmp,outarray);
-                }
-                else
-                {
-                    GlobalSolve(key,inarray,outarray);
-                }
-            }
-            else
-            {
-                Array<OneD, NekDouble> globaltmp(m_ncoeffs,0.0);
-
-                if(inarray.data() == outarray.data())
-                {
-                    Array<OneD,NekDouble> tmp(inarray);
-                    Assemble(tmp,outarray);
-                }
-                else
-                {
-                    Assemble(inarray,outarray);
-                }
-
-                GlobalSolve(key,outarray,globaltmp);
-                GlobalToLocal(globaltmp,outarray);
-            }
+            GlobalSolve(key,inarray,outarray);
         }
 
 
@@ -331,27 +285,28 @@ namespace Nektar
          *   -\boldsymbol{M}^{\mathcal{HD}}\boldsymbol{\hat{u}}^{\mathcal{D}}\f]
          *
          * @param   key         Specifes the linear system to solve.
-         * @param   rhs         Forcing term \f$\boldsymbol{f}\f$.
+         * @param   locrhs         Forcing term \f$\boldsymbol{f}\f$.
          * @param   inout       Solution vector \f$\boldsymbol{\hat{u}}\f$.
          * @param   dirForcing  .
          */
         void ContField1D::GlobalSolve(const GlobalLinSysKey &key,
-                                const Array<OneD, const NekDouble>& rhs,
+                                const Array<OneD, const NekDouble>& locrhs,
                                       Array<OneD,       NekDouble>& inout,
                                 const Array<OneD, const NekDouble>& dirForcing)
         {
-            int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int NumDirBcs   = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
 
             // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE
             //         IN THE SOLUTION ARRAY
             v_ImposeDirichletConditions(inout);
-            
+
             // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
             if(contNcoeffs - NumDirBcs > 0)
             {
                 GlobalLinSysSharedPtr LinSys = GetGlobalLinSys(key);
-                LinSys->Solve(rhs,inout,m_locToGloMap,dirForcing);
+                LinSys->Solve(locrhs,inout,m_locToGloMap,dirForcing);
+                
             }
         }
 
@@ -397,48 +352,39 @@ namespace Nektar
          */
         void ContField1D::IProductWRTBase(
                                 const Array<OneD, const NekDouble> &inarray,
-                                Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate)
+                                Array<OneD,       NekDouble> &outarray)
         {
-            if(coeffstate == eGlobal)
-            {
-                Array<OneD, NekDouble> wsp(m_ncoeffs);
-                IProductWRTBase_IterPerExp(inarray,wsp);
-                Assemble(wsp,outarray);
-            }
-            else
-            {
-                IProductWRTBase_IterPerExp(inarray,outarray);
-            }
+            IProductWRTBase_IterPerExp(inarray,outarray);
         }
-		
-        
+
+
         void ContField1D::v_FwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate)
+                                Array<OneD,       NekDouble> &outarray)
         {
-            FwdTrans(inarray,outarray,coeffstate);
+            FwdTrans(inarray,outarray);
         }
 
         void ContField1D::v_MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
-                                Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate)
+                                Array<OneD,       NekDouble> &outarray)
         {
-            MultiplyByInvMassMatrix(inarray,outarray,coeffstate);
+            MultiplyByInvMassMatrix(inarray,outarray);
         }
 
         void ContField1D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
         {
-            for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            const Array<OneD, const int> map= m_locToGloMap->
+                GetBndCondCoeffsToLocalCoeffsMap();
+            
+            for(int i = 0; i < m_bndCondExpansions.size(); ++i)
             {
-                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                if(m_bndConditions[i]->GetBoundaryConditionType() ==
+                   SpatialDomains::eDirichlet)
                 {
-                    outarray[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(i)]
-                        = m_bndCondExpansions[i]->GetCoeff(0);
+                    outarray[map[i]] = m_bndCondExpansions[i]->GetCoeffs(0);
                 }
-            }            
+            }
         }
 
         /**
@@ -533,13 +479,11 @@ namespace Nektar
          * @param   lambda      Parameter value.
          * @param   Sigma       Coefficients of lambda.
          * @param   varcoeff    Variable diffusivity coefficients.
-         * @param   coeffstate 
          * @param   dirForcing  Dirichlet Forcing.
          */
         void ContField1D::v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
-                const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
                 const MultiRegions::VarFactorsMap &varfactors,
@@ -547,48 +491,41 @@ namespace Nektar
                 const bool PhysSpaceForcing)
         {
             // Inner product of forcing
-            int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-            Array<OneD,NekDouble> wsp(contNcoeffs);
+            Array<OneD,NekDouble> wsp(m_ncoeffs);
             if(PhysSpaceForcing)
             {
-                IProductWRTBase(inarray,wsp,eGlobal);
+                IProductWRTBase(inarray,wsp);
+                // Note -1.0 term necessary to invert forcing function to
+                // be consistent with matrix definition
+                Vmath::Neg(m_ncoeffs, wsp, 1);
             }
             else
             {
-                Assemble(inarray,wsp);
+                Vmath::Smul(m_ncoeffs,-1.0,inarray,1,wsp,1);
             }
-            // Note -1.0 term necessary to invert forcing function to
-            // be consistent with matrix definition
-            Vmath::Neg(contNcoeffs, wsp, 1);
 
-            // Forcing function with weak boundary conditions
+            const Array<OneD, const int> map= m_locToGloMap->
+                GetBndCondCoeffsToLocalCoeffsMap();
+            // Add weak boundary conditions to forcing
             int i;
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
-                       SpatialDomains::eNeumann ||
+                   SpatialDomains::eNeumann ||
                    m_bndConditions[i]->GetBoundaryConditionType() ==
-                       SpatialDomains::eRobin)
+                   SpatialDomains::eRobin)
                 {
-                    wsp[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(i)]
-                        += m_bndCondExpansions[i]->GetCoeff(0);
+                    wsp[map[i]] += m_bndCondExpansions[i]->GetCoeffs(0); 
                 }
             }
+
 
             // Solve the system
             GlobalLinSysKey key(StdRegions::eHelmholtz,
                                 m_locToGloMap,factors,varcoeff,varfactors);
 
-            if(flags.isSet(eUseGlobal))
-            {
-                GlobalSolve(key,wsp,outarray,dirForcing);
-            }
-            else
-            {
-                Array<OneD,NekDouble> tmp(contNcoeffs,0.0);
-                GlobalSolve(key,wsp,tmp,dirForcing);
-                GlobalToLocal(tmp,outarray);
-            }
+
+            GlobalSolve(key,wsp,outarray,dirForcing);
         }
 
         const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>&
@@ -599,18 +536,16 @@ namespace Nektar
 
         void ContField1D::v_BwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                CoeffState coeffstate)
+                                Array<OneD,       NekDouble> &outarray)
         {
-            BwdTrans(inarray,outarray,coeffstate);
+            BwdTrans(inarray,outarray);
         }
 
         void ContField1D::v_IProductWRTBase(
                                 const Array<OneD, const NekDouble>   &inarray,
-                                      Array<OneD,       NekDouble>   &outarray,
-                                CoeffState coeffstate)
-        {
-            IProductWRTBase(inarray,outarray,coeffstate);
+                                Array<OneD,       NekDouble>   &outarray)
+                                        {
+            IProductWRTBase(inarray,outarray);
         }
 
         /**
@@ -632,27 +567,15 @@ namespace Nektar
         void ContField1D::v_GeneralMatrixOp(
                                 const GlobalMatrixKey                &gkey,
                                 const Array<OneD,const NekDouble>    &inarray,
-                                      Array<OneD,      NekDouble>    &outarray,
-                                CoeffState coeffstate)
+                                Array<OneD,      NekDouble>    &outarray)
         {
-            if(coeffstate == eGlobal)
-            {
-                Array<OneD,NekDouble> tmp1(2*m_ncoeffs);
-                Array<OneD,NekDouble> tmp2(tmp1+m_ncoeffs);
-                GlobalToLocal(inarray,tmp1);
-                GeneralMatrixOp_IterPerExp(gkey,tmp1,tmp2);
-                Assemble(tmp2,outarray);
-            }
-            else
-            {
-                GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
-            }
+            GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
         }
 
 
 
         /**
-         * Reset the GlobalLinSys Manager 
+         * Reset the GlobalLinSys Manager
          */
         void ContField1D::v_ClearGlobalLinSysManager(void)
         {

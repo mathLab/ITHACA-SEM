@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -29,12 +28,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -54,8 +54,8 @@ namespace Nektar
             Array<OneD, double> array_1(const_array_1);
             Array<OneD, double> array_2(5, const_array_2);
 
-            BOOST_CHECK_EQUAL(array_1.num_elements(), const_array_1.num_elements());
-            BOOST_CHECK_EQUAL(array_2.num_elements(), 5);
+            BOOST_CHECK_EQUAL(array_1.size(), const_array_1.size());
+            BOOST_CHECK_EQUAL(array_2.size(), 5);
 
             array_1[2] = -1.0;
             array_2[2] = -1.0;
@@ -69,8 +69,8 @@ namespace Nektar
 
         void CheckAddresses(Array<TwoD, double>::reference d, double* expectedAddress)
         {
-            //BOOST_CHECK_EQUAL(d.num_elements(), 7);
-            //BOOST_CHECK_EQUAL(d.origin(), expectedAddress);
+            BOOST_CHECK_EQUAL(d.size(), 7);
+            BOOST_CHECK_EQUAL(d.origin(), expectedAddress);
         }
 
         BOOST_AUTO_TEST_CASE(TestRowPointers)

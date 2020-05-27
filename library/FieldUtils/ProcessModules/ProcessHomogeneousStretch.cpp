@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,9 +36,11 @@
 #include <string>
 using namespace std;
 
-#include "ProcessHomogeneousStretch.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessHomogeneousStretch.h"
 
 namespace Nektar
 {
@@ -69,26 +70,23 @@ ProcessHomogeneousStretch::~ProcessHomogeneousStretch()
 
 void ProcessHomogeneousStretch::Process(po::variables_map &vm)
 {
-	m_f->SetUpExp(vm);
-	
+    m_f->SetUpExp(vm);
+
     // Skip in case of empty partition
     if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
         return;
     }
 
-    if ((m_f->m_numHomogeneousDir) != 1)
-    {
-        ASSERTL0(false,
-                 "ProcessHomogeneousStretch only works for Homogeneous1D.");
-    }
+    ASSERTL0(m_f->m_numHomogeneousDir == 1,
+             "ProcessHomogeneousStretch only works for Homogeneous1D.");
 
     ASSERTL0(m_config["factor"].m_beenSet,
              "Missing parameter factor for ProcessHomogeneousStretch");
 
     int factor  = m_config["factor"].as<int>();
     int nfields = m_f->m_variables.size();
-    int nplanes = m_f->m_exp[0]->GetHomogeneousBasis()->GetZ().num_elements();
+    int nplanes = m_f->m_exp[0]->GetHomogeneousBasis()->GetZ().size();
 
     ASSERTL0(factor > 1, "Parameter factor must be an int greater than 1.");
 

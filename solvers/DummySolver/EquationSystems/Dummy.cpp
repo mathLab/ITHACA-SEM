@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,6 +35,9 @@
 
 #include <iostream>
 
+#include <boost/core/ignore_unused.hpp>
+
+#include <LibUtilities/BasicUtils/Timer.h>
 #include <DummySolver/EquationSystems/Dummy.h>
 
 using namespace std;
@@ -66,7 +68,7 @@ void Dummy::v_InitObject()
     m_ode.DefineProjection(&Dummy::DoOdeProjection, this);
 
     m_forcing = SolverUtils::Forcing::Load(
-        m_session, shared_from_this(), m_fields, m_fields.num_elements());
+        m_session, shared_from_this(), m_fields, m_fields.size());
 
     if (m_session->DefinesElement("Nektar/Coupling"))
     {
@@ -110,12 +112,12 @@ bool Dummy::v_PreIntegrate(int step)
         int numForceFields = 0;
         for (auto &x : m_forcing)
         {
-            numForceFields += x->GetForces().num_elements();
+            numForceFields += x->GetForces().size();
         }
         vector<string> varNames;
-        Array<OneD, Array<OneD, NekDouble> > phys(m_fields.num_elements() +
+        Array<OneD, Array<OneD, NekDouble> > phys(m_fields.size() +
                                                   numForceFields);
-        for (int i = 0; i < m_fields.num_elements(); ++i)
+        for (int i = 0; i < m_fields.size(); ++i)
         {
             varNames.push_back(m_session->GetVariable(i));
             phys[i] = m_fields[i]->UpdatePhys();
@@ -124,9 +126,9 @@ bool Dummy::v_PreIntegrate(int step)
         int f = 0;
         for (auto &x : m_forcing)
         {
-            for (int i = 0; i < x->GetForces().num_elements(); ++i)
+            for (int i = 0; i < x->GetForces().size(); ++i)
             {
-                phys[m_fields.num_elements() + f + i] = x->GetForces()[i];
+                phys[m_fields.size() + f + i] = x->GetForces()[i];
                 varNames.push_back("F_" + boost::lexical_cast<string>(f) + "_" +
                                    m_session->GetVariable(i));
             }
@@ -192,7 +194,7 @@ void Dummy::v_Output()
     int f = 0;
     for (auto &x : m_forcing)
     {
-        for (int i = 0; i < x->GetForces().num_elements(); ++i)
+        for (int i = 0; i < x->GetForces().size(); ++i)
         {
             int npts = GetTotPoints();
 
@@ -235,7 +237,9 @@ void Dummy::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                      Array<OneD, Array<OneD, NekDouble> > &outarray,
                      const NekDouble time)
 {
-    int nVariables = inarray.num_elements();
+    boost::ignore_unused(time);
+
+    int nVariables = inarray.size();
     int nq         = GetTotPoints();
 
     for (int i = 0; i < nVariables; ++i)
@@ -253,7 +257,9 @@ void Dummy::DoOdeProjection(
     Array<OneD, Array<OneD, NekDouble> > &outarray,
     const NekDouble time)
 {
-    int nvariables = inarray.num_elements();
+    boost::ignore_unused(time);
+
+    int nvariables = inarray.size();
     int nq         = m_fields[0]->GetNpoints();
 
     // deep copy

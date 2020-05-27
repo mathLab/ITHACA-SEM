@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -44,8 +43,8 @@ namespace Nektar
                         "PanditGilesDemir03",
                         PanditGilesDemir03::create,
                          "Pandit-Giles-Demir 2003 cell model.");
-    
-    
+
+
     /**
     *
     */
@@ -55,14 +54,14 @@ namespace Nektar
     {
         m_nq   = nq;
     }
-    
-    
+
+
     void PanditGilesDemir03::v_Update(
                      const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                            Array<OneD,        Array<OneD, NekDouble> >&outarray,
                      const NekDouble time)
     {
-        int nvariables  = inarray.num_elements();
+        int nvariables  = inarray.size();
         int nq = m_nq;
         for (unsigned int i = 0; i < nq; ++i)
         {
@@ -121,7 +120,7 @@ namespace Nektar
             NekDouble var_chaste_interface__intracellular_ion_concentrations__Ca_NSR = inarray[26][i];
             // Units: millimolar; Initial value: 0.06600742
 
-            
+
             // Mathematics
             NekDouble d_dt_chaste_interface__membrane__V;
             const NekDouble var_membrane__R = 8314.5; // millijoule_per_mole_kelvin
@@ -490,7 +489,7 @@ namespace Nektar
             const NekDouble d_dt_chaste_interface__intracellular_ion_concentrations__Ca_ss = var_chaste_interface__intracellular_ion_concentrations__d_Ca_ss_d_environment__time; // 'millimole per litre per millisecond'
             const NekDouble d_dt_chaste_interface__intracellular_ion_concentrations__Ca_JSR = var_chaste_interface__intracellular_ion_concentrations__d_Ca_JSR_d_environment__time; // 'millimole per litre per millisecond'
             const NekDouble d_dt_chaste_interface__intracellular_ion_concentrations__Ca_NSR = var_chaste_interface__intracellular_ion_concentrations__d_Ca_NSR_d_environment__time; // 'millimole per litre per millisecond'
-            
+
             const NekDouble var_membrane__Cm = 0.0001; // microF
             const NekDouble var_membrane__i_Na = var_sodium_current__i_Na; // nanoA
             const NekDouble var_membrane__i_Ca_L = var_L_type_Ca_channel__i_Ca_L; // nanoA
@@ -540,7 +539,7 @@ namespace Nektar
             outarray[25][i] = d_dt_chaste_interface__intracellular_ion_concentrations__Ca_JSR;
             outarray[26][i] = d_dt_chaste_interface__intracellular_ion_concentrations__Ca_NSR;
         }
-        
+
     }
 
     /**

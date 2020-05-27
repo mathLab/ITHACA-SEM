@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -41,7 +40,7 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/SegExp.h>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 
@@ -252,7 +251,7 @@ namespace Nektar
                     bmap2 = exp->GetEdgeInverseBoundaryMap(i);
 
                     // Allocate temporary storage for the extracted edge matrix.
-                    const int nEdgeCoeffs = bmap.num_elements();
+                    const int nEdgeCoeffs = bmap.size();
                     vector<NekDouble> tmpStore(nEdgeCoeffs*nEdgeCoeffs);
 
                     gId = asmMap->GetLocalToGlobalMap(cnt + bmap[0]);
@@ -337,7 +336,7 @@ namespace Nektar
                     bmap2 = exp->GetFaceInverseBoundaryMap(i);
 
                     // Allocate temporary storage for the extracted face matrix.
-                    const int nFaceCoeffs = bmap.num_elements();
+                    const int nFaceCoeffs = bmap.size();
                     vector<NekDouble> tmpStore(nFaceCoeffs*nFaceCoeffs);
 
                     gId = asmMap->GetLocalToGlobalMap(cnt + bmap[0]);
@@ -643,7 +642,7 @@ namespace Nektar
             }
 
             // Set up IDs for universal numbering.
-            Array<OneD, long> uniIds(tmpStore.num_elements());
+            Array<OneD, long> uniIds(tmpStore.size());
             for (cnt = 0, n = nDir; n < nTrace; ++n)
             {
                 LocalRegions::ExpansionSharedPtr traceExp = trace->GetExp(n);

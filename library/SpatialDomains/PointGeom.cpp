@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -60,7 +59,10 @@ PointGeom::PointGeom(
 }
 
 // copy constructor
-PointGeom::PointGeom(const PointGeom &T) : NekPoint<NekDouble>(T)
+PointGeom::PointGeom(const PointGeom &T)
+    : Geometry0D(T),
+      NekPoint<NekDouble>(T),
+      std::enable_shared_from_this<PointGeom>(T)
 {
     m_shapeType = T.m_shapeType;
     m_globalID = T.m_globalID;
@@ -77,8 +79,10 @@ void PointGeom::GetCoords(NekDouble &x, NekDouble &y, NekDouble &z)
     {
         case 3:
             z = (*this)(2);
+            /* Falls through. */
         case 2:
             y = (*this)(1);
+            /* Falls through. */
         case 1:
             x = (*this)(0);
             break;
@@ -91,8 +95,10 @@ void PointGeom::GetCoords(Array<OneD, NekDouble> &coords)
     {
         case 3:
             coords[2] = (*this)(2);
+            /* Falls through. */
         case 2:
             coords[1] = (*this)(1);
+            /* Falls through. */
         case 1:
             coords[0] = (*this)(0);
             break;

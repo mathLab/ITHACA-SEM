@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,11 +36,13 @@
 #include <string>
 using namespace std;
 
+#include <boost/core/ignore_unused.hpp>
+
+#include <GlobalMapping/Mapping.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+
 #include "ProcessMapping.h"
 #include "ProcessVorticity.h"
-#include <GlobalMapping/Mapping.h>
-
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
@@ -64,8 +65,8 @@ ProcessVorticity::~ProcessVorticity()
 
 void ProcessVorticity::Process(po::variables_map &vm)
 {
-	m_f->SetUpExp(vm);
-	
+    m_f->SetUpExp(vm);
+
     int i, s;
     int expdim   = m_f->m_graph->GetMeshDimension();
     m_spacedim = expdim;
@@ -74,11 +75,8 @@ void ProcessVorticity::Process(po::variables_map &vm)
         m_spacedim = 3;
     }
     int nfields = m_f->m_variables.size();
-    if (m_spacedim == 1)
-    {
-        ASSERTL0(false, "Error: Vorticity for a 1D problem cannot "
-                        "be computed")
-    }
+    ASSERTL0(m_spacedim != 1,
+             "Error: Vorticity for a 1D problem cannot be computed");
     int addfields = (m_spacedim == 2) ? 1 : 3;
 
     // Append field names

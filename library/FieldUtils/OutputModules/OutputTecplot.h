@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -104,7 +103,7 @@ protected:
     /// Tecplot zone type of output
     TecplotZoneType m_zoneType;
     /// Number of points per block in Tecplot file
-    vector<int>     m_numPoints;
+    std::vector<int>     m_numPoints;
     /// Number of blocks in Tecplot file
     int             m_numBlocks;
     /// Coordinate dimension of output
@@ -112,7 +111,7 @@ protected:
     /// Total number of connectivity entries
     int             m_totConn;
     /// Connectivty for each block: one per element
-    vector<Array<OneD, int> > m_conn;
+    std::vector<Array<OneD, int> > m_conn;
     /// Each rank's field sizes
     Array<OneD, int> m_rankFieldSizes;
     /// Each rank's connectivity sizes

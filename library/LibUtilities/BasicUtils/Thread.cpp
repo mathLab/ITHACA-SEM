@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
+
+#include <boost/core/ignore_unused.hpp>
 
 #include "LibUtilities/BasicUtils/Thread.h"
 
@@ -224,6 +225,7 @@ ThreadStartupManager::~ThreadStartupManager()
  */
 void ThreadStartupManager::QueueJobs(std::vector<ThreadJob*>& joblist)
 {
+    boost::ignore_unused(joblist);
     NEKERROR(ErrorUtil::efatal,
              "Attempted to QueueJobs in ThreadDefaultManager");
 }
@@ -234,6 +236,7 @@ void ThreadStartupManager::QueueJobs(std::vector<ThreadJob*>& joblist)
  */
 void ThreadStartupManager::QueueJob(ThreadJob* job)
 {
+    boost::ignore_unused(job);
     NEKERROR(ErrorUtil::efatal,
              "Attempted to QueueJob in ThreadDefaultManager");
 }
@@ -299,6 +302,7 @@ void ThreadStartupManager::Wait()
  */
 void ThreadStartupManager::SetChunkSize(unsigned int chnk)
 {
+    boost::ignore_unused(chnk);
     NEKERROR(ErrorUtil::efatal,
              "Attempted to SetChunkSize in ThreadDefaultManager");
 }
@@ -309,6 +313,7 @@ void ThreadStartupManager::SetChunkSize(unsigned int chnk)
  */
 void ThreadStartupManager::SetSchedType(SchedType s)
 {
+    boost::ignore_unused(s);
     NEKERROR(ErrorUtil::efatal,
              "Attempted to SetSchedType in ThreadDefaultManager");
 }
@@ -347,6 +352,17 @@ bool ThreadStartupManager::IsInitialised()
 const std::string& ThreadStartupManager::GetType() const
 {
     return m_type;
+}
+
+
+/**
+ * @brief ThreadDefaultManager copy constructor
+ */
+ThreadStartupManager& ThreadStartupManager::operator=(
+        const ThreadStartupManager& src)
+{
+    boost::ignore_unused(src);
+    return *this;
 }
 
 } // Thread

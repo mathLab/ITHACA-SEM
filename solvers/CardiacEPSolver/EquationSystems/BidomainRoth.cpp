@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -294,20 +293,16 @@ void BidomainRoth::v_InitObject()
 
     // Search through the loaded filters and pass the cell model to any
     // CheckpointCellModel filters loaded.
-    int k = 0;
-    const LibUtilities::FilterMap& f = m_session->GetFilters();
-    for (auto &x : f)
+    for (auto &x : m_filters)
     {
         if (x.first == "CheckpointCellModel")
         {
             std::shared_ptr<FilterCheckpointCellModel> c
                 = std::dynamic_pointer_cast<FilterCheckpointCellModel>(
-                                                            m_filters[k]);
+                x.second);
             c->SetCellModel(m_cell);
         }
-        ++k;
     }
-
     // Load stimuli
     m_stimulus = Stimulus::LoadStimuli(m_session, m_fields[0]);
 
@@ -358,7 +353,7 @@ void BidomainRoth::DoImplicitSolve(
     // Solve a system of equations with Helmholtz solver and transform
     // back into physical space.
     m_fields[0]->HelmSolve(m_fields[0]->GetPhys(),
-                           m_fields[0]->UpdateCoeffs(), NullFlagList,
+                           m_fields[0]->UpdateCoeffs(), 
                            factorsHelmholtz, m_vardiffe);
 
     m_fields[0]->BwdTrans( m_fields[0]->GetCoeffs(),
@@ -420,8 +415,7 @@ void BidomainRoth::DoOdeRhs(
     // Solve Poisson problem for Ve
     // ----------------------------
     m_fields[1]->HelmSolve(m_fields[1]->GetPhys(),
-            m_fields[1]->UpdateCoeffs(), NullFlagList, factorsPoisson,
-            m_vardiffie);
+            m_fields[1]->UpdateCoeffs(), factorsPoisson, m_vardiffie);
     m_fields[1]->BwdTrans(m_fields[1]->GetCoeffs(),
             m_fields[1]->UpdatePhys());
     m_fields[1]->SetPhysState(true);

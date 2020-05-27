@@ -10,7 +10,6 @@
 // University of Utah (USA) and Department of Aeronautics, Imperial
 // College London (UK).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -78,7 +77,7 @@ struct OneDArrayToPython
         PyObject *tmp = py::incref(
             np::from_data(
                 arr.data(), np::dtype::get_builtin<T>(),
-                py::make_tuple(arr.num_elements()), py::make_tuple(sizeof(T)),
+                py::make_tuple(arr.size()), py::make_tuple(sizeof(T)),
                 capsule).ptr());
 
         return tmp;
@@ -114,7 +113,7 @@ struct PythonToOneDArray
                 return 0;
             }
         }
-        catch (boost::python::error_already_set)
+        catch (boost::python::error_already_set&)
         {
             py::handle_exception();
             PyErr_Clear();
@@ -124,10 +123,17 @@ struct PythonToOneDArray
         return objPtr;
     }
 
-    static void decrement(void *objPtr) 
+    static void decrement(void *objPtr)
     {
-        //PyObject *pyObjPtr = (PyObject *)objPtr;
-        //Py_DECREF(pyObjPtr);
+        if (!Py_IsInitialized())
+        {
+            // In deinitialisation phase, reference counters are not terribly
+            // robust; decremementing counters here can lead to segfaults during
+            // program exit in some cases.
+            return;
+        }
+
+        // Otherwise decrement reference counter.
         py::decref((PyObject *)objPtr);
     }
 
@@ -139,18 +145,64 @@ struct PythonToOneDArray
         // scope it seems memory gets deallocated
         py::object obj((py::handle<>(py::borrowed(objPtr))));
         np::ndarray array = py::extract<np::ndarray>(obj);
-        
-        // Construct OneD array from numpy array
+
+        // If this array came from C++, extract the C++ array from PyCObject or
+        // PyCapsule and ensure that we set up the C++ array to have a reference
+        // to that object, so that it can be decremented as appropriate.
+        py::object base = array.get_base();
+        Array<OneD, T> *ptr = nullptr;
+
+#if PY_MAJOR_VERSION == 2
+        if (PyCObject_Check(base.ptr()))
+        {
+            ptr = reinterpret_cast<Array<OneD, T> *>(
+                PyCObject_AsVoidPtr(base.ptr()));
+        }
+#else
+        if (PyCapsule_CheckExact(base.ptr()))
+        {
+            ptr = reinterpret_cast<Array<OneD, T> *>(
+                PyCapsule_GetPointer(base.ptr(), 0));
+        }
+#endif
+
         void *storage = (
-            (py::converter::rvalue_from_python_storage<Array<OneD, T> >*)data)
-            ->storage.bytes;
+            (py::converter::rvalue_from_python_storage<Array<OneD, T> >*)
+            data)->storage.bytes;
         data->convertible = storage;
-        void *memory_pointer = objPtr;
-        using nonconst_t = typename std::remove_const<T>::type;
-        new (storage) Array<OneD, T>(array.shape(0), (nonconst_t *)array.get_data(), memory_pointer, &decrement);
+
+        // If array originated in C++, then we need to be careful to avoid
+        // circular references. We therefore take a step to 'convert' this to a
+        // Python array so that essentially the reference counting and memory
+        // cleanup is done from the Python side.
+        //
+        // 1) Calling ToPythonArray to point to this numpy array. This ensures
+        //    that any C++ arrays that share this memory also know to call the
+        //    appropriate decrement function.
+        // 2) Creating a new Array from ptr, since ptr will shortly be deleted.
+        // 3) We call set_base to let the numpy array own its own data. This
+        //    will, at the end of the function and after `base` goes out of
+        //    scope, lead to ptr being deleted.
+        //
+        // After all of this references should be consistent between the C++
+        // side and the Python side.
+        if (ptr != nullptr)
+        {
+            ptr->ToPythonArray((void *)objPtr, &decrement);
+            new (storage) Array<OneD, T>(*ptr);
+            array.set_base(py::object());
+        }
+        else
+        {
+            // Otherwise, construct OneD array from numpy array
+            using nonconst_t = typename std::remove_const<T>::type;
+            new (storage) Array<OneD, T>(
+                array.shape(0), (nonconst_t *)array.get_data(),
+                (void *)objPtr, &decrement);
+        }
+
         py::incref(objPtr);
     }
-
 };
 
 template<typename T>

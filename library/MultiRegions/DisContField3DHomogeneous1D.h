@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -191,6 +190,8 @@ namespace Nektar
 
             Array<OneD, MultiRegions::ExpListSharedPtr>  m_bndCondExpansions;
 
+            Array<OneD, NekDouble >                      m_bndCondBndWeight;
+
             ExpListSharedPtr m_trace;
 
             Array<OneD, int> m_traceBndMap;
@@ -275,7 +276,6 @@ namespace Nektar
             virtual void v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
-                const FlagList                     &flags,
                 const StdRegions::ConstFactorMap   &factors,
                 const StdRegions::VarCoeffMap      &varcoeff,
                 const MultiRegions::VarFactorsMap &varfactors,
@@ -297,6 +297,9 @@ namespace Nektar
             {
                 return m_traceBndMap;
             }
+            inline virtual void v_SetBndCondBwdWeight(
+                const int index, 
+                const NekDouble value);
         };
 
         typedef std::shared_ptr<DisContField3DHomogeneous1D>
@@ -324,6 +327,12 @@ namespace Nektar
             &DisContField3DHomogeneous1D::UpdateBndConditions()
         {
             return m_bndConditions;
+        }
+        inline void DisContField3DHomogeneous1D::v_SetBndCondBwdWeight(
+            const int index, 
+            const NekDouble value)
+        {
+            m_bndCondBndWeight[index]   =   value;
         }
     } //end of namespace
 } //end of namespace

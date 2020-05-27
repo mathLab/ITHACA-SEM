@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Outputs time when solution first drops below a threshold value.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <SolverUtils/Filters/FilterThresholdMin.h>
 
@@ -60,14 +61,14 @@ FilterThresholdMin::FilterThresholdMin(
     auto it = pParams.find("ThresholdValue");
     ASSERTL0(it != pParams.end(), "Missing parameter 'ThresholdValue'.");
     LibUtilities::Equation equ1(
-        m_session->GetExpressionEvaluator(), it->second);
+        m_session->GetInterpreter(), it->second);
     m_thresholdValue = equ1.Evaluate();
 
     // InitialValue
     it = pParams.find("InitialValue");
     ASSERTL0(it != pParams.end(), "Missing parameter 'InitialValue'.");
     LibUtilities::Equation equ2(
-        m_session->GetExpressionEvaluator(), it->second);
+        m_session->GetInterpreter(), it->second);
     m_initialValue = equ2.Evaluate();
 
     // StartTime
@@ -76,7 +77,7 @@ FilterThresholdMin::FilterThresholdMin(
     if (it != pParams.end())
     {
         LibUtilities::Equation equ(
-            m_session->GetExpressionEvaluator(), it->second);
+            m_session->GetInterpreter(), it->second);
         m_startTime = equ.Evaluate();
     }
 
@@ -122,6 +123,8 @@ void FilterThresholdMin::v_Initialise(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     m_threshold = Array<OneD, NekDouble> (
             pFields[m_thresholdVar]->GetNpoints(), m_initialValue);
 }
@@ -160,6 +163,8 @@ void FilterThresholdMin::v_Finalise(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     std::stringstream vOutputFilename;
     vOutputFilename << m_outputFile << ".fld";
 

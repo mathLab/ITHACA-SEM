@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,6 +35,8 @@
 #ifndef NEKTAR_LIB_UTILITIES_COMMDATATYPE_H
 #define NEKTAR_LIB_UTILITIES_COMMDATATYPE_H
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <vector>
 
@@ -47,6 +48,16 @@ namespace Nektar
 namespace LibUtilities
 {
 typedef MPI_Datatype CommDataType;
+}
+}
+
+#elif NEKTAR_USING_PETSC
+
+namespace Nektar
+{
+namespace LibUtilities
+{
+typedef unsigned int CommDataType;
 }
 }
 
@@ -96,6 +107,7 @@ public:
     }
     static int GetCount(const T &val)
     {
+        boost::ignore_unused(val);
         return 1;
     }
 
@@ -114,13 +126,19 @@ public:
     }
     static void *GetPointer(std::vector<elemT> &val)
     {
+        ASSERTL1(!val.empty(),
+                 "Vector cannot be empty when trying to use GetPointer to "
+                 "access a pointer to the first element.");
         return &val[0];
     }
     static const void *GetPointer(const std::vector<elemT> &val)
     {
+        ASSERTL1(!val.empty(),
+                 "Vector cannot be empty when trying to use GetPointer to "
+                 "access a pointer to the first element.");
         return &val[0];
     }
-    static int GetCount(const std::vector<elemT> &val)
+    static size_t GetCount(const std::vector<elemT> &val)
     {
         return val.size();
     }
@@ -145,9 +163,9 @@ public:
     {
         return val.get();
     }
-    static int GetCount(const Array<OneD, elemT> &val)
+    static size_t GetCount(const Array<OneD, elemT> &val)
     {
-        return val.num_elements();
+        return val.size();
     }
     const static bool IsVector = true;
 };

@@ -42,7 +42,6 @@
 \usepackage{rotating}
 %end of Yu Pan's commands
 
-
 \title{A Programmer's Guide to Nektar++}
 
 %\makeatletter\@addtoreset{chapter}{part}\makeatother%
@@ -69,13 +68,9 @@
 \tableofcontents*
 \fi
 %
-\clearpage
-
-\input{test.tex}
-
 \tableofcontents
 
-\input{preface/preface.tex}
+\import{preface/}{preface}
 
 \input{introduction/introduction.tex}
 %
@@ -85,20 +80,20 @@
 \part{Building-Blocks of Our Framework (Inside the Library)} \label{part:library}
 
 
-\input{library/library-master.tex}
+\import{library/}{library-master}
 %%
 \part{Solvers} \label{part:solvers}
 
-\input{solvers/solvers-master.tex}
+\import{solvers/}{solvers-master}
 
 %%
 \part{Utilities} \label{part:utilities}
 
-\input{utilities/utilities-master.tex}
+\import{utilities/}{utilities-master}
 
 \part{NekPy: Python interface to \nek{}} \label{part:nekpy}
 
-\input{python/python-master.tex}
+\import{python/}{python-master}
 
 
 \bibliographystyle{plain}

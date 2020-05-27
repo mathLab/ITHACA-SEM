@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: PtScotch partitioner interface
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/Communication/CommMpi.h>
 #include <SpatialDomains/MeshPartitionPtScotch.h>
@@ -81,6 +82,8 @@ void MeshPartitionPtScotch::PartitionGraphImpl(
     Nektar::Array<Nektar::OneD, int> &edgeWgt, int &nparts, int &volume,
     Nektar::Array<Nektar::OneD, int> &part)
 {
+    boost::ignore_unused(nVertConds, vertSize, edgeWgt, volume);
+
     LibUtilities::CommMpiSharedPtr mpiComm = std::dynamic_pointer_cast<
         LibUtilities::CommMpi>(m_comm->GetRowComm());
 
@@ -90,7 +93,7 @@ void MeshPartitionPtScotch::PartitionGraphImpl(
     SCOTCH_CALL(SCOTCH_dgraphInit, (&scGraph, mpiComm->GetComm()));
     SCOTCH_CALL(SCOTCH_dgraphBuild,
                 (&scGraph, 0, nVerts, nVerts, &xadj[0], &xadj[1], &vertWgt[0],
-                 NULL, adjcy.num_elements(), adjcy.num_elements(),
+                 NULL, adjcy.size(), adjcy.size(),
                  &adjcy[0], NULL, NULL));
     SCOTCH_CALL(SCOTCH_dgraphCheck, (&scGraph));
 

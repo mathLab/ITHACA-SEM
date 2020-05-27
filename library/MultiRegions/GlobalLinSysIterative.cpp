@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -68,7 +67,7 @@ namespace Nektar
             m_root    = (vComm->GetRank())? false : true;
 
             int successiveRHS;
-            
+
             if((successiveRHS = pLocToGloMap->GetSuccessiveRHS()))
             {
                 m_prevLinSol.set_capacity(successiveRHS);
@@ -84,9 +83,8 @@ namespace Nektar
         {
         }
 
-
         /**
-         * 
+         *
          */
         void GlobalLinSysIterative::v_SolveLinearSystem(
                     const int nGlobal,
@@ -217,7 +215,7 @@ namespace Nektar
             }
         }
 
-        
+
         /**
          * Calculating A-norm of an input vector,
          * A-norm(x) := sqrt( < x, Ax > )
@@ -409,7 +407,7 @@ namespace Nektar
                                        m_map + nDir);
 
             vComm->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
-            
+
             eps       = vExchange[2];
 
             if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)
@@ -425,10 +423,10 @@ namespace Nektar
             {
                 if (m_verbose && m_root)
                 {
-                    cout << "CG iterations made = " << m_totalIterations 
-                         << " using tolerance of "  << m_tolerance 
-                         << " (error = " << sqrt(eps/m_rhs_magnitude) 
-                         << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")" 
+                    cout << "CG iterations made = " << m_totalIterations
+                         << " using tolerance of "  << m_tolerance
+                         << " (error = " << sqrt(eps/m_rhs_magnitude)
+                         << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")"
                          << endl;
                 }
                 return;
@@ -462,12 +460,13 @@ namespace Nektar
             // Continue until convergence
             while (true)
             {
+
                 if(k >= m_maxiter)
                 {
                     if (m_root)
                     {
-                        cout << "CG iterations made = " << m_totalIterations 
-                             << " using tolerance of "  << m_tolerance 
+                        cout << "CG iterations made = " << m_totalIterations
+                             << " using tolerance of "  << m_tolerance
                              << " (error = " << sqrt(eps/m_rhs_magnitude)
                              << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")"
                              << endl;
@@ -523,8 +522,8 @@ namespace Nektar
                 {
                     if (m_verbose && m_root)
                     {
-                        cout << "CG iterations made = " << m_totalIterations 
-                             << " using tolerance of "  << m_tolerance 
+                        cout << "CG iterations made = " << m_totalIterations
+                             << " using tolerance of "  << m_tolerance
                              << " (error = " << sqrt(eps/m_rhs_magnitude)
                              << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")"
                              << endl;
@@ -545,7 +544,7 @@ namespace Nektar
             const NekVector<NekDouble> &pIn)
         {
             Array<OneD, NekDouble> vExchange(1, 0.0);
-            if (m_map.num_elements() > 0)
+            if (m_map.size() > 0)
             {
                 vExchange[0] = Vmath::Dot2(pIn.GetDimension(),
                                         &pIn[0],&pIn[0],&m_map[0]);
@@ -566,8 +565,8 @@ namespace Nektar
             }
             else
             {
-                m_rhs_magnitude = (m_rhs_mag_sm*(m_rhs_magnitude) + 
-                                   (1.0-m_rhs_mag_sm)*new_rhs_mag); 
+                m_rhs_magnitude = (m_rhs_mag_sm*(m_rhs_magnitude) +
+                                   (1.0-m_rhs_mag_sm)*new_rhs_mag);
             }
         }
 

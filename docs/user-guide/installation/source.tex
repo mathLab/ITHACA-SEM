@@ -33,7 +33,8 @@ There are two ways to obtain the source code for \nekpp:
     \end{lstlisting}
     \begin{tipbox}
     You can easily switch to using the authenticated access from anonymous
-    access at a later date.
+    access at a later date by running\\
+    \footnotesize\texttt{git remote set-url origin git@gitlab.nektar.info:nektar/nektar.git}
     \end{tipbox}
 	\end{itemize}
 \end{itemize}
@@ -44,7 +45,7 @@ There are two ways to obtain the source code for \nekpp:
 functionality. Some of these are \emph{required} and must be installed prior to
 compiling Nektar++, most of which are available as pre-built \emph{system}
 packages on most Linux distributions or can be installed manually by a
-\emph{user}. Others are optional and required only for specific features, or can
+\emph{user}. Typically, the development packages, with a \emph{-dev} or \emph{-devel} suffix, are required to compile codes against these libraries. Others are optional and required only for specific features, or can
 be downloaded and compiled for use with Nektar++ \emph{automatically} (but not
 installed system-wide).
 
@@ -54,43 +55,42 @@ installed system-wide).
         &      & \multicolumn{3}{c}{Installation} & \\ \cmidrule(r){3-5}
 Package & Req. & Sys. & User & Auto.              & Note \\
 \midrule
-C++ compiler    & \cmark & \cmark & & & gcc, icc, etc \\
-CMake  $>2.8.7$ & \cmark & \cmark & \cmark &        & Ncurses
+C++ compiler    & \cmark & \cmark & & & gcc, icc, etc, supporting C++11 \\
+CMake $>2.8.11$ & \cmark & \cmark & \cmark &        & Ncurses
 GUI optional
 \\
-BLAS            & \cmark & \cmark & \cmark &        & Or MKL,
+BLAS            & \cmark & \cmark & \cmark & \cmark & Or MKL,
 ACML, OpenBLAS
 \\
-LAPACK          & \cmark & \cmark & \cmark &        & \\
-Boost $>=1.52$   & \cmark & \cmark & \cmark & \cmark & Compile
+LAPACK          & \cmark & \cmark & \cmark & \cmark & \\
+Boost $>=1.56$   & \cmark & \cmark & \cmark & \cmark & Compile
 with iostreams
 \\
-Scotch          &        & \cmark & \cmark & \cmark & Required
+TinyXML         & \cmark & \cmark & \cmark & \cmark & For reading XML input files\\
+Scotch          & \cmark & \cmark & \cmark & \cmark & Required
 for multi-level static condensation, highly recommended\\
 METIS           &        & \cmark & \cmark & \cmark &
 Alternative mesh partitioning\\
 FFTW $>3.0$     &        & \cmark & \cmark & \cmark & For
 high-performance FFTs\\
-ARPACK $>2.0$   &        & \cmark & \cmark &        & For
+ARPACK $>2.0$   &        & \cmark & \cmark & \cmark & For
 arnoldi algorithms\\
-OpenMPI         &        & \cmark &        &        & For
-parallel execution\\
+MPI             &        & \cmark & \cmark &        & For
+parallel execution (OpenMPI, MPICH, Intel MPI, etc)\\
 GSMPI           &        &        &        & \cmark & For
 parallel execution\\
 HDF5            &        & \cmark & \cmark & \cmark & For
 large-scale parallel I/O (requires CMake >3.1)\\
-PETSc           &        &        & \cmark & \cmark &
+OpenCascade CE  &        & \cmark & \cmark & \cmark & For mesh generation and optimisation\\
+PETSc           &        & \cmark & \cmark & \cmark &
 Alternative linear solvers\\
-VTK $>5.8$      &        & \cmark & \cmark &        & Visualisation
-utilities\\
+PT-Scotch       &        & \cmark & \cmark & \cmark & Required when MPI enabled\\
+Tetgen          &        & \cmark & \cmark & \cmark & For 3D mesh generation\\
+Triangle        &        & \cmark & \cmark & \cmark & For 2D mesh generation\\
+VTK $>5.8$      &        & \cmark & \cmark &        & Not required to convert field output files to VTK, only mesh files\\
 \bottomrule
 \end{tabularx}
 \end{center}
-
-\begin{warningbox}
-Boost version 1.51 has a bug which prevents \nekpp working correctly.
-Please use a newer version.
-\end{warningbox}
 
 
 \subsubsection{Quick Start}
@@ -133,7 +133,8 @@ tar -zxvf nektar++-(*\nekver*).tar.gz
         \inltt{NEKTAR\_USE\_}) for additional functionality.
         \item Select the libraries not already available on your system which
         you wish to be compiled automatically (prefixed with
-        \inltt{THIRDPARTY\_BUILD\_})
+        \inltt{THIRDPARTY\_BUILD\_}). Some of these will be automatically enabled if not found on your system.
+        \item Choose the installation location by adjusting \inltt{CMAKE\_INSTALL\_PREFIX}. By default, this will be a \inltt{dist} subdirectory within the \inltt{build} directory, which is satisfactory for most users initially.
     \end{itemize}
     A full list of configuration options can be found in
     Section~\ref{s:installation:source:cmake}.
@@ -143,7 +144,9 @@ tar -zxvf nektar++-(*\nekver*).tar.gz
     automatically download thirdparty libraries and compile them within the
     \nekpp directory. If you have administrative access to your machine, it is
     recommended to install the libraries system-wide through your
-    package-management system.
+    package-management system.\\[3pt]
+    
+    If you have installed additional system packages since running CMake, you may need to wipe your build directory and rerun CMake for them to be detected.
     \end{notebox}
 
 
@@ -215,16 +218,16 @@ system-wide).
 Package & Req. & MacPorts & User & Auto.          & Note \\
 \midrule
 Xcode           & \cmark &        & & & Provides developer tools \\
-CMake  $>2.8.7$ & \cmark & \texttt{cmake}   & \cmark &        & Ncurses
+CMake $>2.8.11$ & \cmark & \texttt{cmake}   & \cmark &        & Ncurses
 GUI optional \\
 BLAS            & \cmark &                  &        &        & Part of
 Xcode \\
 LAPACK          & \cmark &                  &        &        & Part of
 Xcode \\
-Boost $>=1.52$   & \cmark & \texttt{boost}   & \cmark & \cmark & Compile
+Boost $>=1.56$  & \cmark & \texttt{boost}   & \cmark & \cmark & Compile
 with iostreams \\
 TinyXML         & \cmark & \texttt{tinyxml} & \cmark & \cmark & \\
-Scotch          &        & \texttt{scotch}  & \cmark & \cmark & Required
+Scotch          & \cmark & \texttt{scotch}  & \cmark & \cmark & Required
 for multi-level static condensation, highly recommended\\
 METIS           &        & \texttt{metis}   & \cmark & \cmark &
 Alternative mesh partitioning\\
@@ -236,12 +239,16 @@ OpenMPI         &        & \texttt{openmpi} &        &        & For
 parallel execution\\
 GSMPI           &        &                  &        & \cmark & For
 parallel execution\\
-HDF5            &        & \cmark & \cmark & \cmark & For
+HDF5            &        &                  & \cmark & \cmark & For
 large-scale parallel I/O (requires CMake >3.1)\\
+OpenCascade CE  &        &                  & \cmark & \cmark & For mesh generation and optimisation\\
 PETSc           &        & \texttt{petsc}   & \cmark & \cmark &
 Alternative linear solvers\\
+PT-Scotch       &        &  & \cmark & \cmark & Required when MPI enabled\\
+Tetgen          &        &  & \cmark & \cmark & For 3D mesh generation\\
+Triangle        &        &  & \cmark & \cmark & For 2D mesh generation\\
 VTK $>5.8$      &        & \texttt{vtk}     & \cmark &        &
-Visualisation utilities\\
+Not required to convert field output files to VTK, only mesh files\\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -308,7 +315,7 @@ tar -zxvf nektar++-(*\nekver*).tar.gz
         \item Select the libraries not already available on your system which
         you wish to be compiled automatically (prefixed with
         \inltt{THIRDPARTY\_BUILD\_})
-        \item
+        \item Choose the installation location by adjusting \inltt{CMAKE\_INSTALL\_PREFIX}. By default, this will be a \inltt{dist} subdirectory within the \inltt{build} directory, which is satisfactory for most users initially.
     \end{itemize}
     A full list of configuration options can be found in
     Section~\ref{s:installation:source:cmake}.
@@ -375,7 +382,7 @@ MS Visual Studio  & \cmark & \cmark &              & 2012, 2013 and 2015 known w
 CMake $\geq 3.0$  & \cmark & \cmark &              & \\
 BLAS              & \cmark & \cmark & \cmark       & \\
 LAPACK            & \cmark & \cmark & \cmark       & \\
-Boost $\geq 1.55$ & \cmark & \cmark & \cmark       & Compile with iostreams\\
+Boost $\geq 1.56$ & \cmark & \cmark & \cmark       & Compile with iostreams\\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -387,7 +394,6 @@ Boost $\geq 1.55$ & \cmark & \cmark & \cmark       & Compile with iostreams\\
   work). This can be obtained from Microsoft free of charge by using their
   Community developer tools from
   \url{https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx}.
-  \item Install WinRAR from \url{http://www.rarlab.com/download.htm}.
   \item Install CMake 3.0+ from \url{http://www.cmake.org/download/}. When
   prompted, select the option to add CMake to the system PATH.
   \item (Optional) Install Git from \url{http://git-scm.com/download/win} to use
@@ -412,7 +418,7 @@ Boost $\geq 1.55$ & \cmark & \cmark & \cmark       & Compile with iostreams\\
 	next to \emph{Variable name} and \inlsh{C:\textbackslash local\textbackslash
 	boost\_1\_61\_0} next to\emph{Variable value}.
   \end{itemize}
-  \item Unpack \inlsh{nektar++-\nekver.tar.gz} using WinRAR.
+  \item Unpack \inlsh{nektar++-\nekver.zip}.
 
   \begin{notebox}
     Some Windows versions do not recognise the path of a folder which has
@@ -504,14 +510,12 @@ Components of the \nekpp package can be selected using the following options:
     Installs the Python wrapper to \nekpp. Requires running the following command 
     after installing \nekpp in order to install the Python package for the 
     current user:
-
     \begin{lstlisting}[style=BashInputStyle]
     make nekpy-install-user
     \end{lstlisting}
 
     Alternatively, the Python package can be installed for all users by running
     the following command with appropriate priviledges:
-
     \begin{lstlisting}[style=BashInputStyle]
     make nekpy-install-system
     \end{lstlisting}
@@ -539,52 +543,26 @@ Components of the \nekpp package can be selected using the following options:
 
     \item \inlsh{NEKTAR\_BUILD\_UTILITIES}
 
-    Compiles utilities for pre- and post-processing simulation data.
-
-    \item \inlsh{NEKTAR\_DISABLE\_BACKUPS}
-
-    By default, Nektar++ solvers and the FieldConvert utility will not overwrite
-    any generated field files or output files they find an existing file with
-    the same name. Instead, the existing file will be either moved to a backup
-    file or you will be prompted to overwrite them. If you do not want this
-    behaviour, then enabling this option will cause all pre-existing output to
-    be overwritten silently.
+    Compiles utilities for pre- and post-processing simulation data, including the mesh conversion and generation tool \inltt{NekMesh} and the \inltt{FieldConvert} post-processing utility.
 
     \item \inlsh{NEKTAR\_SOLVER\_X}
 
-    Enabled compilation of the 'X' solver.
+    Enable compilation of the 'X' solver.
+    
+    \item \inlsh{NEKTAR\_UTILITY\_X}
+    
+    Enable compilation of the 'X' utility. 
 \end{itemize}
 
 A number of ThirdParty libraries are required by \nekpp. There are
 also optional libraries which provide additional functionality. These
 can be selected using the following options:
 \begin{itemize}
-    \item \inlsh{NEKTAR\_USE\_ACML}
-
-    Use the optimised BLAS library for AMD processors.
-
-    \item \inlsh{NEKTAR\_USE\_ACCELERATE\_FRAMEWORK}
-
-    Use the Mac Osx accelerate framework for BLAS and LAPACK
-    methods. This option should only be required under in a Mac OSX
-    environment.
-
     \item \inlsh{NEKTAR\_USE\_ARPACK}
 
     Build \nekpp with support for ARPACK. This provides routines used for
     linear stability analyses. Alternative Arnoldi algorithms are also
     implemented directly in \nekpp.
-
-    \item \inlsh{NEKTAR\_USE\_BLAS\_LAPACK} (Required)
-
-    Enables the use of Basic Linear Algebra Subroutines libraries for linear
-    algebra operations.
-
-    \item \inlsh{NEKTAR\_USE\_SYSTEM\_BLAS\_LAPACK} (Recommended)
-
-    On Linux systems, use the default BLAS and LAPACK library on the system.
-    This may not be the implementation offering the highest performance for your
-    architecture, but it is the most likely to work without problem.
 
     \item \inlsh{NEKTAR\_USE\_CCM}
 
@@ -595,6 +573,10 @@ can be selected using the following options:
     output currently needs to be converted to ascii format using the
     Tecplot package.
 
+    \item \inlsh{NEKTAR\_USE\_CWIPI}
+    
+    Use the CWIPI library for enabling inter-process communication between two solvers. Solvers may also interface with third-party solvers using this package.
+    
     \item \inlsh{NEKTAR\_USE\_FFTW}
 
     Build \nekpp with support for FFTW for performing Fast Fourier Transforms
@@ -610,33 +592,29 @@ can be selected using the following options:
     that \nekpp be built with MPI support with \inlsh{NEKTAR\_USE\_MPI} enabled
     and that HDF5 is compiled with MPI support.
 
+    \item \inlsh{NEKTAR\_USE\_MESHGEN}
+    
+    Build the NekMesh utility with support for generating meshes from CAD geometries. This enables use of the OpenCascade Community Edition library, as well as Triangle and Tetgen.
+    
     \item \inlsh{NEKTAR\_USE\_METIS}
 
     Build \nekpp with support for the METIS graph partitioning library. This
     provides both an alternative mesh partitioning algorithm to SCOTCH for
     parallel simulations.
 
-    \item \inlsh{NEKTAR\_USE\_MKL}
-
-    Use the Intel MKL library. This is typically available on cluster
-    environments and should offer performance tuned for the specific cluster
-    environment.
-
     \item \inlsh{NEKTAR\_USE\_MPI} (Recommended)
 
     Build Nektar++ with MPI parallelisation. This allows solvers to be run in
     serial or parallel.
 
-    \item \inlsh{NEKTAR\_USE\_OPENBLAS}
-
-    Use OpenBLAS for the BLAS library. OpenBLAS is based on the Goto BLAS
-    implementation and generally offers better performance than a non-optimised
-    system BLAS. However, the library must be installed on the system.
-
     \item \inlsh{NEKTAR\_USE\_PETSC}
 
     Build \nekpp with support for the PETSc package for solving linear systems.
 
+    \item \inlsh{NEKTAR\_USE\_PYTHON3} (Requires \inlsh{NEKTAR\_BUILD\_PYTHON})
+    
+    Enables the generation of Python3 interfaces.
+    
     \item \inlsh{NEKTAR\_USE\_SCOTCH} (Recommended)
 
     Build \nekpp with support for the SCOTCH graph partitioning library. This
@@ -645,9 +623,11 @@ can be selected using the following options:
     recommended and enabled by default. However for systems that do not support
     SCOTCH build requirements (e.g. Windows), this can be disabled.
 
-    \item \inlsh{NEKTAR\_USE\_SMV}
+    \item \inlsh{NEKTAR\_USE\_SYSTEM\_BLAS\_LAPACK} (Recommended)
 
-    Build \nekpp with support for optimised sparse matrix-vector operations.
+    On Linux systems, use the default BLAS and LAPACK library on the system.
+    This may not be the implementation offering the highest performance for your
+    architecture, but it is the most likely to work without problem.
 
     \item \inlsh{NEKTAR\_USE\_VTK}
 
@@ -663,6 +643,14 @@ can be selected using the following options:
 The \inlsh{THIRDPARTY\_BUILD\_X} options select which third-party libraries are
 automatically built during the \nekpp build process. Below are the choices of X:
 \begin{itemize}
+    \item \inlsh{ARPACK}
+    
+    Library of iterative Arnoldi algorithms.
+    
+    \item \inlsh{BLAS\_LAPACK}
+    
+    Library of linear algebra routines.
+    
     \item \inlsh{BOOST}
 
     The \emph{Boost} libraries are frequently provided by the operating system,
@@ -670,15 +658,35 @@ automatically built during the \nekpp build process. Below are the choices of X:
     Boost on your system, you can enable this to have Boost configured
     automatically.
 
+    \item \inlsh{CCMIO}
+    
+    I/O library for the Star-CCM+ format.
+    
+    \item \inlsh{CWIPI}
+    
+    Library for inter-process exchange of data between different solvers.
+    
+    \item \inlsh{FFTW}
+    
+    Fast-Fourier transform library.
+    
     \item \inlsh{GSMPI}
 
     (MPI-only) Parallel communication library.
 
+    \item \inlsh{HDF5}
+    
+    Hierarchical Data Format v5 library for structured data storage.
+    
     \item \inlsh{METIS}
 
     A graph partitioning library used for mesh partitioning when \nekpp is run
     in parallel.
 
+    \item \inlsh{OCE}
+    
+    OpenCascade Community Edition 3D modelling library.
+    
     \item \inlsh{PETSC}
 
     A package for the parallel solution of linear algebra systems.
@@ -689,7 +697,39 @@ automatically built during the \nekpp build process. Below are the choices of X:
     in parallel, and reordering routines that are used in multi-level static
     condensation.
 
+    \item \inlsh{TETGEN}
+    
+    3D tetrahedral meshing library.
+    
     \item \inlsh{TINYXML}
 
     Library for reading and writing XML files.
+    
+    \item \inlsh{TRIANGLE}
+    
+    2D triangular meshing library.
+\end{itemize}
+
+There are also a number of additional options to fine-tune the build:
+\begin{itemize}
+    \item \inlsh{NEKTAR\_DISABLE\_BACKUPS}
+
+    By default, Nektar++ solvers and the FieldConvert utility will not overwrite
+    any generated field files or output files they find an existing file with
+    the same name. Instead, the existing file will be either moved to a backup
+    file or you will be prompted to overwrite them. If you do not want this
+    behaviour, then enabling this option will cause all pre-existing output to
+    be overwritten silently.
+
+    \item \inlsh{NEKTAR\_TEST\_ALL}
+    
+    Enables an extra set of more substantial and long-running tests.
+    
+    \item \inlsh{NEKTAR\_TEST\_USE\_HOSTFILE}
+    
+    By default, MPI tests are run directly with the \inltt{mpiexec} command
+    together with the number of cores. If your MPI installation requires a
+    hostfile, enabling this option adds the command line argument
+    \inltt{-hostfile hostfile} to the command line arguments when tests are run
+    with \inltt{ctest} or the \inltt{Tester} executable.
 \end{itemize}

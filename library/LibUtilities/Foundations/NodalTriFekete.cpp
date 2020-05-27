@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -48,7 +47,9 @@ namespace Nektar
 {
     namespace LibUtilities
     {
-
+        bool NodalTriFekete::initPointsManager[] = {
+            PointsManager().RegisterCreator(PointsKey(0, eNodalTriFekete),       NodalTriFekete::Create)
+        };
 
         // ////////////////////////////////////////////////////////
         //  Coordinate the nodal trianlge Fekete points
@@ -284,10 +285,10 @@ namespace Nektar
             //which will put them into sets of ever decreasing size
             //which can be bubble sorted by x to obtain the distrobution
 
-            Array<OneD, NekDouble> xc(m_points[0].num_elements() - iend);
-            Array<OneD, NekDouble> yc(m_points[0].num_elements() - iend);
+            Array<OneD, NekDouble> xc(m_points[0].size() - iend);
+            Array<OneD, NekDouble> yc(m_points[0].size() - iend);
             int ct = 0;
-            for(i = iend; i < m_points[0].num_elements(); i++, ct++)
+            for(i = iend; i < m_points[0].size(); i++, ct++)
             {
                 xc[ct] = m_points[0][i];
                 yc[ct] = m_points[1][i];
@@ -298,7 +299,7 @@ namespace Nektar
             while(repeat)
             {
                 repeat = false;
-                for(i = 0; i < xc.num_elements() - 1; i++)
+                for(i = 0; i < xc.size() - 1; i++)
                 {
                     if(yc[i] > yc[i+1])
                     {
@@ -333,7 +334,7 @@ namespace Nektar
 
             //copy back in
             ct = 0;
-            for(i = iend; i < m_points[0].num_elements(); i++, ct++)
+            for(i = iend; i < m_points[0].size(); i++, ct++)
             {
                 m_points[0][i] = xc[ct];
                 m_points[1][i] = yc[ct];

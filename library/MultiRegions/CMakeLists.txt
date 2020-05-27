@@ -1,4 +1,5 @@
 SET(MULTI_REGIONS_SOURCES
+./AssemblyMap/AssemblyCommDG.cpp
 ./AssemblyMap/AssemblyMap.cpp
 ./AssemblyMap/AssemblyMapCG.cpp
 ./AssemblyMap/AssemblyMapDG.cpp
@@ -35,7 +36,6 @@ GlobalLinSysIterativeStaticCond.cpp
 GlobalLinSysStaticCond.cpp
 GlobalMatrix.cpp
 GlobalMatrixKey.cpp
-GlobalOptimizationParameters.cpp
 Preconditioner.cpp
 PreconditionerDiagonal.cpp
 PreconditionerLowEnergy.cpp
@@ -76,7 +76,6 @@ GlobalLinSysIterativeStaticCond.h
 GlobalLinSysStaticCond.h
 GlobalMatrix.h
 GlobalMatrixKey.h
-GlobalOptimizationParameters.h
 MultiRegions.hpp
 MultiRegionsDeclspec.h
 Preconditioner.h
@@ -87,6 +86,7 @@ SubStructuredGraph.h
 )
 
 SET(ASSEMBLY_MAP_HEADERS
+./AssemblyMap/AssemblyCommDG.h
 ./AssemblyMap/AssemblyMap.h
 ./AssemblyMap/AssemblyMapCG.h
 ./AssemblyMap/AssemblyMapDG.h
@@ -144,7 +144,7 @@ ENDIF( NEKTAR_USE_MPI )
 
 IF( NEKTAR_USE_PETSC )
     TARGET_LINK_LIBRARIES(MultiRegions LINK_PRIVATE ${PETSC_LIBRARIES})
-    ADD_DEPENDENCIES(MultiRegions petsc-3.7.7)
+    ADD_DEPENDENCIES(MultiRegions petsc-3.11.4)
 ENDIF( NEKTAR_USE_PETSC )
 
 IF (NEKTAR_BUILD_PYTHON)

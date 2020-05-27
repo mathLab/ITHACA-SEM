@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -36,8 +35,8 @@
 #ifndef NEKMESHUTILS_CADSYSTEM_CADCURVE
 #define NEKMESHUTILS_CADSYSTEM_CADCURVE
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 #include <NekMeshUtils/CADSystem/CADObject.h>
 
@@ -78,7 +77,13 @@ public:
      *
      * @return Array of two entries, min and max parametric coordinate.
      */
-    virtual Array<OneD, NekDouble> GetBounds() = 0;
+    NEKMESHUTILS_EXPORT virtual Array<OneD, NekDouble> GetBounds() = 0;
+
+    /**
+     * @brief Returns the minimum and maximum parametric coords t of the curve.
+     */
+    NEKMESHUTILS_EXPORT virtual void GetBounds(
+        NekDouble &tmin, NekDouble &tmax) = 0;
 
     /**
      * @brief Calculates the arclength between the two paremetric points \p ti
@@ -88,7 +93,8 @@ public:
      * @param tf Second parametric coordinate.
      * @return Arc length between \p ti and \p tf.
      */
-    virtual NekDouble Length(NekDouble ti, NekDouble tf) = 0;
+    NEKMESHUTILS_EXPORT virtual NekDouble Length(
+        NekDouble ti, NekDouble tf) = 0;
 
     /**
      * @brief Gets the location (x,y,z) in an array out of the curve at
@@ -97,17 +103,26 @@ public:
      * @param t Parametric coordinate
      * @return Array of x,y,z
      */
-    virtual Array<OneD, NekDouble> P(NekDouble t) = 0;
+    NEKMESHUTILS_EXPORT virtual Array<OneD, NekDouble> P(NekDouble t) = 0;
+
+    /**
+     * @brief Gets the location (x,y,z) in an array out of the curve at
+     * point \p t.
+     *
+     * @param t Parametric coordinate
+     */
+    NEKMESHUTILS_EXPORT virtual void P(
+        NekDouble t, NekDouble &x, NekDouble &y, NekDouble &z) = 0;
 
     /**
      * @brief Gets the second derivatives at t
      */
-    virtual Array<OneD, NekDouble> D2(NekDouble t) = 0;
+    NEKMESHUTILS_EXPORT virtual Array<OneD, NekDouble> D2(NekDouble t) = 0;
 
     /**
      * @brief Calculates the radius of curvature of the curve at point t
      */
-    virtual NekDouble Curvature(NekDouble t) = 0;
+    NEKMESHUTILS_EXPORT virtual NekDouble Curvature(NekDouble t) = 0;
 
     /**
      * @brief Calculates the parametric coordinate and arclength location
@@ -118,14 +133,14 @@ public:
      *
      * @todo This really needs improving for accuracy.
      */
-    virtual NekDouble tAtArcLength(NekDouble s) = 0;
+    NEKMESHUTILS_EXPORT virtual NekDouble tAtArcLength(NekDouble s) = 0;
 
     /**
      * @brief Gets the start and end of the curve.
      *
      * @return Array with 6 entries of endpoints x1,y1,z1,x2,y2,z2.
      */
-    virtual Array<OneD, NekDouble> GetMinMax() = 0;
+    NEKMESHUTILS_EXPORT virtual Array<OneD, NekDouble> GetMinMax() = 0;
 
     /**
      * @brief set the ids of the surfaces either side of the curve
@@ -139,8 +154,8 @@ public:
      * @brief returns the ids of surfaces bound by this curve as well as their
      *        Orientation with respect to the loop of curves
      */
-    std::vector<std::pair<CADSurfSharedPtr, CADOrientation::Orientation> >
-        GetAdjSurf()
+    std::vector<std::pair<std::weak_ptr<CADSurf>, CADOrientation::Orientation>>
+    GetAdjSurf()
     {
         return m_adjSurfs;
     }
@@ -174,32 +189,32 @@ public:
      * @brief locates a point in the parametric space. returns the
      * distance to the point and passes t by reference and updates it
      */
-    virtual NekDouble loct(Array<OneD, NekDouble> xyz,
-                           NekDouble &t) = 0;
+    NEKMESHUTILS_EXPORT virtual NekDouble loct(
+        Array<OneD, NekDouble> xyz, NekDouble &t) = 0;
 
     /**
      * @brief Returns the orientation of the curve with respect to a given
      * surface by id surf
      */
-    CADOrientation::Orientation GetOrienationWRT(int surf);
+    NEKMESHUTILS_EXPORT CADOrientation::Orientation GetOrienationWRT(int surf);
 
     /**
      * @brief Returns the normal to the curve which is orientate with respect
      * to the surface surf
      */
-    Array<OneD, NekDouble> NormalWRT(NekDouble t, int surf);
+    NEKMESHUTILS_EXPORT Array<OneD, NekDouble> NormalWRT(NekDouble t, int surf);
 
     /**
      * @brief Returns the normal to a curve, it will always point in the concave
      * direction
      */
-    virtual Array<OneD, NekDouble> N(NekDouble t) = 0;
+    NEKMESHUTILS_EXPORT virtual Array<OneD, NekDouble> N(NekDouble t) = 0;
 
 protected:
     /// Length of edge
     NekDouble m_length;
     /// List of surfaces which this curve belongs to.
-    std::vector<std::pair<CADSurfSharedPtr, CADOrientation::Orientation> >
+    std::vector<std::pair<std::weak_ptr<CADSurf>, CADOrientation::Orientation>>
         m_adjSurfs;
     /// list of end vertices
     std::vector<CADVertSharedPtr> m_mainVerts;

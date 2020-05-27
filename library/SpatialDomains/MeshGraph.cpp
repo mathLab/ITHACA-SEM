@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -60,6 +59,10 @@
 #include <boost/iostreams/filter/zlib.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
+#include <boost/geometry/geometry.hpp>
+#include <boost/geometry/index/rtree.hpp>
+namespace bg = boost::geometry;
+
 using namespace std;
 
 namespace Nektar
@@ -74,6 +77,30 @@ MeshGraphFactory &GetMeshGraphFactory()
 {
     static MeshGraphFactory instance;
     return instance;
+}
+
+struct MeshGraph::GeomRTree
+{
+    typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> BgPoint;
+    typedef bg::model::box<BgPoint> BgBox;
+    typedef std::pair<BgBox, int> BgRtreeValue;
+
+    bg::index::rtree< BgRtreeValue, bg::index::rstar<16, 4> > m_bgTree;
+
+    void InsertGeom(GeometrySharedPtr const &geom)
+    {
+        std::array<NekDouble, 6> minMax = geom->GetBoundingBox();
+        BgPoint ptMin(minMax[0], minMax[1], minMax[2]);
+        BgPoint ptMax(minMax[3], minMax[4], minMax[5]);
+        m_bgTree.insert(
+            std::make_pair(BgBox(ptMin, ptMax), geom->GetGlobalID()));
+    }
+};
+
+MeshGraph::MeshGraph()
+{
+    m_boundingBoxTree = std::unique_ptr<MeshGraph::GeomRTree>(
+        new MeshGraph::GeomRTree());
 }
 
 /**
@@ -187,47 +214,42 @@ void MeshGraph::FillGraph()
 
 void MeshGraph::FillBoundingBoxTree()
 {
-    m_boundingBoxTree.clear();
-    switch (m_meshDimension) {
+
+    m_boundingBoxTree->m_bgTree.clear();
+    switch (m_meshDimension)
+    {
         case 1:
-            for (auto &x : m_segGeoms) 
+            for (auto &x : m_segGeoms)
             {
-                BgBox b = x.second->GetBoundingBox();
-                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+                m_boundingBoxTree->InsertGeom(x.second);
             }
             break;
         case 2:
-            for (auto &x : m_triGeoms) 
+            for (auto &x : m_triGeoms)
             {
-                BgBox b = x.second->GetBoundingBox();
-                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+                m_boundingBoxTree->InsertGeom(x.second);
             }
-            for (auto &x : m_quadGeoms) 
+            for (auto &x : m_quadGeoms)
             {
-                BgBox b = x.second->GetBoundingBox();
-                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+                m_boundingBoxTree->InsertGeom(x.second);
             }
             break;
         case 3:
-            for (auto &x : m_tetGeoms) 
+            for (auto &x : m_tetGeoms)
             {
-                BgBox b = x.second->GetBoundingBox();
-                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+                m_boundingBoxTree->InsertGeom(x.second);
             }
-            for (auto &x : m_prismGeoms) 
+            for (auto &x : m_prismGeoms)
             {
-                BgBox b = x.second->GetBoundingBox();
-                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+                m_boundingBoxTree->InsertGeom(x.second);
             }
-            for (auto &x : m_pyrGeoms) 
+            for (auto &x : m_pyrGeoms)
             {
-                BgBox b = x.second->GetBoundingBox();
-                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+                m_boundingBoxTree->InsertGeom(x.second);
             }
-            for (auto &x : m_hexGeoms) 
+            for (auto &x : m_hexGeoms)
             {
-                BgBox b = x.second->GetBoundingBox();
-                m_boundingBoxTree.insert(std::make_pair(b, x.first));
+                m_boundingBoxTree->InsertGeom(x.second);
             }
             break;
         default:
@@ -235,10 +257,10 @@ void MeshGraph::FillBoundingBoxTree()
     }
 }
 
-std::vector<BgRtreeValue> MeshGraph::GetElementsContainingPoint(
-            PointGeomSharedPtr p)
+std::vector<int> MeshGraph::GetElementsContainingPoint(
+    PointGeomSharedPtr p)
 {
-    if (m_boundingBoxTree.empty())
+    if (m_boundingBoxTree->m_bgTree.empty())
     {
         FillBoundingBoxTree();
     }
@@ -246,19 +268,25 @@ std::vector<BgRtreeValue> MeshGraph::GetElementsContainingPoint(
     NekDouble x = 0.0;
     NekDouble y = 0.0;
     NekDouble z = 0.0;
-    std::vector<BgRtreeValue> vals;
+    std::vector<GeomRTree::BgRtreeValue> matches;
 
     p->GetCoords(x, y, z);
 
-    BgBox b( BgPoint(x, y, z), BgPoint(x, y, z) );
+    GeomRTree::BgBox b(GeomRTree::BgPoint(x, y, z),
+                       GeomRTree::BgPoint(x, y, z));
 
-    m_boundingBoxTree.query(bg::index::intersects( b ),
-                            std::back_inserter( vals ));
+    m_boundingBoxTree->m_bgTree.query(bg::index::intersects(b),
+                                      std::back_inserter(matches));
+
+    std::vector<int> vals(matches.size());
+
+    for (int i = 0; i < matches.size(); ++i)
+    {
+        vals[i] = matches[i].second;
+    }
 
     return vals;
 }
-
-
 
 void MeshGraph::SetDomainRange(NekDouble xmin, NekDouble xmax, NekDouble ymin,
                                NekDouble ymax, NekDouble zmin, NekDouble zmax)
@@ -2763,7 +2791,7 @@ void MeshGraph::ReadExpansions()
                     // nummodes ");
                     if (m_session)
                     {
-                        LibUtilities::Equation nummodesEqn(m_session->GetExpressionEvaluator(), nummodesStr);
+                        LibUtilities::Equation nummodesEqn(m_session->GetInterpreter(), nummodesStr);
                         num_modes = (int)nummodesEqn.Evaluate();
                     }
                     else
@@ -3039,7 +3067,7 @@ void MeshGraph::ReadExpansions()
 
                     if (m_session)
                     {
-                        LibUtilities::Equation nummodesEqn(m_session->GetExpressionEvaluator(), nummodesStr);
+                        LibUtilities::Equation nummodesEqn(m_session->GetInterpreter(), nummodesStr);
                         num_modes_x = (int)nummodesEqn.Evaluate();
                     }
                     else
@@ -3071,7 +3099,7 @@ void MeshGraph::ReadExpansions()
                     // nummodes ");
                     if (m_session)
                     {
-                        LibUtilities::Equation nummodesEqn(m_session->GetExpressionEvaluator(), nummodesStr);
+                        LibUtilities::Equation nummodesEqn(m_session->GetInterpreter(), nummodesStr);
                         num_modes_y = (int)nummodesEqn.Evaluate();
                     }
                     else
@@ -3103,7 +3131,7 @@ void MeshGraph::ReadExpansions()
                     // nummodes ");
                     if (m_session)
                     {
-                        LibUtilities::Equation nummodesEqn(m_session->GetExpressionEvaluator(), nummodesStr);
+                        LibUtilities::Equation nummodesEqn(m_session->GetInterpreter(), nummodesStr);
                         num_modes_z = (int)nummodesEqn.Evaluate();
                     }
                     else

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: File for Expansion3D routines
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/Foundations/InterpCoeff.h>
 #include <SpatialDomains/Geometry3D.h>
@@ -143,11 +144,6 @@ namespace Nektar
 
                 NekDouble scale = invMass.Scale();
                 const NekDouble *data = invMass.GetRawPtr();
-
-                if (m_negatedNormals[face])
-                {
-                    Vmath::Neg(nquad_f, inval, 1);
-                }
 
                 // @TODO Multiply by variable coefficients
                 // @TODO: Document this (probably not needed)
@@ -306,11 +302,6 @@ namespace Nektar
                                          facePhys,     1);
                 }
 
-                if (m_negatedNormals[f])
-                {
-                    Vmath::Neg(nquad_f, facePhys, 1);
-                }
-
                 AddFaceBoundaryInt(f, FaceExp[f], facePhys, outarray,
                                    varcoeffs);
             }
@@ -342,11 +333,6 @@ namespace Nektar
 
                 Vmath::Vmul(nquad_f, normals[dir], 1, facePhys, 1, facePhys, 1);
 
-                if (m_negatedNormals[f])
-                {
-                    Vmath::Neg(nquad_f, facePhys, 1);
-                }
-
                 AddFaceBoundaryInt(f, FaceExp[f], facePhys, outarray);
             }
         }
@@ -361,6 +347,8 @@ namespace Nektar
             Array<OneD, NekDouble>        &outarray,
             const StdRegions::VarCoeffMap &varcoeffs)
         {
+            boost::ignore_unused(varcoeffs);
+
             int i;
             int order_f = FaceExp->GetNcoeffs();
             Array<OneD, NekDouble> coeff(order_f);
@@ -420,13 +408,13 @@ namespace Nektar
             StdRegions::IndexMapValuesSharedPtr map2 =
                 StdExpansion::GetIndexMap(ikey2);
 
-            ASSERTL1((*map1).num_elements() == (*map2).num_elements(),
+            ASSERTL1((*map1).size() == (*map2).size(),
                      "There is an error with the GetFaceToElementMap");
 
-            for(j = 0; j < (*map1).num_elements(); ++j)
+            for(j = 0; j < (*map1).size(); ++j)
             {
                 // j = index in the standard orientation
-                for(k = 0; k < (*map2).num_elements(); ++k)
+                for(k = 0; k < (*map2).size(); ++k)
                 {
                     // k = index in the actual orientation
                     if((*map1)[j].index == (*map2)[k].index && k != j)
@@ -723,9 +711,11 @@ namespace Nektar
             case StdRegions::eHybridDGLamToQ1:
             case StdRegions::eHybridDGLamToQ2:
                 {
-                    int i,j,k,dir;
-                    int nbndry = NumDGBndryCoeffs();
-                    //int nquad  = GetNumPoints(0);
+                    int i       = 0;
+                    int j       = 0;
+                    int k       = 0;
+                    int dir     = 0;
+                    int nbndry  = NumDGBndryCoeffs();
                     int coordim = GetCoordim();
                     int ncoeffs = GetNcoeffs();
                     int nfaces  = GetNfaces();
@@ -1040,11 +1030,6 @@ namespace Nektar
                                                       work,       1);
                             }
 
-                            if (m_negatedNormals[f])
-                            {
-                                Vmath::Neg(nquad_f, work, 1);
-                            }
-
                             // - tau (ulam - lam)
                             // Corresponds to the G and BU terms.
                             for(j = 0; j < order_f; ++j)
@@ -1154,11 +1139,6 @@ namespace Nektar
                 for (i = 0; i < GetNfaces(); ++i)
                 {
                     m_requireNeg[i] = false;
-                    if (m_negatedNormals[i])
-                    {
-                        m_requireNeg[i] = true;
-                        continue;
-                    }
 
                     Expansion2DSharedPtr faceExp = m_faceExp[i].lock();
 
@@ -1180,7 +1160,7 @@ namespace Nektar
             StdRegions::IndexMapValuesSharedPtr map =
                 StdExpansion::GetIndexMap(ikey);
 
-            int order_e  = (*map).num_elements(); // Order of the element
+            int order_e  = (*map).size(); // Order of the element
             int n_coeffs = FaceExp->GetNcoeffs();
 
             Array<OneD, NekDouble> faceCoeffs(n_coeffs);
@@ -1430,7 +1410,7 @@ namespace Nektar
                 StdRegions::IndexMapValuesSharedPtr map2 =
                     StdExpansion::GetIndexMap(ikey2);
 
-                ASSERTL1((*map1).num_elements() == (*map2).num_elements(),
+                ASSERTL1((*map1).size() == (*map2).size(),
                          "There is an error with the GetFaceToElementMap");
 
                 for (i = 0; i < face; ++i)
@@ -1438,11 +1418,11 @@ namespace Nektar
                     cnt += GetFaceNcoeffs(i);
                 }
 
-                for(i = 0; i < (*map1).num_elements(); ++i)
+                for(i = 0; i < (*map1).size(); ++i)
                 {
                     int idx = -1;
 
-                    for(j = 0; j < (*map2).num_elements(); ++j)
+                    for(j = 0; j < (*map2).size(); ++j)
                     {
                         if((*map1)[i].index == (*map2)[j].index)
                         {
@@ -1594,7 +1574,7 @@ namespace Nektar
                 {
                     MatEdgeLocation[eid] = GetEdgeInverseBoundaryMap(
                                             geom->GetVertexEdgeMap(vid, eid));
-                    nmodes = MatEdgeLocation[eid].num_elements();
+                    nmodes = MatEdgeLocation[eid].size();
 
                     if (nmodes)
                     {
@@ -1612,7 +1592,7 @@ namespace Nektar
                 {
                     MatFaceLocation[fid] = GetFaceInverseBoundaryMap(
                                             geom->GetVertexFaceMap(vid, fid));
-                    nmodes = MatFaceLocation[fid].num_elements();
+                    nmodes = MatFaceLocation[fid].size();
 
                     if (nmodes)
                     {
@@ -1733,14 +1713,14 @@ namespace Nektar
                 }
 
                 // Populate R with R_{ve} components
-                for (n = 0; n < edgemodearray.num_elements(); ++n)
+                for (n = 0; n < edgemodearray.size(); ++n)
                 {
                     R.SetValue(GetVertexMap(vid), edgemodearray[n],
                                Sveft(0, n));
                 }
 
                 // Populate R with R_{vf} components
-                for (n = 0; n < facemodearray.num_elements(); ++n)
+                for (n = 0; n < facemodearray.size(); ++n)
                 {
                     R.SetValue(GetVertexMap(vid), facemodearray[n],
                                Sveft(0, n + nedgemodesconnected));
@@ -1830,7 +1810,7 @@ namespace Nektar
                 {
                     MatFaceLocation[fid] = GetFaceInverseBoundaryMap(
                                             geom->GetEdgeFaceMap(eid, fid));
-                    nmodes = MatFaceLocation[fid].num_elements();
+                    nmodes = MatFaceLocation[fid].size();
 
                     if (nmodes)
                     {
@@ -2101,7 +2081,7 @@ namespace Nektar
             // Map from full system to statically condensed system (i.e reverse
             // GetBoundaryMap)
             map<int, int> reversemap;
-            for (j = 0; j < bmap.num_elements(); ++j)
+            for (j = 0; j < bmap.size(); ++j)
             {
                 reversemap[bmap[j]] = j;
             }
@@ -2215,7 +2195,7 @@ namespace Nektar
             // Map from full system to statically condensed system (i.e reverse
             // GetBoundaryMap)
             map<int, int> reversemap;
-            for (j = 0; j < bmap.num_elements(); ++j)
+            for (j = 0; j < bmap.size(); ++j)
             {
                 reversemap[bmap[j]] = j;
             }
@@ -2326,7 +2306,7 @@ namespace Nektar
 
             // Get local face pts and put into o_tmp
             GetFacePhysMap(face,faceids);
-            Vmath::Gathr(faceids.num_elements(),inarray,faceids,o_tmp);
+            Vmath::Gathr(faceids.size(),inarray,faceids,o_tmp);
 
 
             int to_id0,to_id1;
@@ -2375,7 +2355,7 @@ namespace Nektar
                                                  const int nq1,
                                                  Array<OneD, int> &idmap)
         {
-            if(idmap.num_elements() != nq0*nq1)
+            if(idmap.size() != nq0*nq1)
             {
                 idmap = Array<OneD,int>(nq0*nq1);
             }
@@ -2410,7 +2390,7 @@ namespace Nektar
                                                   const int nq1,
                                                   Array<OneD, int> &idmap)
         {
-            if(idmap.num_elements() != nq0*nq1)
+            if(idmap.size() != nq0*nq1)
             {
                 idmap = Array<OneD,int>(nq0*nq1);
             }

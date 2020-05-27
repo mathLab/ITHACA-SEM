@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <StdRegions/StdExpansion3D.h>
 
 #ifdef max
@@ -48,10 +49,10 @@ namespace Nektar
         StdExpansion3D::StdExpansion3D()
         {
         }
-        
-        StdExpansion3D::StdExpansion3D(int                           numcoeffs, 
+
+        StdExpansion3D::StdExpansion3D(int                           numcoeffs,
                                        const LibUtilities::BasisKey &Ba,
-                                       const LibUtilities::BasisKey &Bb, 
+                                       const LibUtilities::BasisKey &Bb,
                                        const LibUtilities::BasisKey &Bc) :
             StdExpansion(numcoeffs,3,Ba,Bb,Bc)
         {
@@ -61,7 +62,7 @@ namespace Nektar
             StdExpansion(T)
         {
         }
-        
+
         StdExpansion3D::~StdExpansion3D()
         {
         }
@@ -76,11 +77,11 @@ namespace Nektar
             const int nquad2 = m_base[2]->GetNumPoints();
 
             Array<OneD, NekDouble> wsp(nquad0*nquad1*nquad2);
-            
+
             // copy inarray to wsp in case inarray is used as outarray
             Vmath::Vcopy(nquad0*nquad1*nquad2, &inarray[0], 1, &wsp[0], 1);
-            
-            if (out_dx.num_elements() > 0)
+
+            if (out_dx.size() > 0)
             {
                 NekDouble  *D0 = &((m_base[0]->GetD())->GetPtr())[0];
 
@@ -88,7 +89,7 @@ namespace Nektar
                             D0,nquad0,&wsp[0],nquad0,0.0,&out_dx[0],nquad0);
             }
 
-            if (out_dy.num_elements() > 0) 
+            if (out_dy.size() > 0)
             {
                 NekDouble   *D1 = &((m_base[1]->GetD())->GetPtr())[0];
                 for (int j = 0; j < nquad2; ++j)
@@ -100,7 +101,7 @@ namespace Nektar
                 }
             }
 
-            if (out_dz.num_elements() > 0) 
+            if (out_dz.size() > 0)
             {
                 NekDouble     *D2 = &((m_base[2]->GetD())->GetPtr())[0];
 
@@ -139,7 +140,7 @@ namespace Nektar
         }
 
         NekDouble StdExpansion3D::v_PhysEvaluate(
-            const Array<OneD, const NekDouble> &coords, 
+            const Array<OneD, const NekDouble> &coords,
             const Array<OneD, const NekDouble> &physvals)
         {
             Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
@@ -152,11 +153,11 @@ namespace Nektar
             WARNINGL2(coords[2] >= -1 - NekConstants::kNekZeroTol,"coord[2] < -1");
             WARNINGL2(coords[2] <=  1 + NekConstants::kNekZeroTol,"coord[2] >  1");
 
-            // Obtain local collapsed corodinate from 
-            // cartesian coordinate. 
+            // Obtain local collapsed corodinate from
+            // cartesian coordinate.
             LocCoordToLocCollapsed(coords,eta);
 
-            // Get Lagrange interpolants. 
+            // Get Lagrange interpolants.
             I[0] = m_base[0]->GetI(eta);
             I[1] = m_base[1]->GetI(eta+1);
             I[2] = m_base[2]->GetI(eta+2);
@@ -165,21 +166,21 @@ namespace Nektar
         }
 
         NekDouble StdExpansion3D::v_PhysEvaluate(
-            const Array<OneD, DNekMatSharedPtr > &I, 
+            const Array<OneD, DNekMatSharedPtr > &I,
             const Array<OneD, const NekDouble> &physvals)
         {
             NekDouble  value;
-            
+
             int Qx = m_base[0]->GetNumPoints();
             int Qy = m_base[1]->GetNumPoints();
             int Qz = m_base[2]->GetNumPoints();
-            
+
             Array<OneD, NekDouble> sumFactorization_qr = Array<OneD, NekDouble>(Qy*Qz);
             Array<OneD, NekDouble> sumFactorization_r  = Array<OneD, NekDouble>(Qz);
-            
+
             // Lagrangian interpolation matrix
             NekDouble *interpolatingNodes = 0;
-            
+
             // Interpolate first coordinate direction
             interpolatingNodes = &I[0]->GetPtr()[0];
 
@@ -193,10 +194,10 @@ namespace Nektar
             // Interpolate in third coordinate direction
             interpolatingNodes = &I[2]->GetPtr()[0];
             value = Blas::Ddot(Qz, interpolatingNodes, 1, &sumFactorization_r[0], 1);
-            
+
             return value;
         }
-        
+
 
         /**
          * @param   inarray     Input coefficients.
@@ -313,7 +314,7 @@ namespace Nektar
         {
             return v_GetFaceNormal(id);
         }
-        
+
         const NormalVector & StdExpansion3D::v_GetFaceNormal(const int face) const
         {
             auto x = m_faceNormals.find(face);
@@ -330,22 +331,7 @@ namespace Nektar
             MultiplyByStdQuadratureMetric(inarray, tmp);
             return Vmath::Vsum(nqtot, tmp, 1);
         }
-        
-        
-        void StdExpansion3D::v_NegateFaceNormal(const int face)
-        {
-            m_negatedNormals[face] = true;
-            for (int i = 0; i < GetCoordim(); ++i)
-            {
-                Vmath::Neg(m_faceNormals[face][i].num_elements(), 
-                           m_faceNormals[face][i], 1);
-            }
-        }
 
-        bool StdExpansion3D::v_FaceNormalNegated(const int face)
-        {
-            return m_negatedNormals[face];
-        }
 
         LibUtilities::BasisKey EvaluateQuadFaceBasisKey(
             const int                     facedir,
@@ -353,6 +339,7 @@ namespace Nektar
             const int                     numpoints,
             const int                     nummodes)
         {
+            boost::ignore_unused(facedir);
 
             switch(faceDirBasisType)
             {
@@ -439,7 +426,7 @@ namespace Nektar
 //                                numpoints+1,
 //                                LibUtilities::eGaussLobattoLegendre);
                             const LibUtilities::PointsKey pkey(
-	 			numpoints, 	
+	 			numpoints,
 				LibUtilities::eGaussRadauMAlpha1Beta0);
                             return LibUtilities::BasisKey(
                                 LibUtilities::eModified_B, nummodes, pkey);
@@ -451,6 +438,7 @@ namespace Nektar
                             break;
                         }
                     }
+                    break;
                 }
 
                 case LibUtilities::eGLL_Lagrange:
@@ -479,6 +467,7 @@ namespace Nektar
                             break;
                         }
                     }
+                    break;
                 }
 
                 case LibUtilities::eOrtho_A:
@@ -510,6 +499,7 @@ namespace Nektar
                             break;
                         }
                     }
+                    break;
                 }
                 default:
                 {
@@ -519,7 +509,7 @@ namespace Nektar
             }
 
             // Keep things happy by returning a value.
-            return LibUtilities::NullBasisKey; 
+            return LibUtilities::NullBasisKey;
         }
     }//end namespace
 }//end namespace

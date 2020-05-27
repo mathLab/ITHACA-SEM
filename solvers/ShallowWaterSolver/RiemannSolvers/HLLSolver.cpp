@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -64,68 +63,68 @@ namespace Nektar
      * @param hvf     Computed Riemann flux for y-momentum component 
      */
     void HLLSolver::v_PointSolve(
-        double  hL, double  huL, double  hvL,
-        double  hR, double  huR, double  hvR,
-        double &hf, double &huf, double &hvf)
+        NekDouble  hL, NekDouble  huL, NekDouble  hvL,
+        NekDouble  hR, NekDouble  huR, NekDouble  hvR,
+        NekDouble &hf, NekDouble &huf, NekDouble &hvf)
     {        
         static NekDouble g = m_params["gravity"]();
         
         // Left and Right velocities
         NekDouble uL = huL / hL;
         NekDouble vL = hvL / hL;
-	NekDouble uR = huR / hR;
+        NekDouble uR = huR / hR;
         NekDouble vR = hvR / hR;
       
 
         // Left and right wave speeds
-	NekDouble cL = sqrt(g * hL);
-	NekDouble cR = sqrt(g * hR);
+        NekDouble cL = sqrt(g * hL);
+        NekDouble cR = sqrt(g * hR);
     
-	// the two-rarefaction wave assumption
-	NekDouble hstar,fL,fR;
-	hstar = 0.5 * (cL + cR) + 0.25 * (uL - uR);
-	hstar *= hstar;
-	hstar *= (1.0/g);
+        // the two-rarefaction wave assumption
+        NekDouble hstar,fL,fR;
+        hstar = 0.5 * (cL + cR) + 0.25 * (uL - uR);
+        hstar *= hstar;
+        hstar *= (1.0/g);
 
     
-	// Compute SL
-	NekDouble SL;
-	if (hstar > hL)
-	  SL = uL - cL * sqrt(0.5*((hstar*hstar + hstar*hL)/(hL*hL)));
-	else
-	  SL = uL - cL;
+        // Compute SL
+        NekDouble SL;
+        if (hstar > hL)
+          SL = uL - cL * sqrt(0.5*((hstar*hstar + hstar*hL)/(hL*hL)));
+        else
+          SL = uL - cL;
     
-	// Compute SR
-	NekDouble SR;
-	if (hstar > hR)
-	  SR = uR + cR * sqrt(0.5*((hstar*hstar + hstar*hR)/(hR*hR)));
-	else
-	  SR = uR + cR;
+        // Compute SR
+        NekDouble SR;
+        if (hstar > hR)
+          SR = uR + cR * sqrt(0.5*((hstar*hstar + hstar*hR)/(hR*hR)));
+        else
+          SR = uR + cR;
     
-	if (SL >= 0)
-	  {
-	    hf  = hL * uL;
-	    huf  = uL * uL * hL + 0.5 * g * hL * hL;
-	    hvf  = hL * uL * vL;
-	  }
-	else if (SR <= 0)
-	  {
-	    hf  = hR * uR;
-	    huf  = uR * uR * hR + 0.5 * g * hR * hR;
-	    hvf  = hR * uR *vR;
-	  }
-	else 
-	  {
-	    hf = (SR * hL * uL - SL * hR * uR + 
-		  SL * SR * (hR - hL)) / (SR - SL);
-	    fL =  uL * uL * hL + 0.5 * g * hL * hL;
-	    fR =  uR * uR * hR + 0.5 * g * hR * hR;
-	    huf =(SR * fL - SL * fR + 
-		  SL * SR * (hR * uR - hL * uL)) / (SR - SL);
-	    fL =  uL * vL * hL;
-	    fR =  uR * vR * hR;
-	    hvf =(SR * fL - SL * fR + 
-		  SL * SR * (hR * vR - hL * vL)) / (SR - SL);
-	  }
+        if (SL >= 0)
+          {
+            hf  = hL * uL;
+            huf  = uL * uL * hL + 0.5 * g * hL * hL;
+            hvf  = hL * uL * vL;
+          }
+        else if (SR <= 0)
+          {
+            hf  = hR * uR;
+            huf  = uR * uR * hR + 0.5 * g * hR * hR;
+            hvf  = hR * uR *vR;
+          }
+        else 
+          {
+            hf = (SR * hL * uL - SL * hR * uR + 
+                  SL * SR * (hR - hL)) / (SR - SL);
+            fL =  uL * uL * hL + 0.5 * g * hL * hL;
+            fR =  uR * uR * hR + 0.5 * g * hR * hR;
+            huf =(SR * fL - SL * fR + 
+                  SL * SR * (hR * uR - hL * uL)) / (SR - SL);
+            fL =  uL * vL * hL;
+            fR =  uR * vR * hR;
+            hvf =(SR * fL - SL * fR + 
+                  SL * SR * (hR * vR - hL * vL)) / (SR - SL);
+          }
     }
 }

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Data manager for homogeneous transpositions
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/Communication/Transposition.h>
 
@@ -148,6 +149,8 @@ Transposition::Transposition(const LibUtilities::BasisKey &HomoBasis0,
                              const LibUtilities::BasisKey &HomoBasis2,
                              LibUtilities::CommSharedPtr hcomm)
 {
+    boost::ignore_unused(HomoBasis0, HomoBasis1, HomoBasis2);
+
     m_hcomm                      = hcomm;
     m_num_homogeneous_directions = 3;
 
@@ -273,7 +276,7 @@ void Transposition::TransposeXYtoZ(const Array<OneD, const NekDouble> &inarray,
         int index    = 0;
         int cnt      = 0;
 
-        int num_dofs             = inarray.num_elements();
+        int num_dofs             = inarray.size();
         int num_points_per_plane = num_dofs / m_num_points_per_proc[0];
         int num_pencil_per_proc =
             (num_points_per_plane / m_num_processes[0]) +
@@ -336,7 +339,7 @@ void Transposition::TransposeXYtoZ(const Array<OneD, const NekDouble> &inarray,
     else
     {
         int i, pts_per_plane;
-        int n = inarray.num_elements();
+        int n = inarray.size();
         int packed_len;
 
         pts_per_plane = n / m_num_points_per_proc[0];
@@ -376,7 +379,7 @@ void Transposition::TransposeZtoXY(const Array<OneD, const NekDouble> &inarray,
         int index    = 0;
         int cnt      = 0;
 
-        int num_dofs             = outarray.num_elements();
+        int num_dofs             = outarray.size();
         int num_points_per_plane = num_dofs / m_num_points_per_proc[0];
         int num_pencil_per_proc =
             (num_points_per_plane / m_num_processes[0]) +
@@ -440,7 +443,7 @@ void Transposition::TransposeZtoXY(const Array<OneD, const NekDouble> &inarray,
     else
     {
         int i, pts_per_plane;
-        int n = inarray.num_elements();
+        int n = inarray.size();
         int packed_len;
 
         // use length of inarray to determine data storage type
@@ -482,7 +485,7 @@ void Transposition::TransposeXtoYZ(const Array<OneD, const NekDouble> &inarray,
     else
     {
         int i, pts_per_line;
-        int n = inarray.num_elements();
+        int n = inarray.size();
         int packed_len;
 
         pts_per_line =
@@ -525,7 +528,7 @@ void Transposition::TransposeYZtoX(const Array<OneD, const NekDouble> &inarray,
     else
     {
         int i, pts_per_line;
-        int n = inarray.num_elements();
+        int n = inarray.size();
         int packed_len;
 
         pts_per_line =
@@ -560,6 +563,8 @@ void Transposition::TransposeYZtoZY(const Array<OneD, const NekDouble> &inarray,
                                     Array<OneD, NekDouble> &outarray,
                                     bool UseNumMode)
 {
+    boost::ignore_unused(UseNumMode);
+
     if (m_num_processes[0] > 1 || m_num_processes[1] > 1)
     {
         ASSERTL0(false, "Parallel transposition not implemented yet for "
@@ -568,7 +573,7 @@ void Transposition::TransposeYZtoZY(const Array<OneD, const NekDouble> &inarray,
     else
     {
         int n = m_num_homogeneous_points[0] * m_num_homogeneous_points[1];
-        int s = inarray.num_elements();
+        int s = inarray.size();
 
         int pts_per_line = s / n;
 
@@ -589,6 +594,8 @@ void Transposition::TransposeZYtoYZ(const Array<OneD, const NekDouble> &inarray,
                                     Array<OneD, NekDouble> &outarray,
                                     bool UseNumMode)
 {
+    boost::ignore_unused(UseNumMode);
+
     if (m_num_processes[0] > 1 || m_num_processes[1] > 1)
     {
         ASSERTL0(false, "Parallel transposition not implemented yet for "
@@ -597,7 +604,7 @@ void Transposition::TransposeZYtoYZ(const Array<OneD, const NekDouble> &inarray,
     else
     {
         int n = m_num_homogeneous_points[0] * m_num_homogeneous_points[1];
-        int s = inarray.num_elements();
+        int s = inarray.size();
 
         int pts_per_line = s / n;
 

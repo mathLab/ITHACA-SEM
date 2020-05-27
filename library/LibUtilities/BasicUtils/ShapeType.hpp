@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,13 +36,13 @@
 #include <algorithm>
 #include <vector>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 #ifdef min
 #undef min
 #endif
-
-using namespace std;
 
 namespace Nektar
 {
@@ -103,6 +102,7 @@ namespace Nektar
 
             inline int getNumberOfBndCoefficients(int Na)
             {
+                boost::ignore_unused(Na);
                 return 2;
             }
         }
@@ -255,7 +255,7 @@ namespace Nektar
                 {
                     for (int b = 0; b < Nb; ++b)
                     {
-                        for (int c = 0; c < Nc - max(a,b); ++c)
+                        for (int c = 0; c < Nc - std::max(a,b); ++c)
                         {
                             ++nCoeff;
                         }
@@ -337,7 +337,7 @@ namespace Nektar
                 returnval = modes[offset]*modes[offset+1]*modes[offset+2];
                 break;
             default:
-                ASSERTL0(false,"Unknown Shape Type");
+                NEKERROR(ErrorUtil::efatal,"Unknown Shape Type");
                 break;
             }
 
@@ -372,7 +372,7 @@ namespace Nektar
                 returnval = na*nb*nc;
                 break;
             default:
-                ASSERTL0(false,"Unknown Shape Type");
+                NEKERROR(ErrorUtil::efatal,"Unknown Shape Type");
                 break;
             }
 

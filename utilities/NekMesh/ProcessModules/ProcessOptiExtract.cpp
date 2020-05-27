@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -116,17 +115,18 @@ void ProcessOptiExtract::Process()
             {
                 for (int k = 0; k < f[j]->m_elLink.size(); k++)
                 {
-                    if (f[j]->m_elLink[k].first->GetId() == invalid[i]->GetId())
+                    if (f[j]->m_elLink[k].first.lock()->GetId() ==
+                        invalid[i]->GetId())
                     {
                         continue;
                     }
 
-                    t = inmesh.insert(f[j]->m_elLink[k].first->GetId());
+                    t = inmesh.insert(f[j]->m_elLink[k].first.lock()->GetId());
                     if (t.second)
                     {
                         m_mesh->m_element[m_mesh->m_expDim].push_back(
-                            f[j]->m_elLink[k].first);
-                        totest.push_back(f[j]->m_elLink[k].first);
+                            f[j]->m_elLink[k].first.lock());
+                        totest.push_back(f[j]->m_elLink[k].first.lock());
                     }
                 }
             }
@@ -143,17 +143,18 @@ void ProcessOptiExtract::Process()
                 {
                     for (int l = 0; l < f[k]->m_elLink.size(); l++)
                     {
-                        if (f[k]->m_elLink[l].first->GetId() == tmp[j]->GetId())
+                        if (f[k]->m_elLink[l].first.lock()->GetId() ==
+                            tmp[j]->GetId())
                         {
                             continue;
                         }
 
-                        auto t = inmesh.insert(f[k]->m_elLink[l].first->GetId());
+                        auto t = inmesh.insert(f[k]->m_elLink[l].first.lock()->GetId());
                         if (t.second)
                         {
                             m_mesh->m_element[m_mesh->m_expDim].push_back(
-                                f[k]->m_elLink[l].first);
-                            totest.push_back(f[k]->m_elLink[l].first);
+                                f[k]->m_elLink[l].first.lock());
+                            totest.push_back(f[k]->m_elLink[l].first.lock());
                         }
                     }
                 }

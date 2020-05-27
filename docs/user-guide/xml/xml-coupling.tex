@@ -11,11 +11,7 @@ The interface is configured in the \inltt{COUPLING} tag as
     ...
 </COUPLING>
 \end{lstlisting}
-The coupling type can be any of the following:
-\begin{itemize}
-    \item "File"
-    \item "Cwipi" 
-\end{itemize}
+The coupling type may be any of the types described later in this section,
 while the name can be chosen arbitrarily.
 Inside each coupling block, the send and receive frequencies are defined by the \inltt{SendSteps}  and \inltt{ReceiveSteps} parameters, respectively.
 Which variables are to be sent or received is specified by the \inltt{SendVariables} and \inltt{ReceiveVariables}.
@@ -95,7 +91,7 @@ Unlike the File-type coupling, a linear interpolation in time is applied to the 
     <I PROPERTY="RemoteName"        VALUE="Dummy1" />
     <I PROPERTY="SendSteps"         VALUE="1" />
     <I PROPERTY="SendVariables"     VALUE="u0S,v0S" />
-    <I PROPERTY="SendMethod"        VALUE="NearestNeighbour" />
+    <I PROPERTY="SendMethod"        VALUE="Evaluate" />
     <I PROPERTY="ReceiveSteps"      VALUE="1" />
     <I PROPERTY="ReceiveVariables"  VALUE="u0R,v0R" />
     <I PROPERTY="Oversample"        VALUE="5" />
@@ -105,10 +101,8 @@ Unlike the File-type coupling, a linear interpolation in time is applied to the 
 \end{lstlisting}
 
 Additional options which define the coupling include \inltt{SendMethod}, the method used to retrieve the physical values at the locations requested by the remote application.
-Available options are \inltt{NearestNeighbour}, \inltt{Shepard} and \inltt{Evaluate}. 
-The nearest neighbor interpolation gives the best performance at the cost of accuracy. 
-The last option directly evaluates the expansions using a backward transform, giving superior accuracy while being the most computationally expensive. 
-The Shepard interpolation can be a good compromise between computational efficiency and accuracy.
+Available options are \inltt{NearestNeighbour}, \inltt{Shepard} and the default \inltt{Evaluate}.
+The last option directly evaluates the expansions using a backward transform, giving superior accuracy at acceptable computational cost.
 
 When using non-conforming domains, the current application might request values outside of the computational domain of the remote application.
 How to handle these not-located points is specified by the \inltt{NotLocMethod} parameter.
@@ -125,7 +119,7 @@ Note that this can be very inefficient when using many MPI ranks.
         \midrule
         \inltt{RemoteName}      & \cmark   & - &
             Name of the remote application.\\
-        \inltt{SendMethod}      & \xmark   & \inltt{NearestNeighbour} &
+        \inltt{SendMethod}      & \xmark   & \inltt{Evaluate} &
             Specifies how to evaluate fields before sending. Available options are \inltt{NearestNeighbour}, \inltt{Shepard} and \inltt{Evaluate}.\\
         \inltt{Oversample}      & \xmark   & 0 &
             Receive fields at a higher (or lower) number of quadrature points before filtering to avoid aliasing.\\

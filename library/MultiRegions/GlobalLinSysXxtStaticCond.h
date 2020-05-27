@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -78,14 +77,14 @@ namespace Nektar
             static std::string className2;
 
             /// Constructor for full direct matrix solve.
-            GlobalLinSysXxtStaticCond(
+            MULTI_REGIONS_EXPORT GlobalLinSysXxtStaticCond(
                         const GlobalLinSysKey &mkey,
                         const std::weak_ptr<ExpList> &pExpList,
                         const std::shared_ptr<AssemblyMap>
                                                                 &locToGloMap);
 
             /// Constructor for full direct matrix solve.
-            GlobalLinSysXxtStaticCond(
+            MULTI_REGIONS_EXPORT GlobalLinSysXxtStaticCond(
                         const GlobalLinSysKey &mkey,
                         const std::weak_ptr<ExpList> &pExpList,
                         const DNekScalBlkMatSharedPtr pSchurCompl,
@@ -95,7 +94,7 @@ namespace Nektar
                         const std::shared_ptr<AssemblyMap>
                                                                 &locToGloMap);
 
-            virtual ~GlobalLinSysXxtStaticCond();
+            MULTI_REGIONS_EXPORT virtual ~GlobalLinSysXxtStaticCond();
 
         protected:
             void CreateMap(const std::shared_ptr<AssemblyMap> &pLocToGloMap);

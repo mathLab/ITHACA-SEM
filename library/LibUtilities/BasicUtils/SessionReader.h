@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -41,11 +40,11 @@
 #include <memory>
 
 #include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/program_options/variables_map.hpp>
 
 class TiXmlElement;
@@ -96,9 +95,6 @@ namespace Nektar
             "Expression",
             "File"
         };
-
-        class Equation;
-        typedef std::shared_ptr<Equation> EquationSharedPtr;
 
         struct FunctionVariableDefinition
         {
@@ -192,7 +188,7 @@ namespace Nektar
             /// Returns the session name with process rank
             LIB_UTILITIES_EXPORT const std::string  GetSessionNameRank() const;
             /// Returns the communication object.
-            LIB_UTILITIES_EXPORT CommSharedPtr &GetComm();
+            LIB_UTILITIES_EXPORT CommSharedPtr GetComm();
             /// Returns if file system shared
             LIB_UTILITIES_EXPORT bool GetSharedFilesystem();
             /// Finalises the session.
@@ -376,12 +372,9 @@ namespace Nektar
                 const std::string &variable,
                 const int pDomain = 0) const;
 
-            /// Returns the instance of AnalyticExpressionEvaluator specific to
-            /// this session.
-            LIB_UTILITIES_EXPORT ExpressionEvaluatorShPtr GetExpressionEvaluator()
-            {
-                return m_exprEvaluator;
-            }
+            /// Returns the instance of the Interpreter specific to this
+            /// session.
+            LIB_UTILITIES_EXPORT InterpreterSharedPtr GetInterpreter();
 
             /* ------ TAGS ------ */
             /// Checks if a specified tag is defined.
@@ -446,8 +439,8 @@ namespace Nektar
             GeometricInfoMap                          m_geometricInfo;
             /// Expressions.
             ExpressionMap                             m_expressions;
-            /// Analytic expression evaluator instance.
-            ExpressionEvaluatorShPtr                  m_exprEvaluator;
+            /// Interpreter instance.
+            InterpreterSharedPtr                      m_interpreter;
             /// Functions.
             FunctionMap                               m_functions;
             /// Variables.

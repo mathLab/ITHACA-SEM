@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <ImageWarpingSolver/EquationSystems/ImageWarpingSystem.h>
 #include <MultiRegions/ContField2D.h>
 
@@ -40,10 +41,10 @@ using namespace std;
 
 namespace Nektar
 {
-    string ImageWarpingSystem::className = 
+    string ImageWarpingSystem::className =
         GetEquationSystemFactory().RegisterCreatorFunction(
-            "ImageWarpingSystem", 
-            ImageWarpingSystem::create, 
+            "ImageWarpingSystem",
+            ImageWarpingSystem::create,
             "Image warping system.");
 
     ImageWarpingSystem::ImageWarpingSystem(
@@ -69,7 +70,7 @@ namespace Nektar
 
         // Bit of a hack: redefine u/v fields so they are continuous for
         // Helmholtz solve.
-        MultiRegions::ContField2DSharedPtr fld = 
+        MultiRegions::ContField2DSharedPtr fld =
             MemoryManager<MultiRegions::ContField2D>
             ::AllocateSharedPtr(m_session,m_graph,m_session->GetVariable(2));
         m_fields[2] = fld;
@@ -80,7 +81,7 @@ namespace Nektar
         // phi).
         m_intVariables.push_back(0);
         m_intVariables.push_back(1);
-        
+
         // Define the normal velocity fields
         if (m_fields[0]->GetTrace())
         {
@@ -126,13 +127,15 @@ namespace Nektar
               Array<OneD,       Array<OneD,NekDouble> > &outarray,
         const NekDouble time)
     {
+        boost::ignore_unused(time);
+
         int npoints = GetNpoints();
-        int ncoeffs = inarray[0].num_elements();
+        int ncoeffs = inarray[0].size();
         StdRegions::ConstFactorMap factors;
 
         // Load parameter alpha.
         m_session->LoadParameter("Alpha", m_alpha);
-        
+
         ASSERTL0(m_projectionType == MultiRegions::eDiscontinuous,
                  "CG not implemented yet.");
 
@@ -145,26 +148,25 @@ namespace Nektar
 
         // Calculate grad I.
         m_fields[0]->PhysDeriv(inarray[0], dIdx1, dIdx2);
-        
+
         // Set factors.
         // TODO: Check - should be -1?
         factors[StdRegions::eFactorLambda] = 1.0 / m_alpha / m_alpha;
-        
+
         // Multiply by phi, and perform Helmholtz solve to calculate the
         // advection velocity field.
         for (int i = 0; i < 2; ++i)
         {
-            Vmath::Vmul(npoints, &alloc[i*npoints], 1, inarray[1].get(), 1, 
+            Vmath::Vmul(npoints, &alloc[i*npoints], 1, inarray[1].get(), 1,
                         m_fields[i+2]->UpdatePhys().get(), 1);
             Vmath::Smul(npoints, 1/m_alpha/m_alpha, m_fields[i+2]->GetPhys().get(), 1,
                         m_fields[i+2]->UpdatePhys().get(), 1);
-            m_fields[i+2]->HelmSolve(m_fields[i+2]->GetPhys(), 
-                                     m_fields[i+2]->UpdateCoeffs(),
-                                     NullFlagList, factors);
-            m_fields[i+2]->BwdTrans(m_fields[i+2]->GetCoeffs(), 
+            m_fields[i+2]->HelmSolve(m_fields[i+2]->GetPhys(),
+                                     m_fields[i+2]->UpdateCoeffs(), factors);
+            m_fields[i+2]->BwdTrans(m_fields[i+2]->GetCoeffs(),
                                     m_velocity[i]);
         }
-        
+
         // Calculate the weak advection operator for I and phi - result is put
         // in WeakAdv and is in physical space.
         m_advObject->Advect(2, m_fields, m_velocity, inarray,
@@ -177,12 +179,12 @@ namespace Nektar
         // Calculate du/dx -> dIdx1, dv/dy -> dIdx2.
         m_fields[2]->PhysDeriv(m_velocity[0], dIdx1, dIdx3);
         m_fields[3]->PhysDeriv(m_velocity[1], dIdx3, dIdx2);
-        
+
         // Calculate RHS = I*div(u) = I*du/dx + I*dv/dy -> dIdx1.
-        Vmath::Vvtvvtp(npoints, dIdx1.get(), 1, inarray[0].get(), 1, 
+        Vmath::Vvtvvtp(npoints, dIdx1.get(), 1, inarray[0].get(), 1,
                        dIdx2.get(), 1, inarray[0].get(), 1,
                        dIdx1.get(), 1);
-        
+
         // Take inner product to get to coefficient space.
         Array<OneD, NekDouble> tmp2(ncoeffs);
         m_fields[0]->IProductWRTBase(dIdx1, tmp2);
@@ -203,9 +205,9 @@ namespace Nektar
                                             Array<OneD,       Array<OneD, NekDouble> >&outarray,
                                             const NekDouble time)
     {
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         SetBoundaryConditions(time);
-        
+
         switch(m_projectionType)
         {
         case MultiRegions::eDiscontinuous:
@@ -239,7 +241,7 @@ namespace Nektar
         // Reset the normal velocity
         Vmath::Zero(nTracePts, m_traceVn, 1);
 
-        for (int i = 0; i < m_velocity.num_elements(); ++i)
+        for (int i = 0; i < m_velocity.size(); ++i)
         {
             m_fields[0]->ExtractTracePhys(m_velocity[i], tmp);
 
@@ -257,14 +259,14 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >               &physfield,
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
     {
-        ASSERTL1(flux[0].num_elements() == m_velocity.num_elements(),
+        ASSERTL1(flux[0].size() == m_velocity.size(),
                  "Dimension of flux array and velocity array do not match");
 
-        int nq = physfield[0].num_elements();
+        int nq = physfield[0].size();
 
-        for (int i = 0; i < flux.num_elements(); ++i)
+        for (int i = 0; i < flux.size(); ++i)
         {
-            for (int j = 0; j < flux[0].num_elements(); ++j)
+            for (int j = 0; j < flux[0].size(); ++j)
             {
                 Vmath::Vmul(nq, physfield[i], 1, m_velocity[j], 1,
                             flux[i][j], 1);

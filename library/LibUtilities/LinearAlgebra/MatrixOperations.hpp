@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_OPERATIONS_DECLARATIONS_HPP
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_OPERATIONS_DECLARATIONS_HPP
+
+#include <boost/core/ignore_unused.hpp>
 
 // Since this file defines all of the operations for all combination of matrix
 // types, we have to include all matrix specializations first.
@@ -142,6 +143,8 @@ void NekMultiplyFullMatrixFullMatrix(
         CanGetRawPtr<NekMatrix<RhsDataType, RhsMatrixType>>::value>::type *p =
         0)
 {
+    boost::ignore_unused(p);
+
     ASSERTL1(lhs.GetType() == eFULL && rhs.GetType() == eFULL,
              "Only full matrices are supported.");
 
@@ -184,6 +187,7 @@ void MultiplyEqual(
         CanGetRawPtr<NekMatrix<RhsInnerType, RhsMatrixType>>::value>::type *t =
         0)
 {
+    boost::ignore_unused(t);
     ASSERTL0(result.GetType() == eFULL && rhs.GetType() == eFULL,
              "Only full matrices supported.");
     unsigned int M = result.GetRows();
@@ -221,11 +225,12 @@ void MultiplyEqual(
         !CanGetRawPtr<NekMatrix<RhsInnerType, RhsMatrixType>>::value>::type *t =
         0)
 {
+    boost::ignore_unused(t);
     ASSERTL1(result.GetColumns() == rhs.GetRows(),
              std::string("A left side matrix with column count ") +
-                 boost::lexical_cast<std::string>(result.GetColumns()) +
+                 std::to_string(result.GetColumns()) +
                  std::string(" and a right side matrix with row count ") +
-                 boost::lexical_cast<std::string>(rhs.GetRows()) +
+                 std::to_string(rhs.GetRows()) +
                  std::string(" can't be multiplied."));
     NekMatrix<DataType, StandardMatrixTag> temp(result.GetRows(),
                                                 result.GetColumns());

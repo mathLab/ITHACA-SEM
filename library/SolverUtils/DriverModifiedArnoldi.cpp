@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iomanip>
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <SolverUtils/DriverModifiedArnoldi.h>
 
@@ -309,6 +310,7 @@ void DriverModifiedArnoldi::EV_update(
     CopyArnoldiArrayToField(src);
     m_equ[0]->TransCoeffToPhys();
 
+    m_equ[0]->SetTime(0.);
     m_equ[0]->DoSolve();
 
     if(m_EvolutionOperator == eTransientGrowth)
@@ -320,6 +322,7 @@ void DriverModifiedArnoldi::EV_update(
         CopyFwdToAdj();
         m_equ[1]->TransCoeffToPhys();
 
+        m_equ[1]->SetTime(0.);
         m_equ[1]->DoSolve();
     }
 
@@ -559,6 +562,8 @@ void DriverModifiedArnoldi::EV_big(
     Array<OneD, NekDouble>               &wr,
     Array<OneD, NekDouble>               &wi)
 {
+    boost::ignore_unused(wr);
+
     NekDouble wgt, norm;
 
     // Generate big eigenvectors

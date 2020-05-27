@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,14 +36,18 @@
 #include <string>
 using namespace std;
 
+#include <boost/core/ignore_unused.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/thread.hpp>
 namespace io = boost::iostreams;
 
 #include <tinyxml.h>
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 #include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/PointGeom.h>
 #include <NekMeshUtils/MeshElements/Element.h>
@@ -78,6 +81,8 @@ OutputNekpp::OutputNekpp(MeshSharedPtr m) : OutputModule(m)
     m_config["order"] = ConfigOption(false, "-1", "Enforce a polynomial order");
     m_config["testcond"] = ConfigOption(
         false, "", "Test a condition.");
+    m_config["varopti"] =
+        ConfigOption(true, "0", "Run the variational optimser");
 }
 
 OutputNekpp::~OutputNekpp()
@@ -87,9 +92,11 @@ OutputNekpp::~OutputNekpp()
 template <typename T> void TestElmts(
     const std::map<int, std::shared_ptr<T> >  &geomMap,
     SpatialDomains::MeshGraphSharedPtr        &graph,
-    LibUtilities::AnalyticExpressionEvaluator &strEval,
+    LibUtilities::Interpreter                 &strEval,
     int                                        exprId)
 {
+    boost::ignore_unused(graph);
+
     for (auto &geomIt : geomMap)
     {
         SpatialDomains::GeometrySharedPtr geom = geomIt.second;
@@ -148,6 +155,29 @@ void OutputNekpp::Process()
     if (order != -1)
     {
         m_mesh->MakeOrder(order, LibUtilities::ePolyEvenlySpaced);
+    }
+
+    // Useful when doing r-adaptation
+    if (m_config["varopti"].beenSet)
+    {
+        unsigned int np        = boost::thread::physical_concurrency();
+        ModuleSharedPtr module = GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "varopti"), m_mesh);
+        module->RegisterConfig("hyperelastic", "");
+        module->RegisterConfig("numthreads", boost::lexical_cast<string>(np));
+
+        try
+        {
+            module->SetDefaults();
+            module->Process();
+        }
+        catch (runtime_error &e)
+        {
+            cout << "Variational optimisation has failed with message:" << endl;
+            cout << e.what() << endl;
+            cout << "The mesh will be written as is, it may be invalid" << endl;
+            return;
+        }
     }
 
     string file = m_config["outfile"].as<string>();
@@ -515,7 +545,6 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
         }
     }
 
-    /*
     if(m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
     {
         //manifold case
@@ -548,7 +577,6 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
             }
         }
     }
-    */
 }
 
 void OutputNekpp::TransferComposites(MeshGraphSharedPtr graph)

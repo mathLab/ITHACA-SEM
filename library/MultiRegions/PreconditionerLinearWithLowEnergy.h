@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -73,20 +72,29 @@ namespace Nektar
             PreconditionerSharedPtr m_linSpacePrecon;
             PreconditionerSharedPtr m_lowEnergyPrecon;
 
+            Array<OneD, NekDouble>  m_invMultiplicity;
 	private:
 
             virtual void v_InitObject();
 
-            virtual void v_DoTransformToLowEnergy(
-                Array<OneD, NekDouble>& pInOut,
-                int offset);
+            virtual void v_DoTransformBasisToLowEnergy(
+                Array<OneD, NekDouble>& pInOut);
 
-            virtual void v_DoTransformFromLowEnergy(
-                Array<OneD, NekDouble>& pInput);
+            virtual void v_DoTransformCoeffsFromLowEnergy(
+                Array<OneD, NekDouble>& pInOut);
+
+            virtual void v_DoTransformCoeffsToLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+
+            virtual void v_DoTransformBasisFromLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+
 
             virtual DNekScalMatSharedPtr
                 v_TransformedSchurCompl(int n, int offset,
-                                        const std::shared_ptr<DNekScalMat > &loc_mat);
+                const std::shared_ptr<DNekScalMat > &loc_mat);
 
             virtual void v_DoPreconditioner(                
                       const Array<OneD, NekDouble>& pInput,

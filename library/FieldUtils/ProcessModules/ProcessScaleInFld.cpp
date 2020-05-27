@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,9 +36,11 @@
 #include <string>
 using namespace std;
 
-#include "ProcessScaleInFld.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessScaleInFld.h"
 
 namespace Nektar
 {
@@ -63,8 +64,11 @@ ProcessScaleInFld::~ProcessScaleInFld()
 
 void ProcessScaleInFld::Process(po::variables_map &vm)
 {
-	ASSERTL0(m_config["scale"].as<string>().compare("NotSet") != 0,
+    boost::ignore_unused(vm);
+
+    ASSERTL0(m_config["scale"].as<string>().compare("NotSet") != 0,
              "scaleinputfld: Need to specify a scale factor");
+
     string scalestr = m_config["scale"].as<string>();
     NekDouble scale = boost::lexical_cast<NekDouble>(scalestr);
 

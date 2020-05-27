@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -38,6 +37,8 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
@@ -91,6 +92,8 @@ public:
                              unsigned int  level,
                              bool          DoComm = false)
     {
+        boost::ignore_unused(DoComm);
+
         // The user of outStream is primarily for the unit tests.  The unit
         // tests often generate errors on purpose to make sure invalid usage is
         // flagged appropriately.  Printing the error messages to cerr made the
@@ -100,7 +103,9 @@ public:
             " assertion violation\n";
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
         baseMsg += "Where   : " + std::string(routine) + "[" +
-            std::to_string(lineNumber) + "]\n Message : ";
+            std::to_string(lineNumber) + "]\nMessage : ";
+#else
+        boost::ignore_unused(routine, lineNumber);
 #endif
         baseMsg += std::string(msg);
 
@@ -117,6 +122,8 @@ public:
                 MPI_Comm_rank(MPI_COMM_WORLD,&rank);
             }
         }
+#else
+        boost::ignore_unused(DoComm);
 #endif
 
         std::string btMessage("");
@@ -170,7 +177,7 @@ public:
                 {
                     (*m_outStream) << btMessage;
                 }
-                (*m_outStream) << "Warning: " << baseMsg << std::endl;
+                (*m_outStream) << "Warning : " << baseMsg << std::endl;
             }
             break;
         default:

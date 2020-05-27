@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -29,7 +28,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -64,8 +63,8 @@ namespace Nektar
     template<typename DataType>
     struct IsSharedPointer<std::shared_ptr<DataType> > : public std::true_type {};
 
-    // The solving of the linear system is located in this class instead of in the LinearSystem 
-    // class because XCode gcc 4.2 didn't compile it correctly when it was moved to the 
+    // The solving of the linear system is located in this class instead of in the LinearSystem
+    // class because XCode gcc 4.2 didn't compile it correctly when it was moved to the
     // LinearSystem class.
     struct LinearSystemSolver
     {
@@ -85,14 +84,14 @@ namespace Nektar
                         Lapack::Dgetrs('N',n,1,A.get(),n,(int *)m_ipivot.get(),x.GetRawPtr(),n,info);
                         if( info < 0 )
                         {
-                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrs";
+                            std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dgetrs";
                             ASSERTL0(false, message.c_str());
                         }
 
                     }
                     break;
                 case eDIAGONAL:
-                    for(unsigned int i = 0; i < A.num_elements(); ++i)
+                    for(unsigned int i = 0; i < A.size(); ++i)
                     {
                         x[i] = b[i]*A[i];
                     }
@@ -105,12 +104,12 @@ namespace Nektar
 
                         if( info < 0 )
                         {
-                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dtrtrs";
+                            std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dtrtrs";
                             ASSERTL0(false, message.c_str());
                         }
                         else if( info > 0 )
                         {
-                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th diagonal element of A is 0 for dtrtrs";
+                            std::string message = "ERROR: The " + std::to_string(-info) + "th diagonal element of A is 0 for dtrtrs";
                             ASSERTL0(false, message.c_str());
                         }
                     }
@@ -123,12 +122,12 @@ namespace Nektar
 
                         if( info < 0 )
                         {
-                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dtrtrs";
+                            std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dtrtrs";
                             ASSERTL0(false, message.c_str());
                         }
                         else if( info > 0 )
                         {
-                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th diagonal element of A is 0 for dtrtrs";
+                            std::string message = "ERROR: The " + std::to_string(-info) + "th diagonal element of A is 0 for dtrtrs";
                             ASSERTL0(false, message.c_str());
                         }
                     }
@@ -140,7 +139,7 @@ namespace Nektar
                         Lapack::Dsptrs('U', n, 1, A.get(), m_ipivot.get(), x.GetRawPtr(), x.GetRows(), info);
                         if( info < 0 )
                         {
-                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dsptrs";
+                            std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dsptrs";
                             ASSERTL0(false, message.c_str());
                         }
                     }
@@ -152,7 +151,7 @@ namespace Nektar
                         Lapack::Dpptrs('U', n, 1, A.get(), x.GetRawPtr(), x.GetRows(), info);
                         if( info < 0 )
                         {
-                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dpptrs";
+                            std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dpptrs";
                             ASSERTL0(false, message.c_str());
                         }
                     }
@@ -163,12 +162,12 @@ namespace Nektar
                         int KL = m_numberOfSubDiagonals;
                         int KU = m_numberOfSuperDiagonals;
                         int info = 0;
-                        
+
                         Lapack::Dgbtrs(m_transposeFlag, n, KL, KU, 1, A.get(), 2*KL+KU+1, m_ipivot.get(), x.GetRawPtr(), n, info);
-                        
+
                         if( info < 0 )
                         {
-                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgbtrs";
+                            std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dgbtrs";
                             ASSERTL0(false, message.c_str());
                         }
                     }
@@ -183,7 +182,7 @@ namespace Nektar
 
                         if( info < 0 )
                         {
-                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dpbtrs";
+                            std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dpbtrs";
                             ASSERTL0(false, message.c_str());
                         }
                     }
@@ -197,11 +196,11 @@ namespace Nektar
                 case eLOWER_TRIANGULAR_BANDED:
                     NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
                     break;
-                    
+
                 default:
                     NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
             }
-            
+
         }
 
         template<typename BVectorType, typename XVectorType>
@@ -221,7 +220,7 @@ namespace Nektar
 
                         if( info < 0 )
                         {
-                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrs";
+                            std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dgetrs";
                             ASSERTL0(false, message.c_str());
                         }
                     }
@@ -248,12 +247,12 @@ namespace Nektar
 
                         if( info < 0 )
                         {
-                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dtrtrs";
+                            std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dtrtrs";
                             ASSERTL0(false, message.c_str());
                         }
                         else if( info > 0 )
                         {
-                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th diagonal element of A is 0 for dtrtrs";
+                            std::string message = "ERROR: The " + std::to_string(-info) + "th diagonal element of A is 0 for dtrtrs";
                             ASSERTL0(false, message.c_str());
                         }
                     }
@@ -276,12 +275,12 @@ namespace Nektar
 
                         if( info < 0 )
                         {
-                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dtrtrs";
+                            std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dtrtrs";
                             ASSERTL0(false, message.c_str());
                         }
                         else if( info > 0 )
                         {
-                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th diagonal element of A is 0 for dtrtrs";
+                            std::string message = "ERROR: The " + std::to_string(-info) + "th diagonal element of A is 0 for dtrtrs";
                             ASSERTL0(false, message.c_str());
                         }
                     }
@@ -297,12 +296,12 @@ namespace Nektar
                         int KL = m_numberOfSubDiagonals;
                         int KU = m_numberOfSuperDiagonals;
                         int info = 0;
-                        
+
                         Lapack::Dgbtrs(m_transposeFlag, n, KL, KU, 1, A.get(), 2*KL+KU+1, m_ipivot.get(), x.GetRawPtr(), n, info);
-                        
+
                         if( info < 0 )
                         {
-                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgbtrs";
+                            std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dgbtrs";
                             ASSERTL0(false, message.c_str());
                         }
                     }
@@ -316,14 +315,14 @@ namespace Nektar
                 case eLOWER_TRIANGULAR_BANDED:
                     NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
                     break;
-                    
+
                 default:
                     NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
             }
         }
     };
 
-    
+
     class LinearSystem
     {
         public:
@@ -337,20 +336,20 @@ namespace Nektar
                 m_matrixType(theA->GetType()),
                 m_transposeFlag(theA->GetTransposeFlag())
             {
-                // At some point we should fix this.  We should upate the copy of 
+                // At some point we should fix this.  We should upate the copy of
                 // A to be transposd for this to work.
                 ASSERTL0(theA->GetTransposeFlag() == 'N', "LinearSystem requires a non-transposed matrix.");
                 ASSERTL0( (wrapperType == eWrapper && theA->GetType() != eBANDED) || wrapperType == eCopy , "Banded matrices can't be wrapped");
-                
+
                 if( wrapperType == eCopy )
                 {
-                    A = Array<OneD, double>(theA->GetPtr().num_elements());
+                    A = Array<OneD, double>(theA->GetPtr().size());
                     CopyArray(theA->GetPtr(), A);
                 }
-                
+
                 FactorMatrix(*theA);
             }
-            
+
             template<typename MatrixType>
             explicit LinearSystem(const MatrixType& theA, PointerWrapper wrapperType = eCopy) :
                 n(theA.GetRows()),
@@ -361,14 +360,14 @@ namespace Nektar
                 m_matrixType(theA.GetType()),
                 m_transposeFlag(theA.GetTransposeFlag())
             {
-                // At some point we should fix this.  We should upate the copy of 
+                // At some point we should fix this.  We should upate the copy of
                 // A to be transposd for this to work.
                 ASSERTL0(theA.GetTransposeFlag() == 'N', "LinearSystem requires a non-transposed matrix.");
                 ASSERTL0( (wrapperType == eWrapper && theA.GetType() != eBANDED) || wrapperType == eCopy, "Banded matrices can't be wrapped" );
-                
+
                 if( wrapperType == eCopy )
                 {
-                    A = Array<OneD, double>(theA.GetPtr().num_elements());
+                    A = Array<OneD, double>(theA.GetPtr().size());
                     CopyArray(theA.GetPtr(), A);
                 }
 
@@ -394,9 +393,9 @@ namespace Nektar
             }
 
             ~LinearSystem() {}
-        
+
             // In the following calls to Solve, VectorType must be a NekVector.
-            // Anything else won't compile.        
+            // Anything else won't compile.
             template<typename VectorType>
             RawType_t<VectorType> Solve(const VectorType& b)
             {
@@ -404,12 +403,12 @@ namespace Nektar
                 LinearSystemSolver::Solve(ConsistentObjectAccess<VectorType>::const_reference(b), x, m_matrixType,
                     m_ipivot, n, A, m_transposeFlag, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
                 return x;
-            }    
+            }
 
             template<typename BType, typename XType>
             void Solve(const BType& b, XType& x) const
             {
-                LinearSystemSolver::Solve(ConsistentObjectAccess<BType>::const_reference(b), 
+                LinearSystemSolver::Solve(ConsistentObjectAccess<BType>::const_reference(b),
                       ConsistentObjectAccess<XType>::reference(x), m_matrixType,
                       m_ipivot, n, A, m_transposeFlag, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
             }
@@ -422,19 +421,19 @@ namespace Nektar
                 LinearSystemSolver::SolveTranspose(ConsistentObjectAccess<VectorType>::const_reference(b), x, m_matrixType,
                     m_ipivot, n, A, m_transposeFlag, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
                 return x;
-            }    
+            }
 
             template<typename BType, typename XType>
             void SolveTranspose(const BType& b, XType& x) const
             {
-                LinearSystemSolver::SolveTranspose(ConsistentObjectAccess<BType>::const_reference(b), 
+                LinearSystemSolver::SolveTranspose(ConsistentObjectAccess<BType>::const_reference(b),
                                ConsistentObjectAccess<XType>::reference(x), m_matrixType,
                                m_ipivot, n, A, m_transposeFlag, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
             }
-        
+
             unsigned int GetRows() const { return n; }
             unsigned int GetColumns() const { return n; }
-            
+
         private:
             template<typename MatrixType>
             void FactorMatrix(const MatrixType& theA)
@@ -445,7 +444,7 @@ namespace Nektar
                         {
                             int m = theA.GetRows();
                             int n = theA.GetColumns();
-                            
+
                             int pivotSize = std::max(1, std::min(m, n));
                             int info = 0;
                             m_ipivot = Array<OneD, int>(pivotSize);
@@ -454,14 +453,14 @@ namespace Nektar
 
                             if( info < 0 )
                             {
-                                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrf";
+                                std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dgetrf";
                                 ASSERTL0(false, message.c_str());
                             }
                             else if( info > 0 )
                             {
-                                std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgetrf";
+                                std::string message = "ERROR: Element u_" + std::to_string(info) +   std::to_string(info) + " is 0 from dgetrf";
                                 ASSERTL0(false, message.c_str());
-                            } 
+                            }
                         }
                         break;
                     case eDIAGONAL:
@@ -478,18 +477,18 @@ namespace Nektar
                             int info = 0;
                             int pivotSize = theA.GetRows();
                             m_ipivot = Array<OneD, int>(pivotSize);
-                            
+
                             Lapack::Dsptrf('U', theA.GetRows(), A.get(), m_ipivot.get(), info);
-                            
+
                             if( info < 0 )
                             {
-                                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dsptrf";
-                                ASSERTL0(false, message.c_str());
+                                std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dsptrf";
+                                NEKERROR(ErrorUtil::efatal, message.c_str());
                             }
                             else if( info > 0 )
                             {
-                                std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dsptrf";
-                                ASSERTL0(false, message.c_str());
+                                std::string message = "ERROR: Element u_" + std::to_string(info) +   std::to_string(info) + " is 0 from dsptrf";
+                                NEKERROR(ErrorUtil::efatal, message.c_str());
                             }
                         }
                         break;
@@ -497,16 +496,16 @@ namespace Nektar
                         {
                             int info = 0;
                             Lapack::Dpptrf('U', theA.GetRows(), A.get(), info);
-                          
+
                             if( info < 0 )
                             {
-                                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dpptrf";
-                                ASSERTL0(false, message.c_str());
+                                std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dpptrf";
+                                NEKERROR(ErrorUtil::efatal, message.c_str());
                             }
                             else if( info > 0 )
                             {
-                                std::string message = "ERROR: The leading minor of order " + boost::lexical_cast<std::string>(info) +  " is not positive definite from dpptrf";
-                                ASSERTL0(false, message.c_str());
+                                std::string message = "ERROR: The leading minor of order " + std::to_string(info) +  " is not positive definite from dpptrf";
+                                NEKERROR(ErrorUtil::efatal, message.c_str());
                             }
                         }
                         break;
@@ -516,13 +515,13 @@ namespace Nektar
                             int N = n;
                             int KL = m_numberOfSubDiagonals;
                             int KU = m_numberOfSuperDiagonals;
-                            
+
                             // The array we pass in to dgbtrf must have enough space for KL
                             // subdiagonals and KL+KU superdiagonals (see lapack users guide,
                             // in the section discussing band storage.
                             unsigned int requiredStorageSize = BandedMatrixFuncs::
                                 GetRequiredStorageSize(n, n, KL, KL+KU);
-                            
+
                             unsigned int rawRows = KL+KU+1;
                             A = Array<OneD, double>(requiredStorageSize);
 
@@ -532,44 +531,44 @@ namespace Nektar
                                 std::copy(theA.GetRawPtr() + i*rawRows, theA.GetRawPtr() + (i+1)*rawRows,
                                     A.get() + (i+1)*KL + i*rawRows);
                             }
-                                   
+
                             int info = 0;
                             int pivotSize = theA.GetRows();
                             m_ipivot = Array<OneD, int>(pivotSize);
-                            
+
                             Lapack::Dgbtrf(M, N, KL, KU, A.get(), 2*KL+KU+1, m_ipivot.get(), info);
-                          
+
                             if( info < 0 )
                             {
-                                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgbtrf";
-                                ASSERTL0(false, message.c_str());
+                                std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dgbtrf";
+                                NEKERROR(ErrorUtil::efatal, message.c_str());
                             }
                             else if( info > 0 )
                             {
-                                std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgbtrf";
-                                ASSERTL0(false, message.c_str());
+                                std::string message = "ERROR: Element u_" + std::to_string(info) +   std::to_string(info) + " is 0 from dgbtrf";
+                                NEKERROR(ErrorUtil::efatal, message.c_str());
                             }
                         }
                         break;
                     case ePOSITIVE_DEFINITE_SYMMETRIC_BANDED:
                         {
                             ASSERTL1(m_numberOfSuperDiagonals==m_numberOfSuperDiagonals,
-                                     std::string("Number of sub- and superdiagonals should ") + 
+                                     std::string("Number of sub- and superdiagonals should ") +
                                      std::string("be equal for a symmetric banded matrix"));
 
                             int KU = m_numberOfSuperDiagonals;
                             int info = 0;
                             Lapack::Dpbtrf('U', theA.GetRows(), KU, A.get(), KU+1, info);
-                          
+
                             if( info < 0 )
                             {
-                                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dpbtrf";
-                                ASSERTL0(false, message.c_str());
+                                std::string message = "ERROR: The " + std::to_string(-info) + "th parameter had an illegal parameter for dpbtrf";
+                                NEKERROR(ErrorUtil::efatal, message.c_str());
                             }
                             else if( info > 0 )
                             {
-                                std::string message = "ERROR: The leading minor of order " + boost::lexical_cast<std::string>(info) +  " is not positive definite from dpbtrf";
-                                ASSERTL0(false, message.c_str());
+                                std::string message = "ERROR: The leading minor of order " + std::to_string(info) +  " is not positive definite from dpbtrf";
+                                NEKERROR(ErrorUtil::efatal, message.c_str());
                             }
                         }
                         break;
@@ -582,12 +581,12 @@ namespace Nektar
                     case eLOWER_TRIANGULAR_BANDED:
                         NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
                         break;
-                        
+
                     default:
                         NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
                 }
             }
-        
+
             void swap(LinearSystem& rhs)
             {
                 std::swap(n, rhs.n);
@@ -601,7 +600,7 @@ namespace Nektar
 
             unsigned int n;
             Array<OneD, double> A;
-            Array<OneD, int> m_ipivot;  
+            Array<OneD, int> m_ipivot;
             unsigned int m_numberOfSubDiagonals;
             unsigned int m_numberOfSuperDiagonals;
             MatrixStorage m_matrixType;

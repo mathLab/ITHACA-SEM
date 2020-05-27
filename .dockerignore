@@ -1,0 +1,16 @@
+# Exclude the usual build environment stuff.
+.clang-format
+.git
+.gitignore
+.gitlab-ci.yml
+ThirdParty
+build
+builds
+.DS_Store
+
+# Make sure Dockerfiles aren't included in build context to
+# improve caching.
+pkg/docker/nektar/Dockerfile
+pkg/docker/nektar-workbook/Dockerfile
+pkg/docker/nektar-env/Dockerfile
+

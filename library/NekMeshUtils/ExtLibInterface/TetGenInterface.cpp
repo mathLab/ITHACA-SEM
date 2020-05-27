@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -86,7 +85,24 @@ void TetGenInterface::InitialMesh(map<int, NodeSharedPtr>  tgidton,
         p->vertexlist[0]           = tri[i][0];
         p->vertexlist[1]           = tri[i][1];
         p->vertexlist[2]           = tri[i][2];
-        surface.facetmarkerlist[i] = 0;
+        surface.facetmarkerlist[i] = 1;
+    }
+
+    surface.numberofholes = m_holes.size();
+
+    if (m_holes.size() > 0)
+    {
+        surface.holelist = new REAL[m_holes.size() * 3];
+        for (int j = 0; j < m_holes.size(); ++j)
+        {
+            surface.holelist[3 * j + 0] = m_holes[j][0];
+            surface.holelist[3 * j + 1] = m_holes[j][1];
+            surface.holelist[3 * j + 2] = m_holes[j][2];
+        }
+    }
+    else
+    {
+        surface.holelist = NULL;
     }
 
     string cmd = "pYzqQ";
@@ -132,6 +148,7 @@ void TetGenInterface::RefineMesh(std::map<int, NekDouble> delta)
 vector<Array<OneD, int> > TetGenInterface::Extract()
 {
     vector<Array<OneD, int> > tets;
+
     for (int i = 0; i < output.numberoftetrahedra; i++)
     {
         Array<OneD, int> tet(4);

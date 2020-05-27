@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -43,7 +42,7 @@ int main(int argc, char *argv[])
 {
     LibUtilities::SessionReaderSharedPtr session;
     SpatialDomains::MeshGraphSharedPtr graph;
-    Gs::string vDriverModule;
+    std::string vDriverModule;
     DriverSharedPtr drv;
 
     try
@@ -70,7 +69,7 @@ int main(int argc, char *argv[])
     }
     catch (const std::string &eStr)
     {
-        Gs::cout << "Error: " << eStr << Gs::endl;
+        std::cout << "Error: " << eStr << std::endl;
     }
 
     return 0;

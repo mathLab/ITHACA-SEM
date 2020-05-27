@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
+#include <boost/core/ignore_unused.hpp>
 
 #include <StdRegions/StdTetExp.h>
 
@@ -121,8 +120,8 @@ namespace Nektar
             Array<OneD, NekDouble> out_dEta1 = out_dEta0 + Qtot;
             Array<OneD, NekDouble> out_dEta2 = out_dEta1 + Qtot;
 
-            bool Do_2 = (out_dxi2.num_elements() > 0)? true:false;
-            bool Do_1 = (out_dxi1.num_elements() > 0)? true:false;
+            bool Do_2 = (out_dxi2.size() > 0)? true:false;
+            bool Do_1 = (out_dxi1.size() > 0)? true:false;
 
             if(Do_2) // Need all local derivatives
             {
@@ -157,7 +156,7 @@ namespace Nektar
                 Vmath::Smul(Q0*Q1,fac,&out_dEta0[0]+k*Q0*Q1,1,&out_dEta0[0]+k*Q0*Q1,1);
             }
 
-            if (out_dxi0.num_elements() > 0)
+            if (out_dxi0.size() > 0)
             {
                 // out_dxi0 = 4.0/((1-eta_1)(1-eta_2)) Out_dEta0
                 Vmath::Smul(Qtot,2.0,out_dEta0,1,out_dxi0,1);
@@ -366,6 +365,9 @@ namespace Nektar
             bool                                doCheckCollDir1,
             bool                                doCheckCollDir2)
         {
+            boost::ignore_unused(doCheckCollDir0, doCheckCollDir1,
+                                 doCheckCollDir2);
+
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
             int  nquad2 = m_base[2]->GetNumPoints();
@@ -591,6 +593,9 @@ namespace Nektar
                           bool                          doCheckCollDir1,
                           bool                          doCheckCollDir2)
         {
+            boost::ignore_unused(doCheckCollDir0, doCheckCollDir1,
+                                 doCheckCollDir2);
+
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
             int  nquad2 = m_base[2]->GetNumPoints();
@@ -683,7 +688,7 @@ namespace Nektar
             ASSERTL0((dir==0)||(dir==1)||(dir==2),"input dir is out of range");
 
             int nq = GetTotPoints();
-            MatrixType mtype;
+            MatrixType mtype = eIProductWRTDerivBase0;
 
             switch (dir)
             {
@@ -912,6 +917,8 @@ namespace Nektar
                     int &numModes0,
                     int &numModes1)
         {
+            boost::ignore_unused(faceOrient);
+
             int nummodes [3] = {m_base[0]->GetNumModes(),
                                 m_base[1]->GetNumModes(),
                                 m_base[2]->GetNumModes()};
@@ -1240,6 +1247,8 @@ namespace Nektar
             Array<OneD,          int>& signarray,
             int                        P)
         {
+            boost::ignore_unused(P);
+
             ASSERTL2(eid >= 0 && eid < 6, "Invalid edge");
             ASSERTL2(v_IsBoundaryInteriorExpansion(),
                      "Method only implemented for Modified_A BasisType (x "
@@ -1249,12 +1258,12 @@ namespace Nektar
             int edgeVerts[6][2] = {{0,1},{1,2},{0,2},{0,3},{1,3},{2,3}};
             int nEdgeModes = v_GetEdgeNcoeffs(eid);
 
-            if (maparray.num_elements() != nEdgeModes)
+            if (maparray.size() != nEdgeModes)
             {
                 maparray  = Array<OneD, unsigned int>(nEdgeModes);
             }
 
-            if (signarray.num_elements() != nEdgeModes)
+            if (signarray.size() != nEdgeModes)
             {
                 signarray = Array<OneD, int>(nEdgeModes, 1.0);
             }
@@ -1339,12 +1348,12 @@ namespace Nektar
             nFaceCoeffs = P*(2*Q-P+1)/2;
 
             // Allocate the map array and sign array; set sign array to ones (+)
-            if(maparray.num_elements() != nFaceCoeffs)
+            if(maparray.size() != nFaceCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nFaceCoeffs,1);
             }
 
-            if(signarray.num_elements() != nFaceCoeffs)
+            if(signarray.size() != nFaceCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceCoeffs,1);
             }
@@ -1554,7 +1563,7 @@ namespace Nektar
 
             const int nEdgeIntCoeffs = v_GetEdgeNcoeffs(eid)-2;
 
-            if(maparray.num_elements() != nEdgeIntCoeffs)
+            if(maparray.size() != nEdgeIntCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
             }
@@ -1563,7 +1572,7 @@ namespace Nektar
             	fill( maparray.get(), maparray.get() + nEdgeIntCoeffs, 0);
             }
 
-            if(signarray.num_elements() != nEdgeIntCoeffs)
+            if(signarray.size() != nEdgeIntCoeffs)
             {
                 signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
             }
@@ -1671,12 +1680,12 @@ namespace Nektar
 
             const int nFaceIntCoeffs = v_GetFaceIntNcoeffs(fid);
 
-            if(maparray.num_elements() != nFaceIntCoeffs)
+            if(maparray.size() != nFaceIntCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nFaceIntCoeffs);
             }
 
-            if(signarray.num_elements() != nFaceIntCoeffs)
+            if(signarray.size() != nFaceIntCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceIntCoeffs,1);
             }
@@ -1770,7 +1779,7 @@ namespace Nektar
 
             int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
 
-            if(outarray.num_elements() != nIntCoeffs)
+            if(outarray.size() != nIntCoeffs)
             {
                 outarray = Array<OneD, unsigned int>(nIntCoeffs);
             }
@@ -1812,7 +1821,7 @@ namespace Nektar
 
             int nBnd = NumBndryCoeffs();
 
-            if (outarray.num_elements() != nBnd)
+            if (outarray.size() != nBnd)
             {
                 outarray = Array<OneD, unsigned int>(nBnd);
             }
@@ -2117,14 +2126,14 @@ namespace Nektar
             // project onto physical space.
             OrthoExp.FwdTrans(array,orthocoeffs);
 
-            if(mkey.ConstFactorExists(eFactorSVVPowerKerDiffCoeff)) 
+            if(mkey.ConstFactorExists(eFactorSVVPowerKerDiffCoeff))
             {
-                // Rodrigo's power kernel                
-                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio); 
+                // Rodrigo's power kernel
+                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio);
                 NekDouble  SvvDiffCoeff  =
                     mkey.GetConstFactor(eFactorSVVPowerKerDiffCoeff)*
                     mkey.GetConstFactor(eFactorSVVDiffCoeff);
-                
+
                 for(int i = 0; i < nmodes_a; ++i)
                 {
                     for(int j = 0; j < nmodes_b-j; ++j)
@@ -2137,7 +2146,7 @@ namespace Nektar
                         {
                             NekDouble fac = std::max(fac1,
                                    pow((1.0*k)/(nmodes_c-1),cutoff*nmodes_c));
-                            
+
                             orthocoeffs[cnt] *= SvvDiffCoeff * fac;
                             cnt++;
                         }
@@ -2156,7 +2165,7 @@ namespace Nektar
                 // clamp max_abc
                 max_abc = max(max_abc,0);
                 max_abc = min(max_abc,kSVVDGFiltermodesmax-kSVVDGFiltermodesmin);
-                
+
                 for(int i = 0; i < nmodes_a; ++i)
                 {
                     for(int j = 0; j < nmodes_b-j; ++j)
@@ -2167,7 +2176,7 @@ namespace Nektar
                         {
                             int maxijk = max(maxij,k);
                             maxijk = min(maxijk,kSVVDGFiltermodesmax-1);
-                        
+
                             orthocoeffs[cnt] *= SvvDiffCoeff *
                                 kSVVDGFilter[max_abc][maxijk];
                             cnt++;
@@ -2181,10 +2190,10 @@ namespace Nektar
                 //SVV filter paramaters (how much added diffusion
                 //relative to physical one and fraction of modes from
                 //which you start applying this added diffusion)
-                
+
                 NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
                 NekDouble  SVVCutOff = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
-                
+
                 //Defining the cut of mode
                 int cutoff_a = (int) (SVVCutOff*nmodes_a);
                 int cutoff_b = (int) (SVVCutOff*nmodes_b);
@@ -2192,7 +2201,7 @@ namespace Nektar
                 int nmodes = min(min(nmodes_a,nmodes_b),nmodes_c);
                 NekDouble cutoff = min(min(cutoff_a,cutoff_b),cutoff_c);
                 NekDouble epsilon = 1;
-                
+
 
                 //------"New" Version August 22nd '13--------------------
                 for(i = 0; i < nmodes_a; ++i)
@@ -2214,7 +2223,7 @@ namespace Nektar
                     }
                 }
             }
-            
+
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }
@@ -2289,6 +2298,8 @@ namespace Nektar
             Array<OneD, int> &conn,
             bool              standard)
         {
+            boost::ignore_unused(standard);
+
             int np0 = m_base[0]->GetNumPoints();
             int np1 = m_base[1]->GetNumPoints();
             int np2 = m_base[2]->GetNumPoints();

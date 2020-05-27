@@ -10,7 +10,6 @@
 // University of Utah (USA) and Department of Aeronautics, Imperial
 // College London (UK).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -111,9 +110,6 @@ namespace Nektar
     private:
         std::map<FlagType, bool> m_data;
     };
-
-    /// An empty flag list.
-    static FlagList NullFlagList;
 
 } //end of namespace
 

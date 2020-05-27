@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -44,11 +43,11 @@ using namespace std;
 
 namespace Nektar
 {
-  string NonlinearSWE::className = 
+  string NonlinearSWE::className =
      SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
-	  "NonlinearSWE", NonlinearSWE::create, 
+	  "NonlinearSWE", NonlinearSWE::create,
           "Nonlinear shallow water equation in conservative variables.");
-  
+
   NonlinearSWE::NonlinearSWE(
       const LibUtilities::SessionReaderSharedPtr& pSession,
       const SpatialDomains::MeshGraphSharedPtr& pGraph)
@@ -59,7 +58,7 @@ namespace Nektar
   void NonlinearSWE::v_InitObject()
   {
       ShallowWaterSystem::v_InitObject();
-      
+
     if (m_explicitAdvection)
       {
 	m_ode.DefineOdeRhs     (&NonlinearSWE::DoOdeRhs,        this);
@@ -73,19 +72,19 @@ namespace Nektar
     // Type of advection class to be used
     switch(m_projectionType)
       {
-	// Continuous field 
+	// Continuous field
       case MultiRegions::eGalerkin:
 	{
-	  //  Do nothing 
+	  //  Do nothing
 	  break;
 	}
-	// Discontinuous field 
+	// Discontinuous field
       case MultiRegions::eDiscontinuous:
 	{
 	  string advName;
 	  string diffName;
 	  string riemName;
-          
+
 	  //---------------------------------------------------------------
 	  // Setting up advection and diffusion operators
 	  // NB: diffusion not set up for SWE at the moment
@@ -96,23 +95,23 @@ namespace Nektar
 	    .CreateInstance(advName, advName);
 	  // m_diffusion = SolverUtils::GetDiffusionFactory()
 	  //                             .CreateInstance(diffName, diffName);
-	  
+
 	  m_advection->SetFluxVector(&NonlinearSWE::GetFluxVector, this);
 	  // m_diffusion->SetFluxVectorNS(&ShallowWaterSystem::
-	  //                                  GetEddyViscosityFluxVector, this); 
-         
+	  //                                  GetEddyViscosityFluxVector, this);
+
 	  // Setting up Riemann solver for advection operator
 	  m_session->LoadSolverInfo("UpwindType", riemName, "Average");
 	  m_riemannSolver = SolverUtils::GetRiemannSolverFactory()
 	    .CreateInstance(riemName, m_session);
-                
+
 	  // Setting up upwind solver for diffusion operator
 	  // m_riemannSolverLDG = SolverUtils::GetRiemannSolverFactory()
 	  //                                 .CreateInstance("UpwindLDG");
-	  
-	  // Setting up parameters for advection operator Riemann solver 
+
+	  // Setting up parameters for advection operator Riemann solver
 	  m_riemannSolver->SetParam (
-                                     "gravity",  
+                                     "gravity",
                                      &NonlinearSWE::GetGravity, this);
           m_riemannSolver->SetAuxVec(
                                      "vecLocs",
@@ -123,10 +122,10 @@ namespace Nektar
 	  m_riemannSolver->SetScalar(
 				     "depth",
 				     &NonlinearSWE::GetDepth, this);
-	  
+
 	  // Setting up parameters for diffusion operator Riemann solver
 	  // m_riemannSolverLDG->AddParam (
-	  //                     "gravity",  
+	  //                     "gravity",
 	  //                     &NonlinearSWE::GetGravity,   this);
       // m_riemannSolverLDG->SetAuxVec(
       //                     "vecLocs",
@@ -134,7 +133,7 @@ namespace Nektar
 	  // m_riemannSolverLDG->AddVector(
 	  //                     "N",
 	  //                     &NonlinearSWE::GetNormals, this);
-          
+
 	  // Concluding initialisation of advection / diffusion operators
 	  m_advection->SetRiemannSolver   (m_riemannSolver);
 	  //m_diffusion->SetRiemannSolver   (m_riemannSolverLDG);
@@ -148,37 +147,37 @@ namespace Nektar
 	  break;
 	}
       }
-    
+
 
   }
-  
+
   NonlinearSWE::~NonlinearSWE()
   {
-    
+
   }
- 
+
   // physarray contains the conservative variables
   void NonlinearSWE::AddCoriolis(const Array<OneD, const Array<OneD, NekDouble> > &physarray,
 			      Array<OneD, Array<OneD, NekDouble> > &outarray)
   {
-    
+
     int ncoeffs    = GetNcoeffs();
     int nq         = GetTotPoints();
-    
+
     Array<OneD, NekDouble> tmp(nq);
     Array<OneD, NekDouble> mod(ncoeffs);
-	
+
     switch(m_projectionType)
       {
       case MultiRegions::eDiscontinuous:
-	{	  
+	{
 	  // add to hu equation
 	  Vmath::Vmul(nq,m_coriolis,1,physarray[2],1,tmp,1);
 	  m_fields[0]->IProductWRTBase(tmp,mod);
 	  m_fields[0]->MultiplyByElmtInvMass(mod,mod);
 	  m_fields[0]->BwdTrans(mod,tmp);
 	  Vmath::Vadd(nq,tmp,1,outarray[1],1,outarray[1],1);
-	   
+
 	  // add to hv equation
 	  Vmath::Vmul(nq,m_coriolis,1,physarray[1],1,tmp,1);
 	  Vmath::Neg(nq,tmp,1);
@@ -194,7 +193,7 @@ namespace Nektar
 	  // add to hu equation
 	  Vmath::Vmul(nq,m_coriolis,1,physarray[2],1,tmp,1);
 	  Vmath::Vadd(nq,tmp,1,outarray[1],1,outarray[1],1);
-	  
+
 	  // add to hv equation
 	  Vmath::Vmul(nq,m_coriolis,1,physarray[1],1,tmp,1);
 	  Vmath::Neg(nq,tmp,1);
@@ -208,23 +207,23 @@ namespace Nektar
 
 
   }
-  
+
 
   // physarray contains the conservative variables
   void NonlinearSWE::AddVariableDepth(const Array<OneD, const Array<OneD, NekDouble> > &physarray,
 				      Array<OneD, Array<OneD, NekDouble> > &outarray)
   {
-    
+
     int ncoeffs    = GetNcoeffs();
     int nq         = GetTotPoints();
-        
+
     Array<OneD, NekDouble> tmp(nq);
     Array<OneD, NekDouble> mod(ncoeffs);
 
     switch(m_projectionType)
       {
       case MultiRegions::eDiscontinuous:
-	{	  
+	{
 	  for (int i = 0; i < m_spacedim; ++i)
 	    {
 	      Vmath::Vmul(nq,m_bottomSlope[i],1,physarray[0],1,tmp,1);
@@ -255,32 +254,32 @@ namespace Nektar
 
   }
 
-  void NonlinearSWE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
-			            Array<OneD,       Array<OneD, NekDouble> >&outarray, 
-			      const NekDouble time) 
+  void NonlinearSWE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+			            Array<OneD,       Array<OneD, NekDouble> >&outarray,
+			      const NekDouble time)
   {
     int i, j;
     int ndim       = m_spacedim;
-    int nvariables = inarray.num_elements();
+    int nvariables = inarray.size();
     int nq         = GetTotPoints();
-  
-    
+
+
     switch(m_projectionType)
       {
       case MultiRegions::eDiscontinuous:
 	{
-	 
+
 	  //-------------------------------------------------------
 	  // Compute the DG advection including the numerical flux
-	  // by using SolverUtils/Advection 
+	  // by using SolverUtils/Advection
 	  // Input and output in physical space
 	  Array<OneD, Array<OneD, NekDouble> > advVel;
-	  
+
 	  m_advection->Advect(nvariables, m_fields, advVel, inarray,
 	                      outarray, time);
 	  //-------------------------------------------------------
-	  
-	  
+
+
 	  //-------------------------------------------------------
 	  // negate the outarray since moving terms to the rhs
 	  for(i = 0; i < nvariables; ++i)
@@ -288,14 +287,14 @@ namespace Nektar
 	      Vmath::Neg(nq,outarray[i],1);
 	    }
 	  //-------------------------------------------------------
-	  
-	  
+
+
 	  //-------------------------------------------------
 	  // Add "source terms"
 	  // Input and output in physical space
-	  	  
+
 	  // Coriolis forcing
-	  if (m_coriolis.num_elements() != 0)
+	  if (m_coriolis.size() != 0)
 	    {
 	      AddCoriolis(inarray,outarray);
 	    }
@@ -305,19 +304,19 @@ namespace Nektar
 	    {
 	      AddVariableDepth(inarray,outarray);
 	    }
-	  //------------------------------------------------- 
-	   
+	  //-------------------------------------------------
+
 	}
 	break;
       case MultiRegions::eGalerkin:
       case MultiRegions::eMixed_CG_Discontinuous:
 	{
-	
+
 	  //-------------------------------------------------------
 	  // Compute the fluxvector in physical space
-	  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
+	  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
 	    fluxvector(nvariables);
-	  
+
 	  for (i = 0; i < nvariables; ++i)
             {
 	      fluxvector[i] = Array<OneD, Array<OneD, NekDouble> >(ndim);
@@ -326,18 +325,18 @@ namespace Nektar
 		  fluxvector[i][j] = Array<OneD, NekDouble>(nq);
                 }
             }
-	  
+
 	  NonlinearSWE::GetFluxVector(inarray, fluxvector);
-	  //------------------------------------------------------- 
+	  //-------------------------------------------------------
 
 
 
  	  //-------------------------------------------------------
-	  // Take the derivative of the flux terms 
+	  // Take the derivative of the flux terms
 	  // and negate the outarray since moving terms to the rhs
 	  Array<OneD,NekDouble> tmp(nq);
-	  Array<OneD, NekDouble>tmp1(nq);           
-	  
+	  Array<OneD, NekDouble>tmp1(nq);
+
 	  for(i = 0; i < nvariables; ++i)
 	    {
 	      m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[0],fluxvector[i][0],tmp);
@@ -346,13 +345,13 @@ namespace Nektar
 	      Vmath::Neg(nq,outarray[i],1);
 	    }
 
-	  
+
 	  //-------------------------------------------------
 	  // Add "source terms"
 	  // Input and output in physical space
-	  
+
 	  // Coriolis forcing
-	  if (m_coriolis.num_elements() != 0)
+	  if (m_coriolis.size() != 0)
 	    {
 	      AddCoriolis(inarray,outarray);
 	    }
@@ -362,7 +361,7 @@ namespace Nektar
 	    {
 	      AddVariableDepth(inarray,outarray);
 	    }
-	  //------------------------------------------------- 
+	  //-------------------------------------------------
 	}
 	break;
       default:
@@ -370,24 +369,24 @@ namespace Nektar
 	break;
       }
   }
- 
+
 
   void NonlinearSWE::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
 				           Array<OneD,       Array<OneD, NekDouble> >&outarray,
 				     const NekDouble time)
   {
     int i;
-    int nvariables = inarray.num_elements();
-   
-    
+    int nvariables = inarray.size();
+
+
     switch(m_projectionType)
       {
       case MultiRegions::eDiscontinuous:
 	{
-	  
+
 	  // Just copy over array
 	  int npoints = GetNpoints();
-	  
+
 	  for(i = 0; i < nvariables; ++i)
 	    {
 	      Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
@@ -398,10 +397,10 @@ namespace Nektar
       case MultiRegions::eGalerkin:
       case MultiRegions::eMixed_CG_Discontinuous:
 	{
-	  
+
 	  EquationSystem::SetBoundaryConditions(time);
-	  Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
-	  
+	  Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs(),0.0);
+
 	  for(i = 0; i < nvariables; ++i)
           {
               m_fields[i]->FwdTrans(inarray[i],coeffs);
@@ -414,15 +413,15 @@ namespace Nektar
 	break;
       }
   }
-  
+
 
    //----------------------------------------------------
   void NonlinearSWE::SetBoundaryConditions(
-    Array<OneD, Array<OneD, NekDouble> > &inarray, 
+    Array<OneD, Array<OneD, NekDouble> > &inarray,
     NekDouble time)
   {
       std::string varName;
-      int nvariables = m_fields.num_elements();
+      int nvariables = m_fields.size();
       int cnt = 0;
       int nTracePts  = GetTraceTotPoints();
 
@@ -436,9 +435,9 @@ namespace Nektar
       }
 
       // Loop over Boundary Regions
-      for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
-      {	
-	
+      for (int n = 0; n < m_fields[0]->GetBndConditions().size(); ++n)
+      {
+
           if (m_fields[0]->GetBndConditions()[n]->GetBoundaryConditionType()
               == SpatialDomains::ePeriodic)
           {
@@ -450,7 +449,7 @@ namespace Nektar
           {
               WallBoundary2D(n, cnt, Fwd, inarray);
           }
-	
+
           // Time Dependent Boundary Condition (specified in meshfile)
           if (m_fields[0]->GetBndConditions()[n]->IsTimeDependent())
           {
@@ -463,7 +462,7 @@ namespace Nektar
           cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
       }
   }
-  
+
   //----------------------------------------------------
   /**
      * @brief Wall boundary condition.
@@ -473,14 +472,14 @@ namespace Nektar
         int                                   cnt,
         Array<OneD, Array<OneD, NekDouble> > &Fwd,
         Array<OneD, Array<OneD, NekDouble> > &physarray)
-    { 
+    {
         int i;
-        int nvariables = physarray.num_elements();
-        
-        // Adjust the physical values of the trace to take 
+        int nvariables = physarray.size();
+
+        // Adjust the physical values of the trace to take
         // user defined boundaries into account
         int e, id1, id2, npts;
-        
+
         for (e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]
                  ->GetExpSize(); ++e)
         {
@@ -490,8 +489,8 @@ namespace Nektar
                 GetPhys_Offset(e);
             id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
                         m_fields[0]->GetTraceMap()->
-                                    GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
-            
+                                    GetBndCondIDToGlobalTraceID(cnt+e));
+
             // For 2D/3D, define: v* = v - 2(v.n)n
             Array<OneD, NekDouble> tmp(npts, 0.0);
 
@@ -502,12 +501,12 @@ namespace Nektar
                              &Fwd[1+i][id2], 1,
                              &m_traceNormals[i][id2], 1,
                              &tmp[0], 1,
-                             &tmp[0], 1);    
+                             &tmp[0], 1);
             }
 
             // Calculate 2.0(v.n)
             Vmath::Smul(npts, -2.0, &tmp[0], 1, &tmp[0], 1);
-            
+
             // Calculate v* = v - 2.0(v.n)n
             for (i = 0; i < m_spacedim; ++i)
             {
@@ -517,7 +516,7 @@ namespace Nektar
                              &Fwd[1+i][id2], 1,
                              &Fwd[1+i][id2], 1);
             }
-            
+
             // copy boundary adjusted values into the boundary expansion
             for (i = 0; i < nvariables; ++i)
             {
@@ -527,50 +526,50 @@ namespace Nektar
             }
         }
     }
-    
+
 
   void NonlinearSWE::WallBoundary2D(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &Fwd, Array<OneD, Array<OneD, NekDouble> > &physarray)
-  { 
+  {
 
     int i;
-    int nvariables = physarray.num_elements();
+    int nvariables = physarray.size();
 
-    // Adjust the physical values of the trace to take 
+    // Adjust the physical values of the trace to take
     // user defined boundaries into account
     int e, id1, id2, npts;
-    
+
     for(e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
       {
 	npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExp(e)->GetNumPoints(0);
 	id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e) ;
-	id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
-	
+	id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->GetBndCondIDToGlobalTraceID(cnt+e));
+
 	switch(m_expdim)
 	  {
 	  case 1:
 	    {
 	      // negate the forward flux
-	      Vmath::Neg(npts,&Fwd[1][id2],1);	
+	      Vmath::Neg(npts,&Fwd[1][id2],1);
 	    }
 	    break;
 	  case 2:
 	    {
 	      Array<OneD, NekDouble> tmp_n(npts);
 	      Array<OneD, NekDouble> tmp_t(npts);
-	      
+
 	      Vmath::Vmul(npts,&Fwd[1][id2],1,&m_traceNormals[0][id2],1,&tmp_n[0],1);
 	      Vmath::Vvtvp(npts,&Fwd[2][id2],1,&m_traceNormals[1][id2],1,&tmp_n[0],1,&tmp_n[0],1);
-	      
+
 	      Vmath::Vmul(npts,&Fwd[1][id2],1,&m_traceNormals[1][id2],1,&tmp_t[0],1);
 	      Vmath::Vvtvm(npts,&Fwd[2][id2],1,&m_traceNormals[0][id2],1,&tmp_t[0],1,&tmp_t[0],1);
-	      
+
 	      // negate the normal flux
-	      Vmath::Neg(npts,tmp_n,1);		      
-	      
+	      Vmath::Neg(npts,tmp_n,1);
+
 	      // rotate back to Cartesian
 	      Vmath::Vmul(npts,&tmp_t[0],1,&m_traceNormals[1][id2],1,&Fwd[1][id2],1);
 	      Vmath::Vvtvm(npts,&tmp_n[0],1,&m_traceNormals[0][id2],1,&Fwd[1][id2],1,&Fwd[1][id2],1);
-	      
+
 	      Vmath::Vmul(npts,&tmp_t[0],1,&m_traceNormals[0][id2],1,&Fwd[2][id2],1);
 	      Vmath::Vvtvp(npts,&tmp_n[0],1,&m_traceNormals[1][id2],1,&Fwd[2][id2],1,&Fwd[2][id2],1);
 	    }
@@ -582,7 +581,7 @@ namespace Nektar
 	    ASSERTL0(false,"Illegal expansion dimension");
 	  }
 
-	
+
 
 	// copy boundary adjusted values into the boundary expansion
 	for (i = 0; i < nvariables; ++i)
@@ -591,16 +590,16 @@ namespace Nektar
 	  }
       }
   }
-  
-    
+
+
   // Physfield in conservative Form
  void NonlinearSWE::GetFluxVector(
-     const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
+     const Array<OneD, const Array<OneD, NekDouble> > &physfield,
            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
   {
     int i, j;
     int nq = m_fields[0]->GetTotPoints();
-    
+
     NekDouble g = m_g;
     Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
 
@@ -610,14 +609,14 @@ namespace Nektar
 	velocity[i] = Array<OneD, NekDouble>(nq);
 	Vmath::Vcopy(nq, physfield[i+1], 1, flux[0][i], 1);
       }
-    
+
      GetVelocityVector(physfield, velocity);
-     
+
      // Put (0.5 g h h) in tmp
      Array<OneD, NekDouble> tmp(nq);
      Vmath::Vmul(nq, physfield[0], 1, physfield[0], 1, tmp, 1);
      Vmath::Smul(nq, 0.5*g, tmp, 1, tmp, 1);
-     
+
      // Flux vector for the momentum equations
      for (i = 0; i < m_spacedim; ++i)
        {
@@ -626,18 +625,18 @@ namespace Nektar
 	     Vmath::Vmul(nq, velocity[j], 1, physfield[i+1], 1,
 			 flux[i+1][j], 1);
 	   }
-            
+
 	 // Add (0.5 g h h) to appropriate field
 	 Vmath::Vadd(nq, flux[i+1][i], 1, tmp, 1, flux[i+1][i], 1);
        }
 
   }
-  
+
   void NonlinearSWE::ConservativeToPrimitive(const Array<OneD, const Array<OneD, NekDouble> >&physin,
 					      Array<OneD,       Array<OneD, NekDouble> >&physout)
   {
     int nq = GetTotPoints();
-      
+
     if(physin.get() == physout.get())
       {
 	// copy indata and work with tmp array
@@ -648,13 +647,13 @@ namespace Nektar
 	    tmp[i] = Array<OneD, NekDouble>(nq);
 	    Vmath::Vcopy(nq,physin[i],1,tmp[i],1);
 	  }
-	
+
 	// \eta = h - d
 	Vmath::Vsub(nq,tmp[0],1,m_depth,1,physout[0],1);
-	
+
 	// u = hu/h
 	Vmath::Vdiv(nq,tmp[1],1,tmp[0],1,physout[1],1);
-	
+
 	// v = hv/ v
 	Vmath::Vdiv(nq,tmp[2],1,tmp[0],1,physout[2],1);
       }
@@ -662,10 +661,10 @@ namespace Nektar
       {
 	// \eta = h - d
 	Vmath::Vsub(nq,physin[0],1,m_depth,1,physout[0],1);
-	
+
 	// u = hu/h
 	Vmath::Vdiv(nq,physin[1],1,physin[0],1,physout[1],1);
-	
+
 	// v = hv/ v
 	Vmath::Vdiv(nq,physin[2],1,physin[0],1,physout[2],1);
       }
@@ -675,10 +674,10 @@ namespace Nektar
    void NonlinearSWE::v_ConservativeToPrimitive( )
   {
     int nq = GetTotPoints();
-    
+
     // u = hu/h
     Vmath::Vdiv(nq,m_fields[1]->GetPhys(),1,m_fields[0]->GetPhys(),1,m_fields[1]->UpdatePhys(),1);
-	
+
     // v = hv/ v
     Vmath::Vdiv(nq,m_fields[2]->GetPhys(),1,m_fields[0]->GetPhys(),1,m_fields[2]->UpdatePhys(),1);
 
@@ -689,9 +688,9 @@ namespace Nektar
   void NonlinearSWE::PrimitiveToConservative(const Array<OneD, const Array<OneD, NekDouble> >&physin,
 					     Array<OneD,       Array<OneD, NekDouble> >&physout)
   {
-    
+
     int nq = GetTotPoints();
-    
+
     if(physin.get() == physout.get())
       {
 	// copy indata and work with tmp array
@@ -702,42 +701,42 @@ namespace Nektar
 	    tmp[i] = Array<OneD, NekDouble>(nq);
 	    Vmath::Vcopy(nq,physin[i],1,tmp[i],1);
 	  }
-	
+
 	// h = \eta + d
 	Vmath::Vadd(nq,tmp[0],1,m_depth,1,physout[0],1);
-	
+
 	// hu = h * u
 	Vmath::Vmul(nq,physout[0],1,tmp[1],1,physout[1],1);
-	
+
 	// hv = h * v
 	Vmath::Vmul(nq,physout[0],1,tmp[2],1,physout[2],1);
-      
+
       }
     else
       {
 	// h = \eta + d
 	Vmath::Vadd(nq,physin[0],1,m_depth,1,physout[0],1);
-	
+
 	// hu = h * u
 	Vmath::Vmul(nq,physout[0],1,physin[1],1,physout[1],1);
-	
+
 	// hv = h * v
 	Vmath::Vmul(nq,physout[0],1,physin[2],1,physout[2],1);
-	
+
       }
-     
+
   }
 
   void NonlinearSWE::v_PrimitiveToConservative( )
   {
     int nq = GetTotPoints();
-    
+
     // h = \eta + d
     Vmath::Vadd(nq,m_fields[0]->GetPhys(),1,m_depth,1,m_fields[0]->UpdatePhys(),1);
-    
+
     // hu = h * u
     Vmath::Vmul(nq,m_fields[0]->GetPhys(),1,m_fields[1]->GetPhys(),1,m_fields[1]->UpdatePhys(),1);
-    
+
     // hv = h * v
     Vmath::Vmul(nq,m_fields[0]->GetPhys(),1,m_fields[2]->GetPhys(),1,m_fields[2]->UpdatePhys(),1);
   }
@@ -746,7 +745,7 @@ namespace Nektar
  /**
      * @brief Compute the velocity field \f$ \mathbf{v} \f$ given the momentum
      * \f$ h\mathbf{v} \f$.
-     * 
+     *
      * @param physfield  Momentum field.
      * @param velocity   Velocity field.
      */
@@ -754,11 +753,11 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> > &physfield,
               Array<OneD, Array<OneD, NekDouble> > &velocity)
     {
-        const int npts = physfield[0].num_elements();
-        
+        const int npts = physfield[0].size();
+
         for (int i = 0; i < m_spacedim; ++i)
         {
-            Vmath::Vdiv(npts, physfield[1+i], 1, physfield[0], 1, 
+            Vmath::Vdiv(npts, physfield[1+i], 1, physfield[0], 1,
                               velocity[i],    1);
         }
     }

@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -67,7 +66,7 @@ void LEE::v_InitObject()
 
     // Initialize basefield again
     m_bf = Array<OneD, Array<OneD, NekDouble>>(m_bfNames.size());
-    for (int i = 0; i < m_bf.num_elements(); ++i)
+    for (int i = 0; i < m_bf.size(); ++i)
     {
         m_bf[i] = Array<OneD, NekDouble>(GetTotPoints());
     }
@@ -76,7 +75,7 @@ void LEE::v_InitObject()
 
     // Define the normal velocity fields
     m_bfFwdBwd = Array<OneD, Array<OneD, NekDouble>>(2 * m_bfNames.size());
-    for (int i = 0; i < m_bfFwdBwd.num_elements(); i++)
+    for (int i = 0; i < m_bfFwdBwd.size(); i++)
     {
         m_bfFwdBwd[i] = Array<OneD, NekDouble>(GetTraceNpoints(), 0.0);
     }
@@ -137,9 +136,9 @@ void LEE::v_GetFluxVector(
     const Array<OneD, Array<OneD, NekDouble>> &physfield,
     Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &flux)
 {
-    int nq = physfield[0].num_elements();
+    int nq = physfield[0].size();
 
-    ASSERTL1(flux[0].num_elements() == m_spacedim,
+    ASSERTL1(flux[0].size() == m_spacedim,
              "Dimension of flux array and velocity array do not match");
 
     Array<OneD, const NekDouble> c0sq = m_bf[0];
@@ -303,7 +302,7 @@ void LEE::v_RiemannInvariantBC(int bcRegion, int cnt,
                                Array<OneD, Array<OneD, NekDouble>> &physarray)
 {
     int id1, id2, nBCEdgePts;
-    int nVariables = physarray.num_elements();
+    int nVariables = physarray.size();
 
     const Array<OneD, const int> &traceBndMap = m_fields[0]->GetTraceBndMap();
 

@@ -23,9 +23,9 @@ std::string GetExt(std::string filename)
 		
 	if(ext == "gz")
 	{
-		string tmp = filename.substr(0,dot-1);
-		dot = tmp.find_last_of('_.') + 1;
-		ext = filename.substr(dot,filename.length()-dot);
+            std::string tmp = filename.substr(0,dot-1);
+            dot = tmp.find_last_of('_.') + 1;
+            ext = filename.substr(dot,filename.length()-dot);
 	}
 	return ext;
 	

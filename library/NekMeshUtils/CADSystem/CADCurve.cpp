@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -32,6 +31,9 @@
 //  Description: cad object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
+
 #include "CADCurve.h"
 #include "CADSurf.h"
 
@@ -44,14 +46,16 @@ namespace NekMeshUtils
 
 Array<OneD, NekDouble> CADCurve::NormalWRT(NekDouble t, int surf)
 {
+    boost::ignore_unused(surf);
+
     Array<OneD, NekDouble> p = P(t);
-    pair<CADSurfSharedPtr, CADOrientation::Orientation> surface;
+    pair<weak_ptr<CADSurf>, CADOrientation::Orientation> surface;
     ASSERTL0(m_adjSurfs.size() == 1,
              "This will only work in 2D for one surface at the moment");
     surface = m_adjSurfs[0];
 
-    Array<OneD, NekDouble> uv = surface.first->locuv(p);
-    Array<OneD, NekDouble> d1 = surface.first->D1(uv);
+    Array<OneD, NekDouble> uv = surface.first.lock()->locuv(p);
+    Array<OneD, NekDouble> d1 = surface.first.lock()->D1(uv);
 
     NekDouble t1 = t - 1e-8;
     NekDouble t2 = t + 1e-8;
@@ -61,8 +65,8 @@ Array<OneD, NekDouble> CADCurve::NormalWRT(NekDouble t, int surf)
         swap(t1, t2);
     }
 
-    Array<OneD, NekDouble> uv1 = surface.first->locuv(P(t1));
-    Array<OneD, NekDouble> uv2 = surface.first->locuv(P(t2));
+    Array<OneD, NekDouble> uv1 = surface.first.lock()->locuv(P(t1));
+    Array<OneD, NekDouble> uv2 = surface.first.lock()->locuv(P(t2));
 
     NekDouble du = uv2[1] - uv1[1];
     NekDouble dv = -1.0 * (uv2[0] - uv1[0]);
@@ -84,7 +88,7 @@ CADOrientation::Orientation CADCurve::GetOrienationWRT(int surf)
 {
     for (int i = 0; i < m_adjSurfs.size(); i++)
     {
-        if (m_adjSurfs[i].first->GetId() == surf)
+        if (m_adjSurfs[i].first.lock()->GetId() == surf)
         {
             return m_adjSurfs[i].second;
         }

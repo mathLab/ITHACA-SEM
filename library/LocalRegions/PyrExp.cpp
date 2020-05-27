@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -38,9 +37,9 @@
 
 using namespace std;
 
-namespace Nektar 
+namespace Nektar
 {
-    namespace LocalRegions 
+    namespace LocalRegions
     {
 
 	PyrExp::PyrExp(const LibUtilities::BasisKey &Ba,
@@ -78,7 +77,7 @@ namespace Nektar
             m_matrixManager(T.m_matrixManager),
             m_staticCondMatrixManager(T.m_staticCondMatrixManager)
         {
-        } 
+        }
 
         PyrExp::~PyrExp()
         {
@@ -89,12 +88,12 @@ namespace Nektar
         // Integration Methods
         //----------------------------
 
-        /** 
+        /**
          * \brief Integrate the physical point list \a inarray over pyramidic
          * region and return the value.
-         * 
-         * Inputs:\n 
-         * 
+         *
+         * Inputs:\n
+         *
          * - \a inarray: definition of function to be returned at quadrature
          * point of expansion.
          *
@@ -131,7 +130,7 @@ namespace Nektar
             return StdPyrExp::v_Integral(tmp);
         }
 
-        
+
         //----------------------------
         // Differentiation Methods
         //----------------------------
@@ -154,21 +153,21 @@ namespace Nektar
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                if(out_d0.num_elements())
+                if(out_d0.size())
                 {
                     Vmath::Vmul  (nquad0*nquad1*nquad2,&gmat[0][0],1,&diff0[0],1, &out_d0[0], 1);
                     Vmath::Vvtvp (nquad0*nquad1*nquad2,&gmat[1][0],1,&diff1[0],1, &out_d0[0], 1,&out_d0[0],1);
                     Vmath::Vvtvp (nquad0*nquad1*nquad2,&gmat[2][0],1,&diff2[0],1, &out_d0[0], 1,&out_d0[0],1);
                 }
-                
-                if(out_d1.num_elements())
+
+                if(out_d1.size())
                 {
                     Vmath::Vmul  (nquad0*nquad1*nquad2,&gmat[3][0],1,&diff0[0],1, &out_d1[0], 1);
                     Vmath::Vvtvp (nquad0*nquad1*nquad2,&gmat[4][0],1,&diff1[0],1, &out_d1[0], 1,&out_d1[0],1);
                     Vmath::Vvtvp (nquad0*nquad1*nquad2,&gmat[5][0],1,&diff2[0],1, &out_d1[0], 1,&out_d1[0],1);
                 }
-                
-                if(out_d2.num_elements())
+
+                if(out_d2.size())
                 {
                     Vmath::Vmul  (nquad0*nquad1*nquad2,&gmat[6][0],1,&diff0[0],1, &out_d2[0], 1);
                     Vmath::Vvtvp (nquad0*nquad1*nquad2,&gmat[7][0],1,&diff1[0],1, &out_d2[0], 1, &out_d2[0],1);
@@ -177,21 +176,21 @@ namespace Nektar
             }
             else // regular geometry
             {
-                if(out_d0.num_elements())
+                if(out_d0.size())
                 {
                     Vmath::Smul  (nquad0*nquad1*nquad2,gmat[0][0],&diff0[0],1, &out_d0[0], 1);
                     Blas::Daxpy (nquad0*nquad1*nquad2,gmat[1][0],&diff1[0],1, &out_d0[0], 1);
                     Blas::Daxpy (nquad0*nquad1*nquad2,gmat[2][0],&diff2[0],1, &out_d0[0], 1);
                 }
-                
-                if(out_d1.num_elements())
+
+                if(out_d1.size())
                 {
                     Vmath::Smul  (nquad0*nquad1*nquad2,gmat[3][0],&diff0[0],1, &out_d1[0], 1);
                     Blas::Daxpy (nquad0*nquad1*nquad2,gmat[4][0],&diff1[0],1, &out_d1[0], 1);
                     Blas::Daxpy (nquad0*nquad1*nquad2,gmat[5][0],&diff2[0],1, &out_d1[0], 1);
                 }
-                
-                if(out_d2.num_elements())
+
+                if(out_d2.size())
                 {
                     Vmath::Smul  (nquad0*nquad1*nquad2,gmat[6][0],&diff0[0],1, &out_d2[0], 1);
                     Blas::Daxpy (nquad0*nquad1*nquad2,gmat[7][0],&diff1[0],1, &out_d2[0], 1);
@@ -200,11 +199,11 @@ namespace Nektar
             }
         }
 
-        
+
         //---------------------------------------
         // Transforms
         //---------------------------------------
-        
+
         /**
          * \brief Forward transform from physical quadrature space stored in
          * \a inarray and evaluate the expansion coefficients and store in \a
@@ -221,8 +220,8 @@ namespace Nektar
         void PyrExp::v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
                                       Array<OneD,       NekDouble>& outarray)
         {
-            if(m_base[0]->Collocation() && 
-               m_base[1]->Collocation() && 
+            if(m_base[0]->Collocation() &&
+               m_base[1]->Collocation() &&
                m_base[2]->Collocation())
             {
                 Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&outarray[0],1);
@@ -243,7 +242,7 @@ namespace Nektar
                 out = (*matsys)*in;
             }
         }
-        
+
 
         //---------------------------------------
         // Inner product functions
@@ -261,12 +260,12 @@ namespace Nektar
          * \sum_{j=0}^{nq_1} \psi_{q}^a(\eta_{2,j}) \sum_{k=0}^{nq_2}
          * \psi_{pqr}^c u(\bar \eta_{1i},\eta_{2j},\eta_{3k}) J_{i,j,k}
          * \end{array} \f$ \n
-         * 
+         *
          * where
          *
          * \f$\phi_{pqr} (\xi_1 , \xi_2 , \xi_3) = \psi_p^a (\bar \eta_1)
          * \psi_{q}^a (\eta_2) \psi_{pqr}^c (\eta_3) \f$ \n
-         * 
+         *
          * which can be implemented as \n \f$f_{pqr} (\xi_{3k}) =
          * \sum_{k=0}^{nq_3} \psi_{pqr}^c u(\bar
          * \eta_{1i},\eta_{2j},\eta_{3k}) J_{i,j,k} = {\bf B_3 U} \f$ \n \f$
@@ -299,9 +298,9 @@ namespace Nektar
             if(multiplybyweights)
             {
                 Array<OneD, NekDouble> tmp(nquad0*nquad1*nquad2);
-                
+
                 MultiplyByQuadratureMetric(inarray, tmp);
-                
+
                 IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
                                              m_base[1]->GetBdata(),
                                              m_base[2]->GetBdata(),
@@ -439,7 +438,7 @@ namespace Nektar
             }
 
             Vmath::Vadd(nqtot, &tmp2[0], 1, &wsp[0], 1, &tmp2[0], 1);
-            
+
             // (1+z1)/(1-z2) for d/d eta_1
             for(i = 0; i < nquad1*nquad2; ++i)
             {
@@ -449,7 +448,7 @@ namespace Nektar
             }
             Vmath::Vadd(nqtot, &tmp3[0], 1, &tmp5[0], 1, &tmp3[0], 1);
 
-            
+
             IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
                                          m_base[1]->GetBdata (),
                                          m_base[2]->GetBdata (),
@@ -473,11 +472,11 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs, tmp6, 1, outarray, 1, outarray, 1);
         }
 
-        
+
         //---------------------------------------
         // Evaluation functions
         //---------------------------------------
-        
+
         StdRegions::StdExpansionSharedPtr PyrExp::v_GetStdExp(void) const
         {
             return MemoryManager<StdRegions::StdPyrExp>
@@ -494,7 +493,7 @@ namespace Nektar
                            2, m_base[1]->GetPointsKey());
             LibUtilities::BasisKey bkey2(m_base[2]->GetBasisType(),
                            2, m_base[2]->GetPointsKey());
-            
+
             return MemoryManager<StdRegions::StdPyrExp>
                 ::AllocateSharedPtr( bkey0, bkey1, bkey2);
         }
@@ -503,19 +502,19 @@ namespace Nektar
          * @brief Get the coordinates #coords at the local coordinates
          * #Lcoords
          */
-        void PyrExp::v_GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
+        void PyrExp::v_GetCoord(const Array<OneD, const NekDouble>& Lcoords,
                                       Array<OneD,       NekDouble>& coords)
         {
             int  i;
-            
-            ASSERTL1(Lcoords[0] <= -1.0 && Lcoords[0] >= 1.0 && 
+
+            ASSERTL1(Lcoords[0] <= -1.0 && Lcoords[0] >= 1.0 &&
                      Lcoords[1] <= -1.0 && Lcoords[1] >= 1.0 &&
                      Lcoords[2] <= -1.0 && Lcoords[2] >= 1.0,
                      "Local coordinates are not in region [-1,1]");
-            
+
             // m_geom->FillGeom(); // TODO: implement FillGeom()
-            
-            for(i = 0; i < m_geom->GetCoordim(); ++i) 
+
+            for(i = 0; i < m_geom->GetCoordim(); ++i)
             {
                 coords[i] = m_geom->GetCoord(i,Lcoords);
             }
@@ -550,7 +549,7 @@ namespace Nektar
             // element to read in data
             if (fromType[0] != m_base[0]->GetBasisType() ||
                 fromType[1] != m_base[1]->GetBasisType() ||
-                fromType[2] != m_base[2]->GetBasisType() || 
+                fromType[2] != m_base[2]->GetBasisType() ||
                 data_order0 != fillorder0 ||
                 data_order1 != fillorder1 ||
                 data_order2 != fillorder2)
@@ -576,7 +575,7 @@ namespace Nektar
 
                 tmpPyr.BwdTrans(tmpData, tmpBwd);
                 tmpPyr2.FwdTrans(tmpBwd, tmpOut);
-                Vmath::Vcopy(tmpOut.num_elements(), &tmpOut[0], 1, coeffs, 1);
+                Vmath::Vcopy(tmpOut.size(), &tmpOut[0], 1, coeffs, 1);
 
             }
             else
@@ -584,8 +583,8 @@ namespace Nektar
                 Vmath::Vcopy(m_ncoeffs,&data[0],1,coeffs,1);
             }
         }
-            
-        /** 
+
+        /**
          * Given the local cartesian coordinate \a Lcoord evaluate the
          * value of physvals at this point by calling through to the
          * StdExpansion method
@@ -604,18 +603,18 @@ namespace Nektar
             Array<OneD,NekDouble> Lcoord(3);
 
             ASSERTL0(m_geom,"m_geom not defined");
-	
+
             //TODO: check GetLocCoords()
             m_geom->GetLocCoords(coord, Lcoord);
-            
+
             return StdPyrExp::v_PhysEvaluate(Lcoord, physvals);
         }
 
-        
+
         //---------------------------------------
         // Helper functions
         //---------------------------------------
-        
+
         int PyrExp::v_GetCoordim()
         {
             return m_geom->GetCoordim();
@@ -627,20 +626,20 @@ namespace Nektar
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
             int nquad2 = m_base[2]->GetNumPoints();
-            
-            int nq0 = 0; 
-            int nq1 = 0; 
+
+            int nq0 = 0;
+            int nq1 = 0;
 
             switch(face)
             {
             case 0:
                 nq0 = nquad0;
                 nq1 = nquad1;
-                if(outarray.num_elements()!=nq0*nq1)
+                if(outarray.size()!=nq0*nq1)
                 {
                     outarray = Array<OneD, int>(nq0*nq1);
                 }
-                
+
                 //Directions A and B positive
                 for(int i = 0; i < nquad0*nquad1; ++i)
                 {
@@ -651,11 +650,11 @@ namespace Nektar
               case 1:
                     nq0 = nquad0;
                     nq1 = nquad2;
-                    if(outarray.num_elements()!=nq0*nq1)
+                    if(outarray.size()!=nq0*nq1)
                     {
                         outarray = Array<OneD, int>(nq0*nq1);
                     }
-                    
+
                     //Direction A and B positive
                     for (int k=0; k<nquad2; k++)
                     {
@@ -665,31 +664,31 @@ namespace Nektar
                         }
                     }
 
-                    break; 
+                    break;
                 case 2:
                     nq0 = nquad1;
                     nq1 = nquad2;
-                    if(outarray.num_elements()!=nq0*nq1)
+                    if(outarray.size()!=nq0*nq1)
                     {
                         outarray = Array<OneD, int>(nq0*nq1);
                     }
-                    
+
                     //Directions A and B positive
                     for(int j = 0; j < nquad1*nquad2; ++j)
                     {
                         outarray[j] = nquad0-1 + j*nquad0;
-                        
+
                     }
                     break;
                 case 3:
-                
+
                     nq0 = nquad0;
                     nq1 = nquad2;
-                    if(outarray.num_elements()!=nq0*nq1)
+                    if(outarray.size()!=nq0*nq1)
                     {
                         outarray = Array<OneD, int>(nq0*nq1);
                     }
-                    
+
                     //Direction A and B positive
                     for (int k=0; k<nquad2; k++)
                     {
@@ -698,21 +697,21 @@ namespace Nektar
                             outarray[k*nquad0+i] = nquad0*(nquad1-1) + (nquad0*nquad1*k)+i;
                         }
                     }
-                    
+                    break;
                 case 4:
                     nq0 = nquad1;
                     nq1 = nquad2;
 
-                    if(outarray.num_elements()!=nq0*nq1)
+                    if(outarray.size()!=nq0*nq1)
                     {
                         outarray = Array<OneD, int>(nq0*nq1);
                     }
-                    
+
                     //Directions A and B positive
                     for(int j = 0; j < nquad1*nquad2; ++j)
                     {
                         outarray[j] = j*nquad0;
-                        
+
                     }
                     break;
                 default:
@@ -720,7 +719,7 @@ namespace Nektar
                     break;
             }
         }
-        
+
         void PyrExp::v_ComputeFaceNormal(const int face)
         {
             const SpatialDomains::GeomFactorsSharedPtr &geomFactors =
@@ -757,6 +756,11 @@ namespace Nektar
                 normal[i] = Array<OneD, NekDouble>(nq_face);
             }
 
+            size_t nqb = nq_face;
+            size_t nbnd= face;
+            m_elmtBndNormDirElmtLen[nbnd] = Array<OneD, NekDouble> {nqb, 0.0};
+            Array<OneD, NekDouble> &length = m_elmtBndNormDirElmtLen[nbnd];
+
             // Regular geometry case
             if (type == SpatialDomains::eRegular      ||
                 type == SpatialDomains::eMovingRegular)
@@ -769,7 +773,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            normal[i][0] = -df[3*i+2][0]; 
+                            normal[i][0] = -df[3*i+2][0];
                         }
                         break;
                     }
@@ -777,7 +781,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            normal[i][0] = -df[3*i+1][0]; 
+                            normal[i][0] = -df[3*i+1][0];
                         }
                         break;
                     }
@@ -785,7 +789,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            normal[i][0] = df[3*i][0]+df[3*i+2][0]; 
+                            normal[i][0] = df[3*i][0]+df[3*i+2][0];
                         }
                         break;
                     }
@@ -801,7 +805,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            normal[i][0] = -df[3*i][0]; 
+                            normal[i][0] = -df[3*i][0];
                         }
                         break;
                     }
@@ -816,6 +820,9 @@ namespace Nektar
                     fac += normal[i][0]*normal[i][0];
                 }
                 fac = 1.0/sqrt(fac);
+
+                Vmath::Fill(nqb, fac, length, 1);
+
                 for (i = 0; i < vCoordDim; ++i)
                 {
                     Vmath::Fill(nq_face,fac*normal[i][0],normal[i],1);
@@ -992,6 +999,8 @@ namespace Nektar
 
                 Vmath::Vsqrt(nq_face,work,1,work,1);
                 Vmath::Sdiv (nq_face,1.0,work,1,work,1);
+                
+                Vmath::Vcopy(nqb, work, 1, length, 1);
 
                 for(i = 0; i < GetCoordim(); ++i)
                 {
@@ -1005,9 +1014,9 @@ namespace Nektar
                     const StdRegions::StdMatrixKey &mkey)
         {
             int nq = GetTotPoints();
-            
+
             // Calculate sqrt of the Jacobian
-            Array<OneD, const NekDouble> jac = 
+            Array<OneD, const NekDouble> jac =
                                     m_metricinfo->GetJac(GetPointsKeys());
             Array<OneD, NekDouble> sqrt_jac(nq);
             if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
@@ -1018,13 +1027,13 @@ namespace Nektar
             {
                 Vmath::Fill(nq,sqrt(jac[0]),sqrt_jac,1);
             }
-            
+
             // Multiply array by sqrt(Jac)
             Vmath::Vmul(nq,sqrt_jac,1,array,1,array,1);
-            
+
             // Apply std region filter
             StdPyrExp::v_SVVLaplacianFilter( array, mkey);
-            
+
             // Divide by sqrt(Jac)
             Vmath::Vdiv(nq,array,1,sqrt_jac,1,array,1);
         }
@@ -1033,7 +1042,7 @@ namespace Nektar
         //---------------------------------------
         // Matrix creation functions
         //---------------------------------------
-        
+
         DNekMatSharedPtr PyrExp::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             DNekMatSharedPtr returnval;
@@ -1051,8 +1060,8 @@ namespace Nektar
             default:
                 returnval = StdPyrExp::v_GenMatrix(mkey);
             }
-            
-            return returnval;            
+
+            return returnval;
         }
 
         DNekMatSharedPtr PyrExp::v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
@@ -1060,7 +1069,7 @@ namespace Nektar
             LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
             LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
             LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
-            StdRegions::StdPyrExpSharedPtr tmp = 
+            StdRegions::StdPyrExpSharedPtr tmp =
                 MemoryManager<StdPyrExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
 
             return tmp->GetStdMatrix(mkey);
@@ -1245,7 +1254,7 @@ namespace Nektar
 
             switch(mkey.GetMatrixType())
             {
-            case StdRegions::eLaplacian: 
+            case StdRegions::eLaplacian:
             case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
 
                 // use Deformed case for both regular and deformed geometries
@@ -1512,7 +1521,7 @@ namespace Nektar
             int nq2  = m_base[2]->GetNumPoints();
             int nqtot   = nquad0*nquad1*nq2;
 
-            ASSERTL1(wsp.num_elements() >= 6*nqtot,
+            ASSERTL1(wsp.size() >= 6*nqtot,
                      "Insufficient workspace size.");
             ASSERTL1(m_ncoeffs <= nqtot,
                      "Workspace not set up for ncoeffs > nqtot");

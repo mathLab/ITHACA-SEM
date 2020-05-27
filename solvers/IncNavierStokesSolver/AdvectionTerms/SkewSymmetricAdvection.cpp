@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -71,7 +70,6 @@ void SkewSymmetricAdvection::v_InitObject(
 {
     Advection::v_InitObject(pSession, pFields);
 
-    m_CoeffState = MultiRegions::eLocal;
     m_homogen_dealiasing = pSession->DefinesSolverInfo("dealiasing");
     pSession->MatchSolverInfo("ModeType","SingleMode",m_SingleMode,false);
     pSession->MatchSolverInfo("ModeType","HalfMode",m_HalfMode,false);
@@ -92,9 +90,9 @@ void SkewSymmetricAdvection::v_Advect(
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
     // use dimension of Velocity vector to dictate dimension of operation
-    int ndim             = advVel.num_elements();
+    int ndim             = advVel.size();
     int nqtot            = fields[0]->GetTotPoints();
-    ASSERTL1(nConvectiveFields == inarray.num_elements(),"Number of convective fields and Inarray are not compatible");
+    ASSERTL1(nConvectiveFields == inarray.size(),"Number of convective fields and Inarray are not compatible");
 
     Array<OneD, Array<OneD, NekDouble> > velocity(ndim);
     for(int i = 0; i < ndim; ++i)
@@ -154,14 +152,14 @@ void SkewSymmetricAdvection::v_Advect(
 
             if(m_homogen_dealiasing == true && fields[0]->GetWaveSpace() == false)
             {
-                fields[0]->DealiasedProd(velocity[0],gradV0,gradV0,m_CoeffState);
-                fields[0]->DealiasedProd(velocity[1],gradV1,gradV1,m_CoeffState);
-                fields[0]->DealiasedProd(velocity[2],gradV2,gradV2,m_CoeffState);
+                fields[0]->DealiasedProd(velocity[0],gradV0,gradV0);
+                fields[0]->DealiasedProd(velocity[1],gradV1,gradV1);
+                fields[0]->DealiasedProd(velocity[2],gradV2,gradV2);
                 Vmath::Vadd(nPointsTot,gradV0,1,gradV1,1,outarray[n],1);
                 Vmath::Vadd(nPointsTot,gradV2,1,outarray[n],1,outarray[n],1);
-                fields[0]->DealiasedProd(inarray[n],velocity[0],gradV0,m_CoeffState);
-                fields[0]->DealiasedProd(inarray[n],velocity[1],gradV1,m_CoeffState);
-                fields[0]->DealiasedProd(inarray[n],velocity[2],gradV2,m_CoeffState);
+                fields[0]->DealiasedProd(inarray[n],velocity[0],gradV0);
+                fields[0]->DealiasedProd(inarray[n],velocity[1],gradV1);
+                fields[0]->DealiasedProd(inarray[n],velocity[2],gradV2);
                 fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],gradV0,tmp);
                 Vmath::Vadd(nPointsTot,tmp,1,outarray[n],1,outarray[n],1);
                 fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],gradV1,tmp);

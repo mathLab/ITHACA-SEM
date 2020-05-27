@@ -1677,8 +1677,8 @@
         <DOMAIN> C[0,1] </DOMAIN>
     </GEOMETRY>
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="u,v,p" TYPE="MODIFIED" />
-        <E COMPOSITE="C[1]" NUMMODES="7" FIELDS="u,v,p" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="6" FIELDS="u,v,p" TYPE="MODIFIED" />
+        <E COMPOSITE="C[1]" NUMMODES="6" FIELDS="u,v,p" TYPE="MODIFIED" />
     </EXPANSIONS>
     <CONDITIONS>
         <SOLVERINFO>
@@ -1699,7 +1699,7 @@
             <P> IO_InfoSteps = 1       </P>
             <P> Re = 500        </P>
             <P> Kinvis = 1.0/Re         </P>
-            <P> kdim = 4 </P>
+            <P> kdim = 2 </P>
             <P> nvec = 1 </P>
             <P> evtol = 1e-4 </P>
         </PARAMETERS>

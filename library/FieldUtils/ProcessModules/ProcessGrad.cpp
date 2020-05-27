@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,11 +36,13 @@
 #include <string>
 using namespace std;
 
+#include <boost/core/ignore_unused.hpp>
+
+#include <GlobalMapping/Mapping.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+
 #include "ProcessGrad.h"
 #include "ProcessMapping.h"
-#include <GlobalMapping/Mapping.h>
-
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
@@ -63,8 +64,8 @@ ProcessGrad::~ProcessGrad()
 
 void ProcessGrad::Process(po::variables_map &vm)
 {
-	m_f->SetUpExp(vm);
-	
+    m_f->SetUpExp(vm);
+
     int i, j;
     int expdim    = m_f->m_graph->GetMeshDimension();
     int spacedim  = m_f->m_numHomogeneousDir + expdim;

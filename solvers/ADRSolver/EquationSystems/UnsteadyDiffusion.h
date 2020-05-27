@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -68,23 +67,21 @@ namespace Nektar
         bool m_useSpecVanVisc;
         NekDouble m_sVVCutoffRatio;   // cut off ratio from which to start decayhing modes
         NekDouble m_sVVDiffCoeff;     // Diffusion coefficient of SVV modes
-        SolverUtils::DiffusionSharedPtr         m_diffusion;        
+        SolverUtils::DiffusionSharedPtr         m_diffusion;
         SolverUtils::RiemannSolverSharedPtr     m_riemannSolver;
-        
+
         virtual void v_GenerateSummary(SummaryList &s);
-        
+
         UnsteadyDiffusion(
             const LibUtilities::SessionReaderSharedPtr& pSession,
             const SpatialDomains::MeshGraphSharedPtr& pGraph);
-        
+
         virtual void v_InitObject();
-        
+
         void GetFluxVector(
-            const int i, 
-            const int j,
-            const Array<OneD, Array<OneD, NekDouble> > &physfield,
-                  Array<OneD, Array<OneD, NekDouble> > &derivatives,
-                  Array<OneD, Array<OneD, NekDouble> > &flux);
+            const Array<OneD, Array<OneD, NekDouble> > &inarray,
+            const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&viscousTensor);
         void DoOdeRhs(
             const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                   Array<OneD,       Array<OneD, NekDouble> >&outarray,

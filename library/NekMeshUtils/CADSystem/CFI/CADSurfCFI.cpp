@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -57,12 +56,22 @@ Array<OneD, NekDouble> CADSurfCFI::GetBounds()
     Array<OneD, NekDouble> b(4);
 
     cfi::UVBox bx = m_cfiSurface->calcUVBox();
-    b[0]          = bx.uLower * m_scal;
-    b[1]          = bx.uUpper * m_scal;
-    b[2]          = bx.vLower * m_scal;
-    b[3]          = bx.vUpper * m_scal;
+    b[0]          = bx.uLower;
+    b[1]          = bx.uUpper;
+    b[2]          = bx.vLower;
+    b[3]          = bx.vUpper;
 
     return b;
+}
+
+void CADSurfCFI::GetBounds(NekDouble &umin, NekDouble &umax,
+                           NekDouble &vmin, NekDouble &vmax)
+{
+    cfi::UVBox bx = m_cfiSurface->calcUVBox();
+    umin          = bx.uLower;
+    umax          = bx.uUpper;
+    vmin          = bx.vLower;
+    vmax          = bx.vUpper;
 }
 
 Array<OneD, NekDouble> CADSurfCFI::locuv(Array<OneD, NekDouble> p,
@@ -83,7 +92,8 @@ Array<OneD, NekDouble> CADSurfCFI::locuv(Array<OneD, NekDouble> p,
 
     dist =
         sqrt((p[0] - p2[0]) * (p[0] - p2[0]) + (p[1] - p2[1]) * (p[1] - p2[1]) +
-             (p[2] - p2[2]) * (p[2] - p2[2])) * m_scal;
+             (p[2] - p2[2]) * (p[2] - p2[2])) *
+        m_scal;
 
     return uv;
 }
@@ -106,6 +116,15 @@ Array<OneD, NekDouble> CADSurfCFI::P(Array<OneD, NekDouble> uv)
     out[2] = p.z * m_scal;
 
     return out;
+}
+
+void CADSurfCFI::P(Array<OneD, NekDouble> uv, NekDouble &x, NekDouble &y, NekDouble &z)
+{
+    cfi::UVPosition uvp(uv[0], uv[1]);
+    cfi::Position p = m_cfiSurface->calcXYZAtUV(uvp);
+    x               = p.x * m_scal;
+    y               = p.y * m_scal;
+    z               = p.z * m_scal;
 }
 
 Array<OneD, NekDouble> CADSurfCFI::N(Array<OneD, NekDouble> uv)

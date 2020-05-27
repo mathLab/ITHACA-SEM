@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -69,7 +68,6 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     StdRegions::ConstFactorMap factors;
     StdRegions::VarCoeffMap varcoeffs;
-    FlagList flags;
 #ifdef TIMING
     NekDouble st;
     NekDouble cps = (double)CLOCKS_PER_SEC;
@@ -94,7 +92,6 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Print summary of solution details
-        flags.set(eUseGlobal, true);
         factors[StdRegions::eFactorLambda]             = 
             vSession->GetParameter("Lambda");
         const SpatialDomains::ExpansionMap &expansions = 
@@ -194,7 +191,7 @@ int main(int argc, char *argv[])
         //Helmholtz solution taking physical forcing after setting
         //initial condition to zero
         Vmath::Zero(Exp->GetNcoeffs(),Exp->UpdateCoeffs(),1);
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), flags, factors,
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), factors,
                        varcoeffs);
         //----------------------------------------------
         Timing("Helmholtz Solve ..");
@@ -203,7 +200,7 @@ int main(int argc, char *argv[])
         for(i = 0; i < 20; ++i)
         {
             Vmath::Zero(Exp->GetNcoeffs(),Exp->UpdateCoeffs(),1);
-            Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), flags, factors);
+            Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), factors);
         }
 
         Timing("20 Helmholtz Solves:... ");
@@ -212,7 +209,7 @@ int main(int argc, char *argv[])
         //----------------------------------------------
         // Backward Transform Solution to get solved values at
         Exp->BwdTrans(
-            Exp->GetCoeffs(), Exp->UpdatePhys(), MultiRegions::eGlobal);
+            Exp->GetCoeffs(), Exp->UpdatePhys());
         //----------------------------------------------
 
         //----------------------------------------------
@@ -228,7 +225,6 @@ int main(int argc, char *argv[])
             Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
-        Exp->GlobalToLocal(Exp->GetCoeffs(),Exp->UpdateCoeffs());
         for(i = 0; i < FieldDef.size(); ++i)
         {
             FieldDef[i]->m_fields.push_back("u");

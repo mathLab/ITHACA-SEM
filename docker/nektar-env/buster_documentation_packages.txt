@@ -1,0 +1,10 @@
+cmake
+doxygen
+dvipng
+graphviz
+imagemagick
+texlive-base
+texlive-fonts-recommended
+texlive-latex-extra
+texlive-pstricks
+texlive-science

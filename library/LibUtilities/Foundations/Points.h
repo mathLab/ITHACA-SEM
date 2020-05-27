@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 
 #ifndef NEKTAR_LIB_UTILITIES_FOUNDATIONS_POINTS_H
 #define NEKTAR_LIB_UTILITIES_FOUNDATIONS_POINTS_H
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
@@ -188,7 +189,8 @@ namespace Nektar
                     totpoints = m_numpoints*(m_numpoints+1)/2;
                     break;
                 case eNodalTriSPI:
-                    ASSERTL0(false,"this method cannot be implemented");
+                    NEKERROR(ErrorUtil::efatal,
+                             "This method cannot be implemented");
                     break;
 
                 case eNodalQuadElec:
@@ -200,7 +202,8 @@ namespace Nektar
                     totpoints = m_numpoints*(m_numpoints+1)*(m_numpoints+2)/6;
                     break;
                 case eNodalTetSPI:
-                    ASSERTL0(false,"this method cannot be implemented");
+                    NEKERROR(ErrorUtil::efatal,
+                             "This method cannot be implemented");
                     break;
 
                 case eNodalPrismEvenlySpaced:
@@ -208,7 +211,8 @@ namespace Nektar
                     totpoints = m_numpoints*m_numpoints*(m_numpoints+1)/2;
                     break;
                 case eNodalPrismSPI:
-                    ASSERTL0(false,"this method cannot be implemented");
+                    NEKERROR(ErrorUtil::efatal,
+                             "This method cannot be implemented");
                     break;
 
                 case eNodalHexElec:
@@ -323,30 +327,34 @@ namespace Nektar
                 return m_derivmatrix[(int)dir];
             }
 
-            virtual const MatrixSharedPtrType GetI(const PointsKey &pkey)
+            virtual const MatrixSharedPtrType GetI(const PointsKey &key)
             {
-                ASSERTL0(false, "Method not implemented ");
+                boost::ignore_unused(key);
+                NEKERROR(ErrorUtil::efatal, "Method not implemented ");
                 std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 
             virtual const MatrixSharedPtrType GetI(const Array<OneD, const DataType>& x)
             {
-                ASSERTL0(false, "Method not implemented");
+                boost::ignore_unused(x);
+                NEKERROR(ErrorUtil::efatal, "Method not implemented");
                 std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 
-            virtual const MatrixSharedPtrType GetI(unsigned int numpoints, const Array<OneD, const DataType>& x)
+            virtual const MatrixSharedPtrType GetI(unsigned int, const Array<OneD, const DataType>& x)
             {
-                ASSERTL0(false, "Method not implemented");
+                boost::ignore_unused(x);
+                NEKERROR(ErrorUtil::efatal, "Method not implemented");
                 std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 
             virtual const MatrixSharedPtrType GetI(const Array<OneD, const DataType>& x, const Array<OneD, const DataType>& y)
             {
-                ASSERTL0(false, "Method not implemented");
+                boost::ignore_unused(x, y);
+                NEKERROR(ErrorUtil::efatal, "Method not implemented");
                 std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
@@ -354,14 +362,16 @@ namespace Nektar
             virtual const MatrixSharedPtrType GetI(const Array<OneD, const DataType>& x, const Array<OneD, const DataType>& y,
                                                    const Array<OneD, const DataType>& z)
             {
-                ASSERTL0(false, "Method not implemented");
+                boost::ignore_unused(x, y, z);
+                NEKERROR(ErrorUtil::efatal, "Method not implemented");
                 std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 
             virtual const MatrixSharedPtrType GetGalerkinProjection(const PointsKey &pkey)
             {
-                ASSERTL0(false, "Method not implemented ");
+                boost::ignore_unused(pkey);
+                NEKERROR(ErrorUtil::efatal, "Method not implemented ");
                 std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
@@ -407,15 +417,18 @@ namespace Nektar
             // These should never be called
             Points(const Points &pts)
             {
-                NEKERROR(ErrorUtil::efatal,"Copy Constructor for Points should not be called");
+                boost::ignore_unused(pts);
+                NEKERROR(ErrorUtil::efatal,
+                         "Copy Constructor for Points should not be called");
             }
             Points()
             {
-                NEKERROR(ErrorUtil::efatal,"Default Constructor for Points should not be called");
+                NEKERROR(ErrorUtil::efatal,
+                         "Default Constructor for Points should not be called");
             }
         };
 
-    }; // end of namespace
+    } // end of namespace
 } // end of namespace
 
 #endif //NEKTAR_LIB_UTILITIES_FOUNDATIONS_POINTS_H

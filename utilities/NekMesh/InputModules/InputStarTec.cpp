@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -33,6 +32,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <LibUtilities/Foundations/ManagerAccess.h>
@@ -434,12 +434,12 @@ void InputTec::ResetNodes(vector<NodeSharedPtr> &Vnodes,
 
     // Determine Prism triangular face connectivity.
     vector<vector<int> > FaceToPrisms(FaceNodes.size());
-    vector<vector<int> > PrismToFaces(ElementFaces.num_elements());
+    vector<vector<int> > PrismToFaces(ElementFaces.size());
     map<int, int> Prisms;
 
     // generate map of prism-faces to prisms and prism to
     // triangular-faces as well as ids of each prism.
-    for (i = 0; i < ElementFaces.num_elements(); ++i)
+    for (i = 0; i < ElementFaces.size(); ++i)
     {
         // Find Prism (and pyramids!).
         if (ElementFaces[i].size() == 5)
@@ -468,7 +468,7 @@ void InputTec::ResetNodes(vector<NodeSharedPtr> &Vnodes,
     }
 
     vector<bool> FacesDone(FaceNodes.size(), false);
-    vector<bool> PrismDone(ElementFaces.num_elements(), false);
+    vector<bool> PrismDone(ElementFaces.size(), false);
 
     // For every prism find the list of prismatic elements
     // that represent an aligned block of cells. Then renumber
@@ -603,7 +603,7 @@ void InputTec::ResetNodes(vector<NodeSharedPtr> &Vnodes,
     }
 
     // fill in any unset nodes at from other shapes
-    for (i = 0; i < NodeReordering.num_elements(); ++i)
+    for (i = 0; i < NodeReordering.size(); ++i)
     {
         if (NodeReordering[i] == -1)
         {
@@ -611,7 +611,7 @@ void InputTec::ResetNodes(vector<NodeSharedPtr> &Vnodes,
         }
     }
 
-    ASSERTL1(nodeid == NodeReordering.num_elements(),
+    ASSERTL1(nodeid == NodeReordering.size(),
              "Have not renumbered all nodes");
 
     // Renumbering successfull so resort nodes and faceNodes;
@@ -673,7 +673,9 @@ void InputTec::GenElement2D(vector<NodeSharedPtr> &VertNodes,
                             vector<vector<int> > &FaceNodes,
                             int nComposite)
 {
-    LibUtilities::ShapeType elType;
+    boost::ignore_unused(i);
+
+    LibUtilities::ShapeType elType = (LibUtilities::ShapeType)0;
     // set up Node list
 
     if (ElementFaces.size() == 3)
@@ -686,7 +688,8 @@ void InputTec::GenElement2D(vector<NodeSharedPtr> &VertNodes,
     }
     else
     {
-        ASSERTL0(false, "Not set up for elements which are not Tets or Prism");
+        NEKERROR(ErrorUtil::efatal,
+                 "Not set up for elements which are not Tris or Quads");
     }
 
     // Create element tags
@@ -696,7 +699,7 @@ void InputTec::GenElement2D(vector<NodeSharedPtr> &VertNodes,
     // make unique node list
     vector<NodeSharedPtr> nodeList;
     Array<OneD, int> Nodes = SortEdgeNodes(VertNodes, ElementFaces, FaceNodes);
-    for (int j = 0; j < Nodes.num_elements(); ++j)
+    for (int j = 0; j < Nodes.size(); ++j)
     {
         nodeList.push_back(VertNodes[Nodes[j]]);
     }
@@ -716,10 +719,12 @@ void InputTec::GenElement3D(vector<NodeSharedPtr> &VertNodes,
                             int nComposite,
                             bool DoOrient)
 {
-    LibUtilities::ShapeType elType;
+    boost::ignore_unused(i);
+
+    LibUtilities::ShapeType elType = (LibUtilities::ShapeType)0;
     // set up Node list
     Array<OneD, int> Nodes = SortFaceNodes(VertNodes, ElementFaces, FaceNodes);
-    int nnodes             = Nodes.num_elements();
+    int nnodes             = Nodes.size();
     map<LibUtilities::ShapeType, int> domainComposite;
 
     // Set Nodes  -- Not sure we need this so could
@@ -740,8 +745,9 @@ void InputTec::GenElement3D(vector<NodeSharedPtr> &VertNodes,
     }
     else
     {
-
-        ASSERTL0(false, "Not set up for elements which are not Tets or Prism");
+        NEKERROR(ErrorUtil::efatal,
+                 "Not set up for elements which are not Tets, "
+                 "Prisms or Pyramids.");
     }
 
     // Create element tags
@@ -750,7 +756,7 @@ void InputTec::GenElement3D(vector<NodeSharedPtr> &VertNodes,
 
     // make unique node list
     vector<NodeSharedPtr> nodeList;
-    for (int j = 0; j < Nodes.num_elements(); ++j)
+    for (int j = 0; j < Nodes.size(); ++j)
     {
         nodeList.push_back(VertNodes[Nodes[j]]);
     }

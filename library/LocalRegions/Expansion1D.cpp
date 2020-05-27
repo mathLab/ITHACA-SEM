@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/Expansion2D.h>
 
@@ -40,31 +41,16 @@ using namespace std;
 
 namespace Nektar
 {
-    namespace LocalRegions 
+    namespace LocalRegions
     {
-        void Expansion1D::v_NegateVertexNormal(const int vertex)
-        {
-            m_negatedNormals[vertex] = true;
-            for (int i = 0; i < GetCoordim(); ++i)
-            {
-                Vmath::Neg(m_vertexNormals[vertex][i].num_elements(),
-                           m_vertexNormals[vertex][i], 1);
-            }
-        }
-
-        bool Expansion1D::v_VertexNormalNegated(const int vertex)
-        {
-            return m_negatedNormals[vertex];
-        }
-
         DNekMatSharedPtr Expansion1D::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             DNekMatSharedPtr returnval;
-            
+
             switch(mkey.GetMatrixType())
             {
             case StdRegions::eHybridDGHelmholtz:
-                {                    
+                {
                 ASSERTL1(IsBoundaryInteriorExpansion(),
                          "HybridDGHelmholtz matrix not set up "
                          "for non boundary-interior expansions");
@@ -79,7 +65,7 @@ namespace Nektar
                     StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
                                                            StdRegions::eWeakDeriv1,
                                                            StdRegions::eWeakDeriv2};
-                    DNekMat LocMat(ncoeffs,ncoeffs); 
+                    DNekMat LocMat(ncoeffs,ncoeffs);
 
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,ncoeffs);
                     DNekMat &Mat = *returnval;
@@ -95,7 +81,7 @@ namespace Nektar
 
                     // Add end Mass Matrix Contribution
                     DNekScalMat  &Mass = *GetLocMatrix(StdRegions::eMass);
-                    Mat = Mat + lambdaval*Mass;                    
+                    Mat = Mat + lambdaval*Mass;
 
                     Array<OneD,unsigned int> bmap;
                     GetBoundaryMap(bmap);
@@ -103,7 +89,7 @@ namespace Nektar
                     // Add tau*F_e using elemental mass matrices
                     for(i = 0; i < 2; ++i)
                     {
-                        Mat(bmap[i],bmap[i]) = Mat(bmap[i],bmap[i]) +  tau; 
+                        Mat(bmap[i],bmap[i]) = Mat(bmap[i],bmap[i]) +  tau;
                     }
                 }
                 break;
@@ -115,38 +101,38 @@ namespace Nektar
                     StdRegions::ConstFactorMap factors;
                     factors[StdRegions::eFactorLambda] = mkey.GetConstFactor(StdRegions::eFactorLambda);
                     factors[StdRegions::eFactorTau] = mkey.GetConstFactor(StdRegions::eFactorTau);
-                    
+
                     Array<OneD,NekDouble> lambda(nbndry);
-                    DNekVec Lambda(nbndry,lambda,eWrapper);                    
+                    DNekVec Lambda(nbndry,lambda,eWrapper);
                     Array<OneD,NekDouble> ulam(ncoeffs);
                     DNekVec Ulam(ncoeffs,ulam,eWrapper);
                     Array<OneD,NekDouble> f(ncoeffs);
                     DNekVec F(ncoeffs,f,eWrapper);
-                    
+
                     // declare matrix space
-                    returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,nbndry); 
+                    returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,nbndry);
                     DNekMat &Umat = *returnval;
-                    
+
                     // Helmholtz matrix
                     DNekScalMat  &invHmat = *GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, factors);
-                    
+
                     // for each degree of freedom of the lambda space
-                    // calculate Umat entry 
-                    // Generate Lambda to U_lambda matrix 
+                    // calculate Umat entry
+                    // Generate Lambda to U_lambda matrix
                     for(j = 0; j < nbndry; ++j)
                     {
                         Vmath::Zero(nbndry,&lambda[0],1);
                         Vmath::Zero(ncoeffs,&f[0],1);
                         lambda[j] = 1.0;
-                        
+
                         AddHDGHelmholtzTraceTerms(factors[StdRegions::eFactorTau],lambda,f);
-                        
+
                         Ulam = invHmat*F; // generate Ulam from lambda
-                        
+
                         // fill column of matrix
                         for(k = 0; k < ncoeffs; ++k)
                         {
-                            Umat(k,j) = Ulam[k]; 
+                            Umat(k,j) = Ulam[k];
                         }
                     }
                 }
@@ -155,13 +141,15 @@ namespace Nektar
             case StdRegions::eHybridDGLamToQ1:
             case StdRegions::eHybridDGLamToQ2:
                 {
-                    int j,k,dir;
-                    int nbndry = NumDGBndryCoeffs();
+                    int j       = 0;
+                    int k       = 0;
+                    int dir     = 0;
+                    int nbndry  = NumDGBndryCoeffs();
                     int ncoeffs = GetNcoeffs();
 
                     Array<OneD,NekDouble> lambda(nbndry);
-                    DNekVec Lambda(nbndry,lambda,eWrapper);                    
-                    
+                    DNekVec Lambda(nbndry,lambda,eWrapper);
+
                     Array<OneD,NekDouble> ulam(ncoeffs);
                     DNekVec Ulam(ncoeffs,ulam,eWrapper);
                     Array<OneD,NekDouble> f(ncoeffs);
@@ -171,16 +159,16 @@ namespace Nektar
                     factors[StdRegions::eFactorTau] = mkey.GetConstFactor(StdRegions::eFactorTau);
 
                     // declare matrix space
-                    returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,nbndry); 
+                    returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,nbndry);
                     DNekMat &Qmat = *returnval;
-                    
+
                     // Lambda to U matrix
                     DNekScalMat &lamToU = *GetLocMatrix(StdRegions::eHybridDGLamToU, factors);
-                    
-                    // Inverse mass matrix 
+
+                    // Inverse mass matrix
                     DNekScalMat &invMass = *GetLocMatrix(StdRegions::eInvMass);
-                    
-                    //Weak Derivative matrix 
+
+                    //Weak Derivative matrix
                     DNekScalMatSharedPtr Dmat;
                     switch(mkey.GetMatrixType())
                     {
@@ -200,37 +188,37 @@ namespace Nektar
                         ASSERTL0(false,"Direction not known");
                         break;
                     }
-                
+
                     // for each degree of freedom of the lambda space
-                    // calculate Qmat entry 
-                    // Generate Lambda to Q_lambda matrix 
+                    // calculate Qmat entry
+                    // Generate Lambda to Q_lambda matrix
                     for(j = 0; j < nbndry; ++j)
                     {
                         Vmath::Zero(nbndry,&lambda[0],1);
                         lambda[j] = 1.0;
-                        
+
                         // for lambda[j] = 1 this is the solution to ulam
                         for(k = 0; k < ncoeffs; ++k)
                         {
                             Ulam[k] = lamToU(k,j);
                         }
-                        
+
 
                         // -D^T ulam
                         Vmath::Neg(ncoeffs,&ulam[0],1);
-                        F = Transpose(*Dmat)*Ulam; 
-                        
+                        F = Transpose(*Dmat)*Ulam;
+
                         // + \tilde{G} \lambda
-                        AddNormTraceInt(dir,lambda,f); 
-                        
+                        AddNormTraceInt(dir,lambda,f);
+
                         // multiply by inverse mass matrix
-                        Ulam = invMass*F; 
-                        
+                        Ulam = invMass*F;
+
                         // fill column of matrix (Qmat is in column major format)
                         Vmath::Vcopy(ncoeffs,&ulam[0],1,&(Qmat.GetPtr())[0]+j*ncoeffs,1);
                     }
                 }
-                break;            
+                break;
             case StdRegions::eHybridDGHelmBndLam:
                 {
                     int j;
@@ -243,14 +231,14 @@ namespace Nektar
                     Array<OneD,unsigned int> bmap;
                     Array<OneD, NekDouble>   lam(2);
                     GetBoundaryMap(bmap);
-                    
+
                     // declare matrix space
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nbndry,  nbndry);
                     DNekMat &BndMat = *returnval;
-                    
+
                     // Matrix to map Lambda to U
                     DNekScalMat &LamToU = *GetLocMatrix(StdRegions::eHybridDGLamToU, factors);
-                
+
                     // Matrix to map Lambda to Q
                     DNekScalMat &LamToQ = *GetLocMatrix(StdRegions::eHybridDGLamToQ0, factors);
 
@@ -271,23 +259,24 @@ namespace Nektar
                 ASSERTL0(false,"This matrix type cannot be generated from this class");
                 break;
             }
-            
+
             return returnval;
         }
-        
-        void Expansion1D::AddNormTraceInt(const int dir, 
+
+        void Expansion1D::AddNormTraceInt(const int dir,
                                           Array<OneD, const NekDouble> &inarray,
-                                          Array<OneD,NekDouble> &outarray) 
+                                          Array<OneD,NekDouble> &outarray)
         {
-            
+            boost::ignore_unused(dir);
+
             int k;
             int nbndry = NumBndryCoeffs();
             int nquad  = GetNumPoints(0);
             const Array<OneD, const NekDouble> &Basis  = GetBasis(0)->GetBdata();
             Array<OneD, unsigned int> vmap;
-            
+
             GetBoundaryMap(vmap);
-            
+
             // add G \lambda term (can assume G is diagonal since one
             // of the basis is zero at boundary otherwise)
             for(k = 0; k < nbndry; ++k)
@@ -305,7 +294,7 @@ namespace Nektar
             int ncoeffs = GetNcoeffs();
             int coordim = GetCoordim();
             Array<OneD, unsigned int> vmap;
-            
+
             ASSERTL0(&inarray[0] != &outarray[0],"Input and output arrays use the same memory");
 
 
@@ -320,10 +309,10 @@ namespace Nektar
                 outarray[vmap[i]] += tau*Basis[(vmap[i]+1)*nquad-1]*Basis[(vmap[i]+1)*nquad-1]*inarray[vmap[i]];
                 outarray[vmap[i]] += tau*Basis[vmap[i]*nquad]*Basis[vmap[i]*nquad]*inarray[vmap[i]];
             }
-            
+
 
             //===============================================================
-            // Add -\sum_i D_i^T M^{-1} G_i + E_i M^{-1} G_i = 
+            // Add -\sum_i D_i^T M^{-1} G_i + E_i M^{-1} G_i =
             //                         \sum_i D_i M^{-1} G_i term
 
             StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
@@ -338,16 +327,16 @@ namespace Nektar
                 // evaluate M^{-1} G
                 for(i = 0; i < ncoeffs; ++i)
                 {
-                    // lower boundary (negative normal) 
+                    // lower boundary (negative normal)
                     tmpcoeff[i] -= invMass(i,vmap[0])*Basis[vmap[0]*nquad]*Basis[vmap[0]*nquad]*inarray[vmap[0]];
-                    
-                    // upper boundary (positive normal) 
+
+                    // upper boundary (positive normal)
                     tmpcoeff[i] += invMass(i,vmap[1])*Basis[(vmap[1]+1)*nquad-1]*Basis[(vmap[1]+1)*nquad-1]*inarray[vmap[1]];
-                    
+
                 }
-                
+
                 DNekScalMat &Dmat = *GetLocMatrix(DerivType[n]);
-                Coeffs = Coeffs  + Dmat*Tmpcoeff; 
+                Coeffs = Coeffs  + Dmat*Tmpcoeff;
             }
         }
 
@@ -362,14 +351,14 @@ namespace Nektar
 
             // Now need to identify a map which takes the local edge
             // mass matrix to the matrix stored in inoutmat;
-            // This can currently be deduced from the size of the matrix       
+            // This can currently be deduced from the size of the matrix
             // - if inoutmat.m_rows() == v_NCoeffs() it is a full
             //   matrix system
             // - if inoutmat.m_rows() == v_NumBndCoeffs() it is a
             //  boundary CG system
-             
+
              int rows = inoutmat->GetRows();
-             
+
              if (rows == GetNcoeffs())
              {
                  // no need to do anything
@@ -379,7 +368,7 @@ namespace Nektar
                  int i;
                  Array<OneD,unsigned int> bmap;
                  GetBoundaryMap(bmap);
-                 
+
                  for(i = 0; i < 2; ++i)
                  {
                      if(map == bmap[i])
@@ -390,7 +379,7 @@ namespace Nektar
                  }
                  ASSERTL1(i != 2,"Did not find number in map");
              }
-             
+
              // assumes end points have unit magnitude
              (*inoutmat)(map,map) +=  primCoeffs[0];
 
@@ -398,20 +387,22 @@ namespace Nektar
 
         /**
          * Given an edge and vector of element coefficients:
-         * - maps those elemental coefficients corresponding to the edge into
-         *   an edge-vector.
-         * - resets the element coefficients
+         * - maps those elemental coefficients corresponding to the trace into
+         *   an vector.
+         * - update the element coefficients
          * - multiplies the edge vector by the edge mass matrix
          * - maps the edge coefficients back onto the elemental coefficients
          */
-        void Expansion1D::v_AddRobinEdgeContribution(const int vert, const Array<OneD, const NekDouble > &primCoeffs, Array<OneD, NekDouble> &coeffs)
+        void Expansion1D::v_AddRobinEdgeContribution(const int vert,
+                                         const Array<OneD, const NekDouble > &primCoeffs,
+                                         const Array<OneD, NekDouble> &incoeffs,
+                                         Array<OneD, NekDouble> &coeffs)
         {
             ASSERTL1(IsBoundaryInteriorExpansion(),
                      "Not set up for non boundary-interior expansions");
 
             int map = GetVertexMap(vert);
-            Vmath::Zero(GetNcoeffs(), coeffs, 1);
-            coeffs[map] = primCoeffs[0];
+            coeffs[map] += primCoeffs[0]*incoeffs[map];
         }
 
         NekDouble Expansion1D::v_VectorFlux(

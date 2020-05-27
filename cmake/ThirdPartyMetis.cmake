@@ -7,9 +7,12 @@
 ########################################################################
 
 INCLUDE(ExternalProject)
-
-OPTION(NEKTAR_USE_METIS
-    "Use Metis library for performing mesh partitioning." OFF)
+	
+IF (WIN32 AND NEKTAR_USE_MPI)
+    OPTION(NEKTAR_USE_METIS "Use Metis library for performing mesh partitioning." ON)
+ELSE ()
+    OPTION(NEKTAR_USE_METIS "Use Metis library for performing mesh partitioning." OFF)
+ENDIF ()
 
 IF (NEKTAR_USE_METIS)
     FIND_LIBRARY(METIS_LIBRARY NAMES metis PATHS ${MACPORTS_PREFIX}/lib)
@@ -56,7 +59,19 @@ IF (NEKTAR_USE_METIS)
                     DEPENDERS build
                     DEPENDEES download)
             ENDIF()
-        ENDIF()
+        ELSEIF (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+            # Metis build fails on more recent MSVC compiler versions. The issue 
+            # and suggested fix are described in
+            # https://github.com/jlblancoc/suitesparse-metis-for-windows/issues/30
+            # and gk_arch.h is patched here based on this suggested fix
+            EXTERNALPROJECT_ADD_STEP(metis-5.1.0 patch-install-path
+                COMMAND powershell -Command "(Get-Content ${TPSRC}/metis-5.1.0/GKlib/gk_arch.h) -replace '(#define rint\\(x\\)[\\w\\(\\) \\+\\.]+)',( \"#if (_MSC_VER " < " 1800)`n\"+'$1'+\"`n#endif\") | Out-File -filepath ${TPSRC}/metis-5.1.0/GKlib/gk_arch.h -encoding ASCII"
+                COMMAND powershell -Command "(Get-Content ${TPSRC}/metis-5.1.0/GKlib/gk_arch.h) -replace '(#define INFINITY FLT_MAX)',(\"#if (_MSC_VER " < " 1800)`n\"+'$1'+\"`n#endif\") | Out-File -filepath ${TPSRC}/metis-5.1.0/GKlib/gk_arch.h -encoding ASCII"
+                COMMAND powershell -Command "(Get-Content ${TPSRC}/metis-5.1.0/CMakeLists.txt) -replace 'set\\(METIS_INSTALL FALSE\\)','set(METIS_INSTALL TRUE)' | Out-File -filepath ${TPSRC}/metis-5.1.0/CMakeLists.txt -encoding ASCII"
+                DEPENDERS build
+                DEPENDEES download
+            )
+        ENDIF ()
 
         THIRDPARTY_LIBRARY(METIS_LIBRARY STATIC metis DESCRIPTION "Metis library")
         MARK_AS_ADVANCED(METIS_LIBRARY)

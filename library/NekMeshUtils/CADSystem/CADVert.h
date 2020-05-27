@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -40,6 +39,8 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 
 #include <NekMeshUtils/CADSystem/CADObject.h>
+
+#include <NekMeshUtils/MeshElements/Node.h>
 
 namespace Nektar
 {
@@ -119,7 +120,7 @@ public:
     /**
      * @brief Get list of CAD curves which are bound by this vertex
      */
-    std::vector<CADCurveSharedPtr> GetAdjCurves()
+    std::vector<std::weak_ptr<CADCurve> > GetAdjCurves()
     {
         return curves;
     }
@@ -132,7 +133,7 @@ protected:
     /// degen surface
     int degensurf;
     /// adjacent curves
-    std::vector<CADCurveSharedPtr> curves;
+    std::vector<std::weak_ptr<CADCurve> > curves;
 };
 
 typedef std::shared_ptr<CADVert> CADVertSharedPtr;

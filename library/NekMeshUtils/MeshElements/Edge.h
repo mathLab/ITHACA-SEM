@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -126,7 +125,7 @@ public:
     /// Distributions of points along edge.
     LibUtilities::PointsType m_curveType;
     /// Element(s) which are linked to this edge.
-    std::vector<std::pair<ElementSharedPtr, int> > m_elLink;
+    std::vector<std::pair<std::weak_ptr<Element>, int> > m_elLink;
 
     CADObjectSharedPtr m_parentCAD;
 

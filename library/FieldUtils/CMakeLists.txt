@@ -28,6 +28,7 @@ SET(FieldUtilsHeaders
     ProcessModules/ProcessDOF.h
     ProcessModules/ProcessEquiSpacedOutput.h
     ProcessModules/ProcessGrad.h
+    ProcessModules/ProcessHalfModeToFourier.h
     ProcessModules/ProcessHomogeneousPlane.h
     ProcessModules/ProcessHomogeneousStretch.h
     ProcessModules/ProcessInnerProduct.h
@@ -86,6 +87,7 @@ SET(FieldUtilsSources
     ProcessModules/ProcessDOF.cpp
     ProcessModules/ProcessEquiSpacedOutput.cpp
     ProcessModules/ProcessGrad.cpp
+    ProcessModules/ProcessHalfModeToFourier.cpp
     ProcessModules/ProcessHomogeneousPlane.cpp
     ProcessModules/ProcessHomogeneousStretch.cpp
     ProcessModules/ProcessInnerProduct.cpp

@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -136,17 +135,19 @@ void InputXml::Process(po::variables_map &vm)
                 rng->m_doZrange = true;
                 rng->m_zmin     = values[4];
                 rng->m_zmax     = values[5];
+                /* Falls through. */
             case 2:
                 rng->m_doYrange = true;
                 rng->m_ymin     = values[2];
                 rng->m_ymax     = values[3];
+                /* Falls through. */
             case 1:
                 rng->m_doXrange = true;
                 rng->m_xmin     = values[0];
                 rng->m_xmax     = values[1];
                 break;
             default:
-                ASSERTL0(false, "too many values specfied in range");
+                NEKERROR(ErrorUtil::efatal, "too many values specfied in range");
         }
     }
 

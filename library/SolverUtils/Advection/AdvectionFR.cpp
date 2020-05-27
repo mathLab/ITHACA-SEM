@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: FR advection class.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <SolverUtils/Advection/AdvectionFR.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
@@ -117,6 +118,7 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
+            boost::ignore_unused(pSession);
             int i, n;
             int nquad0, nquad1;
             int phys_offset;
@@ -270,7 +272,9 @@ namespace Nektar
         void AdvectionFR::v_SetupCFunctions(
             LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
-        {        
+        {
+            boost::ignore_unused(pSession);
+
             int i, n;
             NekDouble c0 = 0.0;
             NekDouble c1 = 0.0;
@@ -808,6 +812,8 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
+            boost::ignore_unused(advVel, time, pFwd, pBwd);
+
             int i, j, n;
             int phys_offset;
             
@@ -1017,6 +1023,8 @@ namespace Nektar
             const Array<OneD, const NekDouble>                &numericalFlux,
                   Array<OneD,       NekDouble>                &divCFlux)
         {
+            boost::ignore_unused(nConvectiveFields);
+
             int n;
             int nLocalSolutionPts, phys_offset, t_offset;
                         
@@ -1122,7 +1130,9 @@ namespace Nektar
             const Array<OneD, const NekDouble>                &fluxX2, 
             const Array<OneD, const NekDouble>                &numericalFlux,
                   Array<OneD,       NekDouble>                &divCFlux)
-        {                   
+        {
+            boost::ignore_unused(nConvectiveFields);
+
             int n, e, i, j, cnt;
             
             int nElements = fields[0]->GetExpSize();
@@ -1205,14 +1215,11 @@ namespace Nektar
                         Vmath::Reverse(nEdgePts, &fluxJumps[0], 1, 
                                        &fluxJumps[0], 1);
                     }
-                    
-                    NekDouble fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?
-                        -1.0 : 1.0;
 
                     for (i = 0; i < nEdgePts; ++i)
                     {
-                        if (m_traceNormals[0][trace_offset+i] != fac*normals[0][i] 
-                        || m_traceNormals[1][trace_offset+i] != fac*normals[1][i])
+                        if (m_traceNormals[0][trace_offset+i] != normals[0][i] 
+                        || m_traceNormals[1][trace_offset+i] != normals[1][i])
                         {
                             fluxJumps[i] = -fluxJumps[i];
                         }
@@ -1312,6 +1319,8 @@ namespace Nektar
             const Array<OneD, const NekDouble> &numericalFlux,
             Array<OneD,       NekDouble> &divCFlux)
         {
+            boost::ignore_unused(nConvectiveFields);
+
             int n, e, i, j, cnt;
             
             int nElements = fields[0]->GetExpSize();
@@ -1321,8 +1330,6 @@ namespace Nektar
             int phys_offset;
             int nquad0;
             int nquad1;
-            
-            NekDouble fac;
             
             Array<OneD, NekDouble> auxArray1, auxArray2;
             Array<OneD, LibUtilities::BasisSharedPtr> base;
@@ -1405,15 +1412,12 @@ namespace Nektar
                                 fluxN_R[i] = (m_Q2D_e0[n][i]) * fluxN[i];
                             }
                             
-                            fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?
-                            -1.0 : 1.0;
-                            
                             for (i = 0; i < nEdgePts; ++i)
                             {
                                 if (m_traceNormals[0][trace_offset+i]
-                                    != fac*normals[0][i] ||
+                                    != normals[0][i] ||
                                     m_traceNormals[1][trace_offset+i]
-                                    != fac*normals[1][i])
+                                    != normals[1][i])
                                 {
                                     fluxN_R[i] = -fluxN_R[i];
                                 }
@@ -1471,15 +1475,12 @@ namespace Nektar
                                 fluxN_R[i] = (m_Q2D_e1[n][i]) * fluxN[i];
                             }
                             
-                            fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?
-                            -1.0 : 1.0;
-                            
                             for (i = 0; i < nEdgePts; ++i)
                             {
                                 if (m_traceNormals[0][trace_offset+i]
-                                    != fac*normals[0][i] ||
+                                    != normals[0][i] ||
                                     m_traceNormals[1][trace_offset+i]
-                                    != fac*normals[1][i])
+                                    != normals[1][i])
                                 {
                                     fluxN_R[i] = -fluxN_R[i];
                                 }
@@ -1539,15 +1540,12 @@ namespace Nektar
                                 fluxN_R[i] = (m_Q2D_e2[n][i]) * fluxN[i];
                             }
                             
-                            fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?
-                            -1.0 : 1.0;
-                            
                             for (i = 0; i < nEdgePts; ++i)
                             {
                                 if (m_traceNormals[0][trace_offset+i]
-                                    != fac*normals[0][i] ||
+                                    != normals[0][i] ||
                                     m_traceNormals[1][trace_offset+i]
-                                    != fac*normals[1][i])
+                                    != normals[1][i])
                                 {
                                     fluxN_R[i] = -fluxN_R[i];
                                 }
@@ -1608,15 +1606,12 @@ namespace Nektar
                                 fluxN_R[i] = (m_Q2D_e3[n][i]) * fluxN[i];
                             }
                             
-                            fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?
-                            -1.0 : 1.0;
-                            
                             for (i = 0; i < nEdgePts; ++i)
                             {
                                 if (m_traceNormals[0][trace_offset+i]
-                                    != fac*normals[0][i] ||
+                                    != normals[0][i] ||
                                     m_traceNormals[1][trace_offset+i]
-                                    != fac*normals[1][i])
+                                    != normals[1][i])
                                 {
                                     fluxN_R[i] = -fluxN_R[i];
                                 }
@@ -1683,7 +1678,8 @@ namespace Nektar
             const Array<OneD, const NekDouble>                &numericalFlux,
                   Array<OneD,       NekDouble>                &divCFlux)
         {
-
+            boost::ignore_unused(nConvectiveFields, fields, fluxX1, fluxX2,
+                                 fluxX3, numericalFlux, divCFlux);
         }
         
     }

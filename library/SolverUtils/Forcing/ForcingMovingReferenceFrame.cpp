@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Forcing/ForcingMovingReferenceFrame.h>
 #include <MultiRegions/ExpList.h>
 #include <LibUtilities/BasicUtils/Vmath.hpp>
@@ -55,7 +56,7 @@ std::string ForcingMovingReferenceFrame::classNameField = GetForcingFactory().
                                 "Field Forcing");
 
 /**
- * @brief 
+ * @brief
  * @param pSession
  * @param pEquation
  */
@@ -78,6 +79,8 @@ void ForcingMovingReferenceFrame::v_InitObject(
         const unsigned int &pNumForcingFields,
         const TiXmlElement *pForce)
 {
+    boost::ignore_unused(pNumForcingFields);
+
     int  npoints = pFields[0]->GetNpoints();
     int  expdim  = pFields[0]->GetGraph()->GetMeshDimension();
     bool isH1d;
@@ -110,7 +113,7 @@ void ForcingMovingReferenceFrame::v_InitObject(
     for (int i = 0; i < m_spacedim; ++i)
     {
         m_Forcing[i] = Array<OneD, NekDouble>(npoints, 0.0);
-        
+
         std::string s_FieldStr = m_session->GetVariable(i);
 
         ASSERTL0(m_session->DefinesFunction(m_funcName, s_FieldStr),
@@ -179,7 +182,7 @@ void ForcingMovingReferenceFrame::CalculateGradient(
                 pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                                       pFields[2]->GetPhys(), tmp);
                 pFields[0]->HomogeneousBwdTrans(tmp, m_grad[8]);
-            } 
+            }
             else if (pFields[0]->GetWaveSpace() == true &&
                      pFields[0]->GetExpType()   == MultiRegions::e3DH2D)
             {
@@ -244,11 +247,13 @@ void ForcingMovingReferenceFrame::Update(
         const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
+    boost::ignore_unused(time);
+
     int npoints = pFields[0]->GetNpoints();
     Array<OneD, NekDouble> tmp(npoints, 0.0);
-    
+
     CalculateGradient(pFields);
-    
+
     switch (m_spacedim)
     {
         case 1:
@@ -338,11 +343,13 @@ void ForcingMovingReferenceFrame::v_Apply(
               Array<OneD, Array<OneD, NekDouble> > &outarray,
         const NekDouble &time)
 {
+    boost::ignore_unused(inarray);
+
     Update(fields, time);
 
     for (int i = 0; i < m_spacedim; i++)
     {
-        Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
+        Vmath::Vadd(outarray[i].size(), outarray[i], 1,
                     m_Forcing[i], 1, outarray[i], 1);
     }
 }

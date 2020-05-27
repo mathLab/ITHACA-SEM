@@ -30,7 +30,7 @@ std::shared_ptr<OutputFld> OutputFld_Init(FieldSharedPtr f, std::string filename
 std::shared_ptr<OutputInfo> OutputInfo_Init(FieldSharedPtr f, std::string filename = "")
 {
 	std::shared_ptr<OutputInfo> m = MemoryManager<OutputInfo>::AllocateSharedPtr(f);
-	std::string nparts = to_string(m->m_f->m_nParts);
+	std::string nparts = std::to_string(m->m_f->m_nParts);
 	m->RegisterConfig("nparts", nparts);
 	if (filename.size())
 	{

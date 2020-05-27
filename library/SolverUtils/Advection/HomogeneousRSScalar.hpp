@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -62,7 +61,7 @@ namespace Nektar
                     m_tmp = m_func();
                 }
 
-                const int nPts   = m_tmp.num_elements() / m_numPlanes;
+                const int nPts   = m_tmp.size() / m_numPlanes;
                 const int offset = m_planeNumber * nPts;
 
                 m_tmp2 = Array<OneD, NekDouble>(nPts, m_tmp + offset);
@@ -103,12 +102,12 @@ namespace Nektar
                     m_tmp = m_func();
                 }
 
-                const int nDim   = m_tmp.num_elements();
-                const int nPts   = m_tmp[0].num_elements() / m_numPlanes;
+                const int nDim   = m_tmp.size();
+                const int nPts   = m_tmp[0].size() / m_numPlanes;
                 const int offset = m_planeNumber * nPts;
                 m_tmp2 = Array<OneD, Array<OneD, NekDouble> >(nDim);
-                
-                for (int i = 0; i < m_tmp.num_elements(); ++i)
+
+                for (int i = 0; i < m_tmp.size(); ++i)
                 {
                     m_tmp2[i] = Array<OneD, NekDouble>(nPts, m_tmp[i] + offset);
                 }

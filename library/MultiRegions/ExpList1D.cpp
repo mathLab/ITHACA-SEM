@@ -161,8 +161,8 @@ namespace Nektar
             // Allocate storage for data and populate element offset lists.
             SetCoeffPhysOffsets();
 
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-            m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
+            m_coeffs = Array<OneD, NekDouble>{size_t(m_ncoeffs), 0.0};
+            m_phys   = Array<OneD, NekDouble>{size_t(m_npoints), 0.0};
 
             CreateCollections(ImpType);
         }
@@ -235,8 +235,8 @@ namespace Nektar
             if(DeclareCoeffPhysArrays)
             {
                 // Set up m_coeffs, m_phys.
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-                m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
+                m_coeffs = Array<OneD, NekDouble> {size_t(m_ncoeffs), 0.0};
+                m_phys   = Array<OneD, NekDouble> {size_t(m_npoints), 0.0};
             }
 
             CreateCollections(ImpType);
@@ -337,8 +337,8 @@ namespace Nektar
             if(DeclareCoeffPhysArrays)
             {
                 // Set up m_coeffs, m_phys.
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-                m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
+                m_coeffs = Array<OneD, NekDouble> {size_t(m_ncoeffs), 0.0};
+                m_phys   = Array<OneD, NekDouble> {size_t(m_npoints), 0.0};
             }
 
             CreateCollections(ImpType);
@@ -416,8 +416,8 @@ namespace Nektar
             // Set up m_coeffs, m_phys.
             if(DeclareCoeffPhysArrays)
             {
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-                m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
+                m_coeffs = Array<OneD, NekDouble> {size_t(m_ncoeffs), 0.0};
+                m_phys   = Array<OneD, NekDouble> {size_t(m_npoints), 0.0};
             }
 
             CreateCollections(ImpType);
@@ -658,8 +658,8 @@ namespace Nektar
             // Set up m_coeffs, m_phys.
             if(DeclareCoeffPhysArrays)
             {
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-                m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
+                m_coeffs = Array<OneD, NekDouble> {size_t(m_ncoeffs), 0.0};
+                m_phys   = Array<OneD, NekDouble> {size_t(m_npoints), 0.0};
             }
 
             CreateCollections(ImpType);
@@ -1037,17 +1037,17 @@ namespace Nektar
                 e_npoints  = (*m_exp)[i]->GetNumPoints(0);
 
                 locnormals = loc_elmt->GetEdgeNormal(edgeNumber);
-		int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
+                int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
                 int loc_nmodes = loc_elmt->GetBasis(0)->GetNumModes();
 
                 if (e_nmodes != loc_nmodes)
                 {
-		    if (loc_exp->GetRightAdjacentElementEdge() >= 0)
+                    if (loc_exp->GetRightAdjacentElementEdge() >= 0)
                     {
-		        LocalRegions::Expansion2DSharedPtr loc_elmt =
+                        LocalRegions::Expansion2DSharedPtr loc_elmt =
                                        loc_exp->GetRightAdjacentElementExp();
 
-			int EdgeNumber = loc_exp->GetRightAdjacentElementEdge();
+                        int EdgeNumber = loc_exp->GetRightAdjacentElementEdge();
                         // Serial case: right element is connected so we can
                         // just grab that normal.
                         locnormals = loc_elmt->GetEdgeNormal(EdgeNumber);
@@ -1111,6 +1111,77 @@ namespace Nektar
                         {
                             normals[k][offset + j] = locnormals[k][j];
                         }
+                    }
+                }
+            }
+        }
+
+        void ExpList1D::v_GetElmtNormalLength(
+            Array<OneD, NekDouble>  &lengthsFwd,
+            Array<OneD, NekDouble>  &lengthsBwd)
+        {
+            int e_npoints;
+
+            Array<OneD, NekDouble> locLeng;
+            Array<OneD, NekDouble> lengintp;
+            Array<OneD, NekDouble> lengAdd;
+            Array<OneD, int      > LRbndnumbs(2);
+            Array<OneD, Array<OneD,NekDouble> > lengLR(2);
+            lengLR[0]   =   lengthsFwd;
+            lengLR[1]   =   lengthsBwd;
+            Array<OneD, LocalRegions::Expansion2DSharedPtr> LRelmts(2);
+            LocalRegions::Expansion2DSharedPtr loc_elmt;
+            LocalRegions::Expansion1DSharedPtr loc_exp;
+            int e_npoints0  =   -1; 
+            for (int i = 0; i < m_exp->size(); ++i)
+            {
+                loc_exp = (*m_exp)[i]->as<LocalRegions::Expansion1D>();
+                int offset = m_phys_offset[i];
+                
+                int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
+                e_npoints  = (*m_exp)[i]->GetNumPoints(0);
+                if ( e_npoints0 < e_npoints)
+                {
+                    lengintp = Array<OneD, NekDouble>{size_t(e_npoints), 0.0};
+                    e_npoints0 = e_npoints;
+                }
+                
+                LRelmts[0] = loc_exp->GetLeftAdjacentElementExp();
+                LRelmts[1] = loc_exp->GetRightAdjacentElementExp();
+
+                LRbndnumbs[0]   =   loc_exp->GetLeftAdjacentElementEdge();
+                LRbndnumbs[1]   =   loc_exp->GetRightAdjacentElementEdge();
+                for (int nlr = 0; nlr < 2; ++nlr)
+                {
+                    Vmath::Zero(e_npoints0, lengintp, 1);
+                    lengAdd     =   lengintp;
+                    int bndNumber = LRbndnumbs[nlr];
+                    loc_elmt = LRelmts[nlr];
+                    if (bndNumber >= 0)
+                    {
+                        locLeng  = loc_elmt->GetElmtBndNormDirElmtLen(
+                                                bndNumber);
+                        lengAdd  =   locLeng;
+
+                        int loc_nmodes  = loc_elmt->GetBasis(0)->GetNumModes();
+
+                        if (e_nmodes != loc_nmodes)
+                        {
+                            // Parallel case: need to interpolate.
+                            LibUtilities::PointsKey to_key =
+                                loc_exp->GetBasis(0)->GetPointsKey();
+                            LibUtilities::PointsKey from_key =
+                                loc_elmt->GetBasis(0)->GetPointsKey();
+                            LibUtilities::Interp1D(from_key,
+                                                locLeng,
+                                                to_key,
+                                                lengintp);
+                            lengAdd     =   lengintp;
+                        }
+                    }
+                    for (int j = 0; j < e_npoints; ++j)
+                    {
+                        lengLR[nlr][offset + j] = lengAdd[j];
                     }
                 }
             }

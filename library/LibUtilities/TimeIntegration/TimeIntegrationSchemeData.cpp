@@ -44,7 +44,7 @@
 
 #include <boost/core/ignore_unused.hpp>
 
-#include <math.h>
+#include <cmath>
 
 namespace Nektar
 {

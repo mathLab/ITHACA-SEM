@@ -188,6 +188,10 @@ namespace Nektar
             /// Populate \a normals with the normals of all expansions.
             void v_GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
 
+            virtual void v_GetElmtNormalLength(
+                Array<OneD, NekDouble>  &lengthsFwd,
+                Array<OneD, NekDouble>  &lengthsBwd);
+
         private:
             /// Set up the normals on each expansion.
             virtual void v_SetUpPhysNormals();

@@ -183,6 +183,22 @@ namespace Nektar
         return *this;
     }
 
+    /// Fill matrix with scalar
+    template<typename DataType>
+    NekMatrix<DataType, StandardMatrixTag>& 
+        NekMatrix<DataType, StandardMatrixTag>::operator=(const DataType & rhs)
+    {
+        unsigned int requiredStorageSize = GetRequiredStorageSize();
+        
+        DataType* lhs_array = m_data.data();
+        
+        for (unsigned int i = 0; i < requiredStorageSize; ++i)
+        {
+            lhs_array[i] = rhs;
+        }
+        
+        return *this;
+    }
 
     template<typename DataType>
     typename NekMatrix<DataType, StandardMatrixTag>::ConstGetValueType NekMatrix<DataType, StandardMatrixTag>::operator()(unsigned int row, unsigned int column) const

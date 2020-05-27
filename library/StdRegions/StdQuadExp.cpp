@@ -362,7 +362,7 @@ namespace Nektar
         *
         *  \f$
         *  \begin{array}{rcl}
-        *  I_{pq} = (\phi_q \phi_q, u) & = & \sum_{i=0}^{nq_0}
+        *  I_{pq} = (\phi_p \phi_q, u) & = & \sum_{i=0}^{nq_0}
         *  \sum_{j=0}^{nq_1}
         *  \phi_p(\xi_{0,i}) \phi_q(\xi_{1,j}) w^0_i w^1_j u(\xi_{0,i}
         *  \xi_{1,j}) \\
@@ -1350,7 +1350,7 @@ namespace Nektar
                 if (bType == LibUtilities::eModified_A)
                 {
                     // Zero signmap and set maparray to zero if
-                    // elemental modes are not as large as face modesl
+                    // elemental modes are not as large as face modes
                     for (int j = numModes; j < P; j++)
                     {
                         signarray[j] = 0.0;
@@ -1464,7 +1464,8 @@ namespace Nektar
                 }
                 case eFwdTrans:
                 {
-                    Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
+                    Mat = MemoryManager<DNekMat>::AllocateSharedPtr(
+                            m_ncoeffs,m_ncoeffs);
                     StdMatrixKey iprodkey(eIProductWRTBase,DetShapeType(),*this);
                     DNekMat &Iprod = *GetStdMatrix(iprodkey);
                     StdMatrixKey imasskey(eInvMass,DetShapeType(),*this);

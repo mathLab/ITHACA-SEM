@@ -157,7 +157,7 @@ int main(int argc, char const *argv[])
     int count;
     LIKWID_MARKER_GET("scalar", &nevents, events.data(), &time, &count);
     // print out CPE
-    std::cout << "likwid CPE\t"
+    std::cout << "scalar likwid CPE\t"
         << events[CPU_CLK_UNHALTED_REF_id]/sizeScalar/experiments << '\n';
     // avoid opt out
     std::cout << Flux[0][0] << std::endl;
@@ -222,7 +222,7 @@ int main(int argc, char const *argv[])
     // get likwid events
     LIKWID_MARKER_GET("vector", &nevents, events.data(), &time, &count);
     // print out CPE
-    std::cout << "likwid CPE\t"
+    std::cout << "vector likwid CPE\t"
         << events[CPU_CLK_UNHALTED_REF_id]/sizeScalar/experiments << '\n';
     // avoid opt out
     std::cout << alignedFlux[0][0].m_data[0] << std::endl;

@@ -37,6 +37,7 @@
 #define NEKTAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
 
 #include <boost/pool/pool.hpp>
+#include <boost/align/aligned_alloc.hpp>
 #include <memory>
 #include <map>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -45,6 +46,8 @@
 #ifdef NEKTAR_USE_THREAD_SAFETY
 #include <boost/thread/mutex.hpp>
 #endif
+
+#include <AVXOperators/VecData.hpp>
 
 #include <cstring>
 
@@ -91,8 +94,8 @@ namespace Nektar
                 ~ThreadSpecificPool()
                 {
                     // The documentation isn't particularly clear if delete needs to be called manually
-                    // or if the thread specific pointer will call delete for me.  Looking through the 
-                    // boost code doesn't make it any clearer. 
+                    // or if the thread specific pointer will call delete for me.  Looking through the
+                    // boost code doesn't make it any clearer.
                 }
 
                 /// \brief Allocate a block of memory of size ByteSize.
@@ -122,8 +125,8 @@ namespace Nektar
 #endif
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
                     // The idea here is to fill the returned memory with some known
-                    // pattern, then detect that pattern on the allocate.  If the 
-                    // pattern is no longer there then some memory corruption has 
+                    // pattern, then detect that pattern on the allocate.  If the
+                    // pattern is no longer there then some memory corruption has
                     // occurred.  However, I'm not sure how to distinguish between first
                     // time allocations and repeat allocations.
 
@@ -148,7 +151,7 @@ namespace Nektar
     {
         public:
             typedef std::map<size_t, std::shared_ptr<detail::ThreadSpecificPool> > PoolMapType;
-            
+
         public:
             MemPool() :
                 m_fourBytePool(4),
@@ -157,9 +160,9 @@ namespace Nektar
             {
                 // The m_pools data member stores a collection of thread specific pools of varying size.  All memory requests
                 // up to and including the largest pool size will be allocated from a pool (note that this means you may receive
-                // more memory than you asked for).  For example, if there is a pool for 8 bytes and the next largest pool is 32 
+                // more memory than you asked for).  For example, if there is a pool for 8 bytes and the next largest pool is 32
                 // bytes, then a request for 10 bytes will return a 32 byte chunk of memory from the 32 byte pool.
-                
+
                 typedef PoolMapType::value_type PairType;
                 m_pools.insert(PairType(8, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(8))));
                 m_pools.insert(PairType(16, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(16))));
@@ -170,20 +173,20 @@ namespace Nektar
                 m_pools.insert(PairType(512, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(512))));
                 m_pools.insert(PairType(1024, std::shared_ptr<detail::ThreadSpecificPool>(new detail::ThreadSpecificPool(1024))));
             }
-            
+
             ~MemPool()
             {
             }
-            
+
             /// \brief Allocate a block of memory of size ByteSize.
             /// \throw std::bad_alloc if memory is exhausted.
             /// \param bytes The number of bytes to allocate.
             ///
-            /// If the bytes parameter specifies a size that is handled by memory pools then the memory 
+            /// If the bytes parameter specifies a size that is handled by memory pools then the memory
             /// is allocated from the pool.  Otherwise the memory is allocated with a call to new.
             ///
             /// Important: All memory allocated from this method must be returned to the pool
-            /// via the Deallocate method.  Deleting pointers allocated from the memory pool with the 
+            /// via the Deallocate method.  Deleting pointers allocated from the memory pool with the
             /// delete operator will result in undefined behavior.
             void* Allocate(size_t bytes)
             {
@@ -193,14 +196,14 @@ namespace Nektar
                 }
                 else if( bytes > m_upperBound )
                 {
-                    return ::operator new(bytes);
+                    return boost::alignment::aligned_alloc(AVX::SIMD_WIDTH_BYTES, bytes);
                 }
                 else
                 {
                     PoolMapType::iterator iter = m_pools.lower_bound(bytes);
                     ASSERTL1(iter != m_pools.end(), "The memory manager is mishandling a memory request for " +
                              std::to_string(bytes) + " bytes of memory.");
-                    
+
                     return (*iter).second->Allocate();
                 }
             }
@@ -217,18 +220,18 @@ namespace Nektar
                 }
                 else if( bytes > m_upperBound )
                 {
-                    ::operator delete(p);
+                    boost::alignment::aligned_free(p);
                 }
                 else
                 {
                     PoolMapType::iterator iter = m_pools.lower_bound(bytes);
                     ASSERTL1(iter != m_pools.end(), "The memory manager is mishandling a memory request for " +
                              std::to_string(bytes) + " bytes of memory.");
-                    
+
                     (*iter).second->Deallocate(p);
                 }
             }
-            
+
         private:
             detail::ThreadSpecificPool m_fourBytePool;
             std::map<size_t, std::shared_ptr<detail::ThreadSpecificPool> > m_pools;

@@ -30,6 +30,10 @@ struct VecData
 {
 };
 
+/////
+///// Aligned vector
+/////
+
 template<class T>
 using AlignedVector =
     std::vector<T, boost::alignment::aligned_allocator<T, SIMD_WIDTH_BYTES>>;
@@ -142,7 +146,7 @@ template<>
 struct VecData<int, 4>
 {
     using T = VecData<int,4>;
-    static const size_t vecWidth = 4;
+    static const unsigned int vecWidth = 4;
     __m128i m_data;
 
     inline VecData() = default;
@@ -574,15 +578,6 @@ inline VecData<double, 8> gather(const double* data, VecData<int, 8> &indices)
 }
 
 #endif
-
-/////
-///// Aligned vector
-/////
-
-template<class T>
-using AlignedVector =
-    std::vector<T, boost::alignment::aligned_allocator<T, SIMD_WIDTH_BYTES>>;
-
 
 
 } // namespace AVX

@@ -2,6 +2,8 @@
 
 #include <AVXOperators/AVXUtil.hpp>
 
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/BasicUtils/Likwid.hpp>
 
@@ -14,6 +16,7 @@ int main(int argc, char const *argv[])
     LIKWID_MARKER_THREADINIT;
     LIKWID_MARKER_REGISTER("scalar");
     LIKWID_MARKER_REGISTER("vector");
+    LIKWID_MARKER_REGISTER("AlignedVector");
 
     using vec_t = AVX::VecData<double, AVX::SIMD_WIDTH_SIZE>;
 
@@ -37,16 +40,20 @@ int main(int argc, char const *argv[])
 
     double gamma = 1.4;
 
-    std::vector<std::vector<double>>
+    // std::vector<std::vector<double>>
+    Array<OneD, Array<OneD, double>>
         Fwd(nVars),
         Bwd(nVars),
         Flux(nVars);
 
     for (size_t i = 0; i < nVars; ++i)
     {
-        Fwd[i] = std::vector<double>(sizeScalar);
-        Bwd[i] = std::vector<double>(sizeScalar);
-        Flux[i] = std::vector<double>(sizeScalar);
+        // Fwd[i] = std::vector<double>(sizeScalar);
+        // Bwd[i] = std::vector<double>(sizeScalar);
+        // Flux[i] = std::vector<double>(sizeScalar);
+        Fwd[i] = Array<OneD, double>(sizeScalar);
+        Bwd[i] = Array<OneD, double>(sizeScalar);
+        Flux[i] = Array<OneD, double>(sizeScalar);
 
         for (size_t j = 0; j < sizeScalar; ++j)
         {
@@ -157,13 +164,78 @@ int main(int argc, char const *argv[])
     int count;
     LIKWID_MARKER_GET("scalar", &nevents, events.data(), &time, &count);
     // print out CPE
-    std::cout << "scalar likwid CPE\t"
-        << events[CPU_CLK_UNHALTED_REF_id]/sizeScalar/experiments << '\n';
+    double cpeScalar = events[CPU_CLK_UNHALTED_REF_id]/sizeScalar/experiments;
+    std::cout << "scalar likwid CPE\t" << cpeScalar << '\n';
     // avoid opt out
     std::cout << Flux[0][0] << std::endl;
 
 
     LIKWID_MARKER_START("vector");
+    // time SIMD
+    for (size_t j = 0; j < experiments; ++j)
+    {
+        // loop
+        for (size_t i = 0; i < sizeScalar; i+=AVX::SIMD_WIDTH_SIZE)
+        {
+            vec_t rhoL{}, rhouL{}, rhovL{}, rhowL{}, EL{};
+            vec_t rhoR{}, rhouR{}, rhovR{}, rhowR{}, ER{};
+
+            // load
+            rhoL  = &(Fwd[0][i]);
+            rhouL = &(Fwd[1][i]);
+            EL    = &(Fwd[spaceDim+1][i]);
+            rhoR  = &(Bwd[0][i]);
+            rhouR = &(Bwd[1][i]);
+            ER    = &(Bwd[spaceDim+1][i]);
+
+            if (spaceDim == 2)
+            {
+                rhovL = &(Fwd[2][i]);
+                rhovR = &(Bwd[2][i]);
+            }
+            else if (spaceDim == 3)
+            {
+                rhovL = &(Fwd[2][i]);
+                rhowL = &(Fwd[3][i]);
+                rhovR = &(Bwd[2][i]);
+                rhowR = &(Bwd[3][i]);
+            }
+
+            vec_t rhof{}, rhouf{}, rhovf{}, rhowf{}, Ef{};
+
+            RoeKernel(
+                rhoL, rhouL, rhovL, rhowL, EL,
+                rhoR, rhouR, rhovR, rhowR, ER,
+                rhof, rhouf, rhovf, rhowf, Ef,
+                gamma);
+
+            // store
+            rhof.store(&(Flux[0][i]));
+            rhouf.store(&(Flux[1][i]));
+            Ef.store(&(Flux[nVars-1][i]));
+            if (spaceDim == 2)
+            {
+                rhovf.store(&(Flux[2][i]));
+            }
+            else if (spaceDim == 3)
+            {
+                rhovf.store(&(Flux[2][i]));
+                rhowf.store(&(Flux[3][i]));
+            }
+
+        } // loop
+    }
+    LIKWID_MARKER_STOP("vector");
+    // get likwid events
+    LIKWID_MARKER_GET("vector", &nevents, events.data(), &time, &count);
+    // print out CPE
+    double cpeVector = events[CPU_CLK_UNHALTED_REF_id]/sizeScalar/experiments;
+    std::cout << "vector likwid CPE\t" << cpeVector << '\t'
+        << cpeScalar/cpeVector << " %\n";
+    // avoid opt out
+    std::cout << Flux[0][0] << std::endl;
+
+    LIKWID_MARKER_START("AoSoA");
     // time SIMD
     for (size_t j = 0; j < experiments; ++j)
     {
@@ -218,12 +290,13 @@ int main(int argc, char const *argv[])
 
         } // loop
     }
-    LIKWID_MARKER_STOP("vector");
+    LIKWID_MARKER_STOP("AoSoA");
     // get likwid events
-    LIKWID_MARKER_GET("vector", &nevents, events.data(), &time, &count);
+    LIKWID_MARKER_GET("AoSoA", &nevents, events.data(), &time, &count);
     // print out CPE
-    std::cout << "vector likwid CPE\t"
-        << events[CPU_CLK_UNHALTED_REF_id]/sizeScalar/experiments << '\n';
+    double cpeAoSoA = events[CPU_CLK_UNHALTED_REF_id]/sizeScalar/experiments;
+    std::cout << "AoSoA likwid CPE\t" << cpeAoSoA << '\t'
+        << cpeScalar/cpeAoSoA << " %\n";
     // avoid opt out
     std::cout << alignedFlux[0][0].m_data[0] << std::endl;
 

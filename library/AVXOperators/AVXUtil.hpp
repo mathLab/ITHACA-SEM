@@ -49,11 +49,10 @@ template<class T, int VW>
 void CopyFromAlignedVector(const AlignedVector<VecData<T, VW>> &in, Array<OneD, T> &out)
 {
     size_t nScal = out.num_elements();
-    size_t nVec = in.size();
 
     // check padding and size
     unsigned short pad = nScal % VW;
-    ASSERTL1(nVec == nScal / VW + (pad == 0 ? 0 : 1), "incorrect size");
+    ASSERTL1(in.size() == nScal / VW + (pad == 0 ? 0 : 1), "incorrect size");
 
     // copy
     T *outPtr = out.data();

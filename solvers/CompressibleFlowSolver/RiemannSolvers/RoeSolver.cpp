@@ -47,13 +47,13 @@ std::string RoeSolver::solverName =
 RoeSolver::RoeSolver(const LibUtilities::SessionReaderSharedPtr& pSession)
     : CompressibleSolver(pSession)
 {
-    // m_pointSolve = false;
+    m_pointSolve = false;
 }
 
 /// programmatic ctor
 RoeSolver::RoeSolver(): CompressibleSolver()
 {
-    // m_pointSolve = false;
+    m_pointSolve = false;
 }
 
 /**
@@ -98,59 +98,47 @@ void RoeSolver::v_PointSolve(
 
 
 void RoeSolver::v_ArraySolve(
-    const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
-    const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+    const Array<OneD, const Array<OneD, NekDouble> > &fwd,
+    const Array<OneD, const Array<OneD, NekDouble> > &bwd,
           Array<OneD,       Array<OneD, NekDouble> > &flux)
 {
     static auto gamma = m_params["gamma"]();
-    static auto nVars = Fwd.num_elements();
+    static auto nVars = fwd.num_elements();
     static auto spaceDim = nVars-2;
 
     using vec_t = AVX::VecData<NekDouble, AVX::SIMD_WIDTH_SIZE>;
 
-    // copy to aligned vectors
-    size_t sizeScalar = Fwd[0].num_elements();
+    // get limit of vectorizable chunk
+    size_t sizeScalar = fwd[0].num_elements();
     size_t pad = sizeScalar % AVX::SIMD_WIDTH_SIZE;
-    size_t sizeVec = sizeScalar / AVX::SIMD_WIDTH_SIZE + (pad == 0 ? 0 : 1);
+    size_t sizeVec = (sizeScalar / AVX::SIMD_WIDTH_SIZE) * AVX::SIMD_WIDTH_SIZE;
 
-    std::vector<AVX::AlignedVector<vec_t>> alignedFwd(nVars),
-        alignedBwd(nVars), alignedFlux(nVars);
-
-    for (size_t i = 0; i < nVars; ++i)
-    {
-        alignedFwd[i] = AVX::AlignedVector<vec_t>(sizeVec);
-        alignedBwd[i] = AVX::AlignedVector<vec_t>(sizeVec);
-        alignedFlux[i] = AVX::AlignedVector<vec_t>(sizeVec);
-
-        AVX::CopyToAlignedVector(Fwd[i], alignedFwd[i]);
-        AVX::CopyToAlignedVector(Bwd[i], alignedBwd[i]);
-    }
-
-    // AVX loop
-    for (size_t i = 0; i < sizeVec; ++i)
+    // SIMD loop
+    size_t i = 0;
+    for (; i < sizeVec; i+=AVX::SIMD_WIDTH_SIZE)
     {
         vec_t rhoL{}, rhouL{}, rhovL{}, rhowL{}, EL{};
         vec_t rhoR{}, rhouR{}, rhovR{}, rhowR{}, ER{};
 
         // load
-        rhoL  = alignedFwd[0][i];
-        rhouL = alignedFwd[1][i];
-        EL    = alignedFwd[spaceDim+1][i];
-        rhoR  = alignedBwd[0][i];
-        rhouR = alignedBwd[1][i];
-        ER    = alignedBwd[spaceDim+1][i];
+        rhoL  = &(fwd[0][i]);
+        rhouL = &(fwd[1][i]);
+        EL    = &(fwd[spaceDim+1][i]);
+        rhoR  = &(bwd[0][i]);
+        rhouR = &(bwd[1][i]);
+        ER    = &(bwd[spaceDim+1][i]);
 
         if (spaceDim == 2)
         {
-            rhovL = alignedFwd[2][i];
-            rhovR = alignedBwd[2][i];
+            rhovL = &(fwd[2][i]);
+            rhovR = &(bwd[2][i]);
         }
         else if (spaceDim == 3)
         {
-            rhovL = alignedFwd[2][i];
-            rhowL = alignedFwd[3][i];
-            rhovR = alignedBwd[2][i];
-            rhowR = alignedBwd[3][i];
+            rhovL = &(fwd[2][i]);
+            rhowL = &(fwd[3][i]);
+            rhovR = &(bwd[2][i]);
+            rhowR = &(bwd[3][i]);
         }
 
         vec_t rhof{}, rhouf{}, rhovf{}, rhowf{}, Ef{};
@@ -162,25 +150,73 @@ void RoeSolver::v_ArraySolve(
             gamma);
 
         // store
-        alignedFlux[0][i] = rhof;
-        alignedFlux[1][i] = rhouf;
-        alignedFlux[nVars-1][i] = Ef;
+        rhof.store(&(flux[0][i]));
+        rhouf.store(&(flux[1][i]));
+        Ef.store(&(flux[nVars-1][i]));
         if (spaceDim == 2)
         {
-            alignedFlux[2][i] = rhovf;
+            rhovf.store(&(flux[2][i]));
         }
         else if (spaceDim == 3)
         {
-            alignedFlux[2][i] = rhovf;
-            alignedFlux[3][i] = rhowf;
+            rhovf.store(&(flux[2][i]));
+            rhowf.store(&(flux[3][i]));
         }
 
     } // avx loop
 
-    for (size_t i = 0; i < nVars; ++i)
+
+    // spillover loop
+    for (; i < sizeScalar; ++i)
     {
-        AVX::CopyFromAlignedVector(alignedFlux[i], flux[i]);
-    }
+        NekDouble rhoL{}, rhouL{}, rhovL{}, rhowL{}, EL{};
+        NekDouble rhoR{}, rhouR{}, rhovR{}, rhowR{}, ER{};
+
+        // load
+        rhoL  = fwd[0][i];
+        rhouL = fwd[1][i];
+        EL    = fwd[spaceDim+1][i];
+        rhoR  = bwd[0][i];
+        rhouR = bwd[1][i];
+        ER    = bwd[spaceDim+1][i];
+
+        if (spaceDim == 2)
+        {
+            rhovL = fwd[2][i];
+            rhovR = bwd[2][i];
+        }
+        else if (spaceDim == 3)
+        {
+            rhovL = fwd[2][i];
+            rhowL = fwd[3][i];
+            rhovR = bwd[2][i];
+            rhowR = bwd[3][i];
+        }
+
+        NekDouble rhof{}, rhouf{}, rhovf{}, rhowf{}, Ef{};
+
+        RoeKernel(
+            rhoL, rhouL, rhovL, rhowL, EL,
+            rhoR, rhouR, rhovR, rhowR, ER,
+            rhof, rhouf, rhovf, rhowf, Ef,
+            gamma);
+
+        // store
+        flux[0][i] = rhof;
+        flux[1][i] = rhouf;
+        flux[nVars-1][i] = Ef;
+        if (spaceDim == 2)
+        {
+            flux[2][i] = rhovf;
+        }
+        else if (spaceDim == 3)
+        {
+            flux[2][i] = rhovf;
+            flux[3][i] = rhowf;
+        }
+
+    } // loop
+
 }
 
 }

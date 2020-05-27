@@ -42,8 +42,7 @@
 #include <LibUtilities/BasicUtils/Thread.h>
 
 #include "ProcessVarOpti.h"
-
-#include <utilities/NekMesh/ProcessModules/ProcessVarOpti/Evaluator.hxx>
+#include "Evaluator.hxx"
 
 namespace Nektar
 {

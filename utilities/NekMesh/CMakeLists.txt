@@ -1,37 +1,5 @@
 SET(NekMeshSources
-    InputModules/InputGmsh.cpp
-    InputModules/InputNek.cpp
-    InputModules/InputNek5000.cpp
-    InputModules/InputNekpp.cpp
-    InputModules/InputPly.cpp
-    InputModules/InputSem.cpp
-    InputModules/InputSwan.cpp
-    InputModules/InputStarTec.cpp
     NekMesh.cpp
-    OutputModules/OutputGmsh.cpp
-    OutputModules/OutputNekpp.cpp
-    OutputModules/OutputSTL.cpp
-    ProcessModules/ProcessBL.cpp
-    ProcessModules/ProcessCurve.cpp
-    ProcessModules/ProcessCurvedEdges.cpp
-    ProcessModules/ProcessCyl.cpp
-    ProcessModules/ProcessDetectSurf.cpp
-    ProcessModules/ProcessExtractSurf.cpp
-    ProcessModules/ProcessExtractTetPrismInterface.cpp
-    ProcessModules/ProcessJac.cpp
-    ProcessModules/ProcessLinkCheck.cpp
-    ProcessModules/ProcessLinear.cpp
-    ProcessModules/ProcessPerAlign.cpp
-    ProcessModules/ProcessScalar.cpp
-    ProcessModules/ProcessSpherigon.cpp
-    ProcessModules/ProcessTetSplit.cpp
-    ProcessModules/ProcessOptiExtract.cpp
-    ProcessModules/ProcessInsertSurface.cpp
-    ProcessModules/ProcessExtrude.cpp
-    ProcessModules/ProcessVarOpti/ProcessVarOpti.cpp
-    ProcessModules/ProcessVarOpti/PreProcessing.cpp
-    ProcessModules/ProcessVarOpti/NodeOpti.cpp
-    ProcessModules/ProcessVarOpti/ElUtil.cpp
 )
 
 IF (NEKTAR_USE_CFI)

@@ -45,7 +45,7 @@
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeData.h>
 
-#include <utilities/NekMesh/ProcessModules/ProcessVarOpti/Evaluator.hxx>
+#include <NekMeshUtils/Module/ProcessModules/ProcessVarOpti/Evaluator.hxx>
 
 namespace Nektar
 {

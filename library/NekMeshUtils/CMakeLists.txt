@@ -1,5 +1,38 @@
 SET(NEKMESHUTILS_SOURCES
     Module/Module.cpp
+    Module/InputModules/InputGmsh.cpp
+    Module/InputModules/InputNek.cpp
+    Module/InputModules/InputNek5000.cpp
+    Module/InputModules/InputNekpp.cpp
+    Module/InputModules/InputPly.cpp
+    Module/InputModules/InputSem.cpp
+    Module/InputModules/InputSwan.cpp
+    Module/InputModules/InputStarTec.cpp
+    Module/OutputModules/OutputGmsh.cpp
+    Module/OutputModules/OutputNekpp.cpp
+    Module/OutputModules/OutputSTL.cpp
+    Module/ProcessModules/ProcessBL.cpp
+    Module/ProcessModules/ProcessCurve.cpp
+    Module/ProcessModules/ProcessCurvedEdges.cpp
+    Module/ProcessModules/ProcessCyl.cpp
+    Module/ProcessModules/ProcessDetectSurf.cpp
+    Module/ProcessModules/ProcessExtractSurf.cpp
+    Module/ProcessModules/ProcessExtractTetPrismInterface.cpp
+    Module/ProcessModules/ProcessJac.cpp
+    Module/ProcessModules/ProcessLinkCheck.cpp
+    Module/ProcessModules/ProcessLinear.cpp
+    Module/ProcessModules/ProcessPerAlign.cpp
+    Module/ProcessModules/ProcessScalar.cpp
+    Module/ProcessModules/ProcessSpherigon.cpp
+    Module/ProcessModules/ProcessTetSplit.cpp
+    Module/ProcessModules/ProcessOptiExtract.cpp
+    Module/ProcessModules/ProcessInsertSurface.cpp
+    Module/ProcessModules/ProcessExtrude.cpp
+    Module/ProcessModules/ProcessVarOpti/ProcessVarOpti.cpp
+    Module/ProcessModules/ProcessVarOpti/PreProcessing.cpp
+    Module/ProcessModules/ProcessVarOpti/NodeOpti.cpp
+    Module/ProcessModules/ProcessVarOpti/ElUtil.cpp
+
     MeshElements/Mesh.cpp
     MeshElements/Element.cpp
     MeshElements/Edge.cpp
@@ -19,9 +52,6 @@ SET(NEKMESHUTILS_SOURCES
     CADSystem/CADVert.cpp
     CADSystem/CADCurve.cpp
     CADSystem/ProcessLoadCAD.cpp
-
-    ../../utilities/NekMesh/InputModules/InputNekpp.cpp
-    ../../utilities/NekMesh/OutputModules/OutputNekpp.cpp
     )
 
 IF(NEKTAR_USE_MESHGEN)
@@ -52,6 +82,37 @@ ENDIF()
 SET(NEKMESHUTILS_HEADERS
     NekMeshUtilsDeclspec.h
     Module/Module.h
+    Module/InputModules/InputGmsh.h
+    Module/InputModules/InputNek.h
+    Module/InputModules/InputNek5000.h
+    Module/InputModules/InputNekpp.h
+    Module/InputModules/InputPly.h
+    Module/InputModules/InputSem.h
+    Module/InputModules/InputSwan.h
+    Module/InputModules/InputStarTec.h
+    Module/OutputModules/OutputGmsh.h
+    Module/OutputModules/OutputNekpp.h
+    Module/OutputModules/OutputSTL.h
+    Module/ProcessModules/ProcessBL.h
+    Module/ProcessModules/ProcessCurve.h
+    Module/ProcessModules/ProcessCurvedEdges.h
+    Module/ProcessModules/ProcessCyl.h
+    Module/ProcessModules/ProcessDetectSurf.h
+    Module/ProcessModules/ProcessExtractSurf.h
+    Module/ProcessModules/ProcessExtractTetPrismInterface.h
+    Module/ProcessModules/ProcessJac.h
+    Module/ProcessModules/ProcessLinkCheck.h
+    Module/ProcessModules/ProcessLinear.h
+    Module/ProcessModules/ProcessPerAlign.h
+    Module/ProcessModules/ProcessScalar.h
+    Module/ProcessModules/ProcessSpherigon.h
+    Module/ProcessModules/ProcessTetSplit.h
+    Module/ProcessModules/ProcessOptiExtract.h
+    Module/ProcessModules/ProcessInsertSurface.h
+    Module/ProcessModules/ProcessExtrude.h
+    Module/ProcessModules/ProcessVarOpti/ProcessVarOpti.h
+    Module/ProcessModules/ProcessVarOpti/NodeOpti.h
+    Module/ProcessModules/ProcessVarOpti/ElUtil.h
     MeshElements/Node.h
     MeshElements/Edge.h
     MeshElements/Face.h
@@ -101,7 +162,7 @@ IF(NEKTAR_USE_MESHGEN)
         CADSystem/OCE/TransfiniteSurface.h
         Optimisation/BGFS-B.h
         Optimisation/OptimiseObj.h
-#        2DGenerator/2DGenerator.h
+        2DGenerator/2DGenerator.h
     )
 ENDIF()
 
@@ -127,7 +188,7 @@ ADD_DEFINITIONS(-DNEKMESHUTILS_EXPORTS)
 ADD_NEKTAR_LIBRARY(NekMeshUtils
     SOURCES ${NEKMESHUTILS_SOURCES}
     HEADERS ${NEKMESHUTILS_HEADERS}
-    DEPENDS SpatialDomains
+    DEPENDS LocalRegions
     SUMMARY "Nektar++ NekMeshUtils library"
     DESCRIPTION "This library provides mesh generation and routines for the NekMesh executable.")
 

@@ -69,16 +69,26 @@ int main(int argc, char const *argv[])
         }
     }
 
+    #if 1
     std::vector<AVX::AlignedVector<vec_t>>
+    #else
+    Array<OneD, Array<OneD, vec_t>>
+    #endif
         alignedFwd(nVars),
         alignedBwd(nVars),
         alignedFlux(nVars);
 
     for (size_t i = 0; i < nVars; ++i)
     {
+        #if 1
         alignedFwd[i] = AVX::AlignedVector<vec_t>(sizeVec);
         alignedBwd[i] = AVX::AlignedVector<vec_t>(sizeVec);
         alignedFlux[i] = AVX::AlignedVector<vec_t>(sizeVec);
+        #else
+        alignedFwd[i] =  Array<OneD,vec_t>(sizeVec);
+        alignedBwd[i] =  Array<OneD,vec_t>(sizeVec);
+        alignedFlux[i] =  Array<OneD,vec_t>(sizeVec);
+        #endif
 
         for (size_t j = 0; j < sizeVec; ++j)
         {

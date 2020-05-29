@@ -174,6 +174,15 @@ namespace Nektar
                 const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                       Array<OneD,       Array<OneD, NekDouble> > &flux) = 0;
 
+            virtual void v_OptSolve(
+                const unsigned short                             nDim,
+                const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+                const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+                      Array<OneD,       Array<OneD, NekDouble> > &flux)
+            {
+                v_Solve(nDim, Fwd, Bwd, flux);
+            }
+
             void GenerateRotationMatrices(
                 const Array<OneD, const Array<OneD, NekDouble> > &normals);
             void FromToRotation(

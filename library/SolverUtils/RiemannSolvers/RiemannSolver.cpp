@@ -105,6 +105,7 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                   Array<OneD,       Array<OneD, NekDouble> > &flux)
         {
+#if 1
             if (m_requiresRotation)
             {
                 ASSERTL1(CheckVectors("N"), "N not defined.");
@@ -141,7 +142,12 @@ namespace Nektar
             {
                 v_Solve(nDim, Fwd, Bwd, flux);
             }
+#else
+            v_OptSolve(nDim, Fwd, Bwd, flux);
+#endif
         }
+
+
 
         /**
          * @brief Rotate a vector field to trace normal.

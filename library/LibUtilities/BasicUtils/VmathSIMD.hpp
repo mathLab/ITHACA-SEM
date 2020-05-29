@@ -45,6 +45,7 @@ namespace SIMD
 {
 
     /// \brief  vvtvp (vector times vector plus vector): z = w*x + y
+    // uses SIMD VecData types, assumes raw * are aligned to SIMD vector width boundary
     template<class T>
     void Vvtvp(const size_t n, const T *w,  const T *x,  const T *y, T *z)
     {
@@ -52,6 +53,7 @@ namespace SIMD
         constexpr unsigned int size = Nektar::AVX::SIMD_WIDTH_SIZE;
         constexpr unsigned int alignment = Nektar::AVX::SIMD_WIDTH_BYTES;
 
+        // Check precondition in debug mode
         ASSERTL1( reinterpret_cast<size_t>(w) % alignment == 0, "w pointer not aligned");
         ASSERTL1( reinterpret_cast<size_t>(x) % alignment == 0, "x pointer not aligned");
         ASSERTL1( reinterpret_cast<size_t>(y) % alignment == 0, "y pointer not aligned");
@@ -86,10 +88,10 @@ namespace SIMD
             // z = w * x + y;
             *z = (*w) * (*x) + (*y);
             // update pointers
-            --w;
-            --x;
-            --y;
-            --z;
+            ++w;
+            ++x;
+            ++y;
+            ++z;
             --cnt;
         }
     }
@@ -106,6 +108,7 @@ namespace SIMD
         constexpr unsigned int size = Nektar::AVX::SIMD_WIDTH_SIZE;
         constexpr unsigned int alignment = Nektar::AVX::SIMD_WIDTH_BYTES;
 
+        // Check precondition in debug mode
         ASSERTL1( reinterpret_cast<size_t>(v) % alignment == 0, "v pointer not aligned");
         ASSERTL1( reinterpret_cast<size_t>(w) % alignment == 0, "w pointer not aligned");
         ASSERTL1( reinterpret_cast<size_t>(x) % alignment == 0, "x pointer not aligned");
@@ -147,11 +150,11 @@ namespace SIMD
             T z2 = (*x) * (*y);
             *z = z1 + z2;
             // update pointers
-            --v;
-            --w;
-            --x;
-            --y;
-            --z;
+            ++v;
+            ++w;
+            ++x;
+            ++y;
+            ++z;
             --cnt;
         }
     }

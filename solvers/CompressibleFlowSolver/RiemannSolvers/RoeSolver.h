@@ -68,6 +68,12 @@ protected:
         const Array<OneD, const Array<OneD, ND> > &Fwd,
         const Array<OneD, const Array<OneD, ND> > &Bwd,
               Array<OneD,       Array<OneD, ND> > &flux) final;
+
+    void v_OptSolve(
+        const unsigned short                      nDim,
+        const Array<OneD, const Array<OneD, ND> > &Fwd,
+        const Array<OneD, const Array<OneD, ND> > &Bwd,
+              Array<OneD,       Array<OneD, ND> > &flux) final;
 };
 
 template<class T>

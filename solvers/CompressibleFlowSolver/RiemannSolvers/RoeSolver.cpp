@@ -110,7 +110,6 @@ void RoeSolver::v_ArraySolve(
 
     // get limit of vectorizable chunk
     size_t sizeScalar = fwd[0].num_elements();
-    size_t pad = sizeScalar % AVX::SIMD_WIDTH_SIZE;
     size_t sizeVec = (sizeScalar / AVX::SIMD_WIDTH_SIZE) * AVX::SIMD_WIDTH_SIZE;
 
     // SIMD loop
@@ -150,17 +149,17 @@ void RoeSolver::v_ArraySolve(
             gamma);
 
         // store
-        rhof.store(&(flux[0][i]));
-        rhouf.store(&(flux[1][i]));
-        Ef.store(&(flux[nVars-1][i]));
+        rhof.store_nts(&(flux[0][i]));
+        rhouf.store_nts(&(flux[1][i]));
+        Ef.store_nts(&(flux[nVars-1][i]));
         if (spaceDim == 2)
         {
-            rhovf.store(&(flux[2][i]));
+            rhovf.store_nts(&(flux[2][i]));
         }
         else if (spaceDim == 3)
         {
-            rhovf.store(&(flux[2][i]));
-            rhowf.store(&(flux[3][i]));
+            rhovf.store_nts(&(flux[2][i]));
+            rhowf.store_nts(&(flux[3][i]));
         }
 
     } // avx loop
@@ -219,4 +218,27 @@ void RoeSolver::v_ArraySolve(
 
 }
 
+
+void RoeSolver::v_OptSolve(
+    const unsigned short                      nDim,
+    const Array<OneD, const Array<OneD, ND> > &Fwd,
+    const Array<OneD, const Array<OneD, ND> > &Bwd,
+          Array<OneD,       Array<OneD, ND> > &flux)
+{
+    // loop
+
+    // get normal, vellocs
+
+
+    // rotate
+
+
+    // Roe kernel
+
+
+    // rotate back
+
+
 }
+
+} // namespace Nektar

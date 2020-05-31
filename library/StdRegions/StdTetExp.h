@@ -172,9 +172,9 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_FillMode(
                 const int                     mode,
                       Array<OneD, NekDouble>& outarray);
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluateBasis(
+            STD_REGIONS_EXPORT NekDouble v_PhysEvaluateBasis(
                 const Array<OneD, const NekDouble>& coords,
-                int mode);
+                int mode) final;
             STD_REGIONS_EXPORT virtual void v_GetFaceNumModes(
                     const int                  fid,
                     const Orientation          faceOrient,

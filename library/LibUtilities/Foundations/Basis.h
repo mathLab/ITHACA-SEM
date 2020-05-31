@@ -190,7 +190,7 @@ namespace Nektar
                                             const BasisKey &rhs) const;
 
         protected:
-            int        m_nummodes;   ///< Expansion order.
+            unsigned int        m_nummodes;   ///< Expansion order.
             BasisType  m_basistype;  ///< Expansion type.
             PointsKey  m_pointsKey;  ///< Points specification.
 

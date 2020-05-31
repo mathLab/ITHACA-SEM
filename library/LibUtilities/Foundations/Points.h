@@ -431,9 +431,9 @@ namespace Nektar
 
                 Array<OneD, DataType> z = m_points[0];
 
-                for (int i = 0; i < totNumPoints; ++i)
+                for (unsigned int i = 0; i < totNumPoints; ++i)
                 {
-                    for (int j = 0; j < totNumPoints; ++j)
+                    for (unsigned int j = 0; j < totNumPoints; ++j)
                     {
                         if (i == j)
                         {

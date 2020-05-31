@@ -1601,6 +1601,13 @@ namespace Nektar
                     NekDouble xdiff = z[i] - coord;
                     NekDouble pval = physvals[i];
 
+                    /*
+                     * (in this specific case) you actually 
+                     * want to do the comparison exactly 
+                     * (believe it or not!) See chapter 7 of 
+                     * the paper here:
+                     *https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
+                     */
                     if (xdiff == 0.0)
                     {
                         return pval;

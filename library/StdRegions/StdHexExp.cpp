@@ -638,15 +638,15 @@ namespace Nektar
                      "Calling argument mode is larger than total expansion "
                      "order");
 
-            for(i = 0; i < nquad1*nquad2; ++i)
+            for(int i = 0; i < nquad1*nquad2; ++i)
             {
                 Vmath::Vcopy(nquad0,(NekDouble *)(base0.get() + mode0*nquad0),1,
                              &outarray[0]+i*nquad0, 1);
             }
 
-            for(j = 0; j < nquad2; ++j)
+            for(int j = 0; j < nquad2; ++j)
             {
-                for(i = 0; i < nquad0; ++i)
+                for(int i = 0; i < nquad0; ++i)
                 {
                     Vmath::Vmul(nquad1,(NekDouble *)(base1.get() + mode1*nquad1),1,
                                 &outarray[0]+i+j*nquad0*nquad1, nquad0,
@@ -654,7 +654,7 @@ namespace Nektar
                 }
             }
 
-            for(i = 0; i < nquad2; i++)
+            for(int i = 0; i < nquad2; i++)
             {
                 Blas::Dscal(nquad0*nquad1,base2[mode2*nquad2+i],
                             &outarray[0]+i*nquad0*nquad1,1);
@@ -1772,7 +1772,7 @@ namespace Nektar
 
             if( signChange )
             {
-                for(p = 1; p < nEdgeIntCoeffs; p+=2)
+                for(int p = 1; p < nEdgeIntCoeffs; p+=2)
                 {
                     signarray[p] = -1;
                 }
@@ -1998,7 +1998,7 @@ namespace Nektar
 
                         if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 2 )
                         {
-                            for(i = 3; i < nummodes[1]; i+=2)
+                            for(int i = 3; i < nummodes[1]; i+=2)
                             {
                                 sign1[i] = -1;
                             }
@@ -2032,7 +2032,7 @@ namespace Nektar
 
                         if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 4 > 1 )
                         {
-                            for(i = 3; i < nummodes[1]; i+=2)
+                            for(int i = 3; i < nummodes[1]; i+=2)
                             {
                                 sign1[i] = -1;
                             }
@@ -2092,7 +2092,7 @@ namespace Nektar
 
                         if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 4 > 1 )
                         {
-                            for(i = 3; i < nummodes[0]; i+=2)
+                            for(int i = 3; i < nummodes[0]; i+=2)
                             {
                                 sign0[i] = -1;
                             }
@@ -2480,7 +2480,7 @@ namespace Nektar
                 nmodes = max(nmodes,nmodes_c);
 
                 Array<OneD, NekDouble> fac(nmodes,1.0);
-                for(j = cutoff; j < nmodes; ++j)
+                for(int j = cutoff; j < nmodes; ++j)
                 {
                     fac[j] = fabs((j-nmodes)/((NekDouble) (j-cutoff+1.0)));
                     fac[j] *= fac[j]; //added this line to conform with equation

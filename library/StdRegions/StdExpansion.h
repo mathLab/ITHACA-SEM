@@ -1594,7 +1594,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &bw =
                     m_base[DIR]->GetBaryWeights();
 
-                const int nquad = z.size();
+                const auto nquad = z.size();
 
                 for (int i = 0; i < nquad; ++i)
                 {

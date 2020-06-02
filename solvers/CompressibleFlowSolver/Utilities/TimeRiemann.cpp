@@ -8,7 +8,7 @@
 #include <LibUtilities/BasicUtils/Likwid.hpp>
 
 #include "../RiemannSolvers/RoeSolver.h"
-#include "../RiemannSolvers/RoeSolverOpt.h"
+#include "../RiemannSolvers/RoeSolverSIMD.h"
 
 using namespace Nektar;
 
@@ -38,7 +38,7 @@ int main(int argc, char const *argv[])
         << "\t(assuming 4*4 nodes per face)\n";
 
     // auto riemannSolver = RoeSolver();
-    auto riemannSolver = RoeSolverOpt();
+    auto riemannSolver = RoeSolverSIMD();
     // Setting up parameters for Riemann solver
     NekDouble gamma = 1.4;
     riemannSolver.SetParam("gamma", [&gamma]()

@@ -36,7 +36,7 @@
 
 // #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include "../RoeSolver.h"
-#include "../RoeSolverOpt.h"
+#include "../RoeSolverSIMD.h"
 
 
 namespace Nektar
@@ -51,15 +51,14 @@ namespace RiemannTests
         // riemannSolver = SolverUtils::GetRiemannSolverFactory()
                                     // .CreateInstance(riemName, m_session);
         // auto riemannSolver = RoeSolver();
-        auto riemannSolver = RoeSolverOpt();
+        auto riemannSolver = RoeSolverSIMD();
         // Setting up parameters for Riemann solver
         NekDouble gamma = 1.4;
         riemannSolver.SetParam("gamma", [&gamma]()
             -> NekDouble& {return gamma;});
 
         size_t spaceDim = 3;
-        // size_t npts = 5; // so that avx spillover loop is engaged
-        size_t npts = 4;
+        size_t npts = 5; // so that avx spillover loop is engaged
 
         // Set up locations of velocity vector.
         Array<OneD, Array<OneD, NekDouble>> vecLocs(1);
@@ -152,14 +151,15 @@ namespace RiemannTests
         // std::string riemannName = "Roe";
         // riemannSolver = SolverUtils::GetRiemannSolverFactory()
                                     // .CreateInstance(riemName, m_session);
-        auto riemannSolver = RoeSolver();
+        // auto riemannSolver = RoeSolver();
+        auto riemannSolver = RoeSolverSIMD();
         // Setting up parameters for Riemann solver
         NekDouble gamma = 1.4;
         riemannSolver.SetParam("gamma", [&gamma]()
             -> NekDouble& {return gamma;});
 
         size_t spaceDim = 3;
-        size_t npts = 1;
+        size_t npts = 5;
 
         // Set up locations of velocity vector.
         Array<OneD, Array<OneD, NekDouble>> vecLocs(1);
@@ -245,7 +245,8 @@ namespace RiemannTests
         // std::string riemannName = "Roe";
         // riemannSolver = SolverUtils::GetRiemannSolverFactory()
                                     // .CreateInstance(riemName, m_session);
-        auto riemannSolver = RoeSolver();
+        // auto riemannSolver = RoeSolver();
+        auto riemannSolver = RoeSolverSIMD();
         // Setting up parameters for Riemann solver
         NekDouble gamma = 1.4;
         riemannSolver.SetParam("gamma", [&gamma]()
@@ -339,7 +340,8 @@ namespace RiemannTests
         // std::string riemannName = "Roe";
         // riemannSolver = SolverUtils::GetRiemannSolverFactory()
                                     // .CreateInstance(riemName, m_session);
-        auto riemannSolver = RoeSolver();
+        // auto riemannSolver = RoeSolver();
+        auto riemannSolver = RoeSolverSIMD();
         // Setting up parameters for Riemann solver
         NekDouble gamma = 1.4;
         riemannSolver.SetParam("gamma", [&gamma]()

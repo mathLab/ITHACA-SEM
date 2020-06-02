@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: RoeSolver.cpp
+// File: RoeSolverSIMD.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,19 +33,19 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <CompressibleFlowSolver/RiemannSolvers/RoeSolver.h>
-#include <CompressibleFlowSolver/RiemannSolvers/RoeSolverOpt.h>
+#include <CompressibleFlowSolver/RiemannSolvers/RoeSolverSIMD.h>
 
 #include <AVXOperators/AVXUtil.hpp>
 
 namespace Nektar
 {
-std::string RoeSolverOpt::solverName =
+std::string RoeSolverSIMD::solverName =
     SolverUtils::GetRiemannSolverFactory().RegisterCreatorFunction(
         "RoeOpt",
-        RoeSolverOpt::create,
+        RoeSolverSIMD::create,
         "Roe Riemann solver opt");
 
-RoeSolverOpt::RoeSolverOpt(const LibUtilities::SessionReaderSharedPtr& pSession)
+RoeSolverSIMD::RoeSolverSIMD(const LibUtilities::SessionReaderSharedPtr& pSession)
     :
     CompressibleSolver(pSession)
 {
@@ -53,14 +53,14 @@ RoeSolverOpt::RoeSolverOpt(const LibUtilities::SessionReaderSharedPtr& pSession)
 }
 
 /// programmatic ctor
-RoeSolverOpt::RoeSolverOpt():
+RoeSolverSIMD::RoeSolverSIMD():
 CompressibleSolver()
 {
     m_requiresRotation = false;
 }
 
-void RoeSolverOpt::v_Solve(
-    const int                                 nDim,
+void RoeSolverSIMD::v_Solve(
+    const int                                        nDim,
     const Array<OneD, const Array<OneD, NekDouble> > &fwd,
     const Array<OneD, const Array<OneD, NekDouble> > &bwd,
           Array<OneD,       Array<OneD, NekDouble> > &flux)
@@ -77,15 +77,15 @@ void RoeSolverOpt::v_Solve(
 
     // get normal, vellocs
     ASSERTL1(CheckVectors("N"), "N not defined.");
-    ASSERTL1(CheckAuxVec("vecLocs"), "vecLocs not defined.");
+    // ASSERTL1(CheckAuxVec("vecLocs"), "vecLocs not defined.");
     const Array<OneD, const Array<OneD, NekDouble> > normals =
         m_vectors["N"]();
-    const Array<OneD, const Array<OneD, NekDouble> > vecLocs =
-        m_auxVec["vecLocs"]();
+    // const Array<OneD, const Array<OneD, NekDouble> > vecLocs =
+        // m_auxVec["vecLocs"]();
 
-    const unsigned int vx = (int)vecLocs[0][0];
-    const unsigned int vy = (int)vecLocs[0][1];
-    const unsigned int vz = (int)vecLocs[0][2];
+    // const unsigned int vx = (int)vecLocs[0][0];
+    // const unsigned int vy = (int)vecLocs[0][1];
+    // const unsigned int vz = (int)vecLocs[0][2];
 
     // Generate matrices if they don't already exist.
     if (m_rotMat.num_elements() == 0)
@@ -97,7 +97,6 @@ void RoeSolverOpt::v_Solve(
     size_t i = 0;
     for (; i < sizeVec; i+=AVX::SIMD_WIDTH_SIZE)
     {
-
         // load scalars
         vec_t rhoL = &(fwd[0][i]);
         vec_t rhoR = &(bwd[0][i]);
@@ -117,6 +116,7 @@ void RoeSolverOpt::v_Solve(
         {
             rotMat[j] = &(m_rotMat[j][i]);
         }
+
         // rotateTo kernel Fwd
         rotateToNormalKernel(tmpIn, rotMat, tmpOut);
 
@@ -137,30 +137,90 @@ void RoeSolverOpt::v_Solve(
         vec_t rhowR = tmpOut[2];
 
         // Roe kernel
-        vec_t rhof{}, rhouf{}, rhovf{}, rhowf{}, Ef{};
+        vec_t rhof{}, Ef{};
         RoeKernel(
             rhoL, rhouL, rhovL, rhowL, EL,
             rhoR, rhouR, rhovR, rhowR, ER,
-            rhof, rhouf, rhovf, rhowf, Ef,
+            rhof, tmpIn[0], tmpIn[1], tmpIn[2], Ef,
             gamma);
 
         // rotateFrom kernel
-        tmpIn[0] = rhouf;
-        tmpIn[1] = rhovf;
-        tmpIn[2] = rhowf;
-        rotateToNormalKernel(tmpIn, rotMat, tmpOut);
+        rotateFromNormalKernel(tmpIn, rotMat, tmpOut);
 
         // store scalar
         rhof.store_nts(&(flux[0][i]));
         Ef.store_nts(&(flux[nVars-1][i]));
 
-        // store vector
+        // store vector 3D only
         tmpOut[0].store_nts(&(flux[1][i]));
         tmpOut[1].store_nts(&(flux[2][i]));
         tmpOut[2].store_nts(&(flux[3][i]));
 
     }
 
+    // spillover loop
+    for (; i < sizeScalar; ++i)
+    {
+        // load scalars
+        NekDouble rhoL = fwd[0][i];
+        NekDouble rhoR = bwd[0][i];
+        NekDouble ER   = bwd[spaceDim+1][i];
+        NekDouble EL   = fwd[spaceDim+1][i];
+
+        // 3D case only
+        // load vectors left
+        NekDouble tmpIn[3], tmpOut[3];
+        tmpIn[0] = fwd[1][i];
+        tmpIn[1] = fwd[2][i];
+        tmpIn[2] = fwd[3][i];
+
+        // load rotation matrix
+        NekDouble rotMat[9];
+        for (size_t j = 0; j < 9; ++j)
+        {
+            rotMat[j] = m_rotMat[j][i];
+        }
+
+        // rotateTo kernel Fwd
+        rotateToNormalKernel(tmpIn, rotMat, tmpOut);
+
+        NekDouble rhouL = tmpOut[0];
+        NekDouble rhovL = tmpOut[1];
+        NekDouble rhowL = tmpOut[2];
+
+        // load vectors right
+        tmpIn[0] = bwd[1][i];
+        tmpIn[1] = bwd[2][i];
+        tmpIn[2] = bwd[3][i];
+
+        // rotateTo kernel Bwd
+        rotateToNormalKernel(tmpIn, rotMat, tmpOut);
+
+        NekDouble rhouR = tmpOut[0];
+        NekDouble rhovR = tmpOut[1];
+        NekDouble rhowR = tmpOut[2];
+
+        // Roe kernel
+        NekDouble rhof{}, Ef{};
+        RoeKernel(
+            rhoL, rhouL, rhovL, rhowL, EL,
+            rhoR, rhouR, rhovR, rhowR, ER,
+            rhof, tmpIn[0], tmpIn[1], tmpIn[2], Ef,
+            gamma);
+
+        // rotateFrom kernel
+        rotateFromNormalKernel(tmpIn, rotMat, tmpOut);
+
+        // store scalar
+        flux[0][i] = rhof;
+        flux[nVars-1][i] = Ef;
+
+        // store vector 3D only
+        flux[1][i] = tmpOut[0];
+        flux[2][i] = tmpOut[1];
+        flux[3][i] = tmpOut[2];
+
+    }
 }
 
 } // namespace Nektar

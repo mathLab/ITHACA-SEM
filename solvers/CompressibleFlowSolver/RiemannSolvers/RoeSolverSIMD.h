@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: RoeSolver.h
+// File: RoeSolverSIMD.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -32,32 +32,31 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_ROESOLVEROPT
-#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_ROESOLVEROPT
+#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_ROESOLVERSIMD
+#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_ROESOLVERSIMD
 
 #include <CompressibleFlowSolver/RiemannSolvers/CompressibleSolver.h>
-// #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
 namespace Nektar
 {
 
-class RoeSolverOpt : public CompressibleSolver
+class RoeSolverSIMD : public CompressibleSolver
 {
 public:
     static RiemannSolverSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr& pSession)
     {
         return RiemannSolverSharedPtr(
-            new RoeSolverOpt(pSession));
+            new RoeSolverSIMD(pSession));
     }
 
     static std::string solverName;
 
     /// programmatic ctor
-    RoeSolverOpt();
+    RoeSolverSIMD();
 
 protected:
-    RoeSolverOpt(const LibUtilities::SessionReaderSharedPtr& pSession);
+    RoeSolverSIMD(const LibUtilities::SessionReaderSharedPtr& pSession);
 
     using ND = NekDouble;
 

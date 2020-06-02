@@ -40,6 +40,8 @@
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
+#include <AVXOperators/AVXUtil.hpp>
+
 #include <string>
 
 namespace Nektar
@@ -174,15 +176,6 @@ namespace Nektar
                 const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                       Array<OneD,       Array<OneD, NekDouble> > &flux) = 0;
 
-            virtual void v_OptSolve(
-                const unsigned short                             nDim,
-                const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
-                const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-                      Array<OneD,       Array<OneD, NekDouble> > &flux)
-            {
-                v_Solve(nDim, Fwd, Bwd, flux);
-            }
-
             void GenerateRotationMatrices(
                 const Array<OneD, const Array<OneD, NekDouble> > &normals);
             void FromToRotation(
@@ -214,7 +207,50 @@ namespace Nektar
                                 const LibUtilities::SessionReaderSharedPtr&>
             RiemannSolverFactory;
         SOLVER_UTILS_EXPORT RiemannSolverFactory& GetRiemannSolverFactory();
-    }
+
+
+
+        template<class T>
+        inline void rotateToNormalKernel(T* in, T* rotMat, T* out)
+        {
+
+            // Apply rotation matrices.
+            out[0] = in[0] * rotMat[0]
+                   + in[1] * rotMat[1]
+                   + in[2] * rotMat[2];
+
+            out[1] = in[0] * rotMat[3]
+                   + in[1] * rotMat[4]
+                   + in[2] * rotMat[5];
+
+            out[2] = in[0] * rotMat[6]
+                   + in[1] * rotMat[7]
+                   + in[2] * rotMat[8];
+        }
+
+        template<class T>
+        inline void rotateFromNormalKernel(T* in, T* rotMat, T* out)
+        {
+
+            // Apply rotation matrices.
+            out[0] = in[0] * rotMat[0]
+                   + in[1] * rotMat[3]
+                   + in[2] * rotMat[6];
+
+            out[1] = in[0] * rotMat[1]
+                   + in[1] * rotMat[4]
+                   + in[2] * rotMat[7];
+
+            out[2] = in[0] * rotMat[2]
+                   + in[1] * rotMat[5]
+                   + in[2] * rotMat[8];
+        }
+
+
+
+
+
+    } // namespace SolverUtils
 }
 
 #endif

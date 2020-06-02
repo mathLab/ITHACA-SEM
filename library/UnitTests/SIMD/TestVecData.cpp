@@ -48,6 +48,27 @@ namespace VecDataTests
 
     using vec_t = AVX::VecData<double, AVX::SIMD_WIDTH_SIZE>;
 
+
+    BOOST_AUTO_TEST_CASE(VecData_add)
+    {
+        double val1 = -4.0;
+        double val2 =  2.0;
+        double val3 =  2.0;
+        vec_t avec1(val1);
+        vec_t avec2(val2);
+        vec_t avec3(val3);
+        vec_t res = avec1 + avec2 * avec3;
+        alignas(AVX::SIMD_WIDTH_BYTES) std::array<double, AVX::SIMD_WIDTH_SIZE>
+            ascalararr{};
+        res.store(ascalararr.data());
+
+        for (size_t i = 0; i < AVX::SIMD_WIDTH_SIZE; ++i)
+        {
+            BOOST_CHECK_EQUAL(ascalararr[i], val1 + val2 + val3);
+        }
+
+    }
+
     BOOST_AUTO_TEST_CASE(VecData_store)
     {
         double val = 4.0;

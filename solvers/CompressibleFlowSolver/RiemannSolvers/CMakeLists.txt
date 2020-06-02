@@ -9,7 +9,8 @@ ADD_LIBRARY(CompRiemann STATIC
     HLLSolver.cpp
     HLLCSolver.cpp
     LaxFriedrichsSolver.cpp
-    RoeSolver.cpp)
+    RoeSolver.cpp
+    RoeSolverOpt.cpp)
 
 ADD_DEPENDENCIES(CompRiemann SolverUtils)
 # TARGET_LINK_LIBRARIES(CompRiemann SolverUtils)

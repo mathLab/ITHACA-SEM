@@ -64,7 +64,7 @@ namespace Nektar
             const int                                         nDim,
             const Array<OneD, const Array<OneD, ND> > &Fwd,
             const Array<OneD, const Array<OneD, ND> > &Bwd,
-                  Array<OneD,       Array<OneD, ND> > &flux) final;
+                  Array<OneD,       Array<OneD, ND> > &flux) override;
 
         virtual void v_ArraySolve(
             const Array<OneD, const Array<OneD, ND> > &Fwd,

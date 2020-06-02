@@ -37,6 +37,8 @@
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
+#include <LibUtilities/BasicUtils/Likwid.hpp>
+
 #define EPSILON 0.000001
 
 #define CROSS(dest, v1, v2){                 \
@@ -105,7 +107,6 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                   Array<OneD,       Array<OneD, NekDouble> > &flux)
         {
-#if 1
             if (m_requiresRotation)
             {
                 ASSERTL1(CheckVectors("N"), "N not defined.");
@@ -132,19 +133,22 @@ namespace Nektar
                     }
                 }
 
+LIKWID_MARKER_START("RotationTo");
                 rotateToNormal  (Fwd, normals, vecLocs, m_rotStorage[0]);
                 rotateToNormal  (Bwd, normals, vecLocs, m_rotStorage[1]);
+LIKWID_MARKER_STOP("RotationTo");
+LIKWID_MARKER_START("v_Solve");
                 v_Solve         (nDim, m_rotStorage[0], m_rotStorage[1],
                                        m_rotStorage[2]);
+LIKWID_MARKER_STOP("v_Solve");
+LIKWID_MARKER_START("RotationFrom");
                 rotateFromNormal(m_rotStorage[2], normals, vecLocs, flux);
+LIKWID_MARKER_STOP("RotationFrom");
             }
             else
             {
                 v_Solve(nDim, Fwd, Bwd, flux);
             }
-#else
-            v_OptSolve(nDim, Fwd, Bwd, flux);
-#endif
         }
 
 

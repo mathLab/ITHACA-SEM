@@ -47,13 +47,13 @@ std::string RoeSolver::solverName =
 RoeSolver::RoeSolver(const LibUtilities::SessionReaderSharedPtr& pSession)
     : CompressibleSolver(pSession)
 {
-    m_pointSolve = false;
+    // m_pointSolve = false;
 }
 
 /// programmatic ctor
 RoeSolver::RoeSolver(): CompressibleSolver()
 {
-    m_pointSolve = false;
+    // m_pointSolve = false;
 }
 
 /**
@@ -215,29 +215,6 @@ void RoeSolver::v_ArraySolve(
         }
 
     } // loop
-
-}
-
-
-void RoeSolver::v_OptSolve(
-    const unsigned short                      nDim,
-    const Array<OneD, const Array<OneD, ND> > &Fwd,
-    const Array<OneD, const Array<OneD, ND> > &Bwd,
-          Array<OneD,       Array<OneD, ND> > &flux)
-{
-    // loop
-
-    // get normal, vellocs
-
-
-    // rotate
-
-
-    // Roe kernel
-
-
-    // rotate back
-
 
 }
 

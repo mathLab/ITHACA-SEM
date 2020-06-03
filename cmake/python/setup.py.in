@@ -5,7 +5,7 @@ libs = ['LibUtilities',   \
         'SpatialDomains', \
         'LocalRegions',   \
         'MultiRegions',   \
-        'NekMeshUtils']
+        'NekMesh']
 
 setup(name='NekPy',
       version='${NEKTAR_VERSION}',

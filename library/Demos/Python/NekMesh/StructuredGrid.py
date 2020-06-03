@@ -1,7 +1,7 @@
 import NekPy
 import sys
 from NekPy.LibUtilities import ShapeType
-from NekPy.NekMeshUtils import Node, Element, ElmtConfig, NodeSet, Mesh, Module, ModuleType
+from NekPy.NekMesh import Node, Element, ElmtConfig, NodeSet, Mesh, Module, ModuleType
 import numpy as np
 
 #

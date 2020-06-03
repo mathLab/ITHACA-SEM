@@ -1,4 +1,4 @@
-from NekPy.NekMeshUtils import Node, NodeSet
+from NekPy.NekMesh import Node, NodeSet
 import unittest
 
 class TestNode(unittest.TestCase):

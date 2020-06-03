@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
     <description> Unit test of the Python interface for the
-                  Nektar::NekMeshUtils::Node class.
+                  Nektar::NekMesh::Node class.
     </description>
     <executable python="true"> test_nekmeshutil_node.py </executable>
     <parameters></parameters>

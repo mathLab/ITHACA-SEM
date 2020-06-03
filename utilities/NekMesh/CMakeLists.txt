@@ -1,4 +1,4 @@
-# Don't use macro -- this way we can just link against NekMeshUtils and
+# Don't use macro -- this way we can just link against NekMesh and
 # LocalRegions.
 ADD_UTILITIES_EXECUTABLE(NekMesh-bin COMPONENT nekmesh
     SOURCES NekMesh.cpp

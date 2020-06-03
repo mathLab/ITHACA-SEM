@@ -59,7 +59,7 @@ MARK_AS_ADVANCED(Boost_USE_MULTITHREADED)
 
 
 IF (WIN32)
-    ADD_DEFINITIONS("-DBOOST_ALL_DYN_LIB")
+    ADD_DEFINITIONS("-DBOOST_ALL_NO_LIB")
 ENDIF()
 
 IF (THIRDPARTY_BUILD_BOOST)
@@ -123,8 +123,8 @@ IF (THIRDPARTY_BUILD_BOOST)
         EXTERNALPROJECT_ADD(
             boost
             PREFIX ${TPSRC}
-            URL ${TPURL}/boost_1_73_0.tar.bz2
-            URL_MD5 "9273c8c4576423562bbe84574b07b2bd"
+            URL ${TPURL}/boost_1_71_0.tar.bz2
+            URL_MD5 "4cdf9b5c2dc01fb2b7b733d5af30e558"
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPBUILD}/boost
@@ -154,8 +154,8 @@ IF (THIRDPARTY_BUILD_BOOST)
         EXTERNALPROJECT_ADD(
             boost
             PREFIX ${TPSRC}
-            URL URL ${TPURL}/boost_1_73_0.tar.bz2
-            URL_MD5 "9273c8c4576423562bbe84574b07b2bd"
+            URL ${TPURL}/boost_1_71_0.tar.bz2
+            URL_MD5 "4cdf9b5c2dc01fb2b7b733d5af30e558"
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPBUILD}/boost

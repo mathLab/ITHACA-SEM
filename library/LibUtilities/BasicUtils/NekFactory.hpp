@@ -40,6 +40,7 @@
 #include <string>
 #include <sstream>
 #include <memory>
+#include <functional>
 
 #ifdef NEKTAR_USE_THREAD_SAFETY
 #include <boost/thread/shared_mutex.hpp>
@@ -299,7 +300,7 @@ protected:
      * @brief Ensure the factory's map is created.
      * @returns                 The factory's map.
      */
-    TMapFactory* getMapFactory() 
+    TMapFactory* getMapFactory()
     {
         return &mMapFactory;
     }

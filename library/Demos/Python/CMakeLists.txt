@@ -1,3 +1,5 @@
+SUBDIRS(NekMeshUtils)
+
 ADD_NEKPY_EXECUTABLE(StdIntegral2D.py StdIntegral2D.py)
 ADD_NEKPY_EXECUTABLE(Helmholtz2D.py Helmholtz2D.py)
 ADD_NEKPY_EXECUTABLE(CurvedGeom.py CurvedGeom.py)

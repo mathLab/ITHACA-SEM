@@ -38,6 +38,7 @@
 
 #include <array>
 #include <cmath>
+#include <iostream>
 
 namespace Nektar
 {
@@ -48,6 +49,26 @@ namespace VecDataTests
 
     using vec_t = AVX::VecData<double, AVX::SIMD_WIDTH_SIZE>;
 
+    BOOST_AUTO_TEST_CASE(VecData_loadu_implicit_conv)
+    {
+        std::array<double, AVX::SIMD_WIDTH_SIZE> ascalararr = {1.0, 2.0, 3.0, 4.0};
+        vec_t avec = ascalararr.data();
+    }
+
+    BOOST_AUTO_TEST_CASE(VecData_loadu)
+    {
+        std::array<double, AVX::SIMD_WIDTH_SIZE> ascalararr = {1.0, 2.0, 3.0, 4.0};
+        vec_t avec{};
+        avec = ascalararr.data();
+    }
+
+    BOOST_AUTO_TEST_CASE(VecData_storeu)
+    {
+        std::array<double, AVX::SIMD_WIDTH_SIZE> ascalararr = {1.0, 2.0, 3.0, 4.0};
+        vec_t avec{};
+
+        avec.store(ascalararr.data());
+    }
 
     BOOST_AUTO_TEST_CASE(VecData_add)
     {
@@ -115,7 +136,7 @@ namespace VecDataTests
 
     }
 
-    BOOST_AUTO_TEST_CASE(VecData_load_unload_to_aligned)
+    BOOST_AUTO_TEST_CASE(VecData_load_interleave_unload_to_aligned)
     {
         constexpr size_t nDof{5};
         // no padding in load_interleave deinterleave_store

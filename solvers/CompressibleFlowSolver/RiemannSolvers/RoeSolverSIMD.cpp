@@ -69,6 +69,9 @@ void RoeSolverSIMD::v_Solve(
     static auto nVars = fwd.num_elements();
     static auto spaceDim = nVars-2;
 
+    // 3D case only so far
+    ASSERTL0(spaceDim == 3, "SIMD Roe implemented only for 3D case...");
+
     using vec_t = AVX::VecData<NekDouble, AVX::SIMD_WIDTH_SIZE>;
 
     // get limit of vectorizable chunk
@@ -103,7 +106,6 @@ void RoeSolverSIMD::v_Solve(
         vec_t ER   = &(bwd[spaceDim+1][i]);
         vec_t EL   = &(fwd[spaceDim+1][i]);
 
-        // 3D case only
         // load vectors left
         vec_t tmpIn[3], tmpOut[3];
         tmpIn[0] = &(fwd[1][i]);
@@ -148,13 +150,22 @@ void RoeSolverSIMD::v_Solve(
         rotateFromNormalKernel(tmpIn, rotMat, tmpOut);
 
         // store scalar
-        rhof.store_nts(&(flux[0][i]));
-        Ef.store_nts(&(flux[nVars-1][i]));
+        // aligned
+        // rhof.store_nts(&(flux[0][i]));
+        // Ef.store_nts(&(flux[nVars-1][i]));
+        //unaligned
+        rhof.store(&(flux[0][i]));
+        Ef.store(&(flux[nVars-1][i]));
 
         // store vector 3D only
-        tmpOut[0].store_nts(&(flux[1][i]));
-        tmpOut[1].store_nts(&(flux[2][i]));
-        tmpOut[2].store_nts(&(flux[3][i]));
+        // aligned
+        // tmpOut[0].store_nts(&(flux[1][i]));
+        // tmpOut[1].store_nts(&(flux[2][i]));
+        // tmpOut[2].store_nts(&(flux[3][i]));
+        // unaligned
+        tmpOut[0].store(&(flux[1][i]));
+        tmpOut[1].store(&(flux[2][i]));
+        tmpOut[2].store(&(flux[3][i]));
 
     }
 

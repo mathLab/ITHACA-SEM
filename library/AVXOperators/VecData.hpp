@@ -204,7 +204,7 @@ struct VecData<double, 4>
     }
     inline VecData(const double *rhs)
     {
-        m_data = _mm256_load_pd(rhs);
+        m_data = _mm256_loadu_pd(rhs);
     }
     inline VecData(const __m256d &rhs) : m_data(rhs)
     {
@@ -223,7 +223,8 @@ struct VecData<double, 4>
 
     inline T &operator=(const double *data)
     {
-        m_data = _mm256_load_pd(data);
+        // m_data = _mm256_load_pd(data);
+        m_data = _mm256_loadu_pd(data);
         return *this;
     }
 
@@ -234,7 +235,8 @@ struct VecData<double, 4>
 
     inline void store(double *out)
     {
-        _mm256_store_pd(out, m_data);
+        // _mm256_store_pd(out, m_data);
+        _mm256_storeu_pd(out, m_data);
     }
 
     inline void store_nts(double *out)
@@ -390,6 +392,13 @@ struct VecData<double, 4>
     }
 };
 
+// unary operators
+inline VecData<double, 4> operator+(const VecData<double, 4> rhs)
+{
+    return rhs;
+}
+
+// binary operators
 inline VecData<double, 4> operator*(VecData<double, 4> lhs, VecData<double, 4> rhs)
 {
     return _mm256_mul_pd(lhs.m_data, rhs.m_data);
@@ -399,6 +408,7 @@ inline VecData<double, 4> operator+(VecData<double, 4> lhs, VecData<double, 4> r
 {
     return _mm256_add_pd(lhs.m_data, rhs.m_data);
 }
+
 
 inline VecData<double, 4> operator-(VecData<double, 4> lhs, VecData<double, 4> rhs)
 {

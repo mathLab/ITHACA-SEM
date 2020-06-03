@@ -214,9 +214,10 @@
             ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
             ASSERTL1(n*incz <= z.num_elements()+z.GetOffset(),"Array out of bounds");
 
-            #if 0
+            #if 1
             Vvtvp(n,&w[0],incw,&x[0],incx,&y[0],incy,&z[0],incz);
             #else
+            boost::ignore_unused(incw, incx, incy, incz);
             SIMD::Vvtvp(n,&w[0],&x[0],&y[0],&z[0]);
             #endif
         }
@@ -280,9 +281,10 @@
             ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
             ASSERTL1(n*incz <= z.num_elements()+z.GetOffset(),"Array out of bounds");
 
-            #if 0
+            #if 1
             Vvtvvtp(n,&v[0],incv,&w[0],incw,&x[0],incx,&y[0],incy,&z[0],incz);
             #else
+            boost::ignore_unused(incv, incw, incx, incy, incz);
             SIMD::Vvtvvtp(n,&v[0],&w[0],&x[0],&y[0],&z[0]);
             #endif
         }

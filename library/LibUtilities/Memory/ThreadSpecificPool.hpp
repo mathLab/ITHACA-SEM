@@ -37,7 +37,7 @@
 #define NEKTAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
 
 #include <boost/pool/pool.hpp>
-#include <boost/align/aligned_alloc.hpp>
+
 #include <memory>
 #include <map>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -47,7 +47,10 @@
 #include <boost/thread/mutex.hpp>
 #endif
 
+#ifdef NEKTAR_USE_ALIGNED_MEM
+#include <boost/align/aligned_alloc.hpp>
 #include <AVXOperators/VecData.hpp>
+#endif
 
 #include <cstring>
 
@@ -196,7 +199,11 @@ namespace Nektar
                 }
                 else if( bytes > m_upperBound )
                 {
+#ifdef NEKTAR_USE_ALIGNED_MEM
                     return boost::alignment::aligned_alloc(AVX::SIMD_WIDTH_BYTES, bytes);
+#else
+                    return ::operator new(bytes);
+#endif
                 }
                 else
                 {
@@ -220,7 +227,11 @@ namespace Nektar
                 }
                 else if( bytes > m_upperBound )
                 {
+#ifdef NEKTAR_USE_ALIGNED_MEM
                     boost::alignment::aligned_free(p);
+#else
+                    ::operator delete(p);
+#endif
                 }
                 else
                 {

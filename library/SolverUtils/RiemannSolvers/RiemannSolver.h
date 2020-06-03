@@ -209,7 +209,6 @@ namespace Nektar
         SOLVER_UTILS_EXPORT RiemannSolverFactory& GetRiemannSolverFactory();
 
 
-
         template<class T>
         inline void rotateToNormalKernel(T* in, T* rotMat, T* out)
         {

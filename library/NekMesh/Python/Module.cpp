@@ -36,6 +36,7 @@
 #include <NekMesh/Module/Module.h>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/python/raw_function.hpp>
 
 using namespace Nektar;
 using namespace Nektar::NekMesh;
@@ -131,12 +132,27 @@ void Module_ProcessFaces(std::shared_ptr<Module> mod,
  * @param modName  Module name (typically filename extension).
  * @param mesh     Mesh that will be passed between modules.
  */
-ModuleSharedPtr Module_Create(ModuleType const  &modType,
-                              std::string const &modName,
-                              MeshSharedPtr     &mesh)
+ModuleSharedPtr Module_Create(py::tuple args, py::dict kwargs)
 {
-    ModuleKey key = std::make_pair(modType, modName);
-    return GetModuleFactory().CreateInstance(key, mesh);
+    ModuleType modType = py::extract<ModuleType>(args[0]);
+    std::string modName = py::extract<std::string>(args[1]);
+    ModuleKey modKey = std::make_pair(modType, modName);
+    MeshSharedPtr mesh = py::extract<MeshSharedPtr>(args[2]);
+    ModuleSharedPtr mod = GetModuleFactory().CreateInstance(modKey, mesh);
+
+    // Process keyword arguments.
+    py::list items = kwargs.items();
+
+    for (int i = 0; i < py::len(items); ++i)
+    {
+        std::string arg = py::extract<std::string>(items[i][0]);
+        std::string val = py::extract<std::string>(items[i][1].attr("__str__")());
+        mod->RegisterConfig(arg, val);
+    }
+
+    mod->SetDefaults();
+
+    return mod;
 }
 
 /**
@@ -308,7 +324,7 @@ void export_Module()
         .def_readwrite("mesh", &ModuleWrap::m_mesh)
 
         // Factory functions.
-        .def("Create", &Module_Create)
+        .def("Create", py::raw_function(Module_Create))
         .staticmethod("Create")
         .def("Register", &Module_Register)
         .staticmethod("Register")

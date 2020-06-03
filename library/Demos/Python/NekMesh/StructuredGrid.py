@@ -1,13 +1,13 @@
 import NekPy
 import sys
 from NekPy.LibUtilities import ShapeType
-from NekPy.NekMesh import Node, Element, ElmtConfig, NodeSet, Mesh, Module, ModuleType
+from NekPy.NekMesh import Node, Element, ElmtConfig, NodeSet, Mesh, Module, ModuleType, InputModule, OutputModule
 import numpy as np
 
 #
 # StructuredGrid creates a 2D structured grid of triangles or quads.
 #
-class StructuredGrid(Module):
+class StructuredGrid(InputModule):
     def __init__(self, mesh):
         super().__init__(mesh)
 
@@ -113,16 +113,12 @@ if __name__ == '__main__':
     # Create a 'pipeline' of the input and output modules.
     mesh = Mesh()
     mod = [
-        Module.Create(ModuleType.Input, "StructuredGrid", mesh,
-                      nx = sys.argv[1],
-                      ny = sys.argv[2],
-                      lx = sys.argv[3],
-                      ly = sys.argv[4],
-                      rx = sys.argv[5],
-                      ry = sys.argv[6],
-                      compid = sys.argv[7],
-                      shape = sys.argv[8]),
-        Module.Create(ModuleType.Output, "xml", mesh, outfile=sys.argv[9])
+        InputModule.Create(
+            "StructuredGrid", mesh,
+            nx = sys.argv[1], ny = sys.argv[2], lx = sys.argv[3],
+            ly = sys.argv[4], rx = sys.argv[5], ry = sys.argv[6],
+            compid = sys.argv[7], shape = sys.argv[8]),
+        OutputModule.Create("xml", mesh, outfile=sys.argv[9])
     ]
 
     # Print out config options that we registered in StructuredGrid, just for

@@ -42,7 +42,8 @@ using namespace Nektar;
 using namespace Nektar::NekMesh;
 
 /**
- * @brief Module wrapper to handle virtual function call in @c Module.
+ * @brief Module wrapper to handle virtual function calls in @c Module and its
+ * subclasses as defined by the template parameter @tparam MODTYPE.
  */
 template<class MODTYPE>
 struct ModuleWrap : public MODTYPE, public py::wrapper<MODTYPE>
@@ -64,6 +65,14 @@ struct ModuleWrap : public MODTYPE, public py::wrapper<MODTYPE>
         this->get_override("Process")();
     }
 
+    /**
+     * @brief Defines a configuration option for this module.
+     *
+     * @param key     The name of the configuration option.
+     * @param def     The option's default value.
+     * @param desc    A text description of the option.
+     * @param isBool  If true, this option is a boolean-type (true/false).
+     */
     void AddConfigOption(std::string key, std::string def, std::string desc,
                          bool isBool)
     {
@@ -156,9 +165,10 @@ const ModuleType ModuleTypeProxy<OutputModule>::value;
 /**
  * @brief Lightweight wrapper for Module factory creation function.
  *
- * @param modType  Module type (input/process/output).
- * @param modName  Module name (typically filename extension).
- * @param mesh     Mesh that will be passed between modules.
+ * @param  modType  Module type (input/process/output).
+ * @param  modName  Module name (typically filename extension).
+ * @param  mesh     Mesh that will be passed between modules.
+ * @tparam MODTYPE  Subclass of Module (e.g #InputModule, #OutputModule)
  */
 template<typename MODTYPE>
 ModuleSharedPtr Module_Create(py::tuple args, py::dict kwargs)
@@ -300,6 +310,51 @@ void Module_Register(ModuleType const  &modType,
     py::import("__main__").attr(modkey.c_str()) = capsule;
 }
 
+template <typename MODTYPE>
+struct ModuleWrapConverter
+{
+    ModuleWrapConverter()
+    {
+        // An important bit of code which will register allow
+        // shared_ptr<MODTYPE> as something that boost::python recognises,
+        // otherwise modules constructed from the factory will not work from
+        // Python.
+        py::objects::class_value_wrapper<
+            std::shared_ptr<MODTYPE>,
+            py::objects::make_ptr_instance<
+                MODTYPE,
+                py::objects::pointer_holder<std::shared_ptr<MODTYPE>, MODTYPE>>
+            >();
+    }
+};
+
+template <typename MODTYPE>
+struct PythonModuleClass
+{
+    PythonModuleClass(std::string modName)
+    {
+        py::class_<ModuleWrap<MODTYPE>,
+                   std::shared_ptr<ModuleWrap<MODTYPE>>,
+                   py::bases<Module>,
+                   boost::noncopyable>(
+                       modName.c_str(), py::init<MeshSharedPtr>())
+
+            .def("AddConfigOption", ModuleWrap_AddConfigOption<MODTYPE>, (
+                     py::arg("key"), py::arg("defValue"), py::arg("desc"),
+                     py::arg("isBool") = false))
+
+            // Allow direct access to mesh object through a property.
+            .def_readwrite("mesh", &ModuleWrap<MODTYPE>::m_mesh)
+
+            .def("Process", py::pure_virtual(&MODTYPE::Process))
+            .def("Create", py::raw_function(Module_Create<MODTYPE>))
+            .staticmethod("Create")
+            ;
+
+        ModuleWrapConverter<MODTYPE>();
+    }
+};
+
 void export_Module()
 {
     // Export ModuleType enum.
@@ -359,94 +414,13 @@ void export_Module()
         .def_readwrite("mesh", &ModuleWrap<Module>::m_mesh)
 
         // Factory functions.
-        //.def("Create", py::raw_function(Module_Create))
-        //.staticmethod("Create")
         .def("Register", &Module_Register)
         .staticmethod("Register")
         ;
 
-    // An important bit of code which will register allow shared_ptr<Module> as
-    // something that boost::python recognises, otherwise modules constructed
-    // from the factory will not work from Python.
-    py::objects::class_value_wrapper<
-        std::shared_ptr<Module>,
-        py::objects::make_ptr_instance<
-            Module,
-            py::objects::pointer_holder<std::shared_ptr<Module>, Module> >
-        >();
+    ModuleWrapConverter<Module>();
 
-    py::class_<ModuleWrap<InputModule>,
-               std::shared_ptr<ModuleWrap<InputModule>>,
-               py::bases<Module>,
-               boost::noncopyable>(
-                   "InputModule", py::init<MeshSharedPtr>())
-
-        .def("AddConfigOption", ModuleWrap_AddConfigOption<InputModule>, (
-                 py::arg("key"), py::arg("defValue"), py::arg("desc"),
-                 py::arg("isBool") = false))
-
-        // Allow direct access to mesh object through a property.
-        .def_readwrite("mesh", &ModuleWrap<InputModule>::m_mesh)
-
-        .def("Process", py::pure_virtual(&InputModule::Process))
-        .def("Create", py::raw_function(Module_Create<InputModule>))
-        .staticmethod("Create")
-        ;
-
-    py::objects::class_value_wrapper<
-        std::shared_ptr<InputModule>,
-        py::objects::make_ptr_instance<
-            InputModule,
-            py::objects::pointer_holder<std::shared_ptr<InputModule>, InputModule> >
-        >();
-
-    py::class_<ModuleWrap<ProcessModule>,
-               std::shared_ptr<ModuleWrap<ProcessModule>>,
-               py::bases<Module>,
-               boost::noncopyable>(
-                   "ProcessModule", py::init<MeshSharedPtr>())
-
-        .def("AddConfigOption", ModuleWrap_AddConfigOption<ProcessModule>, (
-                 py::arg("key"), py::arg("defValue"), py::arg("desc"),
-                 py::arg("isBool") = false))
-
-        // Allow direct access to mesh object through a property.
-        .def_readwrite("mesh", &ModuleWrap<ProcessModule>::m_mesh)
-
-        .def("Process", py::pure_virtual(&ProcessModule::Process))
-        .def("Create", py::raw_function(Module_Create<ProcessModule>))
-        .staticmethod("Create")
-        ;
-
-    py::objects::class_value_wrapper<
-        std::shared_ptr<ProcessModule>,
-        py::objects::make_ptr_instance<
-            ProcessModule,
-            py::objects::pointer_holder<std::shared_ptr<ProcessModule>, ProcessModule> >
-        >();
-
-    py::class_<ModuleWrap<OutputModule>,
-               std::shared_ptr<ModuleWrap<OutputModule>>,
-               py::bases<Module>,
-               boost::noncopyable>(
-                   "OutputModule", py::init<MeshSharedPtr>())
-
-        .def("AddConfigOption", ModuleWrap_AddConfigOption<OutputModule>, (
-                 py::arg("key"), py::arg("defValue"), py::arg("desc"),
-                 py::arg("isBool") = false))
-
-        // Allow direct access to mesh object through a property.
-        .def_readwrite("mesh", &ModuleWrap<OutputModule>::m_mesh)
-
-        .def("Process", py::pure_virtual(&OutputModule::Process))
-        .def("Create", py::raw_function(Module_Create<OutputModule>))
-        .staticmethod("Create")
-        ;
-
-    py::objects::class_value_wrapper<
-        std::shared_ptr<OutputModule>,
-        py::objects::make_ptr_instance<
-            OutputModule,
-            py::objects::pointer_holder<std::shared_ptr<OutputModule>, OutputModule> >
-        >();
+    PythonModuleClass<InputModule>("InputModule");
+    PythonModuleClass<ProcessModule>("ProcessModule");
+    PythonModuleClass<OutputModule>("OutputModule");
 }

@@ -112,20 +112,9 @@ if __name__ == '__main__':
 
     # Create a 'pipeline' of the input and output modules.
     mesh = Mesh()
-    mod = [
-        InputModule.Create(
-            "StructuredGrid", mesh,
-            nx = sys.argv[1], ny = sys.argv[2], lx = sys.argv[3],
-            ly = sys.argv[4], rx = sys.argv[5], ry = sys.argv[6],
-            compid = sys.argv[7], shape = sys.argv[8]),
-        OutputModule.Create("xml", mesh, outfile=sys.argv[9])
-    ]
-
-    # Print out config options that we registered in StructuredGrid, just for
-    # fun and to test they registered correctly!
-    print("Available options from structured grid generator:")
-    mod[0].PrintConfig()
-
-    # Process the pipeline.
-    for m in mod:
-        m.Process()
+    InputModule.Create(
+        "StructuredGrid", mesh,
+        nx = sys.argv[1], ny = sys.argv[2], lx = sys.argv[3],
+        ly = sys.argv[4], rx = sys.argv[5], ry = sys.argv[6],
+        compid = sys.argv[7], shape = sys.argv[8]).Process()
+    OutputModule.Create("xml", mesh, outfile=sys.argv[9]).Process()

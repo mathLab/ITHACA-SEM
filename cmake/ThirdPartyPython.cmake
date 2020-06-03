@@ -7,33 +7,35 @@
 ########################################################################
 
 IF (NEKTAR_BUILD_PYTHON)
-    CMAKE_DEPENDENT_OPTION(NEKTAR_USE_PYTHON3
-        "If true, prefer to use Python 3." OFF "NEKTAR_BUILD_PYTHON" OFF)
-
-    # Set the Python3 status flag as the opposite of the Python3 flag by
-    # default on first run to ensure Python is searched for.
-    IF (NOT DEFINED NEKTAR_PYTHON3_STATUS)
-        SET(NEKTAR_PYTHON3_STATUS NOT ${NEKTAR_USE_PYTHON3} CACHE INTERNAL "")
-    ENDIF()
-
-    IF (NOT NEKTAR_PYTHON3_STATUS STREQUAL NEKTAR_USE_PYTHON3)
-        unset(PYTHON_EXECUTABLE CACHE)
-        unset(PYTHON_INCLUDE_DIR CACHE)
-        unset(PYTHON_LIBRARY CACHE)
-        unset(PYTHON_LIBRARY_DEBUG CACHE)
-        unset(BOOST_PYTHON_LIB CACHE)
-        unset(BOOST_NUMPY_LIB CACHE)
-        SET(NEKTAR_PYTHON3_STATUS ${NEKTAR_USE_PYTHON3} CACHE INTERNAL "")
-    ENDIF()
-
-    SET(PYTHONVER 2.7)
-    IF (NEKTAR_USE_PYTHON3)
-        SET(PYTHONVER 3.0)
-    ENDIF()
-
     # Find Python
-    FIND_PACKAGE(PythonInterp  ${PYTHONVER} REQUIRED)
-    FIND_PACKAGE(PythonLibsNew ${PYTHONVER} REQUIRED)
+    IF(CMAKE_VERSION VERSION_GREATER "3.16.0" OR CMAKE_VERSION VERSION_EQUAL "3.16.0")
+        # If we're using the old version, then we should try to detect older 
+        # variables.
+        IF (DEFINED PYTHON_EXECUTABLE)
+            SET(Python_EXECUTABLE ${PYTHON_EXECUTABLE})
+        ENDIF()
+
+        IF (DEFINED PYTHON_LIBRARY)
+            SET(Python_LIBRARY ${PYTHON_LIBRARY})
+        ENDIF()
+
+        IF (DEFINED PYTHON_LIBRARIES)
+            SET(Python_LIBRARY ${PYTHON_LIBRARIES})
+        ENDIF()
+
+        FIND_PACKAGE(Python COMPONENTS Interpreter Development REQUIRED)
+
+        SET(PYTHON_INCLUDE_DIRS ${Python_INCLUDE_DIRS})
+        SET(PYTHON_EXECUTABLE ${Python_EXECUTABLE})
+        SET(PYTHON_LIBRARIES ${Python_LIBRARY})
+        SET(PYTHONLIBS_VERSION_STRING ${Python_VERSION})
+    ELSE()
+        FIND_PACKAGE(PythonInterp REQUIRED)
+        FIND_PACKAGE(PythonLibsNew REQUIRED)
+    ENDIF()
+
+    MESSAGE(STATUS "Found Python executable: ${PYTHON_EXECUTABLE}")
+    MESSAGE(STATUS "Found Python development: ${PYTHON_LIBRARIES}")
 
     # Include headers from root directory for config file.
 

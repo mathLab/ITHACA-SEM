@@ -41,13 +41,13 @@
 #include <boost/asio/ip/host_name.hpp>
 #include <boost/format.hpp>
 
-#include <NekMeshUtils/Module/Module.h>
+#include <NekMesh/Module/Module.h>
 
 using namespace std;
-using namespace Nektar::NekMeshUtils;
+using namespace Nektar::NekMesh;
 
 namespace po = boost::program_options;
-namespace ip    = boost::asio::ip;
+namespace ip = boost::asio::ip;
 
 int main(int argc, char* argv[])
 {

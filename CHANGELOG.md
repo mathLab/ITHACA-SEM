@@ -21,6 +21,9 @@ v5.1.0
 **CardiacEPSolver**
 - Added additional parameter sets to Fenton-Karma model (!1119)
 
+**Documentation**:
+- Updated Windows source build instructions in user guide (!1152)
+
 **NekMesh**
 - Improved boundary layer splitting and output to CADfix (!938)
 - Improve .geo reader and support 3D geometries with voids (!1031)
@@ -29,6 +32,7 @@ v5.1.0
 **BuildSystem**
 - Toggle build type (!1135)
 - Updated minimum required CMake version to 3.5.1 (!1152)
+- Updated third party Boost version 1.71 (!1152)
 
 v5.0.1
 ------

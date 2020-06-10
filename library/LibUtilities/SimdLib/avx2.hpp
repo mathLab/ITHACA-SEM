@@ -261,17 +261,39 @@ struct avx2Double4
     }
 
     //gather
-    inline void gather(scalarType const* p, sse2Int4 &indices)
+    inline void gather(scalarType const* p, sse2Int4& indices)
     {
         _data = _mm256_i32gather_pd(p, indices._data, 8);
     }
 
-    inline void gather(scalarType const* p, avx2Long4 &indices)
+    inline void gather(scalarType const* p, avx2Long4& indices)
     {
         _data = _mm256_i64gather_pd(p, indices._data, 8);
     }
 
+    inline void scatter(scalarType* out, sse2Int4& indices)
+    {
+        // no scatter intrinsics for AVX2, so we just do it manually
+        alignas(alignment) scalarArray tmp; //Couldn't find an extract for 1 double
+        _mm256_store_pd(tmp, _data);
 
+        out[_mm_extract_epi32(indices._data, 0)] = tmp[0];
+        out[_mm_extract_epi32(indices._data, 1)] = tmp[1];
+        out[_mm_extract_epi32(indices._data, 2)] = tmp[2];
+        out[_mm_extract_epi32(indices._data, 3)] = tmp[3];
+    }
+
+    inline void scatter(scalarType* out, avx2Long4& indices)
+    {
+        // no scatter intrinsics for AVX2, so we just do it manually
+        alignas(alignment) scalarArray tmp; //Couldn't find an extract for 1 double
+        _mm256_store_pd(tmp, _data);
+
+        out[_mm256_extract_epi64(indices._data, 0)] = tmp[0];
+        out[_mm256_extract_epi64(indices._data, 1)] = tmp[1];
+        out[_mm256_extract_epi64(indices._data, 2)] = tmp[2];
+        out[_mm256_extract_epi64(indices._data, 3)] = tmp[3];
+    }
 
     // subscript
     // subscript operators are convienient but expensive

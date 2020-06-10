@@ -166,7 +166,6 @@ namespace SimdLibTests
     #if defined(__AVX2__)
     BOOST_AUTO_TEST_CASE(SimdLib_load_any)
     {
-        using index_t = simd<size_t>;
         vec_t avec;
         double* p0, * p1, * p2, * p3;
         std::array<double, 16> ascalararr{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
@@ -185,7 +184,7 @@ namespace SimdLibTests
 
     }
 
-    BOOST_AUTO_TEST_CASE(SimdLib_gather)
+    BOOST_AUTO_TEST_CASE(SimdLib_gather64)
     {
         using index_t = simd<size_t>;
         vec_t avec;
@@ -202,6 +201,31 @@ namespace SimdLibTests
         BOOST_CHECK_EQUAL(ascalararr[3], avec[1]);
         BOOST_CHECK_EQUAL(ascalararr[5], avec[2]);
         BOOST_CHECK_EQUAL(ascalararr[6], avec[3]);
+
+    }
+
+    BOOST_AUTO_TEST_CASE(SimdLib_scatter64)
+    {
+        using index_t = simd<size_t>;
+        vec_t avec;
+        index_t aindexvec;
+        aindexvec[0] = 0;
+        aindexvec[1] = 3;
+        aindexvec[2] = 5;
+        aindexvec[3] = 6;
+        std::array<double, 16> ascalararr{};
+
+        avec[0] = 10;
+        avec[1] =  9;
+        avec[2] =  8;
+        avec[3] =  7;
+
+        avec.scatter(ascalararr.data(), aindexvec);
+
+        BOOST_CHECK_EQUAL(avec[0], ascalararr[0]);
+        BOOST_CHECK_EQUAL(avec[1], ascalararr[3]);
+        BOOST_CHECK_EQUAL(avec[2], ascalararr[5]);
+        BOOST_CHECK_EQUAL(avec[3], ascalararr[6]);
 
     }
     #endif

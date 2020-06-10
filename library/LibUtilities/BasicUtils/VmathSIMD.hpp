@@ -36,7 +36,7 @@
 #pragma once
 
 #include <LibUtilities/LibUtilitiesDeclspec.h>
-#include <SimdOperators/VecData.hpp>
+#include <LibUtilities/SimdLib/tinysimd.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 namespace Vmath
@@ -45,41 +45,36 @@ namespace SIMD
 {
 
     /// \brief  vvtvp (vector times vector plus vector): z = w*x + y
-    // uses SIMD VecData types, assumes raw * are aligned to SIMD vector width boundary
     template<class T>
     void Vvtvp(const size_t n, const T *w,  const T *x,  const T *y, T *z)
     {
-        using vec_t = Nektar::AVX::VecData<T, Nektar::AVX::SIMD_WIDTH_SIZE>;
-        constexpr unsigned int size = Nektar::AVX::SIMD_WIDTH_SIZE;
-        constexpr unsigned int alignment = Nektar::AVX::SIMD_WIDTH_BYTES;
-
-        // Check precondition in debug mode
-        ASSERTL1( reinterpret_cast<size_t>(w) % alignment == 0, "w pointer not aligned");
-        ASSERTL1( reinterpret_cast<size_t>(x) % alignment == 0, "x pointer not aligned");
-        ASSERTL1( reinterpret_cast<size_t>(y) % alignment == 0, "y pointer not aligned");
-        ASSERTL1( reinterpret_cast<size_t>(z) % alignment == 0, "z pointer not aligned");
+        using namespace tinysimd;
+        using vec_t = simd<T>;
 
         size_t cnt = n;
         // Vectorized loop
-        while (cnt >= size)
+        while (cnt >= vec_t::width)
         {
             // load
-            vec_t wChunk = w;
-            vec_t yChunk = y;
-            vec_t xChunk = x;
+            vec_t wChunk;
+            wChunk.load(w, is_not_aligned);
+            vec_t yChunk;
+            yChunk.load(y, is_not_aligned);
+            vec_t xChunk;
+            xChunk.load(x, is_not_aligned);
 
             // z = w * x + y
             vec_t zChunk = wChunk * xChunk + yChunk;
 
             // store
-            zChunk.store_nts(z);
+            zChunk.store(z, is_not_aligned);
 
             // update pointers
-            w += size;
-            x += size;
-            y += size;
-            z += size;
-            cnt-= size;
+            w += vec_t::width;
+            x += vec_t::width;
+            y += vec_t::width;
+            z += vec_t::width;
+            cnt-= vec_t::width;
         }
 
         // spillover loop
@@ -99,31 +94,26 @@ namespace SIMD
 
     /// \brief  vvtvvtp (vector times vector plus vector times vector):
     // z = v*w + x*y
-    // uses SIMD VecData types, assumes raw * are aligned to SIMD vector width boundary
     template<class T>
     inline void Vvtvvtp (const size_t n, const T* v, const T* w, const T* x,
         const T* y, T* z)
     {
-        using vec_t = Nektar::AVX::VecData<T, Nektar::AVX::SIMD_WIDTH_SIZE>;
-        constexpr unsigned int size = Nektar::AVX::SIMD_WIDTH_SIZE;
-        constexpr unsigned int alignment = Nektar::AVX::SIMD_WIDTH_BYTES;
-
-        // Check precondition in debug mode
-        ASSERTL1( reinterpret_cast<size_t>(v) % alignment == 0, "v pointer not aligned");
-        ASSERTL1( reinterpret_cast<size_t>(w) % alignment == 0, "w pointer not aligned");
-        ASSERTL1( reinterpret_cast<size_t>(x) % alignment == 0, "x pointer not aligned");
-        ASSERTL1( reinterpret_cast<size_t>(y) % alignment == 0, "y pointer not aligned");
-        ASSERTL1( reinterpret_cast<size_t>(z) % alignment == 0, "z pointer not aligned");
+        using namespace tinysimd;
+        using vec_t = simd<T>;
 
         size_t cnt = n;
         // Vectorized loop
-        while (cnt >= size)
+        while (cnt >= vec_t::width)
         {
             // load
-            vec_t vChunk = v;
-            vec_t wChunk = w;
-            vec_t yChunk = y;
-            vec_t xChunk = x;
+            vec_t vChunk;
+            vChunk.load(v, is_not_aligned);
+            vec_t wChunk;
+            wChunk.load(w, is_not_aligned);
+            vec_t yChunk;
+            yChunk.load(y, is_not_aligned);
+            vec_t xChunk;
+            xChunk.load(x, is_not_aligned);
 
             // z = v * w + x * y;
             vec_t z1Chunk = vChunk * wChunk;
@@ -131,15 +121,15 @@ namespace SIMD
             vec_t zChunk = z1Chunk + z2Chunk;
 
             // store
-            zChunk.store_nts(z);
+            zChunk.store(z, is_not_aligned);
 
             // update pointers
-            v += size;
-            w += size;
-            x += size;
-            y += size;
-            z += size;
-            cnt-= size;
+            v += vec_t::width;
+            w += vec_t::width;
+            x += vec_t::width;
+            y += vec_t::width;
+            z += vec_t::width;
+            cnt-= vec_t::width;
         }
 
         // spillover loop

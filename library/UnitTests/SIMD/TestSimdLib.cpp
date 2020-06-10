@@ -163,6 +163,49 @@ namespace SimdLibTests
         }
     }
 
+    #if defined(__AVX2__)
+    BOOST_AUTO_TEST_CASE(SimdLib_load_any)
+    {
+        using index_t = simd<size_t>;
+        vec_t avec;
+        double* p0, * p1, * p2, * p3;
+        std::array<double, 16> ascalararr{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+
+        p0 =  ascalararr.data();
+        p1 =  ascalararr.data() + 3;
+        p2 =  ascalararr.data() + 5;
+        p3 =  ascalararr.data() + 6;
+
+        avec.load(p0, p1, p2, p3);
+
+        BOOST_CHECK_EQUAL(ascalararr[0], avec[0]);
+        BOOST_CHECK_EQUAL(ascalararr[3], avec[1]);
+        BOOST_CHECK_EQUAL(ascalararr[5], avec[2]);
+        BOOST_CHECK_EQUAL(ascalararr[6], avec[3]);
+
+    }
+
+    BOOST_AUTO_TEST_CASE(SimdLib_gather)
+    {
+        using index_t = simd<size_t>;
+        vec_t avec;
+        index_t aindexvec;
+        aindexvec[0] = 0;
+        aindexvec[1] = 3;
+        aindexvec[2] = 5;
+        aindexvec[3] = 6;
+        std::array<double, 16> ascalararr{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+
+        avec.gather(ascalararr.data(), aindexvec);
+
+        BOOST_CHECK_EQUAL(ascalararr[0], avec[0]);
+        BOOST_CHECK_EQUAL(ascalararr[3], avec[1]);
+        BOOST_CHECK_EQUAL(ascalararr[5], avec[2]);
+        BOOST_CHECK_EQUAL(ascalararr[6], avec[3]);
+
+    }
+    #endif
+
 
     BOOST_AUTO_TEST_CASE(SimdLib_add_mul)
     {
@@ -215,6 +258,9 @@ namespace SimdLibTests
         }
 
     }
+
+
+
 
     // BOOST_AUTO_TEST_CASE(SimdLib_load_interleave_unload_to_aligned)
     // {

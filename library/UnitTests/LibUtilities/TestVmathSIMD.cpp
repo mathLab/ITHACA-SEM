@@ -50,7 +50,8 @@ namespace VmathSIMDUnitTests
     {
         using dataType = double;
         constexpr size_t n = 11;
-        alignas(AVX::SIMD_WIDTH_BYTES) std::array<dataType, n> w, x, y, z;
+        alignas(tinysimd::simd<dataType>::alignment)
+            std::array<dataType, n> w, x, y, z;
         dataType epsilon = std::numeric_limits<dataType>::epsilon();
 
         // init
@@ -108,7 +109,8 @@ namespace VmathSIMDUnitTests
     {
         using dataType = double;
         constexpr size_t n = 11;
-        alignas(AVX::SIMD_WIDTH_BYTES) std::array<dataType, n> v, w, x, y, z;
+        alignas(tinysimd::simd<dataType>::alignment)
+            std::array<dataType, n> v, w, x, y, z;
         dataType epsilon = std::numeric_limits<dataType>::epsilon();
 
         // init

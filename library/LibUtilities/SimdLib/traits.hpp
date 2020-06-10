@@ -6,9 +6,9 @@ namespace tinysimd
 {
 
 // load tags
-static struct is_aligned_t {} is_aligned;
-static struct is_not_aligned_t {} is_not_aligned;
-static struct is_not_reused_t {} is_not_reused; // streaming, skip cache
+static constexpr struct is_aligned_t {} is_aligned;
+static constexpr struct is_not_aligned_t {} is_not_aligned;
+static constexpr struct is_not_reused_t {} is_not_reused; // streaming, skip cache
 
 template< class T >
 struct is_streaming

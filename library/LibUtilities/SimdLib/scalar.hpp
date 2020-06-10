@@ -73,6 +73,13 @@ struct scalarT
         _data = rhs;
     }
 
+    template<typename U, typename = typename std::enable_if<
+        std::is_integral<U>::value>::type>
+    inline void gather(const scalarType* p, scalarT<U> index)
+    {
+        return p[index];
+    }
+
     // subscript
     inline scalarType operator[](size_t i) const
     {

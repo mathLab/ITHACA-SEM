@@ -153,28 +153,13 @@ void RoeSolverSIMD::v_Solve(
         rotateFromNormalKernel(tmpIn, rotMat, tmpOut);
 
         // store scalar
-        #if 0
-        // nts
-        rhof.store_nts(&(flux[0][i]), is_not_reused);
-        Ef.store_nts(&(flux[nVars-1][i]), is_not_reused);
-        #else
-        //unaligned
         rhof.store(&(flux[0][i]), is_not_aligned);
         Ef.store(&(flux[nVars-1][i]), is_not_aligned);
-        #endif
 
         // store vector 3D only
-        #if 0
-        // nts
-        // tmpOut[0].store_nts(&(flux[1][i]), is_not_reused);
-        // tmpOut[1].store_nts(&(flux[2][i]), is_not_reused);
-        // tmpOut[2].store_nts(&(flux[3][i]), is_not_reused);
-        #else
-        // unaligned
         tmpOut[0].store(&(flux[1][i]), is_not_aligned);
         tmpOut[1].store(&(flux[2][i]), is_not_aligned);
         tmpOut[2].store(&(flux[3][i]), is_not_aligned);
-        #endif
     }
 
     // spillover loop

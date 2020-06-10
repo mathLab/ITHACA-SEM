@@ -2,6 +2,7 @@
 
 #include <immintrin.h>
 #include "traits.hpp"
+#include "sse2.hpp"
 
 namespace tinysimd
 {
@@ -21,19 +22,130 @@ struct avx2
 #if defined(__AVX2__)
 
 // forward declaration of concrete types
+// struct avx2Int8;
+struct avx2Long4;
 struct avx2Double4;
-// struct avx2Long4;
 
 namespace abi
 {
 
 // mapping between abstract types and concrete types
-// template <> struct avx2<long> { using type = avx2Long4; };
+// template <> struct avx2<int> { using type = avx2Int8; };
+template <> struct avx2<long> { using type = avx2Long4; };
+template <> struct avx2<size_t> { using type = avx2Long4; };
 template <> struct avx2<double> { using type = avx2Double4; };
 
 } // namespace abi
 
 // concrete types
+struct avx2Long4
+{
+    static constexpr unsigned width = 8;
+    static constexpr unsigned alignment = 32;
+
+    using scalarType = std::int64_t;
+    using vectorType = __m256i;
+    using scalarArray = scalarType[width];
+
+    // storage
+    vectorType _data;
+
+    // ctors
+    inline avx2Long4() = default;
+    inline avx2Long4(const avx2Long4& rhs) = default;
+    inline avx2Long4(const vectorType& rhs) : _data(rhs){}
+    inline avx2Long4(const scalarType rhs)
+    {
+        _data = _mm256_set1_epi64x(rhs);
+    }
+
+    // store
+    inline void store(scalarType* p) const
+    {
+        _mm256_store_si256(reinterpret_cast<vectorType*>(p), _data);
+    }
+
+    template
+    <
+        class flag,
+        typename std::enable_if<
+            is_requiring_alignment<flag>::value  &&
+            !is_streaming<flag>::value, bool
+            >::type = 0
+    >
+    inline void store(scalarType* p, flag) const
+    {
+        _mm256_store_si256(reinterpret_cast<vectorType*>(p), _data);
+    }
+
+    template
+    <
+        class flag,
+        typename std::enable_if<
+            !is_requiring_alignment<flag>::value, bool
+            >::type = 0
+    >
+    inline void store(scalarType* p, flag) const
+    {
+        _mm256_storeu_si256(reinterpret_cast<vectorType*>(p), _data);
+    }
+
+    inline void load(const scalarType* p)
+    {
+        _data = _mm256_load_si256(reinterpret_cast<const vectorType*>(p));
+    }
+
+    template
+    <
+        class flag,
+        typename std::enable_if<
+            is_requiring_alignment<flag>::value  &&
+            !is_streaming<flag>::value, bool
+            >::type = 0
+    >
+    inline void load(const scalarType* p, flag)
+    {
+        _data = _mm256_load_si256(reinterpret_cast<const vectorType*>(p));
+    }
+
+    template
+    <
+        class flag,
+        typename std::enable_if<
+            !is_requiring_alignment<flag>::value, bool
+            >::type = 0
+    >
+    inline void load(const scalarType* p, flag)
+    {
+        _data = _mm256_loadu_si256(reinterpret_cast<const vectorType*>(p));
+    }
+
+    inline void broadcast(const scalarType rhs)
+    {
+        _data = _mm256_set1_epi64x(rhs);
+    }
+
+    // subscript
+    // subscript operators are convienient but expensive
+    // should not be used in optimized kernels
+    inline scalarType operator[](size_t i) const
+    {
+        alignas(alignment) scalarArray tmp;
+        store(tmp, is_aligned);
+        return tmp[i];
+    }
+
+    inline scalarType& operator[](size_t i)
+    {
+        scalarType* tmp = reinterpret_cast<scalarType*>(&_data);
+        return tmp[i];
+    }
+
+};
+
+
+
+
 struct avx2Double4
 {
     static constexpr unsigned width = 4;
@@ -129,23 +241,37 @@ struct avx2Double4
     }
 
     // load random
-    inline void load(const scalarType* a, const scalarType* b,
-        const scalarType* c, const scalarType* d)
+    inline void load(scalarType const* a, scalarType const* b,
+        scalarType const* c, scalarType const* d)
     {
         __m128d t1, t2, t3, t4;
         __m256d t5;
-        t1 = _mm_load_sd(a);                      // SSE
-        t2 = _mm_loadh_pd(t1, b);                 // SSE
-        t3 = _mm_load_sd(c);                      // SSE
-        t4 = _mm_loadh_pd(t3, d);                 // SSE
+        t1 = _mm_load_sd(a);                      // SSE2
+        t2 = _mm_loadh_pd(t1, b);                 // SSE2
+        t3 = _mm_load_sd(c);                      // SSE2
+        t4 = _mm_loadh_pd(t3, d);                 // SSE2
         t5 = _mm256_castpd128_pd256(t2);          // cast __m128d -> __m256d
         _data = _mm256_insertf128_pd(t5, t4, 1);
     }
 
+    // broadcast
     inline void broadcast(const scalarType rhs)
     {
         _data = _mm256_set1_pd(rhs);
     }
+
+    //gather
+    inline void gather(scalarType const* p, sse2Int4 &indices)
+    {
+        _data = _mm256_i32gather_pd(p, indices._data, 8);
+    }
+
+    inline void gather(scalarType const* p, avx2Long4 &indices)
+    {
+        _data = _mm256_i64gather_pd(p, indices._data, 8);
+    }
+
+
 
     // subscript
     // subscript operators are convienient but expensive
@@ -199,41 +325,9 @@ inline avx2Double4 abs(avx2Double4 in)
 }
 
 
-// struct avx2_int4: fallback<avx2_int4> {
-//     using i32 = std::int32_t;
 
-//     static void copyTo(__m128i v, i32* p) {
-//         _mm_storeu_si128((__m128i*)p, v);
-//     }
-//     static __m128i copyFrom(const i32* p) {
-//         return _mm_loadu_si128((const __m128i*)p);
-//     }
-//     static __m128i broadcast(i32 v) {
-//         return _mm_set1_epi32(v);
-//     }
-//     static __m128i add(__m128i a, __m128i b) {
-//         return _mm_add_epi32(a, b);
-//     }
-//     static __m128i mul(__m128i a, __m128i b) {
-//         return _mm_mullo_epi32(a, b);
-//     }
-//     static __m128i fma(__m128i u, __m128i v, __m128i w) {
-//         return add(mul(u, v), w);
-//     }
-//     static i32 reduce_add(__m128i a) {
-//         // Add [a3|a2|a1|a0] to [a2|a3|a0|a1]
-//         __m128i b = add(a, _mm_shuffle_epi32(a, 0xb1));
-//         // Add [b3|b2|b1|b0] to [b1|b0|b3|b2]
-//         __m128i c = add(b, _mm_shuffle_epi32(b, 0x4e));
-//         return element(c, 0);
-//     }
 
-//     using fallback<avx2_int4>::gather;
-//     static __m128i gather(tag<avx2_int4>, const i32* p, __m128i index) {
-//         return _mm_i32gather_epi32(p, index, 4);
-//     }
-// };
 
-#endif // defined(__AVX2__) && defined(__FMA__)
+#endif // defined(__AVX2__)
 
 } // namespace tinysimd

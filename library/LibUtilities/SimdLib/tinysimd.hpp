@@ -1,6 +1,5 @@
 #pragma once
 
-#include "traits.hpp"
 #include "avx2.hpp"
 #include "scalar.hpp"
 
@@ -30,6 +29,7 @@ template <typename T> struct default_abi
 {
     using type = typename first_not_void_of<
         typename avx2<T>::type,
+        typename sse2<T>::type,
         typename scalar<T>::type
     >::type;
 

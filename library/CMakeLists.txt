@@ -3,8 +3,8 @@ SUBDIRS(LibUtilities LocalRegions SpatialDomains StdRegions Collections
         MultiRegions)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/library)
 
-IF (NEKTAR_BUILD_AVX)
-    SUBDIRS(AVXOperators)
+IF (NEKTAR_BUILD_SIMD)
+    SUBDIRS(SimdOperators)
     IF (NEKTAR_BUILD_UNIT_TESTS)
         SUBDIRS(UnitTests/SIMD)
     ENDIF()

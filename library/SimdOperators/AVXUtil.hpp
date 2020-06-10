@@ -1,7 +1,7 @@
 #ifndef AVXUTIL_HPP
 #define AVXUTIL_HPP
 
-#include <AVXOperators/VecData.hpp>
+#include <SimdOperators/VecData.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 #include <string>

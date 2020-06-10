@@ -21,7 +21,7 @@ SET(COLLECTIONS_HEADERS
 ADD_NEKTAR_LIBRARY(Collections
     SOURCES ${COLLECTIONS_SOURCES}
     HEADERS ${COLLECTIONS_HEADERS}
-    DEPENDS LocalRegions AVXOperators
+    DEPENDS LocalRegions SimdOperators
     SUMMARY "Nektar++ Collections library"
     DESCRIPTION "This library provides efficient multi-expansion implementations of operators on the various supported regions.")
 

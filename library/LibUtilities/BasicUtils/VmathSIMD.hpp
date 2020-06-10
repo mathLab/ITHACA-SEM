@@ -36,7 +36,7 @@
 #pragma once
 
 #include <LibUtilities/LibUtilitiesDeclspec.h>
-#include <AVXOperators/VecData.hpp>
+#include <SimdOperators/VecData.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 namespace Vmath

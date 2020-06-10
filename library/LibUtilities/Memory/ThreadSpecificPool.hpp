@@ -49,7 +49,7 @@
 
 #ifdef NEKTAR_USE_ALIGNED_MEM
 #include <boost/align/aligned_alloc.hpp>
-#include <AVXOperators/VecData.hpp>
+#include <SimdOperators/VecData.hpp>
 #endif
 
 #include <cstring>

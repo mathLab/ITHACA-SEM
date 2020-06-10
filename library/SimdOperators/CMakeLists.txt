@@ -1,4 +1,4 @@
-SET(AVXOPERATORS_SOURCES
+SET(SIMDOPERATORS_SOURCES
     AVXBwdTrans.cpp
     AVXIProduct.cpp
     AVXIProductWRTDerivBase.cpp
@@ -8,7 +8,7 @@ SET(AVXOPERATORS_SOURCES
     Operator.cpp
   )
 
-SET(AVXOPERATORS_HEADERS
+SET(SIMDOPERATORS_HEADERS
     # AVXAssembly.h
     AVXBwdTrans.h
     AVXBwdTransKernels.hpp
@@ -21,14 +21,14 @@ SET(AVXOPERATORS_HEADERS
     VecData.hpp
 )
 
-ADD_NEKTAR_LIBRARY(AVXOperators
-    SOURCES ${AVXOPERATORS_SOURCES}
-    HEADERS ${AVXOPERATORS_HEADERS}
+ADD_NEKTAR_LIBRARY(SimdOperators
+    SOURCES ${SIMDOPERATORS_SOURCES}
+    HEADERS ${SIMDOPERATORS_HEADERS}
     DEPENDS LibUtilities
-    SUMMARY "Nektar++ AVX operators library"
-    DESCRIPTION "This library provides key operators with AVX vector instructions.")
+    SUMMARY "Nektar++ SIMD operators library"
+    DESCRIPTION "This library provides key operators with SIMD vector instructions.")
 
 
 INSTALL(DIRECTORY ./
-    DESTINATION ${NEKTAR_INCLUDE_DIR}/AVXOperators
+    DESTINATION ${NEKTAR_INCLUDE_DIR}/SimdOperators
     COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

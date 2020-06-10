@@ -204,7 +204,7 @@ struct VecData<double, 4>
     }
     inline VecData(const double *rhs)
     {
-        m_data = _mm256_loadu_pd(rhs);
+        m_data = _mm256_load_pd(rhs);
     }
     inline VecData(const __m256d &rhs) : m_data(rhs)
     {
@@ -223,8 +223,7 @@ struct VecData<double, 4>
 
     inline T &operator=(const double *data)
     {
-        // m_data = _mm256_load_pd(data);
-        m_data = _mm256_loadu_pd(data);
+        m_data = _mm256_load_pd(data);
         return *this;
     }
 
@@ -235,8 +234,7 @@ struct VecData<double, 4>
 
     inline void store(double *out)
     {
-        // _mm256_store_pd(out, m_data);
-        _mm256_storeu_pd(out, m_data);
+        _mm256_store_pd(out, m_data);
     }
 
     inline void store_nts(double *out)

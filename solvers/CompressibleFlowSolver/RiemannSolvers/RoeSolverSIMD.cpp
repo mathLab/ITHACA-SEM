@@ -28,14 +28,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Roe Riemann solver.
+// Description: Roe Riemann solver using simd types.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <CompressibleFlowSolver/RiemannSolvers/RoeSolver.h>
 #include <CompressibleFlowSolver/RiemannSolvers/RoeSolverSIMD.h>
 
-#include <AVXOperators/AVXUtil.hpp>
+#include <LibUtilities/SimdLib/tinysimd.hpp>
 
 namespace Nektar
 {
@@ -72,11 +72,13 @@ void RoeSolverSIMD::v_Solve(
     // 3D case only so far
     ASSERTL0(spaceDim == 3, "SIMD Roe implemented only for 3D case...");
 
-    using vec_t = AVX::VecData<NekDouble, AVX::SIMD_WIDTH_SIZE>;
+    using namespace tinysimd;
+    using vec_t = simd<NekDouble>;
+    // using vec_t = typename tinysimd::abi::scalar<NekDouble>::type;
 
     // get limit of vectorizable chunk
     size_t sizeScalar = fwd[0].num_elements();
-    size_t sizeVec = (sizeScalar / AVX::SIMD_WIDTH_SIZE) * AVX::SIMD_WIDTH_SIZE;
+    size_t sizeVec = (sizeScalar / vec_t::width) * vec_t::width;
 
     // get normal, vellocs
     ASSERTL1(CheckVectors("N"), "N not defined.");
@@ -98,25 +100,26 @@ void RoeSolverSIMD::v_Solve(
 
     // SIMD loop
     size_t i = 0;
-    for (; i < sizeVec; i+=AVX::SIMD_WIDTH_SIZE)
+    for (; i < sizeVec; i+=vec_t::width)
     {
         // load scalars
-        vec_t rhoL = &(fwd[0][i]);
-        vec_t rhoR = &(bwd[0][i]);
-        vec_t ER   = &(bwd[spaceDim+1][i]);
-        vec_t EL   = &(fwd[spaceDim+1][i]);
+        vec_t rhoL, rhoR, ER, EL;
+        rhoL.load(&(fwd[0][i]), is_not_aligned);
+        rhoR.load(&(bwd[0][i]), is_not_aligned);
+        ER.load(&(bwd[spaceDim+1][i]), is_not_aligned);
+        EL.load(&(fwd[spaceDim+1][i]), is_not_aligned);
 
         // load vectors left
         vec_t tmpIn[3], tmpOut[3];
-        tmpIn[0] = &(fwd[1][i]);
-        tmpIn[1] = &(fwd[2][i]);
-        tmpIn[2] = &(fwd[3][i]);
+        tmpIn[0].load(&(fwd[1][i]), is_not_aligned);
+        tmpIn[1].load(&(fwd[2][i]), is_not_aligned);
+        tmpIn[2].load(&(fwd[3][i]), is_not_aligned);
 
         // load rotation matrix
         vec_t rotMat[9];
         for (size_t j = 0; j < 9; ++j)
         {
-            rotMat[j] = &(m_rotMat[j][i]);
+            rotMat[j].load(&(m_rotMat[j][i]), is_not_aligned);
         }
 
         // rotateTo kernel Fwd
@@ -127,9 +130,9 @@ void RoeSolverSIMD::v_Solve(
         vec_t rhowL = tmpOut[2];
 
         // load vectors right
-        tmpIn[0] = &(bwd[1][i]);
-        tmpIn[1] = &(bwd[2][i]);
-        tmpIn[2] = &(bwd[3][i]);
+        tmpIn[0].load(&(bwd[1][i]), is_not_aligned);
+        tmpIn[1].load(&(bwd[2][i]), is_not_aligned);
+        tmpIn[2].load(&(bwd[3][i]), is_not_aligned);
 
         // rotateTo kernel Bwd
         rotateToNormalKernel(tmpIn, rotMat, tmpOut);
@@ -150,23 +153,28 @@ void RoeSolverSIMD::v_Solve(
         rotateFromNormalKernel(tmpIn, rotMat, tmpOut);
 
         // store scalar
-        // aligned
-        // rhof.store_nts(&(flux[0][i]));
-        // Ef.store_nts(&(flux[nVars-1][i]));
+        #if 0
+        // nts
+        rhof.store_nts(&(flux[0][i]), is_not_reused);
+        Ef.store_nts(&(flux[nVars-1][i]), is_not_reused);
+        #else
         //unaligned
-        rhof.store(&(flux[0][i]));
-        Ef.store(&(flux[nVars-1][i]));
+        rhof.store(&(flux[0][i]), is_not_aligned);
+        Ef.store(&(flux[nVars-1][i]), is_not_aligned);
+        #endif
 
         // store vector 3D only
-        // aligned
-        // tmpOut[0].store_nts(&(flux[1][i]));
-        // tmpOut[1].store_nts(&(flux[2][i]));
-        // tmpOut[2].store_nts(&(flux[3][i]));
+        #if 0
+        // nts
+        // tmpOut[0].store_nts(&(flux[1][i]), is_not_reused);
+        // tmpOut[1].store_nts(&(flux[2][i]), is_not_reused);
+        // tmpOut[2].store_nts(&(flux[3][i]), is_not_reused);
+        #else
         // unaligned
-        tmpOut[0].store(&(flux[1][i]));
-        tmpOut[1].store(&(flux[2][i]));
-        tmpOut[2].store(&(flux[3][i]));
-
+        tmpOut[0].store(&(flux[1][i]), is_not_aligned);
+        tmpOut[1].store(&(flux[2][i]), is_not_aligned);
+        tmpOut[2].store(&(flux[3][i]), is_not_aligned);
+        #endif
     }
 
     // spillover loop
@@ -175,8 +183,8 @@ void RoeSolverSIMD::v_Solve(
         // load scalars
         NekDouble rhoL = fwd[0][i];
         NekDouble rhoR = bwd[0][i];
-        NekDouble ER   = bwd[spaceDim+1][i];
         NekDouble EL   = fwd[spaceDim+1][i];
+        NekDouble ER   = bwd[spaceDim+1][i];
 
         // 3D case only
         // load vectors left

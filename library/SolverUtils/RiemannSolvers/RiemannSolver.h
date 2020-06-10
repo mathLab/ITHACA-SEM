@@ -40,7 +40,7 @@
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
-#include <AVXOperators/AVXUtil.hpp>
+#include <SimdOperators/AVXUtil.hpp>
 
 #include <string>
 

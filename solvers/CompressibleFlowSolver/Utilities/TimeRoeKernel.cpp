@@ -1,6 +1,6 @@
 #include "../RiemannSolvers/RoeSolver.h"
 
-#include <AVXOperators/AVXUtil.hpp>
+#include <SimdOperators/AVXUtil.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 

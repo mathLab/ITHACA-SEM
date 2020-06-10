@@ -34,7 +34,7 @@
 
 #include <CompressibleFlowSolver/RiemannSolvers/RoeSolver.h>
 
-#include <AVXOperators/AVXUtil.hpp>
+#include <SimdOperators/AVXUtil.hpp>
 
 namespace Nektar
 {

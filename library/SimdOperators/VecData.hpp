@@ -186,9 +186,16 @@ inline std::ostream &operator<<(std::ostream &os, VecData<int, 4> const &vec) {
     return os << d[0] << ", " << d[1] << ", " << d[2] << ", " << d[3] << ";";
 }
 
+inline VecData<int, 4> operator+(VecData<int, 4> lhs, VecData<int, 4> rhs)
+{
+    return _mm_add_epi32(lhs.m_data, rhs.m_data);
+}
+
 /////
 ///// Specialisation: double + AVX2 (including FMA)
 /////
+inline VecData<double, 4> gather(const double* data, VecData<int, 4> &indices);
+
 template<>
 struct VecData<double, 4>
 {
@@ -255,7 +262,7 @@ struct VecData<double, 4>
         out[_mm_extract_epi32(indices.m_data,3)] = d[3];
     }
 
-
+#if 0
     inline static void load_interleave(
         const double *in,
         size_t dataLen,
@@ -336,6 +343,42 @@ struct VecData<double, 4>
             ++d3;
         }
     }
+#else
+    inline static void load_interleave(
+        const double* in,
+        size_t dataLen,
+        AlignedVector<VecData<double, 4>> &out)
+    {
+        size_t nBlocks = dataLen / 4;
+
+        alignas(32) int tmp[4] = {0, dataLen, 2*dataLen, 3*dataLen};
+        using index_t = VecData<int, 4>;
+        index_t index0(tmp);
+        index_t index1 = index0 + index_t(1);
+        index_t index2 = index0 + index_t(2);
+        index_t index3 = index0 + index_t(3);
+
+        // 4x unrolled loop
+        for (size_t i = 0; i < nBlocks; ++i)
+        {
+            out[4*i + 0] = gather(in, index0);
+            out[4*i + 1] = gather(in, index1);
+            out[4*i + 2] = gather(in, index2);
+            out[4*i + 3] = gather(in, index3);
+            index0 = index0 + index_t(4);
+            index1 = index1 + index_t(4);
+            index2 = index2 + index_t(4);
+            index3 = index3 + index_t(4);
+        }
+
+        // spillover loop
+        for (size_t i = 4 * nBlocks; i < dataLen; ++i)
+        {
+            out[i] = gather(in, index0);
+            index0 = index0 + index_t(1);
+        }
+    }
+#endif
 
     inline static void deinterleave_store(
         const AlignedVector<VecData<double, 4>> &in,

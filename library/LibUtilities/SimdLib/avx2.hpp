@@ -273,8 +273,8 @@ struct avx2Double4
 
     inline void scatter(scalarType* out, sse2Int4& indices)
     {
-        // no scatter intrinsics for AVX2, so we just do it manually
-        alignas(alignment) scalarArray tmp; //Couldn't find an extract for 1 double
+        // no scatter intrinsics for AVX2
+        alignas(alignment) scalarArray tmp;
         _mm256_store_pd(tmp, _data);
 
         out[_mm_extract_epi32(indices._data, 0)] = tmp[0];
@@ -285,8 +285,8 @@ struct avx2Double4
 
     inline void scatter(scalarType* out, avx2Long4& indices)
     {
-        // no scatter intrinsics for AVX2, so we just do it manually
-        alignas(alignment) scalarArray tmp; //Couldn't find an extract for 1 double
+        // no scatter intrinsics for AVX2
+        alignas(alignment) scalarArray tmp;
         _mm256_store_pd(tmp, _data);
 
         out[_mm256_extract_epi64(indices._data, 0)] = tmp[0];

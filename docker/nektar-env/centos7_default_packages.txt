@@ -1,6 +1,6 @@
 blas-devel
 ccache
-cmake
+cmake3
 fftw-devel
 gcc-c++
 gcc-gfortran

@@ -123,7 +123,6 @@ namespace Nektar
             }
 
             val = Vmath::Vamax(ntot, wsp, 1);
-
             return  val;
         }
 
@@ -143,7 +142,7 @@ namespace Nektar
                 Vmath::Vsub(ntot, sol, 1, phys, 1, wsp, 1);
                 Vmath::Vmul(ntot, wsp, 1, wsp, 1, wsp, 1);
             }
-
+            
             val = v_Integral(wsp);
 
             // if val too small, sqrt returns nan.
@@ -1417,6 +1416,12 @@ namespace Nektar
             return 0;
         }
 
+        NekDouble StdExpansion::v_PhysEvaluateBasis(const Array<OneD, const NekDouble>& coords, int mode)
+        {
+            boost::ignore_unused(coords, mode);
+            NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
+            return 0;
+        }
 
         void StdExpansion::v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
         {

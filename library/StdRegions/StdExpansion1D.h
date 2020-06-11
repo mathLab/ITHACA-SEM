@@ -72,40 +72,40 @@ namespace Nektar
 
         protected:
             std::map<int, NormalVector> m_vertexNormals;
-            
+
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                     const Array<OneD, const NekDouble>& coords,
-                    const Array<OneD, const NekDouble>& physvals);
+                    const Array<OneD, const NekDouble>& physvals) override;
 
         private:
 
             // Virtual Functions ----------------------------------------
 
-            virtual int v_GetCoordim(void)
+            virtual int v_GetCoordim(void) override
             {
                 return 1;
             }
 
-            virtual int v_GetShapeDimension() const
+            virtual int v_GetShapeDimension() const final
             {
                 return 1;
             }
 
-            virtual int v_GetNedges() const
+            virtual int v_GetNedges() const final
             {
                 return 0;
             }
 
-            virtual int v_GetNfaces() const
+            virtual int v_GetNfaces() const final
             {
                 return 0;
             }
 
-            STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const int vertex);
+            STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const int vertex) final;
             STD_REGIONS_EXPORT const NormalVector & v_GetSurfaceNormal(
-                    const int id) const;
+                    const int id) const final;
 
-            STD_REGIONS_EXPORT const NormalVector & v_GetVertexNormal(const int vertex) const;
+            STD_REGIONS_EXPORT const NormalVector & v_GetVertexNormal(const int vertex) const final;
         };
 
         typedef std::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;

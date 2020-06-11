@@ -618,7 +618,6 @@ namespace Nektar
         void StdHexExp::v_FillMode(const int mode,
                                 Array<OneD, NekDouble> &outarray)
         {
-            int    i,j;
             int   nquad0 = m_base[0]->GetNumPoints();
             int   nquad1 = m_base[1]->GetNumPoints();
             int   nquad2 = m_base[2]->GetNumPoints();
@@ -633,24 +632,21 @@ namespace Nektar
             int   mode1 = (mode-mode2*btmp0*btmp1)/btmp0;
             int   mode0 = (mode-mode2*btmp0*btmp1)%btmp0;
 
-            ASSERTL2(mode2 == (int)floor((1.0*mode)/(btmp0*btmp1)),
-                     "Integer Truncation not Equiv to Floor");
-            ASSERTL2(mode1 == (int)floor((1.0*mode-mode2*btmp0*btmp1)
-                                /(btmp0*btmp1)),
-                     "Integer Truncation not Equiv to Floor");
-            ASSERTL2(m_ncoeffs <= mode,
-                     "calling argument mode is larger than total expansion "
+            ASSERTL2(mode == mode2 * btmp0 * btmp1 + mode1 * btmp1 + mode0,
+                     "Mode lookup failed.");
+            ASSERTL2(mode < m_ncoeffs,
+                     "Calling argument mode is larger than total expansion "
                      "order");
 
-            for(i = 0; i < nquad1*nquad2; ++i)
+            for(int i = 0; i < nquad1*nquad2; ++i)
             {
                 Vmath::Vcopy(nquad0,(NekDouble *)(base0.get() + mode0*nquad0),1,
                              &outarray[0]+i*nquad0, 1);
             }
 
-            for(j = 0; j < nquad2; ++j)
+            for(int j = 0; j < nquad2; ++j)
             {
-                for(i = 0; i < nquad0; ++i)
+                for(int i = 0; i < nquad0; ++i)
                 {
                     Vmath::Vmul(nquad1,(NekDouble *)(base1.get() + mode1*nquad1),1,
                                 &outarray[0]+i+j*nquad0*nquad1, nquad0,
@@ -658,13 +654,41 @@ namespace Nektar
                 }
             }
 
-            for(i = 0; i < nquad2; i++)
+            for(int i = 0; i < nquad2; i++)
             {
                 Blas::Dscal(nquad0*nquad1,base2[mode2*nquad2+i],
                             &outarray[0]+i*nquad0*nquad1,1);
             }
         }
 
+        NekDouble StdHexExp::v_PhysEvaluateBasis(
+            const Array<OneD, const NekDouble>& coords,
+            int mode)
+        {
+            ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol,
+                     "coord[0] < -1");
+            ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol,
+                     "coord[0] >  1");
+            ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol,
+                     "coord[1] < -1");
+            ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol,
+                     "coord[1] >  1");
+            ASSERTL2(coords[2] > -1 - NekConstants::kNekZeroTol,
+                     "coord[2] < -1");
+            ASSERTL2(coords[2] <  1 + NekConstants::kNekZeroTol,
+                     "coord[2] >  1");
+
+            const int nm0 = m_base[0]->GetNumModes();
+            const int nm1 = m_base[1]->GetNumModes();
+            const int mode2 = mode / (nm0 * nm1);
+            const int mode1 = (mode - mode2 * nm0 * nm1) / nm0;
+            const int mode0 = (mode - mode2 * nm0 * nm1) % nm0;
+
+            return
+                StdExpansion::BaryEvaluateBasis<0>(coords[0], mode0) *
+                StdExpansion::BaryEvaluateBasis<1>(coords[1], mode1) *
+                StdExpansion::BaryEvaluateBasis<2>(coords[2], mode2);
+        }
 
         int StdHexExp::v_GetNverts() const
         {
@@ -977,7 +1001,6 @@ namespace Nektar
             int                        P,
             int                        Q)
         {
-            int i,j;
             int nummodesA=0, nummodesB=0;
 
             ASSERTL1(GetEdgeBasisType(0) == GetEdgeBasisType(1) &&
@@ -1045,9 +1068,9 @@ namespace Nektar
 
             Array<OneD, int> arrayindx(nFaceCoeffs);
 
-            for(i = 0; i < Q; i++)
+            for(int i = 0; i < Q; i++)
             {
-                for(j = 0; j < P; j++)
+                for(int j = 0; j < P; j++)
                 {
                     if( faceOrient < eDir1FwdDir2_Dir2FwdDir1 )
                     {
@@ -1127,9 +1150,9 @@ namespace Nektar
                     ASSERTL0(false,"fid must be between 0 and 5");
             }
 
-            for(i = 0; i < Q; i++)
+            for(int i = 0; i < Q; i++)
             {
-                for(j = 0; j < P; j++)
+                for(int j = 0; j < P; j++)
                 {
                     maparray[ arrayindx[i*P+j] ]
                     = i*jump1 + j*jump2 + offset;
@@ -1143,18 +1166,18 @@ namespace Nektar
                 {
                     // zero signmap and set maparray to zero if elemental
                     // modes are not as large as face modesl
-                    for(i = 0; i < nummodesB; i++)
+                    for(int i = 0; i < nummodesB; i++)
                     {
-                        for(j = nummodesA; j < P; j++)
+                        for(int j = nummodesA; j < P; j++)
                         {
                             signarray[arrayindx[i*P+j]] = 0.0;
                             maparray[arrayindx[i*P+j]]  = maparray[0];
                         }
                     }
 
-                    for(i = nummodesB; i < Q; i++)
+                    for(int i = nummodesB; i < Q; i++)
                     {
-                        for(j = 0; j < P; j++)
+                        for(int j = 0; j < P; j++)
                         {
                             signarray[arrayindx[i*P+j]] = 0.0;
                             maparray[arrayindx[i*P+j]]  = maparray[0];
@@ -1176,15 +1199,15 @@ namespace Nektar
                 {
                     if (modified)
                     {
-                        for(i = 3; i < Q; i+=2)
+                        for(int i = 3; i < Q; i+=2)
                         {
-                            for(j = 0; j < P; j++)
+                            for(int j = 0; j < P; j++)
                             {
                                 signarray[ arrayindx[i*P+j] ] *= -1;
                             }
                         }
 
-                        for(i = 0; i < P; i++)
+                        for(int i = 0; i < P; i++)
                         {
                             swap( maparray[i] , maparray[i+P] );
                             swap( signarray[i] , signarray[i+P] );
@@ -1193,9 +1216,9 @@ namespace Nektar
                     }
                     else
                     {
-                        for(i = 0; i < P; i++)
+                        for(int i = 0; i < P; i++)
                         {
-                            for(j = 0; j < Q/2; j++)
+                            for(int j = 0; j < Q/2; j++)
                             {
                                 swap( maparray[i + j*P],
                                      maparray[i+P*Q
@@ -1211,15 +1234,15 @@ namespace Nektar
                 {
                     if (modified)
                     {
-                        for(i = 0; i < Q; i++)
+                        for(int i = 0; i < Q; i++)
                         {
-                            for(j = 3; j < P; j+=2)
+                            for(int j = 3; j < P; j+=2)
                             {
                                 signarray[ arrayindx[i*P+j] ] *= -1;
                             }
                         }
 
-                        for(i = 0; i < Q; i++)
+                        for(int i = 0; i < Q; i++)
                         {
                             swap( maparray[i] , maparray[i+Q] );
                             swap( signarray[i] , signarray[i+Q] );
@@ -1228,9 +1251,9 @@ namespace Nektar
                     }
                     else
                     {
-                        for(i = 0; i < P; i++)
+                        for(int i = 0; i < P; i++)
                         {
-                            for(j = 0; j < Q/2; j++)
+                            for(int j = 0; j < Q/2; j++)
                             {
                                 swap( maparray[i*Q + j],
                                      maparray[i*Q + Q -1 -j]);
@@ -1251,15 +1274,15 @@ namespace Nektar
                 {
                     if (modified)
                     {
-                        for(i = 0; i < Q; i++)
+                        for(int i = 0; i < Q; i++)
                         {
-                            for(j = 3; j < P; j+=2)
+                            for(int j = 3; j < P; j+=2)
                             {
                                 signarray[ arrayindx[i*P+j] ] *= -1;
                             }
                         }
 
-                        for(i = 0; i < Q; i++)
+                        for(int i = 0; i < Q; i++)
                         {
                             swap( maparray[i*P],
                                  maparray[i*P+1]);
@@ -1269,9 +1292,9 @@ namespace Nektar
                     }
                     else
                     {
-                        for(i = 0; i < Q; i++)
+                        for(int i = 0; i < Q; i++)
                         {
-                            for(j = 0; j < P/2; j++)
+                            for(int j = 0; j < P/2; j++)
                             {
                                 swap( maparray[i*P + j],
                                      maparray[i*P + P -1 -j]);
@@ -1288,15 +1311,15 @@ namespace Nektar
                 {
                     if (modified)
                     {
-                        for(i = 3; i < Q; i+=2)
+                        for(int i = 3; i < Q; i+=2)
                         {
-                            for(j = 0; j < P; j++)
+                            for(int j = 0; j < P; j++)
                             {
                                 signarray[ arrayindx[i*P+j] ] *= -1;
                             }
                         }
 
-                        for(i = 0; i < P; i++)
+                        for(int i = 0; i < P; i++)
                         {
                             swap( maparray[i*Q],
                                  maparray[i*Q+1]);
@@ -1306,9 +1329,9 @@ namespace Nektar
                     }
                     else
                     {
-                        for(i = 0; i < Q; i++)
+                        for(int i = 0; i < Q; i++)
                         {
-                            for(j = 0; j < P/2; j++)
+                            for(int j = 0; j < P/2; j++)
                             {
                                 swap( maparray[i + j*Q] ,
                                      maparray[i+P*Q - Q -j*Q] );
@@ -1728,14 +1751,13 @@ namespace Nektar
                 break;
             }
 
-            int p,q,r;
             int cnt = 0;
 
-            for(r = IdxRange[2][0]; r < IdxRange[2][1]; r++)
+            for(int r = IdxRange[2][0]; r < IdxRange[2][1]; r++)
             {
-                for(q = IdxRange[1][0]; q < IdxRange[1][1]; q++)
+                for(int q = IdxRange[1][0]; q < IdxRange[1][1]; q++)
                 {
-                    for(p = IdxRange[0][0]; p < IdxRange[0][1]; p++)
+                    for(int p = IdxRange[0][0]; p < IdxRange[0][1]; p++)
                     {
                         maparray[cnt++]
                                 = r*nummodes[0]*nummodes[1] + q*nummodes[0] + p;
@@ -1750,7 +1772,7 @@ namespace Nektar
 
             if( signChange )
             {
-                for(p = 1; p < nEdgeIntCoeffs; p+=2)
+                for(int p = 1; p < nEdgeIntCoeffs; p+=2)
                 {
                     signarray[p] = -1;
                 }
@@ -1833,14 +1855,13 @@ namespace Nektar
                 }
             }
 
-            int i,j;
             Array<OneD, int> arrayindx(nFaceIntCoeffs);
 
             // Create a mapping array to account for transposition of the
             // coordinates due to face orientation.
-            for(i = 0; i < (nummodesB-2); i++)
+            for(int i = 0; i < (nummodesB-2); i++)
             {
-                for(j = 0; j < (nummodesA-2); j++)
+                for(int j = 0; j < (nummodesA-2); j++)
                 {
                     if( faceOrient < eDir1FwdDir2_Dir2FwdDir1 )
                     {
@@ -1914,7 +1935,7 @@ namespace Nektar
 
                         if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 2 )
                         {
-                            for(i = 3; i < nummodes[2]; i+=2)
+                            for(int i = 3; i < nummodes[2]; i+=2)
                             {
                                 sign2[i] = -1;
                             }
@@ -1977,7 +1998,7 @@ namespace Nektar
 
                         if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 2 )
                         {
-                            for(i = 3; i < nummodes[1]; i+=2)
+                            for(int i = 3; i < nummodes[1]; i+=2)
                             {
                                 sign1[i] = -1;
                             }
@@ -2011,7 +2032,7 @@ namespace Nektar
 
                         if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 4 > 1 )
                         {
-                            for(i = 3; i < nummodes[1]; i+=2)
+                            for(int i = 3; i < nummodes[1]; i+=2)
                             {
                                 sign1[i] = -1;
                             }
@@ -2071,7 +2092,7 @@ namespace Nektar
 
                         if( ((int) (faceOrient-eDir1FwdDir1_Dir2FwdDir2)) % 4 > 1 )
                         {
-                            for(i = 3; i < nummodes[0]; i+=2)
+                            for(int i = 3; i < nummodes[0]; i+=2)
                             {
                                 sign0[i] = -1;
                             }
@@ -2080,14 +2101,13 @@ namespace Nektar
                 }
             }
 
-            int p,q,r;
             int cnt = 0;
 
-            for(r = IdxRange[2][0]; r != IdxRange[2][1]; r+=Incr[2])
+            for(int r = IdxRange[2][0]; r != IdxRange[2][1]; r+=Incr[2])
             {
-                for(q = IdxRange[1][0]; q != IdxRange[1][1]; q+=Incr[1])
+                for(int q = IdxRange[1][0]; q != IdxRange[1][1]; q+=Incr[1])
                 {
-                    for(p = IdxRange[0][0]; p != IdxRange[0][1]; p+=Incr[0])
+                    for(int p = IdxRange[0][0]; p != IdxRange[0][1]; p+=Incr[0])
                     {
                         maparray [ arrayindx[cnt  ] ]
                                 = r*nummodes[0]*nummodes[1] + q*nummodes[0] + p;
@@ -2114,7 +2134,6 @@ namespace Nektar
                      GetBasisType(2) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
 
-            int i;
             int nummodes [3] = {m_base[0]->GetNumModes(),
                                 m_base[1]->GetNumModes(),
                                 m_base[2]->GetNumModes()};
@@ -2129,13 +2148,11 @@ namespace Nektar
             const LibUtilities::BasisType Btype [3] = {GetBasisType(0),
                                                        GetBasisType(1),
                                                        GetBasisType(2)};
-
-            int p,q,r;
             int cnt = 0;
 
             int IntIdx [3][2];
 
-            for(i = 0; i < 3; i++)
+            for(int i = 0; i < 3; i++)
             {
                 if( Btype[i] == LibUtilities::eModified_A)
                 {
@@ -2149,11 +2166,11 @@ namespace Nektar
                 }
             }
 
-            for(r = IntIdx[2][0]; r < IntIdx[2][1]; r++)
+            for(int r = IntIdx[2][0]; r < IntIdx[2][1]; r++)
             {
-                for( q = IntIdx[1][0]; q < IntIdx[1][1]; q++)
+                for(int q = IntIdx[1][0]; q < IntIdx[1][1]; q++)
                 {
-                    for( p = IntIdx[0][0]; p < IntIdx[0][1]; p++)
+                    for(int p = IntIdx[0][0]; p < IntIdx[0][1]; p++)
                     {
                         outarray[cnt++] = r*nummodes[0]*nummodes[1] +
                             q*nummodes[0] + p;
@@ -2178,7 +2195,6 @@ namespace Nektar
                      GetBasisType(2) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
 
-            int i;
             int nummodes [3] = {m_base[0]->GetNumModes(),
                                 m_base[1]->GetNumModes(),
                                 m_base[2]->GetNumModes()};
@@ -2194,13 +2210,12 @@ namespace Nektar
                                                        GetBasisType(1),
                                                        GetBasisType(2)};
 
-            int p,q,r;
             int cnt = 0;
 
             int BndIdx [3][2];
             int IntIdx [3][2];
 
-            for(i = 0; i < 3; i++)
+            for(int i = 0; i < 3; i++)
             {
                 BndIdx[i][0] = 0;
 
@@ -2219,35 +2234,35 @@ namespace Nektar
             }
 
 
-            for(i = 0; i < 2; i++)
+            for(int i = 0; i < 2; i++)
             {
-                r = BndIdx[2][i];
-                for( q = 0; q < nummodes[1]; q++)
+                int r = BndIdx[2][i];
+                for(int q = 0; q < nummodes[1]; q++)
                 {
-                    for( p = 0; p < nummodes[0]; p++)
+                    for(int p = 0; p < nummodes[0]; p++)
                     {
                         outarray[cnt++] = r*nummodes[0]*nummodes[1]+q*nummodes[0] + p;
                     }
                 }
             }
 
-            for(r = IntIdx[2][0]; r < IntIdx[2][1]; r++)
+            for(int r = IntIdx[2][0]; r < IntIdx[2][1]; r++)
             {
-                for( i = 0; i < 2; i++)
+                for( int i = 0; i < 2; i++)
                 {
-                    q = BndIdx[1][i];
-                    for( p = 0; p < nummodes[0]; p++)
+                    int q = BndIdx[1][i];
+                    for( int p = 0; p < nummodes[0]; p++)
                     {
                         outarray[cnt++] = r*nummodes[0]*nummodes[1] +
                             q*nummodes[0] + p;
                     }
                 }
 
-                for( q = IntIdx[1][0]; q < IntIdx[1][1]; q++)
+                for( int q = IntIdx[1][0]; q < IntIdx[1][1]; q++)
                 {
-                    for( i = 0; i < 2; i++)
+                    for( int i = 0; i < 2; i++)
                     {
-                        p = BndIdx[0][i];
+                        int p = BndIdx[0][i];
                         outarray[cnt++] = r*nummodes[0]*nummodes[1] +
                             q*nummodes[0] + p;
                     }
@@ -2341,7 +2356,6 @@ namespace Nektar
         void StdHexExp::v_MultiplyByStdQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
                                                  Array<OneD, NekDouble> &outarray)
         {
-            int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nquad2 = m_base[2]->GetNumPoints();
@@ -2352,19 +2366,19 @@ namespace Nektar
             const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
             const Array<OneD, const NekDouble>& w2 = m_base[2]->GetW();
 
-            for(i = 0; i < nq12; ++i)
+            for(int i = 0; i < nq12; ++i)
             {
                 Vmath::Vmul(nquad0, inarray.get()+i*nquad0, 1,
                             w0.get(), 1, outarray.get()+i*nquad0,1);
             }
 
-            for(i = 0; i < nq12; ++i)
+            for(int i = 0; i < nq12; ++i)
             {
                 Vmath::Smul(nquad0, w1[i%nquad1], outarray.get()+i*nquad0, 1,
                             outarray.get()+i*nquad0, 1);
             }
 
-            for(i = 0; i < nquad2; ++i)
+            for(int i = 0; i < nquad2; ++i)
             {
                 Vmath::Smul(nq01, w2[i], outarray.get()+i*nq01, 1,
                             outarray.get()+i*nq01, 1);
@@ -2392,7 +2406,7 @@ namespace Nektar
             StdHexExp OrthoExp(Ba,Bb,Bc);
 
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
-            int i,j,k,cnt=0;
+            int cnt=0;
 
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
@@ -2466,17 +2480,17 @@ namespace Nektar
                 nmodes = max(nmodes,nmodes_c);
 
                 Array<OneD, NekDouble> fac(nmodes,1.0);
-                for(j = cutoff; j < nmodes; ++j)
+                for(int j = cutoff; j < nmodes; ++j)
                 {
                     fac[j] = fabs((j-nmodes)/((NekDouble) (j-cutoff+1.0)));
                     fac[j] *= fac[j]; //added this line to conform with equation
                 }
 
-                for(i = 0; i < nmodes_a; ++i)
+                for(int i = 0; i < nmodes_a; ++i)
                 {
-                    for(j = 0; j < nmodes_b; ++j)
+                    for(int j = 0; j < nmodes_b; ++j)
                     {
-                        for(k =  0; k < nmodes_c; ++k)
+                        for(int k =  0; k < nmodes_c; ++k)
                         {
                             if((i >= cutoff)||(j >= cutoff)||(k >= cutoff))
                             {

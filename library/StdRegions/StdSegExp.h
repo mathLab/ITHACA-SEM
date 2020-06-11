@@ -149,9 +149,9 @@ namespace Nektar
             // Evaluations Methods
             //---------------------------
 
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                    const Array<OneD, const NekDouble>& Lcoords,
-                    const Array<OneD, const NekDouble>& physvals);
+            STD_REGIONS_EXPORT NekDouble v_PhysEvaluateBasis(
+                const Array<OneD, const NekDouble>& coords,
+                int mode) final;
 
             STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(
                     const Array<OneD, const NekDouble> &inarray,

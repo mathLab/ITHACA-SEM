@@ -739,6 +739,42 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             }
         }
 
+        // Add vertex value of the 1D Phys space to outarray.
+        void SegExp::v_AddVertexPhysVals(
+            const int                 vertex,
+            const NekDouble           &inarray,
+             Array<OneD, NekDouble>   &outarray)
+        {
+            size_t nquad = m_base[0]->GetNumPoints();
+
+            if (m_base[0]->GetPointsType() != LibUtilities::eGaussGaussLegendre)
+            {
+                switch (vertex)
+                {
+                    case 0:
+                        outarray[0] += inarray;
+                        break;
+                    case 1:
+                        outarray[nquad - 1] += inarray;
+                        break;
+                }
+            }
+            else
+            {
+                StdRegions::ConstFactorMap factors;
+                factors[StdRegions::eFactorGaussVertex] = vertex;
+
+                StdRegions::StdMatrixKey key(
+                    StdRegions::eInterpGauss,
+                    DetShapeType(),*this,factors);
+
+                DNekScalMatSharedPtr mat_gauss = m_matrixManager[key];
+
+                Vmath::Svtvp(nquad,inarray,
+                            mat_gauss->GetOwnedMatrix()->GetPtr().get(), 1,
+                            &outarray[0], 1, &outarray[0], 1);
+            }
+        }
         // Get vertex value from the 1D Phys space.
         void SegExp::v_GetTracePhysVals(
                         const int edge,
@@ -919,6 +955,12 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 normal[i] = Array<OneD, NekDouble>(nqe);
             }
 
+
+            size_t nqb = nqe;
+            size_t nbnd= vertex;
+            m_elmtBndNormDirElmtLen[nbnd] = Array<OneD, NekDouble> {nqb, 0.0};
+            Array<OneD, NekDouble> &length = m_elmtBndNormDirElmtLen[nbnd];
+
             // Regular geometry case
             if ((type == SpatialDomains::eRegular) ||
                 (type == SpatialDomains::eMovingRegular))
@@ -951,6 +993,9 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     vert += normal[i][0]*normal[i][0];
                 }
                 vert = 1.0/sqrt(vert);
+
+                Vmath::Fill(nqb, vert, length, 1);
+
                 for (i = 0; i < vCoordDim; ++i)
                 {
                     Vmath::Smul(nqe, vert, normal[i], 1, normal[i], 1);

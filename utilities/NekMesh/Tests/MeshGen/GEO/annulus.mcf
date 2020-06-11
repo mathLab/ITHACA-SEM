@@ -1,0 +1,25 @@
+<NEKTAR>
+    <MESHING>
+
+        <INFORMATION>
+            <I PROPERTY="CADFile" VALUE="annulus.geo" />
+            <I PROPERTY="MeshType" VALUE="3D" />
+        </INFORMATION>
+
+        <PARAMETERS>
+            <P PARAM="MinDelta" VALUE="0.4"   />
+            <P PARAM="MaxDelta" VALUE="0.4"     />
+            <P PARAM="EPS"      VALUE="0.1"    />
+
+            <P PARAM="Order"    VALUE="4"       />
+        </PARAMETERS>
+
+        <BOOLPARAMETERS>
+            <P VALUE="SurfaceOptimiser" />
+        </BOOLPARAMETERS>
+
+        <VOIDPOINTS>
+            <V> 1.1 0.1 0 </V>
+        </VOIDPOINTS>
+    </MESHING>
+</NEKTAR>

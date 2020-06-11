@@ -898,6 +898,15 @@ namespace Nektar
                 v_GetVertexPhysVals(vertex, inarray, outarray);
             }
 
+            /// Add vertex value of the 1D Phys space to outarray.
+            void AddVertexPhysVals(
+                const int                 vertex,
+                const NekDouble           &inarray,
+                Array<OneD, NekDouble>   &outarray)
+            {
+                v_AddVertexPhysVals(vertex, inarray, outarray);
+            }
+
             void GetEdgeInterpVals(const int edge,const Array<OneD,
                                    const NekDouble> &inarray,
                                          Array<OneD,NekDouble> &outarray)
@@ -947,6 +956,14 @@ namespace Nektar
                           Array<OneD, NekDouble> &outarray)
             {
                 v_MultiplyByQuadratureMetric(inarray, outarray);
+            }
+
+            /// Divided by the metric jacobi and quadrature weights
+            void DivideByQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD, NekDouble> &outarray)
+            {
+                v_DivideByQuadratureMetric(inarray, outarray);
             }
 
             void MultiplyByStdQuadratureMetric(
@@ -1852,6 +1869,10 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_GetTracePhysVals(const int edge,  const std::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray, StdRegions::Orientation  orient = eNoOrientation);
 
             STD_REGIONS_EXPORT virtual void v_GetVertexPhysVals(const int vertex, const Array<OneD, const NekDouble> &inarray, NekDouble &outarray);
+            STD_REGIONS_EXPORT virtual void v_AddVertexPhysVals(
+                const int                   vertex, 
+                const NekDouble             &inarray, 
+                Array<OneD, NekDouble>      &outarray);
 
             STD_REGIONS_EXPORT virtual void v_GetEdgeInterpVals(const int edge,
                 const Array<OneD, const NekDouble> &inarray,Array<OneD,NekDouble> &outarray);
@@ -1879,7 +1900,15 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray);
 
+            STD_REGIONS_EXPORT virtual void v_DivideByQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray);
+
             STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_DivideByStdQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray);
 

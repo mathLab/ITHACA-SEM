@@ -103,7 +103,7 @@ public:
             " assertion violation\n";
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
         baseMsg += "Where   : " + std::string(routine) + "[" +
-            std::to_string(lineNumber) + "]\n Message : ";
+            std::to_string(lineNumber) + "]\nMessage : ";
 #else
         boost::ignore_unused(routine, lineNumber);
 #endif
@@ -177,7 +177,7 @@ public:
                 {
                     (*m_outStream) << btMessage;
                 }
-                (*m_outStream) << "Warning: " << baseMsg << std::endl;
+                (*m_outStream) << "Warning : " << baseMsg << std::endl;
             }
             break;
         default:

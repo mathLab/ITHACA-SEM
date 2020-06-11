@@ -4,7 +4,10 @@ Changelog
 v5.1.0
 ------
 **Library**
-- Restructure library to use local coefficient storage down to the GlobalLinSys level. Removed GlobalCeoffs functionality (!963)
+- Restructure library to use local coefficient storage down to the GlobalLinSys
+  level. Removed GlobalCeoffs functionality (!963)
+- Add interior penalty method to DG framework (!1101)
+- Add an error filter for the time-evolution of the L2 and Linf errors (!1147)
 
 **FieldConvert**
 - Refactored time integration code using factory pattern (!1034)
@@ -18,12 +21,18 @@ v5.1.0
 **CardiacEPSolver**
 - Added additional parameter sets to Fenton-Karma model (!1119)
 
+**Documentation**:
+- Updated Windows source build instructions in user guide (!1152)
+
 **NekMesh**
 - Improved boundary layer splitting and output to CADfix (!938)
+- Improve .geo reader and support 3D geometries with voids (!1031)
 - Added r-adaptation code (!1109)
 
 **BuildSystem**
 - Toggle build type (!1135)
+- Updated minimum required CMake version to 3.5.1 (!1152)
+- Updated third party Boost version 1.71 (!1152)
 
 v5.0.1
 ------
@@ -31,6 +40,9 @@ v5.0.1
 - Fix incorrect coordinate dimension used in history point filter (!1118)
 - Fix compile errors with GCC 9.x (!1108)
 - Correct the Energy/Enstropy integral for the 3DH1 flow (!1132)
+- Added IsRealEqual method to compare real numbers with relative tolerance.
+  Started using it in SharedArray and in NekMesh to fix peralign-extrude tool
+  chain (!1134)
 
 **IncNavierStokesSolver**
 - Change the baseflow time in the Adjoint advection (!1133)

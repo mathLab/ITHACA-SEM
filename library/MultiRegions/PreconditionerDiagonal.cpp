@@ -36,7 +36,7 @@
 #include <MultiRegions/PreconditionerDiagonal.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 

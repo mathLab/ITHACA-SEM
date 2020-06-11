@@ -283,7 +283,6 @@ namespace SimdLibTests
 
     }
 
-
     BOOST_AUTO_TEST_CASE(SimdLib_load_interleave_unload_to_aligned)
     {
         constexpr size_t nDof{5};

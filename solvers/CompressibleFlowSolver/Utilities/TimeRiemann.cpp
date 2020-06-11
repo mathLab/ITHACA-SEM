@@ -1,6 +1,6 @@
 #include "../RiemannSolvers/RoeSolver.h"
 
-#include <SimdOperators/AVXUtil.hpp>
+#include <LibUtilities/SimdLib/tinysimd.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
@@ -21,8 +21,6 @@ int main(int argc, char const *argv[])
     LIKWID_MARKER_REGISTER("RotationTo");
     LIKWID_MARKER_REGISTER("v_Solve");
     LIKWID_MARKER_REGISTER("RotationFrom");
-
-    using vec_t = AVX::VecData<double, AVX::SIMD_WIDTH_SIZE>;
 
     size_t nEle;
     if (argc < 2)

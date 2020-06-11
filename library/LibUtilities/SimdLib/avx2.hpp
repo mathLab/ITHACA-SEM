@@ -2,7 +2,6 @@
 
 #include <immintrin.h>
 #include <vector>
-#include <boost/align/aligned_allocator.hpp>
 #include "allocator.hpp"
 #include "traits.hpp"
 #include "sse2.hpp"
@@ -168,9 +167,7 @@ inline avx2Long4<T> operator+(avx2Long4<T> lhs, U rhs)
     return _mm256_add_epi64(lhs._data, _mm256_set1_epi64x(rhs));
 }
 
-
-
-
+////////////////////////////////////////////////////////////////////////////////
 
 struct avx2Double4
 {
@@ -287,18 +284,20 @@ struct avx2Double4
     }
 
     //gather
-    inline void gather(scalarType const* p, sse2Int4& indices)
+    template <typename T>
+    inline void gather(scalarType const* p, const sse2Int4<T>& indices)
     {
         _data = _mm256_i32gather_pd(p, indices._data, 8);
     }
 
     template <typename T>
-    inline void gather(scalarType const* p, avx2Long4<T>& indices)
+    inline void gather(scalarType const* p, const avx2Long4<T>& indices)
     {
         _data = _mm256_i64gather_pd(p, indices._data, 8);
     }
 
-    inline void scatter(scalarType* out, sse2Int4& indices)
+    template <typename T>
+    inline void scatter(scalarType* out, const sse2Int4<T>& indices) const
     {
         // no scatter intrinsics for AVX2
         alignas(alignment) scalarArray tmp;
@@ -311,7 +310,7 @@ struct avx2Double4
     }
 
     template <typename T>
-    inline void scatter(scalarType* out, avx2Long4<T>& indices)
+    inline void scatter(scalarType* out, const avx2Long4<T>& indices) const
     {
         // no scatter intrinsics for AVX2
         alignas(alignment) scalarArray tmp;
@@ -415,18 +414,35 @@ inline void deinterleave_store(
     size_t dataLen,
     double *out)
 {
-    double *out0 = out;
-    double *out1 = out + dataLen;
-    double *out2 = out + 2 * dataLen;
-    double *out3 = out + 3 * dataLen;
+    size_t nBlocks = dataLen / 4;
 
-    for (size_t i = 0; i < dataLen; ++i)
+    alignas(32) size_t tmp[4] = {0, dataLen, 2*dataLen, 3*dataLen};
+    using index_t = avx2Long4<size_t>;
+    index_t index0(tmp);
+    index_t index1 = index0 + 1;
+    index_t index2 = index0 + 2;
+    index_t index3 = index0 + 3;
+
+    // 4x unrolled loop
+    for (size_t i = 0; i < nBlocks; ++i)
     {
-        out0[i] = in[i]._data[0];
-        out1[i] = in[i]._data[1];
-        out2[i] = in[i]._data[2];
-        out3[i] = in[i]._data[3];
+        in[i].scatter(out, index0);
+        in[i+1].scatter(out, index1);
+        in[i+2].scatter(out, index2);
+        in[i+3].scatter(out, index3);
+        index0 = index0 + 4;
+        index1 = index1 + 4;
+        index2 = index2 + 4;
+        index3 = index3 + 4;
     }
+
+    // spillover loop
+    for (size_t i = 4 * nBlocks; i < dataLen; ++i)
+    {
+        in[i].scatter(out, index0);
+        index0 = index0 + 1;
+    }
+
 }
 
 #endif // defined(__AVX2__)

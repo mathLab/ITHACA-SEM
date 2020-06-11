@@ -22,24 +22,29 @@ struct sse2
 #if defined(__SSE2__)
 
 // forward declaration of concrete types
+template <typename T>
 struct sse2Int4;
 
 namespace abi
 {
 
 // mapping between abstract types and concrete types
-template <> struct sse2<int> { using type = sse2Int4; };
-template <> struct sse2<unsigned int> { using type = sse2Int4; };
+template <> struct sse2<std::int32_t> { using type = sse2Int4<std::int32_t>; };
+template <> struct sse2<std::uint32_t> { using type = sse2Int4<std::uint32_t>; };
 
 } // namespace abi
 
 // concrete types
+template <typename T>
 struct sse2Int4
 {
+    static_assert(std::is_integral<T>::value && sizeof(T) == 4,
+        "4 bytes Integral required.");
+
     static constexpr unsigned width = 4;
     static constexpr unsigned alignment = 16;
 
-    using scalarType = std::int32_t;
+    using scalarType = T;
     using vectorType = __m128i;
     using scalarArray = scalarType[width];
 

@@ -1,6 +1,6 @@
 #include "../RiemannSolvers/RoeSolver.h"
 
-#include <SimdOperators/AVXUtil.hpp>
+#include <LibUtilities/SimdLib/tinysimd.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
@@ -16,9 +16,10 @@ int main(int argc, char const *argv[])
     LIKWID_MARKER_THREADINIT;
     LIKWID_MARKER_REGISTER("scalar");
     LIKWID_MARKER_REGISTER("vector");
-    LIKWID_MARKER_REGISTER("vectorOfVect");
+    LIKWID_MARKER_REGISTER("vectorOfVector");
 
-    using vec_t = AVX::VecData<double, AVX::SIMD_WIDTH_SIZE>;
+    using namespace tinysimd;
+    using vec_t = simd<NekDouble>;
 
     size_t nEle;
     if (argc < 2)
@@ -36,24 +37,20 @@ int main(int argc, char const *argv[])
     size_t sizeScalar = 4*4 * nEle;
     size_t nVars = 5;
     size_t spaceDim = nVars - 2;
-    size_t sizeVec = sizeScalar / AVX::SIMD_WIDTH_SIZE;
+    size_t sizeVec = sizeScalar / vec_t::width;
 
     double gamma = 1.4;
 
-    // std::vector<std::vector<double>>
-    Array<OneD, Array<OneD, double>>
+    std::vector<std::vector<double>>
         Fwd(nVars),
         Bwd(nVars),
         Flux(nVars);
 
     for (size_t i = 0; i < nVars; ++i)
     {
-        // Fwd[i] = std::vector<double>(sizeScalar);
-        // Bwd[i] = std::vector<double>(sizeScalar);
-        // Flux[i] = std::vector<double>(sizeScalar);
-        Fwd[i] = Array<OneD, double>(sizeScalar);
-        Bwd[i] = Array<OneD, double>(sizeScalar);
-        Flux[i] = Array<OneD, double>(sizeScalar);
+        Fwd[i] = std::vector<double>(sizeScalar);
+        Bwd[i] = std::vector<double>(sizeScalar);
+        Flux[i] = std::vector<double>(sizeScalar);
 
         for (size_t j = 0; j < sizeScalar; ++j)
         {
@@ -69,41 +66,28 @@ int main(int argc, char const *argv[])
         }
     }
 
-    #if 1
-    std::vector<AVX::AlignedVector<vec_t>>
-    #else
-    Array<OneD, Array<OneD, vec_t>>
-    #endif
+    std::vector<std::vector<vec_t, allocator<vec_t>>>
         alignedFwd(nVars),
         alignedBwd(nVars),
         alignedFlux(nVars);
 
     for (size_t i = 0; i < nVars; ++i)
     {
-        #if 1
-        alignedFwd[i] = AVX::AlignedVector<vec_t>(sizeVec);
-        alignedBwd[i] = AVX::AlignedVector<vec_t>(sizeVec);
-        alignedFlux[i] = AVX::AlignedVector<vec_t>(sizeVec);
-        #else
-        alignedFwd[i] =  Array<OneD,vec_t>(sizeVec);
-        alignedBwd[i] =  Array<OneD,vec_t>(sizeVec);
-        alignedFlux[i] =  Array<OneD,vec_t>(sizeVec);
-        #endif
+        alignedFwd[i] = std::vector<vec_t, allocator<vec_t>>(sizeVec);
+        alignedBwd[i] = std::vector<vec_t, allocator<vec_t>>(sizeVec);
+        alignedFlux[i] = std::vector<vec_t, allocator<vec_t>>(sizeVec);
 
         for (size_t j = 0; j < sizeVec; ++j)
         {
-            for (size_t k = 0; k < AVX::SIMD_WIDTH_SIZE; ++k)
+            alignedFwd[i][j] = 1.;
+            alignedBwd[i][j] = 1.;
+            // fix energy to avoid negative pressure
+            if (i == nVars - 1)
             {
-                alignedFwd[i][j].m_data[k] = 1.;
-                alignedBwd[i][j].m_data[k] = 1.;
-                // fix energy to avoid negative pressure
-                if (i == nVars - 1)
-                {
-                    alignedFwd[i][j].m_data[k] = 10.;
-                    alignedBwd[i][j].m_data[k] = 10.;
-                }
-                alignedFlux[i][j].m_data[k] = 0.;
+                alignedFwd[i][j] = 10.;
+                alignedBwd[i][j] = 10.;
             }
+            alignedFlux[i][j] = 0.;
         }
     }
 
@@ -185,30 +169,30 @@ int main(int argc, char const *argv[])
     for (size_t j = 0; j < experiments; ++j)
     {
         // loop
-        for (size_t i = 0; i < sizeScalar; i+=AVX::SIMD_WIDTH_SIZE)
+        for (size_t i = 0; i < sizeScalar; i+=vec_t::width)
         {
             vec_t rhoL{}, rhouL{}, rhovL{}, rhowL{}, EL{};
             vec_t rhoR{}, rhouR{}, rhovR{}, rhowR{}, ER{};
 
             // load
-            rhoL  = &(Fwd[0][i]);
-            rhouL = &(Fwd[1][i]);
-            EL    = &(Fwd[spaceDim+1][i]);
-            rhoR  = &(Bwd[0][i]);
-            rhouR = &(Bwd[1][i]);
-            ER    = &(Bwd[spaceDim+1][i]);
+            rhoL  .load(&(Fwd[0][i]), is_not_aligned);
+            rhouL .load(&(Fwd[1][i]), is_not_aligned);
+            EL    .load(&(Fwd[spaceDim+1][i]), is_not_aligned);
+            rhoR  .load(&(Bwd[0][i]), is_not_aligned);
+            rhouR .load(&(Bwd[1][i]), is_not_aligned);
+            ER    .load(&(Bwd[spaceDim+1][i]), is_not_aligned);
 
             if (spaceDim == 2)
             {
-                rhovL = &(Fwd[2][i]);
-                rhovR = &(Bwd[2][i]);
+                rhovL.load(&(Fwd[2][i]), is_not_aligned);
+                rhovR.load(&(Bwd[2][i]), is_not_aligned);
             }
             else if (spaceDim == 3)
             {
-                rhovL = &(Fwd[2][i]);
-                rhowL = &(Fwd[3][i]);
-                rhovR = &(Bwd[2][i]);
-                rhowR = &(Bwd[3][i]);
+                rhovL.load(&(Fwd[2][i]), is_not_aligned);
+                rhowL.load(&(Fwd[3][i]), is_not_aligned);
+                rhovR.load(&(Bwd[2][i]), is_not_aligned);
+                rhowR.load(&(Bwd[3][i]), is_not_aligned);
             }
 
             vec_t rhof{}, rhouf{}, rhovf{}, rhowf{}, Ef{};
@@ -220,17 +204,17 @@ int main(int argc, char const *argv[])
                 gamma);
 
             // store
-            rhof.store(&(Flux[0][i]));
-            rhouf.store(&(Flux[1][i]));
-            Ef.store(&(Flux[nVars-1][i]));
+            rhof.store(&(Flux[0][i]), is_not_aligned);
+            rhouf.store(&(Flux[1][i]), is_not_aligned);
+            Ef.store(&(Flux[nVars-1][i]), is_not_aligned);
             if (spaceDim == 2)
             {
-                rhovf.store(&(Flux[2][i]));
+                rhovf.store(&(Flux[2][i]), is_not_aligned);
             }
             else if (spaceDim == 3)
             {
-                rhovf.store(&(Flux[2][i]));
-                rhowf.store(&(Flux[3][i]));
+                rhovf.store(&(Flux[2][i]), is_not_aligned);
+                rhowf.store(&(Flux[3][i]), is_not_aligned);
             }
 
         } // loop
@@ -245,7 +229,7 @@ int main(int argc, char const *argv[])
     // avoid opt out
     std::cout << Flux[0][0] << std::endl;
 
-    LIKWID_MARKER_START("vectorOfVect");
+    LIKWID_MARKER_START("vectorOfVector");
     // time SIMD
     for (size_t j = 0; j < experiments; ++j)
     {
@@ -300,15 +284,15 @@ int main(int argc, char const *argv[])
 
         } // loop
     }
-    LIKWID_MARKER_STOP("vectorOfVect");
+    LIKWID_MARKER_STOP("vectorOfVector");
     // get likwid events
-    LIKWID_MARKER_GET("vectorOfVect", &nevents, events.data(), &time, &count);
+    LIKWID_MARKER_GET("vectorOfVector", &nevents, events.data(), &time, &count);
     // print out CPE
-    double cpevectorOfVect = events[CPU_CLK_UNHALTED_REF_id]/sizeScalar/experiments;
-    std::cout << "vectorOfVect likwid CPE\t" << cpevectorOfVect << '\t'
-        << cpeScalar/cpevectorOfVect << " %\n";
+    double cpevectorOfVector = events[CPU_CLK_UNHALTED_REF_id]/sizeScalar/experiments;
+    std::cout << "vectorOfVector likwid CPE\t" << cpevectorOfVector << '\t'
+        << cpeScalar/cpevectorOfVector << " %\n";
     // avoid opt out
-    std::cout << alignedFlux[0][0].m_data[0] << std::endl;
+    std::cout << alignedFlux[0][0][0] << std::endl;
 
 LIKWID_MARKER_CLOSE;
 

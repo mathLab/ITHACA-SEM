@@ -34,7 +34,7 @@
 
 #include <CompressibleFlowSolver/RiemannSolvers/RoeSolver.h>
 
-#include <SimdOperators/AVXUtil.hpp>
+#include <LibUtilities/SimdLib/tinysimd.hpp>
 
 namespace Nektar
 {
@@ -106,38 +106,39 @@ void RoeSolver::v_ArraySolve(
     static auto nVars = fwd.num_elements();
     static auto spaceDim = nVars-2;
 
-    using vec_t = AVX::VecData<NekDouble, AVX::SIMD_WIDTH_SIZE>;
+    using namespace tinysimd;
+    using vec_t = simd<NekDouble>;
 
     // get limit of vectorizable chunk
     size_t sizeScalar = fwd[0].num_elements();
-    size_t sizeVec = (sizeScalar / AVX::SIMD_WIDTH_SIZE) * AVX::SIMD_WIDTH_SIZE;
+    size_t sizeVec = (sizeScalar / vec_t::width) * vec_t::width;
 
     // SIMD loop
     size_t i = 0;
-    for (; i < sizeVec; i+=AVX::SIMD_WIDTH_SIZE)
+    for (; i < sizeVec; i+=vec_t::width)
     {
         vec_t rhoL{}, rhouL{}, rhovL{}, rhowL{}, EL{};
         vec_t rhoR{}, rhouR{}, rhovR{}, rhowR{}, ER{};
 
         // load
-        rhoL  = &(fwd[0][i]);
-        rhouL = &(fwd[1][i]);
-        EL    = &(fwd[spaceDim+1][i]);
-        rhoR  = &(bwd[0][i]);
-        rhouR = &(bwd[1][i]);
-        ER    = &(bwd[spaceDim+1][i]);
+        rhoL.load(&(fwd[0][i]), is_not_aligned);
+        rhouL.load(&(fwd[1][i]), is_not_aligned);
+        EL.load(&(fwd[spaceDim+1][i]), is_not_aligned);
+        rhoR.load(&(bwd[0][i]), is_not_aligned);
+        rhouR.load(&(bwd[1][i]), is_not_aligned);
+        ER.load(&(bwd[spaceDim+1][i]), is_not_aligned);
 
         if (spaceDim == 2)
         {
-            rhovL = &(fwd[2][i]);
-            rhovR = &(bwd[2][i]);
+            rhovL.load(&(fwd[2][i]), is_not_aligned);
+            rhovR.load(&(bwd[2][i]), is_not_aligned);
         }
         else if (spaceDim == 3)
         {
-            rhovL = &(fwd[2][i]);
-            rhowL = &(fwd[3][i]);
-            rhovR = &(bwd[2][i]);
-            rhowR = &(bwd[3][i]);
+            rhovL.load(&(fwd[2][i]), is_not_aligned);
+            rhowL.load(&(fwd[3][i]), is_not_aligned);
+            rhovR.load(&(bwd[2][i]), is_not_aligned);
+            rhowR.load(&(bwd[3][i]), is_not_aligned);
         }
 
         vec_t rhof{}, rhouf{}, rhovf{}, rhowf{}, Ef{};
@@ -149,17 +150,17 @@ void RoeSolver::v_ArraySolve(
             gamma);
 
         // store
-        rhof.store_nts(&(flux[0][i]));
-        rhouf.store_nts(&(flux[1][i]));
-        Ef.store_nts(&(flux[nVars-1][i]));
+        rhof.store(&(flux[0][i]), is_not_aligned);
+        rhouf.store(&(flux[1][i]), is_not_aligned);
+        Ef.store(&(flux[nVars-1][i]), is_not_aligned);
         if (spaceDim == 2)
         {
-            rhovf.store_nts(&(flux[2][i]));
+            rhovf.store(&(flux[2][i]), is_not_aligned);
         }
         else if (spaceDim == 3)
         {
-            rhovf.store_nts(&(flux[2][i]));
-            rhowf.store_nts(&(flux[3][i]));
+            rhovf.store(&(flux[2][i]), is_not_aligned);
+            rhowf.store(&(flux[3][i]), is_not_aligned);
         }
 
     } // avx loop

@@ -131,5 +131,28 @@ inline scalarT<T> abs(scalarT<T> in)
     return std::abs(in._data);
 }
 
+template<typename T>
+inline void load_interleave(
+    const T* in,
+    size_t dataLen,
+    std::vector<scalarT<T>, allocator<scalarT<T>>> &out)
+{
+    for (size_t i = 0; i < dataLen; ++i)
+    {
+        out[i] = in[i];
+    }
+}
+
+template<typename T>
+inline void deinterleave_store(
+    const std::vector<scalarT<T>, allocator<scalarT<T>>> &in,
+    size_t dataLen,
+    T *out)
+{
+    for (size_t i = 0; i < dataLen; ++i)
+    {
+        out[i] = in[i];
+    }
+}
 
 } // namespace tinysimd

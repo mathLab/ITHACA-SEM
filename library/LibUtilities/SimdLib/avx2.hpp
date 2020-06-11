@@ -1,6 +1,9 @@
 #pragma once
 
 #include <immintrin.h>
+#include <vector>
+#include <boost/align/aligned_allocator.hpp>
+#include "allocator.hpp"
 #include "traits.hpp"
 #include "sse2.hpp"
 
@@ -23,6 +26,7 @@ struct avx2
 
 // forward declaration of concrete types
 // struct avx2Int8;
+template<typename T>
 struct avx2Long4;
 struct avx2Double4;
 
@@ -31,19 +35,23 @@ namespace abi
 
 // mapping between abstract types and concrete types
 // template <> struct avx2<int> { using type = avx2Int8; };
-template <> struct avx2<long> { using type = avx2Long4; };
-template <> struct avx2<size_t> { using type = avx2Long4; };
+template <> struct avx2<std::int64_t> { using type = avx2Long4<std::int64_t>; };
+template <> struct avx2<std::uint64_t> { using type = avx2Long4<std::uint64_t>; };
 template <> struct avx2<double> { using type = avx2Double4; };
 
 } // namespace abi
 
-// concrete types
+// concrete types, could add enable if to allow only unsigned long and long...
+template<typename T>
 struct avx2Long4
 {
-    static constexpr unsigned width = 8;
+    static_assert(std::is_integral<T>::value && sizeof(T) == 8,
+        "8 bytes Integral required.");
+
+    static constexpr unsigned width = 4;
     static constexpr unsigned alignment = 32;
 
-    using scalarType = std::int64_t;
+    using scalarType = T;
     using vectorType = __m256i;
     using scalarArray = scalarType[width];
 
@@ -57,6 +65,10 @@ struct avx2Long4
     inline avx2Long4(const scalarType rhs)
     {
         _data = _mm256_set1_epi64x(rhs);
+    }
+    explicit inline avx2Long4(scalarArray& rhs)
+    {
+        _data = _mm256_load_si256(reinterpret_cast<vectorType*>(rhs));
     }
 
     // store
@@ -142,6 +154,20 @@ struct avx2Long4
     }
 
 };
+
+template<typename T>
+inline avx2Long4<T> operator+(avx2Long4<T> lhs, avx2Long4<T> rhs)
+{
+    return _mm256_add_epi64(lhs._data, rhs._data);
+}
+
+template<typename T, typename U, typename = typename std::enable_if<
+    std::is_arithmetic<U>::value>::type>
+inline avx2Long4<T> operator+(avx2Long4<T> lhs, U rhs)
+{
+    return _mm256_add_epi64(lhs._data, _mm256_set1_epi64x(rhs));
+}
+
 
 
 
@@ -266,7 +292,8 @@ struct avx2Double4
         _data = _mm256_i32gather_pd(p, indices._data, 8);
     }
 
-    inline void gather(scalarType const* p, avx2Long4& indices)
+    template <typename T>
+    inline void gather(scalarType const* p, avx2Long4<T>& indices)
     {
         _data = _mm256_i64gather_pd(p, indices._data, 8);
     }
@@ -283,7 +310,8 @@ struct avx2Double4
         out[_mm_extract_epi32(indices._data, 3)] = tmp[3];
     }
 
-    inline void scatter(scalarType* out, avx2Long4& indices)
+    template <typename T>
+    inline void scatter(scalarType* out, avx2Long4<T>& indices)
     {
         // no scatter intrinsics for AVX2
         alignas(alignment) scalarArray tmp;
@@ -346,9 +374,60 @@ inline avx2Double4 abs(avx2Double4 in)
     return _mm256_andnot_pd(sign_mask, in._data);        // !sign_mask & x
 }
 
+inline void load_interleave(
+    const double* in,
+    size_t dataLen,
+    std::vector<avx2Double4, allocator<avx2Double4>> &out)
+{
+    size_t nBlocks = dataLen / 4;
+
+    alignas(32) size_t tmp[4] = {0, dataLen, 2*dataLen, 3*dataLen};
+    using index_t = avx2Long4<size_t>;
+    index_t index0(tmp);
+    index_t index1 = index0 + 1;
+    index_t index2 = index0 + 2;
+    index_t index3 = index0 + 3;
+
+    // 4x unrolled loop
+    for (size_t i = 0; i < nBlocks; ++i)
+    {
+        out[4*i + 0].gather(in, index0);
+        out[4*i + 1].gather(in, index1);
+        out[4*i + 2].gather(in, index2);
+        out[4*i + 3].gather(in, index3);
+        index0 = index0 + 4;
+        index1 = index1 + 4;
+        index2 = index2 + 4;
+        index3 = index3 + 4;
+    }
+
+    // spillover loop
+    for (size_t i = 4 * nBlocks; i < dataLen; ++i)
+    {
+        out[i].gather(in, index0);
+        index0 = index0 + 1;
+    }
+}
 
 
+inline void deinterleave_store(
+    const std::vector<avx2Double4, allocator<avx2Double4>> &in,
+    size_t dataLen,
+    double *out)
+{
+    double *out0 = out;
+    double *out1 = out + dataLen;
+    double *out2 = out + 2 * dataLen;
+    double *out3 = out + 3 * dataLen;
 
+    for (size_t i = 0; i < dataLen; ++i)
+    {
+        out0[i] = in[i]._data[0];
+        out1[i] = in[i]._data[1];
+        out2[i] = in[i]._data[2];
+        out3[i] = in[i]._data[3];
+    }
+}
 
 #endif // defined(__AVX2__)
 

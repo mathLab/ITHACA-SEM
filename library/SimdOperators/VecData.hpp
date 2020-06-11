@@ -262,7 +262,7 @@ struct VecData<double, 4>
         out[_mm_extract_epi32(indices.m_data,3)] = d[3];
     }
 
-#if 0
+#if 1
     inline static void load_interleave(
         const double *in,
         size_t dataLen,

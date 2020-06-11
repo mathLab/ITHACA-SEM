@@ -284,51 +284,50 @@ namespace SimdLibTests
     }
 
 
+    BOOST_AUTO_TEST_CASE(SimdLib_load_interleave_unload_to_aligned)
+    {
+        constexpr size_t nDof{5};
+        // no padding in load_interleave deinterleave_store
+        constexpr size_t nEle{vec_t::width * 2};
+        constexpr size_t nDofBlock = nDof * vec_t::width;
 
+        constexpr size_t size{nDof*nEle};
+        std::array<double,size> dofScalarArr{};
+        for (size_t i = 0; i < size; ++i)
+        {
+            dofScalarArr[i] = i;
+        }
 
-    // BOOST_AUTO_TEST_CASE(SimdLib_load_interleave_unload_to_aligned)
-    // {
-    //     constexpr size_t nDof{5};
-    //     // no padding in load_interleave deinterleave_store
-    //     constexpr size_t nEle{vec_t::width * 2};
-    //     constexpr size_t nDofBlock = nDof * vec_t::width;
+        // number of blocks
+        size_t nBlock = nEle / vec_t::width;
 
-    //     constexpr size_t size{nDof*nEle};
-    //     std::array<double,size> dofScalarArr{};
-    //     for (size_t i = 0; i < size; ++i)
-    //     {
-    //         dofScalarArr[i] = i;
-    //     }
+        // aligned vector
+        std::vector<vec_t, allocator<vec_t>> dofVectorArr(nDof);
 
-    //     // number of blocks
-    //     size_t nBlock = nEle / vec_t::width;
+        double* dataPtr = dofScalarArr.data();
+        // loop over blocks vec_t::width elements at the time
+        for (size_t i = 0; i < nBlock; ++i)
+        {
+            // load
+            load_interleave(dataPtr, nDof, dofVectorArr);
 
-    //     AlignedVector<vec_t> dofVectorArr(nDof);
+            // manipulate each block
+            for (size_t j = 0; j < nDof; ++j)
+            {
+                dofVectorArr[j] = dofVectorArr[j] + vec_t(1.0);
+            }
 
-    //     double* dataPtr = dofScalarArr.data();
-    //     // loop over blocks vec_t::width elements at the time
-    //     for (size_t i = 0; i < nBlock; ++i)
-    //     {
-    //         // load
-    //         vec_t::load_interleave(dataPtr, nDof, dofVectorArr);
+            // store
+            deinterleave_store(dofVectorArr, nDof, dataPtr);
+            dataPtr += nDofBlock;
+        }
 
-    //         // manipulate each block
-    //         for (size_t j = 0; j < nDof; ++j)
-    //         {
-    //             dofVectorArr[j] = dofVectorArr[j] + vec_t(1.0);
-    //         }
-
-    //         // store
-    //         vec_t::deinterleave_store(dofVectorArr, nDof, dataPtr);
-    //         dataPtr += nDofBlock;
-    //     }
-
-    //     // check
-    //     for (size_t i = 0; i < size; ++i)
-    //     {
-    //         BOOST_CHECK_EQUAL(dofScalarArr[i], i + 1.0);
-    //     }
-    // }
+        // check
+        for (size_t i = 0; i < size; ++i)
+        {
+            BOOST_CHECK_EQUAL(dofScalarArr[i], i + 1.0);
+        }
+    }
 
 
 }

@@ -7,18 +7,18 @@ namespace Nektar
 {
 namespace AVX
 {
+using namespace tinysimd;
+using vec_t = simd<NekDouble>;
 
-template<int NUMQUAD0, int NUMQUAD1,
-         int VW, class BasisType>
+template<int NUMQUAD0, int NUMQUAD1>
 inline static void AVXPhysDerivTensor2DKernel(
-    const AlignedVector<VecData<double, VW>> &in,
-    const AlignedVector<BasisType> &D0,
-    const AlignedVector<BasisType> &D1,
-          AlignedVector<VecData<double, VW>> &outptr_d0,
-          AlignedVector<VecData<double, VW>> &outptr_d1)
+    const std::vector<vec_t, allocator<vec_t>> &in,
+    const std::vector<vec_t, allocator<vec_t>> &D0,
+    const std::vector<vec_t, allocator<vec_t>> &D1,
+          std::vector<vec_t, allocator<vec_t>> &outptr_d0,
+          std::vector<vec_t, allocator<vec_t>> &outptr_d1)
 {
-    constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1;
-    using T = VecData<double, VW>;
+    constexpr auto nq0 = NUMQUAD0, nq1 = NUMQUAD1;
 
     //All matricies are column major ordered since operators used to be computed via BLAS.
 
@@ -28,11 +28,11 @@ inline static void AVXPhysDerivTensor2DKernel(
         for (int j = 0; j < nq1; ++j)
         { //col index of IN matrix
 
-            T prod_sum = T(0.0);
+            vec_t prod_sum = 0.0;
             for (int k = 0; k < nq0; ++k)
             { //Col index of D0, row index of IN
-                T v1 = D0[k * nq0 + i]; //Load 1x
-                T v2 = in[j * nq0 + k]; //Load 1x
+                vec_t v1 = D0[k * nq0 + i]; //Load 1x
+                vec_t v2 = in[j * nq0 + k]; //Load 1x
 
                 prod_sum.fma(v1, v2);
             }
@@ -47,11 +47,11 @@ inline static void AVXPhysDerivTensor2DKernel(
         for (int j = 0; j < nq1; ++j)
         { //Column index for D1^T (row idx for D1)
 
-            T prod_sum = T(0.0);
+            vec_t prod_sum = 0.0;
             for(int k = 0; k < nq1; ++k)
             {
-                T v1 = in[k * nq0 + i]; //Load 1x
-                T v2 = D1[k * nq1 + j]; //Load 1x
+                vec_t v1 = in[k * nq0 + i]; //Load 1x
+                vec_t v2 = D1[k * nq1 + j]; //Load 1x
 
                 prod_sum.fma(v1, v2);
             }
@@ -63,29 +63,28 @@ inline static void AVXPhysDerivTensor2DKernel(
 
 }
 
-template<int NUMQUAD0, int NUMQUAD1,
-         int VW, bool DEFORMED, class BasisType>
+template<int NUMQUAD0, int NUMQUAD1, bool DEFORMED>
 static void AVXPhysDerivQuadKernel(
-    const AlignedVector<VecData<NekDouble, VW>> &inptr,
-    const AlignedVector<BasisType> &Z0,
-    const AlignedVector<BasisType> &Z1,
-    const AlignedVector<BasisType> &D0,
-    const AlignedVector<BasisType> &D1,
-    const VecData<NekDouble, VW> *df_ptr,
-          AlignedVector<VecData<NekDouble, VW>> &outptr_d0,
-          AlignedVector<VecData<NekDouble, VW>> &outptr_d1)
+    const std::vector<vec_t, allocator<vec_t>> &inptr,
+    const std::vector<vec_t, allocator<vec_t>> &Z0,
+    const std::vector<vec_t, allocator<vec_t>> &Z1,
+    const std::vector<vec_t, allocator<vec_t>> &D0,
+    const std::vector<vec_t, allocator<vec_t>> &D1,
+    const vec_t* df_ptr,
+          std::vector<vec_t, allocator<vec_t>> &outptr_d0,
+          std::vector<vec_t, allocator<vec_t>> &outptr_d1)
 {
     boost::ignore_unused(Z0, Z1);
-    constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1;
-    constexpr int ndf = 4;
-    using T = VecData<double, VW>;
 
-    AVXPhysDerivTensor2DKernel<NUMQUAD0, NUMQUAD1, VW>(
+    constexpr auto nq0 = NUMQUAD0, nq1 = NUMQUAD1;
+    constexpr auto ndf = 4;
+
+    AVXPhysDerivTensor2DKernel<NUMQUAD0, NUMQUAD1>(
         inptr,
         D0, D1,
         outptr_d0, outptr_d1); //Results written to outptr_d0, outptr_d1
 
-    T df0, df1, df2, df3;
+    vec_t df0, df1, df2, df3;
     if(!DEFORMED){
         df0 = df_ptr[0];
         df1 = df_ptr[1];
@@ -99,8 +98,8 @@ static void AVXPhysDerivQuadKernel(
         for (int i = 0; i < nq1; ++i, ++cnt_ji)
         {
 
-            T d0 = outptr_d0[cnt_ji];// Load 1x
-            T d1 = outptr_d1[cnt_ji]; //Load 1x
+            vec_t d0 = outptr_d0[cnt_ji];// Load 1x
+            vec_t d1 = outptr_d1[cnt_ji]; //Load 1x
 
             if(DEFORMED){
                 df0 = df_ptr[cnt_ji * ndf];
@@ -110,11 +109,11 @@ static void AVXPhysDerivQuadKernel(
             }
 
             //Multiply by derivative factors
-            T out0 = d0 * df0; //d0 * df00 + d1 * df10
+            vec_t out0 = d0 * df0; //d0 * df00 + d1 * df10
             out0.fma(d1, df1);
             outptr_d0[cnt_ji] = out0; //Store 1x
 
-            T out1 = d0 * df2; //d0 * df2 + d1 * df30
+            vec_t out1 = d0 * df2; //d0 * df2 + d1 * df30
             out1.fma(d1, df3);
             outptr_d1[cnt_ji] = out1; //Store 1x
         }

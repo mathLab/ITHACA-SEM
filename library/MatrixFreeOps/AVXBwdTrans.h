@@ -187,12 +187,13 @@ struct AVXBwdTransQuad : public BwdTrans, public AVXHelper<2>
     {
         using namespace tinysimd;
         using vec_t = simd<NekDouble>;
+
         auto *inptr = &input[0];
         auto *outptr = &output[0];
 
-        constexpr int nqTot = NQ0 * NQ1;
-        constexpr int nqBlocks = nqTot * vec_t::width;
-        const int nmBlocks = m_nmTot * vec_t::width;
+        constexpr auto nqTot = NQ0 * NQ1;
+        constexpr auto nqBlocks = nqTot * vec_t::width;
+        const auto nmBlocks = m_nmTot * vec_t::width;
 
         vec_t p_sums[NM0 * NQ0]; //Sums over q for each quadpt p_i
         std::vector<vec_t, allocator<vec_t>> tmpIn(m_nmTot), tmpOut(nqTot);

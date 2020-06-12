@@ -14,13 +14,13 @@ namespace Nektar
 namespace AVX
 {
 
-template<int VW, bool DEFORMED = false>
-struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<VW,2, DEFORMED>
+template<bool DEFORMED = false>
+struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<2, DEFORMED>
 {
     AVXPhysDerivQuad(std::vector<LibUtilities::BasisSharedPtr> basis,
                      int nElmt)
     : PhysDeriv(basis, nElmt),
-      AVXHelper<VW, 2, DEFORMED>(basis, nElmt),
+      AVXHelper<2, DEFORMED>(basis, nElmt),
       m_nmTot(LibUtilities::StdQuadData::getNumberOfCoefficients(
                 this->m_nm[0], this->m_nm[1]))
     {
@@ -30,7 +30,7 @@ struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<VW,2, DEFORMED>
         std::vector<LibUtilities::BasisSharedPtr> basis,
         int nElmt)
     {
-        return std::make_shared<AVXPhysDerivQuad<VW, DEFORMED>>(basis, nElmt);
+        return std::make_shared<AVXPhysDerivQuad<DEFORMED>>(basis, nElmt);
     }
 
     static NekDouble FlopsPerElement(
@@ -141,14 +141,13 @@ struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<VW,2, DEFORMED>
               Array<OneD,       NekDouble> &out_d0,
               Array<OneD,       NekDouble> &out_d1)
     {
-        using T = VecData<NekDouble, VW>;
         auto *inptr = &input[0];
         auto *outptr_d0 = &out_d0[0];
         auto *outptr_d1 = &out_d1[0];
 
-        constexpr int ndf = 4;
-        constexpr int nqTot = NQ0 * NQ1;
-        constexpr int nqBlocks = nqTot * VW;
+        constexpr auto ndf = 4;
+        constexpr auto nqTot = NQ0 * NQ1;
+        constexpr auto nqBlocks = nqTot * vec_t::width;
 
         // Get size of derivative factor block
         int dfSize{};
@@ -161,16 +160,17 @@ struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<VW,2, DEFORMED>
             dfSize = ndf;
         }
 
-        AlignedVector<T> tmpIn(nqTot), tmpOut_d0(nqTot), tmpOut_d1(nqTot);
-        const T *df_ptr;
+        std::vector<vec_t, allocator<vec_t>> tmpIn(nqTot), tmpOut_d0(nqTot),
+            tmpOut_d1(nqTot);
+        const vec_t* df_ptr;
         for (int e = 0; e < this->m_nBlocks; e++)
         {
             df_ptr = &(this->m_df[e*dfSize]);
 
             // Load and transpose data
-            T::load_interleave(inptr, nqTot, tmpIn);
+            load_interleave(inptr, nqTot, tmpIn);
 
-            AVXPhysDerivQuadKernel<NQ0, NQ1, VW, DEFORMED>(
+            AVXPhysDerivQuadKernel<NQ0, NQ1, DEFORMED>(
                 tmpIn,
                 this->m_Z[0], this->m_Z[1],
                 this->m_D[0], this->m_D[1],
@@ -178,8 +178,8 @@ struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<VW,2, DEFORMED>
                 tmpOut_d0, tmpOut_d1);
 
             // de-interleave and store data
-            T::deinterleave_store(tmpOut_d0, nqTot, outptr_d0);
-            T::deinterleave_store(tmpOut_d1, nqTot, outptr_d1);
+            deinterleave_store(tmpOut_d0, nqTot, outptr_d0);
+            deinterleave_store(tmpOut_d1, nqTot, outptr_d1);
 
             inptr += nqBlocks;
             outptr_d0 += nqBlocks;
@@ -369,209 +369,209 @@ private:
 //     int m_nmTot;
 // };
 
-template<int VW, bool DEFORMED = false>
-struct AVXPhysDerivHex : public PhysDeriv, public AVXHelper<VW,3,DEFORMED>
-{
-    AVXPhysDerivHex(std::vector<LibUtilities::BasisSharedPtr> basis,
-                    int nElmt)
-        : PhysDeriv(basis, nElmt),
-          AVXHelper<VW, 3,DEFORMED>(basis, nElmt),
-          m_nmTot(LibUtilities::StdHexData::getNumberOfCoefficients(
-                      this->m_nm[0], this->m_nm[1], this->m_nm[2]))
-    {
-    }
+// template<int VW, bool DEFORMED = false>
+// struct AVXPhysDerivHex : public PhysDeriv, public AVXHelper<VW,3,DEFORMED>
+// {
+//     AVXPhysDerivHex(std::vector<LibUtilities::BasisSharedPtr> basis,
+//                     int nElmt)
+//         : PhysDeriv(basis, nElmt),
+//           AVXHelper<VW, 3,DEFORMED>(basis, nElmt),
+//           m_nmTot(LibUtilities::StdHexData::getNumberOfCoefficients(
+//                       this->m_nm[0], this->m_nm[1], this->m_nm[2]))
+//     {
+//     }
 
-    static std::shared_ptr<Operator> Create(
-        std::vector<LibUtilities::BasisSharedPtr> basis,
-        int nElmt)
-    {
-        return std::make_shared<AVXPhysDerivHex<VW,DEFORMED>>(basis, nElmt);
-    }
+//     static std::shared_ptr<Operator> Create(
+//         std::vector<LibUtilities::BasisSharedPtr> basis,
+//         int nElmt)
+//     {
+//         return std::make_shared<AVXPhysDerivHex<VW,DEFORMED>>(basis, nElmt);
+//     }
 
-    static NekDouble FlopsPerElement(
-        const int nq0,
-        const int nq1,
-        const int nq2)
-    {
-        //PhysDerivTensor
-        int pdt0 = nq0 * nq1 * nq2 * nq0 * 2;
-        int pdt1 = nq2 * nq0 * nq1 * nq1 * 2;
-        int pdt2 = nq0 * nq1 * nq2 * nq2 * 2;
-        int physDerivTensor = pdt0 + pdt1 + pdt2;
+//     static NekDouble FlopsPerElement(
+//         const int nq0,
+//         const int nq1,
+//         const int nq2)
+//     {
+//         //PhysDerivTensor
+//         int pdt0 = nq0 * nq1 * nq2 * nq0 * 2;
+//         int pdt1 = nq2 * nq0 * nq1 * nq1 * 2;
+//         int pdt2 = nq0 * nq1 * nq2 * nq2 * 2;
+//         int physDerivTensor = pdt0 + pdt1 + pdt2;
 
-        //PhysDeriv
-        int physDeriv = nq2 * nq1 * nq0 * 15;
+//         //PhysDeriv
+//         int physDeriv = nq2 * nq1 * nq0 * 15;
 
-        return (physDerivTensor + physDeriv);
-    }
+//         return (physDerivTensor + physDeriv);
+//     }
 
-    virtual double GFlops() override
-    {
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
+//     virtual double GFlops() override
+//     {
+//         const int nq0 = m_basis[0]->GetNumPoints();
+//         const int nq1 = m_basis[1]->GetNumPoints();
+//         const int nq2 = m_basis[2]->GetNumPoints();
 
-        int flops = this->m_nElmt * AVXPhysDerivHex::FlopsPerElement(nq0, nq1, nq2);
-        return flops * 1e-9;
-    }
+//         int flops = this->m_nElmt * AVXPhysDerivHex::FlopsPerElement(nq0, nq1, nq2);
+//         return flops * 1e-9;
+//     }
 
-    virtual NekDouble Ndof() override
-    {
-        return m_nmTot * this->m_nElmt;
-    }
+//     virtual NekDouble Ndof() override
+//     {
+//         return m_nmTot * this->m_nElmt;
+//     }
 
-    virtual NekDouble NLoads() override
-    {
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
+//     virtual NekDouble NLoads() override
+//     {
+//         const int nq0 = m_basis[0]->GetNumPoints();
+//         const int nq1 = m_basis[1]->GetNumPoints();
+//         const int nq2 = m_basis[2]->GetNumPoints();
 
-        int load_d0 = nq0 * nq1 * nq2 * nq0 * 2;
-        int load_d1 = nq2 * nq0 * nq1 * nq1 * 2;
-        int load_d2 = nq0 * nq1 * nq2 * nq2 * 2;;
-        int physDerivTensor = load_d0 + load_d1 + load_d2;
-        int physDeriv = nq2 * nq1 * nq0 * 3;
+//         int load_d0 = nq0 * nq1 * nq2 * nq0 * 2;
+//         int load_d1 = nq2 * nq0 * nq1 * nq1 * 2;
+//         int load_d2 = nq0 * nq1 * nq2 * nq2 * 2;;
+//         int physDerivTensor = load_d0 + load_d1 + load_d2;
+//         int physDeriv = nq2 * nq1 * nq0 * 3;
 
-        return m_nElmt * (physDeriv + physDerivTensor);
+//         return m_nElmt * (physDeriv + physDerivTensor);
 
-    }
+//     }
 
-    virtual NekDouble NStores() override
-    {
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
+//     virtual NekDouble NStores() override
+//     {
+//         const int nq0 = m_basis[0]->GetNumPoints();
+//         const int nq1 = m_basis[1]->GetNumPoints();
+//         const int nq2 = m_basis[2]->GetNumPoints();
 
-        int store_d0 = nq0 * nq1 * nq2;
-        int store_d1 = nq2 * nq0 * nq1;
-        int store_d2 = nq0 * nq1 * nq2;
-        int physDerivTensor = store_d0 + store_d1 + store_d2;
-        int physDeriv = nq2 * nq1 * nq0 * 3;
+//         int store_d0 = nq0 * nq1 * nq2;
+//         int store_d1 = nq2 * nq0 * nq1;
+//         int store_d2 = nq0 * nq1 * nq2;
+//         int physDerivTensor = store_d0 + store_d1 + store_d2;
+//         int physDeriv = nq2 * nq1 * nq0 * 3;
 
-        return m_nElmt * (physDeriv + physDerivTensor);
-    }
+//         return m_nElmt * (physDeriv + physDerivTensor);
+//     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &in,
-                                Array<OneD,       NekDouble> &out_d0,
-                                Array<OneD,       NekDouble> &out_d1) override
-    {
-        boost::ignore_unused(in, out_d0, out_d1);
-        throw; //Only for 2D, but need to implement since its abstract
-    }
+//     virtual void operator()(const Array<OneD, const NekDouble> &in,
+//                                 Array<OneD,       NekDouble> &out_d0,
+//                                 Array<OneD,       NekDouble> &out_d1) override
+//     {
+//         boost::ignore_unused(in, out_d0, out_d1);
+//         throw; //Only for 2D, but need to implement since its abstract
+//     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &in,
-                                  Array<OneD,       NekDouble> &out_d0,
-                                  Array<OneD,       NekDouble> &out_d1,
-                                  Array<OneD,       NekDouble> &out_d2) override
-    {
-        switch(m_basis[0]->GetNumPoints())
-        {
-            case 2:
-                AVXPhysDerivHexImpl<2,2,2>(in, out_d0, out_d1, out_d2);
-                break;
-            case 3:
-                AVXPhysDerivHexImpl<3,3,3>(in, out_d0, out_d1, out_d2);
-                break;
-            case 4:
-                AVXPhysDerivHexImpl<4,4,4>(in, out_d0, out_d1, out_d2);
-                break;
-            case 5:
-                AVXPhysDerivHexImpl<5,5,5>(in, out_d0, out_d1, out_d2);
-                break;
-            case 6:
-                AVXPhysDerivHexImpl<6,6,6>(in, out_d0, out_d1, out_d2);
-                break;
-            case 7:
-                AVXPhysDerivHexImpl<7,7,7>(in, out_d0, out_d1, out_d2);
-                break;
-            case 8:
-                AVXPhysDerivHexImpl<8,8,8>(in, out_d0, out_d1, out_d2);
-                break;
-            case 9:
-                AVXPhysDerivHexImpl<9,9,9>(in, out_d0, out_d1, out_d2);
-                break;
-            case 10:
-                AVXPhysDerivHexImpl<10,10,10>(in, out_d0, out_d1, out_d2);
-                break;
-            case 11:
-                AVXPhysDerivHexImpl<11,11,11>(in, out_d0, out_d1, out_d2);
-                break;
-            case 12:
-                AVXPhysDerivHexImpl<12,12,12>(in, out_d0, out_d1, out_d2);
-                break;
-            case 13:
-                AVXPhysDerivHexImpl<13,13,13>(in, out_d0, out_d1, out_d2);
-                break;
-            case 14:
-                AVXPhysDerivHexImpl<14,14,14>(in, out_d0, out_d1, out_d2);
-                break;
-            case 15:
-                AVXPhysDerivHexImpl<15,15,15>(in, out_d0, out_d1, out_d2);
-                break;
-            default: NEKERROR(ErrorUtil::efatal,
-                "AVXPhysDerivHex: # of modes / points combo not implemented.");
-        }
-    }
+//     virtual void operator()(const Array<OneD, const NekDouble> &in,
+//                                   Array<OneD,       NekDouble> &out_d0,
+//                                   Array<OneD,       NekDouble> &out_d1,
+//                                   Array<OneD,       NekDouble> &out_d2) override
+//     {
+//         switch(m_basis[0]->GetNumPoints())
+//         {
+//             case 2:
+//                 AVXPhysDerivHexImpl<2,2,2>(in, out_d0, out_d1, out_d2);
+//                 break;
+//             case 3:
+//                 AVXPhysDerivHexImpl<3,3,3>(in, out_d0, out_d1, out_d2);
+//                 break;
+//             case 4:
+//                 AVXPhysDerivHexImpl<4,4,4>(in, out_d0, out_d1, out_d2);
+//                 break;
+//             case 5:
+//                 AVXPhysDerivHexImpl<5,5,5>(in, out_d0, out_d1, out_d2);
+//                 break;
+//             case 6:
+//                 AVXPhysDerivHexImpl<6,6,6>(in, out_d0, out_d1, out_d2);
+//                 break;
+//             case 7:
+//                 AVXPhysDerivHexImpl<7,7,7>(in, out_d0, out_d1, out_d2);
+//                 break;
+//             case 8:
+//                 AVXPhysDerivHexImpl<8,8,8>(in, out_d0, out_d1, out_d2);
+//                 break;
+//             case 9:
+//                 AVXPhysDerivHexImpl<9,9,9>(in, out_d0, out_d1, out_d2);
+//                 break;
+//             case 10:
+//                 AVXPhysDerivHexImpl<10,10,10>(in, out_d0, out_d1, out_d2);
+//                 break;
+//             case 11:
+//                 AVXPhysDerivHexImpl<11,11,11>(in, out_d0, out_d1, out_d2);
+//                 break;
+//             case 12:
+//                 AVXPhysDerivHexImpl<12,12,12>(in, out_d0, out_d1, out_d2);
+//                 break;
+//             case 13:
+//                 AVXPhysDerivHexImpl<13,13,13>(in, out_d0, out_d1, out_d2);
+//                 break;
+//             case 14:
+//                 AVXPhysDerivHexImpl<14,14,14>(in, out_d0, out_d1, out_d2);
+//                 break;
+//             case 15:
+//                 AVXPhysDerivHexImpl<15,15,15>(in, out_d0, out_d1, out_d2);
+//                 break;
+//             default: NEKERROR(ErrorUtil::efatal,
+//                 "AVXPhysDerivHex: # of modes / points combo not implemented.");
+//         }
+//     }
 
-    template<int NQ0, int NQ1, int NQ2>
-    void AVXPhysDerivHexImpl(
-        const Array<OneD, const NekDouble> &input,
-              Array<OneD,       NekDouble> &out_d0,
-              Array<OneD,       NekDouble> &out_d1,
-              Array<OneD,       NekDouble> &out_d2)
-    {
-        using T = VecData<NekDouble, VW>;
-        auto *inptr = &input[0];
-        auto *outptr_d0 = &out_d0[0];
-        auto *outptr_d1 = &out_d1[0];
-        auto *outptr_d2 = &out_d2[0];
+//     template<int NQ0, int NQ1, int NQ2>
+//     void AVXPhysDerivHexImpl(
+//         const Array<OneD, const NekDouble> &input,
+//               Array<OneD,       NekDouble> &out_d0,
+//               Array<OneD,       NekDouble> &out_d1,
+//               Array<OneD,       NekDouble> &out_d2)
+//     {
+//         using T = VecData<NekDouble, VW>;
+//         auto *inptr = &input[0];
+//         auto *outptr_d0 = &out_d0[0];
+//         auto *outptr_d1 = &out_d1[0];
+//         auto *outptr_d2 = &out_d2[0];
 
-        constexpr int ndf = 9;
-        constexpr int nqTot = NQ0 * NQ1 * NQ2;
-        constexpr int nqBlocks = nqTot * VW;
+//         constexpr int ndf = 9;
+//         constexpr int nqTot = NQ0 * NQ1 * NQ2;
+//         constexpr int nqBlocks = nqTot * VW;
 
-        // Get size of derivative factor block
-        int dfSize{};
-        if (DEFORMED)
-        {
-            dfSize = ndf*nqTot;
-        }
-        else
-        {
-            dfSize = ndf;
-        }
+//         // Get size of derivative factor block
+//         int dfSize{};
+//         if (DEFORMED)
+//         {
+//             dfSize = ndf*nqTot;
+//         }
+//         else
+//         {
+//             dfSize = ndf;
+//         }
 
-        AlignedVector<T> tmpIn(nqTot), tmpd0(nqTot), tmpd1(nqTot), tmpd2(nqTot);
-        const T *df_ptr;
-        for (int e = 0; e < this->m_nBlocks; ++e)
-        {
+//         AlignedVector<T> tmpIn(nqTot), tmpd0(nqTot), tmpd1(nqTot), tmpd2(nqTot);
+//         const T *df_ptr;
+//         for (int e = 0; e < this->m_nBlocks; ++e)
+//         {
 
-            df_ptr = &(this->m_df[e*dfSize]);
+//             df_ptr = &(this->m_df[e*dfSize]);
 
-            // Load and transpose data
-            T::load_interleave(inptr, nqTot, tmpIn);
+//             // Load and transpose data
+//             T::load_interleave(inptr, nqTot, tmpIn);
 
-            AVXPhysDerivHexKernel<NQ0, NQ1, NQ2, VW, DEFORMED>(
-                tmpIn,
-                this->m_Z[0], this->m_Z[1], this->m_Z[2],
-                this->m_D[0], this->m_D[1], this->m_D[2],
-                df_ptr,
-                tmpd0, tmpd1, tmpd2);
+//             AVXPhysDerivHexKernel<NQ0, NQ1, NQ2, VW, DEFORMED>(
+//                 tmpIn,
+//                 this->m_Z[0], this->m_Z[1], this->m_Z[2],
+//                 this->m_D[0], this->m_D[1], this->m_D[2],
+//                 df_ptr,
+//                 tmpd0, tmpd1, tmpd2);
 
-            // de-interleave and store data
-            T::deinterleave_store(tmpd0, nqTot, outptr_d0);
-            T::deinterleave_store(tmpd1, nqTot, outptr_d1);
-            T::deinterleave_store(tmpd2, nqTot, outptr_d2);
+//             // de-interleave and store data
+//             T::deinterleave_store(tmpd0, nqTot, outptr_d0);
+//             T::deinterleave_store(tmpd1, nqTot, outptr_d1);
+//             T::deinterleave_store(tmpd2, nqTot, outptr_d2);
 
-            inptr += nqBlocks;
-            outptr_d0 += nqBlocks;
-            outptr_d1 += nqBlocks;
-            outptr_d2 += nqBlocks;
-        }
-    }
-private:
-    int m_nmTot;
-};
+//             inptr += nqBlocks;
+//             outptr_d0 += nqBlocks;
+//             outptr_d1 += nqBlocks;
+//             outptr_d2 += nqBlocks;
+//         }
+//     }
+// private:
+//     int m_nmTot;
+// };
 
 
 // template<int VW, bool DEFORMED = false>

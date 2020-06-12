@@ -210,13 +210,27 @@ IF (NEKTAR_USE_THREAD_SAFETY)
 ENDIF()
 
 # Simd
-SET(NEKTAR_USE_SIMD None CACHE STRING "Choose SIMD instructions supported")
-# Toggleable build type
-SET_PROPERTY(CACHE NEKTAR_USE_SIMD PROPERTY STRINGS "None;sse2;avx2;avx512;")
+SET(NEKTAR_USE_SIMD None CACHE STRING "Choose SIMD instructions support")
+# Toggleable type
+SET_PROPERTY(CACHE NEKTAR_USE_SIMD PROPERTY STRINGS "None;avx2;avx512;")
 IF (NEKTAR_USE_SIMD STREQUAL "avx2")
-    MESSAGE(STATUS "using avx2")
-    ADD_DEFINITIONS(-DNEKTAR_USE_AVX2)
-    ADD_COMPILE_OPTIONS(-march=native)
+    INCLUDE(CheckCXXCompilerFlag)
+    CHECK_CXX_COMPILER_FLAG("-mavx2" COMPILER_SUPPORTS_AVX2)
+    IF (COMPILER_SUPPORTS_AVX2)
+        MESSAGE(STATUS "Enabling avx2, user is responsable to set appropriate compiler flags")
+        ADD_DEFINITIONS(-DNEKTAR_USE_AVX2)
+    ELSE()
+        MESSAGE(STATUS "Compiler does not support avx2, default to scalar")
+    ENDIF()
+ELSEIF (NEKTAR_USE_SIMD STREQUAL "avx512")
+    INCLUDE(CheckCXXCompilerFlag)
+    CHECK_CXX_COMPILER_FLAG("-mavx512" COMPILER_SUPPORTS_AVX512)
+    IF (COMPILER_SUPPORTS_AVX512)
+        MESSAGE(STATUS "Enabling avx512, user is responsable to set appropriate compiler flags")
+        ADD_DEFINITIONS(-DNEKTAR_USE_AVX512)
+    ELSE()
+        MESSAGE(STATUS "Compiler does not support avx512, default to scalar")
+    ENDIF()
 ENDIF()
 
 # Disable backups

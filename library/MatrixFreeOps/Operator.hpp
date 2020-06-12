@@ -6,8 +6,10 @@
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <Collections/Operator.h>
-#include "VecData.hpp"
 // #include "AVXAssembly.h"
+
+#include "VecData.hpp"
+#include <LibUtilities/SimdLib/tinysimd.hpp>
 
 namespace Nektar {
 namespace AVX {
@@ -387,20 +389,21 @@ protected:
 
 // };
 
-template <int VW, int DIM, bool DEFORMED = false>
+template <int DIM, bool DEFORMED = false>
 class AVXHelper : virtual public Operator
 {
+    using vec_t = tinysimd::simd<NekDouble>;
 protected:
     AVXHelper(std::vector<LibUtilities::BasisSharedPtr> basis,
               int nElmt)
         : Operator()
     {
         // Sanity check: no padding yet!
-        ASSERTL0(nElmt % VW == 0, "Number of elements not divisible by vector "
+        ASSERTL0(nElmt % vec_t::width == 0, "Number of elements not divisible by vector "
                  "width, padding not yet implemented.");
 
         // Calculate number of 'blocks', i.e. meta-elements
-        m_nBlocks = nElmt / VW;
+        m_nBlocks = nElmt / vec_t::width;
 
         // Depending on element dimension, set up basis information, quadrature,
         // etc, inside vectorised environment.
@@ -414,19 +417,15 @@ protected:
             m_nq[i] = basis[i]->GetNumPoints();
 
             m_bdata[i].resize(bdata.num_elements());
-            m_bdata_orig[i].resize(bdata.num_elements());
             for (auto j = 0; j < bdata.num_elements(); ++j)
             {
                 m_bdata[i][j] = bdata[j];
-                m_bdata_orig[i][j] = bdata[j];
             }
 
             m_dbdata[i].resize(dbdata.num_elements());
-            m_dbdata_orig[i].resize(dbdata.num_elements());
             for (auto j = 0; j < dbdata.num_elements(); ++j)
             {
                 m_dbdata[i][j] = dbdata[j];
-                m_dbdata_orig[i][j] = dbdata[j];
             }
 
             NekDouble fac = 1.0;
@@ -440,27 +439,21 @@ protected:
             }
 
             m_w[i].resize(w.num_elements());
-            m_w_orig[i].resize(w.num_elements());
             for (auto j = 0; j < w.num_elements(); ++j)
             {
                 m_w[i][j] = fac * w[j];
-                m_w_orig[i][j] = fac * w[j];
             }
 
             auto D = basis[i]->GetD()->GetPtr();
             m_D[i].resize(D.num_elements());
-            m_D_orig[i].resize(D.num_elements());
             for(int j = 0; j < D.num_elements(); j++){
                 m_D[i][j] = D[j];
-                m_D_orig[i][j] = D[j];
             }
 
             auto Z = basis[i]->GetZ();
             m_Z[i].resize(Z.num_elements());
-            m_Z_orig[i].resize(Z.num_elements());
             for(int j = 0; j < Z.num_elements(); j++){
                 m_Z[i][j] = Z[j];
-                m_Z_orig[i][j] = Z[j];
             }
 
         }
@@ -480,32 +473,32 @@ protected:
 
             m_jac.resize(m_nBlocks*nq);
 
-            AlignedVector<NekDouble> tmp(VW);
+            alignas(vec_t::alignment) NekDouble tmp[vec_t::width];
             for (size_t block = 0; block < m_nBlocks; ++block)
             {
                 for(size_t q = 0; q < nq; q++)
                 {
-                    for (int j = 0; j < VW; ++j)
+                    for (int j = 0; j < vec_t::width; ++j)
                     {
-                        tmp[j] = jac[block*nq*VW + nq*j + q]; //Unvalidated until I can get an actual deformed mesh.
+                        tmp[j] = jac[block*nq*vec_t::width + nq*j + q]; //Unvalidated until I can get an actual deformed mesh.
                     }
 
                     //Order is [block][quadpt]
-                    m_jac[block*nq + q] = &tmp[0];
+                    m_jac[block*nq + q].load(&tmp[0]);
                 }
             }
         }
         else{
             m_jac.resize(m_nBlocks);
 
-            AlignedVector<NekDouble> tmp(VW);
+            alignas(vec_t::alignment) NekDouble tmp[vec_t::width];
             for (size_t i = 0; i < m_nBlocks; ++i)
             {
-                for (int j = 0; j < VW; ++j)
+                for (int j = 0; j < vec_t::width; ++j)
                 {
-                    tmp[j] = jac[VW*i+j];
+                    tmp[j] = jac[vec_t::width*i+j];
                 }
-                m_jac[i] = &tmp[0];
+                m_jac[i].load(&tmp[0]);
             }
         }
     }
@@ -513,7 +506,7 @@ protected:
     virtual void SetDF(const Array<TwoD, const NekDouble> &df) override
     {
         constexpr unsigned int n_df = DIM * DIM;
-        AlignedVector<NekDouble> vec(VW);
+        alignas(vec_t::alignment) NekDouble vec[vec_t::width];
 
         if (DEFORMED)
         {
@@ -525,18 +518,17 @@ protected:
 
             m_df.resize(m_nBlocks * n_df*nq);
             auto *df_ptr = &m_df[0];
-
             for (int e = 0; e < m_nBlocks; ++e)
             {
                 for (int q = 0; q < nq; q++)
                 {
                     for (int dir = 0; dir < n_df; ++dir, ++df_ptr)
                     {
-                        for (int j = 0; j < VW; ++j)
+                        for (int j = 0; j < vec_t::width; ++j)
                         {
-                            vec[j] = df[dir][(VW*e + j)*nq + q];
+                            vec[j] = df[dir][(vec_t::width*e + j)*nq + q];
                         }
-                        *df_ptr = &vec[0];
+                        (*df_ptr).load(&vec[0]);
                     }
                 }
             }
@@ -548,12 +540,12 @@ protected:
             {
                 for (int dir = 0; dir < n_df; ++dir)
                 {
-                    for(int j = 0; j < VW; ++j)
+                    for(int j = 0; j < vec_t::width; ++j)
                     {
-                        vec[j] = df[dir][VW*e + j];
+                        vec[j] = df[dir][vec_t::width*e + j];
                     }
-                    // Must have all VW elemnts aligned to do a load.
-                    m_df[e*n_df + dir] = &vec[0];
+                    // Must have all vec_t::width elemnts aligned to do a load.
+                    m_df[e*n_df + dir].load(&vec[0]);
                 }
             }
         }
@@ -562,25 +554,19 @@ protected:
 
     virtual size_t VectorWidth() override
     {
-        return VW;
+        return vec_t::width;
     }
 
     int m_nBlocks;
     std::array<int, DIM> m_nm, m_nq;
-    std::array<AlignedVector<VecData<NekDouble, VW>>, DIM> m_bdata;
-    std::array<AlignedVector<VecData<NekDouble, VW>>, DIM> m_dbdata;
-    std::array<AlignedVector<VecData<NekDouble, VW>>, DIM> m_D; //Derivatives
-    std::array<AlignedVector<VecData<NekDouble, VW>>, DIM> m_Z; //Zeroes
-    std::array<AlignedVector<VecData<NekDouble, VW>>, DIM> m_w; //Weights
-    AlignedVector<VecData<NekDouble, VW>> m_df; //Chain rule function deriviatives for each element (00, 10, 20, 30...)
-    AlignedVector<VecData<NekDouble, VW>> m_jac;
+    std::array<std::vector<vec_t, tinysimd::allocator<vec_t>>, DIM> m_bdata;
+    std::array<std::vector<vec_t, tinysimd::allocator<vec_t>>, DIM> m_dbdata;
+    std::array<std::vector<vec_t, tinysimd::allocator<vec_t>>, DIM> m_D; //Derivatives
+    std::array<std::vector<vec_t, tinysimd::allocator<vec_t>>, DIM> m_Z; //Zeroes
+    std::array<std::vector<vec_t, tinysimd::allocator<vec_t>>, DIM> m_w; //Weights
+    std::vector<vec_t, tinysimd::allocator<vec_t>> m_df; //Chain rule function deriviatives for each element (00, 10, 20, 30...)
+    std::vector<vec_t, tinysimd::allocator<vec_t>> m_jac;
 
-    // Original basis
-    std::array<AlignedVector<NekDouble>, DIM> m_bdata_orig;
-    std::array<AlignedVector<NekDouble>, DIM> m_dbdata_orig;
-    std::array<AlignedVector<NekDouble>, DIM> m_D_orig; //Derivatives
-    std::array<AlignedVector<NekDouble>, DIM> m_Z_orig; //Zeroes
-    std::array<AlignedVector<NekDouble>, DIM> m_w_orig; //Weights
 };
 
 using OperatorFactory = LibUtilities::NekFactory<

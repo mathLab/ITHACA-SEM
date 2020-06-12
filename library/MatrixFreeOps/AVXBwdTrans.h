@@ -5,7 +5,6 @@
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 #include <LibUtilities/Foundations/Basis.h>
 
-#include "VecData.hpp"
 #include "Operator.hpp"
 #include "AVXBwdTransKernels.hpp"
 
@@ -14,13 +13,12 @@ namespace Nektar
 namespace AVX
 {
 
-template<int VW>
-struct AVXBwdTransQuad : public BwdTrans, public AVXHelper<VW, 2>
+struct AVXBwdTransQuad : public BwdTrans, public AVXHelper<2>
 {
     AVXBwdTransQuad(std::vector<LibUtilities::BasisSharedPtr> basis,
                     int nElmt)
         : BwdTrans(basis, nElmt),
-          AVXHelper<VW, 2>(basis, nElmt),
+          AVXHelper<2>(basis, nElmt),
           m_nmTot(LibUtilities::StdQuadData::getNumberOfCoefficients(
                       this->m_nm[0], this->m_nm[1]))
     {
@@ -30,7 +28,7 @@ struct AVXBwdTransQuad : public BwdTrans, public AVXHelper<VW, 2>
         std::vector<LibUtilities::BasisSharedPtr> basis,
         int nElmt)
     {
-        return std::make_shared<AVXBwdTransQuad<VW>>(basis, nElmt);
+        return std::make_shared<AVXBwdTransQuad>(basis, nElmt);
     }
 
     static NekDouble FlopsPerElement(
@@ -187,28 +185,29 @@ struct AVXBwdTransQuad : public BwdTrans, public AVXHelper<VW, 2>
         const Array<OneD, const NekDouble> &input,
               Array<OneD,       NekDouble> &output)
     {
-        using T = VecData<double, VW>;
+        using namespace tinysimd;
+        using vec_t = simd<NekDouble>;
         auto *inptr = &input[0];
         auto *outptr = &output[0];
 
         constexpr int nqTot = NQ0 * NQ1;
-        constexpr int nqBlocks = nqTot * VW;
-        const int nmBlocks = m_nmTot * VW;
+        constexpr int nqBlocks = nqTot * vec_t::width;
+        const int nmBlocks = m_nmTot * vec_t::width;
 
-        T p_sums[NM0 * NQ0]; //Sums over q for each quadpt p_i
-        AlignedVector<T> tmpIn(m_nmTot), tmpOut(nqTot);
+        vec_t p_sums[NM0 * NQ0]; //Sums over q for each quadpt p_i
+        std::vector<vec_t, allocator<vec_t>> tmpIn(m_nmTot), tmpOut(nqTot);
 
         for (int e = 0; e < this->m_nBlocks; ++e)
         {
             // Load and transpose data
-            T::load_interleave(inptr, m_nmTot, tmpIn);
+            load_interleave(inptr, m_nmTot, tmpIn);
 
-            AVXBwdTransQuadKernel<NM0, NM1, NQ0, NQ1, VW>(
+            AVXBwdTransQuadKernel<NM0, NM1, NQ0, NQ1>(
                 tmpIn, this->m_bdata[0], this->m_bdata[1],
                 p_sums, tmpOut);
 
             // de-interleave and store data
-            T::deinterleave_store(tmpOut, nqTot, outptr);
+            deinterleave_store(tmpOut, nqTot, outptr);
 
             inptr += nmBlocks;
             outptr += nqBlocks;

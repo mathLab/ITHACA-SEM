@@ -34,8 +34,8 @@
 
 #include <boost/core/ignore_unused.hpp>
 
-#include <SimdOperators/Operator.hpp>
-#include <SimdOperators/AVXUtil.hpp>
+#include <MatrixFreeOps/Operator.hpp>
+#include <MatrixFreeOps/AVXUtil.hpp>
 
 #include <Collections/Operator.h>
 #include <Collections/CoalescedGeomData.h>

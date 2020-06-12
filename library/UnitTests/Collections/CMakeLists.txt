@@ -1,12 +1,12 @@
 SET(CollectionsUnitTestsSources
     main.cpp
-    TestHexCollection.cpp
+    # TestHexCollection.cpp
     TestQuadCollection.cpp
-    TestPrismCollection.cpp
-    TestPyrCollection.cpp
-    TestSegCollection.cpp
-    TestTetCollection.cpp
-    TestTriCollection.cpp
+    # TestPrismCollection.cpp
+    # TestPyrCollection.cpp
+    # TestSegCollection.cpp
+    # TestTetCollection.cpp
+    # TestTriCollection.cpp
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)

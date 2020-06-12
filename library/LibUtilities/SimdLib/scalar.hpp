@@ -80,6 +80,13 @@ struct scalarT
         return p[index];
     }
 
+    // fma
+    // this = this + a * b
+    inline void fma(const scalarT<T>& a, const scalarT<T>& b)
+    {
+        _data += a._data * b._data;
+    }
+
     // subscript
     inline scalarType operator[](size_t i) const
     {

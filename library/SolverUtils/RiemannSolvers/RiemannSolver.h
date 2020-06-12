@@ -40,8 +40,6 @@
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
-#include <SimdOperators/AVXUtil.hpp>
-
 #include <string>
 
 namespace Nektar

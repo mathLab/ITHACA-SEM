@@ -4,7 +4,7 @@ SUBDIRS(LibUtilities LocalRegions SpatialDomains StdRegions Collections
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/library)
 
 IF (NEKTAR_BUILD_SIMD)
-    SUBDIRS(SimdOperators)
+    SUBDIRS(MatrixFreeOps)
     IF (NEKTAR_BUILD_UNIT_TESTS)
         SUBDIRS(UnitTests/SIMD)
     ENDIF()

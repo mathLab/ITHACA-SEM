@@ -29,7 +29,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SimdOperators/VecData.hpp>
+#include <MatrixFreeOps/VecData.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -49,26 +49,26 @@ namespace VecDataTests
 
     using vec_t = AVX::VecData<double, AVX::SIMD_WIDTH_SIZE>;
 
-    BOOST_AUTO_TEST_CASE(VecData_loadu_implicit_conv)
-    {
-        std::array<double, AVX::SIMD_WIDTH_SIZE> ascalararr = {1.0, 2.0, 3.0, 4.0};
-        vec_t avec = ascalararr.data();
-    }
+    // BOOST_AUTO_TEST_CASE(VecData_loadu_implicit_conv)
+    // {
+    //     std::array<double, AVX::SIMD_WIDTH_SIZE> ascalararr = {1.0, 2.0, 3.0, 4.0};
+    //     vec_t avec = ascalararr.data();
+    // }
 
-    BOOST_AUTO_TEST_CASE(VecData_loadu)
-    {
-        std::array<double, AVX::SIMD_WIDTH_SIZE> ascalararr = {1.0, 2.0, 3.0, 4.0};
-        vec_t avec{};
-        avec = ascalararr.data();
-    }
+    // BOOST_AUTO_TEST_CASE(VecData_loadu)
+    // {
+    //     std::array<double, AVX::SIMD_WIDTH_SIZE> ascalararr = {1.0, 2.0, 3.0, 4.0};
+    //     vec_t avec{};
+    //     avec = ascalararr.data();
+    // }
 
-    BOOST_AUTO_TEST_CASE(VecData_storeu)
-    {
-        std::array<double, AVX::SIMD_WIDTH_SIZE> ascalararr = {1.0, 2.0, 3.0, 4.0};
-        vec_t avec{};
+    // BOOST_AUTO_TEST_CASE(VecData_storeu)
+    // {
+    //     std::array<double, AVX::SIMD_WIDTH_SIZE> ascalararr = {1.0, 2.0, 3.0, 4.0};
+    //     vec_t avec{};
 
-        avec.store(ascalararr.data());
-    }
+    //     avec.store(ascalararr.data());
+    // }
 
     BOOST_AUTO_TEST_CASE(VecData_add)
     {

@@ -322,6 +322,14 @@ struct avx2Double4
         out[_mm256_extract_epi64(indices._data, 3)] = tmp[3];
     }
 
+    // fma
+    // this = this + a * b
+    inline void fma(const avx2Double4& a, const avx2Double4& b)
+    {
+        _data = _mm256_fmadd_pd(a._data, b._data, _data);
+    }
+
+
     // subscript
     // subscript operators are convienient but expensive
     // should not be used in optimized kernels
@@ -414,34 +422,58 @@ inline void deinterleave_store(
     size_t dataLen,
     double *out)
 {
-    size_t nBlocks = dataLen / 4;
+#if 0
+    double *out0 = out;
+    double *out1 = out + dataLen;
+    double *out2 = out + 2 * dataLen;
+    double *out3 = out + 3 * dataLen;
+
+
+    for (size_t i = 0; i < dataLen; ++i)
+    {
+        out0[i] = in[i][0];
+        out1[i] = in[i][1];
+        out2[i] = in[i][2];
+        out3[i] = in[i][3];
+    }
+#else
+
+    // size_t nBlocks = dataLen / 4;
 
     alignas(32) size_t tmp[4] = {0, dataLen, 2*dataLen, 3*dataLen};
     using index_t = avx2Long4<size_t>;
     index_t index0(tmp);
-    index_t index1 = index0 + 1;
-    index_t index2 = index0 + 2;
-    index_t index3 = index0 + 3;
+    // index_t index1 = index0 + 1;
+    // index_t index2 = index0 + 2;
+    // index_t index3 = index0 + 3;
 
-    // 4x unrolled loop
-    for (size_t i = 0; i < nBlocks; ++i)
-    {
-        in[i].scatter(out, index0);
-        in[i+1].scatter(out, index1);
-        in[i+2].scatter(out, index2);
-        in[i+3].scatter(out, index3);
-        index0 = index0 + 4;
-        index1 = index1 + 4;
-        index2 = index2 + 4;
-        index3 = index3 + 4;
-    }
+    // // 4x unrolled loop
+    // for (size_t i = 0; i < nBlocks; ++i)
+    // {
+    //     in[i].scatter(out, index0);
+    //     in[i+1].scatter(out, index1);
+    //     in[i+2].scatter(out, index2);
+    //     in[i+3].scatter(out, index3);
+    //     index0 = index0 + 4;
+    //     index1 = index1 + 4;
+    //     index2 = index2 + 4;
+    //     index3 = index3 + 4;
+    // }
 
-    // spillover loop
-    for (size_t i = 4 * nBlocks; i < dataLen; ++i)
+    // // spillover loop
+    // for (size_t i = 4 * nBlocks; i < dataLen; ++i)
+    // {
+    //     in[i].scatter(out, index0);
+    //     index0 = index0 + 1;
+    // }
+
+    for (size_t i = 0; i < dataLen; ++i)
     {
         in[i].scatter(out, index0);
         index0 = index0 + 1;
     }
+#endif
+
 
 }
 

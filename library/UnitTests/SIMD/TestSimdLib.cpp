@@ -283,11 +283,11 @@ namespace SimdLibTests
 
     }
 
-    BOOST_AUTO_TEST_CASE(SimdLib_load_interleave_unload_to_aligned)
+    BOOST_AUTO_TEST_CASE(SimdLib_load_interleave_unload)
     {
         constexpr size_t nDof{5};
         // no padding in load_interleave deinterleave_store
-        constexpr size_t nEle{vec_t::width * 2};
+        constexpr size_t nEle{vec_t::width * 4};
         constexpr size_t nDofBlock = nDof * vec_t::width;
 
         constexpr size_t size{nDof*nEle};
@@ -305,7 +305,7 @@ namespace SimdLibTests
 
         double* dataPtr = dofScalarArr.data();
         // loop over blocks vec_t::width elements at the time
-        for (size_t i = 0; i < nBlock; ++i)
+        for (size_t b = 0; b < nBlock; ++b)
         {
             // load
             load_interleave(dataPtr, nDof, dofVectorArr);
@@ -313,7 +313,7 @@ namespace SimdLibTests
             // manipulate each block
             for (size_t j = 0; j < nDof; ++j)
             {
-                dofVectorArr[j] = dofVectorArr[j] + vec_t(1.0);
+                dofVectorArr[j] = dofVectorArr[j] + j;
             }
 
             // store
@@ -322,10 +322,19 @@ namespace SimdLibTests
         }
 
         // check
-        for (size_t i = 0; i < size; ++i)
+        // for (size_t i = 0; i < size; ++i)
+        // {
+        //     BOOST_CHECK_EQUAL(dofScalarArr[i], i + 1.0);
+        // }
+
+        for (size_t b = 0, i = 0; b < nBlock; ++b)
         {
-            BOOST_CHECK_EQUAL(dofScalarArr[i], i + 1.0);
+            for (size_t j = 0; j < nDof; ++j, ++i)
+            {
+                BOOST_CHECK_EQUAL(dofScalarArr[i], i + j);
+            }
         }
+
     }
 
 

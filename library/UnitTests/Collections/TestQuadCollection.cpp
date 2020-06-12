@@ -350,8 +350,9 @@ namespace QuadCollectionTests
 
         LibUtilities::SessionReaderSharedPtr dummySession;
         Collections::CollectionOptimisation colOpt(dummySession,
-            Collections::eAVX);
+            Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+        impTypes[Collections::eBwdTrans] = Collections::eAVX;
         Collections::Collection     c(CollExp, impTypes);
 
         Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;

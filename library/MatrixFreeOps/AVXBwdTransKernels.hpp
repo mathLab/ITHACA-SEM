@@ -1,24 +1,24 @@
 #ifndef NEKTAR_LIBRARY_AVXBWDTRANSKERNELS_HPP
 #define NEKTAR_LIBRARY_AVXBWDTRANSKERNELS_HPP
 
-#include "VecData.hpp"
+#include <LibUtilities/SimdLib/tinysimd.hpp>
 
 namespace Nektar
 {
 namespace AVX
 {
+using namespace tinysimd;
+using vec_t = simd<NekDouble>;
 
-template<int NUMMODE0, int NUMMODE1,
-         int NUMQUAD0, int NUMQUAD1,
-         int VW>
+template<unsigned short NUMMODE0, unsigned short NUMMODE1,
+         unsigned short NUMQUAD0, unsigned short NUMQUAD1>
 inline static void AVXBwdTransQuadKernel(
-    const AlignedVector<VecData<NekDouble, VW>> &in,
-    const AlignedVector<VecData<NekDouble, VW>> &bdata0,
-    const AlignedVector<VecData<NekDouble, VW>> &bdata1,
-    VecData<NekDouble, VW> *wsp,
-    AlignedVector<VecData<NekDouble, VW>> &out)
+    const std::vector<vec_t, allocator<vec_t>> &in,
+    const std::vector<vec_t, allocator<vec_t>> &bdata0,
+    const std::vector<vec_t, allocator<vec_t>> &bdata1,
+    vec_t *wsp,
+    std::vector<vec_t, allocator<vec_t>> &out)
 {
-    using T = VecData<NekDouble, VW>;
 
     constexpr int nm0 = NUMMODE0, nm1 = NUMMODE1;
     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1;
@@ -27,7 +27,7 @@ inline static void AVXBwdTransQuadKernel(
     {
         for (int q = 0, cnt_pq = 0; q < nm1; ++q, ++cnt_iq)
         {
-            T tmp =  in[cnt_pq] * bdata0[i]; //Load 2x
+            vec_t tmp =  in[cnt_pq] * bdata0[i]; //Load 2x
             ++cnt_pq;
             for (int p = 1; p < nm0; ++p, ++cnt_pq)
             {
@@ -41,7 +41,7 @@ inline static void AVXBwdTransQuadKernel(
     {
         for (int i = 0, cnt_iq = 0; i < nq0; ++i, ++cnt_ij)
         {
-            T tmp = wsp[cnt_iq] * bdata1[j]; //Load 2x
+            vec_t tmp = wsp[cnt_iq] * bdata1[j]; //Load 2x
             ++cnt_iq;
             for (int q = 1; q < nm1; ++q, ++cnt_iq)
             {

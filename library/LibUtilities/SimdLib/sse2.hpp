@@ -19,7 +19,7 @@ struct sse2
 } // namespace abi
 
 
-#if defined(__SSE2__)
+#if defined(__SSE2__) && defined(NEKTAR_ENABLE_SSE2)
 
 // forward declaration of concrete types
 template <typename T>

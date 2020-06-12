@@ -21,7 +21,7 @@ struct avx512
 } // namespace abi
 
 
-#if defined(__AVX512F__) && defined(NEKTAR_USE_AVX512)
+#if defined(__AVX512F__) && defined(NEKTAR_ENABLE_AVX512)
 
 // forward declaration of concrete types
 template<typename T> struct avx512Long8;

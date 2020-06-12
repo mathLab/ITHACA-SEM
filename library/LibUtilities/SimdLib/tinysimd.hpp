@@ -1,7 +1,8 @@
 #pragma once
 
-#include "avx2.hpp"
 #include "scalar.hpp"
+#include "avx2.hpp"
+#include "avx512.hpp"
 
 namespace tinysimd
 {
@@ -28,6 +29,7 @@ namespace abi
 template <typename T> struct default_abi
 {
     using type = typename first_not_void_of<
+        typename avx512<T>::type,
         typename avx2<T>::type,
         typename sse2<T>::type,
         typename scalar<T>::type

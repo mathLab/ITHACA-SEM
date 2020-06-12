@@ -18,7 +18,7 @@ SET(MATRIXFREEOPS_HEADERS
     # AVXHelmholtzGlobal.h
     AVXUtil.hpp
     Operator.hpp
-    VecData.hpp
+    # VecData.hpp
 )
 
 ADD_NEKTAR_LIBRARY(MatrixFreeOps

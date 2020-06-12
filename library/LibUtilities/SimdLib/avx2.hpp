@@ -24,16 +24,16 @@ struct avx2
 #if defined(__AVX2__)
 
 // forward declaration of concrete types
-// struct avx2Int8;
-template<typename T>
-struct avx2Long4;
+template<typename T> struct avx2Int8;
+template<typename T> struct avx2Long4;
 struct avx2Double4;
 
 namespace abi
 {
 
 // mapping between abstract types and concrete types
-// template <> struct avx2<int> { using type = avx2Int8; };
+template <> struct avx2<std::int32_t> { using type = avx2Int8<std::int32_t>; };
+template <> struct avx2<std::uint32_t> { using type = avx2Int8<std::uint32_t>; };
 template <> struct avx2<std::int64_t> { using type = avx2Long4<std::int64_t>; };
 template <> struct avx2<std::uint64_t> { using type = avx2Long4<std::uint64_t>; };
 template <> struct avx2<double> { using type = avx2Double4; };
@@ -41,6 +41,134 @@ template <> struct avx2<double> { using type = avx2Double4; };
 } // namespace abi
 
 // concrete types, could add enable if to allow only unsigned long and long...
+template<typename T>
+struct avx2Int8
+{
+    static_assert(std::is_integral<T>::value && sizeof(T) == 4,
+        "4 bytes Integral required.");
+
+    static constexpr unsigned width = 8;
+    static constexpr unsigned alignment = 32;
+
+    using scalarType = T;
+    using vectorType = __m256i;
+    using scalarArray = scalarType[width];
+
+    // storage
+    vectorType _data;
+
+    // ctors
+    inline avx2Int8() = default;
+    inline avx2Int8(const avx2Int8& rhs) = default;
+    inline avx2Int8(const vectorType& rhs) : _data(rhs){}
+    inline avx2Int8(const scalarType rhs)
+    {
+        _data = _mm256_set1_epi32(rhs);
+    }
+    explicit inline avx2Int8(scalarArray& rhs)
+    {
+        _data = _mm256_load_si256(reinterpret_cast<vectorType*>(rhs));
+    }
+
+    // store
+    inline void store(scalarType* p) const
+    {
+        _mm256_store_si256(reinterpret_cast<vectorType*>(p), _data);
+    }
+
+    template
+    <
+        class flag,
+        typename std::enable_if<
+            is_requiring_alignment<flag>::value  &&
+            !is_streaming<flag>::value, bool
+            >::type = 0
+    >
+    inline void store(scalarType* p, flag) const
+    {
+        _mm256_store_si256(reinterpret_cast<vectorType*>(p), _data);
+    }
+
+    template
+    <
+        class flag,
+        typename std::enable_if<
+            !is_requiring_alignment<flag>::value, bool
+            >::type = 0
+    >
+    inline void store(scalarType* p, flag) const
+    {
+        _mm256_storeu_si256(reinterpret_cast<vectorType*>(p), _data);
+    }
+
+    inline void load(const scalarType* p)
+    {
+        _data = _mm256_load_si256(reinterpret_cast<const vectorType*>(p));
+    }
+
+    template
+    <
+        class flag,
+        typename std::enable_if<
+            is_requiring_alignment<flag>::value  &&
+            !is_streaming<flag>::value, bool
+            >::type = 0
+    >
+    inline void load(const scalarType* p, flag)
+    {
+        _data = _mm256_load_si256(reinterpret_cast<const vectorType*>(p));
+    }
+
+    template
+    <
+        class flag,
+        typename std::enable_if<
+            !is_requiring_alignment<flag>::value, bool
+            >::type = 0
+    >
+    inline void load(const scalarType* p, flag)
+    {
+        _data = _mm256_loadu_si256(reinterpret_cast<const vectorType*>(p));
+    }
+
+    inline void broadcast(const scalarType rhs)
+    {
+        _data = _mm256_set1_epi32(rhs);
+    }
+
+    // subscript
+    // subscript operators are convienient but expensive
+    // should not be used in optimized kernels
+    inline scalarType operator[](size_t i) const
+    {
+        alignas(alignment) scalarArray tmp;
+        store(tmp, is_aligned);
+        return tmp[i];
+    }
+
+    inline scalarType& operator[](size_t i)
+    {
+        scalarType* tmp = reinterpret_cast<scalarType*>(&_data);
+        return tmp[i];
+    }
+
+};
+
+template<typename T>
+inline avx2Int8<T> operator+(avx2Int8<T> lhs, avx2Int8<T> rhs)
+{
+    return _mm256_add_epi32(lhs._data, rhs._data);
+}
+
+template<typename T, typename U, typename = typename std::enable_if<
+    std::is_arithmetic<U>::value>::type>
+inline avx2Int8<T> operator+(avx2Int8<T> lhs, U rhs)
+{
+    return _mm256_add_epi32(lhs._data, _mm256_set1_epi32(rhs));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 template<typename T>
 struct avx2Long4
 {

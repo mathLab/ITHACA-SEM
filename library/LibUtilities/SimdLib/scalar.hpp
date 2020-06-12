@@ -1,7 +1,9 @@
 #pragma once
 
+#include <vector>
 #include <cmath>
 #include <type_traits>
+#include "allocator.hpp"
 #include "traits.hpp"
 
 namespace tinysimd

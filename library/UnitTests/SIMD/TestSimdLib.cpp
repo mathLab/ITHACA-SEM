@@ -35,6 +35,8 @@
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/core/ignore_unused.hpp>
+
 
 #include <array>
 #include <cmath>
@@ -45,24 +47,78 @@ namespace Nektar
 namespace SimdLibTests
 {
     using namespace tinysimd;
-    using vec_t = simd<double>;
 
-    BOOST_AUTO_TEST_CASE(SimdLib_type)
+    BOOST_AUTO_TEST_CASE(SimdLib_width_alignment)
     {
-        // specific checks
-        #if defined(__AVX2__)
-        auto width = vec_t::width;
-        auto alignment = vec_t::alignment;
+        std::size_t width, alignment;
+
+        #if defined(__SSE2__) && !defined(__AVX2__) && !defined(__AVX512F__)
+        // int
+        width = simd<int>::width;
+        alignment = simd<int>::alignment;
+        BOOST_CHECK_EQUAL(width, 4);
+        BOOST_CHECK_EQUAL(alignment, 16);
+        #endif
+
+        #if defined(__AVX2__) && !defined(__AVX512F__)
+        // int
+        width = simd<int>::width;
+        alignment = simd<int>::alignment;
+        BOOST_CHECK_EQUAL(width, 8);
+        BOOST_CHECK_EQUAL(alignment, 32);
+        // long
+        width = simd<long>::width;
+        alignment = simd<long>::alignment;
+        BOOST_CHECK_EQUAL(width, 4);
+        BOOST_CHECK_EQUAL(alignment, 32);
+        // double
+        width = simd<double>::width;
+        alignment = simd<double>::alignment;
         BOOST_CHECK_EQUAL(width, 4);
         BOOST_CHECK_EQUAL(alignment, 32);
         #endif
 
+        #if defined(__AVX512F__)
+        // long
+        width = simd<long>::width;
+        alignment = simd<long>::alignment;
+        BOOST_CHECK_EQUAL(width, 8);
+        BOOST_CHECK_EQUAL(alignment, 64);
+        // double
+        width = simd<double>::width;
+        alignment = simd<double>::alignment;
+        BOOST_CHECK_EQUAL(width, 8);
+        BOOST_CHECK_EQUAL(alignment, 64);
+        #endif
+
     }
+
+    using vec_t = simd<double>;
 
     BOOST_AUTO_TEST_CASE(SimdLib_mem_size)
     {
         BOOST_CHECK_EQUAL(sizeof(vec_t), sizeof(double)*vec_t::width);
     }
+
+    BOOST_AUTO_TEST_CASE(SimdLib_ctors)
+    {
+        vec_t avec1;
+
+        vec_t avec2(0.0);
+        vec_t avec3{0.0};
+        vec_t avec4 = 0.0;
+
+        vec_t avec5(avec1);
+        vec_t avec6{avec4};
+
+        vec_t avec7(avec1._data);
+        vec_t avec8{avec1._data};
+
+        vec_t::vectorType anative;
+        vec_t avec9(anative);
+        vec_t avec10{anative};
+    }
+
 
     BOOST_AUTO_TEST_CASE(SimdLib_load)
     {
@@ -322,11 +378,6 @@ namespace SimdLibTests
         }
 
         // check
-        // for (size_t i = 0; i < size; ++i)
-        // {
-        //     BOOST_CHECK_EQUAL(dofScalarArr[i], i + 1.0);
-        // }
-
         for (size_t b = 0, i = 0; b < nBlock; ++b)
         {
             for (size_t j = 0; j < nDof; ++j, ++i)

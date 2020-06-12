@@ -212,13 +212,14 @@ class IProductWRTBase_AVX : public Operator
             const auto nmElmt = pCollExp[0]->GetStdExp()->GetNcoeffs();
 
             // Padding if needed
+            using vec_t = tinysimd::simd<NekDouble>;
             const auto nElmtNoPad = pCollExp.size();
             auto nElmtPad = nElmtNoPad;
-            if (nElmtNoPad % AVX::SIMD_WIDTH_SIZE != 0)
+            if (nElmtNoPad % vec_t::width != 0)
             {
                 m_isPadded = true;
-                nElmtPad = nElmtNoPad + AVX::SIMD_WIDTH_SIZE -
-                    (nElmtNoPad % AVX::SIMD_WIDTH_SIZE);
+                nElmtPad = nElmtNoPad + vec_t::width -
+                    (nElmtNoPad % vec_t::width);
                 m_input = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
                 m_output = Array<OneD, NekDouble>{nmElmt * nElmtPad, 0.0};
             }

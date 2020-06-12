@@ -29,11 +29,11 @@ std::string __register_IProductWRTDerivBase_Quad_Deformed_AVX = GetOperatorFacto
 // std::string __register_IProductWRTDerivBase_Prism_Deformed_AVX = GetOperatorFactory().RegisterCreatorFunction(
 //     std::string("IProductWRTDerivBase_Prism_Deformed_AVX"), &AVXIProductWRTDerivBasePrism<4, true>::Create);
 
-// std::string __register_IProductWRTDerivBase_Hex_AVX = GetOperatorFactory().RegisterCreatorFunction(
-    // std::string("IProductWRTDerivBase_Hex_Regular_AVX"), &AVXIProductWRTDerivBaseHex<4>::Create);
-//
-// std::string __register_IProductWRTDerivBase_Hex_Deformed_AVX = GetOperatorFactory().RegisterCreatorFunction(
-    // std::string("IProductWRTDerivBase_Hex_Deformed_AVX"), &AVXIProductWRTDerivBaseHex<4,true>::Create);
+std::string __register_IProductWRTDerivBase_Hex_AVX = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("IProductWRTDerivBase_Hex_Regular_AVX"), &AVXIProductWRTDerivBaseHex<>::Create);
+
+std::string __register_IProductWRTDerivBase_Hex_Deformed_AVX = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("IProductWRTDerivBase_Hex_Deformed_AVX"), &AVXIProductWRTDerivBaseHex<true>::Create);
 
 } // namespace AVX
 } // namespace Nektar

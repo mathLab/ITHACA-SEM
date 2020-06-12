@@ -509,13 +509,12 @@ private:
     int m_nmTot;
 };
 
-template<int VW>
-struct AVXBwdTransHex : public BwdTrans, public AVXHelper<VW, 3>
+struct AVXBwdTransHex : public BwdTrans, public AVXHelper<3>
 {
     AVXBwdTransHex(std::vector<LibUtilities::BasisSharedPtr> basis,
                    int nElmt )
     : BwdTrans(basis, nElmt),
-        AVXHelper<VW, 3>(basis, nElmt),
+        AVXHelper<3>(basis, nElmt),
         m_nmTot(LibUtilities::StdHexData::getNumberOfCoefficients(
                     this->m_nm[0], this->m_nm[1], this->m_nm[2]))
     {
@@ -525,7 +524,7 @@ struct AVXBwdTransHex : public BwdTrans, public AVXHelper<VW, 3>
         std::vector<LibUtilities::BasisSharedPtr> basis,
         int nElmt)
     {
-        return std::make_shared<AVXBwdTransHex<VW>>(basis, nElmt);
+        return std::make_shared<AVXBwdTransHex>(basis, nElmt);
     }
 
     static NekDouble FlopsPerElement(
@@ -690,32 +689,33 @@ struct AVXBwdTransHex : public BwdTrans, public AVXHelper<VW, 3>
         const Array<OneD, const NekDouble> &input,
               Array<OneD,       NekDouble> &output)
     {
-        using T = VecData<double, VW>;
-        auto *inptr = &input[0];
-        auto *outptr = &output[0];
+        using namespace tinysimd;
+        using vec_t = simd<NekDouble>;
 
-        constexpr int nqTot = NQ0 * NQ1 * NQ2;
-        constexpr int nqBlocks = nqTot * VW;
-        const int nmBlocks = m_nmTot * VW;
+        auto* inptr = &input[0];
+        auto* outptr = &output[0];
 
-        //T sum_irq[NM2 * NQ0 * NM1], sum_jir[NM2 * NQ1 * NQ0];
-        T sum_irq[nqTot], sum_jir[nqTot];
-        AlignedVector<T> tmpIn(m_nmTot), tmpOut(nqTot);
+        constexpr auto nqTot = NQ0 * NQ1 * NQ2;
+        constexpr auto nqBlocks = nqTot * vec_t::width;
+        const auto nmBlocks = m_nmTot * vec_t::width;
+
+        vec_t sum_irq[nqTot], sum_jir[nqTot];
+        std::vector<vec_t, allocator<vec_t>> tmpIn(m_nmTot), tmpOut(nqTot);
 
 
         for (int e = 0; e < this->m_nBlocks; ++e)
         {
             // Load and transpose data
-            T::load_interleave(inptr, m_nmTot, tmpIn);
+            load_interleave(inptr, m_nmTot, tmpIn);
 
-            AVXBwdTransHexKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW>(
+            AVXBwdTransHexKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2>(
                 tmpIn,
                 this->m_bdata[0], this->m_bdata[1], this->m_bdata[2],
                 sum_irq, sum_jir,
                 tmpOut);
 
             // de-interleave and store data
-            T::deinterleave_store(tmpOut, nqTot, outptr);
+            deinterleave_store(tmpOut, nqTot, outptr);
 
             inptr += nmBlocks;
             outptr += nqBlocks;

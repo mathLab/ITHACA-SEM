@@ -7,6 +7,7 @@ namespace Nektar
 {
 namespace AVX
 {
+
 using namespace tinysimd;
 using vec_t = simd<NekDouble>;
 
@@ -259,27 +260,18 @@ inline void TensorContractDealII(const AlignedVector<BasisType> &bdata,
 }
 
 template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
-         int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
-         int VW>
+         int NUMQUAD0, int NUMQUAD1, int NUMQUAD2>
 inline static void AVXBwdTransHexKernel(
-    const AlignedVector<VecData<NekDouble, VW>> &in,
-    const AlignedVector<VecData<NekDouble, VW>> &bdata0,
-    const AlignedVector<VecData<NekDouble, VW>> &bdata1,
-    const AlignedVector<VecData<NekDouble, VW>> &bdata2,
-    VecData<NekDouble, VW> *sum_irq,
-    VecData<NekDouble, VW> *sum_jir,
-    AlignedVector<VecData<NekDouble, VW>> &out)
+    const std::vector<vec_t, allocator<vec_t>> &in,
+    const std::vector<vec_t, allocator<vec_t>> &bdata0,
+    const std::vector<vec_t, allocator<vec_t>> &bdata1,
+    const std::vector<vec_t, allocator<vec_t>> &bdata2,
+    vec_t* sum_irq,
+    vec_t* sum_jir,
+    std::vector<vec_t, allocator<vec_t>> &out)
 {
-    using T = VecData<NekDouble, VW>;
-
-    constexpr int nm0 = NUMMODE0, nm1 = NUMMODE1, nm2 = NUMMODE2;
-    constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD1;
-
-#if 0
-    TensorContractDealII<VW, 3, 0, nm0, nq0, true, false>(bdata0, (T *)inptrtmp, sum_irq);
-    TensorContractDealII<VW, 3, 1, nm0, nq0, true, false>(bdata0, sum_irq, sum_jir);
-    TensorContractDealII<VW, 3, 2, nm0, nq0, true, false>(bdata0, sum_jir, (T *)outptr);
-#else
+    constexpr auto nm0 = NUMMODE0, nm1 = NUMMODE1, nm2 = NUMMODE2;
+    constexpr auto nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD1;
 
     for (int i = 0, cnt_irq = 0; i < nq0; ++i)
     {
@@ -287,7 +279,7 @@ inline static void AVXBwdTransHexKernel(
         {
             for (int q = 0; q < nm1; ++q, ++cnt_irq)
             {
-                T tmp = in[cnt_rqp] * bdata0[i];
+                vec_t tmp = in[cnt_rqp] * bdata0[i];
                 ++cnt_rqp;
 
                 for (int p = 1; p < nm0; ++p, ++cnt_rqp)
@@ -306,7 +298,7 @@ inline static void AVXBwdTransHexKernel(
         {
             for (int r = 0; r < nm2; ++r, ++cnt_jir)
             {
-                T tmp = sum_irq[cnt_irq]* bdata1[j];
+                vec_t tmp = sum_irq[cnt_irq]* bdata1[j];
                 ++cnt_irq;
 
                 for (int q = 1; q < nm1; ++q)
@@ -325,7 +317,7 @@ inline static void AVXBwdTransHexKernel(
         {
             for (int i = 0; i < nq0; ++i, ++cnt_kji)
             {
-                T tmp = sum_jir[cnt_jir] * bdata2[k];
+                vec_t tmp = sum_jir[cnt_jir] * bdata2[k];
                 ++cnt_jir;
 
                 for (int r = 1; r < nm2; ++r)
@@ -337,7 +329,7 @@ inline static void AVXBwdTransHexKernel(
             }
         }
     }
-#endif
+
 }
 
 template<int NUMMODE0, int NUMMODE1, int NUMMODE2,

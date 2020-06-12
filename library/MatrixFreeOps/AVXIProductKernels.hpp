@@ -189,87 +189,85 @@ inline static void AVXIProductQuadKernel(
 //     }
 // }
 
-// template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
-//          int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
-//          int VW, bool SCALE, bool APPEND, bool DEFORMED, class BasisType>
-// inline static void AVXIProductHexKernel(
-//     const AlignedVector<VecData<NekDouble, VW>> &in,
-//     const AlignedVector<BasisType> &bdata0,
-//     const AlignedVector<BasisType> &bdata1,
-//     const AlignedVector<BasisType> &bdata2,
-//     const AlignedVector<BasisType> &w0,
-//     const AlignedVector<BasisType> &w1,
-//     const AlignedVector<BasisType> &w2,
-//     const VecData<NekDouble, VW> *jac,
-//     VecData<NekDouble, VW> *sums_kj,
-//     VecData<NekDouble, VW> *sums_k,
-//     AlignedVector<VecData<NekDouble, VW>> &out,
-//     NekDouble scale = 1.0)
-// {
-//     using T = VecData<NekDouble, VW>;
+template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
+         int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
+         bool SCALE, bool APPEND, bool DEFORMED>
+inline static void AVXIProductHexKernel(
+    const std::vector<vec_t, allocator<vec_t>> &in,
+    const std::vector<vec_t, allocator<vec_t>> &bdata0,
+    const std::vector<vec_t, allocator<vec_t>> &bdata1,
+    const std::vector<vec_t, allocator<vec_t>> &bdata2,
+    const std::vector<vec_t, allocator<vec_t>> &w0,
+    const std::vector<vec_t, allocator<vec_t>> &w1,
+    const std::vector<vec_t, allocator<vec_t>> &w2,
+    const vec_t *jac,
+    vec_t *sums_kj,
+    vec_t *sums_k,
+    std::vector<vec_t, allocator<vec_t>> &out,
+    NekDouble scale = 1.0)
+{
+    constexpr auto nm0 = NUMMODE0, nm1 = NUMMODE1, nm2 = NUMMODE2;
+    constexpr auto nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD2;
 
-//     constexpr int nm0 = NUMMODE0, nm1 = NUMMODE1, nm2 = NUMMODE2;
-//     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD2;
+    for (int p = 0; p < nm0; ++p)
+    {
+        int cnt_kji = 0, cnt_kj = 0;
+        for (int k = 0; k < nq2; ++k)
+        {
+            for (int j = 0; j < nq1; ++j, ++cnt_kj)
+            {
+                vec_t sum_kj = 0.0;
+                for (int i = 0; i < nq0; ++i, ++cnt_kji)
+                {
 
-//     for (int p = 0; p < nm0; ++p)
-//     {
-//         int cnt_kji = 0, cnt_kj = 0;
-//         for (int k = 0; k < nq2; ++k)
-//         {
-//             for (int j = 0; j < nq1; ++j, ++cnt_kj)
-//             {
-//                 T sum_kj = T(0.0);
-//                 for (int i = 0; i < nq0; ++i, ++cnt_kji)
-//                 {
+                    vec_t jac_val;
+                    if(DEFORMED)
+                    {
+                        jac_val = jac[nq0*nq1*k + nq0*j + i];
+                    }
+                    else
+                    {
+                        jac_val = jac[0];
+                    }
 
-//                     T jac_val;
-//                     if(DEFORMED)
-//                     {
-//                         jac_val = jac[nq0*nq1*k + nq0*j + i];
-//                     }
-//                     else
-//                     {
-//                         jac_val = jac[0];
-//                     }
+                    vec_t prod = in[cnt_kji] * bdata0[i + nq0*p] * jac_val; // load 2x
+                    sum_kj.fma(prod, w0[i]); //Load 1x
+                }
 
-//                     T prod = in[cnt_kji] * bdata0[i + nq0*p] * jac_val; // load 2x
-//                     sum_kj.fma(prod, w0[i]); //Load 1x
-//                 }
+                sums_kj[cnt_kj] = sum_kj;
+            }
+        }
 
-//                 sums_kj[cnt_kj] = sum_kj;
-//             }
-//         }
+        for (int q = 0; q < nm1; ++q)
+        {
+            cnt_kj = 0;
+            for (int k = 0; k < nq2; ++k)
+            {
+                vec_t sum_k = 0.0;
+                for (int j = 0; j < nq1; ++j, ++cnt_kj)
+                {
+                    vec_t prod = sums_kj[cnt_kj] * bdata1[q*nq1 + j]; //Load 2x
+                    sum_k.fma(prod, w1[j]); //Load 1x
+                }
 
-//         for (int q = 0; q < nm1; ++q)
-//         {
-//             cnt_kj = 0;
-//             for (int k = 0; k < nq2; ++k)
-//             {
-//                 T sum_k = T(0.0);
-//                 for (int j = 0; j < nq1; ++j, ++cnt_kj)
-//                 {
-//                     T prod = sums_kj[cnt_kj] * bdata1[q*nq1 + j]; //Load 2x
-//                     sum_k.fma(prod, w1[j]); //Load 1x
-//                 }
+                sums_k[k] = sum_k;
+            }
 
-//                 sums_k[k] = sum_k;
-//             }
+            for (int r = 0; r < nm2; ++r)
+            {
+                vec_t sum = 0.0;
 
-//             for (int r = 0; r < nm2; ++r)
-//             {
-//                 T sum = T(0.0);
+                for(int k = 0; k < nq2; ++k)
+                {
+                    vec_t prod = sums_k[k] * bdata2[r*nq2 + k]; //Load 2x
+                    sum.fma(prod,w2[k]); //Load 1x
+                }
 
-//                 for(int k = 0; k < nq2; ++k)
-//                 {
-//                     T prod = sums_k[k] * bdata2[r*nq2 + k]; //Load 2x
-//                     sum.fma(prod,w2[k]); //Load 1x
-//                 }
-
-//                 ScaleAppend<VW, SCALE, APPEND>(out[r*nm0*nm1 + q*nm0 + p], sum, scale); // Store x1
-//             }
-//         }
-//     }
-// }
+                ScaleAppend<SCALE, APPEND>(out[r*nm0*nm1 + q*nm0 + p], sum, scale); // Store x1
+            }
+        }
+    }
+}
 
 // template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
 //          int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,

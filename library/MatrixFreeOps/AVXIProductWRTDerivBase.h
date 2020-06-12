@@ -434,179 +434,182 @@ private:
 //     int m_nmTot;
 // };
 
-// template<int VW, bool DEFORMED = false>
-// struct AVXIProductWRTDerivBaseHex : public IProductWRTDerivBase, public AVXHelper<VW, 3, DEFORMED>
-// {
-// public:
-//     AVXIProductWRTDerivBaseHex(std::vector<LibUtilities::BasisSharedPtr> basis,
-//                    int nElmt)
-//         : IProductWRTDerivBase(basis, nElmt),
-//           AVXHelper<VW, 3, DEFORMED>(basis, nElmt),
-//           m_nmTot(LibUtilities::StdHexData::getNumberOfCoefficients(
-//                       this->m_nm[0], this->m_nm[1], this->m_nm[2]))
-//     {
-//     }
+template<bool DEFORMED = false>
+struct AVXIProductWRTDerivBaseHex : public IProductWRTDerivBase, public AVXHelper<3, DEFORMED>
+{
+public:
+    AVXIProductWRTDerivBaseHex(std::vector<LibUtilities::BasisSharedPtr> basis,
+                   int nElmt)
+        : IProductWRTDerivBase(basis, nElmt),
+          AVXHelper<3, DEFORMED>(basis, nElmt),
+          m_nmTot(LibUtilities::StdHexData::getNumberOfCoefficients(
+                      this->m_nm[0], this->m_nm[1], this->m_nm[2]))
+    {
+    }
 
-//     static std::shared_ptr<Operator> Create(
-//         std::vector<LibUtilities::BasisSharedPtr> basis,
-//         int nElmt)
-//     {
-//         return std::make_shared<AVXIProductWRTDerivBaseHex<VW, DEFORMED>>(basis, nElmt);
-//     }
+    static std::shared_ptr<Operator> Create(
+        std::vector<LibUtilities::BasisSharedPtr> basis,
+        int nElmt)
+    {
+        return std::make_shared<AVXIProductWRTDerivBaseHex<DEFORMED>>(basis, nElmt);
+    }
 
-//     virtual void operator()(const Array<OneD, Array<OneD, NekDouble>> &in,
-//                                   Array<OneD,       NekDouble> &out)
-//     {
-//         switch(m_basis[0]->GetNumModes())
-//         {
-//             case 2:  AVXIProductWRTDerivBaseHexImpl<2 ,2 ,2 ,3 ,3 ,3 >
-//                 (in[0], in[1], in[2], out); break;
-//             case 3:  AVXIProductWRTDerivBaseHexImpl<3 ,3 ,3 ,4 ,4 ,4 >
-//                 (in[0], in[1], in[2], out); break;
-//             case 4:  AVXIProductWRTDerivBaseHexImpl<4 ,4 ,4 ,5 ,5 ,5 >
-//                 (in[0], in[1], in[2], out); break;
-//             case 5:  AVXIProductWRTDerivBaseHexImpl<5 ,5 ,5 ,6 ,6 ,6 >
-//                 (in[0], in[1], in[2], out); break;
-//             case 6:  AVXIProductWRTDerivBaseHexImpl<6 ,6 ,6 ,7 ,7 ,7 >
-//                 (in[0], in[1], in[2], out); break;
-//             case 7:  AVXIProductWRTDerivBaseHexImpl<7 ,7 ,7 ,8 ,8 ,8 >
-//                 (in[0], in[1], in[2], out); break;
-//             case 8:  AVXIProductWRTDerivBaseHexImpl<8 ,8 ,8 ,9 ,9 ,9 >
-//                 (in[0], in[1], in[2], out); break;
-//             case 9:  AVXIProductWRTDerivBaseHexImpl<9 ,9 ,9 ,10,10,10>
-//                 (in[0], in[1], in[2], out); break;
-//             case 10: AVXIProductWRTDerivBaseHexImpl<10,10,10,11,11,11>
-//                 (in[0], in[1], in[2], out); break;
-//             case 11: AVXIProductWRTDerivBaseHexImpl<11,11,11,12,12,12>
-//                 (in[0], in[1], in[2], out); break;
-//         }
-//     }
+    virtual void operator()(const Array<OneD, Array<OneD, NekDouble>> &in,
+                                  Array<OneD,       NekDouble> &out)
+    {
+        switch(m_basis[0]->GetNumModes())
+        {
+            case 2:  AVXIProductWRTDerivBaseHexImpl<2 ,2 ,2 ,3 ,3 ,3 >
+                (in[0], in[1], in[2], out); break;
+            case 3:  AVXIProductWRTDerivBaseHexImpl<3 ,3 ,3 ,4 ,4 ,4 >
+                (in[0], in[1], in[2], out); break;
+            case 4:  AVXIProductWRTDerivBaseHexImpl<4 ,4 ,4 ,5 ,5 ,5 >
+                (in[0], in[1], in[2], out); break;
+            case 5:  AVXIProductWRTDerivBaseHexImpl<5 ,5 ,5 ,6 ,6 ,6 >
+                (in[0], in[1], in[2], out); break;
+            case 6:  AVXIProductWRTDerivBaseHexImpl<6 ,6 ,6 ,7 ,7 ,7 >
+                (in[0], in[1], in[2], out); break;
+            case 7:  AVXIProductWRTDerivBaseHexImpl<7 ,7 ,7 ,8 ,8 ,8 >
+                (in[0], in[1], in[2], out); break;
+            case 8:  AVXIProductWRTDerivBaseHexImpl<8 ,8 ,8 ,9 ,9 ,9 >
+                (in[0], in[1], in[2], out); break;
+            case 9:  AVXIProductWRTDerivBaseHexImpl<9 ,9 ,9 ,10,10,10>
+                (in[0], in[1], in[2], out); break;
+            case 10: AVXIProductWRTDerivBaseHexImpl<10,10,10,11,11,11>
+                (in[0], in[1], in[2], out); break;
+            case 11: AVXIProductWRTDerivBaseHexImpl<11,11,11,12,12,12>
+                (in[0], in[1], in[2], out); break;
+        }
+    }
 
-//     template<int NM0, int NM1, int NM2, int NQ0, int NQ1, int NQ2>
-//     void AVXIProductWRTDerivBaseHexImpl(
-//         const Array<OneD, NekDouble> &input0,
-//         const Array<OneD, NekDouble> &input1,
-//         const Array<OneD, NekDouble> &input2,
-//               Array<OneD, NekDouble> &output)
-//     {
-//         using T = VecData<NekDouble, VW>;
-//         auto *inptr0 = input0.data();
-//         auto *inptr1 = input1.data();
-//         auto *inptr2 = input2.data();
-//         auto *outptr = output.data();
+    template<int NM0, int NM1, int NM2, int NQ0, int NQ1, int NQ2>
+    void AVXIProductWRTDerivBaseHexImpl(
+        const Array<OneD, NekDouble> &input0,
+        const Array<OneD, NekDouble> &input1,
+        const Array<OneD, NekDouble> &input2,
+              Array<OneD, NekDouble> &output)
+    {
+        using namespace tinysimd;
+        using vec_t = simd<NekDouble>;
 
-//         constexpr int ndf = 9;
-//         constexpr int nqTot = NQ0 * NQ1 * NQ2;
-//         constexpr int nqBlocks = nqTot * VW;
-//         const int nmBlocks = m_nmTot * VW;
+        auto* inptr0 = input0.data();
+        auto* inptr1 = input1.data();
+        auto* inptr2 = input2.data();
+        auto* outptr = output.data();
 
-//         // Get size of jacobian factor block
-//         int dJSize{}, dfSize{};
-//         if(DEFORMED)
-//         {
-//             dJSize = nqTot;
-//             dfSize = ndf*nqTot;
-//         }
-//         else
-//         {
-//             dJSize = 1;
-//             dfSize = ndf;
-//         }
+        constexpr auto ndf = 9;
+        constexpr auto nqTot = NQ0 * NQ1 * NQ2;
+        constexpr auto nqBlocks = nqTot * vec_t::width;
+        const auto nmBlocks = m_nmTot * vec_t::width;
 
-//         T sums_kj[NQ1 * NQ2];
-//         T sums_k[NQ2];
+        // Get size of jacobian factor block
+        int dJSize{}, dfSize{};
+        if(DEFORMED)
+        {
+            dJSize = nqTot;
+            dfSize = ndf*nqTot;
+        }
+        else
+        {
+            dJSize = 1;
+            dfSize = ndf;
+        }
 
-//         AlignedVector<T> tmpIn0(nqTot), tmpIn1(nqTot), tmpIn2(nqTot),
-//             tmp0(nqTot), tmp1(nqTot), tmp2(nqTot), tmpOut(m_nmTot);
+        vec_t sums_kj[NQ1 * NQ2];
+        vec_t sums_k[NQ2];
 
-//         const T *df_ptr;
-//         const T *jac_ptr;
-//         for (int e = 0; e < this->m_nBlocks; ++e)
-//         {
-//             // Jacobian
-//             jac_ptr = &(this->m_jac[dJSize*e]);
+        std::vector<vec_t, allocator<vec_t>> tmpIn0(nqTot), tmpIn1(nqTot),
+            tmpIn2(nqTot),  tmp0(nqTot), tmp1(nqTot), tmp2(nqTot),
+            tmpOut(m_nmTot);
 
-//             // Derivative factor
-//             df_ptr = &(this->m_df[e*dfSize]);
+        const vec_t* df_ptr;
+        const vec_t* jac_ptr;
+        for (int e = 0; e < this->m_nBlocks; ++e)
+        {
+            // Jacobian
+            jac_ptr = &(this->m_jac[dJSize*e]);
 
-//             // Load and transpose data
-//             T::load_interleave(inptr0, nqTot, tmpIn0);
-//             T::load_interleave(inptr1, nqTot, tmpIn1);
-//             T::load_interleave(inptr2, nqTot, tmpIn2);
+            // Derivative factor
+            df_ptr = &(this->m_df[e*dfSize]);
 
-//             // Calculate dx/dxi in[0] + dy/dxi in[1] + dz/dxi in[2]
-//             T df0, df1, df2, df3, df4, df5, df6, df7, df8;
-//             if(!DEFORMED)
-//             {
-//                 df0 = df_ptr[0];
-//                 df1 = df_ptr[1];
-//                 df2 = df_ptr[2];
-//                 df3 = df_ptr[3];
-//                 df4 = df_ptr[4];
-//                 df5 = df_ptr[5];
-//                 df6 = df_ptr[6];
-//                 df7 = df_ptr[7];
-//                 df8 = df_ptr[8];
-//             }
-//             for (int i = 0; i < nqTot; ++i)
-//             {
-//                 if(DEFORMED)
-//                 {
-//                     df0 = df_ptr[i * ndf];
-//                     df1 = df_ptr[i * ndf + 1];
-//                     df2 = df_ptr[i * ndf + 2];
-//                     df3 = df_ptr[i * ndf + 3];
-//                     df4 = df_ptr[i * ndf + 4];
-//                     df5 = df_ptr[i * ndf + 5];
-//                     df6 = df_ptr[i * ndf + 6];
-//                     df7 = df_ptr[i * ndf + 7];
-//                     df8 = df_ptr[i * ndf + 8];
-//                 }
-//                 tmp0[i] = df0 * tmpIn0[i] + df3 * tmpIn1[i] + df6 *tmpIn2[i];
-//                 tmp1[i] = df1 * tmpIn0[i] + df4 * tmpIn1[i] + df7 *tmpIn2[i];
-//                 tmp2[i] = df2 * tmpIn0[i] + df5 * tmpIn1[i] + df8 *tmpIn2[i];
-//             }
+            // Load and transpose data
+            load_interleave(inptr0, nqTot, tmpIn0);
+            load_interleave(inptr1, nqTot, tmpIn1);
+            load_interleave(inptr2, nqTot, tmpIn2);
 
-//             // IP DB0 B1 B2
-//             AVXIProductHexKernel
-//             <NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, false, false, DEFORMED>(
-//                 tmp0, this->m_dbdata[0], this->m_bdata[1], this->m_bdata[2],
-//                 this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
-//                 sums_kj, sums_k,
-//                 tmpOut);
+            // Calculate dx/dxi in[0] + dy/dxi in[1] + dz/dxi in[2]
+            vec_t df0, df1, df2, df3, df4, df5, df6, df7, df8;
+            if(!DEFORMED)
+            {
+                df0 = df_ptr[0];
+                df1 = df_ptr[1];
+                df2 = df_ptr[2];
+                df3 = df_ptr[3];
+                df4 = df_ptr[4];
+                df5 = df_ptr[5];
+                df6 = df_ptr[6];
+                df7 = df_ptr[7];
+                df8 = df_ptr[8];
+            }
+            for (int i = 0; i < nqTot; ++i)
+            {
+                if(DEFORMED)
+                {
+                    df0 = df_ptr[i * ndf];
+                    df1 = df_ptr[i * ndf + 1];
+                    df2 = df_ptr[i * ndf + 2];
+                    df3 = df_ptr[i * ndf + 3];
+                    df4 = df_ptr[i * ndf + 4];
+                    df5 = df_ptr[i * ndf + 5];
+                    df6 = df_ptr[i * ndf + 6];
+                    df7 = df_ptr[i * ndf + 7];
+                    df8 = df_ptr[i * ndf + 8];
+                }
+                tmp0[i] = df0 * tmpIn0[i] + df3 * tmpIn1[i] + df6 *tmpIn2[i];
+                tmp1[i] = df1 * tmpIn0[i] + df4 * tmpIn1[i] + df7 *tmpIn2[i];
+                tmp2[i] = df2 * tmpIn0[i] + df5 * tmpIn1[i] + df8 *tmpIn2[i];
+            }
 
-//             // IP B0 DB1 B2
-//             AVXIProductHexKernel
-//             <NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, false, true, DEFORMED>(
-//                 tmp1, this->m_bdata[0], this->m_dbdata[1], this->m_bdata[2],
-//                 this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
-//                 sums_kj, sums_k,
-//                 tmpOut);
+            // IP DB0 B1 B2
+            AVXIProductHexKernel
+            <NM0, NM1, NM2, NQ0, NQ1, NQ2, false, false, DEFORMED>(
+                tmp0, this->m_dbdata[0], this->m_bdata[1], this->m_bdata[2],
+                this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
+                sums_kj, sums_k,
+                tmpOut);
 
-//             // IP B0 B1 DB2
-//             AVXIProductHexKernel
-//             <NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, false, true, DEFORMED>(
-//                 tmp2, this->m_bdata[0], this->m_bdata[1], this->m_dbdata[2],
-//                 this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
-//                 sums_kj, sums_k,
-//                 tmpOut);
+            // IP B0 DB1 B2
+            AVXIProductHexKernel
+            <NM0, NM1, NM2, NQ0, NQ1, NQ2, false, true, DEFORMED>(
+                tmp1, this->m_bdata[0], this->m_dbdata[1], this->m_bdata[2],
+                this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
+                sums_kj, sums_k,
+                tmpOut);
 
-//             // de-interleave and store data
-//             T::deinterleave_store(tmpOut, m_nmTot, outptr);
+            // IP B0 B1 DB2
+            AVXIProductHexKernel
+            <NM0, NM1, NM2, NQ0, NQ1, NQ2, false, true, DEFORMED>(
+                tmp2, this->m_bdata[0], this->m_bdata[1], this->m_dbdata[2],
+                this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
+                sums_kj, sums_k,
+                tmpOut);
 
-//             inptr0 += nqBlocks;
-//             inptr1 += nqBlocks;
-//             inptr2 += nqBlocks;
-//             outptr += nmBlocks;
-//         }
-//     }
+            // de-interleave and store data
+            deinterleave_store(tmpOut, m_nmTot, outptr);
+
+            inptr0 += nqBlocks;
+            inptr1 += nqBlocks;
+            inptr2 += nqBlocks;
+            outptr += nmBlocks;
+        }
+    }
 
 
 
-// private:
-//     /// Padded basis
-//     int m_nmTot;
-// };
+private:
+    /// Padded basis
+    int m_nmTot;
+};
 
 // template<int VW, bool DEFORMED = false>
 // struct AVXIProductWRTDerivBasePrism : public IProduct, public AVXHelper<VW, 3, DEFORMED>

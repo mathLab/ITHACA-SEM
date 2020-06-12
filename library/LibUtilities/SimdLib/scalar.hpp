@@ -90,12 +90,12 @@ struct scalarT
     }
 
     // subscript
-    inline scalarType operator[](size_t i) const
+    inline scalarType operator[](size_t) const
     {
         return _data;
     }
 
-    inline scalarType& operator[](size_t i)
+    inline scalarType& operator[](size_t)
     {
         return _data;
     }
@@ -107,6 +107,18 @@ template<typename T>
 inline scalarT<T> operator+(scalarT<T> lhs, scalarT<T> rhs)
 {
     return lhs._data + rhs._data;
+}
+template<typename T, typename U, typename = typename std::enable_if<
+    std::is_arithmetic<U>::value>::type>
+inline scalarT<T> operator+(U lhs, scalarT<T> rhs)
+{
+    return lhs + rhs._data;
+}
+template<typename T, typename U, typename = typename std::enable_if<
+    std::is_arithmetic<U>::value>::type>
+inline scalarT<T> operator+(scalarT<T> lhs, U rhs)
+{
+    return lhs._data + rhs;
 }
 template<typename T>
 inline scalarT<T> operator-(scalarT<T> lhs, scalarT<T> rhs)
@@ -123,6 +135,12 @@ template<typename T, typename U, typename = typename std::enable_if<
 inline scalarT<T> operator*(U lhs, scalarT<T> rhs)
 {
     return lhs * rhs._data;
+}
+template<typename T, typename U, typename = typename std::enable_if<
+    std::is_arithmetic<U>::value>::type>
+inline scalarT<T> operator*(scalarT<T> lhs, U rhs)
+{
+    return lhs._data * rhs;
 }
 template<typename T>
 inline scalarT<T> operator/(scalarT<T> lhs, scalarT<T> rhs)
@@ -160,7 +178,7 @@ inline void deinterleave_store(
 {
     for (size_t i = 0; i < dataLen; ++i)
     {
-        out[i] = in[i];
+        out[i] = in[i]._data;
     }
 }
 

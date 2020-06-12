@@ -8,7 +8,6 @@
 #include <Collections/Operator.h>
 // #include "AVXAssembly.h"
 
-#include "VecData.hpp"
 #include <LibUtilities/SimdLib/tinysimd.hpp>
 
 namespace Nektar {

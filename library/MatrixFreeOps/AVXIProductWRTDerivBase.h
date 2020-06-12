@@ -5,7 +5,6 @@
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 #include <LibUtilities/Foundations/Basis.h>
 
-#include "VecData.hpp"
 #include "Operator.hpp"
 
 #include "AVXIProductKernels.hpp"

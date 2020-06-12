@@ -21,7 +21,7 @@ struct avx2
 } // namespace abi
 
 
-#if defined(__AVX2__)
+#if defined(__AVX2__) && defined(NEKTAR_USE_AVX2)
 
 // forward declaration of concrete types
 template<typename T> struct avx2Int8;

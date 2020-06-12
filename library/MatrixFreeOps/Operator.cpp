@@ -39,7 +39,7 @@ std::string GetOpstring(LibUtilities::ShapeType shape, bool deformed)
         op_string += "_Regular";
     }
 
-    if (SIMD_WIDTH_SIZE == 4)
+    if (tinysimd::simd<NekDouble>::width == 4)
     {
         op_string += "_AVX";
     }

@@ -104,9 +104,10 @@ namespace SimdLibTests
     {
         vec_t avec1;
 
-        vec_t avec2(0.0);
-        vec_t avec3{0.0};
-        vec_t avec4 = 0.0;
+        vec_t::scalarType ascalar = 0;
+        vec_t avec2(ascalar);
+        vec_t avec3{ascalar};
+        vec_t avec4 = ascalar;
 
         vec_t avec5(avec1);
         vec_t avec6{avec4};
@@ -123,7 +124,7 @@ namespace SimdLibTests
     BOOST_AUTO_TEST_CASE(SimdLib_load)
     {
         alignas(vec_t::alignment) std::array<double, vec_t::width>
-            ascalararr = {1.0, 2.0, 3.0, 4.0};
+            ascalararr{};
         vec_t avec;
         avec.load(ascalararr.data());
     }
@@ -131,7 +132,7 @@ namespace SimdLibTests
     BOOST_AUTO_TEST_CASE(SimdLib_load_implicit)
     {
         alignas(vec_t::alignment) std::array<double, vec_t::width>
-            ascalararr = {1.0, 2.0, 3.0, 4.0};
+            ascalararr{};
         vec_t avec;
         avec = *(reinterpret_cast<vec_t*>(ascalararr.data()));
     }
@@ -139,14 +140,14 @@ namespace SimdLibTests
     BOOST_AUTO_TEST_CASE(SimdLib_load_aligned)
     {
         alignas(vec_t::alignment) std::array<double, vec_t::width>
-            ascalararr = {1.0, 2.0, 3.0, 4.0};
+            ascalararr = {};
         vec_t avec;
         avec.load(ascalararr.data(), is_aligned);
     }
 
     BOOST_AUTO_TEST_CASE(SimdLib_load_unaligned)
     {
-        std::array<double, vec_t::width> ascalararr = {1.0, 2.0, 3.0, 4.0};
+        std::array<double, vec_t::width> ascalararr = {};
         vec_t avec;
         avec.load(ascalararr.data(), is_not_aligned);
     }
@@ -206,7 +207,13 @@ namespace SimdLibTests
     BOOST_AUTO_TEST_CASE(SimdLib_subscript_assign_read)
     {
         vec_t avec;
-        std::array<double, vec_t::width> ascalararr{1, 2, 3, 4};
+        std::array<double, vec_t::width> ascalararr{};
+
+        for (size_t i = 0; i < vec_t::width; ++i)
+        {
+            ascalararr[i] = i;
+        }
+
 
         for (size_t i = 0; i < vec_t::width; ++i)
         {

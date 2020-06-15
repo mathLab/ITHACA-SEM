@@ -71,8 +71,6 @@ int main(int argc, char *argv[])
 	CoupledLinearNS_TT CLNS(session);
 	CLNS.offline_phase();
 	CLNS.online_phase();
-	
-	cout<<"Online phase finished"<<endl;
 
         session->Finalise();
     }

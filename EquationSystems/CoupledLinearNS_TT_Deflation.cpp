@@ -4264,6 +4264,25 @@ namespace Nektar
 	{
 		write_SEM_field = 0;
 	} 
+	int continuation_from_files, Nmax1, Nmax2;
+	if (m_session->DefinesParameter("continuation_from_files")) 
+	{
+		continuation_from_files = m_session->GetParameter("continuation_from_files");
+	}
+	else
+	{
+		continuation_from_files = 0;
+	} 
+	int file_id;
+	if (m_session->DefinesParameter("file_id")) 
+	{
+		file_id = m_session->GetParameter("file_id");
+		babyCLNS_trafo.file_id = file_id;
+	}
+	else
+	{
+		file_id = 0;
+	} 
 	babyCLNS_trafo.write_SEM_field = write_SEM_field;
 	if (m_session->DefinesParameter("snapshot_computation_plot_rel_errors")) 
 	{
@@ -4304,210 +4323,305 @@ namespace Nektar
 	{
 		if(use_continuation)
 		{
-			/*Array<OneD, Array<OneD, NekDouble> > test1 = Array<OneD, Array<OneD, NekDouble> >(2);
-			test1[0] = Array<OneD, NekDouble>(1);
-			test1[1] = Array<OneD, NekDouble>(1);
-			test1[0][0] = 10;
-			test1[1][0] = 11;
-			
-			Array<OneD, Array<OneD, NekDouble> > test = Array<OneD, Array<OneD, NekDouble> >(3);
-			test[0] = Array<OneD, NekDouble>(1);
-			test[0][0] = test1[0][0];
-			//test[1] = test1[1];
-			
-			test1[0][0] = 0;
-			test1[1][0] = 0;
-			
-			for(int a = 0; a < 3; a++)
-				cout<<"test... "<<test[a][0]<<endl;*/
-				
-				
-		/*	Eigen::VectorXd params;  // this part works but can't manage a different number of snapshots for different scaling values
-			params.resize(1);
-			params[0] = param_vector[0];
-			babyCLNS_trafo.snapshot_computation_plot_rel_errors = snapshot_computation_plot_rel_errors;
-			snapshots_from_continuation = babyCLNS_trafo.Continuation_method(&params);	
-			flipperMap = babyCLNS_trafo.getFlipperMap();
-			
-			number_of_snapshots = params.size() -1; 
-			Nmax = number_of_snapshots;
-			snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots * param_vector2_tmp.num_elements());
-			snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots * param_vector2_tmp.num_elements());
-			
-			for(int i = 0; i < Nmax; i++)
+			if( continuation_from_files==0 )
 			{
-				snapshot_x_collection[i] = Array<OneD, NekDouble> (snapshots_from_continuation[0][i+1].num_elements());   
-				snapshot_y_collection[i] = Array<OneD, NekDouble> (snapshots_from_continuation[1][i+1].num_elements());
+				/*Array<OneD, Array<OneD, NekDouble> > test1 = Array<OneD, Array<OneD, NekDouble> >(2);
+				test1[0] = Array<OneD, NekDouble>(1);
+				test1[1] = Array<OneD, NekDouble>(1);
+				test1[0][0] = 10;
+				test1[1][0] = 11;
 				
-				for(int j = 0; j < snapshots_from_continuation[0][i].num_elements(); j++)
-					snapshot_x_collection[i][j] = snapshots_from_continuation[0][i+1][j];
-				for(int j = 0; j < snapshots_from_continuation[1][i].num_elements(); j++)
-					snapshot_y_collection[i][j] = snapshots_from_continuation[1][i+1][j];
-			}
-			
-			//snapshot_x_collection = snapshots_from_continuation[0];
-			//snapshot_y_collection = snapshots_from_continuation[1];
-			
-			param_vector = Array<OneD, NekDouble> (Nmax * param_vector2_tmp.num_elements());
-			param_vector2 = Array<OneD, NekDouble> (Nmax * param_vector2_tmp.num_elements());
-			for(int i = 0; i < Nmax; i++)
-			{
-				param_vector[i] = params[i+1];  
-				//for(int j = 0; j < param_vector2_tmp.num_elements(); j++)
-					param_vector2[i] = param_vector2_tmp[0];
-			}
+				Array<OneD, Array<OneD, NekDouble> > test = Array<OneD, Array<OneD, NekDouble> >(3);
+				test[0] = Array<OneD, NekDouble>(1);
+				test[0][0] = test1[0][0];
+				//test[1] = test1[1];
 				
-			ref_param_index = 0;
-			ref_param_nu = 1;
+				test1[0][0] = 0;
+				test1[1][0] = 0;
 				
-			for(int k = 0; k < param_vector2_tmp.num_elements()-1; k++)
-			{
+				for(int a = 0; a < 3; a++)
+					cout<<"test... "<<test[a][0]<<endl;*/
+					
+					
+			/*	Eigen::VectorXd params;  // this part works but can't manage a different number of snapshots for different scaling values
 				params.resize(1);
 				params[0] = param_vector[0];
-				babyCLNS_trafo.second_param = param_vector2_tmp[k+1];
+				babyCLNS_trafo.snapshot_computation_plot_rel_errors = snapshot_computation_plot_rel_errors;
 				snapshots_from_continuation = babyCLNS_trafo.Continuation_method(&params);	
+				flipperMap = babyCLNS_trafo.getFlipperMap();
+				
+				number_of_snapshots = params.size() -1; 
+				Nmax = number_of_snapshots;
+				snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots * param_vector2_tmp.num_elements());
+				snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots * param_vector2_tmp.num_elements());
+				
 				for(int i = 0; i < Nmax; i++)
 				{
-					snapshot_x_collection[i+Nmax*(k+1)] = Array<OneD, NekDouble> (snapshots_from_continuation[0][i+1].num_elements());   
-					snapshot_y_collection[i+Nmax*(k+1)] = Array<OneD, NekDouble> (snapshots_from_continuation[1][i+1].num_elements());
+					snapshot_x_collection[i] = Array<OneD, NekDouble> (snapshots_from_continuation[0][i+1].num_elements());   
+					snapshot_y_collection[i] = Array<OneD, NekDouble> (snapshots_from_continuation[1][i+1].num_elements());
 					
 					for(int j = 0; j < snapshots_from_continuation[0][i].num_elements(); j++)
-						snapshot_x_collection[i+Nmax*(k+1)][j] = snapshots_from_continuation[0][i+1][j];
+						snapshot_x_collection[i][j] = snapshots_from_continuation[0][i+1][j];
 					for(int j = 0; j < snapshots_from_continuation[1][i].num_elements(); j++)
-						snapshot_y_collection[i+Nmax*(k+1)][j] = snapshots_from_continuation[1][i+1][j];
-					for(int i = 0; i < Nmax; i++)
-						param_vector[i+Nmax*(k+1)] = params[i+1];  
-					for(int i = 0; i < Nmax; i++)
-						param_vector2[i+Nmax*(k+1)] = param_vector2_tmp[k+1];
+						snapshot_y_collection[i][j] = snapshots_from_continuation[1][i+1][j];
 				}
-			}
-			babyCLNS_trafo.param_vector2 = param_vector2;
-			
-			cout<<endl<<endl;
-			for(int k = 0; k < max(param_vector2.num_elements(),param_vector.num_elements()); k++)
-				cout<<"params: \t"<<param_vector[k]<<" \t"<<param_vector2[k]<<endl;	
-			
-			use_Newton = 1;  */
-			
-			Eigen::VectorXd params;
-			std::vector<std::vector<double> > snapshots_x, snapshots_y;
-			params.resize(1);
-			params[0] = param_vector[0];
-			babyCLNS_trafo.total_solve_time = 0.0;
-			babyCLNS_trafo.no_total_solve = 0;
-			babyCLNS_trafo.snapshot_computation_plot_rel_errors = snapshot_computation_plot_rel_errors;
-			snapshots_from_continuation = babyCLNS_trafo.Continuation_method(&params);	
-			flipperMap = babyCLNS_trafo.getFlipperMap();
-			
-			number_of_snapshots = params.size() -1; 
-			Nmax = number_of_snapshots;
-			snapshots_x.reserve(Nmax*6*param_vector2_tmp.num_elements());
-			snapshots_y.reserve(Nmax*6*param_vector2_tmp.num_elements());
-			snapshots_x.resize(Nmax);
-			snapshots_y.resize(Nmax);
-			
-			for(int i = 0; i < Nmax; i++)
-			{
-				snapshots_x[i].resize(snapshots_from_continuation[0][i+1].num_elements());
-				snapshots_y[i].resize(snapshots_from_continuation[1][i+1].num_elements());
 				
-				for(int j = 0; j < snapshots_from_continuation[0][i].num_elements(); j++)
+				//snapshot_x_collection = snapshots_from_continuation[0];
+				//snapshot_y_collection = snapshots_from_continuation[1];
+				
+				param_vector = Array<OneD, NekDouble> (Nmax * param_vector2_tmp.num_elements());
+				param_vector2 = Array<OneD, NekDouble> (Nmax * param_vector2_tmp.num_elements());
+				for(int i = 0; i < Nmax; i++)
 				{
-					snapshots_x[i][j] = snapshots_from_continuation[0][i+1][j];
+					param_vector[i] = params[i+1];  
+					//for(int j = 0; j < param_vector2_tmp.num_elements(); j++)
+						param_vector2[i] = param_vector2_tmp[0];
 				}
-				for(int j = 0; j < snapshots_from_continuation[1][i].num_elements(); j++)
+					
+				ref_param_index = 0;
+				ref_param_nu = 1;
+					
+				for(int k = 0; k < param_vector2_tmp.num_elements()-1; k++)
 				{
-					snapshots_y[i][j] = snapshots_from_continuation[1][i+1][j];
+					params.resize(1);
+					params[0] = param_vector[0];
+					babyCLNS_trafo.second_param = param_vector2_tmp[k+1];
+					snapshots_from_continuation = babyCLNS_trafo.Continuation_method(&params);	
+					for(int i = 0; i < Nmax; i++)
+					{
+						snapshot_x_collection[i+Nmax*(k+1)] = Array<OneD, NekDouble> (snapshots_from_continuation[0][i+1].num_elements());   
+						snapshot_y_collection[i+Nmax*(k+1)] = Array<OneD, NekDouble> (snapshots_from_continuation[1][i+1].num_elements());
+						
+						for(int j = 0; j < snapshots_from_continuation[0][i].num_elements(); j++)
+							snapshot_x_collection[i+Nmax*(k+1)][j] = snapshots_from_continuation[0][i+1][j];
+						for(int j = 0; j < snapshots_from_continuation[1][i].num_elements(); j++)
+							snapshot_y_collection[i+Nmax*(k+1)][j] = snapshots_from_continuation[1][i+1][j];
+						for(int i = 0; i < Nmax; i++)
+							param_vector[i+Nmax*(k+1)] = params[i+1];  
+						for(int i = 0; i < Nmax; i++)
+							param_vector2[i+Nmax*(k+1)] = param_vector2_tmp[k+1];
+					}
 				}
-			}
-			
-			param_vector = Array<OneD, NekDouble> (Nmax);
-			param_vector2 = Array<OneD, NekDouble> (Nmax);
-			Array<OneD, NekDouble> param_vector_temp = Array<OneD, NekDouble> (Nmax);
-			Array<OneD, NekDouble> param_vector2_temp = Array<OneD, NekDouble> (Nmax);
-			for(int i = 0; i < Nmax; i++)
-			{
-				param_vector[i] = params[i+1];  
-				param_vector2[i] = param_vector2_tmp[0];
+				babyCLNS_trafo.param_vector2 = param_vector2;
 				
-				param_vector_temp[i] = params[i+1];  
-				param_vector2_temp[i] = param_vector2_tmp[0];
-			}
+				cout<<endl<<endl;
+				for(int k = 0; k < max(param_vector2.num_elements(),param_vector.num_elements()); k++)
+					cout<<"params: \t"<<param_vector[k]<<" \t"<<param_vector2[k]<<endl;	
 				
-			ref_param_index = 0;
-			ref_param_nu = 1;
+				use_Newton = 1;  */
 				
-			for(int k = 0; k < param_vector2_tmp.num_elements()-1; k++)
-			{
+				Eigen::VectorXd params;
+				std::vector<std::vector<double> > snapshots_x, snapshots_y;
 				params.resize(1);
 				params[0] = param_vector[0];
-				babyCLNS_trafo.second_param = param_vector2_tmp[k+1];
+				babyCLNS_trafo.total_solve_time = 0.0;
+				babyCLNS_trafo.no_total_solve = 0;
+				babyCLNS_trafo.snapshot_computation_plot_rel_errors = snapshot_computation_plot_rel_errors;
 				snapshots_from_continuation = babyCLNS_trafo.Continuation_method(&params);	
-				Nmax = params.size()-1;
+				flipperMap = babyCLNS_trafo.getFlipperMap();
 				
-				int new_size = snapshots_x.size()+Nmax;
+				number_of_snapshots = params.size() -1; 
+				Nmax = number_of_snapshots;
+				snapshots_x.reserve(Nmax*6*param_vector2_tmp.num_elements());
+				snapshots_y.reserve(Nmax*6*param_vector2_tmp.num_elements());
+				snapshots_x.resize(Nmax);
+				snapshots_y.resize(Nmax);
 				
-				param_vector_temp = Array<OneD, NekDouble> (snapshots_x.size());
-				param_vector2_temp = Array<OneD, NekDouble> (snapshots_x.size());
+				for(int i = 0; i < Nmax; i++)
+				{
+					snapshots_x[i].resize(snapshots_from_continuation[0][i+1].num_elements());
+					snapshots_y[i].resize(snapshots_from_continuation[1][i+1].num_elements());
+					
+					for(int j = 0; j < snapshots_from_continuation[0][i].num_elements(); j++)
+					{
+						snapshots_x[i][j] = snapshots_from_continuation[0][i+1][j];
+					}
+					for(int j = 0; j < snapshots_from_continuation[1][i].num_elements(); j++)
+					{
+						snapshots_y[i][j] = snapshots_from_continuation[1][i+1][j];
+					}
+				}
+				
+				param_vector = Array<OneD, NekDouble> (Nmax);
+				param_vector2 = Array<OneD, NekDouble> (Nmax);
+				Array<OneD, NekDouble> param_vector_temp = Array<OneD, NekDouble> (Nmax);
+				Array<OneD, NekDouble> param_vector2_temp = Array<OneD, NekDouble> (Nmax);
+				for(int i = 0; i < Nmax; i++)
+				{
+					param_vector[i] = params[i+1];  
+					param_vector2[i] = param_vector2_tmp[0];
+					
+					param_vector_temp[i] = params[i+1];  
+					param_vector2_temp[i] = param_vector2_tmp[0];
+				}
+					
+				ref_param_index = 0;
+				ref_param_nu = 1;
+					
+				for(int k = 0; k < param_vector2_tmp.num_elements()-1; k++)
+				{
+					params.resize(1);
+					params[0] = param_vector[0];
+					babyCLNS_trafo.second_param = param_vector2_tmp[k+1];
+					snapshots_from_continuation = babyCLNS_trafo.Continuation_method(&params);	
+					Nmax = params.size()-1;
+					
+					int new_size = snapshots_x.size()+Nmax;
+					
+					param_vector_temp = Array<OneD, NekDouble> (snapshots_x.size());
+					param_vector2_temp = Array<OneD, NekDouble> (snapshots_x.size());
+					for(int i = 0; i < snapshots_x.size(); i++) // copy of the previous vectors
+					{
+						param_vector_temp[i] = param_vector[i];
+						param_vector2_temp[i] = param_vector2[i];
+					}	
+					
+					param_vector = Array<OneD, NekDouble> (new_size);
+					param_vector2 = Array<OneD, NekDouble> (new_size);
+					snapshots_x.resize(new_size);
+					snapshots_y.resize(new_size);
+					
+					for(int i = 0; i < snapshots_x.size() - Nmax; i++) // copying back the previous vectors
+					{
+						param_vector[i] = param_vector_temp[i];
+						param_vector2[i] = param_vector2_temp[i];
+					}			
+					
+					for(int i = snapshots_x.size() - Nmax; i < snapshots_x.size(); i++)
+					{
+						snapshots_x[i].resize(snapshots_from_continuation[0][0].num_elements());
+						snapshots_y[i].resize(snapshots_from_continuation[1][0].num_elements());
+						
+						for(int j = 0; j < snapshots_from_continuation[0][i+1-snapshots_x.size()+Nmax].num_elements(); j++)
+						{
+							snapshots_x[i][j] = snapshots_from_continuation[0][i+1-snapshots_x.size()+Nmax][j];
+						}
+						for(int j = 0; j < snapshots_from_continuation[1][i+1-snapshots_x.size()+Nmax].num_elements(); j++)
+						{
+							snapshots_y[i][j] = snapshots_from_continuation[1][i+1-snapshots_x.size()+Nmax][j];
+						}
+						param_vector[i] = params[i+1-snapshots_x.size()+Nmax];
+						param_vector2[i] = param_vector2_tmp[k+1];
+					}
+				}
+				babyCLNS_trafo.param_vector2 = param_vector2;
+				
+				std::stringstream sstm1, sstm2;
+				sstm1 << "snapshots_" << file_id<<".txt";
+				sstm2 << "params_" << file_id<<".txt";
+				std::string snap_file_name = sstm1.str();
+				std::string param_file_name = sstm2.str();
+				const char * snap_name_char = snap_file_name.c_str();
+				const char * param_name_char = param_file_name.c_str();
+				std::ofstream file_snapshots, file_params;
+				
+				file_snapshots.open(snap_name_char, std::ios::out); //first line: #snapshots and #dofs, then x_i y_i for all the snapshots
+				file_params.open(param_name_char, std::ios::out);
+				file_snapshots<<snapshots_x.size()<<" "<<snapshots_x[0].size()<<endl;
+
+				snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (snapshots_x.size());
+				snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (snapshots_x.size());
 				for(int i = 0; i < snapshots_x.size(); i++) // copy of the previous vectors
 				{
-					param_vector_temp[i] = param_vector[i];
-					param_vector2_temp[i] = param_vector2[i];
-				}	
-				
-				param_vector = Array<OneD, NekDouble> (new_size);
-				param_vector2 = Array<OneD, NekDouble> (new_size);
-				snapshots_x.resize(new_size);
-				snapshots_y.resize(new_size);
-				
-				for(int i = 0; i < snapshots_x.size() - Nmax; i++) // copying back the previous vectors
-				{
-					param_vector[i] = param_vector_temp[i];
-					param_vector2[i] = param_vector2_temp[i];
-				}			
-				
-				for(int i = snapshots_x.size() - Nmax; i < snapshots_x.size(); i++)
-				{
-					snapshots_x[i].resize(snapshots_from_continuation[0][0].num_elements());
-					snapshots_y[i].resize(snapshots_from_continuation[1][0].num_elements());
-					
-					for(int j = 0; j < snapshots_from_continuation[0][i+1-snapshots_x.size()+Nmax].num_elements(); j++)
+					snapshot_x_collection[i] = Array<OneD, NekDouble> (snapshots_x[i].size());
+					snapshot_y_collection[i] = Array<OneD, NekDouble> (snapshots_y[i].size());
+					for(int j = 0; j < snapshots_x[i].size(); j++)
 					{
-						snapshots_x[i][j] = snapshots_from_continuation[0][i+1-snapshots_x.size()+Nmax][j];
+						snapshot_x_collection[i][j] = snapshots_x[i][j];
+						file_snapshots<<snapshots_x[i][j]<<" "<<snapshots_y[i][j]<<endl;
 					}
-					for(int j = 0; j < snapshots_from_continuation[1][i+1-snapshots_x.size()+Nmax].num_elements(); j++)
+					for(int j = 0; j < snapshots_y[i].size(); j++)
 					{
-						snapshots_y[i][j] = snapshots_from_continuation[1][i+1-snapshots_x.size()+Nmax][j];
+						snapshot_y_collection[i][j] = snapshots_y[i][j];
 					}
-					param_vector[i] = params[i+1-snapshots_x.size()+Nmax];
-					param_vector2[i] = param_vector2_tmp[k+1];
+					file_params<<param_vector[i]<<" "<<param_vector2[i]<<endl;
 				}
+				
+				file_snapshots.close();
+				file_params.close();
+				cout<<endl<<endl;
+				for(int k = 0; k < max(param_vector2.num_elements(),param_vector.num_elements()); k++)
+					cout<<"params: \t"<<param_vector[k]<<" \t"<<param_vector2[k]<<endl;	
+				
+				use_Newton = 1; 
+				offline_average_time = babyCLNS_trafo.total_solve_time/babyCLNS_trafo.no_total_solve;
+				//second_CLNStrafo = babyCLNS_trafo;
 			}
-			babyCLNS_trafo.param_vector2 = param_vector2;
-			
-			snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (snapshots_x.size());
-			snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (snapshots_x.size());
-			for(int i = 0; i < snapshots_x.size(); i++) // copy of the previous vectors
+			else
 			{
-				snapshot_x_collection[i] = Array<OneD, NekDouble> (snapshots_x[i].size());
-				snapshot_y_collection[i] = Array<OneD, NekDouble> (snapshots_y[i].size());
-				for(int j = 0; j < snapshots_x[i].size(); j++)
+				int n_dofs, i, snap_n;
+				ifstream input_snapshots1("snapshots_1.txt");
+				ifstream input_snapshots2("snapshots_2.txt");
+				ifstream input_params1("params_1.txt");
+				ifstream input_params2("params_2.txt");
+				n_dofs=-1; 
+				i=0;
+				snap_n=0;
+
+				input_snapshots1 >> Nmax1 >> n_dofs;
+				input_snapshots2 >> Nmax2 >> n_dofs;
+				
+				//Nmax2 = 0;
+				param_vector = Array<OneD, NekDouble> (Nmax1+Nmax2);
+				param_vector2 = Array<OneD, NekDouble> (Nmax1+Nmax2);
+
+				snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (Nmax1 + Nmax2);
+				snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (Nmax1 + Nmax2);
+
+				for(int j=0; j<Nmax1+Nmax2; j++)
 				{
-					snapshot_x_collection[i][j] = snapshots_x[i][j];
+					snapshot_x_collection[j] = Array<OneD, NekDouble> (n_dofs);
+					snapshot_y_collection[j] = Array<OneD, NekDouble> (n_dofs);
 				}
-				for(int j = 0; j < snapshots_y[i].size(); j++)
+
+				
+				while (input_snapshots1 >> snapshot_x_collection[snap_n][i-snap_n*n_dofs] >> snapshot_y_collection[snap_n][i-snap_n*n_dofs])
 				{
-					snapshot_y_collection[i][j] = snapshots_y[i][j];
+					i++;
+					if( i%n_dofs==0 ) 
+						snap_n++; 
 				}
+				
+				i=0;
+				while (input_params1 >> param_vector[i] >> param_vector2[i])
+				{
+					cout<<i<<" "<<param_vector[i]<<" "<<param_vector2[i]<<endl;
+					i++;
+				}
+				cout<<endl;
+
+				input_snapshots1.close();
+				input_params1.close();
+ 
+				i=0;
+				snap_n=0;
+
+				while (input_snapshots2 >> snapshot_x_collection[snap_n+Nmax1][i-snap_n*n_dofs] >> snapshot_y_collection[snap_n+Nmax1][i-snap_n*n_dofs])
+				{
+					i++;
+					if( i%n_dofs==0 ) 
+						snap_n++; 
+				}
+
+				i=Nmax1;
+				while (input_params2 >> param_vector[i] >> param_vector2[i])
+				{
+					cout<<i<<" "<<param_vector[i]<<" "<<param_vector2[i]<<endl;
+					i++;
+				}
+
+				input_snapshots2.close();
+				input_params2.close();
+				
+				babyCLNS_trafo.param_vector2 = param_vector2;
+				babyCLNS_trafo.fake_continuation = true;
+				
+				Eigen::VectorXd params;
+				params.resize(1);
+				params[0] = param_vector[0];
+				babyCLNS_trafo.Continuation_method(&params);
+				flipperMap = babyCLNS_trafo.getFlipperMap();
 			}
-			
-			cout<<endl<<endl;
-			for(int k = 0; k < max(param_vector2.num_elements(),param_vector.num_elements()); k++)
-				cout<<"params: \t"<<param_vector[k]<<" \t"<<param_vector2[k]<<endl;	
-			
-			use_Newton = 1; 
-			offline_average_time = babyCLNS_trafo.total_solve_time/babyCLNS_trafo.no_total_solve;
-			//second_CLNStrafo = babyCLNS_trafo;
 		}
 		else
 		{
@@ -4521,8 +4635,12 @@ namespace Nektar
 
 	babyCLNS_trafo.use_Newton = use_Newton;
 	babyCLNS_trafo.debug_mode = debug_mode;
-
-	collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
+	if(continuation_from_files == 0)
+		collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
+	else
+	{
+		collect_f_all = load_collect_f_all();
+	}
 	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_all(collect_f_all, Eigen::ComputeThinU);
 	if (debug_mode)
 	{
@@ -4614,11 +4732,13 @@ namespace Nektar
 	}
 	if(compare_accuracy_mode && RBsize < final_RBsize) 
 	{
+		cout<<"COMPARE ACCURACY MODE ONLINE PHASE"<<endl;
 		online_phase();
 	}
-	RBsize+= 3;
+	RBsize+= 1;
 }
 RBsize--;
+cout<<"END OF OFFLINE PHASE"<<endl;
 
    }
    
@@ -4665,7 +4785,7 @@ RBsize--;
 	//cout<<"adv_vec_proj_y[0] = "<<adv_vec_proj_y[0]<<endl;
 	Eigen::VectorXd add_rhs_Newton = Eigen::VectorXd::Zero(RBsize); 
 	Eigen::VectorXd recovered_affine_adv_rhs_proj_xy_newton = Eigen::VectorXd::Zero(RBsize);
-	Eigen::MatrixXd recovered_affine_adv_rhs_proj_xy_newton_RB = Eigen::MatrixXd::Zero(RBsize,RBsize);  
+	Eigen::MatrixXd recovered_affine_adv_rhs_proj_xy_newton_RB = Eigen::MatrixXd::Zero(RBsize,RBsize); 
 	if (use_Newton)
 	{
 		// can I build the Newton-required term from recovered_affine_adv_mat_proj_xy and curr_xy_projected ?
@@ -5293,6 +5413,42 @@ RBsize--;
 		
 		
 		outfile<<nu<<" "<<scaling<<" "<<second_CLNStrafo.L2_norm(reprojection[0],reprojection[1]) / second_CLNStrafo.L2_norm(truth_sol[0],truth_sol[1])<<endl;
+    }
+    
+    Eigen::MatrixXd CoupledLinearNS_TT::load_collect_f_all()
+    {
+    	int n_dofs, i, snap_n, n_cols1, n_cols2;
+		ifstream input_f_all1("collect_f_all_1.txt");
+		ifstream input_f_all2("collect_f_all_2.txt");
+		n_dofs=-1; 
+		i=0;
+		snap_n=0;
+		input_f_all1 >> n_dofs >> n_cols1;
+		input_f_all2 >> n_dofs >> n_cols2;
+		
+		Eigen::MatrixXd temp_collect_f_all(n_dofs, n_cols1+n_cols2);
+
+		for(int i=0; i<n_dofs; i++)
+		{
+			for(int j=0; j<n_cols1; j++)
+			{
+				input_f_all1 >> temp_collect_f_all(i,j);	
+			}		
+		}	
+		
+		for(int i=0; i<n_dofs; i++)
+		{
+			for(int j=0; j<n_cols2; j++)
+			{
+				input_f_all2 >> temp_collect_f_all(i, n_cols1+j);	
+			}		
+		}		
+		
+		input_f_all1.close();
+		input_f_all2.close();
+		
+
+		return temp_collect_f_all;
     }
     
 }

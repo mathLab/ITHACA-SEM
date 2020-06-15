@@ -1882,7 +1882,9 @@ namespace Nektar
 		cout<<"\nparams: "<<param_vector[i]<<" "<<param_vector2[i]<<endl;	
 	//	CLNS_trafo.DoInitialise();
 		DoInitialiseAdv(snapshot_x_collection[i], snapshot_y_collection[i]); // replaces .DoInitialise();
-		DoSolve();
+		//DoSolve();
+		deflate = false;
+		DoSolve_at_param_continuation(snapshot_x_collection[i], snapshot_y_collection[i], param_vector[i]);
 
 		// compare the accuracy
 		Array<OneD, MultiRegions::ExpListSharedPtr> m_fields_t = UpdateFields();
@@ -1905,7 +1907,7 @@ namespace Nektar
 			csx0(index_conv) = snapshot_x_collection[i][index_conv];
 			csy0(index_conv) = snapshot_y_collection[i][index_conv];
 		}
-
+		
 		//if (debug_mode)
 		{
 			cout << "csx0.norm() " << csx0.norm() << endl;
@@ -1927,6 +1929,16 @@ namespace Nektar
 	collect_f_all.block(collect_f_bnd.rows(),0,collect_f_p.rows(),collect_f_p.cols()) = collect_f_p;
 	collect_f_all.block(collect_f_bnd.rows()+collect_f_p.rows(),0,collect_f_int.rows(),collect_f_int.cols()) = collect_f_int;
 
+	std::stringstream sstm;
+	sstm << "collect_f_all_" << file_id<<".txt";
+	std::string file_name = sstm.str();
+	const char * f_all_file_name_char = file_name.c_str();
+	std::ofstream file_collectf;
+	file_collectf.open(f_all_file_name_char, std::ios::out);
+	file_collectf << curr_f_bnd.size()+curr_f_p.size()+curr_f_int.size() << " " << Nmax << endl;
+	file_collectf << collect_f_all;
+	file_collectf.close();
+				
 	return collect_f_all;
     }
     
@@ -3093,7 +3105,7 @@ namespace Nektar
 			FarrelOutput(flipperMap, outfile, FarrelOutputSign(x,y));
 			total_solutions_found = 1;
 			
-			while(m_kinvis > m_kinvisMin && total_solutions_found < m_maxIt)
+			while(m_kinvis > m_kinvisMin && total_solutions_found < m_maxIt && !fake_continuation)
 			{
 				local_indices_to_be_continued.resize(0);
 				
@@ -3208,7 +3220,7 @@ namespace Nektar
 				int prev_solutions = local_indices_to_be_continued.size();
 				
 				//use_deflation_now = true;
-				use_deflation_now = ((local_indices_to_be_continued.size()<3 && m_kinvis<0.97*second_param)|| (m_kinvis<0.405*second_param && local_indices_to_be_continued.size()<5));
+				use_deflation_now = ((local_indices_to_be_continued.size()<3 && m_kinvis<0.98*second_param)|| (m_kinvis<0.405*second_param && local_indices_to_be_continued.size()<5));
 				for(int i = 0; i < prev_solutions && use_deflation && use_deflation_now && total_solutions_found < m_maxIt; i++)
 				{
 					curr_i = local_indices_to_be_continued[i];

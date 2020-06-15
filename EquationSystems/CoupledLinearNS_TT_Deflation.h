@@ -224,6 +224,7 @@ namespace Nektar
 	double FarrelOutput(Eigen::VectorXd);
 	Eigen::VectorXd reconstruct_solution_w_different_dbc(Eigen::VectorXd, double);
 	void error_analysis(int, double, double, std::ofstream &);
+	Eigen::MatrixXd load_collect_f_all();
 	
 	std::vector<int> flipperMap;
 	int max_dimension;

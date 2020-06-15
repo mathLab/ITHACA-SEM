@@ -42,6 +42,18 @@
 #include <cmath>
 #include <iostream>
 
+// type in use macro
+#if defined(__SSE2__) && defined(NEKTAR_ENABLE_SIMD_SSE2)
+    #define USING_SSE2
+#endif
+#if defined(__AVX2__) && defined(NEKTAR_ENABLE_SIMD_AVX2)
+    #define USING_AVX2
+#endif
+#if defined(__AVX512__) && defined(NEKTAR_ENABLE_SIMD_AVX512)
+    #define USING_AVX512
+#endif
+
+
 namespace Nektar
 {
 namespace SimdLibTests
@@ -52,7 +64,27 @@ namespace SimdLibTests
     {
         std::size_t width, alignment;
 
-        #if defined(__SSE2__) && !defined(__AVX2__) && !defined(__AVX512F__)
+        #if !defined(USING_SSE2) && !defined(USING_AVX2) && !defined(USING_AVX512)
+        std::cout << "scalar" << std::endl;
+        // int
+        width = simd<int>::width;
+        alignment = simd<int>::alignment;
+        BOOST_CHECK_EQUAL(width, 1);
+        BOOST_CHECK_EQUAL(alignment, 4);
+        // long
+        width = simd<long>::width;
+        alignment = simd<long>::alignment;
+        BOOST_CHECK_EQUAL(width, 1);
+        BOOST_CHECK_EQUAL(alignment, 8);
+        // double
+        width = simd<double>::width;
+        alignment = simd<double>::alignment;
+        BOOST_CHECK_EQUAL(width, 1);
+        BOOST_CHECK_EQUAL(alignment, 8);
+        #endif
+
+        #if defined(USING_SSE2) && !defined(USING_AVX2) && !defined(USING_AVX512)
+        std::cout << "sse2" << std::endl;
         // int
         width = simd<int>::width;
         alignment = simd<int>::alignment;
@@ -60,7 +92,8 @@ namespace SimdLibTests
         BOOST_CHECK_EQUAL(alignment, 16);
         #endif
 
-        #if defined(__AVX2__) && !defined(__AVX512F__)
+        #if defined(USING_AVX2) && !defined(USING_AVX512)
+        std::cout << "avx2" << std::endl;
         // int
         width = simd<int>::width;
         alignment = simd<int>::alignment;
@@ -78,7 +111,8 @@ namespace SimdLibTests
         BOOST_CHECK_EQUAL(alignment, 32);
         #endif
 
-        #if defined(__AVX512F__)
+        #if defined(USING_AVX512)
+        std::cout << "avx512" << std::endl;
         // long
         width = simd<long>::width;
         alignment = simd<long>::alignment;
@@ -94,6 +128,18 @@ namespace SimdLibTests
     }
 
     using vec_t = simd<double>;
+
+    BOOST_AUTO_TEST_CASE(SimdLib_type_traits)
+    {
+        BOOST_CHECK_EQUAL(has_width<double>::value, false);
+        BOOST_CHECK_EQUAL(has_width<vec_t>::value, true);
+
+        BOOST_CHECK_EQUAL(has_alignment<double>::value, false);
+        BOOST_CHECK_EQUAL(has_alignment<vec_t>::value, true);
+
+        BOOST_CHECK_EQUAL(is_vector<double>::value, false);
+        BOOST_CHECK_EQUAL(is_vector<vec_t>::value, true);
+    }
 
     BOOST_AUTO_TEST_CASE(SimdLib_mem_size)
     {
@@ -226,7 +272,7 @@ namespace SimdLibTests
         }
     }
 
-    #if defined(__AVX2__)
+    #if defined(__AVX2__) && defined(NEKTAR_ENABLE_AVX2)
     BOOST_AUTO_TEST_CASE(SimdLib_load_any)
     {
         vec_t avec;
@@ -246,52 +292,106 @@ namespace SimdLibTests
         BOOST_CHECK_EQUAL(ascalararr[6], avec[3]);
 
     }
+    #endif
 
     BOOST_AUTO_TEST_CASE(SimdLib_gather64)
     {
-        using index_t = simd<size_t>;
         vec_t avec;
+        using index_t = simd<size_t>;
         index_t aindexvec;
-        aindexvec[0] = 0;
-        aindexvec[1] = 3;
-        aindexvec[2] = 5;
-        aindexvec[3] = 6;
-        std::array<double, 16> ascalararr{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+
+        // create and fill index
+        std::array<size_t, vec_t::width> aindex;
+        aindex[0] = 0;
+        if (vec_t::width > 2)
+        {
+            aindex[1] = 3;
+            aindex[2] = 5;
+            aindex[3] = 6;
+        }
+        if (vec_t::width > 4)
+        {
+            aindex[4] = 8;
+            aindex[5] = 15;
+            aindex[6] = 20;
+        }
+
+        // load index
+        aindexvec.load(aindex.data(), is_not_aligned);
+
+        // create and fill scalar array
+        constexpr size_t scalarArraySize = 32;
+        std::array<double, scalarArraySize> ascalararr;
+        for (size_t i = 0; i < scalarArraySize; ++i)
+        {
+            ascalararr[i] = i;
+        }
 
         avec.gather(ascalararr.data(), aindexvec);
 
-        BOOST_CHECK_EQUAL(ascalararr[0], avec[0]);
-        BOOST_CHECK_EQUAL(ascalararr[3], avec[1]);
-        BOOST_CHECK_EQUAL(ascalararr[5], avec[2]);
-        BOOST_CHECK_EQUAL(ascalararr[6], avec[3]);
+        // check
+        for (size_t i = 0; i < vec_t::width; ++i)
+        {
+            BOOST_CHECK_EQUAL(ascalararr[aindex[i]], avec[i]);
+        }
 
     }
 
     BOOST_AUTO_TEST_CASE(SimdLib_scatter64)
     {
-        using index_t = simd<size_t>;
         vec_t avec;
+        using index_t = simd<size_t>;
         index_t aindexvec;
-        aindexvec[0] = 0;
-        aindexvec[1] = 3;
-        aindexvec[2] = 5;
-        aindexvec[3] = 6;
-        std::array<double, 16> ascalararr{};
 
+        // create and fill index
+        std::array<size_t, vec_t::width> aindex;
+        aindex[0] = 0;
+        if (vec_t::width > 2)
+        {
+            aindex[1] = 3;
+            aindex[2] = 5;
+            aindex[3] = 6;
+        }
+        if (vec_t::width > 4)
+        {
+            aindex[4] = 8;
+            aindex[5] = 15;
+            aindex[6] = 20;
+            aindex[7] = 30;
+        }
+
+         // load index
+        aindexvec.load(aindex.data(), is_not_aligned);
+
+        // create scalar array
+        constexpr size_t scalarArraySize = 32;
+        std::array<double, scalarArraySize> ascalararr;
+
+        // fill vector
         avec[0] = 10;
-        avec[1] =  9;
-        avec[2] =  8;
-        avec[3] =  7;
+        if (vec_t::width > 2)
+        {
+            avec[1] =  9;
+            avec[2] =  8;
+            avec[3] =  7;
+        }
+        if (vec_t::width > 4)
+        {
+            avec[4] =  4;
+            avec[5] =  3;
+            avec[6] =  2;
+            avec[7] =  1;
+        }
 
         avec.scatter(ascalararr.data(), aindexvec);
 
-        BOOST_CHECK_EQUAL(avec[0], ascalararr[0]);
-        BOOST_CHECK_EQUAL(avec[1], ascalararr[3]);
-        BOOST_CHECK_EQUAL(avec[2], ascalararr[5]);
-        BOOST_CHECK_EQUAL(avec[3], ascalararr[6]);
+        // check
+        for (size_t i = 0; i < vec_t::width; ++i)
+        {
+            BOOST_CHECK_EQUAL(avec[i], ascalararr[aindex[i]]);
+        }
 
     }
-    #endif
 
 
     BOOST_AUTO_TEST_CASE(SimdLib_add_mul)
@@ -350,7 +450,7 @@ namespace SimdLibTests
     {
         constexpr size_t nDof{5};
         // no padding in load_interleave deinterleave_store
-        constexpr size_t nEle{vec_t::width * 4};
+        constexpr size_t nEle{vec_t::width * 5};
         constexpr size_t nDofBlock = nDof * vec_t::width;
 
         constexpr size_t size{nDof*nEle};

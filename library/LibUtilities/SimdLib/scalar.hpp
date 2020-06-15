@@ -31,8 +31,8 @@ struct scalar
 template<typename T, typename>
 struct scalarT
 {
-    static constexpr unsigned width = 1;
-    static constexpr unsigned alignment = sizeof(T);
+    static constexpr unsigned int width = 1;
+    static constexpr unsigned int alignment = sizeof(T);
 
     using scalarType = T;
     using vectorType = scalarType;
@@ -77,9 +77,16 @@ struct scalarT
 
     template<typename U, typename = typename std::enable_if<
         std::is_integral<U>::value>::type>
-    inline void gather(const scalarType* p, scalarT<U> index)
+    inline void gather(const scalarType* p, scalarT<U>)
     {
-        return p[index];
+        _data = *p;
+    }
+
+    template<typename U, typename = typename std::enable_if<
+        std::is_integral<U>::value>::type>
+    inline void scatter(scalarType* p, const scalarT<U>) const
+    {
+        *p = _data;
     }
 
     // fma

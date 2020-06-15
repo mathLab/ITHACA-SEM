@@ -21,7 +21,7 @@ struct avx512
 } // namespace abi
 
 
-#if defined(__AVX512F__) && defined(NEKTAR_ENABLE_AVX512)
+#if defined(__AVX512F__) && defined(NEKTAR_ENABLE_SIMD_AVX512)
 
 // forward declaration of concrete types
 template<typename T> struct avx512Long8;
@@ -44,8 +44,8 @@ struct avx512Long8
     static_assert(std::is_integral<T>::value && sizeof(T) == 8,
         "8 bytes Integral required.");
 
-    static constexpr unsigned width = 8;
-    static constexpr unsigned alignment = 64;
+    static constexpr unsigned int width = 8;
+    static constexpr unsigned int alignment = 64;
 
     using scalarType = T;
     using vectorType = __m512i;
@@ -168,8 +168,8 @@ inline avx512Long8<T> operator+(avx512Long8<T> lhs, U rhs)
 
 struct avx512Double8
 {
-    static constexpr unsigned width = 8;
-    static constexpr unsigned alignment = 64;
+    static constexpr unsigned int width = 8;
+    static constexpr unsigned int alignment = 64;
 
     using scalarType = double;
     using vectorType = __m512d;

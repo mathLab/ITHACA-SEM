@@ -19,7 +19,7 @@ struct sse2
 } // namespace abi
 
 
-#if defined(__SSE2__) && defined(NEKTAR_ENABLE_SSE2)
+#if defined(__SSE2__) && defined(NEKTAR_ENABLE_SIMD_SSE2)
 
 // forward declaration of concrete types
 template <typename T>
@@ -41,8 +41,8 @@ struct sse2Int4
     static_assert(std::is_integral<T>::value && sizeof(T) == 4,
         "4 bytes Integral required.");
 
-    static constexpr unsigned width = 4;
-    static constexpr unsigned alignment = 16;
+    static constexpr unsigned int width = 4;
+    static constexpr unsigned int alignment = 16;
 
     using scalarType = T;
     using vectorType = __m128i;

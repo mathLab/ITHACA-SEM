@@ -21,7 +21,7 @@ struct avx2
 } // namespace abi
 
 
-#if defined(__AVX2__) && defined(NEKTAR_ENABLE_AVX2)
+#if defined(__AVX2__) && defined(NEKTAR_ENABLE_SIMD_AVX2)
 
 // forward declaration of concrete types
 template<typename T> struct avx2Int8;
@@ -47,8 +47,8 @@ struct avx2Int8
     static_assert(std::is_integral<T>::value && sizeof(T) == 4,
         "4 bytes Integral required.");
 
-    static constexpr unsigned width = 8;
-    static constexpr unsigned alignment = 32;
+    static constexpr unsigned int width = 8;
+    static constexpr unsigned int alignment = 32;
 
     using scalarType = T;
     using vectorType = __m256i;
@@ -175,8 +175,8 @@ struct avx2Long4
     static_assert(std::is_integral<T>::value && sizeof(T) == 8,
         "8 bytes Integral required.");
 
-    static constexpr unsigned width = 4;
-    static constexpr unsigned alignment = 32;
+    static constexpr unsigned int width = 4;
+    static constexpr unsigned int alignment = 32;
 
     using scalarType = T;
     using vectorType = __m256i;

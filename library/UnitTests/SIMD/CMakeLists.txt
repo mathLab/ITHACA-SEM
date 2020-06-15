@@ -1,6 +1,5 @@
 SET(VecDataTestSources
     main.cpp
-    # TestVecData.cpp
     TestSimdLib.cpp
 )
 

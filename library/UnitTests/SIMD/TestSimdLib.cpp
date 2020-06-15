@@ -42,7 +42,7 @@
 #include <cmath>
 #include <iostream>
 
-// type in use macro
+// type in use
 #if defined(__SSE2__) && defined(NEKTAR_ENABLE_SIMD_SSE2)
     #define USING_SSE2
 #endif

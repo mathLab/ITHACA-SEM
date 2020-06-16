@@ -31,6 +31,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/Thread.h
     ./BasicUtils/ThreadBoost.h
     ./BasicUtils/Vmath.hpp
+    ./BasicUtils/VmathSIMD.hpp
     ./BasicUtils/VmathArray.hpp
     ./BasicUtils/Metis.hpp
     ./BasicUtils/VtkUtil.hpp
@@ -348,7 +349,11 @@ ADD_NEKTAR_LIBRARY(LibUtilities
     SUMMARY "Nektar++ LibUtilities library"
     DESCRIPTION "This library provides core routines including linear algebra and integration with ThirdParty libraries.")
 
-ADD_DEPENDENCIES(LibUtilities boost tinyxml-2.6.2 zlib-1.2.7)
+# tinysimd
+ADD_LIBRARY(tinysimd INTERFACE)
+TARGET_INCLUDE_DIRECTORIES(tinysimd INTERFACE SimdLib)
+
+ADD_DEPENDENCIES(LibUtilities boost tinyxml-2.6.2 zlib-1.2.7 tinysimd)
 
 ### Libraries needed specifically by LibUtilities ###
 

@@ -86,7 +86,7 @@ enum ImplementationType
     eIterPerExp,
     eStdMat,
     eSumFac,
-    eAVX,
+    eMatrixFree,
     SIZE_ImplementationType
 };
 
@@ -97,7 +97,7 @@ const char* const ImplementationTypeMap[] =
     "IterPerExp",
     "StdMat",
     "SumFac",
-    "AVX"
+    "MatrixFree"
 };
 
 typedef bool ExpansionIsNodal;

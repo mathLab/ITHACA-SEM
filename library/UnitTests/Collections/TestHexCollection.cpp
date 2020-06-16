@@ -702,7 +702,7 @@ namespace Nektar
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession,
-                Collections::eAVX);
+                Collections::eMatrixFree);
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
@@ -829,7 +829,7 @@ namespace Nektar
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession,
-                Collections::eAVX);
+                Collections::eMatrixFree);
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
@@ -907,7 +907,7 @@ namespace Nektar
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession,
-                Collections::eAVX);
+                Collections::eMatrixFree);
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
@@ -985,7 +985,7 @@ namespace Nektar
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession,
-                Collections::eAVX);
+                Collections::eMatrixFree);
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
@@ -2011,7 +2011,7 @@ namespace Nektar
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession,
-                Collections::eAVX);
+                Collections::eMatrixFree);
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
@@ -2090,7 +2090,7 @@ namespace Nektar
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession,
-                Collections::eAVX);
+                Collections::eMatrixFree);
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
@@ -2664,7 +2664,7 @@ namespace Nektar
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession,
-                Collections::eAVX);
+                Collections::eMatrixFree);
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);

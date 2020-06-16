@@ -355,7 +355,7 @@ namespace Nektar
             Collections::eIterPerExp);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
         // ... only one op at the time ...
-        impTypes[Collections::eBwdTrans] = Collections::eAVX;
+        impTypes[Collections::eBwdTrans] = Collections::eMatrixFree;
         Collections::Collection     c(CollExp, impTypes);
 
 
@@ -921,7 +921,7 @@ namespace Nektar
             Collections::eSumFac);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
         // not all op implemented ...
-        impTypes[Collections::eIProductWRTBase] = Collections::eAVX;
+        impTypes[Collections::eIProductWRTBase] = Collections::eMatrixFree;
         Collections::Collection     c(CollExp, impTypes);
 
         const int nq = Exp->GetTotPoints();

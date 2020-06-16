@@ -37,6 +37,8 @@
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
+#include <LibUtilities/BasicUtils/Likwid.hpp>
+
 #define EPSILON 0.000001
 
 #define CROSS(dest, v1, v2){                 \
@@ -65,25 +67,28 @@ namespace Nektar
             static RiemannSolverFactory instance;
             return instance;
         }
-        
+
         /**
          * @class RiemannSolver
-         * 
+         *
          * @brief The RiemannSolver class provides an abstract interface under
          * which solvers for various Riemann problems can be implemented.
          */
-        
+
+        RiemannSolver::RiemannSolver()
+            : m_requiresRotation(false), m_rotStorage(3) {}
+
         RiemannSolver::RiemannSolver(
             const LibUtilities::SessionReaderSharedPtr& pSession)
-            : m_requiresRotation(false), m_rotStorage (3)
+            : m_requiresRotation(false), m_rotStorage(3)
         {
             boost::ignore_unused(pSession);
         }
-        
+
         /**
          * @brief Perform the Riemann solve given the forwards and backwards
          * spaces.
-         * 
+         *
          * This routine calls the virtual function #v_Solve to perform the
          * Riemann solve. If the flag #m_requiresRotation is set, then the
          * velocity field is rotated to the normal direction to perform
@@ -91,7 +96,7 @@ namespace Nektar
          * the Cartesian directions before being returned. For the Rotation to
          * work, the normal vectors "N" and the location of the vector
          * components in Fwd "vecLocs"must be set via the SetAuxVec() method.
-         * 
+         *
          * @param Fwd   Forwards trace space.
          * @param Bwd   Backwards trace space.
          * @param flux  Resultant flux along trace space.
@@ -113,7 +118,7 @@ namespace Nektar
 
                 int nFields = Fwd   .num_elements();
                 int nPts    = Fwd[0].num_elements();
-                
+
                 if (m_rotStorage[0].num_elements()    != nFields ||
                     m_rotStorage[0][0].num_elements() != nPts)
                 {
@@ -128,11 +133,17 @@ namespace Nektar
                     }
                 }
 
+LIKWID_MARKER_START("RotationTo");
                 rotateToNormal  (Fwd, normals, vecLocs, m_rotStorage[0]);
                 rotateToNormal  (Bwd, normals, vecLocs, m_rotStorage[1]);
+LIKWID_MARKER_STOP("RotationTo");
+LIKWID_MARKER_START("v_Solve");
                 v_Solve         (nDim, m_rotStorage[0], m_rotStorage[1],
                                        m_rotStorage[2]);
+LIKWID_MARKER_STOP("v_Solve");
+LIKWID_MARKER_START("RotationFrom");
                 rotateFromNormal(m_rotStorage[2], normals, vecLocs, flux);
+LIKWID_MARKER_STOP("RotationFrom");
             }
             else
             {
@@ -140,9 +151,11 @@ namespace Nektar
             }
         }
 
+
+
         /**
          * @brief Rotate a vector field to trace normal.
-         * 
+         *
          * This function performs a rotation of a vector so that the first
          * component aligns with the trace normal direction.
          *
@@ -150,11 +163,11 @@ namespace Nektar
          * be specified in the "vecLocs" array. vecLocs[0] contains the locations
          * of the first vectors components, vecLocs[1] those of the second and
          * so on.
-         * 
+         *
          * In 2D, this is accomplished through the transform:
-         * 
+         *
          * \f[ (u_x, u_y) = (n_x u_x + n_y u_y, -n_x v_x + n_y v_y) \f]
-         * 
+         *
          * In 3D, we generate a (non-unique) transformation using
          * RiemannSolver::fromToRotation.
          *
@@ -241,10 +254,10 @@ namespace Nektar
                 }
             }
         }
-        
+
         /**
          * @brief Rotate a vector field from trace normal.
-         * 
+         *
          * This function performs a rotation of the triad of vector components
          * provided in inarray so that the first component aligns with the
          * Cartesian components; it performs the inverse operation of
@@ -328,7 +341,7 @@ namespace Nektar
 
         /**
          * @brief Determine whether a scalar has been defined in #m_scalars.
-         * 
+         *
          * @param name  Scalar name.
          */
         bool RiemannSolver::CheckScalars(std::string name)
@@ -338,7 +351,7 @@ namespace Nektar
 
         /**
          * @brief Determine whether a vector has been defined in #m_vectors.
-         * 
+         *
          * @param name  Vector name.
          */
         bool RiemannSolver::CheckVectors(std::string name)
@@ -348,7 +361,7 @@ namespace Nektar
 
         /**
          * @brief Determine whether a parameter has been defined in #m_params.
-         * 
+         *
          * @param name  Parameter name.
          */
         bool RiemannSolver::CheckParams(std::string name)
@@ -391,7 +404,7 @@ namespace Nektar
 
             // Allocate storage for rotation matrices.
             m_rotMat = Array<OneD, Array<OneD, NekDouble> >(9);
-            
+
             for (i = 0; i < 9; ++i)
             {
                 m_rotMat[i] = Array<OneD, NekDouble>(nq);
@@ -404,7 +417,7 @@ namespace Nektar
                 tn[1] = normals[1][i];
                 tn[2] = normals[2][i];
                 FromToRotation(tn, xdir, tmp);
-                
+
                 for (j = 0; j < 9; ++j)
                 {
                     m_rotMat[j][i] = tmp[j];
@@ -415,11 +428,11 @@ namespace Nektar
         /**
          * @brief A function for creating a rotation matrix that rotates a
          * vector @a from into another vector @a to.
-         * 
+         *
          * Authors: Tomas Möller, John Hughes
          *          "Efficiently Building a Matrix to Rotate One Vector to
          *          Another" Journal of Graphics Tools, 4(4):1-4, 1999
-         * 
+         *
          * @param from  Normalised 3-vector to rotate from.
          * @param to    Normalised 3-vector to rotate to.
          * @param out   Resulting 3x3 rotation matrix (row-major order).
@@ -431,7 +444,7 @@ namespace Nektar
         {
             NekDouble v[3];
             NekDouble e, h, f;
-        
+
             CROSS(v, from, to);
             e = DOT(from, to);
             f = (e < 0)? -e:e;
@@ -441,11 +454,11 @@ namespace Nektar
                 NekDouble x[3];
                 NekDouble c1, c2, c3;
                 int i, j;
-            
+
                 x[0] = (from[0] > 0.0)? from[0] : -from[0];
                 x[1] = (from[1] > 0.0)? from[1] : -from[1];
                 x[2] = (from[2] > 0.0)? from[2] : -from[2];
-            
+
                 if (x[0] < x[1])
                 {
                     if (x[0] < x[2])
@@ -468,18 +481,18 @@ namespace Nektar
                         x[2] = 1.0; x[0] = x[1] = 0.0;
                     }
                 }
-            
-                u[0] = x[0] - from[0]; 
-                u[1] = x[1] - from[1]; 
+
+                u[0] = x[0] - from[0];
+                u[1] = x[1] - from[1];
                 u[2] = x[2] - from[2];
-                v[0] = x[0] - to  [0];   
-                v[1] = x[1] - to  [1];   
+                v[0] = x[0] - to  [0];
+                v[1] = x[1] - to  [1];
                 v[2] = x[2] - to  [2];
-            
+
                 c1 = 2.0 / DOT(u, u);
                 c2 = 2.0 / DOT(v, v);
                 c3 = c1 * c2  * DOT(u, v);
-                
+
                 for (i = 0; i < 3; i++) {
                     for (j = 0; j < 3; j++) {
                         mat[3*i+j] =  - c1 * u[i] * u[j]

@@ -34,8 +34,8 @@
 
 #include <boost/core/ignore_unused.hpp>
 
-#include <AVXOperators/Operator.hpp>
-#include <AVXOperators/AVXUtil.hpp>
+#include <MatrixFreeOps/Operator.hpp>
+#include <MatrixFreeOps/Util.hpp>
 
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
@@ -226,14 +226,14 @@ OperatorKey PhysDeriv_StdMat::m_typeArr[] =
 };
 
 /**
- * @brief Phys deriv operator using AVX operators.
+ * @brief Phys deriv operator using matrix free operators.
  */
-class PhysDeriv_AVX : public Operator
+class PhysDeriv_MatrixFree : public Operator
 {
     public:
-        OPERATOR_CREATE(PhysDeriv_AVX)
+        OPERATOR_CREATE(PhysDeriv_MatrixFree)
 
-        virtual ~PhysDeriv_AVX()
+        virtual ~PhysDeriv_MatrixFree()
         {
         }
 
@@ -287,11 +287,11 @@ class PhysDeriv_AVX : public Operator
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal,
-                "PhysDeriv_AVX: Not valid for this operator.");
+                "PhysDeriv_MatrixFree: Not valid for this operator.");
         }
 
     private:
-        std::shared_ptr<AVX::PhysDeriv> m_oper;
+        std::shared_ptr<MatrixFree::PhysDeriv> m_oper;
         /// flag for padding
         bool m_isPadded{false};
         /// padded input/output vectors
@@ -300,7 +300,7 @@ class PhysDeriv_AVX : public Operator
         /// coordinate dimensions
         unsigned short m_coordim;
 
-        PhysDeriv_AVX(
+        PhysDeriv_MatrixFree(
                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                 CoalescedGeomDataSharedPtr                pGeomData)
             : Operator(pCollExp, pGeomData)
@@ -310,13 +310,14 @@ class PhysDeriv_AVX : public Operator
             const auto nqElmt = pCollExp[0]->GetStdExp()->GetTotPoints();
 
             // Padding if needed
+            using vec_t = tinysimd::simd<NekDouble>;
             const auto nElmtNoPad = pCollExp.size();
             auto nElmtPad = nElmtNoPad;
-            if (nElmtNoPad % AVX::SIMD_WIDTH_SIZE != 0)
+            if (nElmtNoPad % vec_t::width != 0)
             {
                 m_isPadded = true;
-                nElmtPad = nElmtNoPad + AVX::SIMD_WIDTH_SIZE -
-                    (nElmtNoPad % AVX::SIMD_WIDTH_SIZE);
+                nElmtPad = nElmtNoPad + vec_t::width -
+                    (nElmtNoPad % vec_t::width);
                 m_input = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
                 m_output = Array<OneD, Array<OneD, NekDouble>> {m_coordim};
                 m_output[0] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
@@ -361,28 +362,28 @@ class PhysDeriv_AVX : public Operator
 
             // Generate operator string and create operator.
             std::string op_string = "PhysDeriv";
-            op_string += AVX::GetOpstring(shapeType, deformed);
-            auto oper = AVX::GetOperatorFactory().
+            op_string += MatrixFree::GetOpstring(shapeType, deformed);
+            auto oper = MatrixFree::GetOperatorFactory().
                 CreateInstance(op_string, basis, nElmtPad);
 
             // Store derivative factor
             oper->SetDF(df);
 
-            m_oper = std::dynamic_pointer_cast<AVX::PhysDeriv>(oper);
+            m_oper = std::dynamic_pointer_cast<MatrixFree::PhysDeriv>(oper);
             ASSERTL0(m_oper, "Failed to cast pointer.");
 
         }
 };
 
-/// Factory initialisation for the PhysDeriv_AVX operators
-OperatorKey PhysDeriv_AVX::m_typeArr[] =
+/// Factory initialisation for the PhysDeriv_MatrixFree operators
+OperatorKey PhysDeriv_MatrixFree::m_typeArr[] =
 {
     GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eQuadrilateral, ePhysDeriv, eAVX, false),
-        PhysDeriv_AVX::create, "PhysDeriv_AVX_Quad"),
+        OperatorKey(eQuadrilateral, ePhysDeriv, eMatrixFree, false),
+        PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Quad"),
     GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eHexahedron, ePhysDeriv, eAVX, false),
-        PhysDeriv_AVX::create, "PhysDeriv_AVX_Hex")
+        OperatorKey(eHexahedron, ePhysDeriv, eMatrixFree, false),
+        PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Hex")
 
 };
 

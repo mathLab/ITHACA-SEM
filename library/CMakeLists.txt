@@ -1,14 +1,11 @@
 # Main library sub-directories, required by all of Nektar++.
 SUBDIRS(LibUtilities LocalRegions SpatialDomains StdRegions Collections
-        MultiRegions)
+        MultiRegions MatrixFreeOps)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/library)
-
-IF (NEKTAR_BUILD_AVX)
-    SUBDIRS(AVXOperators)
-ENDIF()
 
 IF (NEKTAR_BUILD_UNIT_TESTS)
     SUBDIRS(UnitTests)
+    SUBDIRS(UnitTests/SIMD)
 ENDIF()
 
 IF (NEKTAR_BUILD_DEMOS)

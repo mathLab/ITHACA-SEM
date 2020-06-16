@@ -34,8 +34,8 @@
 
 #include <boost/core/ignore_unused.hpp>
 
-#include <AVXOperators/Operator.hpp>
-#include <AVXOperators/AVXUtil.hpp>
+#include <MatrixFreeOps/Operator.hpp>
+#include <MatrixFreeOps/Util.hpp>
 
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
@@ -152,14 +152,14 @@ OperatorKey IProductWRTBase_StdMat::m_typeArr[] = {
 };
 
 /**
- * @brief Inner product operator using operator using AVX operators.
+ * @brief Inner product operator using operator using matrix free operators.
  */
-class IProductWRTBase_AVX : public Operator
+class IProductWRTBase_MatrixFree : public Operator
 {
     public:
-        OPERATOR_CREATE(IProductWRTBase_AVX)
+        OPERATOR_CREATE(IProductWRTBase_MatrixFree)
 
-        virtual ~IProductWRTBase_AVX()
+        virtual ~IProductWRTBase_MatrixFree()
         {
         }
 
@@ -197,13 +197,13 @@ class IProductWRTBase_AVX : public Operator
         }
 
     private:
-        std::shared_ptr<AVX::IProduct> m_oper;
+        std::shared_ptr<MatrixFree::IProduct> m_oper;
         /// flag for padding
         bool m_isPadded{false};
         /// padded input/output vectors
         Array<OneD, NekDouble> m_input, m_output;
 
-        IProductWRTBase_AVX(
+        IProductWRTBase_MatrixFree(
                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                 CoalescedGeomDataSharedPtr                pGeomData)
             : Operator(pCollExp, pGeomData)
@@ -212,13 +212,14 @@ class IProductWRTBase_AVX : public Operator
             const auto nmElmt = pCollExp[0]->GetStdExp()->GetNcoeffs();
 
             // Padding if needed
+            using vec_t = tinysimd::simd<NekDouble>;
             const auto nElmtNoPad = pCollExp.size();
             auto nElmtPad = nElmtNoPad;
-            if (nElmtNoPad % AVX::SIMD_WIDTH_SIZE != 0)
+            if (nElmtNoPad % vec_t::width != 0)
             {
                 m_isPadded = true;
-                nElmtPad = nElmtNoPad + AVX::SIMD_WIDTH_SIZE -
-                    (nElmtNoPad % AVX::SIMD_WIDTH_SIZE);
+                nElmtPad = nElmtNoPad + vec_t::width -
+                    (nElmtNoPad % vec_t::width);
                 m_input = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
                 m_output = Array<OneD, NekDouble>{nmElmt * nElmtPad, 0.0};
             }
@@ -253,30 +254,30 @@ class IProductWRTBase_AVX : public Operator
 
             // Generate operator string and create operator.
             std::string op_string = "IProduct";
-            op_string += AVX::GetOpstring(shapeType, deformed);
-            auto oper = AVX::GetOperatorFactory().
+            op_string += MatrixFree::GetOpstring(shapeType, deformed);
+            auto oper = MatrixFree::GetOperatorFactory().
                 CreateInstance(op_string, basis, nElmtPad);
 
             // Set Jacobian
             oper->SetJac(jac);
 
-            m_oper = std::dynamic_pointer_cast<AVX::IProduct>(oper);
+            m_oper = std::dynamic_pointer_cast<MatrixFree::IProduct>(oper);
             ASSERTL0(m_oper, "Failed to cast pointer.");
 
         }
 };
 
-/// Factory initialisation for the IProductWRTBase_AVX operators
-OperatorKey IProductWRTBase_AVX::m_typeArr[] = {
+/// Factory initialisation for the IProductWRTBase_MatrixFree operators
+OperatorKey IProductWRTBase_MatrixFree::m_typeArr[] = {
     GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eQuadrilateral, eIProductWRTBase, eAVX, false),
-        IProductWRTBase_AVX::create, "IProductWRTBase_AVX_Quad"),
+        OperatorKey(eQuadrilateral, eIProductWRTBase, eMatrixFree, false),
+        IProductWRTBase_MatrixFree::create, "IProductWRTBase_MatrixFree_Quad"),
     GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eTriangle, eIProductWRTBase, eAVX, false),
-        IProductWRTBase_AVX::create, "IProductWRTBase_AVX_Tri"),
+        OperatorKey(eTriangle, eIProductWRTBase, eMatrixFree, false),
+        IProductWRTBase_MatrixFree::create, "IProductWRTBase_MatrixFree_Tri"),
     GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eHexahedron, eIProductWRTBase, eAVX, false),
-        IProductWRTBase_AVX::create, "IProductWRTBase_AVX_Hex")
+        OperatorKey(eHexahedron, eIProductWRTBase, eMatrixFree, false),
+        IProductWRTBase_MatrixFree::create, "IProductWRTBase_MatrixFree_Hex")
 };
 
 

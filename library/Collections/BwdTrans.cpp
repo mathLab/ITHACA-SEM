@@ -34,8 +34,7 @@
 
 #include <boost/core/ignore_unused.hpp>
 
-#include <AVXOperators/Operator.hpp>
-#include <AVXOperators/AVXUtil.hpp>
+#include <MatrixFreeOps/Operator.hpp>
 
 #include <Collections/Operator.h>
 #include <Collections/CoalescedGeomData.h>
@@ -143,14 +142,14 @@ OperatorKey BwdTrans_StdMat::m_typeArr[] = {
 
 
 /**
- * @brief Backward transform operator using AVX operators.
+ * @brief Backward transform operator using matrix free operators.
  */
-class BwdTrans_AVX final : public Operator
+class BwdTrans_MatrixFree final : public Operator
 {
     public:
-        OPERATOR_CREATE(BwdTrans_AVX)
+        OPERATOR_CREATE(BwdTrans_MatrixFree)
 
-        ~BwdTrans_AVX()
+        ~BwdTrans_MatrixFree()
         {
         }
 
@@ -185,17 +184,17 @@ class BwdTrans_AVX final : public Operator
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal,
-                "BwdTrans_AVX: Not valid for this operator.");
+                "BwdTrans_MatrixFree: Not valid for this operator.");
         }
 
     private:
-        std::shared_ptr<AVX::BwdTrans> m_oper;
+        std::shared_ptr<MatrixFree::BwdTrans> m_oper;
         /// flag for padding
         bool m_isPadded{false};
         /// padded input/output vectors
         Array<OneD, NekDouble> m_input, m_output;
 
-        BwdTrans_AVX(
+        BwdTrans_MatrixFree(
                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                 CoalescedGeomDataSharedPtr                pGeomData)
             : Operator(pCollExp, pGeomData)
@@ -204,13 +203,14 @@ class BwdTrans_AVX final : public Operator
             const auto nmElmt = pCollExp[0]->GetStdExp()->GetNcoeffs();
 
             // Padding if needed
+            using vec_t = tinysimd::simd<NekDouble>;
             const auto nElmtNoPad = pCollExp.size();
             auto nElmtPad = nElmtNoPad;
-            if (nElmtNoPad % AVX::SIMD_WIDTH_SIZE != 0)
+            if (nElmtNoPad % vec_t::width != 0)
             {
                 m_isPadded = true;
-                nElmtPad = nElmtNoPad + AVX::SIMD_WIDTH_SIZE -
-                    (nElmtNoPad % AVX::SIMD_WIDTH_SIZE);
+                nElmtPad = nElmtNoPad + vec_t::width -
+                    (nElmtNoPad % vec_t::width);
                 m_input = Array<OneD, NekDouble>{nmElmt * nElmtPad, 0.0};
                 m_output = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
             }
@@ -228,28 +228,28 @@ class BwdTrans_AVX final : public Operator
 
             // Generate operator string and create operator.
             std::string op_string = "BwdTrans";
-            op_string += AVX::GetOpstring(shapeType, false);
-            auto oper = AVX::GetOperatorFactory().
+            op_string += MatrixFree::GetOpstring(shapeType, false);
+            auto oper = MatrixFree::GetOperatorFactory().
                 CreateInstance(op_string, basis, nElmtPad);
 
-            m_oper = std::dynamic_pointer_cast<AVX::BwdTrans>(oper);
+            m_oper = std::dynamic_pointer_cast<MatrixFree::BwdTrans>(oper);
             ASSERTL0(m_oper, "Failed to cast pointer.");
 
 
         }
 };
 
-/// Factory initialisation for the BwdTrans_AVX operators
-OperatorKey BwdTrans_AVX::m_typeArr[] = {
+/// Factory initialisation for the BwdTrans_MatrixFree operators
+OperatorKey BwdTrans_MatrixFree::m_typeArr[] = {
     GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eQuadrilateral, eBwdTrans, eAVX, false),
-        BwdTrans_AVX::create, "BwdTrans_AVX_Quad"),
+        OperatorKey(eQuadrilateral, eBwdTrans, eMatrixFree, false),
+        BwdTrans_MatrixFree::create, "BwdTrans_MatrixFree_Quad"),
     GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eTriangle,      eBwdTrans, eAVX, false),
-        BwdTrans_AVX::create, "BwdTrans_AVX_Tri"),
+        OperatorKey(eTriangle,      eBwdTrans, eMatrixFree, false),
+        BwdTrans_MatrixFree::create, "BwdTrans_MatrixFree_Tri"),
     GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eHexahedron,    eBwdTrans, eAVX, false),
-        BwdTrans_AVX::create, "BwdTrans_AVX_Hex")
+        OperatorKey(eHexahedron,    eBwdTrans, eMatrixFree, false),
+        BwdTrans_MatrixFree::create, "BwdTrans_MatrixFree_Hex")
 };
 
 

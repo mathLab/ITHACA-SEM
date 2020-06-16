@@ -226,14 +226,14 @@ OperatorKey PhysDeriv_StdMat::m_typeArr[] =
 };
 
 /**
- * @brief Phys deriv operator using AVX operators.
+ * @brief Phys deriv operator using matrix free operators.
  */
-class PhysDeriv_AVX : public Operator
+class PhysDeriv_MatrixFree : public Operator
 {
     public:
-        OPERATOR_CREATE(PhysDeriv_AVX)
+        OPERATOR_CREATE(PhysDeriv_MatrixFree)
 
-        virtual ~PhysDeriv_AVX()
+        virtual ~PhysDeriv_MatrixFree()
         {
         }
 
@@ -287,7 +287,7 @@ class PhysDeriv_AVX : public Operator
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal,
-                "PhysDeriv_AVX: Not valid for this operator.");
+                "PhysDeriv_MatrixFree: Not valid for this operator.");
         }
 
     private:
@@ -300,7 +300,7 @@ class PhysDeriv_AVX : public Operator
         /// coordinate dimensions
         unsigned short m_coordim;
 
-        PhysDeriv_AVX(
+        PhysDeriv_MatrixFree(
                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                 CoalescedGeomDataSharedPtr                pGeomData)
             : Operator(pCollExp, pGeomData)
@@ -375,15 +375,15 @@ class PhysDeriv_AVX : public Operator
         }
 };
 
-/// Factory initialisation for the PhysDeriv_AVX operators
-OperatorKey PhysDeriv_AVX::m_typeArr[] =
+/// Factory initialisation for the PhysDeriv_MatrixFree operators
+OperatorKey PhysDeriv_MatrixFree::m_typeArr[] =
 {
     GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eQuadrilateral, ePhysDeriv, eAVX, false),
-        PhysDeriv_AVX::create, "PhysDeriv_AVX_Quad"),
+        OperatorKey(eQuadrilateral, ePhysDeriv, eMatrixFree, false),
+        PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Quad"),
     GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eHexahedron, ePhysDeriv, eAVX, false),
-        PhysDeriv_AVX::create, "PhysDeriv_AVX_Hex")
+        OperatorKey(eHexahedron, ePhysDeriv, eMatrixFree, false),
+        PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Hex")
 
 };
 

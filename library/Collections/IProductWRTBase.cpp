@@ -152,14 +152,14 @@ OperatorKey IProductWRTBase_StdMat::m_typeArr[] = {
 };
 
 /**
- * @brief Inner product operator using operator using AVX operators.
+ * @brief Inner product operator using operator using matrix free operators.
  */
-class IProductWRTBase_AVX : public Operator
+class IProductWRTBase_MatrixFree : public Operator
 {
     public:
-        OPERATOR_CREATE(IProductWRTBase_AVX)
+        OPERATOR_CREATE(IProductWRTBase_MatrixFree)
 
-        virtual ~IProductWRTBase_AVX()
+        virtual ~IProductWRTBase_MatrixFree()
         {
         }
 
@@ -203,7 +203,7 @@ class IProductWRTBase_AVX : public Operator
         /// padded input/output vectors
         Array<OneD, NekDouble> m_input, m_output;
 
-        IProductWRTBase_AVX(
+        IProductWRTBase_MatrixFree(
                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                 CoalescedGeomDataSharedPtr                pGeomData)
             : Operator(pCollExp, pGeomData)
@@ -267,14 +267,14 @@ class IProductWRTBase_AVX : public Operator
         }
 };
 
-/// Factory initialisation for the IProductWRTBase_AVX operators
-OperatorKey IProductWRTBase_AVX::m_typeArr[] = {
+/// Factory initialisation for the IProductWRTBase_MatrixFree operators
+OperatorKey IProductWRTBase_MatrixFree::m_typeArr[] = {
     GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eQuadrilateral, eIProductWRTBase, eAVX, false),
-        IProductWRTBase_AVX::create, "IProductWRTBase_AVX_Quad"),
+        OperatorKey(eQuadrilateral, eIProductWRTBase, eMatrixFree, false),
+        IProductWRTBase_MatrixFree::create, "IProductWRTBase_MatrixFree_Quad"),
     GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eHexahedron, eIProductWRTBase, eAVX, false),
-        IProductWRTBase_AVX::create, "IProductWRTBase_AVX_Hex")
+        OperatorKey(eHexahedron, eIProductWRTBase, eMatrixFree, false),
+        IProductWRTBase_MatrixFree::create, "IProductWRTBase_MatrixFree_Hex")
 };
 
 

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>2D unsteady WeakDG advection GAUSS_LAGRANGE, P=3, Q=5 Dirichlet bcs, regular elements using AVX BwdTrans and 2 mpi ranks which force the use of padding</description>
+    <description>2D unsteady WeakDG advection GAUSS_LAGRANGE, P=3, Q=5 Dirichlet bcs, regular elements using matrix free BwdTrans and 2 mpi ranks which force the use of padding</description>
     <executable>ADRSolver</executable>
-    <parameters>Advection2D_dirichlet_regular_GAUSS_LAGRANGE_10x10_AVX.xml</parameters>
+    <parameters>Advection2D_dirichlet_regular_GAUSS_LAGRANGE_10x10_MF.xml</parameters>
     <processes>2</processes>
     <files>
-        <file description="Session File">Advection2D_dirichlet_regular_GAUSS_LAGRANGE_10x10_AVX.xml</file>
+        <file description="Session File">Advection2D_dirichlet_regular_GAUSS_LAGRANGE_10x10_MF.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

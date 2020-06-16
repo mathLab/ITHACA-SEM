@@ -69,7 +69,7 @@
 
     <COLLECTIONS>
         <OPERATOR TYPE="BwdTrans">
-            <ELEMENT TYPE="T" ORDER="2-15" IMPTYPE="AVX" />
+            <ELEMENT TYPE="T" ORDER="2-15" IMPTYPE="MatrixFree" />
         </OPERATOR>
     </COLLECTIONS>
 

@@ -49,7 +49,8 @@
 
 #ifdef NEKTAR_USE_ALIGNED_MEM
 #include <boost/align/aligned_alloc.hpp>
-#include <MatrixFreeOps/VecData.hpp>
+#include <LibUtilities/SimdLib/tinysimd.hpp>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #endif
 
 #include <cstring>
@@ -200,7 +201,7 @@ namespace Nektar
                 else if( bytes > m_upperBound )
                 {
 #ifdef NEKTAR_USE_ALIGNED_MEM
-                    return boost::alignment::aligned_alloc(AVX::SIMD_WIDTH_BYTES, bytes);
+                    return boost::alignment::aligned_alloc(tinysimd::simd<NekDouble>::alignment, bytes);
 #else
                     return ::operator new(bytes);
 #endif

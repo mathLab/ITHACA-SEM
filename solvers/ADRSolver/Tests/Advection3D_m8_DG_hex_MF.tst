@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>3D unsteady DG advection, hexahedra, order 7, using AVX BwdTrans </description>
+    <description>3D unsteady DG advection, hexahedra, order 7, using matrix free BwdTrans </description>
     <executable>ADRSolver</executable>
-    <parameters>Advection3D_m8_DG_hex_AVX.xml</parameters>
+    <parameters>Advection3D_m8_DG_hex_MF.xml</parameters>
     <files>
-        <file description="Session File">Advection3D_m8_DG_hex_AVX.xml</file>
+        <file description="Session File">Advection3D_m8_DG_hex_MF.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

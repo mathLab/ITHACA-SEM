@@ -153,7 +153,7 @@ public:
     static DataType* Allocate(const Args &...args)
     {
         #ifdef NEKTAR_USE_ALIGNED_MEM
-            void *ptr = boost::alignment::aligned_alloc(AVX::SIMD_WIDTH_BYTES,
+            void *ptr = boost::alignment::aligned_alloc(tinysimd::simd<NekDouble>::alignment,
                 sizeof(DataType));
             return new (ptr) DataType(args...);
         #else
@@ -203,7 +203,7 @@ public:
 #else //NEKTAR_MEMORY_POOL_ENABLED
     #ifdef NEKTAR_USE_ALIGNED_MEM
         return static_cast<DataType*>(boost::alignment::aligned_alloc(
-            AVX::SIMD_WIDTH_BYTES,
+            tinysimd::simd<NekDouble>::alignment,
             NumberOfElements * sizeof(DataType)));
     #else
         return static_cast<DataType*>(::operator new(NumberOfElements * sizeof(DataType)));

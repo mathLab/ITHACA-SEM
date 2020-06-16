@@ -1,8 +1,8 @@
 SET(MATRIXFREEOPS_SOURCES
-    AVXBwdTrans.cpp
-    AVXIProduct.cpp
-    AVXIProductWRTDerivBase.cpp
-    AVXPhysDeriv.cpp
+    BwdTrans.cpp
+    IProduct.cpp
+    IProductWRTDerivBase.cpp
+    PhysDeriv.cpp
     # AVXHelmholtz.cpp
     # AVXHelmholtzGlobal.cpp
     Operator.cpp
@@ -10,13 +10,13 @@ SET(MATRIXFREEOPS_SOURCES
 
 SET(MATRIXFREEOPS_HEADERS
     # AVXAssembly.h
-    AVXBwdTrans.h
-    AVXBwdTransKernels.hpp
-    AVXIProduct.h
-    AVXIProductKernels.hpp
-    AVXIProductWRTDerivBase.h
+    BwdTrans.h
+    BwdTransKernels.hpp
+    IProduct.h
+    IProductKernels.hpp
+    IProductWRTDerivBase.h
     # AVXHelmholtzGlobal.h
-    AVXUtil.hpp
+    Util.hpp
     Operator.hpp
 )
 

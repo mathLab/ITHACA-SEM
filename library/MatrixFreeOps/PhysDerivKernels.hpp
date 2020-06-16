@@ -1,17 +1,17 @@
-#ifndef AVXPHYSDERIVKERNELS_HPP
-#define AVXPHYSDERIVKERNELS_HPP
+#ifndef MF_PHYSDERIVKERNELS_HPP
+#define MF_PHYSDERIVKERNELS_HPP
 
 #include <LibUtilities/SimdLib/tinysimd.hpp>
 
 namespace Nektar
 {
-namespace AVX
+namespace MatrixFree
 {
 using namespace tinysimd;
 using vec_t = simd<NekDouble>;
 
 template<int NUMQUAD0, int NUMQUAD1>
-inline static void AVXPhysDerivTensor2DKernel(
+inline static void PhysDerivTensor2DKernel(
     const std::vector<vec_t, allocator<vec_t>> &in,
     const std::vector<vec_t, allocator<vec_t>> &D0,
     const std::vector<vec_t, allocator<vec_t>> &D1,
@@ -64,7 +64,7 @@ inline static void AVXPhysDerivTensor2DKernel(
 }
 
 template<int NUMQUAD0, int NUMQUAD1, bool DEFORMED>
-static void AVXPhysDerivQuadKernel(
+static void PhysDerivQuadKernel(
     const std::vector<vec_t, allocator<vec_t>> &inptr,
     const std::vector<vec_t, allocator<vec_t>> &Z0,
     const std::vector<vec_t, allocator<vec_t>> &Z1,
@@ -79,7 +79,7 @@ static void AVXPhysDerivQuadKernel(
     constexpr auto nq0 = NUMQUAD0, nq1 = NUMQUAD1;
     constexpr auto ndf = 4;
 
-    AVXPhysDerivTensor2DKernel<NUMQUAD0, NUMQUAD1>(
+    PhysDerivTensor2DKernel<NUMQUAD0, NUMQUAD1>(
         inptr,
         D0, D1,
         outptr_d0, outptr_d1); //Results written to outptr_d0, outptr_d1
@@ -123,7 +123,7 @@ static void AVXPhysDerivQuadKernel(
 
 // template<int NUMQUAD0, int NUMQUAD1,
 //          int VW, bool DEFORMED, class BasisType>
-// static void AVXPhysDerivTriKernel(
+// static void PhysDerivTriKernel(
 //     const NekDouble *inptr,
 //     const AlignedVector<BasisType> &Z0,
 //     const AlignedVector<BasisType> &Z1,
@@ -138,7 +138,7 @@ static void AVXPhysDerivQuadKernel(
 //     constexpr int ndf = 4;
 //     using T = VecData<double, VW>;
 
-//     AVXPhysDerivTensor2DKernel<NUMQUAD0, NUMQUAD1, VW>(
+//     PhysDerivTensor2DKernel<NUMQUAD0, NUMQUAD1, VW>(
 //         inptr,
 //         D0, D1,
 //         outptr_d0, outptr_d1); //Results written to outptr_d0, outptr_d1
@@ -186,7 +186,7 @@ static void AVXPhysDerivQuadKernel(
 // }
 
 template<int NUMQUAD0, int NUMQUAD1, int NUMQUAD2>
-inline static void AVXPhysDerivTensor3DKernel(
+inline static void PhysDerivTensor3DKernel(
     const std::vector<vec_t, allocator<vec_t>> &in,
     const std::vector<vec_t, allocator<vec_t>> &D0,
     const std::vector<vec_t, allocator<vec_t>> &D1,
@@ -263,7 +263,7 @@ inline static void AVXPhysDerivTensor3DKernel(
 }
 
 template<int NUMQUAD0, int NUMQUAD1, int NUMQUAD2, bool DEFORMED>
-static void AVXPhysDerivHexKernel(
+static void PhysDerivHexKernel(
     const std::vector<vec_t, allocator<vec_t>> &inptr,
     const std::vector<vec_t, allocator<vec_t>> &Z0,
     const std::vector<vec_t, allocator<vec_t>> &Z1,
@@ -280,7 +280,7 @@ static void AVXPhysDerivHexKernel(
     constexpr auto nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD2;
     constexpr auto ndf = 9;
 
-    AVXPhysDerivTensor3DKernel<NUMQUAD0, NUMQUAD1, NUMQUAD2>(
+    PhysDerivTensor3DKernel<NUMQUAD0, NUMQUAD1, NUMQUAD2>(
         inptr,
         D0, D1, D2,
         outptr_d0, outptr_d1, outptr_d2);
@@ -344,7 +344,7 @@ static void AVXPhysDerivHexKernel(
 
 // template<int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
 //          int VW, bool DEFORMED, class BasisType>
-// static void AVXPhysDerivPrismKernel(
+// static void PhysDerivPrismKernel(
 //     const NekDouble *inptr,
 //     const AlignedVector<BasisType> &Z0,
 //     const AlignedVector<BasisType> &Z1,
@@ -361,7 +361,7 @@ static void AVXPhysDerivHexKernel(
 //     constexpr int ndf = 9;
 //     using T = VecData<double, VW>;
 
-//     AVXPhysDerivTensor3DKernel<NUMQUAD0, NUMQUAD1, NUMQUAD2, VW>(
+//     PhysDerivTensor3DKernel<NUMQUAD0, NUMQUAD1, NUMQUAD2, VW>(
 //         inptr,
 //         D0, D1, D2,
 //         outptr_d0, outptr_d1, outptr_d2);
@@ -428,7 +428,7 @@ static void AVXPhysDerivHexKernel(
 
 // template<int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
 //          int VW, bool DEFORMED, class BasisType>
-// static void AVXPhysDerivTetKernel(
+// static void PhysDerivTetKernel(
 //     const NekDouble *inptr,
 //     const AlignedVector<BasisType> &Z0,
 //     const AlignedVector<BasisType> &Z1,
@@ -449,7 +449,7 @@ static void AVXPhysDerivHexKernel(
 //     constexpr int ndf = 9;
 //     using T = VecData<double, VW>;
 
-//     AVXPhysDerivTensor3DKernel<NUMQUAD0, NUMQUAD1, NUMQUAD2, VW>(
+//     PhysDerivTensor3DKernel<NUMQUAD0, NUMQUAD1, NUMQUAD2, VW>(
 //         inptr,
 //         D0, D1, D2,
 //         diff0, diff1, diff2);
@@ -566,7 +566,7 @@ static void AVXPhysDerivHexKernel(
 
 // }
 
-} // namespace AVX
+} // namespace MatrixFree
 } // namespace Nektar
 
 #endif

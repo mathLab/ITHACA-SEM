@@ -188,7 +188,7 @@ class BwdTrans_AVX final : public Operator
         }
 
     private:
-        std::shared_ptr<AVX::BwdTrans> m_oper;
+        std::shared_ptr<MatrixFree::BwdTrans> m_oper;
         /// flag for padding
         bool m_isPadded{false};
         /// padded input/output vectors
@@ -228,11 +228,11 @@ class BwdTrans_AVX final : public Operator
 
             // Generate operator string and create operator.
             std::string op_string = "BwdTrans";
-            op_string += AVX::GetOpstring(shapeType, false);
-            auto oper = AVX::GetOperatorFactory().
+            op_string += MatrixFree::GetOpstring(shapeType, false);
+            auto oper = MatrixFree::GetOperatorFactory().
                 CreateInstance(op_string, basis, nElmtPad);
 
-            m_oper = std::dynamic_pointer_cast<AVX::BwdTrans>(oper);
+            m_oper = std::dynamic_pointer_cast<MatrixFree::BwdTrans>(oper);
             ASSERTL0(m_oper, "Failed to cast pointer.");
 
 

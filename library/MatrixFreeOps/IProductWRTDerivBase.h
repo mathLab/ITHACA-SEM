@@ -1,25 +1,28 @@
-#ifndef NEKTAR_LIBRARY_AVXIPRODUCT_H
-#define NEKTAR_LIBRARY_AVXIPRODUCT_H
+#ifndef NEKTAR_LIBRARY_MF_IPRODUCTWRTDERIVBASE_H
+#define NEKTAR_LIBRARY_MF_IPRODUCTWRTDERIVBASE_H
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 #include <LibUtilities/Foundations/Basis.h>
 
 #include "Operator.hpp"
-#include "AVXIProductKernels.hpp"
+
+#include "IProductKernels.hpp"
 
 namespace Nektar
 {
-namespace AVX
+namespace MatrixFree
 {
 
 template<bool DEFORMED = false>
-struct AVXIProductQuad : public IProduct, public AVXHelper<2, DEFORMED>
+struct IProductWRTDerivBaseQuad : public IProductWRTDerivBase, public Helper<2, DEFORMED>
 {
-    AVXIProductQuad(std::vector<LibUtilities::BasisSharedPtr> basis,
+public:
+
+    IProductWRTDerivBaseQuad(std::vector<LibUtilities::BasisSharedPtr> basis,
                    int nElmt)
-        : IProduct(basis, nElmt),
-          AVXHelper<2, DEFORMED>(basis, nElmt),
+        : IProductWRTDerivBase(basis, nElmt),
+          Helper<2, DEFORMED>(basis, nElmt),
           m_nmTot(LibUtilities::StdQuadData::getNumberOfCoefficients(
                       this->m_nm[0], this->m_nm[1]))
     {
@@ -29,208 +32,254 @@ struct AVXIProductQuad : public IProduct, public AVXHelper<2, DEFORMED>
         std::vector<LibUtilities::BasisSharedPtr> basis,
         int nElmt)
     {
-        return std::make_shared<AVXIProductQuad<DEFORMED>>(basis, nElmt);
+        return std::make_shared<IProductWRTDerivBaseQuad<DEFORMED>>(basis, nElmt);
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &in,
-                                  Array<OneD,       NekDouble> &out)
+    void operator()( const Array<OneD, Array<OneD, NekDouble>> &in,
+                     Array<OneD, NekDouble> &out) override
     {
         switch(m_basis[0]->GetNumModes())
         {
             case 2:
                 switch(m_basis[0]->GetNumPoints())
                 {
-                    case 2: AVXIProductQuadImpl<2 ,2 ,2 ,2 >(in, out); break;
-                    case 3: AVXIProductQuadImpl<2 ,2 ,3 ,3 >(in, out); break;
-                    case 4: AVXIProductQuadImpl<2 ,2 ,4 ,4 >(in, out); break;
+                    case 2: IProductWRTDerivBaseQuadImpl<2 ,2 ,2 ,2 >
+                    (in[0], in[1], out); break;
+                    case 3: IProductWRTDerivBaseQuadImpl<2 ,2 ,3 ,3 >
+                    (in[0], in[1], out); break;
+                    case 4: IProductWRTDerivBaseQuadImpl<2 ,2 ,4 ,4 >
+                    (in[0], in[1], out); break;
                     default: NEKERROR(ErrorUtil::efatal,
-                "AVXIProductQuad: # of modes / points combo not implemented.");
+                "IProductWRTDerivBaseQuad: # of modes / points combo not"
+                " implemented.");
                 } break;
             case 3:
                 switch(m_basis[0]->GetNumPoints())
                 {
-                    case 3: AVXIProductQuadImpl<3 ,3 ,3 ,3 >(in, out); break;
-                    case 4: AVXIProductQuadImpl<3 ,3 ,4 ,4 >(in, out); break;
-                    case 5: AVXIProductQuadImpl<3 ,3 ,5 ,5 >(in, out); break;
-                    case 6: AVXIProductQuadImpl<3 ,3 ,6 ,6 >(in, out); break;
+                    case 3: IProductWRTDerivBaseQuadImpl<3 ,3 ,3 ,3 >
+                    (in[0], in[1], out); break;
+                    case 4: IProductWRTDerivBaseQuadImpl<3 ,3 ,4 ,4 >
+                    (in[0], in[1], out); break;
+                    case 5: IProductWRTDerivBaseQuadImpl<3 ,3 ,5 ,5 >
+                    (in[0], in[1], out); break;
+                    case 6: IProductWRTDerivBaseQuadImpl<3 ,3 ,6 ,6 >
+                    (in[0], in[1], out); break;
                     default: NEKERROR(ErrorUtil::efatal,
-                "AVXIProductQuad: # of modes / points combo not implemented.");
+                "IProductWRTDerivBaseQuad: # of modes / points combo not"
+                " implemented.");
                 } break;
             case 4:
                 switch(m_basis[0]->GetNumPoints())
                 {
-                    case 4: AVXIProductQuadImpl<4 ,4 ,4 ,4 >(in, out); break;
-                    case 5: AVXIProductQuadImpl<4 ,4 ,5 ,5 >(in, out); break;
-                    case 6: AVXIProductQuadImpl<4 ,4 ,6 ,6 >(in, out); break;
-                    case 7: AVXIProductQuadImpl<4 ,4 ,7 ,7 >(in, out); break;
-                    case 8: AVXIProductQuadImpl<4 ,4 ,8 ,8 >(in, out); break;
+                    case 4: IProductWRTDerivBaseQuadImpl<4 ,4 ,4 ,4 >
+                    (in[0], in[1], out); break;
+                    case 5: IProductWRTDerivBaseQuadImpl<4 ,4 ,5 ,5 >
+                    (in[0], in[1], out); break;
+                    case 6: IProductWRTDerivBaseQuadImpl<4 ,4 ,6 ,6 >
+                    (in[0], in[1], out); break;
+                    case 7: IProductWRTDerivBaseQuadImpl<4 ,4 ,7 ,7 >
+                    (in[0], in[1], out); break;
+                    case 8: IProductWRTDerivBaseQuadImpl<4 ,4 ,8 ,8 >
+                    (in[0], in[1], out); break;
                     default: NEKERROR(ErrorUtil::efatal,
-                "AVXIProductQuad: # of modes / points combo not implemented.");
+                "IProductWRTDerivBaseQuad: # of modes / points combo not"
+                " implemented.");
                 } break;
             case 5:
                 switch(m_basis[0]->GetNumPoints())
                 {
-                    case 5: AVXIProductQuadImpl<5 ,5 ,5 ,5 >(in, out); break;
-                    case 6: AVXIProductQuadImpl<5 ,5 ,6 ,6 >(in, out); break;
-                    case 7: AVXIProductQuadImpl<5 ,5 ,7 ,7 >(in, out); break;
-                    case 8: AVXIProductQuadImpl<5 ,5 ,8 ,8 >(in, out); break;
-                    case 9: AVXIProductQuadImpl<5 ,5 ,9 ,9 >(in, out); break;
-                    case 10: AVXIProductQuadImpl<5 ,5 ,10 ,10 >(in, out); break;
+                    case 5: IProductWRTDerivBaseQuadImpl<5 ,5 ,5 ,5 >
+                    (in[0], in[1], out); break;
+                    case 6: IProductWRTDerivBaseQuadImpl<5 ,5 ,6 ,6 >
+                    (in[0], in[1], out); break;
+                    case 7: IProductWRTDerivBaseQuadImpl<5 ,5 ,7 ,7 >
+                    (in[0], in[1], out); break;
+                    case 8: IProductWRTDerivBaseQuadImpl<5 ,5 ,8 ,8 >
+                    (in[0], in[1], out); break;
+                    case 9: IProductWRTDerivBaseQuadImpl<5 ,5 ,9 ,9 >
+                    (in[0], in[1], out); break;
+                    case 10: IProductWRTDerivBaseQuadImpl<5 ,5 ,10 ,10 >
+                    (in[0], in[1], out); break;
                     default: NEKERROR(ErrorUtil::efatal,
-                "AVXIProductQuad: # of modes / points combo not implemented.");
+                "IProductWRTDerivBaseQuad: # of modes / points combo not"
+                " implemented.");
                 } break;
             case 6:
                 switch(m_basis[0]->GetNumPoints())
                 {
-                    case 6: AVXIProductQuadImpl<6 ,6 ,6 ,6 >(in, out); break;
-                    case 7: AVXIProductQuadImpl<6 ,6 ,7 ,7 >(in, out); break;
-                    case 8: AVXIProductQuadImpl<6 ,6 ,8 ,8 >(in, out); break;
-                    case 9: AVXIProductQuadImpl<6 ,6 ,9 ,9 >(in, out); break;
-                    case 10: AVXIProductQuadImpl<6 ,6 ,10 ,10 >(in, out); break;
-                    case 11: AVXIProductQuadImpl<6 ,6 ,11 ,11 >(in, out); break;
-                    case 12: AVXIProductQuadImpl<6 ,6 ,12 ,12 >(in, out); break;
+                    case 6: IProductWRTDerivBaseQuadImpl<6 ,6 ,6 ,6 >
+                    (in[0], in[1], out); break;
+                    case 7: IProductWRTDerivBaseQuadImpl<6 ,6 ,7 ,7 >
+                    (in[0], in[1], out); break;
+                    case 8: IProductWRTDerivBaseQuadImpl<6 ,6 ,8 ,8 >
+                    (in[0], in[1], out); break;
+                    case 9: IProductWRTDerivBaseQuadImpl<6 ,6 ,9 ,9 >
+                    (in[0], in[1], out); break;
+                    case 10: IProductWRTDerivBaseQuadImpl<6 ,6 ,10 ,10 >
+                    (in[0], in[1], out); break;
+                    case 11: IProductWRTDerivBaseQuadImpl<6 ,6 ,11 ,11 >
+                    (in[0], in[1], out); break;
+                    case 12: IProductWRTDerivBaseQuadImpl<6 ,6 ,12 ,12 >
+                    (in[0], in[1], out); break;
                     default: NEKERROR(ErrorUtil::efatal,
-                "AVXIProductQuad: # of modes / points combo not implemented.");
+                "IProductWRTDerivBaseQuad: # of modes / points combo not"
+                " implemented.");
                 } break;
             case 7:
                 switch(m_basis[0]->GetNumPoints())
                 {
-                    case 7: AVXIProductQuadImpl<7 ,7 ,7 ,7 >(in, out); break;
-                    case 8: AVXIProductQuadImpl<7 ,7 ,8 ,8 >(in, out); break;
-                    case 9: AVXIProductQuadImpl<7 ,7 ,9 ,9 >(in, out); break;
-                    case 10: AVXIProductQuadImpl<7 ,7 ,10 ,10 >(in, out); break;
-                    case 11: AVXIProductQuadImpl<7 ,7 ,11 ,11 >(in, out); break;
-                    case 12: AVXIProductQuadImpl<7 ,7 ,12 ,12 >(in, out); break;
-                    case 13: AVXIProductQuadImpl<7 ,7 ,13 ,13 >(in, out); break;
-                    case 14: AVXIProductQuadImpl<7 ,7 ,14 ,14 >(in, out); break;
+                    case 7: IProductWRTDerivBaseQuadImpl<7 ,7 ,7 ,7 >
+                    (in[0], in[1], out); break;
+                    case 8: IProductWRTDerivBaseQuadImpl<7 ,7 ,8 ,8 >
+                    (in[0], in[1], out); break;
+                    case 9: IProductWRTDerivBaseQuadImpl<7 ,7 ,9 ,9 >
+                    (in[0], in[1], out); break;
+                    case 10: IProductWRTDerivBaseQuadImpl<7 ,7 ,10 ,10 >
+                    (in[0], in[1], out); break;
+                    case 11: IProductWRTDerivBaseQuadImpl<7 ,7 ,11 ,11 >
+                    (in[0], in[1], out); break;
+                    case 12: IProductWRTDerivBaseQuadImpl<7 ,7 ,12 ,12 >
+                    (in[0], in[1], out); break;
+                    case 13: IProductWRTDerivBaseQuadImpl<7 ,7 ,13 ,13 >
+                    (in[0], in[1], out); break;
+                    case 14: IProductWRTDerivBaseQuadImpl<7 ,7 ,14 ,14 >
+                    (in[0], in[1], out); break;
                     default: NEKERROR(ErrorUtil::efatal,
-                "AVXIProductQuad: # of modes / points combo not implemented.");
+                "IProductWRTDerivBaseQuad: # of modes / points combo not"
+                " implemented.");
                 } break;
             case 8:
                 switch(m_basis[0]->GetNumPoints())
                 {
-                    case 8: AVXIProductQuadImpl<8 ,8 ,8 ,8 >(in, out); break;
-                    case 9: AVXIProductQuadImpl<8 ,8 ,9 ,9 >(in, out); break;
-                    case 10: AVXIProductQuadImpl<8 ,8 ,10 ,10 >(in, out); break;
-                    case 11: AVXIProductQuadImpl<8 ,8 ,11 ,11 >(in, out); break;
-                    case 12: AVXIProductQuadImpl<8 ,8 ,12 ,12 >(in, out); break;
-                    case 13: AVXIProductQuadImpl<8 ,8 ,13 ,13 >(in, out); break;
-                    case 14: AVXIProductQuadImpl<8 ,8 ,14 ,14 >(in, out); break;
-                    case 15: AVXIProductQuadImpl<8 ,8 ,15 ,15 >(in, out); break;
-                    case 16: AVXIProductQuadImpl<8 ,8 ,16 ,16 >(in, out); break;
+                    case 8: IProductWRTDerivBaseQuadImpl<8 ,8 ,8 ,8 >
+                    (in[0], in[1], out); break;
+                    case 9: IProductWRTDerivBaseQuadImpl<8 ,8 ,9 ,9 >
+                    (in[0], in[1], out); break;
+                    case 10: IProductWRTDerivBaseQuadImpl<8 ,8 ,10 ,10 >
+                    (in[0], in[1], out); break;
+                    case 11: IProductWRTDerivBaseQuadImpl<8 ,8 ,11 ,11 >
+                    (in[0], in[1], out); break;
+                    case 12: IProductWRTDerivBaseQuadImpl<8 ,8 ,12 ,12 >
+                    (in[0], in[1], out); break;
+                    case 13: IProductWRTDerivBaseQuadImpl<8 ,8 ,13 ,13 >
+                    (in[0], in[1], out); break;
+                    case 14: IProductWRTDerivBaseQuadImpl<8 ,8 ,14 ,14 >
+                    (in[0], in[1], out); break;
+                    case 15: IProductWRTDerivBaseQuadImpl<8 ,8 ,15 ,15 >
+                    (in[0], in[1], out); break;
+                    case 16: IProductWRTDerivBaseQuadImpl<8 ,8 ,16 ,16 >
+                    (in[0], in[1], out); break;
                     default: NEKERROR(ErrorUtil::efatal,
-                "AVXIProductQuad: # of modes / points combo not implemented.");
+                "IProductWRTDerivBaseQuad: # of modes / points combo not"
+                " implemented.");
                 } break;;
             default: NEKERROR(ErrorUtil::efatal,
-                "AVXIProductQuad: # of modes / points combo not implemented.");
+                "IProductWRTDerivBaseQuad: # of modes / points combo not"
+                " implemented.");
         }
     }
 
     template<int NM0, int NM1, int NQ0, int NQ1>
-    void AVXIProductQuadImpl(
-        const Array<OneD, const NekDouble> &input,
+    void IProductWRTDerivBaseQuadImpl(
+        const Array<OneD, const NekDouble> &input0,
+        const Array<OneD, const NekDouble> &input1,
               Array<OneD,       NekDouble> &output)
     {
-        auto *inptr = &input[0];
-        auto *outptr = &output[0];
+        auto* inptr0 = input0.data();
+        auto* inptr1 = input1.data();
+        auto* outptr = output.data();
 
+        constexpr auto ndf = 4;
         constexpr auto nqTot = NQ0 * NQ1;
         constexpr auto nqBlocks = nqTot * vec_t::width;
-        const auto nmBlocks = m_nmTot * vec_t::width;
+        const int nmBlocks = m_nmTot * vec_t::width;
+
+        // Get size of jacobian factor block
+        int dJSize{}, dfSize{};
+        if(DEFORMED)
+        {
+            dJSize = nqTot;
+            dfSize = ndf*nqTot;
+        }
+        else
+        {
+            dJSize = 1;
+            dfSize = ndf;
+        }
 
         vec_t sums_j[NQ1]; //Sums over eta0 for each value of eta1;
+        std::vector<vec_t, allocator<vec_t>> tmpIn0(nqTot), tmpIn1(nqTot),
+            tmp0(nqTot), tmp1(nqTot), tmpOut(m_nmTot);
 
-        std::vector<vec_t, allocator<vec_t>> tmpIn(nqTot), tmpOut(m_nmTot);
-        vec_t* jac_ptr;
+        const vec_t* df_ptr;
+        const vec_t* jac_ptr;
         for (int e = 0; e < this->m_nBlocks; ++e)
         {
-            if(DEFORMED)
-            {
-                jac_ptr = &(this->m_jac[nqTot*e]);
-            }
-            else
-            {
-                jac_ptr = &(this->m_jac[e]);
-            }
+            // Jacobian
+            jac_ptr = &(this->m_jac[dJSize*e]);
+
+            // Derivative factor
+            df_ptr = &(this->m_df[e*dfSize]);
 
             // Load and transpose data
-            load_interleave(inptr, nqTot, tmpIn);
+            load_interleave(inptr0, nqTot, tmpIn0);
+            load_interleave(inptr1, nqTot, tmpIn1);
 
-            AVXIProductQuadKernel<NM0, NM1, NQ0, NQ1, false, false, DEFORMED>(
-                tmpIn, this->m_bdata[0], this->m_bdata[1],
+            // Calculate dx/dxi in[0] + dy/dxi in[1]
+            vec_t df0, df1, df2, df3;
+            if(!DEFORMED)
+            {
+                df0 = df_ptr[0];
+                df1 = df_ptr[1];
+                df2 = df_ptr[2];
+                df3 = df_ptr[3];
+            }
+            for (int i = 0; i < nqTot; ++i)
+            {
+                if(DEFORMED)
+                {
+                    df0 = df_ptr[i * ndf];
+                    df1 = df_ptr[i * ndf + 1];
+                    df2 = df_ptr[i * ndf + 2];
+                    df3 = df_ptr[i * ndf + 3];
+                }
+                tmp0[i] = df0 * tmpIn0[i] + df2 * tmpIn1[i];
+                tmp1[i] = df1 * tmpIn0[i] + df3 * tmpIn1[i];
+            }
+
+            // IP DB0 B1
+            IProductQuadKernel<NM0, NM1, NQ0, NQ1, false, false, DEFORMED>(
+                tmp0, this->m_dbdata[0], this->m_bdata[1],
+                this->m_w[0], this->m_w[1], jac_ptr,
+                sums_j, tmpOut);
+
+            // IP DB1 B0
+            IProductQuadKernel<NM0, NM1, NQ0, NQ1, false, true, DEFORMED>(
+                tmp1, this->m_bdata[0], this->m_dbdata[1],
                 this->m_w[0], this->m_w[1], jac_ptr,
                 sums_j, tmpOut);
 
             // de-interleave and store data
             deinterleave_store(tmpOut, m_nmTot, outptr);
 
-            inptr += nqBlocks;
+            inptr0 += nqBlocks;
+            inptr1 += nqBlocks;
             outptr += nmBlocks;
         }
     }
-public:
-    static NekDouble FlopsPerElement(
-        const int nm,
-        const int nq0,
-        const int nq1)
-    {
-        int loop_ji = nm * nq0 * nq1 * 4;
-        int loop_qj = nm*nm*nq1 * 3;
-        return ( loop_ji + loop_qj);
-    }
 
-    virtual NekDouble GFlops() override
-    {
-        const int nm = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-
-        int flops = this->m_nElmt * AVXIProductQuad::FlopsPerElement(nm, nq0, nq1);
-        return 1e-9 * flops;
-    }
-
-    virtual NekDouble NStores() override
-    {
-        const int nm = m_basis[0]->GetNumModes();
-        // const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-
-        int store_pj = nm * nq1;
-        int store_pq = nm * nm;
-        int store_expected = store_pj + store_pq;
-
-        return this->m_nElmt * store_expected;
-    }
-
-    virtual NekDouble NLoads() override
-    {
-        const int nm = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-
-        int load_pji = nm * nq1 * nq0 * 3;
-        int load_pqj =  nm * nm * nq1 * 3;
-        int load_expected = load_pji + load_pqj;
-
-        return this->m_nElmt * load_expected;
-    }
-
-    virtual NekDouble Ndof() override
-    {
-        return m_nmTot * this->m_nElmt;
-    }
 
 private:
     int m_nmTot;
 };
 
 // template<int VW, bool DEFORMED = false>
-// struct AVXIProductTri : public IProduct, public AVXHelper<VW, 2, DEFORMED>
+// struct AVXIProductTri : public IProduct, public Helper<VW, 2, DEFORMED>
 // {
 //     AVXIProductTri(std::vector<LibUtilities::BasisSharedPtr> basis,
 //                    int nElmt)
 //         : IProduct(basis, nElmt),
-//           AVXHelper<VW, 2, DEFORMED>(basis, nElmt),
+//           Helper<VW, 2, DEFORMED>(basis, nElmt),
 //           m_nmTot(LibUtilities::StdTriData::getNumberOfCoefficients(
 //                       this->m_nm[0], this->m_nm[1]))
 //     {
@@ -250,7 +299,7 @@ private:
 //         {
 //             switch(m_basis[0]->GetNumModes())
 //             {
-//                 case 2:  AVXIProductTriImpl<2 ,2 ,3 ,2 ,true>(in, out); break;
+//                 case 2:  AVXIProductTriImpl<2 ,2 ,3 ,2 ,true>(in0, in1, out); break;
 //                 case 3:  AVXIProductTriImpl<3 ,3 ,4 ,3 ,true>(in, out); break;
 //                 case 4:  AVXIProductTriImpl<4 ,4 ,5 ,4 ,true>(in, out); break;
 //                 case 5:  AVXIProductTriImpl<5 ,5 ,6 ,5 ,true>(in, out); break;
@@ -364,7 +413,7 @@ private:
 //     virtual NekDouble NStores() override
 //     {
 //         const int nm0 = m_basis[0]->GetNumModes();
-//         // const int nq0 = m_basis[0]->GetNumPoints();
+//         const int nq0 = m_basis[0]->GetNumPoints();
 //         const int nq1 = m_basis[1]->GetNumPoints();
 
 //         int store_pj = nm0*nq1;
@@ -385,12 +434,13 @@ private:
 // };
 
 template<bool DEFORMED = false>
-struct AVXIProductHex : public IProduct, public AVXHelper<3, DEFORMED>
+struct IProductWRTDerivBaseHex : public IProductWRTDerivBase, public Helper<3, DEFORMED>
 {
-    AVXIProductHex(std::vector<LibUtilities::BasisSharedPtr> basis,
+public:
+    IProductWRTDerivBaseHex(std::vector<LibUtilities::BasisSharedPtr> basis,
                    int nElmt)
-        : IProduct(basis, nElmt),
-          AVXHelper<3, DEFORMED>(basis, nElmt),
+        : IProductWRTDerivBase(basis, nElmt),
+          Helper<3, DEFORMED>(basis, nElmt),
           m_nmTot(LibUtilities::StdHexData::getNumberOfCoefficients(
                       this->m_nm[0], this->m_nm[1], this->m_nm[2]))
     {
@@ -400,146 +450,145 @@ struct AVXIProductHex : public IProduct, public AVXHelper<3, DEFORMED>
         std::vector<LibUtilities::BasisSharedPtr> basis,
         int nElmt)
     {
-        return std::make_shared<AVXIProductHex<DEFORMED>>(basis, nElmt);
+        return std::make_shared<IProductWRTDerivBaseHex<DEFORMED>>(basis, nElmt);
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &in,
+    virtual void operator()(const Array<OneD, Array<OneD, NekDouble>> &in,
                                   Array<OneD,       NekDouble> &out)
     {
-        auto nm0 = m_basis[0]->GetNumModes();
-        auto nm1 = m_basis[1]->GetNumModes();
-        auto nm2 = m_basis[2]->GetNumModes();
-        ASSERTL0( nm0 == nm1 && nm0 == nm2,
-            "AVXIProductHex: anisotropy not implemented.");
-
-        auto np0 = m_basis[0]->GetNumPoints();
-
-
-        switch(nm0)
+        switch(m_basis[0]->GetNumModes())
         {
-            case 2:
-                switch(np0)
-                {
-                    case 2: AVXIProductHexImpl<2, 2, 2, 2, 2, 2>(in, out); break;
-                    case 3: AVXIProductHexImpl<2, 2, 2, 3, 3, 3>(in, out); break;
-                    case 4: AVXIProductHexImpl<2, 2, 2, 4, 4, 4>(in, out); break;
-                    default: NEKERROR(ErrorUtil::efatal,
-                "AVXIProductHex: # of modes / points combo not implemented.");
-                } break;
-            case 3:
-                switch(np0)
-                {
-                    case 3: AVXIProductHexImpl<3, 3, 3, 3, 3, 3>(in, out); break;
-                    case 4: AVXIProductHexImpl<3, 3, 3, 4, 4, 4>(in, out); break;
-                    case 5: AVXIProductHexImpl<3, 3, 3, 5, 5, 5>(in, out); break;
-                    case 6: AVXIProductHexImpl<3, 3, 3, 6, 6, 6>(in, out); break;
-                    default: NEKERROR(ErrorUtil::efatal,
-                "AVXIProductHex: # of modes / points combo not implemented.");
-                } break;
-            case 4:
-                switch(np0)
-                {
-                    case 4: AVXIProductHexImpl<4, 4, 4, 4, 4 ,4>(in, out); break;
-                    case 5: AVXIProductHexImpl<4, 4, 4, 5, 5 ,5>(in, out); break;
-                    case 6: AVXIProductHexImpl<4, 4, 4, 6, 6 ,6>(in, out); break;
-                    case 7: AVXIProductHexImpl<4, 4, 4, 7, 7 ,7>(in, out); break;
-                    case 8: AVXIProductHexImpl<4, 4, 4, 8, 8 ,8>(in, out); break;
-                    default: NEKERROR(ErrorUtil::efatal,
-                "AVXIProductHex: # of modes / points combo not implemented.");
-                } break;
-            case 5:
-                switch(np0)
-                {
-                    case 5: AVXIProductHexImpl<5, 5, 5, 5, 5, 5>(in, out); break;
-                    case 6: AVXIProductHexImpl<5, 5, 5, 6, 6, 6>(in, out); break;
-                    case 7: AVXIProductHexImpl<5, 5, 5, 7, 7, 7>(in, out); break;
-                    case 8: AVXIProductHexImpl<5, 5, 5, 8, 8, 8>(in, out); break;
-                    case 9: AVXIProductHexImpl<5, 5, 5, 9, 9, 9>(in, out); break;
-                    case 10: AVXIProductHexImpl<5, 5, 5, 10, 10, 10>(in, out); break;
-                    default: NEKERROR(ErrorUtil::efatal,
-                "AVXIProductHex: # of modes / points combo not implemented.");
-                } break;
-            case 6:
-                switch(np0)
-                {
-                    case 6: AVXIProductHexImpl<6, 6, 6, 6, 6, 6>(in, out); break;
-                    case 7: AVXIProductHexImpl<6, 6, 6, 7, 7, 7>(in, out); break;
-                    case 8: AVXIProductHexImpl<6, 6, 6, 8, 8, 8>(in, out); break;
-                    case 9: AVXIProductHexImpl<6, 6, 6, 9, 9, 9>(in, out); break;
-                    case 10: AVXIProductHexImpl<6, 6, 6, 10, 10, 10>(in, out); break;
-                    case 11: AVXIProductHexImpl<6, 6, 6, 11, 11, 11>(in, out); break;
-                    case 12: AVXIProductHexImpl<6, 6, 6, 12, 12, 12>(in, out); break;
-                    default: NEKERROR(ErrorUtil::efatal,
-                "AVXIProductHex: # of modes / points combo not implemented.");
-                } break;
-            case 7:
-                switch(np0)
-                {
-                    case 7: AVXIProductHexImpl<7, 7, 7, 7, 7, 7>(in, out); break;
-                    case 8: AVXIProductHexImpl<7, 7, 7, 8, 8, 8>(in, out); break;
-                    case 9: AVXIProductHexImpl<7, 7, 7, 9, 9, 9>(in, out); break;
-                    case 10: AVXIProductHexImpl<7, 7, 7, 10, 10, 10>(in, out); break;
-                    case 11: AVXIProductHexImpl<7, 7, 7, 11, 11, 11>(in, out); break;
-                    case 12: AVXIProductHexImpl<7, 7, 7, 12, 12, 12>(in, out); break;
-                    case 13: AVXIProductHexImpl<7, 7, 7, 13, 13, 13>(in, out); break;
-                    case 14: AVXIProductHexImpl<7, 7, 7, 14, 14, 14>(in, out); break;
-                    default: NEKERROR(ErrorUtil::efatal,
-                "AVXIProductHex: # of modes / points combo not implemented.");
-                } break;
-            case 8:
-                switch(np0)
-                {
-                    case 8: AVXIProductHexImpl<8, 8, 8, 8, 8, 8>(in, out); break;
-                    case 9: AVXIProductHexImpl<8, 8, 8, 9, 9, 9>(in, out); break;
-                    case 10: AVXIProductHexImpl<8, 8, 8, 10, 10, 10>(in, out); break;
-                    case 11: AVXIProductHexImpl<8, 8, 8, 11, 11, 11>(in, out); break;
-                    case 12: AVXIProductHexImpl<8, 8, 8, 12, 12, 12>(in, out); break;
-                    case 13: AVXIProductHexImpl<8, 8, 8, 13, 13, 13>(in, out); break;
-                    case 14: AVXIProductHexImpl<8, 8, 8, 14, 14, 14>(in, out); break;
-                    case 15: AVXIProductHexImpl<8, 8, 8, 15, 15, 15>(in, out); break;
-                    case 16: AVXIProductHexImpl<8, 8, 8, 16, 16, 16>(in, out); break;
-                    default: NEKERROR(ErrorUtil::efatal,
-                "AVXIProductHex: # of modes / points combo not implemented.");
-                } break;;
-            default: NEKERROR(ErrorUtil::efatal,
-                "AVXIProductHex: # of modes / points combo not implemented.");
+            case 2:  IProductWRTDerivBaseHexImpl<2 ,2 ,2 ,3 ,3 ,3 >
+                (in[0], in[1], in[2], out); break;
+            case 3:  IProductWRTDerivBaseHexImpl<3 ,3 ,3 ,4 ,4 ,4 >
+                (in[0], in[1], in[2], out); break;
+            case 4:  IProductWRTDerivBaseHexImpl<4 ,4 ,4 ,5 ,5 ,5 >
+                (in[0], in[1], in[2], out); break;
+            case 5:  IProductWRTDerivBaseHexImpl<5 ,5 ,5 ,6 ,6 ,6 >
+                (in[0], in[1], in[2], out); break;
+            case 6:  IProductWRTDerivBaseHexImpl<6 ,6 ,6 ,7 ,7 ,7 >
+                (in[0], in[1], in[2], out); break;
+            case 7:  IProductWRTDerivBaseHexImpl<7 ,7 ,7 ,8 ,8 ,8 >
+                (in[0], in[1], in[2], out); break;
+            case 8:  IProductWRTDerivBaseHexImpl<8 ,8 ,8 ,9 ,9 ,9 >
+                (in[0], in[1], in[2], out); break;
+            case 9:  IProductWRTDerivBaseHexImpl<9 ,9 ,9 ,10,10,10>
+                (in[0], in[1], in[2], out); break;
+            case 10: IProductWRTDerivBaseHexImpl<10,10,10,11,11,11>
+                (in[0], in[1], in[2], out); break;
+            case 11: IProductWRTDerivBaseHexImpl<11,11,11,12,12,12>
+                (in[0], in[1], in[2], out); break;
         }
     }
 
     template<int NM0, int NM1, int NM2, int NQ0, int NQ1, int NQ2>
-    void AVXIProductHexImpl(
-        const Array<OneD, const NekDouble> &input,
-              Array<OneD,       NekDouble> &output)
+    void IProductWRTDerivBaseHexImpl(
+        const Array<OneD, NekDouble> &input0,
+        const Array<OneD, NekDouble> &input1,
+        const Array<OneD, NekDouble> &input2,
+              Array<OneD, NekDouble> &output)
     {
         using namespace tinysimd;
         using vec_t = simd<NekDouble>;
 
-        auto* inptr = &input[0];
-        auto* outptr = &output[0];
+        auto* inptr0 = input0.data();
+        auto* inptr1 = input1.data();
+        auto* inptr2 = input2.data();
+        auto* outptr = output.data();
 
+        constexpr auto ndf = 9;
         constexpr auto nqTot = NQ0 * NQ1 * NQ2;
         constexpr auto nqBlocks = nqTot * vec_t::width;
         const auto nmBlocks = m_nmTot * vec_t::width;
 
+        // Get size of jacobian factor block
+        int dJSize{}, dfSize{};
+        if(DEFORMED)
+        {
+            dJSize = nqTot;
+            dfSize = ndf*nqTot;
+        }
+        else
+        {
+            dJSize = 1;
+            dfSize = ndf;
+        }
+
         vec_t sums_kj[NQ1 * NQ2];
         vec_t sums_k[NQ2];
 
-        std::vector<vec_t, allocator<vec_t>> tmpIn(nqTot), tmpOut(m_nmTot);
-        vec_t* jac_ptr;
+        std::vector<vec_t, allocator<vec_t>> tmpIn0(nqTot), tmpIn1(nqTot),
+            tmpIn2(nqTot),  tmp0(nqTot), tmp1(nqTot), tmp2(nqTot),
+            tmpOut(m_nmTot);
+
+        const vec_t* df_ptr;
+        const vec_t* jac_ptr;
         for (int e = 0; e < this->m_nBlocks; ++e)
         {
-            if(DEFORMED){
-                jac_ptr = &(this->m_jac[nqTot*e]);
-            }
-            else{
-                jac_ptr = &(this->m_jac[e]);
-            }
+            // Jacobian
+            jac_ptr = &(this->m_jac[dJSize*e]);
+
+            // Derivative factor
+            df_ptr = &(this->m_df[e*dfSize]);
 
             // Load and transpose data
-            load_interleave(inptr, nqTot, tmpIn);
+            load_interleave(inptr0, nqTot, tmpIn0);
+            load_interleave(inptr1, nqTot, tmpIn1);
+            load_interleave(inptr2, nqTot, tmpIn2);
 
-            AVXIProductHexKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, false, false, DEFORMED>(
-                tmpIn, this->m_bdata[0], this->m_bdata[1], this->m_bdata[2],
+            // Calculate dx/dxi in[0] + dy/dxi in[1] + dz/dxi in[2]
+            vec_t df0, df1, df2, df3, df4, df5, df6, df7, df8;
+            if(!DEFORMED)
+            {
+                df0 = df_ptr[0];
+                df1 = df_ptr[1];
+                df2 = df_ptr[2];
+                df3 = df_ptr[3];
+                df4 = df_ptr[4];
+                df5 = df_ptr[5];
+                df6 = df_ptr[6];
+                df7 = df_ptr[7];
+                df8 = df_ptr[8];
+            }
+            for (int i = 0; i < nqTot; ++i)
+            {
+                if(DEFORMED)
+                {
+                    df0 = df_ptr[i * ndf];
+                    df1 = df_ptr[i * ndf + 1];
+                    df2 = df_ptr[i * ndf + 2];
+                    df3 = df_ptr[i * ndf + 3];
+                    df4 = df_ptr[i * ndf + 4];
+                    df5 = df_ptr[i * ndf + 5];
+                    df6 = df_ptr[i * ndf + 6];
+                    df7 = df_ptr[i * ndf + 7];
+                    df8 = df_ptr[i * ndf + 8];
+                }
+                tmp0[i] = df0 * tmpIn0[i] + df3 * tmpIn1[i] + df6 *tmpIn2[i];
+                tmp1[i] = df1 * tmpIn0[i] + df4 * tmpIn1[i] + df7 *tmpIn2[i];
+                tmp2[i] = df2 * tmpIn0[i] + df5 * tmpIn1[i] + df8 *tmpIn2[i];
+            }
+
+            // IP DB0 B1 B2
+            IProductHexKernel
+            <NM0, NM1, NM2, NQ0, NQ1, NQ2, false, false, DEFORMED>(
+                tmp0, this->m_dbdata[0], this->m_bdata[1], this->m_bdata[2],
+                this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
+                sums_kj, sums_k,
+                tmpOut);
+
+            // IP B0 DB1 B2
+            IProductHexKernel
+            <NM0, NM1, NM2, NQ0, NQ1, NQ2, false, true, DEFORMED>(
+                tmp1, this->m_bdata[0], this->m_dbdata[1], this->m_bdata[2],
+                this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
+                sums_kj, sums_k,
+                tmpOut);
+
+            // IP B0 B1 DB2
+            IProductHexKernel
+            <NM0, NM1, NM2, NQ0, NQ1, NQ2, false, true, DEFORMED>(
+                tmp2, this->m_bdata[0], this->m_bdata[1], this->m_dbdata[2],
                 this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
                 sums_kj, sums_k,
                 tmpOut);
@@ -547,77 +596,14 @@ struct AVXIProductHex : public IProduct, public AVXHelper<3, DEFORMED>
             // de-interleave and store data
             deinterleave_store(tmpOut, m_nmTot, outptr);
 
-            inptr += nqBlocks;
+            inptr0 += nqBlocks;
+            inptr1 += nqBlocks;
+            inptr2 += nqBlocks;
             outptr += nmBlocks;
         }
     }
 
-public:
 
-    static NekDouble FlopsPerElement(
-        const int nm,
-        const int nq0,
-        const int nq1,
-        const int nq2)
-    {
-        int loop_kji = nq2 * nq1 * nq0 * 4;
-        int loop_kj = nq2 * nq1 * 3;
-        int loop_k = nq2 * 3;
-
-        return nm*(loop_kji + nm*(loop_kj + nm*(loop_k)));
-    }
-
-    virtual NekDouble GFlops() override
-    {
-        const int nm = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int expected = AVXIProductHex::FlopsPerElement(nm, nq0, nq1, nq2);
-        int flops = this->m_nElmt * expected;
-        return flops * 1e-9;
-    }
-
-    virtual NekDouble Ndof() override
-    {
-        return m_nmTot * this->m_nElmt;
-    }
-
-    virtual NekDouble NLoads() override
-    {
-        const int nm0 = m_basis[0]->GetNumModes();
-        const int nm1 = m_basis[1]->GetNumModes();
-        const int nm2 = m_basis[2]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int load_pkji = nm0 * nq2 * nq1 * nq0 * 3;
-        int load_pqkj = nm0 * nm1 * nq2 * nq1 * 3;
-        int load_pqrk = nm0 * nm1 * nm2 * nq2 * 3;
-        int load_expected = load_pkji + load_pqkj + load_pqrk;
-
-
-        return this->m_nElmt * load_expected;
-    }
-
-    virtual NekDouble NStores() override
-    {
-        const int nm0 = m_basis[0]->GetNumModes();
-        const int nm1 = m_basis[1]->GetNumModes();
-        const int nm2 = m_basis[2]->GetNumModes();
-        // const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int store_pkj = nm0 * nq2 * nq1;
-        int store_pqk = nm0 * nm1 * nq2;
-        int store_pqr = nm0 * nm1 * nm2;
-        int store_expected = store_pkj + store_pqk + store_pqr;
-
-        return this->m_nElmt * store_expected;
-    }
 
 private:
     /// Padded basis
@@ -625,12 +611,12 @@ private:
 };
 
 // template<int VW, bool DEFORMED = false>
-// struct AVXIProductPrism : public IProduct, public AVXHelper<VW, 3, DEFORMED>
+// struct ProductWRTDerivBasePrism : public IProduct, public Helper<VW, 3, DEFORMED>
 // {
 //     AVXIProductPrism(std::vector<LibUtilities::BasisSharedPtr> basis,
 //                      int nElmt)
 //         : IProduct(basis, nElmt),
-//           AVXHelper<VW, 3, DEFORMED>(basis, nElmt),
+//           Helper<VW, 3, DEFORMED>(basis, nElmt),
 //           m_nmTot(LibUtilities::StdPrismData::getNumberOfCoefficients(
 //                       this->m_nm[0], this->m_nm[1], this->m_nm[2]))
 //     {
@@ -760,7 +746,7 @@ private:
 //     {
 //         const int nm0 = m_basis[0]->GetNumModes();
 //         const int nm1 = m_basis[1]->GetNumModes();
-//         // const int nm2 = m_basis[2]->GetNumModes();
+//         const int nm2 = m_basis[2]->GetNumModes();
 //         const int nq0 = m_basis[0]->GetNumPoints();
 //         const int nq1 = m_basis[1]->GetNumPoints();
 //         const int nq2 = m_basis[2]->GetNumPoints();
@@ -780,8 +766,8 @@ private:
 //     {
 //         const int nm0 = m_basis[0]->GetNumModes();
 //         const int nm1 = m_basis[1]->GetNumModes();
-//         // const int nm2 = m_basis[2]->GetNumModes();
-//         // const int nq0 = m_basis[0]->GetNumPoints();
+//         const int nm2 = m_basis[2]->GetNumModes();
+//         const int nq0 = m_basis[0]->GetNumPoints();
 //         const int nq1 = m_basis[1]->GetNumPoints();
 //         const int nq2 = m_basis[2]->GetNumPoints();
 
@@ -805,12 +791,12 @@ private:
 // };
 
 // template<int VW, bool DEFORMED = false>
-// struct AVXIProductTet : public IProduct, public AVXHelper<VW, 3, DEFORMED>
+// struct AVXIProductTet : public IProduct, public Helper<VW, 3, DEFORMED>
 // {
 //     AVXIProductTet(std::vector<LibUtilities::BasisSharedPtr> basis,
 //                    int nElmt)
 //         : IProduct(basis, nElmt),
-//           AVXHelper<VW, 3, DEFORMED>(basis, nElmt),
+//           Helper<VW, 3, DEFORMED>(basis, nElmt),
 //           m_nmTot(LibUtilities::StdTetData::getNumberOfCoefficients(
 //                       this->m_nm[0], this->m_nm[1], this->m_nm[2]))
 //     {
@@ -932,7 +918,7 @@ private:
 //     virtual NekDouble NLoads() override
 //     {
 //         const int nm0 = m_basis[0]->GetNumModes();
-//         // const int nm1 = m_basis[1]->GetNumModes();
+//         const int nm1 = m_basis[1]->GetNumModes();
 //         const int nm2 = m_basis[2]->GetNumModes();
 //         const int nq0 = m_basis[0]->GetNumPoints();
 //         const int nq1 = m_basis[1]->GetNumPoints();
@@ -951,7 +937,7 @@ private:
 //     virtual NekDouble NStores() override
 //     {
 //         const int nm0 = m_basis[0]->GetNumModes();
-//         // const int nm1 = m_basis[1]->GetNumModes();
+//         const int nm1 = m_basis[1]->GetNumModes();
 //         const int nm2 = m_basis[2]->GetNumModes();
 //         const int nq0 = m_basis[0]->GetNumPoints();
 //         const int nq1 = m_basis[1]->GetNumPoints();
@@ -977,7 +963,7 @@ private:
 //     int m_nmTot;
 // };
 
-} // namespace AVX
+} // namespace MatrixFree
 } // namespace Nektar
 
 #endif

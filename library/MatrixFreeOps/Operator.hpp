@@ -11,7 +11,7 @@
 #include <LibUtilities/SimdLib/tinysimd.hpp>
 
 namespace Nektar {
-namespace AVX {
+namespace MatrixFree {
 
 
 /// Operator base class
@@ -389,11 +389,11 @@ protected:
 // };
 
 template <int DIM, bool DEFORMED = false>
-class AVXHelper : virtual public Operator
+class Helper : virtual public Operator
 {
     using vec_t = tinysimd::simd<NekDouble>;
 protected:
-    AVXHelper(std::vector<LibUtilities::BasisSharedPtr> basis,
+    Helper(std::vector<LibUtilities::BasisSharedPtr> basis,
               int nElmt)
         : Operator()
     {
@@ -580,7 +580,7 @@ OperatorFactory &GetOperatorFactory();
 /// Helper function, get operator string
 std::string GetOpstring(LibUtilities::ShapeType shape, bool deformed=false);
 
-} // namespace AVX
+} // namespace MatrixFree
 } // namespace Nektar
 
 #endif

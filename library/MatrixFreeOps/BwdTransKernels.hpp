@@ -1,11 +1,11 @@
-#ifndef NEKTAR_LIBRARY_AVXBWDTRANSKERNELS_HPP
-#define NEKTAR_LIBRARY_AVXBWDTRANSKERNELS_HPP
+#ifndef NEKTAR_LIBRARY_MF_BWDTRANSKERNELS_HPP
+#define NEKTAR_LIBRARY_MF_BWDTRANSKERNELS_HPP
 
 #include <LibUtilities/SimdLib/tinysimd.hpp>
 
 namespace Nektar
 {
-namespace AVX
+namespace MatrixFree
 {
 
 using namespace tinysimd;
@@ -13,7 +13,7 @@ using vec_t = simd<NekDouble>;
 
 template<unsigned short NUMMODE0, unsigned short NUMMODE1,
          unsigned short NUMQUAD0, unsigned short NUMQUAD1>
-inline static void AVXBwdTransQuadKernel(
+inline static void BwdTransQuadKernel(
     const std::vector<vec_t, allocator<vec_t>> &in,
     const std::vector<vec_t, allocator<vec_t>> &bdata0,
     const std::vector<vec_t, allocator<vec_t>> &bdata1,
@@ -184,7 +184,7 @@ inline static void AVXBwdTransQuadKernel(
 
 template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
          int NUMQUAD0, int NUMQUAD1, int NUMQUAD2>
-inline static void AVXBwdTransHexKernel(
+inline static void BwdTransHexKernel(
     const std::vector<vec_t, allocator<vec_t>> &in,
     const std::vector<vec_t, allocator<vec_t>> &bdata0,
     const std::vector<vec_t, allocator<vec_t>> &bdata1,
@@ -371,7 +371,7 @@ inline static void AVXBwdTransHexKernel(
 //     }
 //  }
 
-} // namespace AVX
+} // namespace MatrixFree
 } // namespace Nektar
 
 #endif

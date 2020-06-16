@@ -35,7 +35,7 @@
 #include <boost/core/ignore_unused.hpp>
 
 #include <MatrixFreeOps/Operator.hpp>
-#include <MatrixFreeOps/AVXUtil.hpp>
+#include <MatrixFreeOps/Util.hpp>
 
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
@@ -197,7 +197,7 @@ class IProductWRTBase_AVX : public Operator
         }
 
     private:
-        std::shared_ptr<AVX::IProduct> m_oper;
+        std::shared_ptr<MatrixFree::IProduct> m_oper;
         /// flag for padding
         bool m_isPadded{false};
         /// padded input/output vectors
@@ -254,14 +254,14 @@ class IProductWRTBase_AVX : public Operator
 
             // Generate operator string and create operator.
             std::string op_string = "IProduct";
-            op_string += AVX::GetOpstring(shapeType, deformed);
-            auto oper = AVX::GetOperatorFactory().
+            op_string += MatrixFree::GetOpstring(shapeType, deformed);
+            auto oper = MatrixFree::GetOperatorFactory().
                 CreateInstance(op_string, basis, nElmtPad);
 
             // Set Jacobian
             oper->SetJac(jac);
 
-            m_oper = std::dynamic_pointer_cast<AVX::IProduct>(oper);
+            m_oper = std::dynamic_pointer_cast<MatrixFree::IProduct>(oper);
             ASSERTL0(m_oper, "Failed to cast pointer.");
 
         }

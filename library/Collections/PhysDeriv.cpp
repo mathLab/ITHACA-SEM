@@ -35,7 +35,7 @@
 #include <boost/core/ignore_unused.hpp>
 
 #include <MatrixFreeOps/Operator.hpp>
-#include <MatrixFreeOps/AVXUtil.hpp>
+#include <MatrixFreeOps/Util.hpp>
 
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
@@ -291,7 +291,7 @@ class PhysDeriv_AVX : public Operator
         }
 
     private:
-        std::shared_ptr<AVX::PhysDeriv> m_oper;
+        std::shared_ptr<MatrixFree::PhysDeriv> m_oper;
         /// flag for padding
         bool m_isPadded{false};
         /// padded input/output vectors
@@ -362,14 +362,14 @@ class PhysDeriv_AVX : public Operator
 
             // Generate operator string and create operator.
             std::string op_string = "PhysDeriv";
-            op_string += AVX::GetOpstring(shapeType, deformed);
-            auto oper = AVX::GetOperatorFactory().
+            op_string += MatrixFree::GetOpstring(shapeType, deformed);
+            auto oper = MatrixFree::GetOperatorFactory().
                 CreateInstance(op_string, basis, nElmtPad);
 
             // Store derivative factor
             oper->SetDF(df);
 
-            m_oper = std::dynamic_pointer_cast<AVX::PhysDeriv>(oper);
+            m_oper = std::dynamic_pointer_cast<MatrixFree::PhysDeriv>(oper);
             ASSERTL0(m_oper, "Failed to cast pointer.");
 
         }

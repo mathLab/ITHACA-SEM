@@ -1,11 +1,11 @@
-#ifndef NEKTAR_LIBRARY_AVXIPRODUCTKERNELS_HPP
-#define NEKTAR_LIBRARY_AVXIPRODUCTKERNELS_HPP
+#ifndef NEKTAR_LIBRARY_MF_IPRODUCTKERNELS_HPP
+#define NEKTAR_LIBRARY_MF_IPRODUCTKERNELS_HPP
 
 #include <LibUtilities/SimdLib/tinysimd.hpp>
 
 namespace Nektar
 {
-namespace AVX
+namespace MatrixFree
 {
 
 using namespace tinysimd;
@@ -39,7 +39,7 @@ inline static void ScaleAppend(
 template<int NUMMODE0, int NUMMODE1,
          int NUMQUAD0, int NUMQUAD1,
          bool SCALE, bool APPEND, bool DEFORMED>
-inline static void AVXIProductQuadKernel(
+inline static void IProductQuadKernel(
     const std::vector<vec_t, allocator<vec_t>> &in,
     const std::vector<vec_t, allocator<vec_t>> &basis0,
     const std::vector<vec_t, allocator<vec_t>> &basis1,
@@ -99,7 +99,7 @@ inline static void AVXIProductQuadKernel(
 //          int NUMQUAD0, int NUMQUAD1,
 //          int VW, bool CORRECT, bool SCALE, bool APPEND,
 //          bool DEFORMED, class BasisType>
-// inline static void AVXIProductTriKernel(
+// inline static void IProductTriKernel(
 //     const double *inptr,
 //     const AlignedVector<BasisType> &basis0,
 //     const AlignedVector<BasisType> &basis1,
@@ -192,7 +192,7 @@ inline static void AVXIProductQuadKernel(
 template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
          int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
          bool SCALE, bool APPEND, bool DEFORMED>
-inline static void AVXIProductHexKernel(
+inline static void IProductHexKernel(
     const std::vector<vec_t, allocator<vec_t>> &in,
     const std::vector<vec_t, allocator<vec_t>> &bdata0,
     const std::vector<vec_t, allocator<vec_t>> &bdata1,
@@ -273,7 +273,7 @@ inline static void AVXIProductHexKernel(
 //          int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
 //          int VW, bool CORRECT, bool SCALE, bool APPEND, bool DEFORMED,
 //          class BasisType>
-// inline static void AVXIProductPrismKernel(
+// inline static void IProductPrismKernel(
 //     const double *inptr,
 //     const AlignedVector<BasisType> &bdata0,
 //     const AlignedVector<BasisType> &bdata1,
@@ -396,7 +396,7 @@ inline static void AVXIProductHexKernel(
 //          int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
 //          int VW, bool CORRECT, bool SCALE, bool APPEND,
 //          bool DEFORMED, class BasisType>
-// inline static void AVXIProductTetKernel(
+// inline static void IProductTetKernel(
 //     const double *in,
 //     const AlignedVector<BasisType> &bdata0,
 //     const AlignedVector<BasisType> &bdata1,
@@ -554,7 +554,7 @@ inline static void AVXIProductHexKernel(
 //     }
 // }
 
-} // namespace AVX
+} // namespace MatrixFree
 } // namespace Nektar
 
 #endif

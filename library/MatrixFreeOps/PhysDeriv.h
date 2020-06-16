@@ -1,25 +1,25 @@
-#ifndef AVXPHYSDERIV_H
-#define AVXPHYSDERIV_H
+#ifndef MF_PHYSDERIV_H
+#define MF_PHYSDERIV_H
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
 #include <LibUtilities/Foundations/Basis.h>
 
 #include "Operator.hpp"
-#include "AVXPhysDerivKernels.hpp"
+#include "PhysDerivKernels.hpp"
 
 namespace Nektar
 {
-namespace AVX
+namespace MatrixFree
 {
 
 template<bool DEFORMED = false>
-struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<2, DEFORMED>
+struct PhysDerivQuad : public PhysDeriv, public Helper<2, DEFORMED>
 {
-    AVXPhysDerivQuad(std::vector<LibUtilities::BasisSharedPtr> basis,
+    PhysDerivQuad(std::vector<LibUtilities::BasisSharedPtr> basis,
                      int nElmt)
     : PhysDeriv(basis, nElmt),
-      AVXHelper<2, DEFORMED>(basis, nElmt),
+      Helper<2, DEFORMED>(basis, nElmt),
       m_nmTot(LibUtilities::StdQuadData::getNumberOfCoefficients(
                 this->m_nm[0], this->m_nm[1]))
     {
@@ -29,7 +29,7 @@ struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<2, DEFORMED>
         std::vector<LibUtilities::BasisSharedPtr> basis,
         int nElmt)
     {
-        return std::make_shared<AVXPhysDerivQuad<DEFORMED>>(basis, nElmt);
+        return std::make_shared<PhysDerivQuad<DEFORMED>>(basis, nElmt);
     }
 
     static NekDouble FlopsPerElement(
@@ -46,7 +46,7 @@ struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<2, DEFORMED>
         const int nq0 = m_basis[0]->GetNumPoints();
         const int nq1 = m_basis[1]->GetNumPoints();
 
-        int flops = this->m_nElmt * AVXPhysDerivQuad::FlopsPerElement(nq0, nq1);
+        int flops = this->m_nElmt * PhysDerivQuad::FlopsPerElement(nq0, nq1);
         return flops * 1e-9;
     }
 
@@ -100,42 +100,42 @@ struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<2, DEFORMED>
         switch(m_basis[0]->GetNumPoints())
         {
             case 2:
-                AVXPhysDerivQuadImpl<2,2>(in, out_d0, out_d1); break;
+                PhysDerivQuadImpl<2,2>(in, out_d0, out_d1); break;
             case 3:
-                AVXPhysDerivQuadImpl<3,3>(in, out_d0, out_d1); break;
+                PhysDerivQuadImpl<3,3>(in, out_d0, out_d1); break;
             case 4:
-                AVXPhysDerivQuadImpl<4,4>(in, out_d0, out_d1); break;
+                PhysDerivQuadImpl<4,4>(in, out_d0, out_d1); break;
             case 5:
-                AVXPhysDerivQuadImpl<5,5>(in, out_d0, out_d1); break;
+                PhysDerivQuadImpl<5,5>(in, out_d0, out_d1); break;
             case 6:
-                AVXPhysDerivQuadImpl<6,6>(in, out_d0, out_d1); break;
+                PhysDerivQuadImpl<6,6>(in, out_d0, out_d1); break;
             case 7:
-                AVXPhysDerivQuadImpl<7,7>(in, out_d0, out_d1); break;
+                PhysDerivQuadImpl<7,7>(in, out_d0, out_d1); break;
             case 8:
-                AVXPhysDerivQuadImpl<8,8>(in, out_d0, out_d1); break;
+                PhysDerivQuadImpl<8,8>(in, out_d0, out_d1); break;
             case 9:
-                AVXPhysDerivQuadImpl<9,9>(in, out_d0, out_d1); break;
+                PhysDerivQuadImpl<9,9>(in, out_d0, out_d1); break;
             case 10:
-                AVXPhysDerivQuadImpl<10,10>(in, out_d0, out_d1); break;
+                PhysDerivQuadImpl<10,10>(in, out_d0, out_d1); break;
             case 11:
-                AVXPhysDerivQuadImpl<11,11>(in, out_d0, out_d1); break;
+                PhysDerivQuadImpl<11,11>(in, out_d0, out_d1); break;
             case 12:
-                AVXPhysDerivQuadImpl<12,12>(in, out_d0, out_d1); break;
+                PhysDerivQuadImpl<12,12>(in, out_d0, out_d1); break;
             case 13:
-                AVXPhysDerivQuadImpl<13,13>(in, out_d0, out_d1); break;
+                PhysDerivQuadImpl<13,13>(in, out_d0, out_d1); break;
             case 14:
-                AVXPhysDerivQuadImpl<14,14>(in, out_d0, out_d1); break;
+                PhysDerivQuadImpl<14,14>(in, out_d0, out_d1); break;
             case 15:
-                AVXPhysDerivQuadImpl<15,15>(in, out_d0, out_d1); break;
+                PhysDerivQuadImpl<15,15>(in, out_d0, out_d1); break;
             case 16:
-                AVXPhysDerivQuadImpl<16,16>(in, out_d0, out_d1); break;
+                PhysDerivQuadImpl<16,16>(in, out_d0, out_d1); break;
             default: NEKERROR(ErrorUtil::efatal,
-                "AVXPhysDerivQuad: # of modes / points combo not implemented.");
+                "PhysDerivQuad: # of modes / points combo not implemented.");
         }
     }
 
     template<int NQ0, int NQ1>
-    void AVXPhysDerivQuadImpl(
+    void PhysDerivQuadImpl(
         const Array<OneD, const NekDouble> &input,
               Array<OneD,       NekDouble> &out_d0,
               Array<OneD,       NekDouble> &out_d1)
@@ -169,7 +169,7 @@ struct AVXPhysDerivQuad : public PhysDeriv, public AVXHelper<2, DEFORMED>
             // Load and transpose data
             load_interleave(inptr, nqTot, tmpIn);
 
-            AVXPhysDerivQuadKernel<NQ0, NQ1, DEFORMED>(
+            PhysDerivQuadKernel<NQ0, NQ1, DEFORMED>(
                 tmpIn,
                 this->m_Z[0], this->m_Z[1],
                 this->m_D[0], this->m_D[1],
@@ -193,12 +193,12 @@ private:
 };
 
 // template<int VW, bool DEFORMED=false>
-// struct AVXPhysDerivTri : public PhysDeriv, public AVXHelper<VW,2,DEFORMED>
+// struct PhysDerivTri : public PhysDeriv, public Helper<VW,2,DEFORMED>
 // {
-//     AVXPhysDerivTri(std::vector<LibUtilities::BasisSharedPtr> basis,
+//     PhysDerivTri(std::vector<LibUtilities::BasisSharedPtr> basis,
 //                     int nElmt)
 //         : PhysDeriv(basis, nElmt),
-//           AVXHelper<VW, 2, DEFORMED>(basis, nElmt),
+//           Helper<VW, 2, DEFORMED>(basis, nElmt),
 //           m_nmTot(LibUtilities::StdTriData::getNumberOfCoefficients(
 //                       this->m_nm[0], this->m_nm[1]))
 //     {
@@ -208,7 +208,7 @@ private:
 //         std::vector<LibUtilities::BasisSharedPtr> basis,
 //         int nElmt)
 //     {
-//         return std::make_shared<AVXPhysDerivTri<VW,DEFORMED>>(basis, nElmt);
+//         return std::make_shared<PhysDerivTri<VW,DEFORMED>>(basis, nElmt);
 //     }
 
 //     static NekDouble FlopsPerElement(
@@ -229,7 +229,7 @@ private:
 //         const int nq0 = m_basis[0]->GetNumPoints();
 //         const int nq1 = m_basis[1]->GetNumPoints();
 
-//         int flops = m_nElmt * AVXPhysDerivTri::FlopsPerElement(nq0, nq1);
+//         int flops = m_nElmt * PhysDerivTri::FlopsPerElement(nq0, nq1);
 //         return flops * 1e-9;
 //     }
 
@@ -280,55 +280,55 @@ private:
 //         switch(m_basis[0]->GetNumModes())
 //         {
 //             case 2:
-//                 AVXPhysDerivTriImpl<3,2>(in, out_d0, out_d1);
+//                 PhysDerivTriImpl<3,2>(in, out_d0, out_d1);
 //                 break;
 //             case 3:
-//                 AVXPhysDerivTriImpl<4,3>(in, out_d0, out_d1);
+//                 PhysDerivTriImpl<4,3>(in, out_d0, out_d1);
 //                 break;
 //             case 4:
-//                 AVXPhysDerivTriImpl<5,4>(in, out_d0, out_d1);
+//                 PhysDerivTriImpl<5,4>(in, out_d0, out_d1);
 //                 break;
 //             case 5:
-//                 AVXPhysDerivTriImpl<6,5>(in, out_d0, out_d1);
+//                 PhysDerivTriImpl<6,5>(in, out_d0, out_d1);
 //                 break;
 //             case 6:
-//                 AVXPhysDerivTriImpl<7,6>(in, out_d0, out_d1);
+//                 PhysDerivTriImpl<7,6>(in, out_d0, out_d1);
 //                 break;
 //             case 7:
-//                 AVXPhysDerivTriImpl<8,7>(in, out_d0, out_d1);
+//                 PhysDerivTriImpl<8,7>(in, out_d0, out_d1);
 //                 break;
 //             case 8:
-//                 AVXPhysDerivTriImpl<9,8>(in, out_d0, out_d1);
+//                 PhysDerivTriImpl<9,8>(in, out_d0, out_d1);
 //                 break;
 //             case 9:
-//                 AVXPhysDerivTriImpl<10,9>(in, out_d0, out_d1);
+//                 PhysDerivTriImpl<10,9>(in, out_d0, out_d1);
 //                 break;
 //             case 10:
-//                 AVXPhysDerivTriImpl<11,10>(in, out_d0, out_d1);
+//                 PhysDerivTriImpl<11,10>(in, out_d0, out_d1);
 //                 break;
 //             case 11:
-//                 AVXPhysDerivTriImpl<12,11>(in, out_d0, out_d1);
+//                 PhysDerivTriImpl<12,11>(in, out_d0, out_d1);
 //                 break;
 //             case 12:
-//                 AVXPhysDerivTriImpl<13,12>(in, out_d0, out_d1);
+//                 PhysDerivTriImpl<13,12>(in, out_d0, out_d1);
 //                 break;
 //             case 13:
-//                 AVXPhysDerivTriImpl<14,13>(in, out_d0, out_d1);
+//                 PhysDerivTriImpl<14,13>(in, out_d0, out_d1);
 //                 break;
 //             case 14:
-//                 AVXPhysDerivTriImpl<15,14>(in, out_d0, out_d1);
+//                 PhysDerivTriImpl<15,14>(in, out_d0, out_d1);
 //                 break;
 //             case 15:
-//                 AVXPhysDerivTriImpl<16,15>(in, out_d0, out_d1);
+//                 PhysDerivTriImpl<16,15>(in, out_d0, out_d1);
 //                 break;
 //             case 16:
-//                 AVXPhysDerivTriImpl<17,16>(in, out_d0, out_d1);
+//                 PhysDerivTriImpl<17,16>(in, out_d0, out_d1);
 //                 break;
 //         }
 //     }
 
 //     template<int NQ0, int NQ1>
-//     void AVXPhysDerivTriImpl(
+//     void PhysDerivTriImpl(
 //         const Array<OneD, const NekDouble> &input,
 //               Array<OneD,       NekDouble> &out_d0,
 //               Array<OneD,       NekDouble> &out_d1)
@@ -352,7 +352,7 @@ private:
 //                 df_ptr = &(this->m_df[e*ndf]);
 //             }
 
-//             AVXPhysDerivTriKernel<NQ0, NQ1, VW, DEFORMED>(
+//             PhysDerivTriKernel<NQ0, NQ1, VW, DEFORMED>(
 //                 inptr,
 //                 this->m_Z[0], this->m_Z[1],
 //                 this->m_D[0], this->m_D[1],
@@ -369,12 +369,12 @@ private:
 // };
 
 template<bool DEFORMED = false>
-struct AVXPhysDerivHex : public PhysDeriv, public AVXHelper<3,DEFORMED>
+struct PhysDerivHex : public PhysDeriv, public Helper<3,DEFORMED>
 {
-    AVXPhysDerivHex(std::vector<LibUtilities::BasisSharedPtr> basis,
+    PhysDerivHex(std::vector<LibUtilities::BasisSharedPtr> basis,
                     int nElmt)
         : PhysDeriv(basis, nElmt),
-          AVXHelper<3,DEFORMED>(basis, nElmt),
+          Helper<3,DEFORMED>(basis, nElmt),
           m_nmTot(LibUtilities::StdHexData::getNumberOfCoefficients(
                       this->m_nm[0], this->m_nm[1], this->m_nm[2]))
     {
@@ -384,7 +384,7 @@ struct AVXPhysDerivHex : public PhysDeriv, public AVXHelper<3,DEFORMED>
         std::vector<LibUtilities::BasisSharedPtr> basis,
         int nElmt)
     {
-        return std::make_shared<AVXPhysDerivHex<DEFORMED>>(basis, nElmt);
+        return std::make_shared<PhysDerivHex<DEFORMED>>(basis, nElmt);
     }
 
     static NekDouble FlopsPerElement(
@@ -410,7 +410,7 @@ struct AVXPhysDerivHex : public PhysDeriv, public AVXHelper<3,DEFORMED>
         const int nq1 = m_basis[1]->GetNumPoints();
         const int nq2 = m_basis[2]->GetNumPoints();
 
-        int flops = this->m_nElmt * AVXPhysDerivHex::FlopsPerElement(nq0, nq1, nq2);
+        int flops = this->m_nElmt * PhysDerivHex::FlopsPerElement(nq0, nq1, nq2);
         return flops * 1e-9;
     }
 
@@ -466,54 +466,54 @@ struct AVXPhysDerivHex : public PhysDeriv, public AVXHelper<3,DEFORMED>
         switch(m_basis[0]->GetNumPoints())
         {
             case 2:
-                AVXPhysDerivHexImpl<2,2,2>(in, out_d0, out_d1, out_d2);
+                PhysDerivHexImpl<2,2,2>(in, out_d0, out_d1, out_d2);
                 break;
             case 3:
-                AVXPhysDerivHexImpl<3,3,3>(in, out_d0, out_d1, out_d2);
+                PhysDerivHexImpl<3,3,3>(in, out_d0, out_d1, out_d2);
                 break;
             case 4:
-                AVXPhysDerivHexImpl<4,4,4>(in, out_d0, out_d1, out_d2);
+                PhysDerivHexImpl<4,4,4>(in, out_d0, out_d1, out_d2);
                 break;
             case 5:
-                AVXPhysDerivHexImpl<5,5,5>(in, out_d0, out_d1, out_d2);
+                PhysDerivHexImpl<5,5,5>(in, out_d0, out_d1, out_d2);
                 break;
             case 6:
-                AVXPhysDerivHexImpl<6,6,6>(in, out_d0, out_d1, out_d2);
+                PhysDerivHexImpl<6,6,6>(in, out_d0, out_d1, out_d2);
                 break;
             case 7:
-                AVXPhysDerivHexImpl<7,7,7>(in, out_d0, out_d1, out_d2);
+                PhysDerivHexImpl<7,7,7>(in, out_d0, out_d1, out_d2);
                 break;
             case 8:
-                AVXPhysDerivHexImpl<8,8,8>(in, out_d0, out_d1, out_d2);
+                PhysDerivHexImpl<8,8,8>(in, out_d0, out_d1, out_d2);
                 break;
             case 9:
-                AVXPhysDerivHexImpl<9,9,9>(in, out_d0, out_d1, out_d2);
+                PhysDerivHexImpl<9,9,9>(in, out_d0, out_d1, out_d2);
                 break;
             case 10:
-                AVXPhysDerivHexImpl<10,10,10>(in, out_d0, out_d1, out_d2);
+                PhysDerivHexImpl<10,10,10>(in, out_d0, out_d1, out_d2);
                 break;
             case 11:
-                AVXPhysDerivHexImpl<11,11,11>(in, out_d0, out_d1, out_d2);
+                PhysDerivHexImpl<11,11,11>(in, out_d0, out_d1, out_d2);
                 break;
             case 12:
-                AVXPhysDerivHexImpl<12,12,12>(in, out_d0, out_d1, out_d2);
+                PhysDerivHexImpl<12,12,12>(in, out_d0, out_d1, out_d2);
                 break;
             case 13:
-                AVXPhysDerivHexImpl<13,13,13>(in, out_d0, out_d1, out_d2);
+                PhysDerivHexImpl<13,13,13>(in, out_d0, out_d1, out_d2);
                 break;
             case 14:
-                AVXPhysDerivHexImpl<14,14,14>(in, out_d0, out_d1, out_d2);
+                PhysDerivHexImpl<14,14,14>(in, out_d0, out_d1, out_d2);
                 break;
             case 15:
-                AVXPhysDerivHexImpl<15,15,15>(in, out_d0, out_d1, out_d2);
+                PhysDerivHexImpl<15,15,15>(in, out_d0, out_d1, out_d2);
                 break;
             default: NEKERROR(ErrorUtil::efatal,
-                "AVXPhysDerivHex: # of modes / points combo not implemented.");
+                "PhysDerivHex: # of modes / points combo not implemented.");
         }
     }
 
     template<int NQ0, int NQ1, int NQ2>
-    void AVXPhysDerivHexImpl(
+    void PhysDerivHexImpl(
         const Array<OneD, const NekDouble> &input,
               Array<OneD,       NekDouble> &out_d0,
               Array<OneD,       NekDouble> &out_d1,
@@ -553,7 +553,7 @@ struct AVXPhysDerivHex : public PhysDeriv, public AVXHelper<3,DEFORMED>
             // Load and transpose data
             load_interleave(inptr, nqTot, tmpIn);
 
-            AVXPhysDerivHexKernel<NQ0, NQ1, NQ2, DEFORMED>(
+            PhysDerivHexKernel<NQ0, NQ1, NQ2, DEFORMED>(
                 tmpIn,
                 this->m_Z[0], this->m_Z[1], this->m_Z[2],
                 this->m_D[0], this->m_D[1], this->m_D[2],
@@ -577,12 +577,12 @@ private:
 
 
 // template<int VW, bool DEFORMED = false>
-// struct AVXPhysDerivPrism : public PhysDeriv, public AVXHelper<VW,3,DEFORMED>
+// struct PhysDerivPrism : public PhysDeriv, public Helper<VW,3,DEFORMED>
 // {
-//     AVXPhysDerivPrism(std::vector<LibUtilities::BasisSharedPtr> basis,
+//     PhysDerivPrism(std::vector<LibUtilities::BasisSharedPtr> basis,
 //                       int nElmt)
 //         : PhysDeriv(basis, nElmt),
-//           AVXHelper<VW, 3,DEFORMED>(basis, nElmt),
+//           Helper<VW, 3,DEFORMED>(basis, nElmt),
 //           m_nmTot(LibUtilities::StdPrismData::getNumberOfCoefficients(
 //                       this->m_nm[0], this->m_nm[1], this->m_nm[2]))
 //     {
@@ -592,7 +592,7 @@ private:
 //         std::vector<LibUtilities::BasisSharedPtr> basis,
 //         int nElmt)
 //     {
-//         return std::make_shared<AVXPhysDerivPrism<VW,DEFORMED>>(basis, nElmt);
+//         return std::make_shared<PhysDerivPrism<VW,DEFORMED>>(basis, nElmt);
 //     }
 
 //     virtual NekDouble Ndof() override
@@ -623,7 +623,7 @@ private:
 //         const int nq1 = m_basis[1]->GetNumPoints();
 //         const int nq2 = m_basis[2]->GetNumPoints();
 
-//         int flops = m_nElmt * AVXPhysDerivPrism::FlopsPerElement(nq0, nq1, nq2);
+//         int flops = m_nElmt * PhysDerivPrism::FlopsPerElement(nq0, nq1, nq2);
 //         return flops * 1e-9;
 //     }
 
@@ -673,55 +673,55 @@ private:
 //         switch(m_basis[0]->GetNumModes())
 //         {
 //             case 2:
-//                 AVXPhysDerivPrismImpl<3,3,2>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivPrismImpl<3,3,2>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 3:
-//                 AVXPhysDerivPrismImpl<4,4,3>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivPrismImpl<4,4,3>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 4:
-//                 AVXPhysDerivPrismImpl<5,5,4>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivPrismImpl<5,5,4>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 5:
-//                 AVXPhysDerivPrismImpl<6,6,5>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivPrismImpl<6,6,5>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 6:
-//                 AVXPhysDerivPrismImpl<7,7,6>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivPrismImpl<7,7,6>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 7:
-//                 AVXPhysDerivPrismImpl<8,8,7>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivPrismImpl<8,8,7>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 8:
-//                 AVXPhysDerivPrismImpl<9,9,8>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivPrismImpl<9,9,8>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 9:
-//                 AVXPhysDerivPrismImpl<10,10,9>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivPrismImpl<10,10,9>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 10:
-//                 AVXPhysDerivPrismImpl<11,11,10>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivPrismImpl<11,11,10>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 11:
-//                 AVXPhysDerivPrismImpl<12,12,11>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivPrismImpl<12,12,11>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 12:
-//                 AVXPhysDerivPrismImpl<13,13,12>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivPrismImpl<13,13,12>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 13:
-//                 AVXPhysDerivPrismImpl<14,14,13>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivPrismImpl<14,14,13>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 14:
-//                 AVXPhysDerivPrismImpl<15,15,14>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivPrismImpl<15,15,14>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 15:
-//                 AVXPhysDerivPrismImpl<16,16,15>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivPrismImpl<16,16,15>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 16:
-//                 AVXPhysDerivPrismImpl<17,17,16>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivPrismImpl<17,17,16>(in, out_d0, out_d1, out_d2);
 //                 break;
 //         }
 //     }
 
 //     template<int NQ0, int NQ1, int NQ2>
-//     void AVXPhysDerivPrismImpl(
+//     void PhysDerivPrismImpl(
 //         const Array<OneD, const NekDouble> &input,
 //               Array<OneD,       NekDouble> &out_d0,
 //               Array<OneD,       NekDouble> &out_d1,
@@ -748,7 +748,7 @@ private:
 //                 df_ptr = &(this->m_df[e*ndf]);
 //             }
 
-//             AVXPhysDerivPrismKernel<NQ0, NQ1, NQ2, VW,DEFORMED>(
+//             PhysDerivPrismKernel<NQ0, NQ1, NQ2, VW,DEFORMED>(
 //                 inptr,
 //                 this->m_Z[0], this->m_Z[1], this->m_Z[2],
 //                 this->m_D[0], this->m_D[1], this->m_D[2],
@@ -767,12 +767,12 @@ private:
 // };
 
 // template<int VW, bool DEFORMED = false>
-// struct AVXPhysDerivTet : public PhysDeriv, public AVXHelper<VW,3, DEFORMED>
+// struct PhysDerivTet : public PhysDeriv, public Helper<VW,3, DEFORMED>
 // {
-//     AVXPhysDerivTet(std::vector<LibUtilities::BasisSharedPtr> basis,
+//     PhysDerivTet(std::vector<LibUtilities::BasisSharedPtr> basis,
 //                     int nElmt)
 //         : PhysDeriv(basis, nElmt),
-//           AVXHelper<VW, 3, DEFORMED>(basis, nElmt),
+//           Helper<VW, 3, DEFORMED>(basis, nElmt),
 //           m_nmTot(LibUtilities::StdTetData::getNumberOfCoefficients(
 //                       this->m_nm[0], this->m_nm[1], this->m_nm[2]))
 //     {
@@ -782,7 +782,7 @@ private:
 //         std::vector<LibUtilities::BasisSharedPtr> basis,
 //         int nElmt)
 //     {
-//         return std::make_shared<AVXPhysDerivTet<VW, DEFORMED>>(basis, nElmt);
+//         return std::make_shared<PhysDerivTet<VW, DEFORMED>>(basis, nElmt);
 //     }
 
 //     static NekDouble FlopsPerElement(
@@ -812,7 +812,7 @@ private:
 //         const int nq1 = m_basis[1]->GetNumPoints();
 //         const int nq2 = m_basis[2]->GetNumPoints();
 
-//         int flops = m_nElmt * AVXPhysDerivTet::FlopsPerElement(nq0, nq1, nq2);
+//         int flops = m_nElmt * PhysDerivTet::FlopsPerElement(nq0, nq1, nq2);
 //         return flops * 1e-9;
 //     }
 
@@ -876,55 +876,55 @@ private:
 //         switch(m_basis[0]->GetNumModes())
 //         {
 //             case 2:
-//                 AVXPhysDerivTetImpl<3,2,2>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivTetImpl<3,2,2>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 3:
-//                 AVXPhysDerivTetImpl<4,3,3>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivTetImpl<4,3,3>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 4:
-//                 AVXPhysDerivTetImpl<5,4,4>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivTetImpl<5,4,4>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 5:
-//                 AVXPhysDerivTetImpl<6,5,5>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivTetImpl<6,5,5>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 6:
-//                 AVXPhysDerivTetImpl<7,6,6>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivTetImpl<7,6,6>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 7:
-//                 AVXPhysDerivTetImpl<8,7,7>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivTetImpl<8,7,7>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 8:
-//                 AVXPhysDerivTetImpl<9,8,8>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivTetImpl<9,8,8>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 9:
-//                 AVXPhysDerivTetImpl<10,9,9>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivTetImpl<10,9,9>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 10:
-//                 AVXPhysDerivTetImpl<11,10,10>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivTetImpl<11,10,10>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 11:
-//                 AVXPhysDerivTetImpl<12,11,11>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivTetImpl<12,11,11>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 12:
-//                 AVXPhysDerivTetImpl<13,12,12>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivTetImpl<13,12,12>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 13:
-//                 AVXPhysDerivTetImpl<14,13,13>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivTetImpl<14,13,13>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 14:
-//                 AVXPhysDerivTetImpl<15,14,14>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivTetImpl<15,14,14>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 15:
-//                 AVXPhysDerivTetImpl<16,15,15>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivTetImpl<16,15,15>(in, out_d0, out_d1, out_d2);
 //                 break;
 //             case 16:
-//                 AVXPhysDerivTetImpl<17,16,16>(in, out_d0, out_d1, out_d2);
+//                 PhysDerivTetImpl<17,16,16>(in, out_d0, out_d1, out_d2);
 //                 break;
 //         }
 //     }
 
 //     template<int NQ0, int NQ1, int NQ2>
-//     void AVXPhysDerivTetImpl(
+//     void PhysDerivTetImpl(
 //         const Array<OneD, const NekDouble> &input,
 //               Array<OneD,       NekDouble> &out_d0,
 //               Array<OneD,       NekDouble> &out_d1,
@@ -956,7 +956,7 @@ private:
 //             else{
 //                 df_ptr = &(this->m_df[e*ndf]);
 //             }
-//             AVXPhysDerivTetKernel<NQ0, NQ1, NQ2, VW,DEFORMED>(
+//             PhysDerivTetKernel<NQ0, NQ1, NQ2, VW,DEFORMED>(
 //                 inptr,
 //                 this->m_Z[0], this->m_Z[1], this->m_Z[2],
 //                 this->m_D[0], this->m_D[1], this->m_D[2],
@@ -974,7 +974,7 @@ private:
 //     int m_nmTot;
 // };
 
-} // namespace AVX
+} // namespace MatrixFree
 } // namespace Nektar
 
 #endif

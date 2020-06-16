@@ -1,12 +1,12 @@
-#ifndef AVXUTIL_HPP
-#define AVXUTIL_HPP
+#ifndef MF_UTIL_HPP
+#define MF_UTIL_HPP
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 #include <string>
 
 namespace Nektar {
-namespace AVX {
+namespace MatrixFree {
 
 
 template<typename T>
@@ -85,7 +85,7 @@ void InvTransposeData(const int       nElmt,
     }
 }
 
-} // namespace AVX
+} // namespace MatrixFree
 } // namespace Nektar
 
 #endif // header guard

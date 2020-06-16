@@ -1,7 +1,7 @@
 #include "Operator.hpp"
 
 namespace Nektar {
-namespace AVX {
+namespace MatrixFree {
 
 OperatorFactory &GetOperatorFactory()
 {
@@ -38,8 +38,6 @@ std::string GetOpstring(LibUtilities::ShapeType shape, bool deformed)
     {
         op_string += "_Regular";
     }
-
-    op_string += "_AVX";
 
     return op_string;
 }

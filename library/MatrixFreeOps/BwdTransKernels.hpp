@@ -21,8 +21,8 @@ inline static void BwdTransQuadKernel(
     std::vector<vec_t, allocator<vec_t>> &out)
 {
 
-    constexpr int nm0 = NUMMODE0, nm1 = NUMMODE1;
-    constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1;
+    constexpr auto nm0 = NUMMODE0, nm1 = NUMMODE1;
+    constexpr auto nq0 = NUMQUAD0, nq1 = NUMQUAD1;
 
     for (int i = 0, cnt_iq = 0; i < nq0; ++i)
     {

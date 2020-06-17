@@ -159,6 +159,8 @@ namespace NekMesh
         NEKMESH_EXPORT Module(MeshSharedPtr p_m) : m_mesh(p_m) {}
         NEKMESH_EXPORT virtual void Process() = 0;
 
+        NEKMESH_EXPORT virtual ~Module() = default;
+
         NEKMESH_EXPORT void RegisterConfig(std::string key,
                                                 std::string value = std::string());
         NEKMESH_EXPORT void PrintConfig();

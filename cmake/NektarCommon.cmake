@@ -66,7 +66,7 @@ MACRO(SET_COMMON_PROPERTIES name)
     SET_TARGET_PROPERTIES(${name} PROPERTIES DEBUG_POSTFIX -g)
     SET_TARGET_PROPERTIES(${name} PROPERTIES MINSIZEREL_POSTFIX -ms)
     SET_TARGET_PROPERTIES(${name} PROPERTIES RELWITHDEBINFO_POSTFIX -rg)
-    
+
     IF (MSVC)
         # Enable production-level warnings
         TARGET_COMPILE_OPTIONS(${name} PRIVATE /W4)
@@ -84,6 +84,7 @@ MACRO(SET_COMMON_PROPERTIES name)
         IF (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
             # For GNU compilers add pedantic warnings
             TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wpedantic)
+            TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wnon-virtual-dtor)
         ENDIF()
         # Temporarily disable warnings about comparing signed and unsigned
         TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wno-sign-compare)
@@ -92,7 +93,7 @@ MACRO(SET_COMMON_PROPERTIES name)
         IF (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             TARGET_COMPILE_OPTIONS(${name} PRIVATE -fpermissive)
         ENDIF()
-        
+
         # Disable dignostic about partially overloaded virtual functions
         IF (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
             TARGET_COMPILE_OPTIONS(${name} PRIVATE -diag-disable 654)
@@ -117,19 +118,19 @@ MACRO(SET_COMMON_PROPERTIES name)
         SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_DEBUG")
 
         IF ( NEKTAR_FULL_DEBUG )
-            SET(CMAKE_CXX_FLAGS_DEBUG 
+            SET(CMAKE_CXX_FLAGS_DEBUG
                     "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_FULLDEBUG")
         ENDIF( NEKTAR_FULL_DEBUG)
-   
+
         # Define version
         SET_PROPERTY(TARGET ${name}
             APPEND PROPERTY COMPILE_DEFINITIONS
             NEKTAR_VERSION=\"${NEKTAR_VERSION}\")
 
-        SET(CMAKE_CXX_FLAGS_RELEASE 
+        SET(CMAKE_CXX_FLAGS_RELEASE
                 "${CMAKE_CXX_FLAGS_RELEASE} -DNEKTAR_RELEASE")
     ENDIF(NOT ${CMAKE_CXX_FLAGS_DEBUG} MATCHES ".*DNEKTAR_DEBUG.*")
-        
+
     IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
         # The static libraries must be compiled with position independent
         # code on 64 bit Linux.

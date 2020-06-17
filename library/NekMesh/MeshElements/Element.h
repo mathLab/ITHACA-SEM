@@ -63,6 +63,8 @@ public:
     NEKMESH_EXPORT Element(
         ElmtConfig pConf, unsigned int pNumNodes, unsigned int pGotNodes);
 
+    NEKMESH_EXPORT virtual ~Element() = default;
+
     /// Returns the ID of the element (or associated edge or face for
     /// boundary elements).
     NEKMESH_EXPORT unsigned int GetId() const
@@ -249,7 +251,7 @@ public:
             return it->second;
         }
     }
-    /// Is this element connected to a boundary 
+    /// Is this element connected to a boundary
     NEKMESH_EXPORT bool HasBoundaryLinks()
     {
         return m_boundaryLinks.size() > 0;

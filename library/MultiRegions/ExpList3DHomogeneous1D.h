@@ -154,6 +154,8 @@ namespace Nektar
                 m_planes[0]->GetPeriodicEntities(periodicVerts,periodicEdges);
             }
 
+            NekDouble v_Integral(const Array<OneD, const NekDouble> &inarray);
+
         private:
 
             MULTI_REGIONS_EXPORT void GenExpList3DHomogeneous1D(const SpatialDomains::ExpansionMap &expansions,  const Collections::ImplementationType ImpType);

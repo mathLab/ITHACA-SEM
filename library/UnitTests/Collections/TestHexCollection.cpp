@@ -656,7 +656,7 @@ namespace Nektar
         }
 
 
-        BOOST_AUTO_TEST_CASE(TestHexBwdTrans_AVX_UniformP)
+        BOOST_AUTO_TEST_CASE(TestHexBwdTrans_MatrixFree_UniformP)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(
                 3u, 0u, -1.0, -1.0, -1.0));
@@ -783,7 +783,7 @@ namespace Nektar
         }
 
 
-        BOOST_AUTO_TEST_CASE(TestHexIProductWRTBase_AVX_UniformP_Undeformed)
+        BOOST_AUTO_TEST_CASE(TestHexIProductWRTBase_MatrixFree_UniformP_Undeformed)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(
                 3u, 0u, -1.0, -1.0, -1.0));
@@ -861,7 +861,7 @@ namespace Nektar
         }
 
 
-        BOOST_AUTO_TEST_CASE(TestHexIProductWRTBase_AVX_UniformP_Deformed)
+        BOOST_AUTO_TEST_CASE(TestHexIProductWRTBase_MatrixFree_UniformP_Deformed)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(
                 3u, 0u, -1.0, -1.0, -1.0));
@@ -939,7 +939,7 @@ namespace Nektar
         }
 
 
-        BOOST_AUTO_TEST_CASE(TestHexIProductWRTBase_AVX_UniformP_Deformed_OverInt)
+        BOOST_AUTO_TEST_CASE(TestHexIProductWRTBase_MatrixFree_UniformP_Deformed_OverInt)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(
                 3u, 0u, -1.0, -1.0, -1.0));
@@ -1965,7 +1965,7 @@ namespace Nektar
             }
         }
 
-        BOOST_AUTO_TEST_CASE(TestHexPhysDeriv_AVX_UniformP_Undeformed)
+        BOOST_AUTO_TEST_CASE(TestHexPhysDeriv_MatrixFree_UniformP_Undeformed)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(
                 3u, 0u, -1.0, -1.0, -1.0));
@@ -2044,7 +2044,7 @@ namespace Nektar
             }
         }
 
-        BOOST_AUTO_TEST_CASE(TestHexPhysDeriv_AVX_UniformP_Deformed)
+        BOOST_AUTO_TEST_CASE(TestHexPhysDeriv_MatrixFree_UniformP_Deformed)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(
                 3u, 0u, -1.0, -1.0, -1.0));
@@ -2618,7 +2618,7 @@ namespace Nektar
             }
         }
 
-        BOOST_AUTO_TEST_CASE(TestHexIProductWRTDerivBase_AVX_UniformP_Undeformed)
+        BOOST_AUTO_TEST_CASE(TestHexIProductWRTDerivBase_MatrixFree_UniformP_Undeformed)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(
                 3u, 0u, -1.0, -1.0, -1.0));

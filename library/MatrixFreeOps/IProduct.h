@@ -260,32 +260,172 @@ struct IProductTri : public IProduct, public Helper<2, DEFORMED>
         {
             switch(m_basis[0]->GetNumModes())
             {
-                case 2:  IProductTriImpl<2 ,2 ,3 ,2 ,true>(in, out); break;
-                case 3:  IProductTriImpl<3 ,3 ,4 ,3 ,true>(in, out); break;
-                case 4:  IProductTriImpl<4 ,4 ,5 ,4 ,true>(in, out); break;
-                case 5:  IProductTriImpl<5 ,5 ,6 ,5 ,true>(in, out); break;
-                case 6:  IProductTriImpl<6 ,6 ,7 ,6 ,true>(in, out); break;
-                case 7:  IProductTriImpl<7 ,7 ,8 ,7 ,true>(in, out); break;
-                case 8:  IProductTriImpl<8 ,8 ,9 ,8 ,true>(in, out); break;
-                case 9:  IProductTriImpl<9 ,9 ,10,9 ,true>(in, out); break;
-                case 10: IProductTriImpl<10,10,11,10,true>(in, out); break;
-                case 11: IProductTriImpl<11,11,12,11,true>(in, out); break;
+                case 2:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 3: IProductTriImpl<2 ,2 ,3 ,2 ,true>(in, out); break;
+                        case 4: IProductTriImpl<2 ,2 ,4 ,3 ,true>(in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductTri: # of modes / points combo not implemented.");
+                    } break;
+                case 3:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 4: IProductTriImpl<3 ,3 ,4 ,3 ,true>(in, out); break;
+                        case 5: IProductTriImpl<3 ,3 ,5 ,4 ,true>(in, out); break;
+                        case 6: IProductTriImpl<3 ,3 ,6 ,5 ,true>(in, out); break;
+                        case 7: IProductTriImpl<3 ,3 ,7 ,6 ,true>(in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductTri: # of modes / points combo not implemented.");
+                    } break;
+                case 4:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 5: IProductTriImpl<4 ,4 ,5 ,4 ,true>(in, out); break;
+                        case 6: IProductTriImpl<4 ,4 ,6 ,5 ,true>(in, out); break;
+                        case 7: IProductTriImpl<4 ,4 ,7 ,6 ,true>(in, out); break;
+                        case 8: IProductTriImpl<4 ,4 ,8 ,7 ,true>(in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductTri: # of modes / points combo not implemented.");
+                    } break;
+                case 5:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 6: IProductTriImpl<5 ,5 ,6 ,5 ,true>(in, out); break;
+                        case 7: IProductTriImpl<5 ,5 ,7 ,6 ,true>(in, out); break;
+                        case 8: IProductTriImpl<5 ,5 ,8 ,7 ,true>(in, out); break;
+                        case 9: IProductTriImpl<5 ,5 ,9 ,8 ,true>(in, out); break;
+                        case 10: IProductTriImpl<5 ,5 ,10 ,9 ,true>(in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductTri: # of modes / points combo not implemented.");
+                    } break;
+                case 6:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 7: IProductTriImpl<6 ,6 ,7 ,6 ,true>(in, out); break;
+                        case 8: IProductTriImpl<6 ,6 ,8 ,7 ,true>(in, out); break;
+                        case 9: IProductTriImpl<6 ,6 ,9 ,8 ,true>(in, out); break;
+                        case 10: IProductTriImpl<6 ,6 ,10 ,9 ,true>(in, out); break;
+                        case 11: IProductTriImpl<6 ,6 ,11 ,10 ,true>(in, out); break;
+                        case 12: IProductTriImpl<6 ,6 ,12 ,11 ,true>(in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductTri: # of modes / points combo not implemented.");
+                    } break;
+                case 7:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 8: IProductTriImpl<7 ,7 ,8 ,7 ,true>(in, out); break;
+                        case 9: IProductTriImpl<7 ,7 ,9 ,8 ,true>(in, out); break;
+                        case 10: IProductTriImpl<7 ,7 ,10 ,9 ,true>(in, out); break;
+                        case 11: IProductTriImpl<7 ,7 ,11 ,10 ,true>(in, out); break;
+                        case 12: IProductTriImpl<7 ,7 ,12 ,11 ,true>(in, out); break;
+                        case 13: IProductTriImpl<7 ,7 ,13 ,12 ,true>(in, out); break;
+                        case 14: IProductTriImpl<7 ,7 ,14 ,13 ,true>(in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductTri: # of modes / points combo not implemented.");
+                    } break;
+                case 8:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 9: IProductTriImpl<8 ,8 ,9 ,8 ,true>(in, out); break;
+                        case 10: IProductTriImpl<8 ,8 ,10 ,9 ,true>(in, out); break;
+                        case 11: IProductTriImpl<8 ,8 ,11 ,10 ,true>(in, out); break;
+                        case 12: IProductTriImpl<8 ,8 ,12 ,11 ,true>(in, out); break;
+                        case 13: IProductTriImpl<8 ,8 ,13 ,12 ,true>(in, out); break;
+                        case 14: IProductTriImpl<8 ,8 ,14 ,13 ,true>(in, out); break;
+                        case 15: IProductTriImpl<8 ,8 ,15 ,14 ,true>(in, out); break;
+                        case 16: IProductTriImpl<8 ,8 ,16 ,15 ,true>(in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductTri: # of modes / points combo not implemented.");
+                    } break;
+                default: NEKERROR(ErrorUtil::efatal,
+                    "IProductTri: # of modes / points combo not implemented.");
             }
         }
         else
         {
             switch(m_basis[0]->GetNumModes())
             {
-                case 2:  IProductTriImpl<2 ,2 ,3 ,2 ,false>(in, out); break;
-                case 3:  IProductTriImpl<3 ,3 ,4 ,3 ,false>(in, out); break;
-                case 4:  IProductTriImpl<4 ,4 ,5 ,4 ,false>(in, out); break;
-                case 5:  IProductTriImpl<5 ,5 ,6 ,5 ,false>(in, out); break;
-                case 6:  IProductTriImpl<6 ,6 ,7 ,6 ,false>(in, out); break;
-                case 7:  IProductTriImpl<7 ,7 ,8 ,7 ,false>(in, out); break;
-                case 8:  IProductTriImpl<8 ,8 ,9 ,8 ,false>(in, out); break;
-                case 9:  IProductTriImpl<9 ,9 ,10,9 ,false>(in, out); break;
-                case 10: IProductTriImpl<10,10,11,10,false>(in, out); break;
-                case 11: IProductTriImpl<11,11,12,11,false>(in, out); break;
+                case 2:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 3: IProductTriImpl<2 ,2 ,3 ,2 ,false>(in, out); break;
+                        case 4: IProductTriImpl<2 ,2 ,4 ,3 ,false>(in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductTri: # of modes / points combo not implemented.");
+                    } break;
+                case 3:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 4: IProductTriImpl<3 ,3 ,4 ,3 ,false>(in, out); break;
+                        case 5: IProductTriImpl<3 ,3 ,5 ,4 ,false>(in, out); break;
+                        case 6: IProductTriImpl<3 ,3 ,6 ,5 ,false>(in, out); break;
+                        case 7: IProductTriImpl<3 ,3 ,7 ,6 ,false>(in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductTri: # of modes / points combo not implemented.");
+                    } break;
+                case 4:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 5: IProductTriImpl<4 ,4 ,5 ,4 ,false>(in, out); break;
+                        case 6: IProductTriImpl<4 ,4 ,6 ,5 ,false>(in, out); break;
+                        case 7: IProductTriImpl<4 ,4 ,7 ,6 ,false>(in, out); break;
+                        case 8: IProductTriImpl<4 ,4 ,8 ,7 ,false>(in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductTri: # of modes / points combo not implemented.");
+                    } break;
+                case 5:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 6: IProductTriImpl<5 ,5 ,6 ,5 ,false>(in, out); break;
+                        case 7: IProductTriImpl<5 ,5 ,7 ,6 ,false>(in, out); break;
+                        case 8: IProductTriImpl<5 ,5 ,8 ,7 ,false>(in, out); break;
+                        case 9: IProductTriImpl<5 ,5 ,9 ,8 ,false>(in, out); break;
+                        case 10: IProductTriImpl<5 ,5 ,10 ,9 ,false>(in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductTri: # of modes / points combo not implemented.");
+                    } break;
+                case 6:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 7: IProductTriImpl<6 ,6 ,7 ,6 ,false>(in, out); break;
+                        case 8: IProductTriImpl<6 ,6 ,8 ,7 ,false>(in, out); break;
+                        case 9: IProductTriImpl<6 ,6 ,9 ,8 ,false>(in, out); break;
+                        case 10: IProductTriImpl<6 ,6 ,10 ,9 ,false>(in, out); break;
+                        case 11: IProductTriImpl<6 ,6 ,11 ,10 ,false>(in, out); break;
+                        case 12: IProductTriImpl<6 ,6 ,12 ,11 ,false>(in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductTri: # of modes / points combo not implemented.");
+                    } break;
+                case 7:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 8: IProductTriImpl<7 ,7 ,8 ,7 ,false>(in, out); break;
+                        case 9: IProductTriImpl<7 ,7 ,9 ,8 ,false>(in, out); break;
+                        case 10: IProductTriImpl<7 ,7 ,10 ,9 ,false>(in, out); break;
+                        case 11: IProductTriImpl<7 ,7 ,11 ,10 ,false>(in, out); break;
+                        case 12: IProductTriImpl<7 ,7 ,12 ,11 ,false>(in, out); break;
+                        case 13: IProductTriImpl<7 ,7 ,13 ,12 ,false>(in, out); break;
+                        case 14: IProductTriImpl<7 ,7 ,14 ,13 ,false>(in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductTri: # of modes / points combo not implemented.");
+                    } break;
+                case 8:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 9: IProductTriImpl<8 ,8 ,9 ,8 ,false>(in, out); break;
+                        case 10: IProductTriImpl<8 ,8 ,10 ,9 ,false>(in, out); break;
+                        case 11: IProductTriImpl<8 ,8 ,11 ,10 ,false>(in, out); break;
+                        case 12: IProductTriImpl<8 ,8 ,12 ,11 ,false>(in, out); break;
+                        case 13: IProductTriImpl<8 ,8 ,13 ,12 ,false>(in, out); break;
+                        case 14: IProductTriImpl<8 ,8 ,14 ,13 ,false>(in, out); break;
+                        case 15: IProductTriImpl<8 ,8 ,15 ,14 ,false>(in, out); break;
+                        case 16: IProductTriImpl<8 ,8 ,16 ,15 ,false>(in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductTri: # of modes / points combo not implemented.");
+                    } break;
+                default: NEKERROR(ErrorUtil::efatal,
+                    "IProductTri: # of modes / points combo not implemented.");
             }
         }
     }

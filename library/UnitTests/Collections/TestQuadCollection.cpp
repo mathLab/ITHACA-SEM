@@ -313,7 +313,7 @@ namespace QuadCollectionTests
         }
     }
 
-    BOOST_AUTO_TEST_CASE(TestQuadBwdTrans_AVX_UniformP)
+    BOOST_AUTO_TEST_CASE(TestQuadBwdTrans_MatrixFree_UniformP)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u,
             0u, -1.0, -1.0, 0.0));
@@ -945,7 +945,7 @@ namespace QuadCollectionTests
         }
     }
 
-    BOOST_AUTO_TEST_CASE(TestQuadIProductWRTBase_AVX_UniformP_Undeformed)
+    BOOST_AUTO_TEST_CASE(TestQuadIProductWRTBase_MatrixFree_UniformP_Undeformed)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u,
             0u, -1.0, -1.0, 0.0));
@@ -1012,7 +1012,7 @@ namespace QuadCollectionTests
         }
     }
 
-    BOOST_AUTO_TEST_CASE(TestQuadIProductWRTBase_AVX_UniformP_Deformed)
+    BOOST_AUTO_TEST_CASE(TestQuadIProductWRTBase_MatrixFree_UniformP_Deformed)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u,
             0u, -1.0, -1.0, 0.0));
@@ -1079,7 +1079,7 @@ namespace QuadCollectionTests
         }
     }
 
-    BOOST_AUTO_TEST_CASE(TestQuadIProductWRTBase_AVX_UniformP_Deformed_OverInt)
+    BOOST_AUTO_TEST_CASE(TestQuadIProductWRTBase_MatrixFree_UniformP_Deformed_OverInt)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u,
             0u, -1.0, -1.0, 0.0));
@@ -1272,7 +1272,7 @@ namespace QuadCollectionTests
         }
     }
 
-    BOOST_AUTO_TEST_CASE(TestQuadPhysDeriv_AVX_UniformP_Undeformed)
+    BOOST_AUTO_TEST_CASE(TestQuadPhysDeriv_MatrixFree_UniformP_Undeformed)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u,
             0u, -1.0, -1.0, 0.0));
@@ -1338,7 +1338,7 @@ namespace QuadCollectionTests
         }
     }
 
-    BOOST_AUTO_TEST_CASE(TestQuadPhysDeriv_AVX_UniformP_Deformed)
+    BOOST_AUTO_TEST_CASE(TestQuadPhysDeriv_MatrixFree_UniformP_Deformed)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u,
             0u, -1.0, -2.0, 0.0));
@@ -1800,7 +1800,7 @@ namespace QuadCollectionTests
         }
     }
 
-    BOOST_AUTO_TEST_CASE(TestQuadIProductWRTDerivBase_AVX_UniformP_Undeformed)
+    BOOST_AUTO_TEST_CASE(TestQuadIProductWRTDerivBase_MatrixFree_UniformP_Undeformed)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u,
             0u, -1.0, -1.0, 0.0));
@@ -1878,7 +1878,7 @@ namespace QuadCollectionTests
         }
     }
 
-    BOOST_AUTO_TEST_CASE(TestQuadIProductWRTDerivBase_AVX_UniformP_Deformed)
+    BOOST_AUTO_TEST_CASE(TestQuadIProductWRTDerivBase_MatrixFree_UniformP_Deformed)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u,
             0u, -1.0, -1.0, 0.0));
@@ -1956,7 +1956,7 @@ namespace QuadCollectionTests
         }
     }
 
-    BOOST_AUTO_TEST_CASE(TestQuadIProductWRTDerivBase_AVX_UniformP_Deformed_OverInt)
+    BOOST_AUTO_TEST_CASE(TestQuadIProductWRTDerivBase_MatrixFree_UniformP_Deformed_OverInt)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u,
             0u, -1.0, -1.0, 0.0));

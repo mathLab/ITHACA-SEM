@@ -388,6 +388,9 @@ OperatorKey IProductWRTDerivBase_MatrixFree::m_typeArr[] = {
     GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eQuadrilateral, eIProductWRTDerivBase, eMatrixFree, false),
         IProductWRTDerivBase_MatrixFree::create, "IProductWRTDerivBase_MatrixFree_Quad"),
+        GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eTriangle, eIProductWRTDerivBase, eMatrixFree, false),
+        IProductWRTDerivBase_MatrixFree::create, "IProductWRTDerivBase_MatrixFree_Tri"),
     GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eHexahedron, eIProductWRTDerivBase, eMatrixFree, false),
         IProductWRTDerivBase_MatrixFree::create, "IProductWRTDerivBase_MatrixFree_Hex")

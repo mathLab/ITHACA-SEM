@@ -11,11 +11,11 @@ std::string __register_IProductWRTDerivBase_Quad = GetOperatorFactory().Register
 std::string __register_IProductWRTDerivBase_Quad_Deformed = GetOperatorFactory().RegisterCreatorFunction(
     std::string("IProductWRTDerivBase_Quad_Deformed"), &IProductWRTDerivBaseQuad<true>::Create);
 
-// std::string __register_IProductWRTDerivBase_Tri = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("IProductWRTDerivBase_Tri_Regular"), &IProductWRTDerivBaseTri<4>::Create);
+std::string __register_IProductWRTDerivBase_Tri = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("IProductWRTDerivBase_Tri_Regular"), &IProductWRTDerivBaseTri<>::Create);
 
-// std::string __register_IProductWRTDerivBase_Tri_Deformed = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("IProductWRTDerivBase_Tri_Deformed"), &IProductWRTDerivBaseTri<4,true>::Create);
+std::string __register_IProductWRTDerivBase_Tri_Deformed = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("IProductWRTDerivBase_Tri_Deformed"), &IProductWRTDerivBaseTri<true>::Create);
 
 // std::string __register_IProductWRTDerivBase_Tet = GetOperatorFactory().RegisterCreatorFunction(
 //     std::string("IProductWRTDerivBase_Tet_Regular"), &IProductWRTDerivBaseTet<4>::Create);

@@ -36,7 +36,7 @@ public:
     }
 
     void operator()( const Array<OneD, Array<OneD, NekDouble>> &in,
-                     Array<OneD, NekDouble> &out) override
+        Array<OneD, NekDouble> &out) final
     {
         switch(m_basis[0]->GetNumModes())
         {
@@ -189,22 +189,18 @@ public:
         auto* inptr1 = input1.data();
         auto* outptr = output.data();
 
-        constexpr auto ndf = 4;
+        constexpr auto ndf = 4u;
         constexpr auto nqTot = NQ0 * NQ1;
         constexpr auto nqBlocks = nqTot * vec_t::width;
-        const int nmBlocks = m_nmTot * vec_t::width;
+        const auto nmBlocks = m_nmTot * vec_t::width;
 
         // Get size of jacobian factor block
-        int dJSize{}, dfSize{};
+        auto dJSize = 1u;
+        auto dfSize = ndf;
         if(DEFORMED)
         {
             dJSize = nqTot;
             dfSize = ndf*nqTot;
-        }
-        else
-        {
-            dJSize = 1;
-            dfSize = ndf;
         }
 
         vec_t sums_j[NQ1]; //Sums over eta0 for each value of eta1;
@@ -273,165 +269,151 @@ private:
     int m_nmTot;
 };
 
-// template<int VW, bool DEFORMED = false>
-// struct AVXIProductTri : public IProduct, public Helper<VW, 2, DEFORMED>
-// {
-//     AVXIProductTri(std::vector<LibUtilities::BasisSharedPtr> basis,
-//                    int nElmt)
-//         : IProduct(basis, nElmt),
-//           Helper<VW, 2, DEFORMED>(basis, nElmt),
-//           m_nmTot(LibUtilities::StdTriData::getNumberOfCoefficients(
-//                       this->m_nm[0], this->m_nm[1]))
-//     {
-//     }
+template<bool DEFORMED = false>
+struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, DEFORMED>
+{
+    IProductWRTDerivBaseTri(std::vector<LibUtilities::BasisSharedPtr> basis,
+                   int nElmt)
+        : IProductWRTDerivBase(basis, nElmt),
+          Helper<2, DEFORMED>(basis, nElmt),
+          m_nmTot(LibUtilities::StdTriData::getNumberOfCoefficients(
+                      this->m_nm[0], this->m_nm[1]))
+    {
+    }
 
-//     static std::shared_ptr<Operator> Create(
-//         std::vector<LibUtilities::BasisSharedPtr> basis,
-//         int nElmt)
-//     {
-//         return std::make_shared<AVXIProductTri<VW, DEFORMED>>(basis, nElmt);
-//     }
+    static std::shared_ptr<Operator> Create(
+        std::vector<LibUtilities::BasisSharedPtr> basis,
+        int nElmt)
+    {
+        return std::make_shared<IProductWRTDerivBaseTri<DEFORMED>>(basis, nElmt);
+    }
 
-//     virtual void operator()(const Array<OneD, const NekDouble> &in,
-//                                   Array<OneD,       NekDouble> &out)
-//     {
-//         if (m_basis[0]->GetBasisType() == LibUtilities::eModified_A)
-//         {
-//             switch(m_basis[0]->GetNumModes())
-//             {
-//                 case 2:  AVXIProductTriImpl<2 ,2 ,3 ,2 ,true>(in0, in1, out); break;
-//                 case 3:  AVXIProductTriImpl<3 ,3 ,4 ,3 ,true>(in, out); break;
-//                 case 4:  AVXIProductTriImpl<4 ,4 ,5 ,4 ,true>(in, out); break;
-//                 case 5:  AVXIProductTriImpl<5 ,5 ,6 ,5 ,true>(in, out); break;
-//                 case 6:  AVXIProductTriImpl<6 ,6 ,7 ,6 ,true>(in, out); break;
-//                 case 7:  AVXIProductTriImpl<7 ,7 ,8 ,7 ,true>(in, out); break;
-//                 case 8:  AVXIProductTriImpl<8 ,8 ,9 ,8 ,true>(in, out); break;
-//                 case 9:  AVXIProductTriImpl<9 ,9 ,10,9 ,true>(in, out); break;
-//                 case 10: AVXIProductTriImpl<10,10,11,10,true>(in, out); break;
-//                 case 11: AVXIProductTriImpl<11,11,12,11,true>(in, out); break;
-//             }
-//         }
-//         else
-//         {
-//             switch(m_basis[0]->GetNumModes())
-//             {
-//                 case 2:  AVXIProductTriImpl<2 ,2 ,3 ,2 ,false>(in, out); break;
-//                 case 3:  AVXIProductTriImpl<3 ,3 ,4 ,3 ,false>(in, out); break;
-//                 case 4:  AVXIProductTriImpl<4 ,4 ,5 ,4 ,false>(in, out); break;
-//                 case 5:  AVXIProductTriImpl<5 ,5 ,6 ,5 ,false>(in, out); break;
-//                 case 6:  AVXIProductTriImpl<6 ,6 ,7 ,6 ,false>(in, out); break;
-//                 case 7:  AVXIProductTriImpl<7 ,7 ,8 ,7 ,false>(in, out); break;
-//                 case 8:  AVXIProductTriImpl<8 ,8 ,9 ,8 ,false>(in, out); break;
-//                 case 9:  AVXIProductTriImpl<9 ,9 ,10,9 ,false>(in, out); break;
-//                 case 10: AVXIProductTriImpl<10,10,11,10,false>(in, out); break;
-//                 case 11: AVXIProductTriImpl<11,11,12,11,false>(in, out); break;
-//             }
-//         }
-//     }
+   void operator()( const Array<OneD, Array<OneD, NekDouble>> &in,
+        Array<OneD, NekDouble> &out) final
+    {
+        if (m_basis[0]->GetBasisType() == LibUtilities::eModified_A)
+        {
+            switch(m_basis[0]->GetNumModes())
+            {
+                case 2:  IProductWRTDerivBaseTriImpl<2 ,2 ,3 ,2 ,true>(in[0], in[1], out); break;
+                case 3:  IProductWRTDerivBaseTriImpl<3 ,3 ,4 ,3 ,true>(in[0], in[1], out); break;
+                case 4:  IProductWRTDerivBaseTriImpl<4 ,4 ,5 ,4 ,true>(in[0], in[1], out); break;
+                case 5:  IProductWRTDerivBaseTriImpl<5 ,5 ,6 ,5 ,true>(in[0], in[1], out); break;
+                case 6:  IProductWRTDerivBaseTriImpl<6 ,6 ,7 ,6 ,true>(in[0], in[1], out); break;
+                case 7:  IProductWRTDerivBaseTriImpl<7 ,7 ,8 ,7 ,true>(in[0], in[1], out); break;
+                case 8:  IProductWRTDerivBaseTriImpl<8 ,8 ,9 ,8 ,true>(in[0], in[1], out); break;
+                case 9:  IProductWRTDerivBaseTriImpl<9 ,9 ,10,9 ,true>(in[0], in[1], out); break;
+                case 10: IProductWRTDerivBaseTriImpl<10,10,11,10,true>(in[0], in[1], out); break;
+                case 11: IProductWRTDerivBaseTriImpl<11,11,12,11,true>(in[0], in[1], out); break;
+            }
+        }
+        else
+        {
+            switch(m_basis[0]->GetNumModes())
+            {
+                case 2:  IProductWRTDerivBaseTriImpl<2 ,2 ,3 ,2 ,false>(in[0], in[1], out); break;
+                case 3:  IProductWRTDerivBaseTriImpl<3 ,3 ,4 ,3 ,false>(in[0], in[1], out); break;
+                case 4:  IProductWRTDerivBaseTriImpl<4 ,4 ,5 ,4 ,false>(in[0], in[1], out); break;
+                case 5:  IProductWRTDerivBaseTriImpl<5 ,5 ,6 ,5 ,false>(in[0], in[1], out); break;
+                case 6:  IProductWRTDerivBaseTriImpl<6 ,6 ,7 ,6 ,false>(in[0], in[1], out); break;
+                case 7:  IProductWRTDerivBaseTriImpl<7 ,7 ,8 ,7 ,false>(in[0], in[1], out); break;
+                case 8:  IProductWRTDerivBaseTriImpl<8 ,8 ,9 ,8 ,false>(in[0], in[1], out); break;
+                case 9:  IProductWRTDerivBaseTriImpl<9 ,9 ,10,9 ,false>(in[0], in[1], out); break;
+                case 10: IProductWRTDerivBaseTriImpl<10,10,11,10,false>(in[0], in[1], out); break;
+                case 11: IProductWRTDerivBaseTriImpl<11,11,12,11,false>(in[0], in[1], out); break;
+            }
+        }
+    }
 
-//     template<int NM0, int NM1, int NQ0, int NQ1, bool CORRECT>
-//     void AVXIProductTriImpl(
-//         const Array<OneD, const NekDouble> &input,
-//               Array<OneD,       NekDouble> &output)
-//     {
-//         using T = VecData<double, VW>;
-//         auto *inptr = &input[0];
-//         auto *outptr = &output[0];
+    template<int NM0, int NM1, int NQ0, int NQ1, bool CORRECT>
+    void IProductWRTDerivBaseTriImpl(
+        const Array<OneD, const NekDouble> &input0,
+        const Array<OneD, const NekDouble> &input1,
+              Array<OneD,       NekDouble> &output)
+    {
+        auto* inptr0 = input0.data();
+        auto* inptr1 = input1.data();
+        auto* outptr = output.data();
 
-//         constexpr int nqBlocks = NQ0 * NQ1 * VW;
-//         const int nmBlocks = m_nmTot * VW;
+        constexpr auto ndf = 4u;
+        constexpr auto nqTot = NQ0 * NQ1;
+        constexpr auto nqBlocks = nqTot * vec_t::width;
+        const auto nmBlocks = m_nmTot * vec_t::width;
 
-//         T eta0_sums[NQ1]; //Sums over eta0 for each value of eta1;
 
-//         for(int e =0; e < this->m_nBlocks; e++)
-//         {
+        // Get size of jacobian factor block
+        auto dJSize = 1u;
+        auto dfSize = ndf;
+        if(DEFORMED)
+        {
+            dJSize = nqTot;
+            dfSize = ndf*nqTot;
+        }
 
-//             VecData<NekDouble, VW> *jac_ptr;
-//             if(DEFORMED){
-//                 jac_ptr = &(this->m_jac[NQ0*NQ1*e]);
-//             }
-//             else{
-//                 jac_ptr = &(this->m_jac[e]);
-//             }
+        vec_t sums_j[NQ1]; //Sums over eta0 for each value of eta1;
+        std::vector<vec_t, allocator<vec_t>> tmpIn0(nqTot), tmpIn1(nqTot),
+            tmp0(nqTot), tmp1(nqTot), tmpOut(m_nmTot);
 
-//             AVXIProductTriKernel
-//                 <NM0, NM1, NQ0, NQ1, VW, CORRECT,
-//                  false, false, DEFORMED>(
-//                      inptr, this->m_bdata[0], this->m_bdata[1],
-//                      this->m_w[0], this->m_w[1], jac_ptr,
-//                      eta0_sums, outptr);
+        const vec_t* df_ptr;
+        const vec_t* jac_ptr;
+        for(int e =0; e < this->m_nBlocks; ++e)
+        {
+            // Jacobian
+            jac_ptr = &(this->m_jac[dJSize*e]);
 
-//             inptr += nqBlocks;
-//             outptr += nmBlocks;
-//         }
-//     }
-// public:
-//     static NekDouble FlopsPerElement(
-//         const int nm,
-//         const int nq0,
-//         const int nq1)
-//     {
-//         int ploop = nm * 4 * nq0 * nq1;
-//         int pqloop = (nm * (nm+1) / 2) * nq1 * 3;
+            // Derivative factor
+            df_ptr = &(this->m_df[e*dfSize]);
 
-//         int corr_loop;
-//         if(DEFORMED){
-//             //We can't premultiply the jacobian in the outer loop.
-//             corr_loop = nq1 * (1 + nq0*5);
-//         }
-//         else{
-//             corr_loop = nq1 * ( 2 + nq0 * 4);
-//         }
+            // Load and transpose data
+            load_interleave(inptr0, nqTot, tmpIn0);
+            load_interleave(inptr1, nqTot, tmpIn1);
 
-//         return (ploop + pqloop + corr_loop);
-//     }
+            // Calculate dx/dxi in[0] + dy/dxi in[1]
+            vec_t df0, df1, df2, df3;
+            if(!DEFORMED)
+            {
+                df0 = df_ptr[0];
+                df1 = df_ptr[1];
+                df2 = df_ptr[2];
+                df3 = df_ptr[3];
+            }
+            for (int i = 0; i < nqTot; ++i)
+            {
+                if(DEFORMED)
+                {
+                    df0 = df_ptr[i * ndf];
+                    df1 = df_ptr[i * ndf + 1];
+                    df2 = df_ptr[i * ndf + 2];
+                    df3 = df_ptr[i * ndf + 3];
+                }
+                tmp0[i] = df0 * tmpIn0[i] + df2 * tmpIn1[i];
+                tmp1[i] = df1 * tmpIn0[i] + df3 * tmpIn1[i];
+            }
 
-//     virtual NekDouble GFlops() override
-//     {
-//         const int nm = m_basis[0]->GetNumModes();
-//         const int nq0 = m_basis[0]->GetNumPoints();
-//         const int nq1 = m_basis[1]->GetNumPoints();
+            // IP DB0 B1
+            IProductTriKernel<NM0, NM1, NQ0, NQ1, CORRECT, false, false, DEFORMED>(
+                tmp0, this->m_dbdata[0], this->m_bdata[1],
+                this->m_w[0], this->m_w[1], jac_ptr,
+                sums_j, tmpOut);
 
-//         int flops = m_nElmt * AVXIProductTri::FlopsPerElement(nm, nq0, nq1);
-//         return flops * 1e-9;
-//     }
+            // IP DB1 B0
+            IProductTriKernel<NM0, NM1, NQ0, NQ1, CORRECT, false, true, DEFORMED>(
+                tmp1, this->m_bdata[0], this->m_dbdata[1],
+                this->m_w[0], this->m_w[1], jac_ptr,
+                sums_j, tmpOut);
 
-//     virtual NekDouble NLoads() override
-//     {
-//         const int nm0 = m_basis[0]->GetNumModes();
-//         const int nq0 = m_basis[0]->GetNumPoints();
-//         const int nq1 = m_basis[1]->GetNumPoints();
+            // de-interleave and store data
+            deinterleave_store(tmpOut, m_nmTot, outptr);
 
-//         int load_pji = nm0 * nq1 * nq0 * 3;
-//         int load_pqj = nm0*(nm0+1) * nq1 *0.5 * 3;
-//         int load_corr = 1 + nq1*(2 + nq0*3);
-//         int load_expected = load_pji + load_pqj + load_corr;
+            inptr0 += nqBlocks;
+            inptr1 += nqBlocks;
+            outptr += nmBlocks;
+        }
+    }
 
-//         return this->m_nElmt * load_expected;
-//     }
-
-//     virtual NekDouble NStores() override
-//     {
-//         const int nm0 = m_basis[0]->GetNumModes();
-//         const int nq0 = m_basis[0]->GetNumPoints();
-//         const int nq1 = m_basis[1]->GetNumPoints();
-
-//         int store_pj = nm0*nq1;
-//         int store_pq = nm0*(nm0+1) / 2.0;
-//         int store_corr = 1;
-//         int store_expected = store_pj + store_pq + store_corr;
-
-//         return this->m_nElmt * store_expected;
-//     }
-
-//     virtual NekDouble Ndof() override
-//     {
-//         return m_nmTot * this->m_nElmt;
-//     }
-
-// private:
-//     int m_nmTot;
-// };
+private:
+    int m_nmTot;
+};
 
 template<bool DEFORMED = false>
 struct IProductWRTDerivBaseHex : public IProductWRTDerivBase, public Helper<3, DEFORMED>
@@ -453,8 +435,8 @@ public:
         return std::make_shared<IProductWRTDerivBaseHex<DEFORMED>>(basis, nElmt);
     }
 
-    virtual void operator()(const Array<OneD, Array<OneD, NekDouble>> &in,
-                                  Array<OneD,       NekDouble> &out)
+    void operator()(const Array<OneD, Array<OneD, NekDouble>> &in,
+        Array<OneD,       NekDouble> &out) final
     {
         switch(m_basis[0]->GetNumModes())
         {

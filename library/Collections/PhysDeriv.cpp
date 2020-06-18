@@ -379,6 +379,9 @@ class PhysDeriv_MatrixFree : public Operator
 OperatorKey PhysDeriv_MatrixFree::m_typeArr[] =
 {
     GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eTriangle, ePhysDeriv, eMatrixFree, false),
+        PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Tri"),
+    GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eQuadrilateral, ePhysDeriv, eMatrixFree, false),
         PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Quad"),
     GetOperatorFactory().RegisterCreatorFunction(

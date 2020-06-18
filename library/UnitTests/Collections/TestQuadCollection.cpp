@@ -1290,7 +1290,7 @@ namespace QuadCollectionTests
         Nektar::LibUtilities::BasisType basisTypeDir1 =
             Nektar::LibUtilities::eModified_A;
         unsigned int numQuadPoints = 5;
-        int numModes = 2;
+        unsigned int numModes = 2;
         const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(numQuadPoints,
             quadPointsTypeDir1);
         const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,

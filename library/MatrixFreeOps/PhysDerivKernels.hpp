@@ -65,14 +65,14 @@ inline static void PhysDerivTensor2DKernel(
 
 template<int NUMQUAD0, int NUMQUAD1, bool DEFORMED>
 static void PhysDerivQuadKernel(
-    const std::vector<vec_t, allocator<vec_t>> &inptr,
+    const std::vector<vec_t, allocator<vec_t>> &in,
     const std::vector<vec_t, allocator<vec_t>> &Z0,
     const std::vector<vec_t, allocator<vec_t>> &Z1,
     const std::vector<vec_t, allocator<vec_t>> &D0,
     const std::vector<vec_t, allocator<vec_t>> &D1,
     const vec_t* df_ptr,
-          std::vector<vec_t, allocator<vec_t>> &outptr_d0,
-          std::vector<vec_t, allocator<vec_t>> &outptr_d1)
+          std::vector<vec_t, allocator<vec_t>> &out_d0,
+          std::vector<vec_t, allocator<vec_t>> &out_d1)
 {
     boost::ignore_unused(Z0, Z1);
 
@@ -80,12 +80,13 @@ static void PhysDerivQuadKernel(
     constexpr auto ndf = 4;
 
     PhysDerivTensor2DKernel<NUMQUAD0, NUMQUAD1>(
-        inptr,
+        in,
         D0, D1,
-        outptr_d0, outptr_d1); //Results written to outptr_d0, outptr_d1
+        out_d0, out_d1); //Results written to out_d0, out_d1
 
     vec_t df0, df1, df2, df3;
-    if(!DEFORMED){
+    if (!DEFORMED)
+    {
         df0 = df_ptr[0];
         df1 = df_ptr[1];
         df2 = df_ptr[2];
@@ -98,10 +99,11 @@ static void PhysDerivQuadKernel(
         for (int i = 0; i < nq1; ++i, ++cnt_ji)
         {
 
-            vec_t d0 = outptr_d0[cnt_ji];// Load 1x
-            vec_t d1 = outptr_d1[cnt_ji]; //Load 1x
+            vec_t d0 = out_d0[cnt_ji];// Load 1x
+            vec_t d1 = out_d1[cnt_ji]; //Load 1x
 
-            if(DEFORMED){
+            if (DEFORMED)
+            {
                 df0 = df_ptr[cnt_ji * ndf];
                 df1 = df_ptr[cnt_ji * ndf + 1];
                 df2 = df_ptr[cnt_ji * ndf + 2];
@@ -111,79 +113,81 @@ static void PhysDerivQuadKernel(
             //Multiply by derivative factors
             vec_t out0 = d0 * df0; //d0 * df00 + d1 * df10
             out0.fma(d1, df1);
-            outptr_d0[cnt_ji] = out0; //Store 1x
+            out_d0[cnt_ji] = out0; //Store 1x
 
             vec_t out1 = d0 * df2; //d0 * df2 + d1 * df30
             out1.fma(d1, df3);
-            outptr_d1[cnt_ji] = out1; //Store 1x
+            out_d1[cnt_ji] = out1; //Store 1x
         }
     }
 
 }
 
-// template<int NUMQUAD0, int NUMQUAD1,
-//          int VW, bool DEFORMED, class BasisType>
-// static void PhysDerivTriKernel(
-//     const NekDouble *inptr,
-//     const AlignedVector<BasisType> &Z0,
-//     const AlignedVector<BasisType> &Z1,
-//     const AlignedVector<BasisType> &D0,
-//     const AlignedVector<BasisType> &D1,
-//     const VecData<double, VW> *df_ptr,
-//     NekDouble *outptr_d0,
-//     NekDouble *outptr_d1)
-// {
+template<int NUMQUAD0, int NUMQUAD1, bool DEFORMED>
+static void PhysDerivTriKernel(
+    const std::vector<vec_t, allocator<vec_t>> &in,
+    const std::vector<vec_t, allocator<vec_t>> &Z0,
+    const std::vector<vec_t, allocator<vec_t>> &Z1,
+    const std::vector<vec_t, allocator<vec_t>> &D0,
+    const std::vector<vec_t, allocator<vec_t>> &D1,
+    const vec_t* df_ptr,
+    std::vector<vec_t, allocator<vec_t>> &out_d0,
+    std::vector<vec_t, allocator<vec_t>> &out_d1)
+{
 
-//     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1;
-//     constexpr int ndf = 4;
-//     using T = VecData<double, VW>;
+    constexpr auto nq0 = NUMQUAD0, nq1 = NUMQUAD1;
+    constexpr auto ndf = 4;
 
-//     PhysDerivTensor2DKernel<NUMQUAD0, NUMQUAD1, VW>(
-//         inptr,
-//         D0, D1,
-//         outptr_d0, outptr_d1); //Results written to outptr_d0, outptr_d1
+    PhysDerivTensor2DKernel<NUMQUAD0, NUMQUAD1>(
+        in,
+        D0, D1,
+        out_d0, out_d1); //Results written to out_d0, out_d1
 
-//     int cnt_ji = 0;
-//     T df0, df1, df2, df3;
-//     if(!DEFORMED){ //Optimized out by compiler
-//         df0 = df_ptr[0];
-//         df1 = df_ptr[1];
-//         df2 = df_ptr[2];
-//         df3 = df_ptr[3];
-//     }
+    vec_t df0, df1, df2, df3;
+    if (!DEFORMED) //Optimized out by compiler
+    {
+        df0 = df_ptr[0];
+        df1 = df_ptr[1];
+        df2 = df_ptr[2];
+        df3 = df_ptr[3];
+    }
 
-//     for(int j = 0; j < nq1; j++){
+    int cnt_ji = 0;
+    for (int j = 0; j < nq1; ++j)
+    {
 
-//         T xfrm0 = T(2.0) / (T(1.0) - Z1[j]); //Load 1x
+        vec_t xfrm0 = 2.0 / (1.0 - Z1[j]); //Load 1x
 
-//         for(int i = 0; i < nq0; i++, cnt_ji++){
-//             //moving from standard to collapsed coordinates
-//             T d0 = xfrm0 * T(outptr_d0 + cnt_ji*VW); //Load 1x
+        for (int i = 0; i < nq0; ++i, ++cnt_ji)
+        {
 
-//             if(DEFORMED){
-//                 df0 = df_ptr[cnt_ji*ndf];
-//                 df1 = df_ptr[cnt_ji*ndf + 1];
-//                 df2 = df_ptr[cnt_ji*ndf + 2];
-//                 df3 = df_ptr[cnt_ji*ndf + 3];
-//             }
+            if (DEFORMED)
+            {
+                df0 = df_ptr[cnt_ji * ndf];
+                df1 = df_ptr[cnt_ji * ndf + 1];
+                df2 = df_ptr[cnt_ji * ndf + 2];
+                df3 = df_ptr[cnt_ji * ndf + 3];
+            }
 
-//             T xfrm1 = T(0.5) * ( T(1.0) + Z0[i] ); //Load 1x
-//             T d1 = T(outptr_d1 + cnt_ji*VW); //Load 1x
-//             d1.fma(d0, xfrm1);
+            //moving from standard to collapsed coordinates
+            vec_t d0 = xfrm0 * out_d0[cnt_ji]; //Load 1x
+            vec_t d1 = out_d1[cnt_ji]; //Load 1x
+            vec_t xfrm1 = 0.5 * (1.0 + Z0[i]); //Load 1x
+            d1.fma(d0, xfrm1);
 
-//             //Multiply by derivative factors
-//             T out0 = d0 * df0; //d0 * df0 + d1 * df10
-//             out0.fma(d1, df1);
-//             out0.store(outptr_d0 + cnt_ji*VW); //Store 1x
+            //Multiply by derivative factors
+            vec_t out0 = d0 * df0; //d0 * df0 + d1 * df10
+            out0.fma(d1, df1);
+            out_d0[cnt_ji] = out0; // store 1x
 
-//             T out1 = d0 * df2; //d0 * df2 + d1 * df3
-//             out1.fma(d1, df3);
-//             out1.store(outptr_d1 + cnt_ji*VW); //Store 1x
+            vec_t out1 = d0 * df2; //d0 * df2 + d1 * df3
+            out1.fma(d1, df3);
+            out_d1[cnt_ji] = out1; //Store 1x
 
-//         }
-//     }
+        }
+    }
 
-// }
+}
 
 template<int NUMQUAD0, int NUMQUAD1, int NUMQUAD2>
 inline static void PhysDerivTensor3DKernel(

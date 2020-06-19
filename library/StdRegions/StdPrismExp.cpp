@@ -680,13 +680,10 @@ namespace Nektar
         // Evaluation functions
         //---------------------------------------
 
-
-
         void StdPrismExp::v_LocCoordToLocCollapsed(
                 const Array<OneD, const NekDouble>& xi,
                 Array<OneD, NekDouble>& eta)
         {
-
             if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
             {
                 // Very top point of the prism
@@ -733,6 +730,40 @@ namespace Nektar
             Array<OneD, NekDouble> tmp(m_ncoeffs,0.0);
             tmp[mode] = 1.0;
             StdPrismExp::v_BwdTrans(tmp, outarray);
+        }
+
+        NekDouble StdPrismExp::v_PhysEvaluateBasis(
+            const Array<OneD, const NekDouble>& coords,
+            int mode)
+        {
+            Array<OneD, NekDouble> coll(3);
+            LocCoordToLocCollapsed(coords, coll);
+
+            const int nm1 = m_base[1]->GetNumModes();
+            const int nm2 = m_base[2]->GetNumModes();
+            const int b = 2 * nm2 + 1;
+
+            const int mode0 = floor(0.5 * (b - sqrt(b * b - 8.0 * mode / nm1)));
+            const int tmp   =
+                mode - nm1*(mode0 * (nm2-1) + 1 - (mode0 - 2)*(mode0 - 1) / 2);
+            const int mode1 = tmp / (nm2 - mode0);
+            const int mode2 = tmp % (nm2 - mode0);
+
+            if (mode0 == 0 && mode2 == 1 &&
+                m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+            {
+                // handle collapsed top edge to remove mode0 terms
+                return
+                    StdExpansion::BaryEvaluateBasis<1>(coll[1], mode1) *
+                    StdExpansion::BaryEvaluateBasis<2>(coll[2], mode2);
+            }
+            else
+            {
+                return
+                    StdExpansion::BaryEvaluateBasis<0>(coll[0], mode0) *
+                    StdExpansion::BaryEvaluateBasis<1>(coll[1], mode1) *
+                    StdExpansion::BaryEvaluateBasis<2>(coll[2], mode2);
+            }
         }
 
         void StdPrismExp::v_GetFaceNumModes(

@@ -261,6 +261,7 @@ namespace Nektar
             {
                 CalculatePoints();
                 CalculateWeights();
+                CalculateBaryWeights();
                 CalculateDerivMatrix();
             }
 
@@ -299,6 +300,11 @@ namespace Nektar
             {
                 z = m_points[0];
                 w = m_weights;
+            }
+
+            inline const Array<OneD, const NekDouble>& GetBaryWeights() const
+            {
+                return m_bcweights;
             }
 
             inline void GetPoints(Array<OneD, const DataType> &x) const
@@ -377,9 +383,16 @@ namespace Nektar
             }
 
         protected:
+            /// Points type for this points distributions.
             PointsKey             m_pointsKey;
+            /// Storage for the point locations, allowing for up to a 3D points
+            /// storage.
             Array<OneD, DataType> m_points[3];
+            /// Quadrature weights for the weights.
             Array<OneD, DataType> m_weights;
+            /// Barycentric weights.
+            Array<OneD, DataType> m_bcweights;
+            /// Derivative matrices.
             MatrixSharedPtrType   m_derivmatrix[3];
             NekManager<PointsKey, NekMatrix<DataType>, PointsKey::opLess> m_InterpManager;
             NekManager<PointsKey, NekMatrix<DataType>, PointsKey::opLess> m_GalerkinProjectionManager;
@@ -398,6 +411,40 @@ namespace Nektar
             virtual void CalculateWeights()
             {
                 m_weights = Array<OneD, DataType>(GetTotNumPoints());
+            }
+
+            /**
+             * @brief This function calculates the barycentric weights used for
+             * enhanced interpolation speed.
+             *
+             * For the points distribution \f$ z_i \f$ with \f% 1\leq z_i \leq N
+             * \f$, the barycentric weights are computed as:
+             *
+             * \f[
+             * b_i=\prod_{\substack{1\leq j\leq N\\ i\neq j}} \frac{1}{z_i-z_j}
+             * \f]
+             */
+            virtual void CalculateBaryWeights()
+            {
+                const unsigned int totNumPoints = m_pointsKey.GetNumPoints();
+                m_bcweights = Array<OneD, DataType>(totNumPoints, 1.0);
+
+                Array<OneD, DataType> z = m_points[0];
+
+                for (unsigned int i = 0; i < totNumPoints; ++i)
+                {
+                    for (unsigned int j = 0; j < totNumPoints; ++j)
+                    {
+                        if (i == j)
+                        {
+                            continue;
+                        }
+
+                        m_bcweights[i] *= (z[i] - z[j]);
+                    }
+
+                    m_bcweights[i] = 1.0 / m_bcweights[i];
+                }
             }
 
             virtual void CalculateDerivMatrix()

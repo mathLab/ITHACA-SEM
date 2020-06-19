@@ -13,6 +13,7 @@ configuration.
 
 
 \subsection{Obtaining the source code}
+\label{s:installation:source:obtainingsource}
 There are two ways to obtain the source code for \nekpp:
 \begin{itemize}
 	\item Download the latest source-code archive from the
@@ -56,7 +57,7 @@ installed system-wide).
 Package & Req. & Sys. & User & Auto.              & Note \\
 \midrule
 C++ compiler    & \cmark & \cmark & & & gcc, icc, etc, supporting C++11 \\
-CMake $>2.8.11$ & \cmark & \cmark & \cmark &        & Ncurses
+CMake $\geq 3.5.1$ & \cmark & \cmark & \cmark &        & Ncurses
 GUI optional
 \\
 BLAS            & \cmark & \cmark & \cmark & \cmark & Or MKL,
@@ -218,7 +219,7 @@ system-wide).
 Package & Req. & MacPorts & User & Auto.          & Note \\
 \midrule
 Xcode           & \cmark &        & & & Provides developer tools \\
-CMake $>2.8.11$ & \cmark & \texttt{cmake}   & \cmark &        & Ncurses
+CMake $\geq 3.5.1$ & \cmark & \texttt{cmake}   & \cmark &        & Ncurses
 GUI optional \\
 BLAS            & \cmark &                  &        &        & Part of
 Xcode \\
@@ -367,10 +368,15 @@ tar -zxvf nektar++-(*\nekver*).tar.gz
 
 \subsection{Windows}
 
-Windows compilation is supported, but the build process is somewhat convoluted
-at present. As such, only serial execution is supported with a minimal amount of
-additional build packages. These can either be installed by the user, or
-automatically in the build process.
+\lstset{showstringspaces=false}
+
+Windows compilation is supported but there are some complexities with building
+additional features on this platform at present. As such, only builds with
+a minimal amount of additional build packages are currently supported. These can
+either be installed by the user, or automatically as part of the build process.
+Support has recently been added for building with MPI on Windows. This enables
+parallel computations to be carried out with \nekpp on Windows where only
+sequential computations were previously supported. 
 
 \begin{center}
 \begin{tabularx}{\linewidth}{lcccX}
@@ -378,72 +384,142 @@ automatically in the build process.
                   &        & \multicolumn{2}{c}{Installation} & \\ \cmidrule(r){3-4}
 Package           & Req.   & User   & Auto.        & Note \\
 \midrule
-MS Visual Studio  & \cmark & \cmark &              & 2012, 2013 and 2015 known working\\
-CMake $\geq 3.0$  & \cmark & \cmark &              & \\
+MS Visual Studio  & \cmark & \cmark &              & 2015, 2017 and 2019 known working\\
+CMake $\geq 3.5.1$  & \cmark & \cmark &              & 3.16+ recommended, see info below\\
 BLAS              & \cmark & \cmark & \cmark       & \\
 LAPACK            & \cmark & \cmark & \cmark       & \\
-Boost $\geq 1.56$ & \cmark & \cmark & \cmark       & Compile with iostreams\\
+Boost $\geq 1.61$ & \cmark & \cmark & \cmark       & Recommend installing from binaries\\ %Compile with iostreams\\
+Microsoft MPI $\geq 10.1.2$    &                & \cmark &        & Required for parallel execution. Install both runtime and SDK\\
 \bottomrule
 \end{tabularx}
 \end{center}
 
+  \begin{notebox}
+    These instructions assume you are using a 64-bit version of Windows 10.
+  \end{notebox}
+
+  \begin{notebox}
+    There have been issues with automatically building Boost from source as
+    a third party dependency during the \nekpp build when using MS Visual
+    Studio 2015, 2017 and 2019. This should now be possible but it is,
+    nonetheless, recommended you install a suitable version of Boost from 
+    binaries as detailed in the instructions below.
+  \end{notebox}
+
 \subsubsection{Detailed instructions}
 
 \begin{enumerate}
-  \item Install Microsoft Visual Studio 2015 (preferred), 2013 or 2012 (known to
-  work). This can be obtained from Microsoft free of charge by using their
-  Community developer tools from
-  \url{https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx}.
-  \item Install CMake 3.0+ from \url{http://www.cmake.org/download/}. When
-  prompted, select the option to add CMake to the system PATH.
-  \item (Optional) Install Git from \url{http://git-scm.com/download/win} to use
-  the development versions of \nekpp. When prompted, select the option to add
-  Git to the system PATH. You do not need to select the option to add Unix tools
-  to the PATH.
-  \item (Optional) If you do not wish to build boost during the compilation
-  process (which can take some time), then boost binaries can be found at
-  \url{http://sourceforge.net/projects/boost/files/boost-binaries/1.61.0/}. By
-  default these install into \inlsh{C:\textbackslash local\textbackslash
-    boost\_1\_61\_0}. If you use these libraries, you will need to:
+  \item Install Microsoft Visual Studio 2019 (preferred), 2017 or 2015 (both
+  known to work). This can be obtained from Microsoft free of charge by using
+  their Community developer tools from
+  \url{https://visualstudio.microsoft.com/vs/community/}.
+
+  \item Install CMake from \url{http://www.cmake.org/download/}. For building
+  on Windows you are strongly recommended to use a recent version of CMake,
+  e.g 3.16+. Minimum required CMake versions for building \nekpp on Windows
+  with Visual Studio are CMake 3.5.1+ (VS2015), 3.7+ (VS2017), or 3.15+ 
+  (VS2019). When prompted, select the option to add CMake to the system PATH.
+
+  \item (Optional) As highlighted above, it is possible to have Boost built
+  from source as a third-party library during the \nekpp build. However, it
+  is currently recommended to install the Boost binaries that can be found at
+  \url{http://sourceforge.net/projects/boost/files/boost-binaries}. By
+  default these install into \\ \inlsh{C:\textbackslash local\textbackslash
+    boost\_<version>}. We recommend installing a specific version of the
+    binaries depending on the version of Visual Studio you are using, 
+    these are known to be working with the \nekpp build:
   \begin{itemize}
-    \item Rename \texttt{libs-msvc14.0} to \texttt{lib}
-    \item Inside the \texttt{lib} directory, create duplicates of
-    \texttt{boost\_zlib.dll} and \texttt{boost\_bzip2.dll} called
-    \texttt{zlib.dll} and \texttt{libbz2.dll}
-	\item Add a \inlsh{BOOST\_HOME} environment variable. To do so,
-	navigate to \emph{Control Panel > System and Security > System}, select
+  	\item For Visual Studio 2015, install boost 1.61 using the package
+	 \texttt{boost\_1\_61\_0-\\msvc-14.0-64.exe} from \url{http://sourceforge.net/projects/boost/files/boost-binaries/1.61.0/}
+  	\item For Visual Studio 2017, install boost 1.68 using the package
+	 \texttt{boost\_1\_68\_0-\\msvc-14.1-64.exe} from \url{http://sourceforge.net/projects/boost/files/boost-binaries/1.68.0/}
+  	\item For Visual Studio 2019, install boost 1.72 using the package
+	 \texttt{boost\_1\_72\_0-\\msvc-14.2-64.exe}  from \url{http://sourceforge.net/projects/boost/files/boost-binaries/1.72.0/}
+  \end{itemize}  
+  If you use these libraries, you will need to:
+  \begin{itemize}
+  	\item Add a \inlsh{BOOST\_HOME} environment variable. To do so, click the
+	Start menu and type `env', you should be presented with an \emph{``Edit
+  the system environment variables''} option. Alternatively, from the Start
+  menu, navigate to \emph{Settings > System > About > System info 
+	(under Related Settings on the right hand panel)}, select
 	\emph{Advanced System Settings}, and in the \emph{Advanced} tab click the
-	\emph{Environment Variables}. In the \emph{System Variables} box, click
-	\emph{New}. In the \emph{New System Variable} window, type \inlsh{BOOST\_HOME}
-	next to \emph{Variable name} and \inlsh{C:\textbackslash local\textbackslash
-	boost\_1\_61\_0} next to\emph{Variable value}.
+	\emph{Environment Variables} button. In the \emph{System variables} box,
+  click \emph{New}. In the \emph{New System Variable} window, type
+  \inlsh{BOOST\_HOME} next to \emph{Variable name} and 
+  \inlsh{C:\textbackslash local\textbackslash
+	<boost\_dir>} next to\emph{Variable value}, where \emph{<boost\_dir>}
+  corresponds to the directory that boost has been installed to, based on the
+  boost version you have installed. (e.g. \emph{boost\_1\_61\_0},
+  \emph{boost\_1\_68\_0}, \emph{boost\_1\_72\_0}).
+
+%    \item Rename \texttt{libs-msvc14.0} to \texttt{lib}
+%    \item Inside the \texttt{lib} directory, create duplicates of
+%    \texttt{boost\_zlib.dll} and \texttt{boost\_bzip2.dll} called
+%    \texttt{zlib.dll} and \texttt{libbz2.dll}
   \end{itemize}
-  \item Unpack \inlsh{nektar++-\nekver.zip}.
+  \item (Optional) Install Git for Windows from
+  \url{https://gitforwindows.org/} to use the development versions of \nekpp.
+  You can accept the default set of components in the \emph{Select Components}
+  panel. When prompted, in the \emph{``Adjusting your PATH environment''}
+  panel, select the option \emph{``Git from the command line and also from
+  3rd-party software''}. You do not need to select the option to add Unix
+  tools to the PATH.
+  
+  \item If you've downloaded the source code archive (as described in 
+  Section~\ref{s:installation:source:obtainingsource}), unpack 
+  \inlsh{nektar++-\nekver.zip}.
 
   \begin{notebox}
     Some Windows versions do not recognise the path of a folder which has
-    \inltt{++} in the name. If you think that your Windows version can not
-    handle path containing special characters, you should rename
-    \inlsh{nektar++-\nekver} to \inlsh{nektar-\nekver}.
+    \inltt{++} in the name. If you are not using Windows 10 and think that your
+    Windows version cannot handle paths containing special characters, you
+    should rename \inlsh{nektar++-\nekver} to \inlsh{nektar-\nekver}.
   \end{notebox}
-  \item Create a \inlsh{builds} directory within the \inlsh{nektar++-\nekver}
-  subdirectory.
-  \item Open a Visual Studio terminal. From the start menu, this can be found in
-  \emph{All Programs > Visual Studio 2015 > Visual Studio Tools > Developer
-    Command Prompt for VS2015}.
-  \item Change directory into the \texttt{builds} directory and run the CMake
-  graphical utility:
+  \item Create a \inlsh{build} directory within the \inlsh{nektar++-\nekver}
+  subdirectory. \textit{If you cloned the source code from the git repository,
+  your \nekpp subdirectory will be called \inlsh{nektar} rather than
+  \inlsh{nektar++-\nekver}}
+  
+  \item Open a Visual Studio terminal (\emph{Developer Command Prompt for
+  VS [2015/2017/2019]} or \emph{x64 Native Tools Command Prompt}. From the 
+  Start menu, this can be found under \emph{Visual Studio [2015/2017/2019]}.
+  
+  \item Change directory into the \texttt{build} directory and run CMake to
+  generate the build files. You need to set the \emph{generator} to the
+  correct Visual Studio version using the -G switch on the command line, e.g.
+  for VS2019:
   \begin{lstlisting}[style=BashInputStyle]
     cd C:\path\to\nektar\builds
-    cmake-gui ..
+    cmake -G "Visual Studio 16 2019" ..
   \end{lstlisting}
-  \item Select the build system you want to generate build scripts for. Note
-  that \emph{Visual Studio 2015} is listed as \emph{Visual Studio 14} in the
-  drop-down list. If you have a 64-bit installation of Windows, you should
-  select the \emph{Win64} variant, otherwise 32-bit executables will be
-  generated. Select the option to use the native compilers.
-  \item Click the \emph{Configure} button, then the \emph{Generate} button.
-  \item Return to the command line and issue the command:
+  You can see the list of available generators using \emph{cmake --help}. For
+  VS2017 use \emph{``Visual Studio 15 2017 Win64''} and for VS2015 use
+  \emph{``Visual Studio 14 2015 Win64''}.
+  
+  If you want to build a parallel version of \nekpp with MPI support, you need
+  to add the \emph{-DNEKTAR\_USE\_MPI=ON} switch to the cmake command, e.g.:
+  \begin{lstlisting}[style=BashInputStyle]
+    cmake -G "Visual Studio 16 2019" -D NEKTAR_USE_MPI=ON ..
+  \end{lstlisting}
+
+  \begin{notebox}
+  If you installed Boost binaries, as described above, you should ensure at
+  this stage that the version of Boost that you installed has been correctly 
+  detected by CMake. You should see a number of lines of output from CMake
+  saying \emph{-- -- Found boost <library name> library: } followed by paths to
+  one or more files which should be located in the directory where you
+  installed your Boost binaries. If you do not see this output, CMake has
+  failed to detect the installed Boost libraries and the build process will
+  instead try to build Boost from source as part of building \nekpp.\\
+  
+  If you experience any issues with CMake finding pre-installed Boost, binaries
+  ensure that you are working in a Visual Studio command prompt that was
+  opened \emph{after} you installed boost and set up the \inlsh{BOOST\_HOME}
+  environment variable.
+  \end{notebox}
+  
+  \item Assuming the configuration completes successfully and you see the message \emph{Build files have been written to: ...}, you should now be ready to issue the build command:
   \begin{lstlisting}[style=BashInputStyle]
     msbuild INSTALL.vcxproj /p:Configuration=Release
   \end{lstlisting}
@@ -451,37 +527,43 @@ Boost $\geq 1.56$ & \cmark & \cmark & \cmark       & Compile with iostreams\\
   \begin{lstlisting}[style=BashInputStyle]
     msbuild INSTALL.vcxproj /p:Configuration=Release /m:12
   \end{lstlisting}
-  \item After the installation process is completed, the executables will be
-  available in \inlsh{builds\textbackslash dist\textbackslash bin}.
+  \item After the build and installation process has completed, the executables will be
+  available in \inlsh{build\textbackslash dist\textbackslash bin}.
   \item To use these executables, you need to modify your system \inlsh{PATH} to
-  include the library directories where DLLs are stored. To do this, navigate to
-  \emph{Control Panel > System and Security > System}, select \emph{Advanced
-    System Settings}, and in the \emph{Advanced} tab click the \emph{Environment
-    Variables}. In the \emph{System Variables} box, select \emph{Path} and click
-  \emph{Edit}. To the end of this list, add the \textbf{full paths} to
-  directories:
+  include the \inlsh{bin} directory and library directories where DLLs are stored. To do this, click the
+	Start menu and type `env', you should be presented with an \emph{``Edit the system environment variables''} 
+	option. Alternatively, navigate to \emph{Settings > System > About > System info 
+	(under Related Settings on the right hand panel)}, select
+	\emph{Advanced System Settings}, and in the \emph{Advanced} tab click the
+	\emph{Environment Variables} button. In the \emph{System Variables} box, select \inlsh{Path} and click
+  \emph{Edit}. Add the \textbf{full paths} to the following directories to the end of the list of paths shown in the \emph{``Edit environment variable''} window:
   \begin{itemize}
-    \item \inlsh{builds\textbackslash dist\textbackslash lib\textbackslash nektar++-\nekver}
-    \item \inlsh{builds\textbackslash dist\textbackslash bin}
-    \item Optionally, if you installed Boost from the binary packages,
-    \inlsh{C:\textbackslash local\textbackslash boost\_1\_61\_0 \textbackslash lib}
+    \item \inlsh{nektar++-\nekver\textbackslash build\textbackslash dist\textbackslash lib\textbackslash nektar++-\nekver}
+    \item \inlsh{nektar++-\nekver\textbackslash build\textbackslash dist\textbackslash bin}
+    \item \inlsh{nektar++-\nekver\textbackslash ThirdParty}
+    \item \inlsh{C:\textbackslash local\textbackslash boost\_<boost\_version>\textbackslash <boost\_lib\_dir>} 
+    where \emph{boost\_<boost\_version>} is the directory where the boost binaries were installed to and 
+    \emph{<boost\_lib\_dir>} is the name of the library directory within this location, e.g. 
+    \emph{lib64-msvc-14.2} or similar depending on the version of Boost binaries you installed.
   \end{itemize}
   \item To run the test suite, open a \textbf{new} command line window, change
-  to the \inlsh{builds} directory, and then issue the command
+  to the \inlsh{build} directory, and then issue the command
   \begin{lstlisting}[style=BashInputStyle]
     ctest -C Release
   \end{lstlisting}
 \end{enumerate}
 
+\lstset{showstringspaces=true}
+
 \subsection{CMake Option Reference}
 \label{s:installation:source:cmake}
 This section describes the main configuration options which can be set when
-building Nektar++. The default options should work on almost all systems, but
+building \nekpp. The default options should work on almost all systems, but
 additional features (such as parallelisation and specialist libraries) can be
 enabled if needed.
 
 \subsubsection{Components}
-The first set of options specify the components of the Nektar++ toolkit to
+The first set of options specify the components of the \nekpp toolkit to
 compile. Some options are dependent on others being enabled, so the available
 options may change.
 
@@ -502,7 +584,7 @@ Components of the \nekpp package can be selected using the following options:
 
     \item \inlsh{NEKTAR\_BUILD\_LIBRARY} (Required)
 
-    Compiles the Nektar++ framework libraries. This is required for all other
+    Compiles the \nekpp framework libraries. This is required for all other
     options.
 
     \item \inlsh{NEKTAR\_BUILD\_PYTHON}
@@ -604,7 +686,7 @@ can be selected using the following options:
 
     \item \inlsh{NEKTAR\_USE\_MPI} (Recommended)
 
-    Build Nektar++ with MPI parallelisation. This allows solvers to be run in
+    Build \nekpp with MPI parallelisation. This allows solvers to be run in
     serial or parallel.
 
     \item \inlsh{NEKTAR\_USE\_PETSC}

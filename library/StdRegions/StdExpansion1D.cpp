@@ -83,39 +83,32 @@ namespace Nektar
         }
     }
 
-        NekDouble StdExpansion1D::v_PhysEvaluate(
-                const Array<OneD, const NekDouble>& Lcoord,
-                const Array<OneD, const NekDouble>& physvals)
-        {
-        int    nquad = GetTotPoints();
-        NekDouble  val;
-        DNekMatSharedPtr I = m_base[0]->GetI(Lcoord);
-
+    NekDouble StdExpansion1D::v_PhysEvaluate(
+        const Array<OneD, const NekDouble>& Lcoord,
+        const Array<OneD, const NekDouble>& physvals)
+    {
         ASSERTL2(Lcoord[0] >= -1 - NekConstants::kNekZeroTol,"Lcoord[0] < -1");
         ASSERTL2(Lcoord[0] <=  1 + NekConstants::kNekZeroTol,"Lcoord[0] >  1");
 
-        val = Blas::Ddot(nquad, I->GetPtr(), 1, physvals, 1);
-
-        return val;
+        return StdExpansion::BaryEvaluate<0>(Lcoord[0], &physvals[0]);
     }
-	
-	void StdExpansion1D::v_SetUpPhysNormals(const int vertex)
-    {
-		ComputeVertexNormal(vertex);
-    }
-        
-        const NormalVector & StdExpansion1D::v_GetSurfaceNormal(const int id) const
-        {
-            return v_GetVertexNormal(id);
-        }
 
-		
-	const NormalVector & StdExpansion1D::v_GetVertexNormal(const int vertex) const
+    void StdExpansion1D::v_SetUpPhysNormals(const int vertex)
     {
-         auto x = m_vertexNormals.find(vertex);
-         ASSERTL0 (x != m_vertexNormals.end(),
-				  "vertex normal not computed.");
-         return x->second;
+        ComputeVertexNormal(vertex);
+    }
+
+    const NormalVector & StdExpansion1D::v_GetSurfaceNormal(const int id) const
+    {
+        return v_GetVertexNormal(id);
+    }
+
+    const NormalVector & StdExpansion1D::v_GetVertexNormal(const int vertex) const
+    {
+        auto x = m_vertexNormals.find(vertex);
+        ASSERTL0 (x != m_vertexNormals.end(),
+                  "vertex normal not computed.");
+        return x->second;
     }
 
     }//end namespace

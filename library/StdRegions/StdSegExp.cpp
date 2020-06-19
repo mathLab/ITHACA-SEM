@@ -524,12 +524,11 @@ namespace Nektar
             Vmath::Vcopy(nquad,(NekDouble *)base+mode*nquad,1, &outarray[0],1);
         }
 
-
-        NekDouble StdSegExp::v_PhysEvaluate(
-                const Array<OneD, const NekDouble>& coords,
-                const Array<OneD, const NekDouble>& physvals)
+        NekDouble StdSegExp::v_PhysEvaluateBasis(
+            const Array<OneD, const NekDouble>& coords,
+            int mode)
         {
-            return  StdExpansion1D::v_PhysEvaluate(coords, physvals);
+            return StdExpansion::BaryEvaluateBasis<0>(coords[0], mode);
         }
 
         void StdSegExp::v_LaplacianMatrixOp(

@@ -911,6 +911,52 @@ namespace Nektar
             StdTetExp::v_BwdTrans(tmp, outarray);
         }
 
+        NekDouble StdTetExp::v_PhysEvaluateBasis(
+            const Array<OneD, const NekDouble>& coords,
+            int mode)
+        {
+            Array<OneD, NekDouble> coll(3);
+            LocCoordToLocCollapsed(coords, coll);
+
+            const int nm1 = m_base[1]->GetNumModes();
+            const int nm2 = m_base[2]->GetNumModes();
+
+            const int b = 2 * nm2 + 1;
+            const int mode0 = floor(0.5 * (b - sqrt(b * b - 8.0 * mode / nm1)));
+            const int tmp   =
+                mode - nm1*(mode0 * (nm2-1) + 1 - (mode0 - 2)*(mode0 - 1) / 2);
+            const int mode1 = tmp / (nm2 - mode0);
+            const int mode2 = tmp % (nm2 - mode0);
+
+            if (m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+            {
+                // Handle the collapsed vertices and edges in the modified
+                // basis.
+                if (mode == 1)
+                {
+                    // Collapsed top vertex
+                    return StdExpansion::BaryEvaluateBasis<2>(coll[2], 1);
+                }
+                else if (mode0 == 0 && mode2 == 1)
+                {
+                    return
+                        StdExpansion::BaryEvaluateBasis<1>(coll[1], 0) *
+                        StdExpansion::BaryEvaluateBasis<2>(coll[2], 1);
+                }
+                else if (mode0 == 1 && mode1 == 1 && mode2 == 0)
+                {
+                    return
+                        StdExpansion::BaryEvaluateBasis<0>(coll[0], 0) *
+                        StdExpansion::BaryEvaluateBasis<1>(coll[1], 1);
+                }
+            }
+
+            return
+                StdExpansion::BaryEvaluateBasis<0>(coll[0], mode0) *
+                StdExpansion::BaryEvaluateBasis<1>(coll[1], mode1) *
+                StdExpansion::BaryEvaluateBasis<2>(coll[2], mode2);
+        }
+
         void StdTetExp::v_GetFaceNumModes(
                     const int                  fid,
                     const Orientation          faceOrient,

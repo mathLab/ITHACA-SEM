@@ -288,7 +288,7 @@ void Module_Register(ModuleType const  &modType,
     // Register this with the module factory using std::bind to grab a function
     // pointer to that particular object's function.
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eInputModule, modName),
+        ModuleKey(modType, modName),
         std::bind(
             &ModuleRegisterHelper::create, helper, std::placeholders::_1));
 

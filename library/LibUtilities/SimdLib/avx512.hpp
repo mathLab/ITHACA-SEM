@@ -315,6 +315,26 @@ struct avx512Double8
         return tmp[i];
     }
 
+        // unary ops
+    inline void operator+=(avx512Double8 rhs)
+    {
+        _data = _mm512_add_pd(_data, rhs._data);
+    }
+
+    inline void operator-=(avx512Double8 rhs)
+    {
+        _data = _mm512_sub_pd(_data, rhs._data);
+    }
+
+    inline void operator*=(avx512Double8 rhs)
+    {
+        _data = _mm512_mul_pd(_data, rhs._data);
+    }
+
+    inline void operator/=(avx512Double8 rhs)
+    {
+        _data = _mm512_div_pd(_data, rhs._data);
+    }
 
 };
 

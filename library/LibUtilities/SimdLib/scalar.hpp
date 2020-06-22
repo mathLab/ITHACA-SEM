@@ -107,6 +107,26 @@ struct scalarT
         return _data;
     }
 
+    // unary ops
+    inline void operator+=(scalarT<T> rhs)
+    {
+        _data += rhs._data;
+    }
+
+    inline void operator-=(scalarT<T> rhs)
+    {
+        _data -= rhs._data;
+    }
+
+    inline void operator*=(scalarT<T> rhs)
+    {
+        _data *= rhs._data;
+    }
+
+    inline void operator/=(scalarT<T> rhs)
+    {
+        _data /= rhs._data;
+    }
 
 };
 

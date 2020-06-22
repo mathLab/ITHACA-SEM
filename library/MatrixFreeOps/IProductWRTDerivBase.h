@@ -628,7 +628,7 @@ struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, D
                     // Multiply by geometric factors
                     vec_t hf1 = 0.5 * (1.0 + Z0[i]); //Load 1x
                     // Scale by geometric factor 2/(1-z1)
-                    t0 = f0 * t0;
+                    t0 *= f0;
                     // Scale by geometric factor (1+z0)/(1-z1)
                     vec_t c1 = hf1 * t1;
                     t0.fma(c1, f0);

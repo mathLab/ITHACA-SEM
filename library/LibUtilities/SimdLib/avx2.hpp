@@ -474,6 +474,26 @@ struct avx2Double4
         return tmp[i];
     }
 
+    // unary ops
+    inline void operator+=(avx2Double4 rhs)
+    {
+        _data = _mm256_add_pd(_data, rhs._data);
+    }
+
+    inline void operator-=(avx2Double4 rhs)
+    {
+        _data = _mm256_sub_pd(_data, rhs._data);
+    }
+
+    inline void operator*=(avx2Double4 rhs)
+    {
+        _data = _mm256_mul_pd(_data, rhs._data);
+    }
+
+    inline void operator/=(avx2Double4 rhs)
+    {
+        _data = _mm256_div_pd(_data, rhs._data);
+    }
 
 };
 

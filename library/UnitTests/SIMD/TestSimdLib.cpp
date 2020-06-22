@@ -393,6 +393,73 @@ namespace SimdLibTests
 
     }
 
+    BOOST_AUTO_TEST_CASE(SimdLib_add_unary)
+    {
+        double val1 = -4.0;
+        double val2 =  2.0;
+        vec_t res(val1);
+        vec_t avec(val2);
+        res += avec;
+        alignas(vec_t::alignment) std::array<double, vec_t::width>
+            ascalararr{};
+        res.store(ascalararr.data());
+
+        for (size_t i = 0; i < vec_t::width; ++i)
+        {
+            BOOST_CHECK_EQUAL(ascalararr[i], val1 + val2);
+        }
+    }
+
+    BOOST_AUTO_TEST_CASE(SimdLib_sub_unary)
+    {
+        double val1 = -4.0;
+        double val2 =  2.0;
+        vec_t res(val1);
+        vec_t avec(val2);
+        res -= avec;
+        alignas(vec_t::alignment) std::array<double, vec_t::width>
+            ascalararr{};
+        res.store(ascalararr.data());
+
+        for (size_t i = 0; i < vec_t::width; ++i)
+        {
+            BOOST_CHECK_EQUAL(ascalararr[i], val1 - val2);
+        }
+    }
+
+    BOOST_AUTO_TEST_CASE(SimdLib_mul_unary)
+    {
+        double val1 = -4.0;
+        double val2 =  2.0;
+        vec_t res(val1);
+        vec_t avec(val2);
+        res *= avec;
+        alignas(vec_t::alignment) std::array<double, vec_t::width>
+            ascalararr{};
+        res.store(ascalararr.data());
+
+        for (size_t i = 0; i < vec_t::width; ++i)
+        {
+            BOOST_CHECK_EQUAL(ascalararr[i], val1 * val2);
+        }
+    }
+
+    BOOST_AUTO_TEST_CASE(SimdLib_div_unary)
+    {
+        double val1 = -4.0;
+        double val2 =  2.0;
+        vec_t res(val1);
+        vec_t avec(val2);
+        res /= avec;
+        alignas(vec_t::alignment) std::array<double, vec_t::width>
+            ascalararr{};
+        res.store(ascalararr.data());
+
+        for (size_t i = 0; i < vec_t::width; ++i)
+        {
+            BOOST_CHECK_EQUAL(ascalararr[i], val1 / val2);
+        }
+    }
 
     BOOST_AUTO_TEST_CASE(SimdLib_add_mul)
     {

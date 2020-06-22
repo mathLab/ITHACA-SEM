@@ -11,7 +11,6 @@ DisContField.cpp
 DisContField3DHomogeneous1D.cpp
 DisContField3DHomogeneous2D.cpp
 ExpList.cpp
-ExpListConstructors.cpp
 ExpListHomogeneous1D.cpp
 ExpListHomogeneous2D.cpp
 ExpList2DHomogeneous1D.cpp

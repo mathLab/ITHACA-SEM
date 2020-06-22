@@ -206,7 +206,7 @@ public:
         PointGeomSharedPtr p);
 
     ////////////////////
-    SPATIAL_DOMAINS_EXPORT void ReadExpansionInfos();
+    SPATIAL_DOMAINS_EXPORT void ReadExpansionInfo();
 
     /* ---- Helper functions ---- */
     /// Dimension of the mesh (can be a 1D curve in 3D space).
@@ -273,35 +273,35 @@ public:
         return m_domain[domain];
     }
 
-    SPATIAL_DOMAINS_EXPORT const ExpansionInfoMap &GetExpansionInfos(
+    SPATIAL_DOMAINS_EXPORT const ExpansionInfoMap &GetExpansionInfo(
         const std::string variable = "DefaultVar");
 
     SPATIAL_DOMAINS_EXPORT ExpansionInfoShPtr GetExpansionInfo(
         GeometrySharedPtr geom, const std::string variable = "DefaultVar");
 
     /// Sets expansions given field definitions
-    SPATIAL_DOMAINS_EXPORT void SetExpansionInfos(
+    SPATIAL_DOMAINS_EXPORT void SetExpansionInfo(
         std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef);
 
     /// Sets expansions given field definition, quadrature points.
-    SPATIAL_DOMAINS_EXPORT void SetExpansionInfos(
+    SPATIAL_DOMAINS_EXPORT void SetExpansionInfo(
         std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
         std::vector<std::vector<LibUtilities::PointsType>> &pointstype);
 
     /// Sets expansions to have equispaced points
-    SPATIAL_DOMAINS_EXPORT void SetExpansionInfosToEvenlySpacedPoints(
+    SPATIAL_DOMAINS_EXPORT void SetExpansionInfoToEvenlySpacedPoints(
         int npoints = 0);
 
     /// Reset expansion to have specified polynomial order \a nmodes
-    SPATIAL_DOMAINS_EXPORT void SetExpansionInfosToPolyOrder(int nmodes);
+    SPATIAL_DOMAINS_EXPORT void SetExpansionInfoToNumModes(int nmodes);
 
     /// Reset expansion to have specified point order \a
     /// npts
-    SPATIAL_DOMAINS_EXPORT void SetExpansionInfosToPointOrder(int npts);
+    SPATIAL_DOMAINS_EXPORT void SetExpansionInfoToPointOrder(int npts);
     /// This function sets the expansion #exp in map with
     /// entry #variable
 
-    inline void SetExpansionInfos(const std::string variable,
+    inline void SetExpansionInfo(const std::string variable,
                               ExpansionInfoMapShPtr &exp);
 
     inline void SetSession(LibUtilities::SessionReaderSharedPtr pSession);
@@ -311,11 +311,13 @@ public:
                                             LibUtilities::BasisKeyVector &keys,
                                             std::string var = "DefaultVar");
 
-    SPATIAL_DOMAINS_EXPORT void ResetExpansionInfoToBasisKey(ExpansionInfoMapShPtr &expansionMap,
-                                                             LibUtilities::ShapeType shape,
-                                                             LibUtilities::BasisKeyVector &keys);
-
-    inline bool SameExpansionInfos(const std::string var1, const std::string var2);
+    SPATIAL_DOMAINS_EXPORT void ResetExpansionInfoToBasisKey(
+                                      ExpansionInfoMapShPtr &expansionMap,
+                                      LibUtilities::ShapeType shape,
+                                      LibUtilities::BasisKeyVector &keys);
+    
+    inline bool SameExpansionInfo(const std::string var1,
+                                  const std::string var2);
 
     inline bool CheckForGeomInfo(std::string parameter);
 
@@ -491,7 +493,7 @@ SPATIAL_DOMAINS_EXPORT MeshGraphFactory &GetMeshGraphFactory();
 /**
  *
  */
-void MeshGraph::SetExpansionInfos(const std::string variable,
+void MeshGraph::SetExpansionInfo(const std::string variable,
                               ExpansionInfoMapShPtr &exp)
 {
     if (m_expansionMapShPtrMap.count(variable) != 0)
@@ -510,7 +512,7 @@ void MeshGraph::SetExpansionInfos(const std::string variable,
 /**
  *
  */
-inline bool MeshGraph::SameExpansionInfos(const std::string var1,
+inline bool MeshGraph::SameExpansionInfo(const std::string var1,
                                           const std::string var2)
 {
     ExpansionInfoMapShPtr expVec1 = m_expansionMapShPtrMap.find(var1)->second;

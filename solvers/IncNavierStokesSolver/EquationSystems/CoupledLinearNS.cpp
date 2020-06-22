@@ -73,7 +73,7 @@ namespace Nektar
 
         // Get Expansion list for orthogonal expansion at p-2
         const SpatialDomains::ExpansionInfoMap
-            &pressure_exp = GenPressureExp(m_graph->GetExpansionInfos("u"));
+            &pressure_exp = GenPressureExp(m_graph->GetExpansionInfo("u"));
 
         m_nConvectiveFields = m_fields.size();
         if(boost::iequals(m_boundaryConditions->GetVariable(m_nConvectiveFields-1), "p"))
@@ -1794,7 +1794,7 @@ namespace Nektar
         }
         
         // Save expansion into graph. 
-        m_graph->SetExpansionInfos("p",returnval);
+        m_graph->SetExpansionInfo("p",returnval);
         
         return *returnval;
     }

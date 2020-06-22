@@ -37,7 +37,8 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Print summary of solution details
-    const SpatialDomains::ExpansionInfoMap &expansions = graph3D->GetExpansionInfos();
+    const SpatialDomains::ExpansionInfoMap &expansions = graph3D->
+        GetExpansionInfo();
     LibUtilities::BasisKey bkey
                             = expansions.begin()->second->m_basisKeyVector[0];
     cout << "Solving 3D C0 continuous Projection (with boundary conditions)"  << endl; 

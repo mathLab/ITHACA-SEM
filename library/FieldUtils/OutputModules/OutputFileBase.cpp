@@ -310,7 +310,7 @@ void OutputFileBase::ConvertExpToEquispaced(po::variables_map &vm)
     {
         nPointsNew = vm["output-points"].as<int>();
     }
-    m_f->m_graph->SetExpansionInfosToEvenlySpacedPoints(nPointsNew);
+    m_f->m_graph->SetExpansionInfoToEvenlySpacedPoints(nPointsNew);
 
     // Save original expansion
     vector<MultiRegions::ExpListSharedPtr> expOld = m_f->m_exp;

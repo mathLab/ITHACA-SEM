@@ -433,9 +433,9 @@ namespace Nektar
                             m_fields[0] = firstfield;
                             for (i = 1; i < m_fields.size(); i++)
                             {
-                                if (m_graph->
-                                      SameExpansionInfos(m_session->GetVariable(0),
-                                                         m_session->GetVariable(i)))
+                                if (m_graph->SameExpansionInfo(
+                                                m_session->GetVariable(0),
+                                                m_session->GetVariable(i)))
                                 {
                                     m_fields[i] = MemoryManager<MultiRegions::
                                         ContField>::AllocateSharedPtr(
@@ -490,7 +490,7 @@ namespace Nektar
                         m_fields[0] = firstfield;
                         for (i = 1; i < m_fields.size(); i++)
                         {
-                            if(m_graph->SameExpansionInfos(m_session->GetVariable(0),
+                            if(m_graph->SameExpansionInfo(m_session->GetVariable(0),
                                                            m_session->GetVariable(i)))
                             {
                                 m_fields[i] = MemoryManager<MultiRegions
@@ -879,7 +879,7 @@ namespace Nektar
             LibUtilities::BasisKeyVector Tkeys, Qkeys;
 
             // make a copy of the ExpansionInfoMap
-            SpatialDomains::ExpansionInfoMap NewExpInfo = m_graph->GetExpansionInfos();
+            SpatialDomains::ExpansionInfoMap NewExpInfo = m_graph->GetExpansionInfo();
             SpatialDomains::ExpansionInfoMapShPtr ExpInfo=
                 MemoryManager<SpatialDomains::ExpansionInfoMap>::AllocateSharedPtr(NewExpInfo);
             

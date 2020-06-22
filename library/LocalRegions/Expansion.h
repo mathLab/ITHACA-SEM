@@ -96,15 +96,15 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT const SpatialDomains::GeomFactorsSharedPtr& GetMetricInfo() const;
 
-            LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildTransformationMatrix
-                         (const DNekScalMatSharedPtr &r_bnd, 
+            LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildTransformationMatrix(
+                          const DNekScalMatSharedPtr &r_bnd, 
                           const StdRegions::MatrixType matrixType);
             
-            LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildVertexMatrix
-                         (const DNekScalMatSharedPtr &r_bnd);
+            LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildVertexMatrix(
+                          const DNekScalMatSharedPtr &r_bnd);
 
-            LOCAL_REGIONS_EXPORT void ExtractDataToCoeffs
-                         (const NekDouble *data,
+            LOCAL_REGIONS_EXPORT void ExtractDataToCoeffs(
+                          const NekDouble *data,
                           const std::vector<unsigned int > &nummodes,
                           const int nmodes_offset,
                           NekDouble *coeffs,
@@ -137,7 +137,7 @@ namespace Nektar
 
             inline IndexMapValuesSharedPtr GetIndexMap(const IndexMapKey &ikey)
             {
-                return m_IndexMapManager[ikey];
+                return m_indexMapManager[ikey];
             }
 
             inline ExpansionSharedPtr GetLeftAdjacentElementExp() const;
@@ -152,12 +152,12 @@ namespace Nektar
                     int                traceid,
                     ExpansionSharedPtr &e);
                 
-            StdRegions::Orientation GetTraceOrient(int trace)
+            inline StdRegions::Orientation GetTraceOrient(int trace)
             {
                 return v_GetTraceOrient(trace);
             }
             
-            void SetCoeffsToOrientation(
+            inline void SetCoeffsToOrientation(
                 StdRegions::Orientation dir,
                 Array<OneD, const NekDouble> &inarray,
                 Array<OneD, NekDouble> &outarray)
@@ -166,90 +166,90 @@ namespace Nektar
             }
 
             /// Divided by the metric jacobi and quadrature weights
-            void DivideByQuadratureMetric(
+            inline void DivideByQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD, NekDouble> &outarray)
+                    Array<OneD, NekDouble> &outarray)
             {
                 v_DivideByQuadratureMetric(inarray, outarray);
             }
-
+            
             /**
              * @brief Extract the metric factors to compute the contravariant
              * fluxes along edge \a edge and stores them into \a outarray
              * following the local edge orientation (i.e. anticlockwise
              * convention).
              */
-            void GetTraceQFactors(const int trace,
-                                  Array<OneD, NekDouble> &outarray)
+            inline void GetTraceQFactors(const int trace,
+                                     Array<OneD, NekDouble> &outarray)
             {
                 v_GetTraceQFactors(trace, outarray);
             }
 
-            void GetTracePhysVals
-                  (const int trace,
-                   const StdRegions::StdExpansionSharedPtr &TraceExp,
-                   const Array<OneD, const NekDouble> &inarray,
-                   Array<OneD,       NekDouble> &outarray,
-                   StdRegions::Orientation  orient =  StdRegions::eNoOrientation)
+            inline void GetTracePhysVals(const int trace,
+                  const StdRegions::StdExpansionSharedPtr &TraceExp,
+                  const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+                  StdRegions::Orientation orient = StdRegions::eNoOrientation)
             {
                 v_GetTracePhysVals(trace,TraceExp,inarray,outarray,orient);
             }
-
-            void GetTracePhysMap(
-                const int           edge,
-                Array<OneD, int>   &outarray)
+            
+            inline void GetTracePhysMap(
+                    const int           edge,
+                    Array<OneD, int>   &outarray)
             {
                 v_GetTracePhysMap(edge, outarray);
             }
-
-            void ReOrientTracePhysMap(const StdRegions::Orientation orient,
-                                      Array<OneD, int> &idmap,
-                                      const int nq0,
-                                      const int nq1 = -1)
+        
+            inline void ReOrientTracePhysMap(
+                            const StdRegions::Orientation orient,
+                            Array<OneD, int> &idmap,
+                            const int nq0,
+                            const int nq1)
             {
                 v_ReOrientTracePhysMap(orient,idmap,nq0,nq1);
             }
-
-        // Elemental Normals routines
-            const NormalVector & GetTraceNormal(const int id) const
+            
+            inline const NormalVector &GetTraceNormal(const int id) const
             {
                 return v_GetTraceNormal(id);
             }
             
-            void ComputeTraceNormal(const int id)
+            inline void ComputeTraceNormal(const int id)
             {
                 v_ComputeTraceNormal(id);
             }
-            
-            const Array<OneD, const NekDouble>& GetPhysNormals(void)
+        
+            inline const Array<OneD, const NekDouble>& GetPhysNormals(void)
             {
                 return v_GetPhysNormals();
             }
             
-            void SetPhysNormals(Array<OneD, const NekDouble> &normal)
+            inline void SetPhysNormals(Array<OneD, const NekDouble> &normal)
             {
                 v_SetPhysNormals(normal);
             }
             
-            void SetUpPhysNormals(const int trace)
+            inline void SetUpPhysNormals(const int trace)
             {
                 v_SetUpPhysNormals(trace);
             }
             
-            void AddRobinMassMatrix(const int traceid,
-                                    const Array<OneD, const NekDouble > &primCoeffs,
-                                    DNekMatSharedPtr &inoutmat)
+            inline void AddRobinMassMatrix(const int traceid,
+                          const Array<OneD, const NekDouble > &primCoeffs,
+                                           DNekMatSharedPtr &inoutmat)
             {
                 v_AddRobinMassMatrix(traceid,primCoeffs,inoutmat);
             }
+            
 
-            void AddRobinTraceContribution
-                             (const int traceid,
-                              const Array<OneD, const NekDouble> &primCoeffs,
-                              const Array<OneD, NekDouble> &incoeffs,
-                              Array<OneD, NekDouble> &coeffs)
+            virtual void AddRobinTraceContribution(
+                const int traceid,
+                const Array<OneD, const NekDouble> &primCoeffs,
+                const Array<OneD, NekDouble> &incoeffs,
+                Array<OneD, NekDouble> &coeffs)
             {
-                v_AddRobinTraceContribution(traceid, primCoeffs, incoeffs, coeffs);
+                v_AddRobinTraceContribution(traceid,primCoeffs,incoeffs,coeffs);
             }
 
             LOCAL_REGIONS_EXPORT const Array<OneD, const NekDouble > 
@@ -257,16 +257,16 @@ namespace Nektar
             
         protected:
 	    LibUtilities::NekManager<IndexMapKey,
-                      IndexMapValues, IndexMapKey::opLess> m_IndexMapManager;
+                      IndexMapValues, IndexMapKey::opLess> m_indexMapManager;
 
             std::vector<ExpansionWeakPtr>        m_traceExp;
             SpatialDomains::GeometrySharedPtr    m_geom;
             SpatialDomains::GeomFactorsSharedPtr m_metricinfo;
-            MetricMap m_metrics;
+            MetricMap        m_metrics;
             ExpansionWeakPtr m_elementLeft;
             ExpansionWeakPtr m_elementRight;
-            int              m_elementTraceLeft;
-            int              m_elementTraceRight;
+            int              m_elementTraceLeft  = -1;
+            int              m_elementTraceRight = -1;
 
             /// the element length in each element boundary(Vertex, edge
             /// or face) normal direction calculated based on the local
@@ -280,8 +280,8 @@ namespace Nektar
                                    const Array<OneD, const NekDouble> &direction,
                                    Array<OneD, Array<OneD, NekDouble> > &dfdir);
             
-            virtual void v_MultiplyByQuadratureMetric
-                    (const Array<OneD, const NekDouble> &inarray,
+            virtual void v_MultiplyByQuadratureMetric(
+                     const Array<OneD, const NekDouble> &inarray,
                      Array<OneD,       NekDouble> &outarray);
 
             virtual void v_DivideByQuadratureMetric(
@@ -289,7 +289,8 @@ namespace Nektar
                      const NekDouble>& inarray,
                      Array<OneD, NekDouble> &outarray);
 
-            virtual void v_ComputeLaplacianMetric() {};
+            virtual void v_ComputeLaplacianMetric()
+                         {}
             
             virtual void v_GetCoords(Array<OneD,NekDouble> &coords_1,
                                      Array<OneD,NekDouble> &coords_2,
@@ -360,8 +361,7 @@ namespace Nektar
             virtual void v_GetTraceQFactors(const int trace,
                                            Array<OneD, NekDouble> &outarray);
 
-            virtual void v_GetTracePhysVals
-                    (const int trace,
+            virtual void v_GetTracePhysVals(const int trace,
                      const StdRegions::StdExpansionSharedPtr &TraceExp,
                      const Array<OneD, const NekDouble> &inarray,
                      Array<OneD,       NekDouble> &outarray,
@@ -370,8 +370,8 @@ namespace Nektar
             virtual void v_GetTracePhysMap( const int       edge,
                                             Array<OneD,int> &outarray);
 
-            virtual void v_ReOrientTracePhysMap
-                                (const StdRegions::Orientation orient,
+            virtual void v_ReOrientTracePhysMap(
+                                const StdRegions::Orientation orient,
                                  Array<OneD, int> &idmap,
                                  const int nq0,
                                  const int nq1 = -1);
@@ -464,6 +464,8 @@ namespace Nektar
             }
         }
 
+        
+        
     } //end of namespace
 } //end of namespace
 

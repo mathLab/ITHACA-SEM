@@ -45,7 +45,7 @@ namespace Nektar
     namespace LocalRegions
     {
         Expansion::Expansion(SpatialDomains::GeometrySharedPtr pGeom) :
-            m_IndexMapManager
+            m_indexMapManager
                (std::bind(&Expansion::CreateIndexMap,this, std::placeholders::_1),
                 std::string("ExpansionIndexMap")),
             m_geom(pGeom),
@@ -77,7 +77,7 @@ namespace Nektar
 
         Expansion::Expansion(const Expansion &pSrc) :
                 StdExpansion(pSrc),
-                m_IndexMapManager(pSrc.m_IndexMapManager),
+                m_indexMapManager(pSrc.m_indexMapManager),
                 m_geom(pSrc.m_geom),
                 m_metricinfo(pSrc.m_metricinfo)
         {
@@ -198,39 +198,39 @@ namespace Nektar
 
             switch(itype)
             {
-            case eEdgeToElement:
+                case eEdgeToElement:
                 {
                     GetTraceToElementMap(entity,map,sign,orient);
                 }
                 break;
-            case eFaceToElement:
+                case eFaceToElement:
                 {
                     GetTraceToElementMap(entity,map,sign,orient);
                 }
                 break;
-            case eEdgeInterior:
+                case eEdgeInterior:
                 {
                     ASSERTL0(false,"Boundary Index Map not implemented yet.");
                     //v_GetEdgeInteriorMap(entity,orient,map,sign);
                 }
                 break;
-            case eFaceInterior:
+                case eFaceInterior:
                 {
                     ASSERTL0(false,"Boundary Index Map not implemented yet.");
                     //v_GetFaceInteriorMap(entity,orient,map,sign);
                 }
                 break;
-            case eBoundary:
+                case eBoundary:
                 {
                     ASSERTL0(false,"Boundary Index Map not implemented yet.");
                 }
                 break;
-            case eVertex:
+                case eVertex:
                 {
                     ASSERTL0(false,"Vertex Index Map not implemented yet.");
                 }
                 break;
-            default:
+                default:
                 {
                     ASSERTL0(false,"The Index Map you are requiring "
                              "is not between the possible options.");
@@ -681,8 +681,8 @@ namespace Nektar
                      "Method does not exist for this shape or library" );
         }
         
-        void Expansion::v_ReOrientTracePhysMap
-                                (const StdRegions::Orientation orient,
+        void Expansion::v_ReOrientTracePhysMap(
+                                 const StdRegions::Orientation orient,
                                  Array<OneD, int> &idmap,
                                  const int nq0,  const int nq1)
         {

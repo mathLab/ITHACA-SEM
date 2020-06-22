@@ -61,8 +61,10 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT Expansion3D(SpatialDomains::Geometry3DSharedPtr pGeom): Expansion(pGeom), StdExpansion3D(), m_requireNeg() {}
             LOCAL_REGIONS_EXPORT virtual ~Expansion3D() {}
             
-            LOCAL_REGIONS_EXPORT void SetTraceToGeomOrientation(Array<OneD, NekDouble> &inout);
-            LOCAL_REGIONS_EXPORT void SetFaceToGeomOrientation(const int face, Array<OneD, NekDouble> &inout);
+            LOCAL_REGIONS_EXPORT void SetTraceToGeomOrientation
+                   (Array<OneD, NekDouble> &inout);
+            LOCAL_REGIONS_EXPORT void SetFaceToGeomOrientation
+                   (const int face, Array<OneD, NekDouble> &inout);
             inline void AddHDGHelmholtzFaceTerms(
                 const NekDouble                    tau,
                 const int                          edge,
@@ -93,23 +95,24 @@ namespace Nektar
 
             inline SpatialDomains::Geometry3DSharedPtr GetGeom3D() const;
 
-            LOCAL_REGIONS_EXPORT void v_ReOrientTracePhysMap
-                  (const StdRegions::Orientation orient,
+            LOCAL_REGIONS_EXPORT void v_ReOrientTracePhysMap(
+                   const StdRegions::Orientation orient,
                    Array<OneD, int> &idmap,
                    const int nq0,
                    const int nq1);
             
             void v_NormVectorIProductWRTBase(
-                const Array<OneD, const Array<OneD, NekDouble> > &Fvec,
-                      Array<OneD,       NekDouble>               &outarray);
+                    const Array<OneD, const Array<OneD, NekDouble> > &Fvec,
+                    Array<OneD,       NekDouble>               &outarray);
 
             LOCAL_REGIONS_EXPORT Array<OneD, unsigned int>
-                GetEdgeInverseBoundaryMap(int eid);
+                   GetEdgeInverseBoundaryMap(int eid);
 
             LOCAL_REGIONS_EXPORT Array<OneD, unsigned int>
-               GetTraceInverseBoundaryMap(int fid,
-                      StdRegions::Orientation faceOrient = StdRegions::eNoOrientation,
-                                          int P1=-1, int P2=-1);
+                   GetTraceInverseBoundaryMap(int fid,
+                                     StdRegions::Orientation
+                                     faceOrient = StdRegions::eNoOrientation,
+                                     int P1=-1, int P2=-1);
             
             LOCAL_REGIONS_EXPORT void GetInverseBoundaryMaps(
                     Array<OneD, unsigned int> &vmap,

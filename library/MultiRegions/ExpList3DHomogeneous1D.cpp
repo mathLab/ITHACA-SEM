@@ -72,7 +72,7 @@ namespace Nektar
             ExpListHomogeneous1D(e3DH1D, pSession,HomoBasis,
                                  lhom,useFFT,dealiasing)
         {
-            GenExpList3DHomogeneous1D(graph2D->GetExpansionInfos(var),ImpType);
+            GenExpList3DHomogeneous1D(graph2D->GetExpansionInfo(var),ImpType);
             m_expType = e3DH1D;
             m_graph = graph2D;
         }

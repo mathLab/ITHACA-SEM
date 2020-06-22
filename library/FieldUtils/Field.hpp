@@ -310,8 +310,7 @@ struct Field
 
                     // Choose points to be at evenly spaced points at
                     // nplanes points
-                    const LibUtilities::PointsKey Pkey(
-                                                       nplanes, ptype);
+                    const LibUtilities::PointsKey Pkey(nplanes, ptype);
 
                     const LibUtilities::BasisKey Bkey(btype, nplanes, Pkey);
 

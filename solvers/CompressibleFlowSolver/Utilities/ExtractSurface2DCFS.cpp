@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
         }
         pointsType.push_back(ptype);
     }
-    graphShPt->SetExpansionInfos(fieldDef, pointsType);
+    graphShPt->SetExpansionInfo(fieldDef, pointsType);
 
     //--------------------------------------------------------------------------
 

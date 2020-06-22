@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
         factors[StdRegions::eFactorLambda]             = 
             vSession->GetParameter("Lambda");
         const SpatialDomains::ExpansionInfoMap &expansions = 
-            graph3D->GetExpansionInfos();
+            graph3D->GetExpansionInfo();
         LibUtilities::BasisKey              bkey0      = 
             expansions.begin()->second->m_basisKeyVector[0];
         

@@ -801,14 +801,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
             map = Array<OneD, int>(1);
             
-            if(vertex == 0)
-            {
-                map[0] = 0;
-            }
-            else
-            {
-                map[0] = nquad - 1;
-            }
+            map[0] = vertex == 0 ? 0: nquad - 1;
         }
 
         //-----------------------------

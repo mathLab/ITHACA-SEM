@@ -368,7 +368,6 @@ struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, D
             load_interleave(inptr0, nqTot, tmpIn0);
             load_interleave(inptr1, nqTot, tmpIn1);
 
-            // Calculate dx/dxi in[0] + dy/dxi in[1]
             vec_t df0, df1, df2, df3;
             if(!DEFORMED)
             {
@@ -377,20 +376,7 @@ struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, D
                 df2 = df_ptr[2];
                 df3 = df_ptr[3];
             }
-            for (int i = 0; i < nqTot; ++i)
-            {
-                if(DEFORMED)
-                {
-                    df0 = df_ptr[i * ndf];
-                    df1 = df_ptr[i * ndf + 1];
-                    df2 = df_ptr[i * ndf + 2];
-                    df3 = df_ptr[i * ndf + 3];
-                }
-                tmp0[i] = df0 * tmpIn0[i] + df2 * tmpIn1[i];
-                tmp1[i] = df1 * tmpIn0[i] + df3 * tmpIn1[i];
-            }
 
-            // Multiply by geometric factors
             std::vector<vec_t, allocator<vec_t>> Z0 = this->m_Z[0];
             std::vector<vec_t, allocator<vec_t>> Z1 = this->m_Z[1];
             size_t cnt_ji = 0;
@@ -400,13 +386,29 @@ struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, D
 
                 for (size_t i = 0; i < NQ0; ++i, ++cnt_ji)
                 {
+                    if (DEFORMED)
+                    {
+                        df0 = df_ptr[cnt_ji * ndf];
+                        df1 = df_ptr[cnt_ji * ndf + 1];
+                        df2 = df_ptr[cnt_ji * ndf + 2];
+                        df3 = df_ptr[cnt_ji * ndf + 3];
+                    }
+
+                    // Calculate dx/dxi in[0] + dy/dxi in[1]
+                    vec_t t0 = df0 * tmpIn0[cnt_ji] + df2 * tmpIn1[cnt_ji]; // load 2x
+                    vec_t t1 = df1 * tmpIn0[cnt_ji] + df3 * tmpIn1[cnt_ji]; // load 2x
+
+                    // Multiply by geometric factors
                     vec_t hf1 = 0.5 * (1.0 + Z0[i]); //Load 1x
-                    // scale tmp[0] by geometric factor: 2/(1-z1)
-                    vec_t c0 = f0 * tmp0[cnt_ji]; //Load 1x
-                    // scale tmp[1] by geometric factor (1+z0)/(1-z1)
-                    vec_t c1 = hf1 * tmp1[cnt_ji]; //Load 1x
-                    c0.fma(c1, f0);
-                    tmp0[cnt_ji] = c0;
+                    // Scale by geometric factor 2/(1-z1)
+                    t0 = f0 * t0;
+                    // Scale by geometric factor (1+z0)/(1-z1)
+                    vec_t c1 = hf1 * t1;
+                    t0.fma(c1, f0);
+
+                    // Store
+                    tmp0[cnt_ji] = t0; // store 1x
+                    tmp1[cnt_ji] = t1; // store 1x
                 }
             }
 

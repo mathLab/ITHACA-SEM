@@ -390,6 +390,28 @@ struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, D
                 tmp1[i] = df1 * tmpIn0[i] + df3 * tmpIn1[i];
             }
 
+            // Multiply by geometric factors
+            std::vector<vec_t, allocator<vec_t>> Z0 = this->m_Z[0];
+            std::vector<vec_t, allocator<vec_t>> Z1 = this->m_Z[1];
+            size_t cnt_ji = 0;
+            for (size_t j = 0; j < NQ1; ++j)
+            {
+                vec_t f0 = 2.0 / (1.0 - Z1[j]); //Load 1x
+
+                for (size_t i = 0; i < NQ0; ++i, ++cnt_ji)
+                {
+                    vec_t hf1 = 0.5 * (1.0 + Z0[i]); //Load 1x
+                    // scale tmp[0] by geometric factor: 2/(1-z1)
+                    vec_t c0 = f0 * tmp0[cnt_ji]; //Load 1x
+                    // scale tmp[1] by geometric factor (1+z0)/(1-z1)
+                    vec_t c1 = hf1 * tmp1[cnt_ji]; //Load 1x
+                    c0.fma(c1, f0);
+                    tmp0[cnt_ji] = c0;
+                }
+            }
+
+
+
             // IP DB0 B1
             IProductTriKernel<NM0, NM1, NQ0, NQ1, CORRECT, false, false, DEFORMED>(
                 tmp0, this->m_dbdata[0], this->m_bdata[1],

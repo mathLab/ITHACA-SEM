@@ -931,11 +931,10 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
             {
                 Vmath::Vmul (ntot,m_derivFac[i],1, in[0],1, tmp[i],1);
 
-                for(int j = 1; j < 2; ++j)
-                {
-                    Vmath::Vvtvp (ntot,m_derivFac[i +j*2],1,
-                                  in[j],1, tmp[i], 1, tmp[i],1);
-                }
+                //  vvtvp (vector times vector plus vector): z = w*x + y
+                Vmath::Vvtvp (ntot,m_derivFac[i +2],1,
+                    in[1],1, tmp[i], 1, tmp[i],1);
+
             }
 
             // Multiply by factor: 2/(1-z1)
@@ -946,6 +945,8 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
                             tmp[0].get()+i*nPhys,1);
 
                 // scale tmp[1] by geometric factor (1+z0)/(1-z1)
+                //  vvtvp (vector times vector plus vector): z = w*x + y
+                // m_fac1*tmp1 + tmp0
                 Vmath::Vvtvp(nPhys,&m_fac1[0],1,tmp[1].get()+i*nPhys,1,
                              tmp[0].get()+i*nPhys,1,tmp[0].get()+i*nPhys,1);
             }

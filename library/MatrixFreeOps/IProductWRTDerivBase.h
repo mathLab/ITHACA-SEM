@@ -291,39 +291,266 @@ struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, D
    void operator()( const Array<OneD, Array<OneD, NekDouble>> &in,
         Array<OneD, NekDouble> &out) final
     {
+        // Check preconditions
+        ASSERTL0(m_basis[0]->GetNumModes() == m_basis[1]->GetNumModes() &&
+            m_basis[0]->GetNumPoints() == m_basis[1]->GetNumPoints()+1,
+            "MatrixFree requires homogenous modes/points");
+
         if (m_basis[0]->GetBasisType() == LibUtilities::eModified_A)
         {
             switch(m_basis[0]->GetNumModes())
             {
-                case 2:  IProductWRTDerivBaseTriImpl<2 ,2 ,3 ,2 ,true>(in[0], in[1], out); break;
-                case 3:  IProductWRTDerivBaseTriImpl<3 ,3 ,4 ,3 ,true>(in[0], in[1], out); break;
-                case 4:  IProductWRTDerivBaseTriImpl<4 ,4 ,5 ,4 ,true>(in[0], in[1], out); break;
-                case 5:  IProductWRTDerivBaseTriImpl<5 ,5 ,6 ,5 ,true>(in[0], in[1], out); break;
-                case 6:  IProductWRTDerivBaseTriImpl<6 ,6 ,7 ,6 ,true>(in[0], in[1], out); break;
-                case 7:  IProductWRTDerivBaseTriImpl<7 ,7 ,8 ,7 ,true>(in[0], in[1], out); break;
-                case 8:  IProductWRTDerivBaseTriImpl<8 ,8 ,9 ,8 ,true>(in[0], in[1], out); break;
-                case 9:  IProductWRTDerivBaseTriImpl<9 ,9 ,10,9 ,true>(in[0], in[1], out); break;
-                case 10: IProductWRTDerivBaseTriImpl<10,10,11,10,true>(in[0], in[1], out); break;
-                case 11: IProductWRTDerivBaseTriImpl<11,11,12,11,true>(in[0], in[1], out); break;
+                case 2:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 3: IProductWRTDerivBaseTriImpl<2 ,2 ,3 ,2 ,true>(in[0], in[1], out); break;
+                        case 4: IProductWRTDerivBaseTriImpl<2 ,2 ,4 ,3 ,true>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                case 3:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 4: IProductWRTDerivBaseTriImpl<3 ,3 ,4 ,3 ,true>(in[0], in[1], out); break;
+                        case 5: IProductWRTDerivBaseTriImpl<3 ,3 ,5 ,4 ,true>(in[0], in[1], out); break;
+                        case 6: IProductWRTDerivBaseTriImpl<3 ,3 ,6 ,5 ,true>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                case 4:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 5: IProductWRTDerivBaseTriImpl<4 ,4 ,5 ,4 ,true>(in[0], in[1], out); break;
+                        case 6: IProductWRTDerivBaseTriImpl<4 ,4 ,6 ,5 ,true>(in[0], in[1], out); break;
+                        case 7: IProductWRTDerivBaseTriImpl<4 ,4 ,7 ,6 ,true>(in[0], in[1], out); break;
+                        case 8: IProductWRTDerivBaseTriImpl<4 ,4 ,8 ,7 ,true>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                case 5:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 6: IProductWRTDerivBaseTriImpl<5 ,5 ,6 ,5 ,true>(in[0], in[1], out); break;
+                        case 7: IProductWRTDerivBaseTriImpl<5 ,5 ,7 ,6 ,true>(in[0], in[1], out); break;
+                        case 8: IProductWRTDerivBaseTriImpl<5 ,5 ,8 ,7 ,true>(in[0], in[1], out); break;
+                        case 9: IProductWRTDerivBaseTriImpl<5 ,5 ,9 ,8 ,true>(in[0], in[1], out); break;
+                        case 10: IProductWRTDerivBaseTriImpl<5 ,5 ,10 ,9 ,true>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                case 6:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 7: IProductWRTDerivBaseTriImpl<6 ,6 ,7 ,6 ,true>(in[0], in[1], out); break;
+                        case 8: IProductWRTDerivBaseTriImpl<6 ,6 ,8 ,7 ,true>(in[0], in[1], out); break;
+                        case 9: IProductWRTDerivBaseTriImpl<6 ,6 ,9 ,8 ,true>(in[0], in[1], out); break;
+                        case 10: IProductWRTDerivBaseTriImpl<6 ,6 ,10 ,9 ,true>(in[0], in[1], out); break;
+                        case 11: IProductWRTDerivBaseTriImpl<6 ,6 ,11 ,10 ,true>(in[0], in[1], out); break;
+                        case 12: IProductWRTDerivBaseTriImpl<6 ,6 ,12 ,11 ,true>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                case 7:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 8: IProductWRTDerivBaseTriImpl<7 ,7 ,8 ,7 ,true>(in[0], in[1], out); break;
+                        case 9: IProductWRTDerivBaseTriImpl<7 ,7 ,9 ,8 ,true>(in[0], in[1], out); break;
+                        case 10: IProductWRTDerivBaseTriImpl<7 ,7 ,10 ,9 ,true>(in[0], in[1], out); break;
+                        case 11: IProductWRTDerivBaseTriImpl<7 ,7 ,11 ,10 ,true>(in[0], in[1], out); break;
+                        case 12: IProductWRTDerivBaseTriImpl<7 ,7 ,12 ,11 ,true>(in[0], in[1], out); break;
+                        case 13: IProductWRTDerivBaseTriImpl<7 ,7 ,13 ,12 ,true>(in[0], in[1], out); break;
+                        case 14: IProductWRTDerivBaseTriImpl<7 ,7 ,14 ,13 ,true>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                case 8:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 9: IProductWRTDerivBaseTriImpl<8 ,8 ,9 ,8 ,true>(in[0], in[1], out); break;
+                        case 10: IProductWRTDerivBaseTriImpl<8 ,8 ,10 ,9 ,true>(in[0], in[1], out); break;
+                        case 11: IProductWRTDerivBaseTriImpl<8 ,8 ,11 ,10 ,true>(in[0], in[1], out); break;
+                        case 12: IProductWRTDerivBaseTriImpl<8 ,8 ,12 ,11 ,true>(in[0], in[1], out); break;
+                        case 13: IProductWRTDerivBaseTriImpl<8 ,8 ,13 ,12 ,true>(in[0], in[1], out); break;
+                        case 14: IProductWRTDerivBaseTriImpl<8 ,8 ,14 ,13 ,true>(in[0], in[1], out); break;
+                        case 15: IProductWRTDerivBaseTriImpl<8 ,8 ,15 ,14 ,true>(in[0], in[1], out); break;
+                        case 16: IProductWRTDerivBaseTriImpl<8 ,8 ,16 ,15 ,true>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
             }
         }
         else
         {
             switch(m_basis[0]->GetNumModes())
             {
-                case 2:  IProductWRTDerivBaseTriImpl<2 ,2 ,3 ,2 ,false>(in[0], in[1], out); break;
-                case 3:  IProductWRTDerivBaseTriImpl<3 ,3 ,4 ,3 ,false>(in[0], in[1], out); break;
-                case 4:  IProductWRTDerivBaseTriImpl<4 ,4 ,5 ,4 ,false>(in[0], in[1], out); break;
-                case 5:  IProductWRTDerivBaseTriImpl<5 ,5 ,6 ,5 ,false>(in[0], in[1], out); break;
-                case 6:  IProductWRTDerivBaseTriImpl<6 ,6 ,7 ,6 ,false>(in[0], in[1], out); break;
-                case 7:  IProductWRTDerivBaseTriImpl<7 ,7 ,8 ,7 ,false>(in[0], in[1], out); break;
-                case 8:  IProductWRTDerivBaseTriImpl<8 ,8 ,9 ,8 ,false>(in[0], in[1], out); break;
-                case 9:  IProductWRTDerivBaseTriImpl<9 ,9 ,10,9 ,false>(in[0], in[1], out); break;
-                case 10: IProductWRTDerivBaseTriImpl<10,10,11,10,false>(in[0], in[1], out); break;
-                case 11: IProductWRTDerivBaseTriImpl<11,11,12,11,false>(in[0], in[1], out); break;
+                case 2:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 3: IProductWRTDerivBaseTriImpl<2 ,2 ,3 ,2 ,false>(in[0], in[1], out); break;
+                        case 4: IProductWRTDerivBaseTriImpl<2 ,2 ,4 ,3 ,false>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                case 3:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 4: IProductWRTDerivBaseTriImpl<3 ,3 ,4 ,3 ,false>(in[0], in[1], out); break;
+                        case 5: IProductWRTDerivBaseTriImpl<3 ,3 ,5 ,4 ,false>(in[0], in[1], out); break;
+                        case 6: IProductWRTDerivBaseTriImpl<3 ,3 ,6 ,5 ,false>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                case 4:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 5: IProductWRTDerivBaseTriImpl<4 ,4 ,5 ,4 ,false>(in[0], in[1], out); break;
+                        case 6: IProductWRTDerivBaseTriImpl<4 ,4 ,6 ,5 ,false>(in[0], in[1], out); break;
+                        case 7: IProductWRTDerivBaseTriImpl<4 ,4 ,7 ,6 ,false>(in[0], in[1], out); break;
+                        case 8: IProductWRTDerivBaseTriImpl<4 ,4 ,8 ,7 ,false>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                case 5:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 6: IProductWRTDerivBaseTriImpl<5 ,5 ,6 ,5 ,false>(in[0], in[1], out); break;
+                        case 7: IProductWRTDerivBaseTriImpl<5 ,5 ,7 ,6 ,false>(in[0], in[1], out); break;
+                        case 8: IProductWRTDerivBaseTriImpl<5 ,5 ,8 ,7 ,false>(in[0], in[1], out); break;
+                        case 9: IProductWRTDerivBaseTriImpl<5 ,5 ,9 ,8 ,false>(in[0], in[1], out); break;
+                        case 10: IProductWRTDerivBaseTriImpl<5 ,5 ,10 ,9 ,false>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                case 6:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 7: IProductWRTDerivBaseTriImpl<6 ,6 ,7 ,6 ,false>(in[0], in[1], out); break;
+                        case 8: IProductWRTDerivBaseTriImpl<6 ,6 ,8 ,7 ,false>(in[0], in[1], out); break;
+                        case 9: IProductWRTDerivBaseTriImpl<6 ,6 ,9 ,8 ,false>(in[0], in[1], out); break;
+                        case 10: IProductWRTDerivBaseTriImpl<6 ,6 ,10 ,9 ,false>(in[0], in[1], out); break;
+                        case 11: IProductWRTDerivBaseTriImpl<6 ,6 ,11 ,10 ,false>(in[0], in[1], out); break;
+                        case 12: IProductWRTDerivBaseTriImpl<6 ,6 ,12 ,11 ,false>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                case 7:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 8: IProductWRTDerivBaseTriImpl<7 ,7 ,8 ,7 ,false>(in[0], in[1], out); break;
+                        case 9: IProductWRTDerivBaseTriImpl<7 ,7 ,9 ,8 ,false>(in[0], in[1], out); break;
+                        case 10: IProductWRTDerivBaseTriImpl<7 ,7 ,10 ,9 ,false>(in[0], in[1], out); break;
+                        case 11: IProductWRTDerivBaseTriImpl<7 ,7 ,11 ,10 ,false>(in[0], in[1], out); break;
+                        case 12: IProductWRTDerivBaseTriImpl<7 ,7 ,12 ,11 ,false>(in[0], in[1], out); break;
+                        case 13: IProductWRTDerivBaseTriImpl<7 ,7 ,13 ,12 ,false>(in[0], in[1], out); break;
+                        case 14: IProductWRTDerivBaseTriImpl<7 ,7 ,14 ,13 ,false>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                case 8:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 9: IProductWRTDerivBaseTriImpl<8 ,8 ,9 ,8 ,false>(in[0], in[1], out); break;
+                        case 10: IProductWRTDerivBaseTriImpl<8 ,8 ,10 ,9 ,false>(in[0], in[1], out); break;
+                        case 11: IProductWRTDerivBaseTriImpl<8 ,8 ,11 ,10 ,false>(in[0], in[1], out); break;
+                        case 12: IProductWRTDerivBaseTriImpl<8 ,8 ,12 ,11 ,false>(in[0], in[1], out); break;
+                        case 13: IProductWRTDerivBaseTriImpl<8 ,8 ,13 ,12 ,false>(in[0], in[1], out); break;
+                        case 14: IProductWRTDerivBaseTriImpl<8 ,8 ,14 ,13 ,false>(in[0], in[1], out); break;
+                        case 15: IProductWRTDerivBaseTriImpl<8 ,8 ,15 ,14 ,false>(in[0], in[1], out); break;
+                        case 16: IProductWRTDerivBaseTriImpl<8 ,8 ,16 ,15 ,false>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+            }
+
+            switch(m_basis[0]->GetNumModes())
+            {
+                case 2:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 3: IProductWRTDerivBaseTriImpl<2 ,2 ,3 ,2 ,true>(in[0], in[1], out); break;
+                        case 4: IProductWRTDerivBaseTriImpl<2 ,2 ,4 ,3 ,true>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                case 3:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 4: IProductWRTDerivBaseTriImpl<3 ,3 ,4 ,3 ,true>(in[0], in[1], out); break;
+                        case 5: IProductWRTDerivBaseTriImpl<3 ,3 ,5 ,4 ,true>(in[0], in[1], out); break;
+                        case 6: IProductWRTDerivBaseTriImpl<3 ,3 ,6 ,5 ,true>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                case 4:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 5: IProductWRTDerivBaseTriImpl<4 ,4 ,5 ,4 ,true>(in[0], in[1], out); break;
+                        case 6: IProductWRTDerivBaseTriImpl<4 ,4 ,6 ,5 ,true>(in[0], in[1], out); break;
+                        case 7: IProductWRTDerivBaseTriImpl<4 ,4 ,7 ,6 ,true>(in[0], in[1], out); break;
+                        case 8: IProductWRTDerivBaseTriImpl<4 ,4 ,8 ,7 ,true>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                case 5:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 6: IProductWRTDerivBaseTriImpl<5 ,5 ,6 ,5 ,true>(in[0], in[1], out); break;
+                        case 7: IProductWRTDerivBaseTriImpl<5 ,5 ,7 ,6 ,true>(in[0], in[1], out); break;
+                        case 8: IProductWRTDerivBaseTriImpl<5 ,5 ,8 ,7 ,true>(in[0], in[1], out); break;
+                        case 9: IProductWRTDerivBaseTriImpl<5 ,5 ,9 ,8 ,true>(in[0], in[1], out); break;
+                        case 10: IProductWRTDerivBaseTriImpl<5 ,5 ,10 ,9 ,true>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                case 6:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 7: IProductWRTDerivBaseTriImpl<6 ,6 ,7 ,6 ,true>(in[0], in[1], out); break;
+                        case 8: IProductWRTDerivBaseTriImpl<6 ,6 ,8 ,7 ,true>(in[0], in[1], out); break;
+                        case 9: IProductWRTDerivBaseTriImpl<6 ,6 ,9 ,8 ,true>(in[0], in[1], out); break;
+                        case 10: IProductWRTDerivBaseTriImpl<6 ,6 ,10 ,9 ,true>(in[0], in[1], out); break;
+                        case 11: IProductWRTDerivBaseTriImpl<6 ,6 ,11 ,10 ,true>(in[0], in[1], out); break;
+                        case 12: IProductWRTDerivBaseTriImpl<6 ,6 ,12 ,11 ,true>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                case 7:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 8: IProductWRTDerivBaseTriImpl<7 ,7 ,8 ,7 ,true>(in[0], in[1], out); break;
+                        case 9: IProductWRTDerivBaseTriImpl<7 ,7 ,9 ,8 ,true>(in[0], in[1], out); break;
+                        case 10: IProductWRTDerivBaseTriImpl<7 ,7 ,10 ,9 ,true>(in[0], in[1], out); break;
+                        case 11: IProductWRTDerivBaseTriImpl<7 ,7 ,11 ,10 ,true>(in[0], in[1], out); break;
+                        case 12: IProductWRTDerivBaseTriImpl<7 ,7 ,12 ,11 ,true>(in[0], in[1], out); break;
+                        case 13: IProductWRTDerivBaseTriImpl<7 ,7 ,13 ,12 ,true>(in[0], in[1], out); break;
+                        case 14: IProductWRTDerivBaseTriImpl<7 ,7 ,14 ,13 ,true>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                case 8:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 9: IProductWRTDerivBaseTriImpl<8 ,8 ,9 ,8 ,true>(in[0], in[1], out); break;
+                        case 10: IProductWRTDerivBaseTriImpl<8 ,8 ,10 ,9 ,true>(in[0], in[1], out); break;
+                        case 11: IProductWRTDerivBaseTriImpl<8 ,8 ,11 ,10 ,true>(in[0], in[1], out); break;
+                        case 12: IProductWRTDerivBaseTriImpl<8 ,8 ,12 ,11 ,true>(in[0], in[1], out); break;
+                        case 13: IProductWRTDerivBaseTriImpl<8 ,8 ,13 ,12 ,true>(in[0], in[1], out); break;
+                        case 14: IProductWRTDerivBaseTriImpl<8 ,8 ,14 ,13 ,true>(in[0], in[1], out); break;
+                        case 15: IProductWRTDerivBaseTriImpl<8 ,8 ,15 ,14 ,true>(in[0], in[1], out); break;
+                        case 16: IProductWRTDerivBaseTriImpl<8 ,8 ,16 ,15 ,true>(in[0], in[1], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
+                    } break;
+                default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTri: # of modes / points combo not implemented.");
             }
         }
     }
+
 
     template<int NM0, int NM1, int NQ0, int NQ1, bool CORRECT>
     void IProductWRTDerivBaseTriImpl(

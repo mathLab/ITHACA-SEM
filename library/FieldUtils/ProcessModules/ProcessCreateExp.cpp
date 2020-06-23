@@ -141,7 +141,7 @@ void ProcessCreateExp::Process(po::variables_map &vm)
         if (vm.count("output-points"))
         {
             int nPointsNew = vm["output-points"].as<int>();
-            m_f->m_graph->SetExpansionInfoToNumModes(nPointsNew);
+            m_f->m_graph->SetExpansionInfoToPointOrder(nPointsNew);
         }
 
         if (m_f->m_verbose)

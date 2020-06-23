@@ -3522,6 +3522,7 @@ namespace Nektar
             {
                 if (time == 0.0 || m_bndConditions[i]->IsTimeDependent())
                 {
+                    m_bndCondBndWeight[i] = 1.0;
                     locExpList = m_bndCondExpansions[i];
 
                     npoints = locExpList->GetNpoints();

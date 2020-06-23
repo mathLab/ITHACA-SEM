@@ -3731,7 +3731,7 @@ namespace Nektar
                     for (e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
                         npts = m_bndCondExpansions[n]->
-                                GetExp(e)->GetNumPoints(0);
+                                GetExp(e)->GetTotPoints();
                         id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondIDToGlobalTraceID(cnt+e));
                         Vmath::Fill(npts,m_bndCondBndWeight[n],
@@ -3750,7 +3750,7 @@ namespace Nektar
                     for (e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
                         npts = m_bndCondExpansions[n]->
-                                GetExp(e)->GetNumPoints(0);
+                                GetExp(e)->GetTotPoints();
                         id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondIDToGlobalTraceID(cnt+e));
                         Vmath::Fill(npts,

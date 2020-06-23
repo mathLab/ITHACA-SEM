@@ -40,10 +40,10 @@
 #include <SpatialDomains/MeshGraph.h>
 #include <LocalRegions/Expansion0D.h>
 #include <LocalRegions/Expansion1D.h>
-#include <LocalRegions/QuadExp.h>   
-#include <LocalRegions/TriExp.h>    
-#include <LocalRegions/HexExp.h>    
-#include <LocalRegions/TetExp.h>    
+#include <LocalRegions/QuadExp.h>
+#include <LocalRegions/TriExp.h>
+#include <LocalRegions/HexExp.h>
+#include <LocalRegions/TetExp.h>
 
 
 using namespace std;
@@ -131,7 +131,7 @@ namespace Nektar
                     }
                     cnt += m_bndCondExpansions[i]->GetExpSize();
                 }
-                
+
                 if(m_session->DefinesSolverInfo("PROJECTION"))
                 {
                     std::string ProjectStr =
@@ -169,18 +169,18 @@ namespace Nektar
             m_globalBndMat = MemoryManager<GlobalLinSysMap>::
                 AllocateSharedPtr();
 
-            
+
             // Set up trace space
             m_trace = MemoryManager<ExpList>::AllocateSharedPtr
                 (m_session, m_bndCondExpansions, m_bndConditions,
                  *m_exp,m_graph);
 
             PeriodicMap  periodicTraces = (m_expType == e1D)? m_periodicVerts:
-                (m_expType == e2D)? m_periodicEdges: m_periodicFaces; 
+                (m_expType == e2D)? m_periodicEdges: m_periodicFaces;
 
             m_traceMap = MemoryManager<AssemblyMapDG>::
                 AllocateSharedPtr(m_session, m_graph, m_trace, *this,
-                                  m_bndCondExpansions, m_bndConditions, 
+                                  m_bndCondExpansions, m_bndConditions,
                                   periodicTraces, variable);
 
             if (m_session->DefinesCmdLineArgument("verbose"))
@@ -196,7 +196,7 @@ namespace Nektar
             // then retains a pointer to the elemental trace, to
             // ensure uniqueness of normals when retrieving from two
             // adjoining elements which do not lie in a plane.
-            
+
             for (int i = 0; i < m_exp->size(); ++i)
             {
                 for (int j = 0; j < (*m_exp)[i]->GetNtraces(); ++j)
@@ -207,7 +207,7 @@ namespace Nektar
                     (*m_exp)[i]->SetTraceExp   (j, exp);
                 }
             }
-            
+
             // Set up physical normals
             SetUpPhysNormals();
 
@@ -216,7 +216,7 @@ namespace Nektar
             // Identify boundary trace
             for(cnt = 0, n = 0; n < m_bndCondExpansions.size(); ++n)
             {
-                if (m_bndConditions[n]->GetBoundaryConditionType() != 
+                if (m_bndConditions[n]->GetBoundaryConditionType() !=
                     SpatialDomains::ePeriodic)
                 {
                     for(int v = 0; v < m_bndCondExpansions[n]->GetExpSize(); ++v)
@@ -246,7 +246,7 @@ namespace Nektar
 
             // Set up left-adjacent tracelist.
             m_leftAdjacentTraces.resize(cnt);
-            
+
             // count size of trace
             for (cnt = n = 0; n < m_exp->size(); ++n)
             {
@@ -266,7 +266,7 @@ namespace Nektar
 
                     // Check to see if this trace is periodic.
                     auto it = periodicTraces.find(GeomId);
-                    
+
                     if (it != periodicTraces.end())
                     {
                         const PeriodicEntity &ent = it->second[0];
@@ -311,10 +311,10 @@ namespace Nektar
                                 // Calculate relative orientations between trace to
                                 // calculate copying map.
                                 int nquad = elmtToTrace[n][v]->GetNumPoints(0);
-                            
+
                                 vector<int> tmpBwd(nquad);
                                 vector<int> tmpFwd(nquad);
-                            
+
                                 if (ent.orient == StdRegions::eForwards)
                                 {
                                     for (int i = 0; i < nquad; ++i)
@@ -331,7 +331,7 @@ namespace Nektar
                                         tmpFwd[i] = offset  + nquad - i - 1;
                                     }
                                 }
-                            
+
                                 for (int i = 0; i < nquad; ++i)
                                 {
                                     m_periodicFwdCopy.push_back(tmpFwd[i]);
@@ -345,10 +345,10 @@ namespace Nektar
                             // calculate copying map.
                             int nquad1 = elmtToTrace[n][v]->GetNumPoints(0);
                             int nquad2 = elmtToTrace[n][v]->GetNumPoints(1);
-                            
+
                             vector<int> tmpBwd(nquad1*nquad2);
                             vector<int> tmpFwd(nquad1*nquad2);
-                            
+
                             if (ent.orient == StdRegions::eDir1FwdDir2_Dir2FwdDir1 ||
                                 ent.orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1 ||
                                 ent.orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1 ||
@@ -374,7 +374,7 @@ namespace Nektar
                                     }
                                 }
                             }
-                            
+
                             if (ent.orient==StdRegions::eDir1BwdDir1_Dir2FwdDir2 ||
                                 ent.orient==StdRegions::eDir1BwdDir1_Dir2BwdDir2 ||
                                 ent.orient==StdRegions::eDir1FwdDir2_Dir2BwdDir1 ||
@@ -390,7 +390,7 @@ namespace Nektar
                                     }
                                 }
                             }
-                            
+
                             if (ent.orient==StdRegions::eDir1FwdDir1_Dir2BwdDir2 ||
                                 ent.orient==StdRegions::eDir1BwdDir1_Dir2BwdDir2 ||
                                 ent.orient==StdRegions::eDir1BwdDir2_Dir2FwdDir1 ||
@@ -406,7 +406,7 @@ namespace Nektar
                                     }
                                 }
                             }
-                            
+
                             for (int i = 0; i < nquad1*nquad2; ++i)
                             {
                                 m_periodicFwdCopy.push_back(tmpFwd[i]);
@@ -429,7 +429,7 @@ namespace Nektar
 
         bool DisContField::IsLeftAdjacentTrace(const int n, const int e)
         {
-            LocalRegions::ExpansionSharedPtr traceEl = 
+            LocalRegions::ExpansionSharedPtr traceEl =
                 m_traceMap->GetElmtToTrace()[n][e];
 
             PeriodicMap  periodicTraces = (m_expType == e1D)? m_periodicVerts:
@@ -442,12 +442,12 @@ namespace Nektar
                 // Boundary edge (1 connected element). Do nothing in
                 // serial.
                 auto it = m_boundaryTraces.find(traceEl->GetElmtId());
-                
+
                 // If the edge does not have a boundary condition set on
                 // it, then assume it is a partition edge or periodic.
                 if (it == m_boundaryTraces.end())
                 {
-                    fwd = true; 
+                    fwd = true;
                 }
             }
             else if (traceEl->GetLeftAdjacentElementTrace () != -1 &&
@@ -461,23 +461,23 @@ namespace Nektar
             {
                 ASSERTL2(false, "Unconnected trace element!");
             }
-            
+
             return fwd;
         }
-		
-        
+
+
         // Given all boundary regions for the whole solution determine
         // which ones (if any) are part of domain and ensure all other
-        // conditions are given as UserDefined Dirichlet. 
+        // conditions are given as UserDefined Dirichlet.
         SpatialDomains::BoundaryConditionsSharedPtr DisContField::GetDomainBCs
              (const SpatialDomains::CompositeMap &domain,
               const SpatialDomains::BoundaryConditions &Allbcs,
               const std::string &variable)
-        {            
+        {
             SpatialDomains::BoundaryConditionsSharedPtr returnval;
-            
+
             returnval = MemoryManager<SpatialDomains::BoundaryConditions>::AllocateSharedPtr();
-            
+
             map<int,int> GeometryToRegionsMap;
 
             const SpatialDomains::BoundaryRegionCollection &bregions
@@ -502,7 +502,7 @@ namespace Nektar
             // Now find out which points in domain have only one vertex
             for(auto &domIt : domain)
             {
-                SpatialDomains::CompositeSharedPtr geomvector = domIt.second; 
+                SpatialDomains::CompositeSharedPtr geomvector = domIt.second;
                 for(int i = 0; i < geomvector->m_geomVec.size(); ++i)
                 {
                     for(int j = 0; j < 2; ++j)
@@ -548,11 +548,11 @@ namespace Nektar
                         bconditionsIter->second;
                     returnval->AddBoundaryConditions(regionId,bcond);
                 }
-                else // Set up an undefined region. 
+                else // Set up an undefined region.
                 {
                     SpatialDomains::BoundaryRegionShPtr breg(MemoryManager<SpatialDomains::BoundaryRegion>::AllocateSharedPtr());
-                    
-                    // Set up Composite (GemetryVector) to contain vertex and put into bRegion 
+
+                    // Set up Composite (GemetryVector) to contain vertex and put into bRegion
                     SpatialDomains::CompositeSharedPtr gvec =
                         MemoryManager<SpatialDomains::Composite>
                         ::AllocateSharedPtr();
@@ -563,23 +563,23 @@ namespace Nektar
 
                     SpatialDomains::BoundaryConditionMapShPtr bCondition = MemoryManager<SpatialDomains::BoundaryConditionMap>::AllocateSharedPtr();
 
-                    // Set up just boundary condition for this variable. 
+                    // Set up just boundary condition for this variable.
                     SpatialDomains::BoundaryConditionShPtr notDefinedCondition(MemoryManager<SpatialDomains::NotDefinedBoundaryCondition>::AllocateSharedPtr(m_session, "0"));
                     (*bCondition)[variable] = notDefinedCondition;
-                    
+
                     returnval->AddBoundaryConditions(bregions.size()+numNewBc,bCondition);
 		    ++numNewBc;
 
                 }
             }
-            
-            return returnval; 
-        } 
-        
+
+            return returnval;
+        }
+
         /**
          * Constructor for use in multidomain computations where a
          * domain list can be passed instead of graph1D
-         * 
+         *
          * @param	domain	Subdomain specified in the inputfile from
          *       	      	which the DisContField is set up
          */
@@ -587,7 +587,7 @@ namespace Nektar
               (const LibUtilities::SessionReaderSharedPtr &pSession,
                const SpatialDomains::MeshGraphSharedPtr   &graph1D,
                const SpatialDomains::CompositeMap         &domain,
-               const SpatialDomains::BoundaryConditions   &Allbcs, 
+               const SpatialDomains::BoundaryConditions   &Allbcs,
                const std::string                          &variable,
                bool SetToOneSpaceDimension,
                const Collections::ImplementationType ImpType):
@@ -607,7 +607,7 @@ namespace Nektar
 
             SetUpDG(variable);
         }
-        
+
         /**
          * Constructs a field as a copy of an existing field.
          * @param   In          Existing DisContField object to copy.
@@ -632,8 +632,8 @@ namespace Nektar
                     (*In.m_trace,DeclareCoeffPhysArrays);
             }
         }
-        
-        
+
+
         /*
          * @brief Copy type constructor which declares new boundary conditions
          * and re-uses mapping info and trace space if possible
@@ -648,24 +648,24 @@ namespace Nektar
         {
 
             m_trace = NullExpListSharedPtr;
-            
+
             // Set up boundary conditions for this variable.
             // Do not set up BCs if default variable
             if(variable.compare("DefaultVar") != 0)
             {
                 SpatialDomains::BoundaryConditions bcs(m_session, graph);
                 GenerateBoundaryConditionExpansion(graph, bcs, variable);
-                
+
                 if (DeclareCoeffPhysArrays)
                 {
                     EvaluateBoundaryConditions(0.0, variable);
                 }
-            
+
                 if (!SameTypeOfBoundaryConditions(In))
                 {
                     // Find periodic edges for this variable.
                     FindPeriodicTraces(bcs, variable);
-                    
+
                     if(SetUpJustDG)
                     {
                         SetUpDG(variable);
@@ -676,14 +676,14 @@ namespace Nektar
                         int i, cnt = 0;
                         Array<OneD, int> ElmtID,TraceID;
                         GetBoundaryToElmtMap(ElmtID,TraceID);
-                        
+
                         for (i = 0; i < m_bndCondExpansions.size(); ++i)
                         {
                             MultiRegions::ExpListSharedPtr locExpList;
-                            
+
                             int e;
                             locExpList = m_bndCondExpansions[i];
-                            
+
                             for(e = 0; e < locExpList->GetExpSize(); ++e)
                             {
                                 (*m_exp)[ElmtID[cnt+e]]->SetTraceExp
@@ -691,16 +691,16 @@ namespace Nektar
                                 locExpList->GetExp(e)->SetAdjacentElementExp
                                     (TraceID[cnt+e], (*m_exp)[ElmtID[cnt+e]]);
                             }
-                            
+
                             cnt += m_bndCondExpansions[i]->GetExpSize();
                         }
-                        
-                        
+
+
                         if (m_session->DefinesSolverInfo("PROJECTION"))
                         {
                             std::string ProjectStr =
                                 m_session->GetSolverInfo("PROJECTION");
-                            
+
                             if ((ProjectStr == "MixedCGDG") ||
                                 (ProjectStr == "Mixed_CG_Discontinuous"))
                             {
@@ -737,14 +737,14 @@ namespace Nektar
                         int i, cnt = 0;
                         Array<OneD, int> ElmtID, TraceID;
                         GetBoundaryToElmtMap(ElmtID, TraceID);
-                        
+
                         for (i = 0; i < m_bndCondExpansions.size(); ++i)
                         {
                             MultiRegions::ExpListSharedPtr locExpList;
-                            
+
                             int e;
                             locExpList = m_bndCondExpansions[i];
-                            
+
                             for (e = 0; e < locExpList->GetExpSize(); ++e)
                             {
                                 (*m_exp)[ElmtID[cnt+e]]->SetTraceExp
@@ -754,7 +754,7 @@ namespace Nektar
                             }
                             cnt += m_bndCondExpansions[i]->GetExpSize();
                         }
-                    
+
                         SetUpPhysNormals();
                     }
                 }
@@ -847,7 +847,7 @@ namespace Nektar
         /**
          * @brief Determine the periodic faces, edges and vertices for the given
          * graph.
-         * 
+         *
          * @param   bcs         Information about the boundary conditions.
          * @param   variable    Specifies the field.
          */
@@ -869,17 +869,17 @@ namespace Nektar
             case e1D:
             {
                 int i, region1ID, region2ID;
-                
+
                 SpatialDomains::BoundaryConditionShPtr locBCond;
                 map<int,int> BregionToVertMap;
-                
+
                 // Construct list of all periodic Region and their
                 // global vertex on this process.
                 for (auto &it : bregions)
                 {
                     locBCond = GetBoundaryCondition(bconditions,
                                                     it.first, variable);
-                    
+
                     if (locBCond->GetBoundaryConditionType()
                         != SpatialDomains::ePeriodic)
                     {
@@ -887,31 +887,31 @@ namespace Nektar
                     }
                     int id = it.second->begin()->second->
                         m_geomVec[0]->GetGlobalID();
-                    
+
                     BregionToVertMap[it.first] = id;
                 }
-                
+
                 set<int> islocal;
-                
+
                 int n = vComm->GetSize();
                 int p = vComm->GetRank();
-                
+
                 Array<OneD, int> nregions(n, 0);
                 nregions[p] = BregionToVertMap.size();
                 vComm->AllReduce(nregions, LibUtilities::ReduceSum);
-                
+
                 int totRegions = Vmath::Vsum(n, nregions, 1);
-                
+
                 Array<OneD, int> regOffset(n, 0);
-                
+
                 for (i = 1; i < n; ++i)
                 {
                     regOffset[i] = regOffset[i-1] + nregions[i-1];
                 }
-                
+
                 Array<OneD, int> bregmap(totRegions, 0);
                 Array<OneD, int> bregid (totRegions, 0);
-                
+
                 i = regOffset[p];
                 for (auto &iit : BregionToVertMap)
                 {
@@ -919,10 +919,10 @@ namespace Nektar
                     bregmap[i++] = iit.second;
                     islocal.insert(iit.first);
                 }
-                
+
                 vComm->AllReduce(bregmap, LibUtilities::ReduceSum);
                 vComm->AllReduce(bregid,  LibUtilities::ReduceSum);
-                
+
                 for (int i = 0; i < totRegions; ++i)
                 {
                     BregionToVertMap[bregid[i]] = bregmap[i];
@@ -933,29 +933,29 @@ namespace Nektar
                 {
                     locBCond = GetBoundaryCondition(bconditions,
                                                     it.first, variable);
-                    
+
                     if (locBCond->GetBoundaryConditionType()
                         != SpatialDomains::ePeriodic)
                     {
                         continue;
                     }
-                    
+
                     // Identify periodic boundary region IDs.
                     region1ID = it.first;
                     region2ID = std::static_pointer_cast<
                         SpatialDomains::PeriodicBoundaryCondition>(
                                      locBCond)->m_connectedBoundaryRegion;
-                    
-                    ASSERTL0(BregionToVertMap.count(region1ID) != 0, 
+
+                    ASSERTL0(BregionToVertMap.count(region1ID) != 0,
                              "Cannot determine vertex of region1ID");
-                    
-                    ASSERTL0(BregionToVertMap.count(region2ID) != 0, 
+
+                    ASSERTL0(BregionToVertMap.count(region2ID) != 0,
                              "Cannot determine vertex of region2ID");
-                    
+
                     PeriodicEntity ent(BregionToVertMap[region2ID],
                                        StdRegions::eNoOrientation,
                                        islocal.count(region2ID) != 0);
-                    
+
                     m_periodicVerts[BregionToVertMap[region1ID]].push_back(ent);
                 }
             }
@@ -964,14 +964,14 @@ namespace Nektar
             {
                 int region1ID, region2ID, i, j, k, cnt;
                 SpatialDomains::BoundaryConditionShPtr locBCond;
-                
+
                 SpatialDomains::CompositeOrdering compOrder   =
                     m_graph->GetCompositeOrdering();
                 SpatialDomains::BndRegionOrdering bndRegOrder =
                     m_graph->GetBndRegionOrdering();
                 SpatialDomains::CompositeMap      compMap     =
                     m_graph->GetComposites();
-            
+
                 // Unique collection of pairs of periodic composites
                 // (i.e. if composites 1 and 2 are periodic then this
                 // map will contain either the pair (1,2) or (2,1) but
@@ -980,8 +980,8 @@ namespace Nektar
                 map<int,vector<int>>                         allVerts;
                 set<int>                                     locVerts;
                 map<int, pair<int, StdRegions::Orientation>> allEdges;
-                
-                // Set up a set of all local verts and edges. 
+
+                // Set up a set of all local verts and edges.
                 for(i = 0; i < (*m_exp).size(); ++i)
                 {
                     for(j = 0; j < (*m_exp)[i]->GetNverts(); ++j)
@@ -996,19 +996,19 @@ namespace Nektar
                 {
                     locBCond = GetBoundaryCondition(
                                       bconditions, it.first, variable);
-                    
+
                     if (locBCond->GetBoundaryConditionType()
                         != SpatialDomains::ePeriodic)
                     {
                         continue;
                     }
-                    
+
                     // Identify periodic boundary region IDs.
                     region1ID = it.first;
                     region2ID = std::static_pointer_cast<
                         SpatialDomains::PeriodicBoundaryCondition>(
                                      locBCond)->m_connectedBoundaryRegion;
-                    
+
                     // From this identify composites. Note that in
                     // serial this will be an empty map.
                     int cId1, cId2;
@@ -1022,13 +1022,13 @@ namespace Nektar
                         cId1 = bndRegOrder.find(region1ID)->second[0];
                         cId2 = bndRegOrder.find(region2ID)->second[0];
                     }
-                    
+
                     ASSERTL0(it.second->size() == 1,
                              "Boundary region "+boost::lexical_cast<string>(
                                region1ID)+" should only contain 1 composite.");
-                    
+
                     vector<unsigned int> tmpOrder;
-                    
+
                     // Construct set containing all periodic edgesd on
                     // this process
                     SpatialDomains::CompositeSharedPtr
@@ -1040,7 +1040,7 @@ namespace Nektar
                             std::dynamic_pointer_cast<
                                 SpatialDomains::SegGeom>(c->m_geomVec[i]);
                         ASSERTL0(segGeom, "Unable to cast to shared ptr");
-                        
+
                         SpatialDomains::GeometryLinkSharedPtr elmt =
                             m_graph->GetElementsFromEdge(segGeom);
                         ASSERTL0(elmt->size() == 1,
@@ -1061,19 +1061,19 @@ namespace Nektar
                         {
                             tmpOrder.push_back(c->m_geomVec[i]->GetGlobalID());
                         }
-                    
+
                         vector<int> vertList(2);
                         vertList[0] = segGeom->GetVid(0);
                         vertList[1] = segGeom->GetVid(1);
                         allVerts[c->m_geomVec[i]->GetGlobalID()] = vertList;
                     }
-                    
+
                     if (vComm->GetSize() == 1)
                     {
                         compOrder[it.second->begin()->first] = tmpOrder;
                     }
-                
-                
+
+
                     // See if we already have either region1 or
                     // region2 stored in perComps map.
                     if (perComps.count(cId1) == 0)
@@ -1100,7 +1100,7 @@ namespace Nektar
                         ASSERTL0(perComps[cId1] == cId1, ss.str());
                     }
                 }
-                
+
 
                 // Process local edge list to obtain relative edge orientations.
                 int              n = vComm->GetSize();
@@ -1109,7 +1109,7 @@ namespace Nektar
                 Array<OneD, int> edgecounts(n,0);
                 Array<OneD, int> edgeoffset(n,0);
                 Array<OneD, int> vertoffset(n,0);
-                
+
                 edgecounts[p] = allEdges.size();
                 vComm->AllReduce(edgecounts, LibUtilities::ReduceSum);
 
@@ -1118,15 +1118,15 @@ namespace Nektar
                 {
                     edgeoffset[i] = edgeoffset[i-1] + edgecounts[i-1];
                 }
-                
+
                 totEdges = Vmath::Vsum(n, edgecounts, 1);
                 Array<OneD, int> edgeIds   (totEdges, 0);
                 Array<OneD, int> edgeIdx   (totEdges, 0);
                 Array<OneD, int> edgeOrient(totEdges, 0);
                 Array<OneD, int> edgeVerts (totEdges, 0);
-                
+
                 auto sIt = allEdges.begin();
-                
+
                 for (i = 0; sIt != allEdges.end(); ++sIt)
                 {
                     edgeIds   [edgeoffset[p] + i  ] = sIt->first;
@@ -1134,16 +1134,16 @@ namespace Nektar
                     edgeOrient[edgeoffset[p] + i  ] = sIt->second.second;
                     edgeVerts [edgeoffset[p] + i++] = allVerts[sIt->first].size();
                 }
-                
+
                 vComm->AllReduce(edgeIds,    LibUtilities::ReduceSum);
                 vComm->AllReduce(edgeIdx,    LibUtilities::ReduceSum);
                 vComm->AllReduce(edgeOrient, LibUtilities::ReduceSum);
                 vComm->AllReduce(edgeVerts,  LibUtilities::ReduceSum);
-            
+
                 // Calculate number of vertices on each processor.
                 Array<OneD, int> procVerts(n,0);
                 int nTotVerts;
-                
+
                 // Note if there are no periodic edges at all calling Vsum will
                 // cause a segfault.
                 if (totEdges > 0)
@@ -1168,7 +1168,7 @@ namespace Nektar
                     }
                 }
                 vertoffset[0] = 0;
-                
+
                 for (i = 1; i < n; ++i)
                 {
                     vertoffset[i] = vertoffset[i-1] + procVerts[i-1];
@@ -1182,18 +1182,18 @@ namespace Nektar
                         traceIds[vertoffset[p] + i++] = allVerts[sIt->first][j];
                     }
                 }
-                
+
                 vComm->AllReduce(traceIds, LibUtilities::ReduceSum);
-                
+
                 // For simplicity's sake create a map of edge id -> orientation.
                 map<int, StdRegions::Orientation> orientMap;
                 map<int, vector<int> >            vertMap;
-                
+
                 for (cnt = i = 0; i < totEdges; ++i)
                 {
                     ASSERTL0(orientMap.count(edgeIds[i]) == 0,
                              "Already found edge in orientation map!");
-                    
+
                     // Work out relative orientations. To avoid having
                     // to exchange vertex locations, we figure out if
                     // the edges are backwards or forwards orientated
@@ -1205,17 +1205,17 @@ namespace Nektar
                     // quad and the left edge of a triangle.
                     StdRegions::Orientation o =
                         (StdRegions::Orientation)edgeOrient[i];
-                    
+
                     if (edgeIdx[i] > 1)
                     {
                         o = o == StdRegions::eForwards ?
                             StdRegions::eBackwards : StdRegions::eForwards;
                     }
-                    
+
                     orientMap[edgeIds[i]] = o;
-                    
+
                     vector<int> verts(edgeVerts[i]);
-                    
+
                     for (j = 0; j < edgeVerts[i]; ++j)
                     {
                         verts[j] = traceIds[cnt++];
@@ -1228,14 +1228,14 @@ namespace Nektar
                 // session file. This includes composites which are
                 // not necessarily on this process.
                 map<int,int> allCompPairs;
-                
+
                 // Store temporary map of periodic vertices which will hold all
                 // periodic vertices on the entire mesh so that doubly periodic
                 // vertices can be counted properly across partitions. Local
                 // vertices are copied into m_periodicVerts at the end of the
                 // function.
                 PeriodicMap periodicVerts;
-                
+
                 for (auto &cIt : perComps)
                 {
                     SpatialDomains::CompositeSharedPtr c[2];
@@ -1243,25 +1243,25 @@ namespace Nektar
                     const int   id2  = cIt.second;
                     std::string id1s = boost::lexical_cast<string>(id1);
                     std::string id2s = boost::lexical_cast<string>(id2);
-                    
+
                     if (compMap.count(id1) > 0)
                     {
                         c[0] = compMap[id1];
                     }
-                    
+
                     if (compMap.count(id2) > 0)
                     {
                         c[1] = compMap[id2];
                     }
-                    
+
                     ASSERTL0(c[0] || c[1],
                              "Both composites not found on this process!");
-                    
+
                     // Loop over composite ordering to construct list of all
                     // periodic edges regardless of whether they are on this
                     // process.
                     map<int,int> compPairs;
-                    
+
                     ASSERTL0(compOrder.count(id1) > 0,
                              "Unable to find composite "+id1s+" in order map.");
                     ASSERTL0(compOrder.count(id2) > 0,
@@ -1272,23 +1272,23 @@ namespace Nektar
                     ASSERTL0(compOrder[id1].size() > 0,
                              "Periodic composites "+id1s+" and "+id2s+
                              " are empty!");
-                    
+
                     // TODO: Add more checks.
                     for (i = 0; i < compOrder[id1].size(); ++i)
                     {
                         int eId1 = compOrder[id1][i];
                         int eId2 = compOrder[id2][i];
-                        
+
                         ASSERTL0(compPairs.count(eId1) == 0,
                                  "Already paired.");
-                        
+
                         if (compPairs.count(eId2) != 0)
                         {
                             ASSERTL0(compPairs[eId2] == eId1, "Pairing incorrect");
                         }
                         compPairs[eId1] = eId2;
                     }
-                    
+
                     // Construct set of all edges that we have locally on this
                     // processor.
                     set<int> locEdges;
@@ -1298,7 +1298,7 @@ namespace Nektar
                         {
                             continue;
                         }
-                        
+
                         if (c[i]->m_geomVec.size() > 0)
                         {
                             for (j = 0; j < c[i]->m_geomVec.size(); ++j)
@@ -1307,53 +1307,53 @@ namespace Nektar
                             }
                         }
                     }
-                    
+
                     // Loop over all edges in the geometry composite.
                     for (auto &pIt : compPairs)
                     {
                         int  ids  [2] = {pIt.first, pIt.second};
                         bool local[2] = {locEdges.count(pIt.first) > 0,
                                          locEdges.count(pIt.second) > 0};
-                        
+
                         ASSERTL0(orientMap.count(ids[0]) > 0 &&
                                  orientMap.count(ids[1]) > 0,
                                  "Unable to find edge in orientation map.");
-                        
+
                         allCompPairs[pIt.first ] = pIt.second;
                         allCompPairs[pIt.second] = pIt.first;
-                        
+
                         for (i = 0; i < 2; ++i)
                         {
                             if (!local[i])
                             {
                                 continue;
                             }
-                            
+
                             int other = (i+1) % 2;
-                            
+
                             StdRegions::Orientation o =
                                 orientMap[ids[i]] == orientMap[ids[other]] ?
                                 StdRegions::eBackwards :
                                 StdRegions::eForwards;
-                            
+
                             PeriodicEntity ent(ids  [other], o,
                                                local[other]);
                             m_periodicEdges[ids[i]].push_back(ent);
                         }
-                        
+
                         for (i = 0; i < 2; ++i)
                         {
                             int other = (i+1) % 2;
-                            
+
                             StdRegions::Orientation o =
                                 orientMap[ids[i]] == orientMap[ids[other]] ?
                                 StdRegions::eBackwards :
                                 StdRegions::eForwards;
-                            
+
                             // Determine periodic vertices.
                             vector<int> perVerts1 = vertMap[ids[i]];
                             vector<int> perVerts2 = vertMap[ids[other]];
-                            
+
                             map<int, pair<int, bool> > tmpMap;
                             if (o == StdRegions::eForwards)
                             {
@@ -1369,7 +1369,7 @@ namespace Nektar
                                 tmpMap[perVerts1[1]] = make_pair(
                                 perVerts2[0], locVerts.count(perVerts2[0]) > 0);
                             }
-                            
+
                             for (auto &mIt : tmpMap)
                             {
                                 // See if this vertex has been recorded already.
@@ -1377,7 +1377,7 @@ namespace Nektar
                                                     StdRegions::eNoOrientation,
                                                     mIt.second.second);
                                 auto perIt = periodicVerts.find(mIt.first);
-                                
+
                                 if (perIt == periodicVerts.end())
                                 {
                                     periodicVerts[mIt.first].push_back(ent2);
@@ -1395,7 +1395,7 @@ namespace Nektar
                                             break;
                                         }
                                     }
-                                    
+
                                     if (doAdd)
                                     {
                                         perIt->second.push_back(ent2);
@@ -1405,60 +1405,60 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 Array<OneD, int> pairSizes(n, 0);
                 pairSizes[p] = allCompPairs.size();
                 vComm->AllReduce(pairSizes, LibUtilities::ReduceSum);
-                
+
                 int totPairSizes = Vmath::Vsum(n, pairSizes, 1);
-                
+
                 Array<OneD, int> pairOffsets(n, 0);
                 pairOffsets[0] = 0;
-                
+
                 for (i = 1; i < n; ++i)
                 {
                     pairOffsets[i] = pairOffsets[i-1] + pairSizes[i-1];
                 }
-                
+
                 Array<OneD, int> first (totPairSizes, 0);
                 Array<OneD, int> second(totPairSizes, 0);
-                
+
                 cnt = pairOffsets[p];
-                
+
                 for (auto &pIt : allCompPairs)
                 {
                     first [cnt  ] = pIt.first;
                     second[cnt++] = pIt.second;
                 }
-                
+
                 vComm->AllReduce(first,  LibUtilities::ReduceSum);
                 vComm->AllReduce(second, LibUtilities::ReduceSum);
-                
+
                 allCompPairs.clear();
-                
+
                 for(cnt = 0; cnt < totPairSizes; ++cnt)
                 {
                     allCompPairs[first[cnt]] = second[cnt];
                 }
-                
+
                 // Search for periodic vertices and edges which are not in
                 // a periodic composite but lie in this process. First, loop
                 // over all information we have from other processors.
                 for (cnt = i = 0; i < totEdges; ++i)
                 {
                     int edgeId    = edgeIds[i];
-                    
+
                     ASSERTL0(allCompPairs.count(edgeId) > 0,
                              "Unable to find matching periodic edge.");
-                    
+
                     int perEdgeId = allCompPairs[edgeId];
-                    
+
                     for (j = 0; j < edgeVerts[i]; ++j, ++cnt)
                     {
                         int vId = traceIds[cnt];
-                        
+
                         auto perId = periodicVerts.find(vId);
-                        
+
                         if (perId == periodicVerts.end())
                         {
                             // This vertex is not included in the
@@ -1471,16 +1471,16 @@ namespace Nektar
                                 orientMap[edgeId] == orientMap[perEdgeId] ?
                                 vertMap[perEdgeId][(j+1)%2]:
                                 vertMap[perEdgeId][j];
-                            
+
                             PeriodicEntity ent(perVertexId,
                                                StdRegions::eNoOrientation,
                                                locVerts.count(perVertexId) > 0);
-                            
+
                             periodicVerts[vId].push_back(ent);
                         }
                     }
                 }
-                
+
                 // Loop over all periodic vertices to complete connectivity
                 // information.
                 for (auto &perIt : periodicVerts)
@@ -1491,14 +1491,14 @@ namespace Nektar
                         auto perIt2 = periodicVerts.find(perIt.second[i].id);
                         ASSERTL0(perIt2 != periodicVerts.end(),
                                  "Couldn't find periodic vertex.");
-                        
+
                         for (j = 0; j < perIt2->second.size(); ++j)
                         {
                             if (perIt2->second[j].id == perIt.first)
                             {
                                 continue;
                             }
-                            
+
                             bool doAdd = true;
                             for (k = 0; k < perIt.second.size(); ++k)
                             {
@@ -1508,7 +1508,7 @@ namespace Nektar
                                     break;
                                 }
                             }
-                            
+
                             if (doAdd)
                             {
                                 perIt.second.push_back(perIt2->second[j]);
@@ -1516,7 +1516,7 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 // Do one final loop over periodic vertices to remove non-local
                 // vertices from map.
                 for (auto &perIt : periodicVerts)
@@ -1536,7 +1536,7 @@ namespace Nektar
                     m_graph->GetBndRegionOrdering();
                 SpatialDomains::CompositeMap      compMap     =
                     m_graph->GetComposites();
-                
+
                 // perComps: Stores a unique collection of pairs of periodic
                 // composites (i.e. if composites 1 and 2 are periodic then this map
                 // will contain either the pair (1,2) or (2,1) but not both).
@@ -1558,11 +1558,11 @@ namespace Nektar
                 set<int>                                       locVerts;
                 set<int>                                       locEdges;
                 set<int>                                       locFaces;
-                
+
                 int region1ID, region2ID, i, j, k, cnt;
                 SpatialDomains::BoundaryConditionShPtr locBCond;
 
-                // Set up a set of all local verts and edges. 
+                // Set up a set of all local verts and edges.
                 for(i = 0; i < (*m_exp).size(); ++i)
                 {
                     for(j = 0; j < (*m_exp)[i]->GetNverts(); ++j)
@@ -1570,40 +1570,40 @@ namespace Nektar
                         int id = (*m_exp)[i]->GetGeom()->GetVid(j);
                         locVerts.insert(id);
                     }
-                    
+
                     for(j = 0; j < (*m_exp)[i]->GetGeom()->GetNumEdges(); ++j)
                     {
                         int id = (*m_exp)[i]->GetGeom()->GetEid(j);
                         locEdges.insert(id);
                     }
-                }    
-                
+                }
+
                 // Begin by populating the perComps map. We loop over all periodic
                 // boundary conditions and determine the composite associated with
                 // it, then fill out the all* maps.
                 for (auto &it : bregions)
                 {
-                    
+
                     locBCond = GetBoundaryCondition
                         (bconditions, it.first, variable);
-                    
+
                     if (locBCond->GetBoundaryConditionType()
                         != SpatialDomains::ePeriodic)
                     {
                         continue;
                     }
-                    
+
                     // Identify periodic boundary region IDs.
                     region1ID = it.first;
                     region2ID = std::static_pointer_cast<
                         SpatialDomains::PeriodicBoundaryCondition>
                         (locBCond)->m_connectedBoundaryRegion;
-                    
+
                     // Check the region only contains a single composite.
                     ASSERTL0(it.second->size() == 1,
                              "Boundary region "+boost::lexical_cast<string>
                              (region1ID)+" should only contain 1 composite.");
-                    
+
                     // From this identify composites by looking at the original
                     // boundary region ordering. Note that in serial the mesh
                     // partitioner is not run, so this map will be empty and
@@ -1620,15 +1620,15 @@ namespace Nektar
                         cId1 = bndRegOrder.find(region1ID)->second[0];
                         cId2 = bndRegOrder.find(region2ID)->second[0];
                     }
-                    
+
                     // check to see if boundary is rotationally aligned
                     if(boost::icontains(locBCond->GetUserDefined(),"Rotated"))
                     {
                         vector<string> tmpstr;
-                        
+
                         boost::split(tmpstr,locBCond->GetUserDefined(),
                                      boost::is_any_of(":"));
-                        
+
                         if(boost::iequals(tmpstr[0],"Rotated"))
                         {
                             ASSERTL1(tmpstr.size() > 2,
@@ -1636,20 +1636,20 @@ namespace Nektar
                                      "contain direction and rotation angle "
                                      "and optionally a tolerance, "
                                      "i.e. Rotated:dir:PI/2:1e-6");
-                            
-                            
+
+
                             ASSERTL1((tmpstr[1] == "x")||(tmpstr[1] == "y")
                                      ||(tmpstr[1] == "z"), "Rotated Dir is "
                                      "not specified as x,y or z");
-                            
+
                             RotPeriodicInfo RotInfo;
                             RotInfo.m_dir = (tmpstr[1] == "x")? 0:
                                 (tmpstr[1] == "y")? 1:2;
-                            
+
                             LibUtilities::Interpreter strEval;
                             int ExprId = strEval.DefineFunction("", tmpstr[2]);
                             RotInfo.m_angle = strEval.Evaluate(ExprId);
-                            
+
                             if(tmpstr.size() == 4)
                             {
                                 try {
@@ -1670,13 +1670,13 @@ namespace Nektar
                             rotComp[cId1] = RotInfo;
                         }
                     }
-                    
+
                     SpatialDomains::CompositeSharedPtr c = it.second->begin()->second;
-                    
+
                     vector<unsigned int> tmpOrder;
-                    
-                    // store the rotation info of this 
-                    
+
+                    // store the rotation info of this
+
                     // From the composite, we now construct the allVerts, allEdges
                     // and allCoord map so that they can be transferred across
                     // processors. We also populate the locFaces set to store a
@@ -1687,18 +1687,18 @@ namespace Nektar
                             std::dynamic_pointer_cast<
                                 SpatialDomains::Geometry2D>(c->m_geomVec[i]);
                         ASSERTL1(faceGeom, "Unable to cast to shared ptr");
-                        
+
                         // Get geometry ID of this face and store in locFaces.
                         int faceId = c->m_geomVec[i]->GetGlobalID();
                         locFaces.insert(faceId);
-                        
+
                         // In serial, mesh partitioning will not have occurred so
                         // need to fill composite ordering map manually.
                         if (vComm->GetSize() == 1)
                         {
                             tmpOrder.push_back(c->m_geomVec[i]->GetGlobalID());
                         }
-                        
+
                         // Loop over vertices and edges of the face to populate
                         // allVerts, allEdges and allCoord maps.
                         vector<int> vertList, edgeList;
@@ -1711,20 +1711,20 @@ namespace Nektar
                             coordVec .push_back(faceGeom->GetVertex(j));
                             orientVec.push_back(faceGeom->GetEorient(j));
                         }
-                        
+
                         allVerts [faceId] = vertList;
                         allEdges [faceId] = edgeList;
                         allCoord [faceId] = coordVec;
                         allOrient[faceId] = orientVec;
                     }
-                    
+
                     // In serial, record the composite ordering in compOrder for
                     // later in the routine.
                     if (vComm->GetSize() == 1)
                     {
                         compOrder[it.second->begin()->first] = tmpOrder;
                     }
-                    
+
                     // See if we already have either region1 or region2 stored in
                     // perComps map already and do a sanity check to ensure regions
                     // are mutually periodic.
@@ -1752,7 +1752,7 @@ namespace Nektar
                         ASSERTL0(perComps[cId1] == cId1, ss.str());
                     }
                 }
-                
+
                 // The next routines process local face lists to exchange vertices,
                 // edges and faces.
                 int              n = vComm->GetSize();
@@ -1762,55 +1762,55 @@ namespace Nektar
                 Array<OneD, int> vertcounts(n,0);
                 Array<OneD, int> faceoffset(n,0);
                 Array<OneD, int> vertoffset(n,0);
-                
+
                 Array<OneD, int> rotcounts(n,0);
                 Array<OneD, int> rotoffset(n,0);
-                
+
                 rotcounts[p] = rotComp.size();
                 vComm->AllReduce(rotcounts, LibUtilities::ReduceSum);
                 int totrot  = Vmath::Vsum(n,rotcounts,1);
-                
+
                 if(totrot)
                 {
                     for (i = 1; i < n ; ++i)
                     {
                         rotoffset[i] = rotoffset[i-1] + rotcounts[i-1];
                     }
-                    
+
                     Array<OneD, int> compid(totrot,0);
                     Array<OneD, int> rotdir(totrot,0);
                     Array<OneD, NekDouble> rotangle(totrot,0.0);
                     Array<OneD, NekDouble> rottol(totrot,0.0);
-                    
+
                     // fill in rotational informaiton
                     auto rIt = rotComp.begin();
-                    
+
                     for(i = 0; rIt != rotComp.end(); ++rIt)
                     {
-                        compid  [rotoffset[p] + i  ] = rIt->first; 
-                        rotdir  [rotoffset[p] + i  ] = rIt->second.m_dir; 
-                        rotangle[rotoffset[p] + i  ] = rIt->second.m_angle; 
-                        rottol  [rotoffset[p] + i++] = rIt->second.m_tol; 
+                        compid  [rotoffset[p] + i  ] = rIt->first;
+                        rotdir  [rotoffset[p] + i  ] = rIt->second.m_dir;
+                        rotangle[rotoffset[p] + i  ] = rIt->second.m_angle;
+                        rottol  [rotoffset[p] + i++] = rIt->second.m_tol;
                     }
-                    
+
                     vComm->AllReduce(compid, LibUtilities::ReduceSum);
                     vComm->AllReduce(rotdir, LibUtilities::ReduceSum);
                     vComm->AllReduce(rotangle, LibUtilities::ReduceSum);
                     vComm->AllReduce(rottol, LibUtilities::ReduceSum);
-                    
+
                     // Fill in full rotational composite list
                     for(i =0; i < totrot; ++i)
                     {
                         RotPeriodicInfo rinfo(rotdir[i],rotangle[i], rottol[i]);
-                        
-                        rotComp[compid[i]] = rinfo; 
+
+                        rotComp[compid[i]] = rinfo;
                     }
                 }
-                
+
                 // First exchange the number of faces on each process.
                 facecounts[p] = locFaces.size();
                 vComm->AllReduce(facecounts, LibUtilities::ReduceSum);
-                
+
                 // Set up an offset map to allow us to distribute face IDs to all
                 // processors.
                 faceoffset[0] = 0;
@@ -1818,15 +1818,15 @@ namespace Nektar
                 {
                     faceoffset[i] = faceoffset[i-1] + facecounts[i-1];
                 }
-                
+
                 // Calculate total number of faces.
                 totFaces = Vmath::Vsum(n, facecounts, 1);
-                
+
                 // faceIds holds face IDs for each periodic face. faceVerts holds
                 // the number of vertices in this face.
                 Array<OneD, int> faceIds  (totFaces, 0);
                 Array<OneD, int> faceVerts(totFaces, 0);
-                
+
                 // Process p writes IDs of its faces into position faceoffset[p] of
                 // faceIds which allows us to perform an AllReduce to distribute
                 // information amongst processors.
@@ -1836,15 +1836,15 @@ namespace Nektar
                     faceIds  [faceoffset[p] + i  ] = *sIt;
                     faceVerts[faceoffset[p] + i++] = allVerts[*sIt].size();
                 }
-                
+
                 vComm->AllReduce(faceIds,   LibUtilities::ReduceSum);
                 vComm->AllReduce(faceVerts, LibUtilities::ReduceSum);
-                
+
                 // procVerts holds number of vertices (and also edges since each
                 // face is 2D) on each process.
                 Array<OneD, int> procVerts(n,0);
                 int nTotVerts;
-                
+
                 // Note if there are no periodic faces at all calling Vsum will
                 // cause a segfault.
                 if (totFaces > 0)
@@ -1856,7 +1856,7 @@ namespace Nektar
                 {
                     nTotVerts = 0;
                 }
-                
+
                 for (i = 0; i < n; ++i)
                 {
                     if (facecounts[i] > 0)
@@ -1869,7 +1869,7 @@ namespace Nektar
                         procVerts[i] = 0;
                     }
                 }
-                
+
                 // vertoffset is defined in the same manner as edgeoffset
                 // beforehand.
                 vertoffset[0] = 0;
@@ -1877,7 +1877,7 @@ namespace Nektar
                 {
                     vertoffset[i] = vertoffset[i-1] + procVerts[i-1];
                 }
-                
+
                 // At this point we exchange all vertex IDs, edge IDs and vertex
                 // coordinates for each face. The coordinates are necessary because
                 // we need to calculate relative face orientations between periodic
@@ -1888,7 +1888,7 @@ namespace Nektar
                 Array<OneD, NekDouble> vertX  (nTotVerts, 0.0);
                 Array<OneD, NekDouble> vertY  (nTotVerts, 0.0);
                 Array<OneD, NekDouble> vertZ  (nTotVerts, 0.0);
-                
+
                 for (cnt = 0, sIt = locFaces.begin();
                      sIt != locFaces.end(); ++sIt)
                 {
@@ -1903,14 +1903,14 @@ namespace Nektar
                         edgeOrt[vertoffset[p] + cnt++] = allOrient[*sIt][j];
                     }
                 }
-                
+
                 vComm->AllReduce(vertIds, LibUtilities::ReduceSum);
                 vComm->AllReduce(vertX,   LibUtilities::ReduceSum);
                 vComm->AllReduce(vertY,   LibUtilities::ReduceSum);
                 vComm->AllReduce(vertZ,   LibUtilities::ReduceSum);
                 vComm->AllReduce(edgeIds, LibUtilities::ReduceSum);
                 vComm->AllReduce(edgeOrt, LibUtilities::ReduceSum);
-                
+
                 // Finally now we have all of this information, we construct maps
                 // which make accessing the information easier. These are
                 // conceptually the same as all* maps at the beginning of the
@@ -1918,20 +1918,20 @@ namespace Nektar
                 map<int, vector<int> >                          vertMap;
                 map<int, vector<int> >                          edgeMap;
                 map<int, SpatialDomains::PointGeomVector>       coordMap;
-                
+
                 // These final two maps are required for determining the relative
                 // orientation of periodic edges. vCoMap associates vertex IDs with
                 // their coordinates, and eIdMap maps an edge ID to the two vertices
                 // which construct it.
                 map<int, SpatialDomains::PointGeomSharedPtr>    vCoMap;
                 map<int, pair<int, int> >                       eIdMap;
-                
+
                 for (cnt = i = 0; i < totFaces; ++i)
                 {
                     vector<int> edges(faceVerts[i]);
                     vector<int> verts(faceVerts[i]);
                     SpatialDomains::PointGeomVector coord(faceVerts[i]);
-                    
+
                     // Keep track of cnt to enable correct edge vertices to be
                     // inserted into eIdMap.
                     int tmp = cnt;
@@ -1943,17 +1943,17 @@ namespace Nektar
                             ::AllocateSharedPtr(3, verts[j], vertX[cnt],
                                                 vertY[cnt], vertZ[cnt]);
                         vCoMap[vertIds[cnt]] = coord[j];
-                        
+
                         // Try to insert edge into the eIdMap to avoid re-inserting.
                         auto testIns = eIdMap.insert
                             ( make_pair( edgeIds[cnt], make_pair(vertIds[tmp+j],
                                                  vertIds[tmp+((j+1) % faceVerts[i])])));
-                        
+
                         if (testIns.second == false)
                         {
                             continue;
                         }
-                        
+
                         // If the edge is reversed with respect to the face, then
                         // swap the edges so that we have the original ordering of
                         // the edge in the 3D element. This is necessary to properly
@@ -1968,37 +1968,37 @@ namespace Nektar
                             edgeOrient = edgeOrient == StdRegions::eForwards ?
                                 StdRegions::eBackwards : StdRegions::eForwards;
                         }
-                        
+
                         if (edgeOrient == StdRegions::eBackwards)
                         {
                             swap(testIns.first->second.first,
                                  testIns.first->second.second);
                         }
                     }
-                    
+
                     vertMap [faceIds[i]] = verts;
                     edgeMap [faceIds[i]] = edges;
                     coordMap[faceIds[i]] = coord;
                 }
-                
+
                 // Go through list of composites and figure out which edges are
                 // parallel from original ordering in session file. This includes
                 // composites which are not necessarily on this process.
-                
+
                 // Store temporary map of periodic vertices which will hold all
                 // periodic vertices on the entire mesh so that doubly periodic
                 // vertices/edges can be counted properly across partitions. Local
                 // vertices/edges are copied into m_periodicVerts and
                 // m_periodicEdges at the end of the function.
                 PeriodicMap periodicVerts, periodicEdges;
-                
+
                 // Construct two maps which determine how vertices and edges of
                 // faces connect given a specific face orientation. The key of the
                 // map is the number of vertices in the face, used to determine
                 // difference between tris and quads.
                 map<int, map<StdRegions::Orientation, vector<int> > > vmap;
                 map<int, map<StdRegions::Orientation, vector<int> > > emap;
-                
+
                 map<StdRegions::Orientation, vector<int> > quadVertMap;
                 quadVertMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] = {0,1,2,3};
                 quadVertMap[StdRegions::eDir1FwdDir1_Dir2BwdDir2] = {3,2,1,0};
@@ -2008,7 +2008,7 @@ namespace Nektar
                 quadVertMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] = {1,2,3,0};
                 quadVertMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] = {3,0,1,2};
                 quadVertMap[StdRegions::eDir1BwdDir2_Dir2BwdDir1] = {2,1,0,3};
-                
+
                 map<StdRegions::Orientation, vector<int> > quadEdgeMap;
                 quadEdgeMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] = {0,1,2,3};
                 quadEdgeMap[StdRegions::eDir1FwdDir1_Dir2BwdDir2] = {2,1,0,3};
@@ -2018,25 +2018,25 @@ namespace Nektar
                 quadEdgeMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] = {1,2,3,0};
                 quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] = {3,0,1,2};
                 quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2BwdDir1] = {1,0,3,2};
-                
+
                 map<StdRegions::Orientation, vector<int> > triVertMap;
                 triVertMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] = {0,1,2};
                 triVertMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] = {1,0,2};
-                
+
                 map<StdRegions::Orientation, vector<int> > triEdgeMap;
                 triEdgeMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] = {0,1,2};
                 triEdgeMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] = {0,2,1};
-                
+
                 vmap[3] = triVertMap;
                 vmap[4] = quadVertMap;
                 emap[3] = triEdgeMap;
                 emap[4] = quadEdgeMap;
-                
+
                 map<int,int> allCompPairs;
-                
+
                 // Collect composite id's of each periodic face for use if rotation is required
                 map<int,int> fIdToCompId;
-                
+
                 // Finally we have enough information to populate the periodic
                 // vertex, edge and face maps. Begin by looping over all pairs of
                 // periodic composites to determine pairs of periodic faces.
@@ -2047,26 +2047,26 @@ namespace Nektar
                     const int   id2  = cIt.second;
                     std::string id1s = boost::lexical_cast<string>(id1);
                     std::string id2s = boost::lexical_cast<string>(id2);
-                    
+
                     if (compMap.count(id1) > 0)
                     {
                         c[0] = compMap[id1];
                     }
-                    
+
                     if (compMap.count(id2) > 0)
                     {
                         c[1] = compMap[id2];
                     }
-                    
+
                     ASSERTL0(c[0] || c[1],
                              "Neither composite not found on this process!");
-                    
+
                     // Loop over composite ordering to construct list of all
                     // periodic faces, regardless of whether they are on this
                     // process.
                     map<int,int> compPairs;
-                    
-                    
+
+
                     ASSERTL0(compOrder.count(id1) > 0,
                              "Unable to find composite "+id1s+" in order map.");
                     ASSERTL0(compOrder.count(id2) > 0,
@@ -2077,28 +2077,28 @@ namespace Nektar
                     ASSERTL0(compOrder[id1].size() > 0,
                              "Periodic composites "+id1s+" and "+id2s+
                              " are empty!");
-                    
+
                     // Look up composite ordering to determine pairs.
                     for (i = 0; i < compOrder[id1].size(); ++i)
                     {
                         int eId1 = compOrder[id1][i];
                         int eId2 = compOrder[id2][i];
-                        
+
                         ASSERTL0(compPairs.count(eId1) == 0,
                                  "Already paired.");
-                        
+
                         // Sanity check that the faces are mutually periodic.
                         if (compPairs.count(eId2) != 0)
                         {
                             ASSERTL0(compPairs[eId2] == eId1, "Pairing incorrect");
                         }
                         compPairs[eId1] = eId2;
-                        
+
                         // store  a map of face ids to composite ids
                         fIdToCompId[eId1] = id1;
                         fIdToCompId[eId2] = id2;
                     }
-                    
+
                     // Now that we have all pairs of periodic faces, loop over the
                     // ones local on this process and populate face/edge/vertex
                     // maps.
@@ -2107,23 +2107,23 @@ namespace Nektar
                         int  ids  [2] = {pIt.first, pIt.second};
                         bool local[2] = {locFaces.count(pIt.first) > 0,
                                          locFaces.count(pIt.second) > 0};
-                        
+
                         ASSERTL0(coordMap.count(ids[0]) > 0 &&
                                  coordMap.count(ids[1]) > 0,
                                  "Unable to find face in coordinate map");
-                        
+
                         allCompPairs[pIt.first ] = pIt.second;
                         allCompPairs[pIt.second] = pIt.first;
-                        
+
                         // Loop up coordinates of the faces, check they have the
                         // same number of vertices.
                         SpatialDomains::PointGeomVector tmpVec[2]
                             = { coordMap[ids[0]], coordMap[ids[1]] };
-                        
+
                         ASSERTL0(tmpVec[0].size() == tmpVec[1].size(),
                                  "Two periodic faces have different number "
                                  "of vertices!");
-                        
+
                         // o will store relative orientation of faces. Note that in
                         // some transpose cases (Dir1FwdDir2_Dir2BwdDir1 and
                         // Dir1BwdDir1_Dir2FwdDir1) it seems orientation will be
@@ -2135,7 +2135,7 @@ namespace Nektar
                         NekDouble angle = 0.0;
                         NekDouble sign = 0.0;
                         NekDouble tol = 1e-8;
-                        
+
                         // check to see if perioid boundary is rotated
                         if(rotComp.count(fIdToCompId[pIt.first]))
                         {
@@ -2144,7 +2144,7 @@ namespace Nektar
                             angle = rotComp[fIdToCompId[pIt.first]].m_angle;
                             tol   = rotComp[fIdToCompId[pIt.first]].m_tol;
                         }
-                        
+
                         // Record periodic faces.
                         for (i = 0; i < 2; ++i)
                         {
@@ -2152,13 +2152,13 @@ namespace Nektar
                             {
                                 continue;
                             }
-                            
+
                             // Reference to the other face.
                             int other = (i+1) % 2;
-                            
+
                             // angle is set up for i = 0 to i = 1
                             sign = (i == 0)? 1.0:-1.0;
-                            
+
                             // Calculate relative face orientation.
                             if (tmpVec[0].size() == 3)
                             {
@@ -2172,24 +2172,24 @@ namespace Nektar
                                    tmpVec[i], tmpVec[other],
                                    rotbnd,dir,sign*angle,tol);
                             }
-                            
+
                             // Record face ID, orientation and whether other face is
                             // local.
                             PeriodicEntity ent(ids  [other], o,
                                                local[other]);
                             m_periodicFaces[ids[i]].push_back(ent);
                         }
-                        
+
                         int nFaceVerts = vertMap[ids[0]].size();
-                        
+
                     // Determine periodic vertices.
                         for (i = 0; i < 2; ++i)
                         {
                             int other = (i+1) % 2;
-                            
+
                             // angle is set up for i = 0 to i = 1
                             sign = (i == 0)? 1.0:-1.0;
-                            
+
                             // Calculate relative face orientation.
                             if (tmpVec[0].size() == 3)
                             {
@@ -2203,7 +2203,7 @@ namespace Nektar
                                      tmpVec[i], tmpVec[other], rotbnd, dir,
                                      sign*angle, tol);
                             }
-                            
+
                             if (nFaceVerts == 3)
                             {
                                 ASSERTL0(o == StdRegions::eDir1FwdDir1_Dir2FwdDir2 ||
@@ -2211,15 +2211,15 @@ namespace Nektar
                                          "Unsupported face orientation for face "+
                                          boost::lexical_cast<string>(ids[i]));
                             }
-                            
+
                             // Look up vertices for this face.
                             vector<int> per1 = vertMap[ids[i]];
                             vector<int> per2 = vertMap[ids[other]];
-                            
+
                             // tmpMap will hold the pairs of vertices which are
                             // periodic.
                             map<int, pair<int, bool> > tmpMap;
-                            
+
                             // Use vmap to determine which vertices connect given
                             // the orientation o.
                             for (j = 0; j < nFaceVerts; ++j)
@@ -2228,17 +2228,17 @@ namespace Nektar
                                 tmpMap[per1[j]] = make_pair
                                     (per2[v], locVerts.count(per2[v]) > 0);
                             }
-                            
+
                             // Now loop over tmpMap to associate periodic vertices.
                             for (auto &mIt : tmpMap)
                             {
                                 PeriodicEntity ent2(mIt.second.first,
                                                     StdRegions::eNoOrientation,
                                                     mIt.second.second);
-                                
+
                                 // See if this vertex has been recorded already.
                                 auto perIt = periodicVerts.find(mIt.first);
-                                
+
                                 if (perIt == periodicVerts.end())
                                 {
                                     // Vertex is new - just record this entity as
@@ -2258,7 +2258,7 @@ namespace Nektar
                                             break;
                                         }
                                     }
-                                    
+
                                     if (k == perIt->second.size())
                                     {
                                         perIt->second.push_back(ent2);
@@ -2266,16 +2266,16 @@ namespace Nektar
                                 }
                             }
                         }
-                        
+
                         // Determine periodic edges. Logic is the same as above,
                         // and perhaps should be condensed to avoid replication.
                         for (i = 0; i < 2; ++i)
                         {
                             int other = (i+1) % 2;
-                            
+
                             // angle is set up for i = 0 to i = 1
                             sign = (i == 0)? 1.0:-1.0;
-                            
+
                             if (tmpVec[0].size() == 3)
                             {
                                 o = SpatialDomains::TriGeom::GetFaceOrientation(
@@ -2288,19 +2288,19 @@ namespace Nektar
                                      tmpVec[i], tmpVec[other], rotbnd, dir,
                                      sign*angle, tol);
                             }
-                            
+
                             vector<int> per1 = edgeMap[ids[i]];
                             vector<int> per2 = edgeMap[ids[other]];
-                            
+
                             map<int, pair<int, bool> > tmpMap;
-                            
+
                             for (j = 0; j < nFaceVerts; ++j)
                             {
                                 int e = emap[nFaceVerts][o][j];
                                 tmpMap[per1[j]] = make_pair
                                     (per2[e], locEdges.count(per2[e]) > 0);
                             }
-                            
+
                             for (auto &mIt : tmpMap)
                             {
                                 // Note we assume orientation of edges is forwards -
@@ -2309,7 +2309,7 @@ namespace Nektar
                                                     StdRegions::eForwards,
                                                     mIt.second.second);
                                 auto perIt = periodicEdges.find(mIt.first);
-                                
+
                                 if (perIt == periodicEdges.end())
                                 {
                                     periodicEdges[mIt.first].push_back(ent2);
@@ -2324,7 +2324,7 @@ namespace Nektar
                                             break;
                                         }
                                     }
-                                    
+
                                     if (k == perIt->second.size())
                                     {
                                         perIt->second.push_back(ent2);
@@ -2334,75 +2334,75 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 Array<OneD, int> pairSizes(n, 0);
                 pairSizes[p] = allCompPairs.size();
                 vComm->AllReduce(pairSizes, LibUtilities::ReduceSum);
-                
+
                 int totPairSizes = Vmath::Vsum(n, pairSizes, 1);
-                
+
                 Array<OneD, int> pairOffsets(n, 0);
                 pairOffsets[0] = 0;
-                
+
                 for (i = 1; i < n; ++i)
                 {
                     pairOffsets[i] = pairOffsets[i-1] + pairSizes[i-1];
                 }
-                
+
                 ASSERTL1(allCompPairs.size() == fIdToCompId.size(),
                          "At this point the size of allCompPairs "
                          "should have been the same as fIdToCompId");
-                
+
                 Array<OneD, int> first (totPairSizes, 0);
                 Array<OneD, int> second(totPairSizes, 0);
-                
+
                 cnt = pairOffsets[p];
-                
+
                 for (auto &pIt : allCompPairs)
                 {
                     first [cnt  ] = pIt.first;
                     second[cnt++] = pIt.second;
                 }
-                
+
                 vComm->AllReduce(first,  LibUtilities::ReduceSum);
                 vComm->AllReduce(second, LibUtilities::ReduceSum);
-                
+
                 allCompPairs.clear();
-                
+
                 for(cnt = 0; cnt < totPairSizes; ++cnt)
                 {
                     allCompPairs[first[cnt]] = second[cnt];
                 }
-                
+
                 // make global list of faces to composite ids if rotComp is non-zero
-            
+
                 if(rotComp.size())
                 {
                     Vmath::Zero(totPairSizes,first,1);
                     Vmath::Zero(totPairSizes,second,1);
-                    
+
                     cnt = pairOffsets[p];
-                    
+
                     for (auto &pIt : fIdToCompId)
                     {
                         first [cnt  ] = pIt.first;
                         second[cnt++] = pIt.second;
                     }
-                    
+
                     vComm->AllReduce(first,  LibUtilities::ReduceSum);
                     vComm->AllReduce(second, LibUtilities::ReduceSum);
-                    
+
                     fIdToCompId.clear();
-                    
+
                     for(cnt = 0; cnt < totPairSizes; ++cnt)
                     {
                         fIdToCompId[first[cnt]] = second[cnt];
                     }
                 }
-                
+
                 // also will need an edge id to composite id at end of routine
-                map<int,int> eIdToCompId; 
-                
+                map<int,int> eIdToCompId;
+
                 // Search for periodic vertices and edges which are not
                 // in a periodic composite but lie in this process. First,
                 // loop over all information we have from other
@@ -2413,14 +2413,14 @@ namespace Nektar
                     int dir = 0;
                     NekDouble angle = 0.0;
                     NekDouble tol = 1e-8;
-                    
+
                     int faceId    = faceIds[i];
-                    
+
                     ASSERTL0(allCompPairs.count(faceId) > 0,
                              "Unable to find matching periodic face.");
-                    
+
                     int perFaceId = allCompPairs[faceId];
-                    
+
                     // check to see if periodic boundary is rotated
                     ASSERTL1((rotComp.size() == 0) ||
                              fIdToCompId.count(faceId) > 0,"Face " +
@@ -2433,16 +2433,16 @@ namespace Nektar
                         angle = rotComp[fIdToCompId[faceId]].m_angle;
                         tol   = rotComp[fIdToCompId[faceId]].m_tol;
                     }
-                    
+
                     for (j = 0; j < faceVerts[i]; ++j, ++cnt)
                     {
                         int vId = vertIds[cnt];
-                        
+
                         auto perId = periodicVerts.find(vId);
-                        
+
                         if (perId == periodicVerts.end())
                         {
-                            
+
                             // This vertex is not included in the
                             // map. Figure out which vertex it is supposed
                             // to be periodic with. perFaceId is the face
@@ -2450,36 +2450,36 @@ namespace Nektar
                             // is much the same as the loop above.
                             SpatialDomains::PointGeomVector tmpVec[2]
                                 = { coordMap[faceId], coordMap[perFaceId] };
-                            
+
                             int nFaceVerts = tmpVec[0].size();
-                            StdRegions::Orientation o = nFaceVerts == 3 ? 
+                            StdRegions::Orientation o = nFaceVerts == 3 ?
                                 SpatialDomains::TriGeom::GetFaceOrientation(
                                   tmpVec[0], tmpVec[1], rotbnd, dir, angle, tol):
                                 SpatialDomains::QuadGeom::GetFaceOrientation(
                                    tmpVec[0], tmpVec[1], rotbnd, dir, angle, tol);
-                            
+
                             // Use vmap to determine which vertex of the other face
                             // should be periodic with this one.
                             int perVertexId = vertMap[perFaceId][vmap[nFaceVerts][o][j]];
-                            
-                            
+
+
                             PeriodicEntity ent(perVertexId,
                                                StdRegions::eNoOrientation,
                                            locVerts.count(perVertexId) > 0);
-                            
+
                             periodicVerts[vId].push_back(ent);
                         }
-                        
+
                         int eId = edgeIds[cnt];
-                        
+
                         perId = periodicEdges.find(eId);
-                        
-                        // this map is required at very end to determine rotation of edges. 
+
+                        // this map is required at very end to determine rotation of edges.
                         if(rotbnd)
                         {
                             eIdToCompId[eId] = fIdToCompId[faceId];
                         }
-                        
+
                         if (perId == periodicEdges.end())
                         {
                             // This edge is not included in the map. Figure
@@ -2489,25 +2489,25 @@ namespace Nektar
                             // same as the loop above.
                             SpatialDomains::PointGeomVector tmpVec[2]
                                 = { coordMap[faceId], coordMap[perFaceId] };
-                            
+
                             int nFaceEdges = tmpVec[0].size();
-                            StdRegions::Orientation o = nFaceEdges == 3 ? 
+                            StdRegions::Orientation o = nFaceEdges == 3 ?
                             SpatialDomains::TriGeom::GetFaceOrientation(
                                         tmpVec[0], tmpVec[1], rotbnd, dir, angle, tol):
                                 SpatialDomains::QuadGeom::GetFaceOrientation(
                                         tmpVec[0], tmpVec[1], rotbnd, dir, angle, tol);
-                        
+
                             // Use emap to determine which edge of the other
                             // face should be periodic with this one.
                             int perEdgeId = edgeMap[perFaceId][emap[nFaceEdges][o][j]];
-                            
+
                             PeriodicEntity ent(perEdgeId,
                                                StdRegions::eForwards,
                                                locEdges.count(perEdgeId) > 0);
-                            
+
                             periodicEdges[eId].push_back(ent);
-                        
-                            
+
+
                             // this map is required at very end to
                             // determine rotation of edges.
                             if(rotbnd)
@@ -2517,7 +2517,7 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 // Finally, we must loop over the periodicVerts and periodicEdges
                 // map to complete connectivity information.
                 for (auto &perIt : periodicVerts)
@@ -2529,7 +2529,7 @@ namespace Nektar
                         auto perIt2 = periodicVerts.find(perIt.second[i].id);
                         ASSERTL0(perIt2 != periodicVerts.end(),
                                  "Couldn't find periodic vertex.");
-                        
+
                         // Now search through this vertex's list and make sure that
                         // we have a record of any vertices which aren't in the
                         // original list.
@@ -2539,7 +2539,7 @@ namespace Nektar
                             {
                                 continue;
                             }
-                            
+
                             for (k = 0; k < perIt.second.size(); ++k)
                             {
                                 if (perIt2->second[j].id == perIt.second[k].id)
@@ -2547,7 +2547,7 @@ namespace Nektar
                                     break;
                                 }
                             }
-                            
+
                             if (k == perIt.second.size())
                             {
                                 perIt.second.push_back(perIt2->second[j]);
@@ -2555,7 +2555,7 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 for (auto &perIt : periodicEdges)
                 {
                     for (i = 0; i < perIt.second.size(); ++i)
@@ -2563,14 +2563,14 @@ namespace Nektar
                         auto perIt2 = periodicEdges.find(perIt.second[i].id);
                         ASSERTL0(perIt2 != periodicEdges.end(),
                                  "Couldn't find periodic edge.");
-                        
+
                         for (j = 0; j < perIt2->second.size(); ++j)
                         {
                             if (perIt2->second[j].id == perIt.first)
                             {
                                 continue;
                             }
-                            
+
                             for (k = 0; k < perIt.second.size(); ++k)
                             {
                                 if (perIt2->second[j].id == perIt.second[k].id)
@@ -2578,7 +2578,7 @@ namespace Nektar
                                     break;
                                 }
                             }
-                            
+
                             if (k == perIt.second.size())
                             {
                                 perIt.second.push_back(perIt2->second[j]);
@@ -2586,7 +2586,7 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 // Loop over periodic edges to determine relative edge orientations.
                 for (auto &perIt : periodicEdges)
                 {
@@ -2594,15 +2594,15 @@ namespace Nektar
                     int dir = 0;
                     NekDouble angle = 0.0;
                     NekDouble tol = 1e-8;
-                    
-                    
+
+
                     // Find edge coordinates
                     auto eIt = eIdMap.find(perIt.first);
                     SpatialDomains::PointGeom v[2] = {
                         *vCoMap[eIt->second.first],
                         *vCoMap[eIt->second.second]
                     };
-                    
+
                     // check to see if perioid boundary is rotated
                     if(rotComp.count(eIdToCompId[perIt.first]))
                     {
@@ -2611,27 +2611,27 @@ namespace Nektar
                         angle = rotComp[eIdToCompId[perIt.first]].m_angle;
                         tol   = rotComp[eIdToCompId[perIt.first]].m_tol;
                     }
-                    
+
                     // Loop over each edge, and construct a vector that takes us
                     // from one vertex to another. Use this to figure out which
                     // vertex maps to which.
                     for (i = 0; i < perIt.second.size(); ++i)
                     {
                         eIt = eIdMap.find(perIt.second[i].id);
-                        
+
                         SpatialDomains::PointGeom w[2] = {
                             *vCoMap[eIt->second.first],
                             *vCoMap[eIt->second.second]
                         };
-                        
+
                         int vMap[2] = {-1,-1};
                         if(rotbnd)
                         {
-                            
+
                             SpatialDomains::PointGeom r;
-                            
+
                             r.Rotate(v[0],dir,angle);
-                            
+
                             if(r.dist(w[0])< tol)
                             {
                                 vMap[0] = 0;
@@ -2655,7 +2655,7 @@ namespace Nektar
                             NekDouble cx = 0.5*(w[0](0)-v[0](0)+w[1](0)-v[1](0));
                             NekDouble cy = 0.5*(w[0](1)-v[0](1)+w[1](1)-v[1](1));
                             NekDouble cz = 0.5*(w[0](2)-v[0](2)+w[1](2)-v[1](2));
-                            
+
                             for (j = 0; j < 2; ++j)
                             {
                                 NekDouble x = v[j](0);
@@ -2666,7 +2666,7 @@ namespace Nektar
                                     NekDouble x1 = w[k](0)-cx;
                                     NekDouble y1 = w[k](1)-cy;
                                     NekDouble z1 = w[k](2)-cz;
-                                    
+
                                     if (sqrt((x1-x)*(x1-x)+(y1-y)*(y1-y)+(z1-z)*(z1-z))
                                         < 1e-8)
                                     {
@@ -2675,7 +2675,7 @@ namespace Nektar
                                     }
                                 }
                             }
-                            
+
                             // Sanity check the map.
                             ASSERTL0(vMap[0] >= 0 && vMap[1] >= 0,
                                      "Unable to align periodic edge vertex.");
@@ -2684,7 +2684,7 @@ namespace Nektar
                                      (vMap[0] != vMap[1]),
                                      "Unable to align periodic edge vertex.");
                         }
-                        
+
                         // If 0 -> 0 then edges are aligned already; otherwise
                     // reverse the orientation.
                         if (vMap[0] != 0)
@@ -2693,7 +2693,7 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 // Do one final loop over periodic vertices/edges to remove
                 // non-local vertices/edges from map.
                 for (auto &perIt : periodicVerts)
@@ -2703,7 +2703,7 @@ namespace Nektar
                         m_periodicVerts.insert(perIt);
                     }
                 }
-                
+
                 for (auto &perIt : periodicEdges)
                 {
                     if (locEdges.count(perIt.first) > 0)
@@ -2718,7 +2718,7 @@ namespace Nektar
                 break;
             }
         }
-            
+
         /**
          *
          */
@@ -2797,7 +2797,7 @@ namespace Nektar
                     &elmtToTrace = m_traceMap->GetElmtToTrace();
 
                 m_negatedFluxNormal.resize(2*GetExpSize());
-                
+
                 for(int i = 0; i < GetExpSize(); ++i)
                 {
 
@@ -2824,13 +2824,13 @@ namespace Nektar
             return m_negatedFluxNormal;
         }
 
-        
-        
+
+
         /**
          * \brief This method extracts the "forward" and "backward" trace
          * data from the array \a field and puts the data into output
          * vectors \a Fwd and \a Bwd.
-         * 
+         *
          * We first define the convention which defines "forwards" and
          * "backwards". First an association is made between the vertex/edge/face of
          * each element and its corresponding vertex/edge/face in the trace space
@@ -2838,7 +2838,7 @@ namespace Nektar
          * left-adjacent or right-adjacent to this trace face (see
          * Expansion2D::GetLeftAdjacentElementExp). Boundary faces are
          * always left-adjacent since left-adjacency is populated first.
-         * 
+         *
          * If the element is left-adjacent we extract the trace data
          * from \a field into the forward trace space \a Fwd; otherwise,
          * we place it in the backwards trace space \a Bwd. In this way,
@@ -2856,7 +2856,7 @@ namespace Nektar
             Array<OneD, NekDouble> &Fwd,
             Array<OneD, NekDouble> &Bwd,
             bool FillBnd,
-            bool PutFwdInBwdOnBCs, 
+            bool PutFwdInBwdOnBCs,
             bool DoExchange)
         {
             int cnt, n, e, npts, phys_offset;
@@ -2893,7 +2893,7 @@ namespace Nektar
 
                 for(cnt = n = 0; n < nexp; ++n)
                 {
-                    exp = (*m_exp)[n]; 
+                    exp = (*m_exp)[n];
                     phys_offset = GetPhys_Offset(n);
 
                     for(e = 0; e < exp->GetNtraces(); ++e, ++cnt)
@@ -2902,7 +2902,7 @@ namespace Nektar
                             elmtToTrace[n][e]->GetElmtId());
 
                         e_tmp = (m_leftAdjacentTraces[cnt])? Fwd + offset:
-                            Bwd + offset; 
+                            Bwd + offset;
 
                         exp->GetTracePhysVals(e, elmtToTrace[n][e],
                                               field + phys_offset, e_tmp);
@@ -2916,40 +2916,40 @@ namespace Nektar
             {
                 // Fill boundary conditions into missing elements
                 int id1, id2 = 0;
-                
+
                 if(PutFwdInBwdOnBCs) // just set Bwd value to be Fwd value on BCs
                 {
                     // Fill boundary conditions into missing elements
                     for (int n = cnt = 0; n < m_bndCondExpansions.size(); ++n)
                     {
-                        if (m_bndConditions[n]->GetBoundaryConditionType() == 
+                        if (m_bndConditions[n]->GetBoundaryConditionType() ==
                             SpatialDomains::eDirichlet)
                         {
                             for (e=0; e<m_bndCondExpansions[n]->GetExpSize();++e)
                             {
                                 npts = m_bndCondExpansions[n]->
-                                    GetExp(e)->GetNumPoints(0);
+                                    GetExp(e)->GetTotPoints();
                                 int id2 = m_trace->GetPhys_Offset(m_traceMap->
                                           GetBndCondIDToGlobalTraceID(cnt+e));
                                 Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
                             }
-                            
+
                             cnt += e;
                         }
-                        else if (m_bndConditions[n]->GetBoundaryConditionType() == 
-                                 SpatialDomains::eNeumann || 
-                                 m_bndConditions[n]->GetBoundaryConditionType() == 
+                        else if (m_bndConditions[n]->GetBoundaryConditionType() ==
+                                 SpatialDomains::eNeumann ||
+                                 m_bndConditions[n]->GetBoundaryConditionType() ==
                                  SpatialDomains::eRobin)
                         {
                             for (e=0; e<m_bndCondExpansions[n]->GetExpSize(); ++e)
                             {
                                 npts = m_bndCondExpansions[n]->
-                                    GetExp(e)->GetNumPoints(0);
+                                    GetExp(e)->GetTotPoints();
                                 int id2 = m_trace->GetPhys_Offset(m_traceMap->
                                           GetBndCondIDToGlobalTraceID(cnt+e));
                                 Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
                             }
-                            
+
                             cnt += e;
                         }
                         else if (m_bndConditions[n]->GetBoundaryConditionType() !=
@@ -2959,13 +2959,13 @@ namespace Nektar
                                      "Method not set up for this "
                                      "boundary condition.");
                         }
-                    }       
+                    }
                 }
                 else
                 {
                     for (cnt = n = 0; n < m_bndCondExpansions.size(); ++n)
                     {
-                        if (m_bndConditions[n]->GetBoundaryConditionType() == 
+                        if (m_bndConditions[n]->GetBoundaryConditionType() ==
                             SpatialDomains::eDirichlet)
                         {
                             for (e=0; e<m_bndCondExpansions[n]->GetExpSize(); ++e)
@@ -2979,12 +2979,12 @@ namespace Nektar
                                              &(m_bndCondExpansions[n]->GetPhys())
                                              [id1], 1, &Bwd[id2], 1);
                             }
-                            
+
                             cnt += e;
                         }
-                        else if (m_bndConditions[n]->GetBoundaryConditionType() == 
-                                 SpatialDomains::eNeumann || 
-                                 m_bndConditions[n]->GetBoundaryConditionType() == 
+                        else if (m_bndConditions[n]->GetBoundaryConditionType() ==
+                                 SpatialDomains::eNeumann ||
+                                 m_bndConditions[n]->GetBoundaryConditionType() ==
                                  SpatialDomains::eRobin)
                         {
                             for(e=0; e<m_bndCondExpansions[n]->GetExpSize(); ++e)
@@ -3000,14 +3000,14 @@ namespace Nektar
                                   m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
                                 Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
                             }
-                            
+
                             cnt += e;
                         }
                         else if (m_bndConditions[n]->GetBoundaryConditionType() ==
                                  SpatialDomains::eNotDefined)
                         {
                             // Do nothing
-                        }                
+                        }
                         else if (m_bndConditions[n]->GetBoundaryConditionType() !=
                                  SpatialDomains::ePeriodic)
                         {
@@ -3025,7 +3025,7 @@ namespace Nektar
                 m_traceMap->GetAssemblyCommDG()->PerformExchange(Fwd, Bwd);
             }
         }
-        
+
         void DisContField::v_AddTraceQuadPhysToField(
             const Array<OneD, const NekDouble> &Fwd,
             const Array<OneD, const NekDouble> &Bwd,
@@ -3038,11 +3038,11 @@ namespace Nektar
                 Array<OneD, NekDouble> edgevals(m_locTraceToTraceMap->
                                                GetNLocTracePts(), 0.0);
 
-                Array<OneD, NekDouble> invals = edgevals + 
+                Array<OneD, NekDouble> invals = edgevals +
                     m_locTraceToTraceMap->GetNFwdLocTracePts();
                 m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(
                                         1, Bwd, invals);
-                
+
                 m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(
                                         0, Fwd, edgevals);
 
@@ -3050,8 +3050,8 @@ namespace Nektar
             }
             else
             {
-                ASSERTL0(false, 
-                    "v_AddTraceQuadPhysToField not coded for eGauss_Lagrange");                
+                ASSERTL0(false,
+                    "v_AddTraceQuadPhysToField not coded for eGauss_Lagrange");
             }
         }
 
@@ -3060,7 +3060,7 @@ namespace Nektar
             ASSERTL1(m_physState == true,"local physical space is not true ");
             v_ExtractTracePhys(m_phys, outarray);
         }
-        
+
         /**
          * @brief This method extracts the trace (verts in 1D) from
          * the field @a inarray and puts the values in @a outarray.
@@ -3076,7 +3076,7 @@ namespace Nektar
          * This will not work for non-boundary expansions
          */
         void DisContField::v_ExtractTracePhys
-           (const Array<OneD, const NekDouble> &inarray, 
+           (const Array<OneD, const NekDouble> &inarray,
             Array<OneD,       NekDouble> &outarray)
         {
             LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
@@ -3104,11 +3104,11 @@ namespace Nektar
 
                 ASSERTL1(outarray.size() >= m_trace->GetNpoints(),
                          "input array is of insufficient length");
-                
+
                 for (n  = 0; n < nexp; ++n)
                 {
                     phys_offset = GetPhys_Offset(n);
-		
+
                     for (p = 0; p < (*m_exp)[n]->GetNtraces(); ++p)
                     {
                         offset = m_trace->GetPhys_Offset
@@ -3120,27 +3120,27 @@ namespace Nektar
                 }
             }
 	}
-        
+
         /**
          * @brief Add trace contributions into elemental coefficient spaces.
-         * 
+         *
          * Given some quantity \f$ \vec{Fn} \f$, which conatins this
          * routine calculates the integral
-         * 
-         * \f[ 
+         *
+         * \f[
          * \int_{\Omega^e} \vec{Fn}, \mathrm{d}S
-         * \f] 
-         * 
+         * \f]
+         *
          * and adds this to the coefficient space provided by outarray.
-         * 
+         *
          * @see Expansion3D::AddFaceNormBoundaryInt
-         * 
+         *
          * @param Fn        The trace quantities.
          * @param outarray  Resulting 3D coefficient space.
          *
          */
         void DisContField::v_AddTraceIntegral
-        (const Array<OneD, const NekDouble> &Fn, 
+        (const Array<OneD, const NekDouble> &Fn,
          Array<OneD,       NekDouble> &outarray)
         {
             if(m_expType == e1D)
@@ -3151,14 +3151,14 @@ namespace Nektar
                     &elmtToTrace = m_traceMap->GetElmtToTrace();
 
                 vector<bool> negatedFluxNormal = GetNegatedFluxNormal();
-            
+
                 for (n = 0; n < GetExpSize(); ++n)
                 {
                     // Number of coefficients on each element
                     int e_ncoeffs = (*m_exp)[n]->GetNcoeffs();
-                    
+
                     offset = GetCoeff_Offset(n);
-                    
+
                     // Implementation for every points except Gauss points
                     if ((*m_exp)[n]->GetBasis(0)->GetBasisType() !=
                         LibUtilities::eGauss_Lagrange)
@@ -3173,10 +3173,10 @@ namespace Nektar
                         {
                             outarray[offset] += Fn[t_offset];
                         }
-                        
+
                         t_offset = GetTrace()->GetCoeff_Offset
                             (elmtToTrace[n][1]->GetElmtId());
-                        
+
                         if(negatedFluxNormal[2*n+1])
                         {
                             outarray[offset+(*m_exp)[n]->GetVertexMap(1)] -=
@@ -3187,7 +3187,7 @@ namespace Nektar
                             outarray[offset+(*m_exp)[n]->GetVertexMap(1)] +=
                                 Fn[t_offset];
                         }
-                        
+
                     }
                     else
                     {
@@ -3201,20 +3201,20 @@ namespace Nektar
                                 BS_p(e_ncoeffs,LibUtilities::eGaussGaussLegendre);
                             const LibUtilities::BasisKey
                                 BS_k(LibUtilities::eGauss_Lagrange,e_ncoeffs,BS_p);
-                            
+
                             BASE  = LibUtilities::BasisManager()[BS_k];
-                            
+
                             Array<OneD, NekDouble> coords(1, 0.0);
-                            
+
                             coords[0] = -1.0;
-                            m_Ixm = BASE->GetI(coords); 
-                            
+                            m_Ixm = BASE->GetI(coords);
+
                             coords[0] = 1.0;
-                            m_Ixp = BASE->GetI(coords); 
-                            
-                            sav_ncoeffs = e_ncoeffs; 
+                            m_Ixp = BASE->GetI(coords);
+
+                            sav_ncoeffs = e_ncoeffs;
                         }
-                        
+
                         t_offset = GetTrace()->GetCoeff_Offset
                             (elmtToTrace[n][0]->GetElmtId());
 
@@ -3234,7 +3234,7 @@ namespace Nektar
                                     (m_Ixm->GetPtr())[j] * Fn[t_offset];
                             }
                         }
-                        
+
                         t_offset = GetTrace()->GetCoeff_Offset
                             (elmtToTrace[n][1]->GetElmtId());
 
@@ -3266,7 +3266,7 @@ namespace Nektar
                 {
                     Array<OneD, NekDouble> Fcoeffs(m_trace->GetNcoeffs());
                     m_trace->IProductWRTBase(Fn, Fcoeffs);
-                    
+
                     m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(Fcoeffs,
                                                                       outarray);
                 }
@@ -3276,7 +3276,7 @@ namespace Nektar
                     Array<OneD, NekDouble> e_outarray;
                     Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                         &elmtToTrace = m_traceMap->GetElmtToTrace();
-                    
+
                     for(n = 0; n < GetExpSize(); ++n)
                     {
                         offset = GetCoeff_Offset(n);
@@ -3293,21 +3293,21 @@ namespace Nektar
                 }
             }
 	}
-	
+
         /**
          * @brief Add trace contributions into elemental coefficient spaces.
-         * 
+         *
          * Given some quantity \f$ \vec{q} \f$, calculate the elemental integral
-         * 
-         * \f[ 
+         *
+         * \f[
          * \int_{\Omega^e} \vec{q}, \mathrm{d}S
-         * \f] 
-         * 
+         * \f]
+         *
          * and adds this to the coefficient space provided by
          * outarray. The value of q is determined from the routine
          * IsLeftAdjacentTrace() which if true we use Fwd else we use
          * Bwd
-         * 
+         *
          * @param Fwd       The trace quantities associated with left (fwd)
          *                  adjancent elmt.
          * @param Bwd       The trace quantities associated with right (bwd)
@@ -3315,13 +3315,13 @@ namespace Nektar
          * @param outarray  Resulting  coefficient space.
          */
         void DisContField::v_AddFwdBwdTraceIntegral(
-            const Array<OneD, const NekDouble> &Fwd, 
-            const Array<OneD, const NekDouble> &Bwd, 
+            const Array<OneD, const NekDouble> &Fwd,
+            const Array<OneD, const NekDouble> &Bwd,
                   Array<OneD,       NekDouble> &outarray)
         {
 
             ASSERTL0(m_expType != e1D, "This method is not setup or "
-                     "tested for 1D expansion"); 
+                     "tested for 1D expansion");
 
             Array<OneD, NekDouble> Coeffs(m_trace->GetNcoeffs());
 
@@ -3401,9 +3401,9 @@ namespace Nektar
                 cnt += nbndry;
             }
 
-            Array<OneD, const int> bndCondMap =  
+            Array<OneD, const int> bndCondMap =
                 m_traceMap->GetBndCondCoeffsToLocalTraceMap();
-            Array<OneD, const NekDouble> Sign = 
+            Array<OneD, const NekDouble> Sign =
                 m_traceMap->GetLocalToGlobalBndSign();
 
             // Copy Dirichlet boundary conditions and weak forcing
@@ -3414,14 +3414,14 @@ namespace Nektar
             {
                 Array<OneD, const NekDouble> bndcoeffs =
                     m_bndCondExpansions[i]->GetCoeffs();
-                
+
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                    SpatialDomains::eDirichlet)
                 {
                     for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                     {
                         locid = bndCondMap[cnt + j];
-                        loclambda[locid] = Sign[locid]*bndcoeffs[j]; 
+                        loclambda[locid] = Sign[locid]*bndcoeffs[j];
                     }
                 }
                 else if (m_bndConditions[i]->GetBoundaryConditionType() ==
@@ -3433,10 +3433,10 @@ namespace Nektar
                     for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                     {
                         locid = bndCondMap[cnt + j];
-                        bndrhs[locid] += Sign[locid]*bndcoeffs[j]; 
+                        bndrhs[locid] += Sign[locid]*bndcoeffs[j];
                     }
                 }
-                
+
                 cnt += (m_bndCondExpansions[i])->GetNcoeffs();
             }
 
@@ -3517,7 +3517,7 @@ namespace Nektar
             int npoints;
 
             MultiRegions::ExpListSharedPtr locExpList;
-            
+
             for (i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if (time == 0.0 || m_bndConditions[i]->IsTimeDependent())
@@ -3529,9 +3529,9 @@ namespace Nektar
                     Array<OneD, NekDouble> x0(npoints, 0.0);
                     Array<OneD, NekDouble> x1(npoints, 0.0);
                     Array<OneD, NekDouble> x2(npoints, 0.0);
-                    
+
                     locExpList->GetCoords(x0, x1, x2);
-                    
+
                     if (x2_in != NekConstants::kNekUnsetDouble && x3_in !=
                         NekConstants::kNekUnsetDouble)
                     {
@@ -3542,12 +3542,12 @@ namespace Nektar
                     {
                         Vmath::Fill(npoints,x2_in,x2,1);
                     }
-                    
+
                     // treat 1D expansions separately since we only
                     // require an evaluation at a point rather than
                     // any projections or inner products that are not
                     // available in a PointExp
-                    if(m_expType == e1D) 
+                    if(m_expType == e1D)
                     {
                         if (m_bndConditions[i]->GetBoundaryConditionType() ==
                             SpatialDomains::eDirichlet)
@@ -3580,7 +3580,7 @@ namespace Nektar
                                     (m_bndConditions[i])
                                     ->m_robinFunction).Evaluate
                                  (x0[0],x1[0],x2[0],time));
-                            
+
                         }
                         else if (m_bndConditions[i]->GetBoundaryConditionType()
                                  == SpatialDomains::ePeriodic)
@@ -3606,13 +3606,13 @@ namespace Nektar
                                 = std::static_pointer_cast<
                                     SpatialDomains::DirichletBoundaryCondition>
                                 (m_bndConditions[i]);
-                            
+
                             Array<OneD, NekDouble> valuesFile(npoints, 1.0),
                                 valuesExp(npoints, 1.0);
 
                             string filebcs = bcPtr->m_filename;
                             string exprbcs = bcPtr->m_expr;
-                            
+
                             if (filebcs != "")
                             {
                                 ExtractFileBCs
@@ -3622,14 +3622,14 @@ namespace Nektar
 
                             if (exprbcs != "")
                             {
-                                LibUtilities::Equation condition = 
+                                LibUtilities::Equation condition =
                                     std::static_pointer_cast<
                                      SpatialDomains::DirichletBoundaryCondition>
                                     (m_bndConditions[i])->m_dirichletCondition;
-                                
+
                                 condition.Evaluate(x0, x1, x2, time, valuesExp);
                             }
-                            
+
                             Vmath::Vmul(npoints, valuesExp, 1, valuesFile, 1,
                                         locExpList->UpdatePhys(), 1);
 
@@ -3656,10 +3656,10 @@ namespace Nektar
                                     std::static_pointer_cast<
                                      SpatialDomains::NeumannBoundaryCondition>
                                     (m_bndConditions[i])->m_neumannCondition;
-                                condition.Evaluate(x0, x1, x2, time, 
+                                condition.Evaluate(x0, x1, x2, time,
                                                locExpList->UpdatePhys());
                             }
-                            
+
                             locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                    locExpList->UpdateCoeffs());
                         }
@@ -3672,7 +3672,7 @@ namespace Nektar
                                 (m_bndConditions[i]);
 
                             string filebcs = bcPtr->m_filename;
-                            
+
                             if (filebcs != "")
                             {
                                 ExtractFileBCs
@@ -3681,14 +3681,14 @@ namespace Nektar
                             }
                             else
                             {
-                                LibUtilities::Equation condition = 
+                                LibUtilities::Equation condition =
                                     std::static_pointer_cast<
                                         SpatialDomains::RobinBoundaryCondition>
                                     (m_bndConditions[i])->m_robinFunction;
                                 condition.Evaluate(x0, x1, x2, time,
                                                locExpList->UpdatePhys());
                             }
-                            
+
                             locExpList->IProductWRTBase
                                 (locExpList->GetPhys(),
                                  locExpList->UpdateCoeffs());
@@ -3721,11 +3721,11 @@ namespace Nektar
 
             // Fill boundary conditions into missing elements
             int id2 = 0;
-            
+
             for (int n = cnt = 0; n < m_bndCondExpansions.size(); ++n)
             {
 
-                if (m_bndConditions[n]->GetBoundaryConditionType() == 
+                if (m_bndConditions[n]->GetBoundaryConditionType() ==
                         SpatialDomains::eDirichlet)
                 {
                     for (e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
@@ -3734,17 +3734,17 @@ namespace Nektar
                                 GetExp(e)->GetNumPoints(0);
                         id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondIDToGlobalTraceID(cnt+e));
-                        Vmath::Fill(npts,m_bndCondBndWeight[n], 
+                        Vmath::Fill(npts,m_bndCondBndWeight[n],
                                     &weightave[id2], 1);
                         Vmath::Fill(npts, 0.0, &weightjmp[id2], 1);
 
                     }
-                    
+
                     cnt += e;
                 }
-                else if (m_bndConditions[n]->GetBoundaryConditionType() == 
-                             SpatialDomains::eNeumann || 
-                         m_bndConditions[n]->GetBoundaryConditionType() == 
+                else if (m_bndConditions[n]->GetBoundaryConditionType() ==
+                             SpatialDomains::eNeumann ||
+                         m_bndConditions[n]->GetBoundaryConditionType() ==
                              SpatialDomains::eRobin)
                 {
                     for (e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
@@ -3754,11 +3754,11 @@ namespace Nektar
                         id2 = m_trace->GetPhys_Offset(m_traceMap->
                                         GetBndCondIDToGlobalTraceID(cnt+e));
                         Vmath::Fill(npts,
-                                    m_bndCondBndWeight[n], 
+                                    m_bndCondBndWeight[n],
                                     &weightave[id2], 1);
                         Vmath::Fill(npts, 0.0, &weightjmp[id2], 1);
                     }
-                    
+
                     cnt += e;
                 }
                 else if (m_bndConditions[n]->GetBoundaryConditionType() !=
@@ -3767,9 +3767,9 @@ namespace Nektar
                     ASSERTL0(false,
                              "Method not set up for this boundary condition.");
                 }
-            }       
+            }
         }
-        
+
 
         // Set up a list of element ids and trace ids that link to the
         // boundary conditions
@@ -3788,7 +3788,7 @@ namespace Nektar
                     int i,n,id;
                     int bid,cnt,Vid;
                     int nbcs = m_bndConditions.size();
-                    
+
                     // make sure arrays are of sufficient length
                     m_BCtoElmMap   = Array<OneD, int>(nbcs,-1);
                     m_BCtoTraceMap = Array<OneD, int>(nbcs);
@@ -3810,7 +3810,7 @@ namespace Nektar
                         for(i = 0; i < exp->GetNverts(); ++i)
                         {
                             id = exp->GetGeom()->GetVid(i);
-                            
+
                             if (VertGID.count(id) > 0)
                             {
                                 bid = VertGID.find(id)->second;
@@ -3832,29 +3832,29 @@ namespace Nektar
                     int i,n;
                     int cnt;
                     int nbcs = 0;
-                    
+
                     // Populate global ID map (takes global geometry
                     // ID to local expansion list ID).
                     for (i = 0; i < GetExpSize(); ++i)
                     {
                         globalIdMap[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
                     }
-                    
+
                     // Determine number of boundary condition expansions.
                     for(i = 0; i < m_bndConditions.size(); ++i)
                     {
                         nbcs += m_bndCondExpansions[i]->GetExpSize();
                     }
-                    
+
                     // Initialize arrays
                     m_BCtoElmMap   = Array<OneD, int>(nbcs);
                     m_BCtoTraceMap = Array<OneD, int>(nbcs);
 
                     LocalRegions::Expansion1DSharedPtr exp1d;
-                    cnt = 0; 
+                    cnt = 0;
                     for (n = 0; n < m_bndCondExpansions.size(); ++n)
                     {
-                        for (i = 0; i < m_bndCondExpansions[n]->GetExpSize(); 
+                        for (i = 0; i < m_bndCondExpansions[n]->GetExpSize();
                              ++i, ++cnt)
                         {
                             exp1d = m_bndCondExpansions[n]->GetExp(i)->
@@ -3877,7 +3877,7 @@ namespace Nektar
                     int i, n;
                     int cnt;
                     int nbcs = 0;
-                    
+
                     // Populate global ID map (takes global geometry ID to local
                     // expansion list ID).
                     LocalRegions::Expansion3DSharedPtr exp3d;
@@ -3891,7 +3891,7 @@ namespace Nektar
                     {
                         nbcs += m_bndCondExpansions[i]->GetExpSize();
                     }
-                    
+
                     // Initialize arrays
                     m_BCtoElmMap = Array<OneD, int>(nbcs);
                     m_BCtoTraceMap = Array<OneD, int>(nbcs);
@@ -3922,7 +3922,7 @@ namespace Nektar
             ElmtID = m_BCtoElmMap;
             TraceID = m_BCtoTraceMap;
         }
-        
+
         void DisContField::v_GetBndElmtExpansion(int i,
                             std::shared_ptr<ExpList> &result,
                             const bool DeclareCoeffPhysArrays)
@@ -3930,10 +3930,10 @@ namespace Nektar
             int n, cnt, nq;
             int offsetOld, offsetNew;
             std::vector<unsigned int> eIDs;
-            
+
             Array<OneD, int> ElmtID,TraceID;
             GetBoundaryToElmtMap(ElmtID,TraceID);
-            
+
             // Skip other boundary regions
             for (cnt = n = 0; n < i; ++n)
             {
@@ -3945,12 +3945,12 @@ namespace Nektar
             {
                 eIDs.push_back(ElmtID[cnt+n]);
             }
-            
+
             // Create expansion list
-            result = 
+            result =
                 MemoryManager<ExpList>::AllocateSharedPtr
                     (*this, eIDs, DeclareCoeffPhysArrays);
-            
+
             // Copy phys and coeffs to new explist
             if( DeclareCoeffPhysArrays)
             {
@@ -4011,7 +4011,7 @@ namespace Nektar
             {
                 MultiRegions::ExpListSharedPtr locExpList;
 
-                if(m_bndConditions[i]->GetBoundaryConditionType() == 
+                if(m_bndConditions[i]->GetBoundaryConditionType() ==
                        SpatialDomains::eRobin)
                 {
                     int e,elmtid;
@@ -4032,7 +4032,7 @@ namespace Nektar
                             SpatialDomains::RobinBoundaryCondition>
                         (m_bndConditions[i])->m_robinPrimitiveCoeff;
 
-                    // evalaute coefficient 
+                    // evalaute coefficient
                     coeffeqn.Evaluate(x0, x1, x2, 0.0, coeffphys);
 
                     for(e = 0; e < locExpList->GetExpSize(); ++e)
@@ -4041,9 +4041,9 @@ namespace Nektar
                             MemoryManager<RobinBCInfo>
                             ::AllocateSharedPtr(
                                 TraceID[cnt+e],
-                                Array_tmp = coeffphys + 
+                                Array_tmp = coeffphys +
                                 locExpList->GetPhys_Offset(e));
-                        
+
                         elmtid = ElmtID[cnt+e];
                         // make link list if necessary
                         if(returnval.count(elmtid) != 0)
@@ -4059,10 +4059,10 @@ namespace Nektar
             return returnval;
         }
 
-        /** 
+        /**
          * @brief Calculate the \f$ L^2 \f$ error of the \f$ Q_{\rm dir} \f$
          * derivative using the consistent DG evaluation of \f$ Q_{\rm dir} \f$.
-         * 
+         *
          * The solution provided is of the primative variation at the quadrature
          * points and the derivative is compared to the discrete derivative at
          * these points, which is likely to be undesirable unless using a much
@@ -4077,7 +4077,7 @@ namespace Nektar
             Array<OneD, const NekDouble> tmp_coeffs;
             Array<OneD, NekDouble> out_d(m_ncoeffs), out_tmp;
 
-            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> > 
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             StdRegions::Orientation edgedir;
@@ -4086,11 +4086,11 @@ namespace Nektar
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
             Array<OneD, NekDouble> loc_lambda(LocBndCoeffs), edge_lambda;
 
-            
+
             m_traceMap->GlobalToLocalBnd(m_trace->GetCoeffs(),loc_lambda);
 
             edge_lambda = loc_lambda;
-            
+
             // Calculate Q using standard DG formulation.
             for(i = cnt = 0; i < GetExpSize(); ++i)
             {
@@ -4118,7 +4118,7 @@ namespace Nektar
                                        out_tmp = out_d+cnt);
                 cnt  += (*m_exp)[i]->GetNcoeffs();
             }
-            
+
             BwdTrans(out_d,m_phys);
             Vmath::Vsub(m_npoints,m_phys,1,soln,1,m_phys,1);
             return L2(m_phys);
@@ -4127,21 +4127,21 @@ namespace Nektar
         /**
          * @brief Evaluate HDG post-processing to increase polynomial order of
          * solution.
-         * 
+         *
          * This function takes the solution (assumed to be one order lower) in
          * physical space, and postprocesses at the current polynomial order by
          * solving the system:
-         * 
+         *
          * \f[
          * \begin{aligned}
          *   (\nabla w, \nabla u^*) &= (\nabla w, u), \\
          *   \langle \nabla u^*, 1 \rangle &= \langle \nabla u, 1 \rangle
          * \end{aligned}
          * \f]
-         * 
+         *
          * where \f$ u \f$ corresponds with the current solution as stored
          * inside #m_coeffs.
-         * 
+         *
          * @param outarray  The resulting field \f$ u^* \f$.
          */
         void  DisContField::EvaluateHDGPostProcessing(
@@ -4149,7 +4149,7 @@ namespace Nektar
         {
             int    i,cnt,e,ncoeff_trace;
             Array<OneD, NekDouble> force, out_tmp, qrhs, qrhs1;
-            Array<OneD, Array< OneD, LocalRegions::ExpansionSharedPtr> > 
+            Array<OneD, Array< OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             StdRegions::Orientation edgedir;
@@ -4166,7 +4166,7 @@ namespace Nektar
 
             int num_points[] = {0,0,0};
             int num_modes [] = {0,0,0};
-            
+
             // Calculate Q using standard DG formulation.
             for(i = cnt = 0; i < GetExpSize(); ++i)
             {
@@ -4293,8 +4293,8 @@ namespace Nektar
                     ASSERTL0(false, "Wrong shape type, HDG postprocessing is not implemented");
                 };
 
-              
-                //DGDeriv    
+
+                //DGDeriv
                 // (d/dx w, d/dx q_0)
                 (*m_exp)[i]->DGDeriv(
                     0,tmp_coeffs = m_coeffs + m_coeff_offset[i],
@@ -4321,8 +4321,8 @@ namespace Nektar
                 // get matrix inverse
                 LocalRegions::MatrixKey  lapkey(StdRegions::eInvLaplacianWithUnityMean,
                                                 ppExp->DetShapeType(), *ppExp);
-                DNekScalMatSharedPtr lapsys = ppExp->GetLocMatrix(lapkey); 
-                
+                DNekScalMatSharedPtr lapsys = ppExp->GetLocMatrix(lapkey);
+
                 NekVector<NekDouble> in (nm_elmt,force,eWrapper);
                 NekVector<NekDouble> out(nm_elmt);
 

@@ -159,6 +159,8 @@ namespace NekMesh
         NEKMESH_EXPORT Module(MeshSharedPtr p_m) : m_mesh(p_m) {}
         NEKMESH_EXPORT virtual void Process() = 0;
 
+        NEKMESH_EXPORT virtual ~Module() = default;
+
         NEKMESH_EXPORT void RegisterConfig(std::string key,
                                                 std::string value = std::string());
         NEKMESH_EXPORT void PrintConfig();
@@ -177,17 +179,17 @@ namespace NekMesh
         }
 
         /// Extract element vertices
-        NEKMESH_EXPORT virtual void ProcessVertices();
+        NEKMESH_EXPORT void ProcessVertices();
         /// Extract element edges
-        NEKMESH_EXPORT virtual void ProcessEdges(bool ReprocessEdges = true);
+        NEKMESH_EXPORT void ProcessEdges(bool ReprocessEdges = true);
         /// Extract element faces
-        NEKMESH_EXPORT virtual void ProcessFaces(bool ReprocessFaces = true);
+        NEKMESH_EXPORT void ProcessFaces(bool ReprocessFaces = true);
         /// Generate element IDs
-        NEKMESH_EXPORT virtual void ProcessElements();
+        NEKMESH_EXPORT void ProcessElements();
         /// Generate composites
-        NEKMESH_EXPORT virtual void ProcessComposites();
+        NEKMESH_EXPORT void ProcessComposites();
 
-        NEKMESH_EXPORT virtual void ClearElementLinks();
+        NEKMESH_EXPORT void ClearElementLinks();
 
     protected:
         /// Mesh object

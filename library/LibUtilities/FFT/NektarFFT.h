@@ -43,43 +43,43 @@ namespace Nektar
 {
     template <typename Dim, typename DataType>
     class Array;
-    
+
 	namespace LibUtilities
 	{
 		/**
 		 * The NektarFFT class is a virtual class to manage the use of the FFT to do Fwd/Bwd transformations
 		 * and convolutions. The function here defined will link to a proper implementation of the FFT algorithm.
-		 * Depending on the user definition the functions can link to a class which is a wrapper around the FFTW 
+		 * Depending on the user definition the functions can link to a class which is a wrapper around the FFTW
 		 * library or to a specific FFT implementation.
 		 */
 		class NektarFFT;
-		
+
 		// A shared pointer to the NektarFFT object
 		typedef std::shared_ptr<NektarFFT>  NektarFFTSharedPtr;
-		
+
 		/// Datatype of the NekFactory used to instantiate classes derived from
 		/// the NektarFFT class.
 		typedef LibUtilities::NekFactory< std::string, NektarFFT, int> NektarFFTFactory;
-		
+
 		LIB_UTILITIES_EXPORT NektarFFTFactory& GetNektarFFTFactory();
 
 		class NektarFFT
 		{
 		public:
-			
+
 			/// Initialises NektarFFT class members.
 			LIB_UTILITIES_EXPORT NektarFFT(int N);
-			
+
 			// Distructor
-			LIB_UTILITIES_EXPORT  ~NektarFFT();
-			
+			LIB_UTILITIES_EXPORT  virtual ~NektarFFT();
+
 			/**
 			 * m_N is the dimension of the Fourier transform.
 			 * It means that the coefficient vector and the vector of the variable in physical
 			 * space have size m_N. It is becasue everything is managed just with real data.
 			 */
 			int m_N;
-		
+
 			/**
 			 * Forward transformation to pass from physical to coefficient space using the FFT.
 			 * This method will take the place of the Matrix-Vector multiplication
@@ -90,7 +90,7 @@ namespace Nektar
 			 * outarray  = vector in coefficient space (length N)
 			 */
 			LIB_UTILITIES_EXPORT void FFTFwdTrans(Array<OneD,NekDouble> &phy, Array<OneD,NekDouble> &coef);
-			
+
 			/**
 			 * Backward transformation to pass from coefficient to physical space using the FFT.
 			 * This method will take the place of the Matrix-Vector multiplication
@@ -101,16 +101,16 @@ namespace Nektar
 			 * outarray   = vector in physical space (length N)
 			 */
 			LIB_UTILITIES_EXPORT void FFTBwdTrans(Array<OneD,NekDouble> &coef, Array<OneD,NekDouble> &phys);
-			
+
 		protected:
-			
-			
+
+
 			virtual void v_FFTFwdTrans(Array<OneD,NekDouble> &phys, Array<OneD,NekDouble> &coef);
-						
+
 			virtual void v_FFTBwdTrans(Array<OneD,NekDouble> &coef, Array<OneD,NekDouble> &phys);
-			
+
 		private:
-			
+
 		};
 	}//end namespace LibUtilities
 }//end of namespace Nektar

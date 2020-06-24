@@ -85,28 +85,11 @@ struct ModuleWrap : public MODTYPE, public py::wrapper<MODTYPE>
     using MODTYPE::m_mesh;
 };
 
-std::string Module_GetStringConfig(std::shared_ptr<Module> mod,
-                                   const std::string &key)
+template<typename T>
+T Module_GetConfig(std::shared_ptr<Module> mod,
+                   const std::string &key)
 {
-    return mod->GetConfigOption(key).as<std::string>();
-}
-
-int Module_GetIntConfig(std::shared_ptr<Module> mod,
-                        const std::string &key)
-{
-    return mod->GetConfigOption(key).as<int>();
-}
-
-double Module_GetFloatConfig(std::shared_ptr<Module> mod,
-                             const std::string &key)
-{
-    return mod->GetConfigOption(key).as<double>();
-}
-
-bool Module_GetBoolConfig(std::shared_ptr<Module> mod,
-                          const std::string &key)
-{
-    return mod->GetConfigOption(key).as<bool>();
+    return mod->GetConfigOption(key).as<T>();
 }
 
 /**
@@ -389,10 +372,10 @@ void export_Module()
                  py::arg("key"), py::arg("value") = ""))
         .def("PrintConfig", &Module::PrintConfig)
         .def("SetDefaults", &Module::SetDefaults)
-        .def("GetStringConfig", Module_GetStringConfig)
-        .def("GetFloatConfig", Module_GetFloatConfig)
-        .def("GetIntConfig", Module_GetIntConfig)
-        .def("GetBoolConfig", Module_GetBoolConfig)
+        .def("GetStringConfig", Module_GetConfig<std::string>)
+        .def("GetFloatConfig", Module_GetConfig<double>)
+        .def("GetIntConfig", Module_GetConfig<int>)
+        .def("GetBoolConfig", Module_GetConfig<bool>)
         .def("AddConfigOption", ModuleWrap_AddConfigOption<Module>, (
                  py::arg("key"), py::arg("defValue"), py::arg("desc"),
                  py::arg("isBool") = false))

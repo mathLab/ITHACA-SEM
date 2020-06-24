@@ -41,7 +41,7 @@
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 class NodeOpti1D3D : public NodeOpti // 1D optimsation in 3D space

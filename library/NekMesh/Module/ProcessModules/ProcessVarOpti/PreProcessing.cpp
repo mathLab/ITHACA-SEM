@@ -44,7 +44,7 @@ using namespace std;
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 map<LibUtilities::ShapeType, DerivUtilSharedPtr> ProcessVarOpti::BuildDerivUtil(

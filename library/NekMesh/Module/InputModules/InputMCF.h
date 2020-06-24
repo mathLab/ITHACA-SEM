@@ -39,7 +39,7 @@
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 class InputMCF : public NekMesh::InputModule

@@ -51,7 +51,7 @@ using namespace Nektar::NekMesh;
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 ModuleKey ProcessCurve::className = GetModuleFactory().RegisterCreatorFunction(

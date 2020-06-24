@@ -50,7 +50,7 @@
 namespace Nektar
 {
 
-using namespace Utilities;
+using namespace NekMesh;
 
 namespace LibUtilities
 {

@@ -41,7 +41,7 @@
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 /// Converter for VTK files.
 class InputStar : public NekMesh::InputModule

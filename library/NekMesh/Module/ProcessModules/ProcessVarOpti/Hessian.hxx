@@ -38,7 +38,7 @@
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 /**

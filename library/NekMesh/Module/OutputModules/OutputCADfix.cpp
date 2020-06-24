@@ -45,7 +45,7 @@ using namespace Nektar::SpatialDomains;
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 ModuleKey OutputCADfix::className = GetModuleFactory().RegisterCreatorFunction(
     ModuleKey(eOutputModule, "fbm"), OutputCADfix::create,

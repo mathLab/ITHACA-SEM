@@ -42,7 +42,7 @@
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 /// Appends to CADfix database files.

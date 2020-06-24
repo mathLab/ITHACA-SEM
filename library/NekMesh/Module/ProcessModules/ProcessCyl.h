@@ -39,7 +39,7 @@
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 class ProcessCyl : public ProcessCurvedEdges

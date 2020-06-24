@@ -42,7 +42,7 @@
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 class NodeOptiJob : public Thread::ThreadJob

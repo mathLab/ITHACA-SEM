@@ -42,7 +42,7 @@ using namespace std;
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 std::mutex mtx2;

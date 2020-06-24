@@ -39,7 +39,7 @@
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 class ProcessOptiExtract : public NekMesh::ProcessModule

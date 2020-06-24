@@ -47,7 +47,7 @@ using namespace Nektar::NekMesh;
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 ModuleKey OutputVtk::className = GetModuleFactory().RegisterCreatorFunction(

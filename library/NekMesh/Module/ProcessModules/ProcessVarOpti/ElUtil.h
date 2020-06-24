@@ -46,7 +46,7 @@ typedef Nektar::LibUtilities::PtsFieldSharedPtr PtsFieldSharedPtr;
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 using namespace NekMesh;

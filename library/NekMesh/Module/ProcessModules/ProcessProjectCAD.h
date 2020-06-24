@@ -52,7 +52,7 @@ typedef std::pair<box, unsigned> boxI;
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 

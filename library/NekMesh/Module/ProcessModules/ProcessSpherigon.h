@@ -41,7 +41,7 @@
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 class ProcessSpherigon : public NekMesh::ProcessModule

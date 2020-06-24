@@ -49,7 +49,7 @@ using namespace Nektar::NekMesh;
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 ModuleKey InputNek5000::className = GetModuleFactory().RegisterCreatorFunction(

@@ -42,7 +42,7 @@
 using namespace std;
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 using namespace Nektar::NekMesh;

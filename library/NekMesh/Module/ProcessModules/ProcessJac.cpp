@@ -40,7 +40,7 @@ using namespace Nektar::NekMesh;
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 ModuleKey ProcessJac::className = GetModuleFactory().RegisterCreatorFunction(

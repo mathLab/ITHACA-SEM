@@ -54,7 +54,7 @@ using namespace Nektar::NekMesh;
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 ModuleKey InputGmsh::className = GetModuleFactory().RegisterCreatorFunction(

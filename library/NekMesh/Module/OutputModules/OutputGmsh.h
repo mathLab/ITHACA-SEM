@@ -40,10 +40,8 @@
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
-
-bool operator==(NekMesh::ElmtConfig const &p1, NekMesh::ElmtConfig const &p2);
 
 struct ElmtConfigHash : std::unary_function<NekMesh::ElmtConfig, std::size_t>
 {
@@ -53,14 +51,6 @@ struct ElmtConfigHash : std::unary_function<NekMesh::ElmtConfig, std::size_t>
             (int)el.m_e, el.m_faceNodes, el.m_volumeNodes, el.m_order);
     }
 };
-
-bool operator==(NekMesh::ElmtConfig const &p1, NekMesh::ElmtConfig const &p2)
-{
-    return p1.m_e           == p2.m_e           &&
-           p1.m_faceNodes   == p2.m_faceNodes   &&
-           p1.m_volumeNodes == p2.m_volumeNodes &&
-           p1.m_order       == p2.m_order;
-}
 
 /// Converter for Gmsh files.
 class OutputGmsh : public NekMesh::OutputModule

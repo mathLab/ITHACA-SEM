@@ -59,7 +59,7 @@ using namespace Nektar::SpatialDomains;
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 ModuleKey OutputNekpp::className1 =
     GetModuleFactory().RegisterCreatorFunction(ModuleKey(eOutputModule, "xml"),

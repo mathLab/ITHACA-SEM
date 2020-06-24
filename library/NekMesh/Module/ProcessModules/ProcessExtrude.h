@@ -39,7 +39,7 @@
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 /**
  * @brief This processing module extrudes a 2d mesh in the z direction

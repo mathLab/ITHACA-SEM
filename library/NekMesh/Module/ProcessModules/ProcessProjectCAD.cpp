@@ -48,7 +48,7 @@ using namespace Nektar::NekMesh;
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 const NekDouble prismU1[6] = {-1.0, 1.0, 1.0,-1.0,-1.0,-1.0};

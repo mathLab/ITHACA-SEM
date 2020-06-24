@@ -46,7 +46,7 @@ using namespace Nektar::NekMesh;
 
 namespace Nektar
 {
-namespace Utilities
+namespace NekMesh
 {
 
 typedef std::pair<int, int> ipair;

@@ -45,7 +45,7 @@ using namespace Nektar::NekMesh;
 namespace Nektar
 {
 static char const kDefaultState[] = "default";
-namespace Utilities
+namespace NekMesh
 {
 
 ModuleKey InputStar::className = GetModuleFactory().RegisterCreatorFunction(

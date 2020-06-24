@@ -487,22 +487,5 @@ namespace Nektar
                 }
             }
         }
-
-        NekDouble ExpList2DHomogeneous1D::v_Integral(const Array<OneD,
-            const NekDouble> &inarray)
-        {
-            NekDouble val = 0.0;
-            int       i   = 0;
-
-            for (i = 0; i < (*m_exp).size(); ++i)
-            {
-                val += (*m_exp)[i]->Integral(inarray + m_phys_offset[i]);
-            }
-            val *= m_lhom/m_homogeneousBasis->GetNumModes();
-
-            m_comm->AllReduce(val, LibUtilities::ReduceSum);
-
-            return val;
-        }
     } //end of namespace
 } //end of namespace

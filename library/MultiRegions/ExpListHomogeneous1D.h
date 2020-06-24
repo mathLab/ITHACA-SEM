@@ -261,6 +261,8 @@ namespace Nektar
 
             virtual void v_SetHomoLen(const NekDouble lhom);
 
+            NekDouble v_Integral(const Array<OneD, const NekDouble> &inarray);
+
         private:
 
             //Padding operations variables

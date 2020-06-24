@@ -592,21 +592,21 @@ namespace Nektar
             }
 
             /// This function returns the transposition class
-            /// associaed with the homogeneous expansion.
+            /// associated with the homogeneous expansion.
             LibUtilities::TranspositionSharedPtr GetTransposition(void)
             {
                 return v_GetTransposition();
             }
 
             /// This function returns the Width of homogeneous direction
-            /// associaed with the homogeneous expansion.
+            /// associated with the homogeneous expansion.
             NekDouble GetHomoLen(void)
             {
                 return v_GetHomoLen();
             }
 
             /// This function sets the Width of homogeneous direction
-            /// associaed with the homogeneous expansion.
+            /// associated with the homogeneous expansion.
             void SetHomoLen(const NekDouble lhom)
             {
                 return v_SetHomoLen(lhom);

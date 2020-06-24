@@ -19,7 +19,7 @@ s = [ SegGeom(i, 2, [p[i], p[(i+1) % 4]]) for i in range(0,4) ]
 # Create a quadratic curve along the base edge.
 curve = Curve(1, PointsType.PolyEvenlySpaced)
 curve.points = [ p[0], PointGeom(2, 4, 0.5, -0.2, 0.0), p[1] ]
-s[0] = SegGeom(i, 2, [p[0], p[1]], curve)
+s[0] = SegGeom(0, 2, [p[0], p[1]], curve)
 
 # Construct the geometry object for the square.
 geom = QuadGeom(0, s)

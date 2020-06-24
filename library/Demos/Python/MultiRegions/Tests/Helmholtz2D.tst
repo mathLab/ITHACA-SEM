@@ -5,7 +5,7 @@
     <parameters>Helmholtz2D_P7.xml</parameters>
     <processes>4</processes>
     <files>
-        <file description="Session File">../../MultiRegions/Tests/Helmholtz2D_P7.xml</file>
+        <file description="Session File">../../../MultiRegions/Tests/Helmholtz2D_P7.xml</file>
     </files>
     <metrics>
         <metric type="Linf" id="1">

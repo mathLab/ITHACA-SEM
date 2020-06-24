@@ -1,13 +1,12 @@
-import NekPy
 import sys
 from NekPy.LibUtilities import ShapeType
-from NekPy.NekMesh import Node, Element, ElmtConfig, NodeSet, Mesh, Module, ModuleType, InputModule, OutputModule
+import NekPy.NekMesh as NekMesh
 import numpy as np
 
 #
 # StructuredGrid creates a 2D structured grid of triangles or quads.
 #
-class StructuredGrid(InputModule):
+class StructuredGrid(NekMesh.InputModule):
     def __init__(self, mesh):
         super().__init__(mesh)
 
@@ -30,7 +29,8 @@ class StructuredGrid(InputModule):
         self.AddConfigOption("ly", "0", "Lower-left y-coordinate")
         self.AddConfigOption("ry", "0", "Upper-right y-coordinate")
         self.AddConfigOption("compid", "0", "Composite ID")
-        self.AddConfigOption("shape", "Quadrilateral", "Triangular/Quadrilateral Mesh")
+        self.AddConfigOption("shape", "Quadrilateral",
+                             "Triangular/Quadrilateral Mesh")
 
     def Process(self):
         # Get the input variables from our configuration options. You can use
@@ -44,7 +44,7 @@ class StructuredGrid(InputModule):
         coord_2y   = self.GetFloatConfig("ry")
         nx         = self.GetIntConfig("nx")
         ny         = self.GetIntConfig("ny")
-        comp_ID    = self.GetIntConfig("compid")
+        compID     = self.GetIntConfig("compid")
         shape_type = self.GetStringConfig("shape")
         x_points   = np.linspace(coord_1x, coord_2x, nx)
         y_points   = np.linspace(coord_1y, coord_2y, ny)
@@ -55,14 +55,14 @@ class StructuredGrid(InputModule):
         for y in range(ny):
             tmp = []
             for x in range(nx):
-                tmp.append(Node(id_cnt, x_points[x], y_points[y], 0.0))
+                tmp.append(NekMesh.Node(id_cnt, x_points[x], y_points[y], 0.0))
                 id_cnt += 1
             nodes.append(tmp)
 
         if shape_type[0].lower() == "q":
-            self._create_quadrilaterals(nodes, nx, ny, comp_ID)
+            self._create_quadrilaterals(nodes, nx, ny, compID)
         elif shape_type[0].lower() == "t":
-            self._create_triangles(nodes, nx, ny, comp_ID)
+            self._create_triangles(nodes, nx, ny, compID)
         else:
             raise ValueError("Unknown shape type: should be quad or tri.")
 
@@ -74,33 +74,36 @@ class StructuredGrid(InputModule):
         self.ProcessElements()
         self.ProcessComposites()
 
-    def _create_quadrilaterals(self, nodes, nx, ny, comp_ID):
+    def _create_quadrilaterals(self, nodes, nx, ny, compID):
+        config = NekMesh.ElmtConfig(ShapeType.Quadrilateral, 1, False, False)
         for y in range(ny-1):
             for x in range(nx-1):
-                config = ElmtConfig(ShapeType.Quadrilateral, 1, False, False)
                 self.mesh.element[2].append(
-                    Element.Create(
-                        config, # Element configuration
-                        [nodes[y][x], nodes[y][x+1], nodes[y+1][x+1], nodes[y+1][x]], # node list
-                        [comp_ID])) # tag for composite.
+                    NekMesh.Element.Create(
+                        config, [
+                            nodes[y][x], nodes[y][x+1],
+                            nodes[y+1][x+1], nodes[y+1][x]
+                        ], [compID]))
 
-    def _create_triangles(self, nodes, nx, ny, comp_ID):
+    def _create_triangles(self, nodes, nx, ny, compID):
+        config = NekMesh.ElmtConfig(ShapeType.Triangle, 1, False, False)
         for y in range(ny-1):
             for x in range(nx-1):
-                config = ElmtConfig(ShapeType.Triangle, 1, False, False)
+                self.mesh.element[2].append(
+                    NekMesh.Element.Create(
+                        config,
+                        [nodes[y][x], nodes[y+1][x+1], nodes[y+1][x]],
+                        [compID]))
+
                 self.mesh.element[2].append(
                     Element.Create(
-                    config,
-                    [nodes[y][x], nodes[y+1][x+1], nodes[y+1][x]],
-                    [comp_ID]))
-                self.mesh.element[2].append(
-                    Element.Create(
-                    config,
-                    [nodes[y][x], nodes[y][x+1], nodes[y+1][x+1]],
-                    [comp_ID]))
+                        config,
+                        [nodes[y][x], nodes[y][x+1], nodes[y+1][x+1]],
+                        [compID]))
 
 # Register our TestInput module with the factory.
-Module.Register(ModuleType.Input, "StructuredGrid", StructuredGrid)
+NekMesh.Module.Register(
+    NekMesh.ModuleType.Input, "StructuredGrid", StructuredGrid)
 
 if __name__ == '__main__':
     if len(sys.argv) != 10:
@@ -111,10 +114,19 @@ if __name__ == '__main__':
         exit(1)
 
     # Create a 'pipeline' of the input and output modules.
-    mesh = Mesh()
-    InputModule.Create(
+    mesh = NekMesh.Mesh()
+
+    # First, call our input module's create function from the NekMesh factory.
+    NekMesh.InputModule.Create(
         "StructuredGrid", mesh,
         nx = sys.argv[1], ny = sys.argv[2], lx = sys.argv[3],
         ly = sys.argv[4], rx = sys.argv[5], ry = sys.argv[6],
         compid = sys.argv[7], shape = sys.argv[8]).Process()
-    OutputModule.Create("xml", mesh, outfile=sys.argv[9]).Process()
+
+    # Then ensure there's no negative Jacobians.
+    NekMesh.ProcessModule.Create("jac", mesh, list=True).Process()
+
+    # Finally, output the resulting file (making sure to test it inside Nektar++
+    # first).
+    NekMesh.OutputModule.Create(
+        "xml", mesh, test=True, outfile=sys.argv[9]).Process()

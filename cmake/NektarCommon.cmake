@@ -304,9 +304,34 @@ MACRO(ADD_NEKPY_LIBRARY name)
     INSTALL(TARGETS _${name} DESTINATION ${CMAKE_BINARY_DIR}/NekPy/${name})
 ENDMACRO()
 
+#
+# ADD_NEKPY_EXECUTABLE(name source)
+#
+# Adds a NekPy Python-based executable. No compilation is obviously required
+# for Python scripts, so this macro simply copies the given file into the
+# appropriate install directory.
+#
 MACRO(ADD_NEKPY_EXECUTABLE name source)
     # Copy the files into binary directory.
     INSTALL(FILES ${source} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
     FILE(COPY ${source} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
     ADD_CUSTOM_TARGET(${name} SOURCES ${source})
 ENDMACRO()
+
+#
+# ADD_NEKPY_TEST(name)
+#
+# Adds a NekPy test with a given name. The Test Definition File should be in a
+# subdirectory called Tests relative to the CMakeLists.txt file calling this
+# macros. The test file should be called NAME.tst, where NAME is given as a
+# parameter to this macro.
+#
+# Arguments:
+#   - `name`: name of the test file
+#
+MACRO(ADD_NEKPY_TEST name)
+    GET_FILENAME_COMPONENT(dir ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+    ADD_TEST(NAME NekPy_${dir}_${name}
+             COMMAND Tester ${CMAKE_CURRENT_SOURCE_DIR}/Tests/${name}.tst)
+ENDMACRO(ADD_NEKPY_TEST)
+

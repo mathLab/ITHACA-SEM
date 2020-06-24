@@ -28,5 +28,8 @@ mesh.expDim = 2
 # Create a high-order surface
 ProcessModule.Create("hosurface", mesh).Process()
 
+# Dump out elemental Jacobians
+ProcessModule.Create("jac", mesh, list=True).Process()
+
 # Dump out the surface mesh.
-OutputModule.Create("xml", mesh, outfile=sys.argv[2]).Process()
+OutputModule.Create("xml", mesh, test=True, outfile=sys.argv[2]).Process()

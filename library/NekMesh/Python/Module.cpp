@@ -190,6 +190,16 @@ void Module_RegisterConfig(std::shared_ptr<Module> mod,
     mod->RegisterConfig(key, value);
 }
 
+/**
+ * @brief Add a configuration option for the module.
+ *
+ * @tparam MODTYPE   Module type (e.g. #ProcessModule).
+ * @param  mod       Module object.
+ * @param  key       Name of the configuration option.
+ * @param  defValue  Default value.
+ * @param  desc      Description of the option.
+ * @param  isBool    If true, denotes that the option will be bool-type.
+ */
 template<typename MODTYPE>
 void ModuleWrap_AddConfigOption(std::shared_ptr<ModuleWrap<MODTYPE>> mod,
                                 std::string const &key,
@@ -200,19 +210,40 @@ void ModuleWrap_AddConfigOption(std::shared_ptr<ModuleWrap<MODTYPE>> mod,
     mod->AddConfigOption(key, defValue, desc, isBool);
 }
 
+/**
+ * @brief Helper class to handle module registration.
+ *
+ * This class is used in combination with the #Module_Register function to
+ * handle module registration. In particular, given a Python object that
+ * represents the user-supplied class (which inherits from Module), we use the
+ * functions in here to handle reference management, as well as the creation of
+ * the module that can then be passed back to Python.
+ */
 class ModuleRegisterHelper
 {
 public:
+    /**
+     * @brief Constructor.
+     *
+     * @param obj  Python class object that inherits from Module.
+     */
     ModuleRegisterHelper(py::object obj) : m_obj(obj)
     {
         py::incref(obj.ptr());
     }
 
+    /**
+     * @brief Destructor.
+     */
     ~ModuleRegisterHelper()
     {
         py::decref(m_obj.ptr());
     }
 
+    /**
+     * @brief Constructs a module from a given mesh, using the Python object
+     * stored in #m_obj.
+     */
     ModuleSharedPtr create(MeshSharedPtr mesh)
     {
         py::object inst = m_obj(mesh);
@@ -220,6 +251,7 @@ public:
     }
 
 protected:
+    /// Python object that represents a subclass of Module.
     py::object m_obj;
 };
 
@@ -298,10 +330,9 @@ struct ModuleWrapConverter
 {
     ModuleWrapConverter()
     {
-        // An important bit of code which will register allow
-        // shared_ptr<MODTYPE> as something that boost::python recognises,
-        // otherwise modules constructed from the factory will not work from
-        // Python.
+        // An important bit of code which will allow shared_ptr<MODTYPE> to be
+        // interpreted as something that boost::python recognises, otherwise
+        // modules constructed from the factory will not work from Python.
         py::objects::class_value_wrapper<
             std::shared_ptr<MODTYPE>,
             py::objects::make_ptr_instance<
@@ -311,6 +342,10 @@ struct ModuleWrapConverter
     }
 };
 
+/**
+ * @brief Wrapper for subclasses of the Module class, e.g. #InputModule, which
+ * can then be inhereted from inside Python.
+ */
 template <typename MODTYPE>
 struct PythonModuleClass
 {
@@ -403,6 +438,7 @@ void export_Module()
 
     ModuleWrapConverter<Module>();
 
+    // Wrap the Module subclasses.
     PythonModuleClass<InputModule>("InputModule");
     PythonModuleClass<ProcessModule>("ProcessModule");
     PythonModuleClass<OutputModule>("OutputModule");

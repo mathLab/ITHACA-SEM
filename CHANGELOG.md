@@ -34,6 +34,7 @@ v5.1.0
 - Improved boundary layer splitting and output to CADfix (!938)
 - Improve .geo reader and support 3D geometries with voids (!1031)
 - Added r-adaptation code (!1109)
+- Added Python bindings (!1149)
 
 **BuildSystem**
 - Toggle build type (!1135)

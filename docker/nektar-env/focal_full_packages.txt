@@ -1,4 +1,5 @@
 libarpack2-dev
+libboost-numpy-dev
 libboost-python-dev
 libfftw3-dev
 libhdf5-mpi-dev
@@ -9,8 +10,7 @@ libptscotch-dev
 libtet1.5-dev
 libtriangle-dev
 mpi-default-dev
-patch
 petsc-dev
-python-dev
-python-numpy
+python3-dev
+python3-numpy
 rsh-client

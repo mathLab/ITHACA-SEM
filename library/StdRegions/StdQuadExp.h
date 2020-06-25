@@ -179,6 +179,9 @@ namespace Nektar
                 Array<OneD, NekDouble> &coords_0,
                 Array<OneD, NekDouble> &coords_1,
                 Array<OneD, NekDouble> &coords_2);
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluateBasis(
+                const Array<OneD, const NekDouble>& coords,
+                int mode);
 
             //--------------------------
             // Mappings

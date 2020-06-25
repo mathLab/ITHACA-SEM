@@ -99,7 +99,7 @@ namespace Nektar
                 virtual NekDouble v_VectorFlux(
                     const Array<OneD, Array<OneD, NekDouble> > &vec);
 
-                virtual const NormalVector &v_GetTraceNormal(const int edge) const;
+                virtual const NormalVector &v_GetTraceNormal(const int edge) const final;
                 virtual void v_ReOrientTracePhysMap(
                          const StdRegions::Orientation orient,
                          Array<OneD, int> &idmap,

@@ -51,6 +51,7 @@ stages:
     - sed "s %%BASE_IMAGE%% $CI_REGISTRY_IMAGE:$ENV_NAME g" .gitlab-ci/Dockerfile_add_repo > Dockerfile_tmp
     - export ENV_IMAGE=$(docker build -q -f Dockerfile_tmp .)
     - mkdir -p log
+    - if [ ! -d $CCACHE_DIR ]; then mkdir -p $CCACHE_DIR && chown 1000:1000 $CCACHE_DIR; fi
     - docker run --name $CONTAINER_NAME -v ccache:/cache
       -e "BUILD_TYPE=$BUILD_TYPE"
       -e "NUM_CPUS=$NUM_CPUS"
@@ -242,7 +243,14 @@ tutorials-build:
   <<: *build-env-ubuntu-template-default
   stage:
     build-env-full
-    
+
+focal-default-build-env:
+  <<: *build-env-ubuntu-template-default
+
+focal-full_py3-build-env:
+  <<: *build-env-ubuntu-template-full
+  needs: ["focal-default-build-env"]
+
 bionic-default-build-env:
   <<: *build-env-ubuntu-template-default
 
@@ -257,13 +265,14 @@ xenial-full-build-env:
   <<: *build-env-ubuntu-template-full
   needs: ["xenial-default-build-env"]
 
-trusty-default-build-env:
-  <<: *build-env-ubuntu-template-default
 
-trusty-full-build-env:
-  <<: *build-env-ubuntu-template-full
-  needs: ["trusty-default-build-env"]
+focal-default-build-and-test:
+  <<: *build-and-test-template
+  needs: ["focal-default-build-env"]
 
+focal-full_py3-build-and-test:
+  <<: *build-and-test-template
+  needs: ["focal-full_py3-build-env"]
 
 bionic-default-build-and-test:
   <<: *build-and-test-template
@@ -281,16 +290,16 @@ xenial-full-build-and-test:
   <<: *build-and-test-template
   needs: ["xenial-full-build-env"]
 
-trusty-default-build-and-test:
-  <<: *build-and-test-template
-  needs: ["trusty-default-build-env"]
-
-trusty-full-build-and-test:
-  <<: *build-and-test-template
-  needs: ["trusty-full-build-env"]
-
 
 # COMPILER WARNINGS
+focal-default-warnings:
+  <<: *compiler-warning-template
+  needs: ["focal-default-build-and-test"]
+
+focal-full_py3-warnings:
+  <<: *compiler-warning-template
+  needs: ["focal-full_py3-build-and-test"]
+
 bionic-default-warnings:
   <<: *compiler-warning-template
   needs: ["bionic-default-build-and-test"]
@@ -306,14 +315,6 @@ xenial-default-warnings:
 xenial-full-warnings:
   <<: *compiler-warning-template
   needs: ["xenial-full-build-and-test"]
-
-trusty-default-warnings:
-  <<: *compiler-warning-template
-  needs: ["trusty-default-build-and-test"]
-
-trusty-full-warnings:
-  <<: *compiler-warning-template
-  needs: ["trusty-full-build-and-test"]
 
 
 ################################################

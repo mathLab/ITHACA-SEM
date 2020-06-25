@@ -194,6 +194,10 @@ namespace Nektar
                     int &numModes1,
                     Orientation  faceOrient  = eDir1FwdDir1_Dir2FwdDir2);
 
+            STD_REGIONS_EXPORT NekDouble v_PhysEvaluateBasis(
+               const Array<OneD, const NekDouble>& coords,
+               int mode) final;
+
             
             //---------------------------------------
             // Helper functions

@@ -172,6 +172,11 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_FillMode(
                 const int                     mode,
                       Array<OneD, NekDouble>& outarray);
+
+            STD_REGIONS_EXPORT NekDouble v_PhysEvaluateBasis(
+                const Array<OneD, const NekDouble>& coords,
+                int mode) final;
+
             STD_REGIONS_EXPORT virtual void v_GetTraceNumModes(
                     const int                  fid,
                     int &numModes0,

@@ -595,11 +595,10 @@ namespace Nektar
             int   mode0 = mode%btmp0;
             int   mode1 = mode/btmp0;
 
-
             ASSERTL2(mode1 == (int)floor((1.0*mode)/btmp0),
                      "Integer Truncation not Equiv to Floor");
 
-            ASSERTL2(m_ncoeffs <= mode,
+            ASSERTL2(m_ncoeffs > mode,
                      "calling argument mode is larger than total expansion order");
 
             for(i = 0; i < nquad1; ++i)
@@ -751,6 +750,38 @@ namespace Nektar
                 Blas::Dcopy(nq0,z0.get(), 1,&coords_0[0] + i*nq0,1);
                 Vmath::Fill(nq0,z1[i],&coords_1[0] + i*nq0,1);
             }
+        }
+
+        /**
+         * @brief This function evaluates the basis function mode @p mode at a
+         * point @p coords of the domain.
+         *
+         * This function uses barycentric interpolation with the tensor
+         * product separation of the basis function to improve performance.
+         *
+         * @param coord   The coordinate inside the standard region.
+         * @param mode    The mode number to be evaluated.
+         *
+         * @return The value of the basis function @p mode at @p coords.
+         */
+        NekDouble StdQuadExp::v_PhysEvaluateBasis(
+            const Array<OneD, const NekDouble>& coords,
+            int mode)
+        {
+            ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol,
+                     "coord[0] < -1");
+            ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol,
+                     "coord[0] >  1");
+            ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol,
+                     "coord[1] < -1");
+            ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol,
+                     "coord[1] >  1");
+
+            const int nm0 = m_base[0]->GetNumModes();
+            const int nm1 = m_base[1]->GetNumModes();
+
+            return StdExpansion::BaryEvaluateBasis<0>(coords[0], mode % nm1) *
+                StdExpansion::BaryEvaluateBasis<1>(coords[1], mode / nm0);
         }
 
         //////////////

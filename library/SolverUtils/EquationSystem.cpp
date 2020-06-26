@@ -39,15 +39,11 @@
 
 #include <LocalRegions/MatrixKey.h>
 #include <LibUtilities/BasicUtils/Equation.h>
-#include <MultiRegions/ContField1D.h>
-#include <MultiRegions/ContField2D.h>
-#include <MultiRegions/ContField3D.h>
+#include <MultiRegions/ContField.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
 
-#include <MultiRegions/ExpList.h>       
-#include <MultiRegions/ExpList2D.h>     // for ExpList2D, etc
-#include <MultiRegions/ExpList3D.h>     // for ExpList3D
+#include <MultiRegions/ExpList.h>  
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
 
@@ -320,7 +316,7 @@ namespace Nektar
                             for (i = 0; i < m_fields.size(); i++)
                             {
                                 m_fields[i] = MemoryManager
-                                <MultiRegions::ContField1D>::
+                                <MultiRegions::ContField>::
                                     AllocateSharedPtr(
                                         m_session, m_graph,
                                         m_session->GetVariable(i));
@@ -427,9 +423,9 @@ namespace Nektar
                         else
                         {
                             i = 0;
-                            MultiRegions::ContField2DSharedPtr firstfield;
+                            MultiRegions::ContFieldSharedPtr firstfield;
                             firstfield = MemoryManager<MultiRegions::
-                                ContField2D>::AllocateSharedPtr(
+                                ContField>::AllocateSharedPtr(
                                     m_session, m_graph,
                                     m_session->GetVariable(i),
                                     DeclareCoeffPhysArrays,
@@ -437,12 +433,12 @@ namespace Nektar
                             m_fields[0] = firstfield;
                             for (i = 1; i < m_fields.size(); i++)
                             {
-                                if (m_graph->
-                                      SameExpansions(m_session->GetVariable(0),
-                                                     m_session->GetVariable(i)))
+                                if (m_graph->SameExpansionInfo(
+                                                m_session->GetVariable(0),
+                                                m_session->GetVariable(i)))
                                 {
                                     m_fields[i] = MemoryManager<MultiRegions::
-                                        ContField2D>::AllocateSharedPtr(
+                                        ContField>::AllocateSharedPtr(
                                             *firstfield, m_graph,
                                             m_session->GetVariable(i),
                                             DeclareCoeffPhysArrays,
@@ -451,8 +447,8 @@ namespace Nektar
                                 else
                                 {
                                     m_fields[i] = MemoryManager<MultiRegions
-                                        ::ContField2D>::AllocateSharedPtr(
-                                            m_session, m_graph,
+                                        ::ContField>::AllocateSharedPtr(
+                                            m_session, m_graph, 
                                             m_session->GetVariable(i),
                                             DeclareCoeffPhysArrays,
                                             m_checkIfSystemSingular[i]);
@@ -484,32 +480,34 @@ namespace Nektar
                 case 3:
                     {
                         i = 0;
-                        MultiRegions::ContField3DSharedPtr firstfield =
-                            MemoryManager<MultiRegions::ContField3D>
-                            ::AllocateSharedPtr(m_session, m_graph,
+                        MultiRegions::ContFieldSharedPtr firstfield =
+                            MemoryManager<MultiRegions::ContField>
+                            ::AllocateSharedPtr(m_session, m_graph, 
                                                 m_session->GetVariable(i),
+                                                DeclareCoeffPhysArrays,
                                                 m_checkIfSystemSingular[i]);
 
                         m_fields[0] = firstfield;
                         for (i = 1; i < m_fields.size(); i++)
                         {
-                            if(m_graph->SameExpansions(
-                                        m_session->GetVariable(0),
-                                        m_session->GetVariable(i)))
+                            if(m_graph->SameExpansionInfo(m_session->GetVariable(0),
+                                                           m_session->GetVariable(i)))
                             {
                                 m_fields[i] = MemoryManager<MultiRegions
-                                    ::ContField3D>::AllocateSharedPtr(
+                                    ::ContField>::AllocateSharedPtr(
                                         *firstfield, m_graph,
                                         m_session->GetVariable(i),
+                                        DeclareCoeffPhysArrays,
                                         m_checkIfSystemSingular[i]);
                             }
                             else
                             {
                                 m_fields[i] = MemoryManager<MultiRegions
-                                    ::ContField3D>::AllocateSharedPtr(
-                                        m_session, m_graph,
+                                    ::ContField>::AllocateSharedPtr(
+                                        m_session, m_graph, 
                                         m_session->GetVariable(i),
-                                        m_checkIfSystemSingular[i]);
+                                        DeclareCoeffPhysArrays,
+                                        m_checkIfSystemSingular[i]); 
                             }
                         }
 
@@ -575,7 +573,7 @@ namespace Nektar
                             for (i = 0; i < m_fields.size(); i++)
                             {
                                 m_fields[i] = MemoryManager<MultiRegions::
-                                    DisContField1D>::AllocateSharedPtr(
+                                    DisContField>::AllocateSharedPtr(
                                         m_session, m_graph,
                                         m_session->GetVariable(i));
                             }
@@ -607,7 +605,7 @@ namespace Nektar
                             for (i = 0; i < m_fields.size(); i++)
                             {
                                 m_fields[i] = MemoryManager<MultiRegions::
-                                    DisContField2D>::AllocateSharedPtr(
+                                    DisContField>::AllocateSharedPtr(
                                         m_session, m_graph,
                                         m_session->GetVariable(i));
                             }
@@ -627,7 +625,7 @@ namespace Nektar
                             for (i = 0; i < m_fields.size(); i++)
                             {
                                 m_fields[i] = MemoryManager<MultiRegions::
-                                    DisContField3D>::AllocateSharedPtr(
+                                    DisContField>::AllocateSharedPtr(
                                         m_session, m_graph,
                                         m_session->GetVariable(i));
                             }
@@ -878,9 +876,24 @@ namespace Nektar
             const LibUtilities::BasisKey  BkeyQ2(
                 LibUtilities::eModified_A, NumModes, PkeyQ2);
 
-            MultiRegions::ExpList2DSharedPtr ErrorExp =
-                MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(
-                        m_session, BkeyT1, BkeyT2, BkeyQ1, BkeyQ2, m_graph);
+            LibUtilities::BasisKeyVector Tkeys, Qkeys;
+
+            // make a copy of the ExpansionInfoMap
+            SpatialDomains::ExpansionInfoMap NewExpInfo = m_graph->GetExpansionInfo();
+            SpatialDomains::ExpansionInfoMapShPtr ExpInfo=
+                MemoryManager<SpatialDomains::ExpansionInfoMap>::AllocateSharedPtr(NewExpInfo);
+            
+            // reset new graph with new keys
+            Tkeys.push_back(BkeyT1);
+            Tkeys.push_back(BkeyT2);
+            m_graph->ResetExpansionInfoToBasisKey(ExpInfo, LibUtilities::eTriangle, Tkeys);
+            Qkeys.push_back(BkeyQ1);
+            Qkeys.push_back(BkeyQ2);
+            m_graph->ResetExpansionInfoToBasisKey(ExpInfo, LibUtilities::eQuadrilateral, Qkeys);
+                                                           
+
+            MultiRegions::ExpListSharedPtr ErrorExp =
+                MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr(m_session, NewExpInfo);
 
             int ErrorCoordim = ErrorExp->GetCoordim(0);
             int ErrorNq      = ErrorExp->GetTotPoints();

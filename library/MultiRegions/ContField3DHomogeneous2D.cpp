@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ContField3DHomogeneous2D.h>
-#include <MultiRegions/ContField1D.h>
+#include <MultiRegions/ContField.h>
 
 namespace Nektar
 {
@@ -50,12 +50,12 @@ namespace Nektar
                                    const ContField3DHomogeneous2D &In):
             DisContField3DHomogeneous2D (In,false)
         {
-
-            ContField1DSharedPtr zero_line = std::dynamic_pointer_cast<ContField1D> (In.m_lines[0]);
-
+            
+            ContFieldSharedPtr zero_line = std::dynamic_pointer_cast<ContField> (In.m_lines[0]);
+            
             for(int n = 0; n < m_lines.size(); ++n)
             {
-                m_lines[n] = MemoryManager<ContField1D>::AllocateSharedPtr(*zero_line);
+                m_lines[n] = MemoryManager<ContField>::AllocateSharedPtr(*zero_line);
             }
 
             SetCoeffPhys();
@@ -79,10 +79,10 @@ namespace Nektar
             DisContField3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing,ImpType)
         {
             int i,n,nel;
-            ContField1DSharedPtr line_zero;
+            ContFieldSharedPtr line_zero;
             SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
 
-            m_lines[0] = line_zero = MemoryManager<ContField1D>::AllocateSharedPtr(pSession,graph1D,variable,ImpType);
+            m_lines[0] = line_zero = MemoryManager<ContField>::AllocateSharedPtr(pSession,graph1D,variable,ImpType);
 
             m_exp = MemoryManager<LocalRegions::ExpansionVector>::AllocateSharedPtr();
             nel = m_lines[0]->GetExpSize();
@@ -97,7 +97,7 @@ namespace Nektar
 
             for(n = 1; n < nylines*nzlines; ++n)
             {
-                m_lines[n] = MemoryManager<ContField1D>::AllocateSharedPtr(pSession,graph1D,variable,ImpType);
+                m_lines[n] = MemoryManager<ContField>::AllocateSharedPtr(pSession,graph1D,variable,ImpType);
 
                 for(i = 0; i < nel; ++i)
                 {

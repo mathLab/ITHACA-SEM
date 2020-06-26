@@ -101,7 +101,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
     Array<OneD, Array<OneD, NekDouble> > grad(ngrad), fgrad(ngrad),
         outfield(nfields);
 
-    StdRegions::StdExpansionSharedPtr elmt;
+    LocalRegions::ExpansionSharedPtr elmt;
     StdRegions::StdExpansion2DSharedPtr bc;
     Array<OneD, int> BoundarytoElmtID, BoundarytoTraceID;
     Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> > BndExp(nfields);
@@ -167,7 +167,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
                         // Get face normals
                         const SpatialDomains::GeomFactorsSharedPtr m_metricinfo = lep->GetMetricInfo();
 
-                        const Array<OneD, const Array<OneD, NekDouble> > normals = elmt->GetFaceNormal(boundary);
+                        const Array<OneD, const Array<OneD, NekDouble> > normals = elmt->GetTraceNormal(boundary);
 
                         // initialise arrays
                         for (j = 0; j < ngrad; ++j)
@@ -185,7 +185,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
 
                             for (j = 0; j < ngrad; ++j)
                             {
-                                elmt->GetFacePhysVals(boundary, bc, grad[j],
+                                elmt->GetTracePhysVals(boundary, bc, grad[j],
                                                       fgrad[j]);
                             }
 

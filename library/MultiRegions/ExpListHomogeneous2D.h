@@ -79,9 +79,10 @@ namespace Nektar
         {
         public:
             /// Default constructor.
-            MULTI_REGIONS_EXPORT ExpListHomogeneous2D();
+            MULTI_REGIONS_EXPORT ExpListHomogeneous2D(const ExpansionType type);
 
-            MULTI_REGIONS_EXPORT ExpListHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
+            MULTI_REGIONS_EXPORT ExpListHomogeneous2D(const ExpansionType type,
+                                                      const LibUtilities::SessionReaderSharedPtr &pSession,
                                                       const LibUtilities::BasisKey &HomoBasis_y,
                                                       const LibUtilities::BasisKey &HomoBasis_z,
                                                       const NekDouble ly,

@@ -4,7 +4,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ContField3D.h>
+#include <MultiRegions/ContField.h>
 #include <SpatialDomains/MeshGraph.h>
 
 using namespace std;
@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-    MultiRegions::ContField3DSharedPtr Exp,Fce;
+    MultiRegions::ContFieldSharedPtr Exp,Fce;
     int     i, j, nq,  coordim;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Print summary of solution details
-    const SpatialDomains::ExpansionMap &expansions = graph3D->GetExpansions();
+    const SpatialDomains::ExpansionInfoMap &expansions = graph3D->GetExpansionInfos();
     LibUtilities::BasisKey bkey
                             = expansions.begin()->second->m_basisKeyVector[0];
     int nmodes =  bkey.GetNumModes();
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Define Expansion
-    Exp = MemoryManager<MultiRegions::ContField3D>
+    Exp = MemoryManager<MultiRegions::ContField>
                                 ::AllocateSharedPtr(vSession,graph3D,vSession->GetVariable(0));
     //----------------------------------------------
 
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 
     //---------------------------------------------
     // Set up ExpList1D containing the solution
-    Fce = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(*Exp);
+    Fce = MemoryManager<MultiRegions::ContField>::AllocateSharedPtr(*Exp);
     Fce->SetPhys(fce);
     //---------------------------------------------
 

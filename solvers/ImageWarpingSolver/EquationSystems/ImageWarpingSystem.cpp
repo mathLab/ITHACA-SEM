@@ -35,7 +35,7 @@
 #include <boost/core/ignore_unused.hpp>
 
 #include <ImageWarpingSolver/EquationSystems/ImageWarpingSystem.h>
-#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField.h>
 
 using namespace std;
 
@@ -70,11 +70,11 @@ namespace Nektar
 
         // Bit of a hack: redefine u/v fields so they are continuous for
         // Helmholtz solve.
-        MultiRegions::ContField2DSharedPtr fld =
-            MemoryManager<MultiRegions::ContField2D>
+        MultiRegions::ContFieldSharedPtr fld = 
+            MemoryManager<MultiRegions::ContField>
             ::AllocateSharedPtr(m_session,m_graph,m_session->GetVariable(2));
         m_fields[2] = fld;
-        m_fields[3] = MemoryManager<MultiRegions::ContField2D>
+        m_fields[3] = MemoryManager<MultiRegions::ContField>
             ::AllocateSharedPtr(*fld,m_graph,m_session->GetVariable(3));
 
         // Tell UnsteadySystem to only integrate first two fields (i.e. I and

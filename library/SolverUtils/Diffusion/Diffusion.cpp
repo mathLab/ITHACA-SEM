@@ -120,7 +120,7 @@ namespace Nektar
             m_ArtificialDiffusionVector(inarray, muvar);
 
             // BwdMuvar is left to be 0.0 according to DiffusionLDG.cpp
-            fields[0]->GetFwdBwdTracePhysNoBndFill(muvar, Fwd, Bwd);
+            fields[0]->GetFwdBwdTracePhys(muvar, Fwd, Bwd, false);
 
             for (int k = 0; k < nTracePts; ++k)
             {

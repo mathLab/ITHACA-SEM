@@ -105,9 +105,11 @@ void export_MeshGraph()
 
         .def("GetNumElements", &MeshGraph::GetNumElements)
 
-        .def("SetExpansionsToEvenlySpacedPoints",
-             &MeshGraph::SetExpansionsToEvenlySpacedPoints)
-        .def("SetExpansionsToPolyOrder", &MeshGraph::SetExpansionsToPolyOrder)
-        .def("SetExpansionsToPointOrder", &MeshGraph::SetExpansionsToPointOrder)
+        .def("SetExpansionInfosToEvenlySpacedPoints",
+             &MeshGraph::SetExpansionInfoToEvenlySpacedPoints)
+        .def("SetExpansionInfosToPolyOrder",
+             &MeshGraph::SetExpansionInfoToNumModes)
+        .def("SetExpansionInfosToPointOrder",
+             &MeshGraph::SetExpansionInfoToPointOrder)
         ;
 }

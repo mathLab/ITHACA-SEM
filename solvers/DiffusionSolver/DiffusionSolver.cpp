@@ -35,7 +35,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <SpatialDomains/MeshGraph.h>
-#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField.h>
 
 using namespace std;
 using namespace Nektar;
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     LibUtilities::SessionReaderSharedPtr session;
     LibUtilities::FieldIOSharedPtr       fld;
     SpatialDomains::MeshGraphSharedPtr   graph;
-    MultiRegions::ContField2DSharedPtr   field;
+    MultiRegions::ContFieldSharedPtr   field;
     LibUtilities::EquationSharedPtr      icond, ex_sol;
     StdRegions::ConstFactorMap           factors;
 
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
         NekDouble    epsilon     = session->GetParameter("epsilon" );
 
         // Create field
-        field = MemoryManager<MultiRegions::ContField2D>
+        field = MemoryManager<MultiRegions::ContField>
             ::AllocateSharedPtr(session, graph, session->GetVariable(0));
 
         // Get coordinates of physical points

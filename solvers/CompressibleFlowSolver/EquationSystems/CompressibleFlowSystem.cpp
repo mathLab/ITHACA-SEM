@@ -1006,7 +1006,7 @@ Array<OneD, NekDouble>  CompressibleFlowSystem::GetElmtMinHP(void)
             {
                 LocalRegions::Expansion3DSharedPtr exp3D;
                 exp3D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion3D>();
-                for (int i = 0; i < exp3D->GetNedges(); ++i)
+                for(int i = 0; i < exp3D->GetNtraces(); ++i)
                 {
                     h = min(h, exp3D->GetGeom3D()->GetEdge(i)->GetVertex(0)->
                         dist(*(exp3D->GetGeom3D()->GetEdge(i)->GetVertex(1))));
@@ -1018,7 +1018,7 @@ Array<OneD, NekDouble>  CompressibleFlowSystem::GetElmtMinHP(void)
             {
                 LocalRegions::Expansion2DSharedPtr exp2D;
                 exp2D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion2D>();
-                for (int i = 0; i < exp2D->GetNedges(); ++i)
+                for(int i = 0; i < exp2D->GetNtraces(); ++i)
                 {
                     h = min(h, exp2D->GetGeom2D()->GetEdge(i)->GetVertex(0)->
                         dist(*(exp2D->GetGeom2D()->GetEdge(i)->GetVertex(1))));

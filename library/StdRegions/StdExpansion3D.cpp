@@ -215,7 +215,7 @@ namespace Nektar
             return value;
         }
 
-
+        
         /**
          * @param   inarray     Input coefficients.
          * @param   output      Output coefficients.
@@ -323,21 +323,6 @@ namespace Nektar
             {
                 StdExpansion::HelmholtzMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
             }
-
-        }
-
-        const NormalVector & StdExpansion3D::v_GetSurfaceNormal(
-                const int id) const
-        {
-            return v_GetFaceNormal(id);
-        }
-
-        const NormalVector & StdExpansion3D::v_GetFaceNormal(const int face) const
-        {
-            auto x = m_faceNormals.find(face);
-            ASSERTL0 (x != m_faceNormals.end(),
-                      "face normal not computed.");
-            return x->second;
         }
 
         NekDouble StdExpansion3D::v_Integral(
@@ -345,10 +330,32 @@ namespace Nektar
         {
             const int nqtot = GetTotPoints();
             Array<OneD, NekDouble> tmp(GetTotPoints());
-            MultiplyByStdQuadratureMetric(inarray, tmp);
+            v_MultiplyByStdQuadratureMetric(inarray, tmp);
             return Vmath::Vsum(nqtot, tmp, 1);
         }
 
+        int StdExpansion3D::v_GetNedges(void) const
+        {
+            ASSERTL0(false, "This function is not valid or not defined");
+            return 0;
+        }
+
+        int StdExpansion3D::v_GetEdgeNcoeffs(const int i) const
+        {
+            boost::ignore_unused(i);
+            ASSERTL0(false, "This function is not valid or not defined");
+            return 0;
+        }
+
+        void StdExpansion3D::v_GetEdgeInteriorToElementMap(
+               const int                  tid,
+               Array<OneD, unsigned int> &maparray,
+               Array<OneD,          int> &signarray,
+               Orientation                traceOrient)
+        {
+            boost::ignore_unused(tid,maparray,signarray,traceOrient);
+            NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+        }
 
         LibUtilities::BasisKey EvaluateQuadFaceBasisKey(
             const int                     facedir,

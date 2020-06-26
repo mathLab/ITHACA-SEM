@@ -119,6 +119,11 @@ namespace Nektar
                 return 1;
             }
 
+            virtual int v_GetNtraces() const
+            {
+                return 0;
+            }
+            
             virtual int v_GetVertexMap(
                 int localVertexId, bool useCoeffPacking = false)
             {

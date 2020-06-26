@@ -78,6 +78,26 @@ namespace Nektar
             return val;
         }
 
+        enum IndexMapType
+            {
+                eEdgeToElement,
+                eFaceToElement,
+                eEdgeInterior,
+                eFaceInterior,
+                eBoundary,
+                eVertex
+		};
+        
+        const char* const IndexMapTypeMap[] =
+            {
+                "EdgeToElement",
+                "FaceToElement",
+                "EdgeInterior",
+                "FaceInterior",
+                "Boundary",
+                "Vertex"
+            };
+
     } // end of namespace
 } // end of namespace
 

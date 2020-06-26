@@ -86,10 +86,10 @@ void DiffusionIP::v_InitObject(
     Array<OneD, NekDouble> lengthFwd{nTracePts, 0.0};
     Array<OneD, NekDouble> lengthBwd{nTracePts, 0.0};
     pFields[0]->GetTrace()->GetElmtNormalLength(lengthFwd, lengthBwd);
+    pFields[0]->PeriodicBwdCopy(lengthFwd, lengthBwd);
 
     const MultiRegions::AssemblyMapDGSharedPtr TraceMap =
         pFields[0]->GetTraceMap();
-    pFields[0]->PeriodicBwdCopy(lengthFwd, lengthBwd);
     TraceMap->GetAssemblyCommDG()->PerformExchange(lengthFwd, lengthBwd);
 
     Vmath::Vadd(nTracePts, lengthBwd, 1, lengthFwd, 1, lengthFwd, 1);
@@ -707,8 +707,7 @@ void DiffusionIP::CalTraceNumFlux(
         {
             Vmath::Zero(nTracePts, Bwd, 1);
             Vmath::Zero(nTracePts, Fwd, 1);
-            fields[i]->GetFwdBwdTracePhysDerivSerial(nd, qfield[nd][i], Fwd,
-                                                      Bwd);
+            fields[i]->GetFwdBwdTracePhys(qfield[nd][i], Fwd,Bwd,true,true,false);
             Vmath::Svtvp(nTracePts, 0.5, Bwd, 1, numDerivBwd[nd][i], 1,
                          numDerivBwd[nd][i], 1);
             Vmath::Svtvp(nTracePts, 0.5, Fwd, 1, numDerivFwd[nd][i], 1,
@@ -795,8 +794,8 @@ void DiffusionIP::AddSecondDerivToTrace(
             for (int nd2 = nd1; nd2 < nDim; ++nd2)
             {
                 Vmath::Zero(nTracePts, Bwd, 1);
-                fields[i]->GetFwdBwdTracePhysDerivSerial(nd2, elmt2ndDerv[nd2],
-                                                         Fwd, Bwd);
+                fields[i]->GetFwdBwdTracePhys(elmt2ndDerv[nd2],Fwd,Bwd,
+                                              true, true, false);
                 Vmath::Vmul(nTracePts, tmp, 1, Bwd, 1, Bwd, 1);
                 Vmath::Vvtvp(nTracePts, m_traceNormals[nd2], 1, Bwd, 1,
                              numDerivBwd[nd1][i], 1, numDerivBwd[nd1][i], 1);

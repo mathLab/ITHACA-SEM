@@ -47,8 +47,8 @@ namespace Nektar
     namespace MultiRegions
     {
         // Forward declaration for typedefs
-        ExpListHomogeneous2D::ExpListHomogeneous2D():
-            ExpList(),
+        ExpListHomogeneous2D::ExpListHomogeneous2D(const ExpansionType type):
+            ExpList(type),
             m_homogeneousBasis_y(LibUtilities::NullBasisSharedPtr),
             m_homogeneousBasis_z(LibUtilities::NullBasisSharedPtr),
             m_lhom_y(1),
@@ -57,20 +57,25 @@ namespace Nektar
         {
         }
 
-        ExpListHomogeneous2D::ExpListHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                   const LibUtilities::BasisKey &HomoBasis_y,
-                                                   const LibUtilities::BasisKey &HomoBasis_z,
-                                                   const NekDouble lhom_y,
-                                                   const NekDouble lhom_z,
-                                                   const bool useFFT,
-                                                   const bool dealiasing):
-            ExpList(pSession),
+        ExpListHomogeneous2D::ExpListHomogeneous2D(
+                const ExpansionType type,
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const LibUtilities::BasisKey &HomoBasis_y,
+                const LibUtilities::BasisKey &HomoBasis_z, 
+                const NekDouble lhom_y,
+                const NekDouble lhom_z,
+                const bool useFFT,
+                const bool dealiasing):
+            ExpList(type),
             m_useFFT(useFFT),
             m_lhom_y(lhom_y),
             m_lhom_z(lhom_z),
             m_homogeneous2DBlockMat(MemoryManager<Homo2DBlockMatrixMap>::AllocateSharedPtr()),
             m_dealiasing(dealiasing)
         {
+            m_session = pSession;
+            m_comm    = pSession->GetComm();
+
             ASSERTL2(HomoBasis_y != LibUtilities::NullBasisKey,
                      "Homogeneous Basis in y direction is a null basis");
             ASSERTL2(HomoBasis_z != LibUtilities::NullBasisKey,

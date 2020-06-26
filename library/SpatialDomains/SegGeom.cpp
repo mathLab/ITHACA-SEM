@@ -414,10 +414,5 @@ int SegGeom::v_GetNumVerts() const
     return kNverts;
 }
 
-int SegGeom::v_GetNumEdges() const
-{
-    return kNedges;
-}
-
 }
 }

@@ -394,7 +394,7 @@ void QuadGeom::v_FillGeom()
         for (i = 0; i < kNedges; i++)
         {
             m_edges[i]->FillGeom();
-            m_xmap->GetEdgeToElementMap(i, m_eorient[i], mapArray, signArray);
+            m_xmap->GetTraceToElementMap(i,  mapArray, signArray, m_eorient[i]);
 
             nEdgeCoeffs = m_edges[i]->GetXmap()->GetNcoeffs();
 
@@ -506,6 +506,13 @@ bool QuadGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
     ClampLocCoords(stdCoord, tol);
 
     return false;
+}
+
+int QuadGeom::v_GetDir(const int i, const int j) const
+{
+    boost::ignore_unused(j); // required in 3D shapes
+
+    return i%2;
 }
 
 void QuadGeom::v_Reset(CurveMap &curvedEdges, CurveMap &curvedFaces)

@@ -8,7 +8,7 @@ import numpy as np
 #
 class StructuredGrid(NekMesh.InputModule):
     def __init__(self, mesh):
-        super().__init__(mesh)
+        super(StructuredGrid, self).__init__(mesh)
 
         # This for now only works in 2D.
         self.mesh.spaceDim = 2

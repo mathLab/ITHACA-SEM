@@ -165,7 +165,7 @@ MeshGraphSharedPtr MeshGraph::Read(
 
 void MeshGraph::FillGraph()
 {
-    ReadExpansions();
+    ReadExpansionInfo();
 
     switch (m_meshDimension)
     {
@@ -652,9 +652,9 @@ void MeshGraph::GetCompositeList(const std::string &compositeStr,
 /**
  *
  */
-const ExpansionMap &MeshGraph::GetExpansions(const std::string variable)
+const ExpansionInfoMap &MeshGraph::GetExpansionInfo(const std::string variable)
 {
-    ExpansionMapShPtr returnval;
+    ExpansionInfoMapShPtr returnval;
 
     if (m_expansionMapShPtrMap.count(variable))
     {
@@ -688,10 +688,10 @@ const ExpansionMap &MeshGraph::GetExpansions(const std::string variable)
 /**
  *
  */
-ExpansionShPtr MeshGraph::GetExpansion(GeometrySharedPtr geom,
+ExpansionInfoShPtr MeshGraph::GetExpansionInfo(GeometrySharedPtr geom,
                                        const std::string variable)
 {
-    ExpansionMapShPtr expansionMap =
+    ExpansionInfoMapShPtr expansionMap =
         m_expansionMapShPtrMap.find(variable)->second;
 
     auto iter = expansionMap->find(geom->GetGlobalID());
@@ -705,13 +705,13 @@ ExpansionShPtr MeshGraph::GetExpansion(GeometrySharedPtr geom,
 /**
  *
  */
-void MeshGraph::SetExpansions(
+void MeshGraph::SetExpansionInfo(
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef)
 {
     int i, j, k, cnt, id;
     GeometrySharedPtr geom;
 
-    ExpansionMapShPtr expansionMap;
+    ExpansionInfoMapShPtr expansionMap;
 
     // Loop over fields and determine unique fields string and
     // declare whole expansion list
@@ -722,7 +722,7 @@ void MeshGraph::SetExpansions(
             std::string field = fielddef[i]->m_fields[j];
             if (m_expansionMapShPtrMap.count(field) == 0)
             {
-                expansionMap                  = SetUpExpansionMap();
+                expansionMap                  = SetUpExpansionInfoMap();
                 m_expansionMapShPtrMap[field] = expansionMap;
 
                 // check to see if DefaultVar also not set and
@@ -1252,7 +1252,7 @@ void MeshGraph::SetExpansions(
                 default:
                     ASSERTL0(
                         false,
-                        "Need to set up for pyramid and prism 3D Expansions");
+                        "Need to set up for pyramid and prism 3D ExpansionInfo");
                     break;
             }
 
@@ -1272,14 +1272,14 @@ void MeshGraph::SetExpansions(
 /**
  *
  */
-void MeshGraph::SetExpansions(
+void MeshGraph::SetExpansionInfo(
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
     std::vector<std::vector<LibUtilities::PointsType>> &pointstype)
 {
     int i, j, k, cnt, id;
     GeometrySharedPtr geom;
 
-    ExpansionMapShPtr expansionMap;
+    ExpansionInfoMapShPtr expansionMap;
 
     // Loop over fields and determine unique fields string and
     // declare whole expansion list
@@ -1290,7 +1290,7 @@ void MeshGraph::SetExpansions(
             std::string field = fielddef[i]->m_fields[j];
             if (m_expansionMapShPtrMap.count(field) == 0)
             {
-                expansionMap                  = SetUpExpansionMap();
+                expansionMap                  = SetUpExpansionInfoMap();
                 m_expansionMapShPtrMap[field] = expansionMap;
 
                 // check to see if DefaultVar also not set and
@@ -1474,7 +1474,7 @@ void MeshGraph::SetExpansions(
                 default:
                     ASSERTL0(
                         false,
-                        "Need to set up for pyramid and prism 3D Expansions");
+                        "Need to set up for pyramid and prism 3D ExpansionInfo");
                     break;
             }
 
@@ -1496,7 +1496,7 @@ void MeshGraph::SetExpansions(
  * optional arguemt of \a npoints which redefines how many
  * points are to be used.
  */
-void MeshGraph::SetExpansionsToEvenlySpacedPoints(int npoints)
+void MeshGraph::SetExpansionInfoToEvenlySpacedPoints(int npoints)
 {
     // iterate over all defined expansions
     for (auto it = m_expansionMapShPtrMap.begin();
@@ -1538,7 +1538,7 @@ void MeshGraph::SetExpansionsToEvenlySpacedPoints(int npoints)
  *  the number of points the same difference from the number
  *  of modes as the original expansion definition
  */
-void MeshGraph::SetExpansionsToPolyOrder(int nmodes)
+void MeshGraph::SetExpansionInfoToNumModes(int nmodes)
 {
     // iterate over all defined expansions
     for (auto it = m_expansionMapShPtrMap.begin();
@@ -1571,7 +1571,7 @@ void MeshGraph::SetExpansionsToPolyOrder(int nmodes)
  *  the number of points the same difference from the number
  *  of modes as the original expansion definition
  */
-void MeshGraph::SetExpansionsToPointOrder(int npts)
+void MeshGraph::SetExpansionInfoToPointOrder(int npts)
 {
     // iterate over all defined expansions
     for (auto it = m_expansionMapShPtrMap.begin();
@@ -1611,8 +1611,14 @@ void MeshGraph::SetExpansionsToPointOrder(int npts)
 void MeshGraph::SetBasisKey(LibUtilities::ShapeType shape,
                             LibUtilities::BasisKeyVector &keys, std::string var)
 {
-    ExpansionMapShPtr expansionMap = m_expansionMapShPtrMap.find(var)->second;
+    ExpansionInfoMapShPtr expansionMap = m_expansionMapShPtrMap.find(var)->second;
+    ResetExpansionInfoToBasisKey(expansionMap, shape, keys);
+}
 
+void MeshGraph::ResetExpansionInfoToBasisKey(ExpansionInfoMapShPtr &expansionMap,
+                                             LibUtilities::ShapeType shape,
+                                             LibUtilities::BasisKeyVector &keys)
+{
     for (auto elemIter = expansionMap->begin(); elemIter != expansionMap->end();
          ++elemIter)
     {
@@ -2569,16 +2575,16 @@ LibUtilities::BasisKeyVector MeshGraph::DefineBasisKeyFromExpansionTypeHomo(
 }
 
 /**
- * Generate a single vector of Expansion structs mapping global element
+ * Generate a single vector of ExpansionInfo structs mapping global element
  * ID to a corresponding Geometry shared pointer and basis key.
  *
- * Expansion map ensures elements which appear in multiple composites
+ * ExpansionInfo map ensures elements which appear in multiple composites
  * within the domain are only listed once.
  */
-ExpansionMapShPtr MeshGraph::SetUpExpansionMap(void)
+ExpansionInfoMapShPtr MeshGraph::SetUpExpansionInfoMap(void)
 {
-    ExpansionMapShPtr returnval;
-    returnval = MemoryManager<ExpansionMap>::AllocateSharedPtr();
+    ExpansionInfoMapShPtr returnval;
+    returnval = MemoryManager<ExpansionInfoMap>::AllocateSharedPtr();
 
     for (int d = 0; d < m_domain.size(); ++d)
     {
@@ -2589,8 +2595,8 @@ ExpansionMapShPtr MeshGraph::SetUpExpansionMap(void)
                  x != compIter->second->m_geomVec.end(); ++x)
             {
                 LibUtilities::BasisKeyVector def;
-                ExpansionShPtr expansionElementShPtr =
-                    MemoryManager<Expansion>::AllocateSharedPtr(*x, def);
+                ExpansionInfoShPtr expansionElementShPtr =
+                    MemoryManager<ExpansionInfo>::AllocateSharedPtr(*x, def);
                 int id           = (*x)->GetGlobalID();
                 (*returnval)[id] = expansionElementShPtr;
             }
@@ -2599,6 +2605,8 @@ ExpansionMapShPtr MeshGraph::SetUpExpansionMap(void)
 
     return returnval;
 }
+
+
 
 /**
  * @brief Returns a string representation of a composite.
@@ -2640,7 +2648,7 @@ std::string MeshGraph::GetCompositeString(CompositeSharedPtr comp)
     return s.str();
 }
 
-void MeshGraph::ReadExpansions()
+void MeshGraph::ReadExpansionInfo()
 {
     // Find the Expansions tag
     TiXmlElement *expansionTypes = m_session->GetElement("NEKTAR/EXPANSIONS");
@@ -2655,7 +2663,7 @@ void MeshGraph::ReadExpansions()
         if (expType == "E")
         {
             int i;
-            ExpansionMapShPtr expansionMap;
+            ExpansionInfoMapShPtr expansionMap;
 
             /// Expansiontypes will contain composite,
             /// nummodes, and expansiontype (eModified, or
@@ -2688,7 +2696,7 @@ void MeshGraph::ReadExpansions()
                 if (m_expansionMapShPtrMap.count("DefaultVar") ==
                     0) // no previous definitions
                 {
-                    expansionMap = SetUpExpansionMap();
+                    expansionMap = SetUpExpansionInfoMap();
 
                     m_expansionMapShPtrMap["DefaultVar"] = expansionMap;
 
@@ -2713,7 +2721,7 @@ void MeshGraph::ReadExpansions()
                         }
                         else
                         {
-                            expansionMap = SetUpExpansionMap();
+                            expansionMap = SetUpExpansionInfoMap();
                             // make sure all fields in this search point
                             // to same expansion vector;
                             for (i = 0; i < fieldStrings.size(); ++i)
@@ -2948,7 +2956,7 @@ void MeshGraph::ReadExpansions()
         else if (expType == "H")
         {
             int i;
-            ExpansionMapShPtr expansionMap;
+            ExpansionInfoMapShPtr expansionMap;
 
             while (expansion)
             {
@@ -2971,7 +2979,7 @@ void MeshGraph::ReadExpansions()
                 if (m_expansionMapShPtrMap.count("DefaultVar") ==
                     0) // no previous definitions
                 {
-                    expansionMap = SetUpExpansionMap();
+                    expansionMap = SetUpExpansionInfoMap();
 
                     m_expansionMapShPtrMap["DefaultVar"] = expansionMap;
 
@@ -2996,7 +3004,7 @@ void MeshGraph::ReadExpansions()
                         }
                         else
                         {
-                            expansionMap = SetUpExpansionMap();
+                            expansionMap = SetUpExpansionInfoMap();
                             // make sure all fields in this search point
                             // to same expansion vector;
                             for (i = 0; i < fieldStrings.size(); ++i)
@@ -3176,7 +3184,7 @@ void MeshGraph::ReadExpansions()
             f->ImportFieldDefs(LibUtilities::XmlDataSource::create(m_session->GetDocument()),
                                fielddefs, true);
             cout << "    Number of elements: " << fielddefs.size() << endl;
-            SetExpansions(fielddefs);
+            SetExpansionInfo(fielddefs);
         }
         else if (expType == "F")
         {
@@ -3191,7 +3199,7 @@ void MeshGraph::ReadExpansions()
             LibUtilities::FieldIOSharedPtr f =
                 LibUtilities::FieldIO::CreateForFile(m_session, filenameStr);
             f->Import(filenameStr, fielddefs);
-            SetExpansions(fielddefs);
+            SetExpansionInfo(fielddefs);
         }
         else
         {
@@ -3265,7 +3273,7 @@ LibUtilities::BasisKey MeshGraph::GetEdgeBasisKey(SegGeomSharedPtr edge,
     // the edge belongs have the same type and order of
     // expansion such that no confusion can arise.
     GeometrySharedPtr geom   = elmts->at(0).first;
-    ExpansionShPtr expansion = GetExpansion(geom, variable);
+    ExpansionInfoShPtr expansion = GetExpansionInfo(geom, variable);
     int edge_id              = elmts->at(0).second;
     if (geom->GetShapeType() == LibUtilities::eTriangle)
     {
@@ -3451,7 +3459,7 @@ LibUtilities::BasisKey MeshGraph::GetFaceBasisKey(Geometry2DSharedPtr face,
     // Get the Expansion structure detailing the basis keys used for
     // this element.
     GeometrySharedPtr geom   = elements->at(0).first;
-    ExpansionShPtr expansion = GetExpansion(geom, variable);
+    ExpansionInfoShPtr expansion = GetExpansionInfo(geom, variable);
     ASSERTL0(expansion, "Could not find expansion connected to face " +
                             boost::lexical_cast<string>(face->GetGlobalID()));
     // Retrieve the geometry object of the element as a Geometry3D.

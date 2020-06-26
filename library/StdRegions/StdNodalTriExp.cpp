@@ -281,23 +281,34 @@ namespace Nektar
         // Mappings
         //--------------------------
 
-        void StdNodalTriExp::v_GetEdgeToElementMap(
-                                                   const int                  eid,
-                                                   const Orientation      edgeOrient,
-                                                   Array<OneD, unsigned int> &maparray,
-                                                   Array<OneD,          int> &signarray,
-                                                   int                        P)
-        {
-            ASSERTL0(eid >= 0 && eid <= 2,
-                     "Local Edge ID must be between 0 and 2");
 
+        int StdNodalTriExp::v_GetVertexMap(const int localVertexId,
+                                           bool useCoeffPacking)
+        {
+            boost::ignore_unused(useCoeffPacking);
+            ASSERTL0(localVertexId >= 0 && localVertexId <= 2,
+                     "Local Vertex ID must be between 0 and 2");
+            return localVertexId;
+        }
+
+        void StdNodalTriExp::v_GetTraceToElementMap(
+            const int                  eid,
+            Array<OneD, unsigned int> &maparray,
+            Array<OneD,          int> &signarray,
+            Orientation                edgeOrient,
+            int P, int Q)
+        {
+            boost::ignore_unused(Q);
+
+            ASSERTL0(eid >= 0 && eid <= 2,
+                     "Local Edge ID must be between 0 and 2"); 
+
+            const int nEdgeCoeffs = GetTraceNcoeffs(eid);
             
-            const int nEdgeCoeffs = GetEdgeNcoeffs(eid);
-            
-            ASSERTL0(P == -1 || P == nEdgeCoeffs,
-                     "Nodal triangle not set up to deal with variable"
+           ASSERTL0(P == -1 || P == nEdgeCoeffs,
+                     "Nodal triangle not set up to deal with variable "
                      "polynomial order.");
-            
+
             if (maparray.size() != nEdgeCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
@@ -319,11 +330,11 @@ namespace Nektar
             }
 
             maparray[0] = eid;
-            for (int i = 1; i < nEdgeCoeffs-1; i++)
-            {
-                maparray[i] = eid*(nEdgeCoeffs-2)+2+i; 
-            }  
             maparray[nEdgeCoeffs-1] = eid == 2 ? 0 : eid+1;
+            for (int i = 2; i < nEdgeCoeffs; i++)
+            {
+                maparray[i-1] = eid*(nEdgeCoeffs-2)+1+i; 
+            }  
 
             if (orient == eBackwards)
             {
@@ -331,26 +342,17 @@ namespace Nektar
             }
         }
 
-        int StdNodalTriExp::v_GetVertexMap(const int localVertexId,
-                                           bool useCoeffPacking)
-        {
-            boost::ignore_unused(useCoeffPacking);
-            ASSERTL0(localVertexId >= 0 && localVertexId <= 2,
-                     "Local Vertex ID must be between 0 and 2");
-            return localVertexId;
-        }
-
-        void StdNodalTriExp::v_GetEdgeInteriorMap(
+        void StdNodalTriExp::v_GetTraceInteriorToElementMap(
             const int                  eid,
-            const Orientation      edgeOrient,
             Array<OneD, unsigned int> &maparray,
-            Array<OneD,          int> &signarray)
+            Array<OneD,          int> &signarray,
+            const Orientation          edgeOrient)
         {
             ASSERTL0(eid >= 0 && eid <= 2,
-                     "Local Edge ID must be between 0 and 2");
-
-            const int nEdgeIntCoeffs = GetEdgeNcoeffs(eid)-2;
-
+                     "Local Edge ID must be between 0 and 2"); 
+            
+            const int nEdgeIntCoeffs = GetTraceNcoeffs(eid)-2;
+            
             if (maparray.size() != nEdgeIntCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
@@ -373,8 +375,8 @@ namespace Nektar
 
             for (int i = 0; i < nEdgeIntCoeffs; i++)
             {
-                maparray[i] = eid*nEdgeIntCoeffs+3+i;
-            }
+                maparray[i] = eid*nEdgeIntCoeffs+3+i; 
+            }  
 
             if (orient == eBackwards)
             {

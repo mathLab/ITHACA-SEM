@@ -747,21 +747,21 @@ void TetGeom::v_GenGeomFactors()
 void TetGeom::SetUpXmap()
 {
     vector<int> tmp;
-    tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(0));
+    tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(0));
     int order0 = *max_element(tmp.begin(), tmp.end());
 
     tmp.clear();
     tmp.push_back(order0);
-    tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(1));
-    tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(2));
+    tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(1));
+    tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(2));
     int order1 = *max_element(tmp.begin(), tmp.end());
 
     tmp.clear();
     tmp.push_back(order0);
     tmp.push_back(order1);
-    tmp.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs(1));
-    tmp.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs(2));
-    tmp.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs(1));
+    tmp.push_back(m_faces[1]->GetXmap()->GetTraceNcoeffs(1));
+    tmp.push_back(m_faces[1]->GetXmap()->GetTraceNcoeffs(2));
+    tmp.push_back(m_faces[3]->GetXmap()->GetTraceNcoeffs(1));
     int order2 = *max_element(tmp.begin(), tmp.end());
 
     const LibUtilities::BasisKey A(

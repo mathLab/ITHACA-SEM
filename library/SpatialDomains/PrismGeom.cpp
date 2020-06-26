@@ -843,41 +843,41 @@ void PrismGeom::SetUpXmap()
 
     if (m_forient[0] < 9)
     {
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(0));
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(2));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(0));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(2));
         order0 = *max_element(tmp.begin(), tmp.end());
     }
     else
     {
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(1));
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(3));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(1));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(3));
         order0 = *max_element(tmp.begin(), tmp.end());
     }
 
     if (m_forient[0] < 9)
     {
         tmp.clear();
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(1));
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(3));
-        tmp.push_back(m_faces[2]->GetXmap()->GetEdgeNcoeffs(2));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(1));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(3));
+        tmp.push_back(m_faces[2]->GetXmap()->GetTraceNcoeffs(2));
         order1 = *max_element(tmp.begin(), tmp.end());
     }
     else
     {
         tmp.clear();
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(0));
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(2));
-        tmp.push_back(m_faces[2]->GetXmap()->GetEdgeNcoeffs(2));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(0));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(2));
+        tmp.push_back(m_faces[2]->GetXmap()->GetTraceNcoeffs(2));
         order1 = *max_element(tmp.begin(), tmp.end());
     }
 
     tmp.clear();
     tmp.push_back(order0);
     tmp.push_back(order1);
-    tmp.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs(1));
-    tmp.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs(2));
-    tmp.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs(1));
-    tmp.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs(2));
+    tmp.push_back(m_faces[1]->GetXmap()->GetTraceNcoeffs(1));
+    tmp.push_back(m_faces[1]->GetXmap()->GetTraceNcoeffs(2));
+    tmp.push_back(m_faces[3]->GetXmap()->GetTraceNcoeffs(1));
+    tmp.push_back(m_faces[3]->GetXmap()->GetTraceNcoeffs(2));
     int order2 = *max_element(tmp.begin(), tmp.end());
 
     const LibUtilities::BasisKey A(

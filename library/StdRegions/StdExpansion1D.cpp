@@ -93,23 +93,5 @@ namespace Nektar
         return StdExpansion::BaryEvaluate<0>(Lcoord[0], &physvals[0]);
     }
 
-    void StdExpansion1D::v_SetUpPhysNormals(const int vertex)
-    {
-        ComputeVertexNormal(vertex);
-    }
-
-    const NormalVector & StdExpansion1D::v_GetSurfaceNormal(const int id) const
-    {
-        return v_GetVertexNormal(id);
-    }
-
-    const NormalVector & StdExpansion1D::v_GetVertexNormal(const int vertex) const
-    {
-        auto x = m_vertexNormals.find(vertex);
-        ASSERTL0 (x != m_vertexNormals.end(),
-                  "vertex normal not computed.");
-        return x->second;
-    }
-
     }//end namespace
 }//end namespace

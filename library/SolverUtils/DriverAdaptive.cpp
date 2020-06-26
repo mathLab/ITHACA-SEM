@@ -349,7 +349,7 @@ void DriverAdaptive::v_Execute(ostream &out)
 
         // Write new expansion section to the session reader and re-read graph.
         ReplaceExpansion(fields, deltaP);
-        m_graph->ReadExpansions();
+        m_graph->ReadExpansionInfo();
 
         // Reset GlobalLinSys Manager to avoid using too much memory
         //

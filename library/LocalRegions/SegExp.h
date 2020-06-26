@@ -155,7 +155,7 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual void v_AddVertexPhysVals(
                         const int                 vertex,
                         const NekDouble           &inarray,
-                        Array<OneD, NekDouble>   &outarray) override;
+                        Array<OneD, NekDouble>   &outarray);
             
             LOCAL_REGIONS_EXPORT virtual void v_GetTracePhysVals(
                         const int edge,
@@ -164,6 +164,9 @@ namespace Nektar
                         Array<OneD,       NekDouble> &outarray,
                         StdRegions::Orientation  orient) override;
 
+            LOCAL_REGIONS_EXPORT virtual void v_GetTracePhysMap(
+                         const int vertex,
+                         Array<OneD, int> &map) override;
             //-----------------------------
             // Helper functions
             //-----------------------------
@@ -174,10 +177,6 @@ namespace Nektar
                 StdRegions::StdExpansionSharedPtr v_GetLinStdExp(void) const override;
             
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim() override;
-
-            LOCAL_REGIONS_EXPORT virtual void v_SetCoeffsToOrientation(
-                Array<OneD, NekDouble> &coeffs,
-                StdRegions::Orientation dir) override;
 
             LOCAL_REGIONS_EXPORT virtual void v_SetCoeffsToOrientation(
                 StdRegions::Orientation dir,
@@ -195,10 +194,11 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT virtual int v_NumDGBndryCoeffs() const override;
 
-            LOCAL_REGIONS_EXPORT virtual void v_ComputeVertexNormal(
-                 const int vertex) override;
+            LOCAL_REGIONS_EXPORT virtual void v_ComputeTraceNormal(
+                           const int vertex) override; 
 
-            LOCAL_REGIONS_EXPORT virtual SpatialDomains::GeomType  v_MetricInfoType();
+            LOCAL_REGIONS_EXPORT virtual SpatialDomains::GeomType
+                                             v_MetricInfoType();
 
             LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
                 const NekDouble *data,
@@ -208,7 +208,8 @@ namespace Nektar
                 std::vector<LibUtilities::BasisType> &fromType) override;
 
             LOCAL_REGIONS_EXPORT virtual const
-                    Array<OneD, const NekDouble>&  v_GetPhysNormals(void) override;
+                    Array<OneD, const NekDouble>&
+                                     v_GetPhysNormals(void) override;
 
             //-----------------------------
             // Operator creation functions

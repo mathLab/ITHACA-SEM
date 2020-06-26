@@ -39,7 +39,6 @@
 #include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
-#include <MultiRegions/ExpList2D.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 //#include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 
@@ -111,7 +110,8 @@ namespace Nektar
                                 bool IsLinearNSEquation = true);
         
         
-        const SpatialDomains::ExpansionMap &GenPressureExp(const SpatialDomains::ExpansionMap &VelExp);
+        const SpatialDomains::ExpansionInfoMap
+            &GenPressureExp(const SpatialDomains::ExpansionInfoMap &VelExp);
         
         void Solve(void);
         

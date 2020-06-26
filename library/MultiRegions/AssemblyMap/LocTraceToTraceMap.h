@@ -164,20 +164,13 @@ public:
     // Destructor
     MULTI_REGIONS_EXPORT virtual ~LocTraceToTraceMap();
 
-    MULTI_REGIONS_EXPORT void Setup2D(
+    MULTI_REGIONS_EXPORT void Setup(
         const ExpList &locExp,
         const ExpListSharedPtr &trace,
         const Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
-            &elmtToTrace,
+        &elmtToTrace,
         const std::vector<bool> &LeftAdjacents);
-
-    MULTI_REGIONS_EXPORT void Setup3D(
-        const ExpList &locExp,
-        const ExpListSharedPtr &trace,
-        const Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
-            &elmtToTrace,
-        const std::vector<bool> &LeftAdjacents);
-
+        
     MULTI_REGIONS_EXPORT void LocTracesFromField(
         const Array<OneD, const NekDouble> &field,
         Array<OneD, NekDouble> faces);
@@ -189,7 +182,12 @@ public:
         const Array<OneD, const NekDouble>  &faces,
         Array<OneD, NekDouble>              &field);
 
-    MULTI_REGIONS_EXPORT void InterpLocEdgesToTrace(
+    MULTI_REGIONS_EXPORT void InterpLocTracesToTrace(
+        const int dir,
+        const Array<OneD, const NekDouble> &loctraces,
+        Array<OneD, NekDouble> traces);
+
+    MULTI_REGIONS_EXPORT inline void InterpLocEdgesToTrace(
         const int dir,
         const Array<OneD, const NekDouble> &locfaces,
         Array<OneD, NekDouble> edges);
@@ -199,6 +197,7 @@ public:
         const int                           dir,
         const Array<OneD, const NekDouble>  &edges,
         Array<OneD, NekDouble>              &locedges);
+
     MULTI_REGIONS_EXPORT void InterpLocFacesToTrace(
         const int dir,
         const Array<OneD, const NekDouble> &locfaces,
@@ -290,6 +289,8 @@ public:
         const ExpListSharedPtr &trace);
 
 private:
+    /// Expansion Dimension we have setup for trace mapping. 
+    int m_expdim;
     /// The number of forward trace points. A local trace element is `forward'
     /// if it is the side selected for the global trace.
     int m_nFwdLocTracePts;

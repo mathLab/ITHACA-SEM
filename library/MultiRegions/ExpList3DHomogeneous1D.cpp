@@ -29,12 +29,12 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // Description: An ExpList which is homogeneous in 1 direction and so
-// uses much of the functionality from a ExpList2D and its daughters
+// uses much of the functionality from a ExpList and its daughters
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
-#include <MultiRegions/ExpList2D.h>
+#include <MultiRegions/ExpList.h>
 
 using namespace std;
 
@@ -44,9 +44,8 @@ namespace Nektar
     {
         // Forward declaration for typedefs
         ExpList3DHomogeneous1D::ExpList3DHomogeneous1D():
-            ExpListHomogeneous1D()
+            ExpListHomogeneous1D(e3DH1D)
         {
-            SetExpType(e3DH1D);
         }
 
         ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(
@@ -55,12 +54,12 @@ namespace Nektar
             const NekDouble lhom,
             const bool useFFT,
             const bool dealiasing):
-            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
+            ExpListHomogeneous1D(e3DH1D, pSession,HomoBasis,
+                                 lhom,useFFT,dealiasing)
         {
-            SetExpType(e3DH1D);
         }
 
-        // Constructor for ExpList3DHomogeneous1D to act as a Explist2D field
+        // Constructor for ExpList3DHomogeneous1D to act as a Explist field
         ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const LibUtilities::BasisKey &HomoBasis,
@@ -70,41 +69,40 @@ namespace Nektar
             const SpatialDomains::MeshGraphSharedPtr &graph2D,
             const std::string &var,
             const Collections::ImplementationType ImpType):
-            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
+            ExpListHomogeneous1D(e3DH1D, pSession,HomoBasis,
+                                 lhom,useFFT,dealiasing)
         {
-            SetExpType(e3DH1D);
-
+            GenExpList3DHomogeneous1D(graph2D->GetExpansionInfo(var),ImpType);
+            m_expType = e3DH1D;
             m_graph = graph2D;
-
-            GenExpList3DHomogeneous1D(graph2D->GetExpansions(var),ImpType);
         }
-
-        // Constructor for ExpList3DHomogeneous1D to act as a Explist2D field
+        
+        // Constructor for ExpList3DHomogeneous1D to act as a Explist field
         ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const LibUtilities::BasisKey &HomoBasis,
             const NekDouble lhom,
             const bool useFFT,
             const bool dealiasing,
-            const SpatialDomains::ExpansionMap  &expansions,
-            const Collections::ImplementationType ImpType):
-            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
+            const SpatialDomains::ExpansionInfoMap  &expansions,
+            const Collections::ImplementationType ImpType): 
+            ExpListHomogeneous1D(e3DH1D, pSession,HomoBasis,
+                                 lhom,useFFT,dealiasing)
         {
-            SetExpType(e3DH1D);
-
             GenExpList3DHomogeneous1D(expansions,ImpType);
         }
 
         void ExpList3DHomogeneous1D::GenExpList3DHomogeneous1D(
-                      const SpatialDomains::ExpansionMap &expansions,
+                      const SpatialDomains::ExpansionInfoMap &expansions,
                       const Collections::ImplementationType ImpType)
         {
             int  n,j,nel;
             bool False = false;
-            ExpList2DSharedPtr plane_zero;
+            ExpListSharedPtr plane_zero;
 
             // note that nzplanes can be larger than nzmodes
-            m_planes[0] = plane_zero = MemoryManager<ExpList2D>::AllocateSharedPtr(m_session, expansions, False,ImpType);
+            m_planes[0] = plane_zero = MemoryManager<ExpList>::AllocateSharedPtr
+                (m_session, expansions, false, ImpType);
 
             m_exp = MemoryManager<LocalRegions::ExpansionVector>::AllocateSharedPtr();
             nel = m_planes[0]->GetExpSize();
@@ -116,7 +114,8 @@ namespace Nektar
 
             for(n = 1; n < m_planes.size(); ++n)
             {
-                m_planes[n] = MemoryManager<ExpList2D>::AllocateSharedPtr(*plane_zero,False);
+                m_planes[n] = MemoryManager<ExpList>::AllocateSharedPtr
+                    (*plane_zero,False);
                 for(j = 0; j < nel; ++j)
                 {
                     (*m_exp).push_back((*m_exp)[j]);
@@ -133,16 +132,16 @@ namespace Nektar
         ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const ExpList3DHomogeneous1D &In, bool DeclarePlanesSetCoeffPhys):
             ExpListHomogeneous1D(In)
         {
-            SetExpType(e3DH1D);
-
             if(DeclarePlanesSetCoeffPhys)
             {
                 bool False = false;
-                ExpList2DSharedPtr zero_plane = std::dynamic_pointer_cast<ExpList2D> (In.m_planes[0]);
+                ExpListSharedPtr zero_plane = std::dynamic_pointer_cast<ExpList>
+                    (In.m_planes[0]);
 
                 for(int n = 0; n < m_planes.size(); ++n)
                 {
-                    m_planes[n] = MemoryManager<ExpList2D>::AllocateSharedPtr(*zero_plane,False);
+                    m_planes[n] = MemoryManager<ExpList>::AllocateSharedPtr
+                        (*zero_plane,False);
                 }
 
                 SetCoeffPhys();
@@ -160,8 +159,6 @@ namespace Nektar
                         const Collections::ImplementationType ImpType):
             ExpListHomogeneous1D(In, eIDs)
         {
-            SetExpType(e3DH1D);
-
             if(DeclarePlanesSetCoeffPhys)
             {
                 bool False = false;
@@ -172,16 +169,18 @@ namespace Nektar
                 {
                     eIDsPlane.push_back(eIDs[i]);
                 }
-
-                ExpList2DSharedPtr zero_plane_old =
-                        std::dynamic_pointer_cast<ExpList2D> (In.m_planes[0]);
-
-                ExpList2DSharedPtr zero_plane =
-                    MemoryManager<ExpList2D>::AllocateSharedPtr(*(zero_plane_old), eIDsPlane, ImpType);
+                
+                ExpListSharedPtr zero_plane_old =
+                        std::dynamic_pointer_cast<ExpList> (In.m_planes[0]);
+                
+                ExpListSharedPtr zero_plane = 
+                    MemoryManager<ExpList>::AllocateSharedPtr
+                    (*(zero_plane_old), eIDsPlane, ImpType);
 
                 for(int n = 0; n < m_planes.size(); ++n)
                 {
-                    m_planes[n] = MemoryManager<ExpList2D>::AllocateSharedPtr(*zero_plane,False);
+                    m_planes[n] = MemoryManager<ExpList>::AllocateSharedPtr
+                        (*zero_plane,False);
                 }
 
                 SetCoeffPhys();

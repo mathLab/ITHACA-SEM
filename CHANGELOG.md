@@ -18,6 +18,7 @@ v5.1.0
   for parallel DG simulations (!1112)
   num_elements with size() (!1127, !1137, !1141)
 - Add phifile module to compute shape functions for the SPM solver (!1065)
+- Fix mean and innerProduct modules in 3DH1D cases (!1157)
 
 **CardiacEPSolver**
 - Added additional parameter sets to Fenton-Karma model (!1119)

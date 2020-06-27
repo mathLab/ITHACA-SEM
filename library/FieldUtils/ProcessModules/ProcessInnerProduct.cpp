@@ -244,21 +244,8 @@ NekDouble ProcessInnerProduct::IProduct(
         Vmath::Vmul(nphys, SaveFld[j], 1, m_f->m_exp[fid]->GetPhys(), 1,
                     m_f->m_exp[fid]->UpdatePhys(), 1);
 
-        // NekDouble iprod =
-        //     m_f->m_exp[fid]->PhysIntegral(m_f->m_exp[fid]->UpdatePhys());
         NekDouble iprod =
             m_f->m_exp[fid]->Integral(m_f->m_exp[fid]->UpdatePhys());
-        // // PhysIntegral in the case of homogeneous expansion integrates on
-        // each
-        // // spectral/hp plane and adds all contributions so needs adjustment
-        // if(m_f->m_numHomogeneousDir==1)
-        // {
-        //     iprod *= m_f->m_exp[fid]->GetHomoLen() /
-        //              m_f->m_exp[fid]->GetHomoNumPlanes();
-        // }
-
-        // // put in parallel summation
-        // m_f->m_comm->AllReduce(iprod, Nektar::LibUtilities::ReduceSum);
 
         totiprod += iprod;
     }

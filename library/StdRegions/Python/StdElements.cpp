@@ -82,13 +82,5 @@ void export_StdElements()
                    "StdHexExp", py::init<const LibUtilities::BasisKey&,
                    const LibUtilities::BasisKey&,
                    const LibUtilities::BasisKey&>());
-
-    NEKPY_SHPTR_FIX(StdSegExp, StdExpansion);
-    NEKPY_SHPTR_FIX(StdQuadExp, StdExpansion);
-    NEKPY_SHPTR_FIX(StdTriExp, StdExpansion);
-    NEKPY_SHPTR_FIX(StdTetExp, StdExpansion);
-    NEKPY_SHPTR_FIX(StdPrismExp, StdExpansion);
-    NEKPY_SHPTR_FIX(StdPyrExp, StdExpansion);
-    NEKPY_SHPTR_FIX(StdHexExp, StdExpansion);
 }
 

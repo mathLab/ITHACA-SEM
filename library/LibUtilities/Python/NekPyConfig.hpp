@@ -110,5 +110,3 @@ namespace np = boost::numpy;
                              PyUnicode_FromString(DOCSTRING));     \
     }
 #endif
-
-#define NEKPY_SHPTR_FIX(SOURCE, TARGET)

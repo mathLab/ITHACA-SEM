@@ -34,6 +34,15 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <boost/version.hpp>
+#include <memory>
+
+// Boost 1.62 and earlier don't have native support for std::shared_ptr. This
+// includes various patches that are pulled from the git changeset 97e4b34a15
+// from the main boost.python github repository, which is where fixes were
+// added to include std::shared_ptr support.
+#if BOOST_VERSION < 106300
+#include "ShPtrFixes.hpp"
+#endif
 
 #ifdef BOOST_HAS_NUMPY
 
@@ -102,12 +111,4 @@ namespace np = boost::numpy;
     }
 #endif
 
-// Boost 1.62 and earlier don't have native support for std::shared_ptr.
-#if BOOST_VERSION < 106300
-#define NEKPY_SHPTR_FIX(SOURCE,TARGET)                             \
-    py::implicitly_convertible<std::shared_ptr<SOURCE>,            \
-                               std::shared_ptr<TARGET>>();
-#else
-#define NEKPY_SHPTR_FIX(SOURCE,TARGET)
-#endif
-
+#define NEKPY_SHPTR_FIX(SOURCE, TARGET)

@@ -583,20 +583,24 @@ struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, D
 
         const vec_t* df_ptr;
         const vec_t* jac_ptr;
-        for(int e =0; e < this->m_nBlocks; ++e)
+
+        std::vector<vec_t, allocator<vec_t>> Z0 = this->m_Z[0];
+        std::vector<vec_t, allocator<vec_t>> Z1 = this->m_Z[1];
+
+        for (int e =0; e < this->m_nBlocks; ++e)
         {
             // Jacobian
             jac_ptr = &(this->m_jac[dJSize*e]);
 
             // Derivative factor
-            df_ptr = &(this->m_df[e*dfSize]);
+            df_ptr = &(this->m_df[dfSize*e]);
 
             // Load and transpose data
             load_interleave(inptr0, nqTot, tmpIn0);
             load_interleave(inptr1, nqTot, tmpIn1);
 
             vec_t df0, df1, df2, df3;
-            if(!DEFORMED)
+            if (!DEFORMED)
             {
                 df0 = df_ptr[0];
                 df1 = df_ptr[1];
@@ -604,8 +608,6 @@ struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, D
                 df3 = df_ptr[3];
             }
 
-            std::vector<vec_t, allocator<vec_t>> Z0 = this->m_Z[0];
-            std::vector<vec_t, allocator<vec_t>> Z1 = this->m_Z[1];
             size_t cnt_ji = 0;
             for (size_t j = 0; j < NQ1; ++j)
             {

@@ -539,7 +539,7 @@ protected:
             {
                 for (int dir = 0; dir < n_df; ++dir)
                 {
-                    for(int j = 0; j < vec_t::width; ++j)
+                    for (int j = 0; j < vec_t::width; ++j)
                     {
                         vec[j] = df[dir][vec_t::width*e + j];
                     }

@@ -646,7 +646,7 @@ namespace Nektar
         /**
          * \brief Returns the physical values at the quadrature points of a face
          */
-        void TetExp::v_GetFacePhysMap(const int                face,
+        void TetExp::v_GetTracePhysMap(const int                face,
                                       Array<OneD, int>        &outarray)
         {
             int nquad0 = m_base[0]->GetNumPoints();
@@ -736,7 +736,7 @@ namespace Nektar
         /**
 	 * \brief Compute the normal of a triangular face
 	 */
-        void TetExp::v_ComputeFaceNormal(const int face)
+        void TetExp::v_ComputeTraceNormal(const int face)
         {
             int i;
             const SpatialDomains::GeomFactorsSharedPtr &geomFactors =
@@ -757,8 +757,8 @@ namespace Nektar
             const Array<TwoD, const NekDouble> &df   = geomFactors->GetDerivFactors(ptsKeys);
             const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac(ptsKeys);
 
-            LibUtilities::BasisKey tobasis0 = DetFaceBasisKey(face,0);
-            LibUtilities::BasisKey tobasis1 = DetFaceBasisKey(face,1);
+            LibUtilities::BasisKey tobasis0 = GetTraceBasisKey(face,0);
+            LibUtilities::BasisKey tobasis1 = GetTraceBasisKey(face,1);
 
             // number of face quadrature points
             int nq_face = tobasis0.GetNumPoints()*tobasis1.GetNumPoints();

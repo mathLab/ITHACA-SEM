@@ -153,7 +153,7 @@ namespace Nektar
                         // add local matrix contribution
                         for(rBC = r.second;rBC; rBC = rBC->next)
                         {
-                            vExp->AddRobinEdgeContribution(rBC->m_robinID,
+                            vExp->AddRobinTraceContribution(rBC->m_robinID,
                                                            rBC->m_robinPrimitiveCoeffs,
                                                            pLocOutput + offset,
                                                            tmploc = tmp + offset);

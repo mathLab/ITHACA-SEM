@@ -35,7 +35,6 @@
 #include <LibUtilities/Python/NekPyConfig.hpp>
 
 void export_ExpList();
-void export_ExpList2D();
 void export_DisContField();
 void export_ContField();
 
@@ -44,7 +43,6 @@ BOOST_PYTHON_MODULE(_MultiRegions)
     np::initialize();
 
     export_ExpList();
-    export_ExpList2D();
     export_DisContField();
     export_ContField();
 }

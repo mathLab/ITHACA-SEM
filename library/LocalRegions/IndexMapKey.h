@@ -35,14 +35,16 @@
 #ifndef INDEXMAPKEY_H
 #define INDEXMAPKEY_H
 
+#include <LocalRegions/LocalRegions.hpp>
+#include <LocalRegions/LocalRegionsDeclspec.h>
 #include <StdRegions/StdRegions.hpp>
-#include <StdRegions/StdRegionsDeclspec.h>
+
 #include <ostream>
 #include <memory>
 
 namespace Nektar
 {
-    namespace StdRegions
+    namespace LocalRegions
     {
         struct IndexValue
         {
@@ -55,18 +57,18 @@ namespace Nektar
         class IndexMapKey
         {
         public:
-            STD_REGIONS_EXPORT IndexMapKey(
-                const StdRegions::IndexMapType  indexmapType,
-                const LibUtilities::ShapeType   shapeType,
-                const unsigned short            p, 
-                const unsigned short            q,
-                const unsigned short            r,
-                const unsigned short            entityID    = 0,
-                const StdRegions::Orientation   orientation = eNoOrientation);
+            LOCAL_REGIONS_EXPORT IndexMapKey(const IndexMapType  indexmapType,
+                                             const LibUtilities::ShapeType   shapeType,
+                                             const unsigned short            p, 
+                                             const unsigned short            q,
+                                             const unsigned short            r,
+                                             const unsigned short            entityID    = 0,
+                const StdRegions::Orientation   orientation = StdRegions::eNoOrientation);
             
-            STD_REGIONS_EXPORT IndexMapKey(const IndexMapKey& rhs,const StdRegions::IndexMapType indexmapType);
+            LOCAL_REGIONS_EXPORT IndexMapKey(const IndexMapKey& rhs,
+                                             const IndexMapType indexmapType);
 
-            STD_REGIONS_EXPORT IndexMapKey(const IndexMapKey& rhs);
+            LOCAL_REGIONS_EXPORT IndexMapKey(const IndexMapKey& rhs);
 
             virtual ~IndexMapKey()
             {
@@ -75,20 +77,20 @@ namespace Nektar
             // Used to lookup the create function in NekManager.
             struct opLess
             {
-                STD_REGIONS_EXPORT bool operator()(const IndexMapKey &lhs, const IndexMapKey &rhs) const;
+                LOCAL_REGIONS_EXPORT bool operator()(const IndexMapKey &lhs, const IndexMapKey &rhs) const;
             };
 
             // Used for finding value given the key in NekManager.
-            STD_REGIONS_EXPORT friend bool operator<(const IndexMapKey &lhs, const IndexMapKey &rhs);
-            STD_REGIONS_EXPORT friend bool operator==(const IndexMapKey &lhs, const IndexMapKey &rhs);
-            STD_REGIONS_EXPORT friend bool opLess::operator()(const IndexMapKey &lhs, const IndexMapKey &rhs) const;
+            LOCAL_REGIONS_EXPORT friend bool operator<(const IndexMapKey &lhs, const IndexMapKey &rhs);
+            LOCAL_REGIONS_EXPORT friend bool operator==(const IndexMapKey &lhs, const IndexMapKey &rhs);
+            LOCAL_REGIONS_EXPORT friend bool opLess::operator()(const IndexMapKey &lhs, const IndexMapKey &rhs) const;
 
             IndexMapType GetIndexMapType() const
             {
                 return m_indexMapType;
             }
 			
-            Orientation GetIndexOrientation() const
+            StdRegions::Orientation GetIndexOrientation() const
             {
                 return m_orientation;
             }
@@ -110,15 +112,15 @@ namespace Nektar
 			
             unsigned short m_entityID;
 			
-            Orientation m_orientation;
+            StdRegions::Orientation m_orientation;
 			
         private:
 			
             IndexMapKey();
         };
-        //=======================================================================================
+        //==================================================================================
 
-        STD_REGIONS_EXPORT std::ostream& operator<<(std::ostream& os, const IndexMapKey& rhs);
+        LOCAL_REGIONS_EXPORT std::ostream& operator<<(std::ostream& os, const IndexMapKey& rhs);
 
         typedef  std::shared_ptr<IndexMapKey> IndexMapKeySharedPtr;
         typedef  std::shared_ptr<IndexMapValues> IndexMapValuesSharedPtr;

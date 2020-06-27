@@ -188,63 +188,65 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_FillMode(
                 const int mode, 
                 Array<OneD, NekDouble> &outarray);  
-            STD_REGIONS_EXPORT virtual void v_GetFaceNumModes(
+            STD_REGIONS_EXPORT virtual void v_GetTraceNumModes(
                     const int                  fid,
-                    const Orientation          faceOrient,
                     int &numModes0,
-                    int &numModes1);
+                    int &numModes1,
+                    Orientation  faceOrient  = eDir1FwdDir1_Dir2FwdDir2);
+
             STD_REGIONS_EXPORT NekDouble v_PhysEvaluateBasis(
                const Array<OneD, const NekDouble>& coords,
                int mode) final;
 
+            
             //---------------------------------------
             // Helper functions
             //---------------------------------------
             STD_REGIONS_EXPORT virtual int v_GetNverts() const;
             STD_REGIONS_EXPORT virtual int v_GetNedges() const;
-            STD_REGIONS_EXPORT virtual int v_GetNfaces() const;
+            STD_REGIONS_EXPORT virtual int v_GetNtraces() const;
             STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
             STD_REGIONS_EXPORT virtual int v_NumBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int v_NumDGBndryCoeffs() const;
+            STD_REGIONS_EXPORT virtual int v_GetTraceNcoeffs(const int i) const;
+            STD_REGIONS_EXPORT virtual int v_GetTraceIntNcoeffs(const int i) const;
+            STD_REGIONS_EXPORT virtual int v_GetTraceNumPoints(const int i) const;
+
             STD_REGIONS_EXPORT virtual int v_GetEdgeNcoeffs(const int i) const;
-            STD_REGIONS_EXPORT virtual int v_GetFaceNcoeffs(const int i) const;
-            STD_REGIONS_EXPORT virtual int v_GetFaceIntNcoeffs(const int i) const;
-            STD_REGIONS_EXPORT virtual int v_GetFaceNumPoints(const int i) const;
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients(
                 const std::vector<unsigned int> &nummodes, 
                 int &modes_offset);
             STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey 
-                    v_DetFaceBasisKey(const int i, const int k) const;
-            STD_REGIONS_EXPORT virtual LibUtilities::BasisType v_GetEdgeBasisType(
-                const int i) const;
+                    v_GetTraceBasisKey(const int i, const int k) const;
 
             //---------------------------------------
             // Mappings
             //---------------------------------------
-            STD_REGIONS_EXPORT virtual void v_GetFaceToElementMap(
-                const int                  fid,
-                const Orientation          faceOrient,
-                Array<OneD, unsigned int> &maparray,
-                Array<OneD,          int> &signarray,
-                int                        nummodesA=-1,
-                int                        nummodesB=-1);
             STD_REGIONS_EXPORT virtual int  v_GetVertexMap(
                 int                        localVertexId,
                 bool                       useCoeffPacking = false);
-            STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(
-                const int                  eid,
-                const Orientation          edgeOrient,
-                Array<OneD, unsigned int> &maparray,
-                Array<OneD,          int> &signarray);
-            STD_REGIONS_EXPORT virtual void v_GetFaceInteriorMap(
-                const int                  fid,
-                const Orientation          faceOrient,
-                Array<OneD, unsigned int> &maparray,
-                Array<OneD,          int> &signarray);
             STD_REGIONS_EXPORT virtual void v_GetInteriorMap(
                 Array<OneD, unsigned int> &outarray);
             STD_REGIONS_EXPORT virtual void v_GetBoundaryMap(
                 Array<OneD, unsigned int> &outarray);
+            STD_REGIONS_EXPORT virtual void v_GetTraceToElementMap
+                (const int                  fid,
+                 Array<OneD, unsigned int> &maparray,
+                 Array<OneD,          int> &signarray,
+                 Orientation               faceOrient,
+                 int                        P,
+                 int                        Q);
+            STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorToElementMap(
+               const int                  tid,
+               Array<OneD, unsigned int> &maparray,
+               Array<OneD,          int> &signarray,
+               const Orientation         traceOrient = eDir1FwdDir1_Dir2FwdDir2);
+
+            STD_REGIONS_EXPORT virtual void v_GetTraceInteriorToElementMap(
+               const int                  tid,
+               Array<OneD, unsigned int> &maparray,
+               Array<OneD,          int> &signarray,
+               const Orientation          traceOrient = eDir1FwdDir1_Dir2FwdDir2);
 
             //---------------------------------------
             // Wrapper functions

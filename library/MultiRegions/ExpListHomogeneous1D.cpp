@@ -46,8 +46,8 @@ namespace Nektar
     namespace MultiRegions
     {
         // Forward declaration for typedefs
-        ExpListHomogeneous1D::ExpListHomogeneous1D():
-            ExpList(),
+        ExpListHomogeneous1D::ExpListHomogeneous1D(const ExpansionType type):
+            ExpList(type),
             m_homogeneousBasis(LibUtilities::NullBasisSharedPtr),
             m_lhom(1),
             m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr())
@@ -55,17 +55,21 @@ namespace Nektar
         }
 
         ExpListHomogeneous1D::ExpListHomogeneous1D(
-                   const LibUtilities::SessionReaderSharedPtr
-                   &pSession,const LibUtilities::BasisKey &HomoBasis,
+                   const ExpansionType type,
+                   const LibUtilities::SessionReaderSharedPtr &pSession,
+                   const LibUtilities::BasisKey &HomoBasis,
                    const NekDouble lhom,
                    const bool useFFT,
                    const bool dealiasing):
-            ExpList(pSession),
+            ExpList(type),
             m_useFFT(useFFT),
             m_lhom(lhom),
             m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr()),
             m_dealiasing(dealiasing)
         {
+            m_session = pSession;
+            m_comm    = pSession->GetComm();
+
             ASSERTL2(HomoBasis != LibUtilities::NullBasisKey,
                      "Homogeneous Basis is a null basis");
 

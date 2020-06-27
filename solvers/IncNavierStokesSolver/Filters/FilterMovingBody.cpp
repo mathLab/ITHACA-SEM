@@ -230,7 +230,7 @@ void FilterMovingBody::UpdateForce(
     int nt  = pFields[0]->GetNpoints();
     int dim = pFields.size()-1;
 
-    StdRegions::StdExpansionSharedPtr elmt;
+    LocalRegions::ExpansionSharedPtr elmt;
     Array<OneD, int> BoundarytoElmtID;
     Array<OneD, int> BoundarytoTraceID;
     Array<OneD, MultiRegions::ExpListSharedPtr>  BndExp;
@@ -348,25 +348,25 @@ void FilterMovingBody::UpdateForce(
                     Array<OneD, NekDouble>  lift_t(nbc,0.0);
                     Array<OneD, NekDouble>  drag_p(nbc,0.0);
                     Array<OneD, NekDouble>  lift_p(nbc,0.0);
-                    Array<OneD, NekDouble>  temp(nbc,0.0);
-                    Array<OneD, NekDouble>  temp2(nbc,0.0);
+                    Array<OneD, NekDouble>  temp  (nbc,0.0);
+                    Array<OneD, NekDouble>  temp2 (nbc,0.0);
 
                     // identify boundary of element .
                     boundary = BoundarytoTraceID[cnt];
 
                     // extraction of the pressure and wss on the
                     // boundary of the element
-                    elmt->GetEdgePhysVals(boundary,bc,P,Pb);
+                    elmt->GetTracePhysVals(boundary,bc,P,Pb);
 
                     for(int j = 0; j < dim; ++j)
                     {
-                        elmt->GetEdgePhysVals(boundary,bc,gradU[j],fgradU[j]);
-                        elmt->GetEdgePhysVals(boundary,bc,gradV[j],fgradV[j]);
+                        elmt->GetTracePhysVals(boundary,bc,gradU[j],fgradU[j]);
+                        elmt->GetTracePhysVals(boundary,bc,gradV[j],fgradV[j]);
                     }
 
                     //normals of the element
                     const Array<OneD, Array<OneD, NekDouble> > &normals
-                                            = elmt->GetEdgeNormal(boundary);
+                        = elmt->GetTraceNormal(boundary);
 
                     //
                     // Compute viscous tractive forces on wall from

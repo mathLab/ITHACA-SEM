@@ -32,15 +32,15 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <StdRegions/IndexMapKey.h>
-#include <StdRegions/StdRegions.hpp>
+#include <LocalRegions/IndexMapKey.h>
+#include <LocalRegions/LocalRegions.hpp>
 
 namespace Nektar
 {
-    namespace StdRegions
+    namespace LocalRegions
     {
         IndexMapKey::IndexMapKey(
-            const StdRegions::IndexMapType  indexmapType,
+            const IndexMapType  indexmapType,
             const LibUtilities::ShapeType   shapeType,
             const unsigned short            p, 
             const unsigned short            q,
@@ -58,7 +58,7 @@ namespace Nektar
         }
 
         IndexMapKey::IndexMapKey(const IndexMapKey& rhs,
-                                 const StdRegions::IndexMapType indexmapType):
+                                 const IndexMapType indexmapType):
             m_indexMapType (indexmapType),
             m_shapeType(rhs.m_shapeType),
             m_p            (rhs.m_p),
@@ -201,5 +201,5 @@ namespace Nektar
                << std::endl;
             return os;
         }
-    } // end StdRegion namespace
+    } // end LocalRegion namespace
 } // end Nektar namespace

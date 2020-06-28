@@ -272,7 +272,7 @@ Note that only \inltt{WeakDG} is fully supported, the other operators work only 
 \item \inltt{DiffusionType} is the diffusion operator we want to use
 for the Navier-Stokes equations:
 \begin{itemize}
-\item \inltt{LDGNS} (LDG);
+\item \inltt{LDGNS} (LDG with primitive variables. The penalty term is inversely proportional to the element size, proportional to the local viscosity for the momentum equations and to the thermal conductivity for the energy equation, and proportional to an optional parameter \inltt{LDGNSc11} which is by default set to one; proportionality to polynomial order can be manually imposed by setting the parameter \inltt{LDGNSc11} equal to $p^2$);
 \item \inltt{LFRDGNS} (Flux-Reconstruction recovering nodal DG scheme);
 \item \inltt{LFRSDNS} (Flux-Reconstruction recovering a spectral difference (SD) scheme);
 \item \inltt{LFRHUNS} (Flux-Reconstruction recovering Huynh (G2) scheme);

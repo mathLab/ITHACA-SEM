@@ -83,21 +83,15 @@ namespace Nektar
         }
     }
 
-        NekDouble StdExpansion1D::v_PhysEvaluate(
-                const Array<OneD, const NekDouble>& Lcoord,
-                const Array<OneD, const NekDouble>& physvals)
-        {
-        int    nquad = GetTotPoints();
-        NekDouble  val;
-        DNekMatSharedPtr I = m_base[0]->GetI(Lcoord);
-
+    NekDouble StdExpansion1D::v_PhysEvaluate(
+        const Array<OneD, const NekDouble>& Lcoord,
+        const Array<OneD, const NekDouble>& physvals)
+    {
         ASSERTL2(Lcoord[0] >= -1 - NekConstants::kNekZeroTol,"Lcoord[0] < -1");
         ASSERTL2(Lcoord[0] <=  1 + NekConstants::kNekZeroTol,"Lcoord[0] >  1");
 
-        val = Blas::Ddot(nquad, I->GetPtr(), 1, physvals, 1);
-
-        return val;
+        return StdExpansion::BaryEvaluate<0>(Lcoord[0], &physvals[0]);
     }
-	
+
     }//end namespace
 }//end namespace

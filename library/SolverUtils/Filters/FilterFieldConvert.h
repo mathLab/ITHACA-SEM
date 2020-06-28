@@ -124,6 +124,14 @@ protected:
     std::string  m_restartFile;
     unsigned int m_index;
     unsigned int m_outputIndex;
+
+    // Phase sample parameters
+    bool         m_phaseSample;
+    NekDouble    m_phaseSamplePeriod;
+    NekDouble    m_phaseSamplePhase;
+    NekDouble    m_phaseTolerance;
+    NekDouble    m_dt;
+
     std::vector<ModuleSharedPtr> m_modules;
     LibUtilities::FieldMetaDataMap m_fieldMetaData;
     std::vector<Array<OneD, NekDouble> > m_outFields;

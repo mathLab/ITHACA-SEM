@@ -50,3 +50,17 @@ ADD_CUSTOM_TARGET(developer-guide-pdf
     COMMAND ${PDFLATEX} --output-directory ${DEVGUIDE} ${DEVGUIDESRC}/developers-guide.tex
     WORKING_DIRECTORY ${DEVGUIDESRC}
 )
+
+# Install output, if it is generated.
+INSTALL(CODE "IF (EXISTS ${DEVGUIDE}/html)
+    FILE(GLOB DGHTML ${DEVGUIDE}/html/*)
+    LIST(LENGTH DGHTML DGHTML_LEN)
+    IF(DGHTML_LEN GREATER 0)
+        FILE(INSTALL ${DEVGUIDE}/html
+             DESTINATION \${CMAKE_INSTALL_PREFIX}/${NEKTAR_DOC_DIR}/developers-guide)
+    ENDIF()
+ENDIF()
+IF (EXISTS ${DEVGUIDE}/developers-guide.pdf)
+    FILE(INSTALL ${DEVGUIDE}/developers-guide.pdf
+         DESTINATION \${CMAKE_INSTALL_PREFIX}/${NEKTAR_DOC_DIR}/developers-guide)
+ENDIF()")

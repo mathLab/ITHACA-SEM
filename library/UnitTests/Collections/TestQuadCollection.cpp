@@ -110,7 +110,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < phys1.num_elements(); ++i)
+        for(int i = 0; i < phys1.size(); ++i)
         {
             BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
         }
@@ -157,9 +157,9 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < phys1.num_elements(); ++i)
+        for(int i = 0; i < phys1.size(); ++i)
         {
-            BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
+            BOOST_CHECK_CLOSE(phys1[i], phys2[i], epsilon);
         }
     }
 
@@ -212,9 +212,9 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < phys1.num_elements(); ++i)
+        for(int i = 0; i < phys1.size(); ++i)
         {
-            BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
+            BOOST_CHECK_CLOSE(phys1[i], phys2[i], epsilon);
         }
     }
 
@@ -249,19 +249,17 @@ namespace QuadCollectionTests
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
 
-
         Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
         Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
         Array<OneD, NekDouble> phys2(Exp->GetTotPoints());
-
 
         Exp->BwdTrans(coeffs, phys1);
         c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < phys1.num_elements(); ++i)
+        for(int i = 0; i < phys1.size(); ++i)
         {
-            BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
+            BOOST_CHECK_CLOSE(phys1[i], phys2[i], epsilon);
         }
     }
 
@@ -302,14 +300,13 @@ namespace QuadCollectionTests
         Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
         Array<OneD, NekDouble> phys2(Exp->GetTotPoints());
 
-
         Exp->BwdTrans(coeffs, phys1);
         c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < phys1.num_elements(); ++i)
+        for(int i = 0; i < phys1.size(); ++i)
         {
-            BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
+            BOOST_CHECK_CLOSE(phys1[i], phys2[i], epsilon);
         }
     }
 
@@ -362,7 +359,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eBwdTrans, coeffs, phys);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < physRef.num_elements(); ++i)
+        for(int i = 0; i < physRef.size(); ++i)
         {
             BOOST_CHECK_CLOSE(physRef[i], phys[i], epsilon);
         }
@@ -415,9 +412,9 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < phys1.num_elements(); ++i)
+        for(int i = 0; i < phys1.size(); ++i)
         {
-            BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
+            BOOST_CHECK_CLOSE(phys1[i], phys2[i], epsilon);
         }
     }
 
@@ -468,9 +465,9 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < phys1.num_elements(); ++i)
+        for(int i = 0; i < phys1.size(); ++i)
         {
-            BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
+            BOOST_CHECK_CLOSE(phys1[i], phys2[i], epsilon);
         }
     }
 
@@ -523,9 +520,9 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < phys1.num_elements(); ++i)
+        for(int i = 0; i < phys1.size(); ++i)
         {
-            BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
+            BOOST_CHECK_CLOSE(phys1[i], phys2[i], epsilon);
         }
     }
 
@@ -577,9 +574,9 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < phys1.num_elements(); ++i)
+        for(int i = 0; i < phys1.size(); ++i)
         {
-            BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
+            BOOST_CHECK_CLOSE(phys1[i], phys2[i], epsilon);
         }
     }
 
@@ -633,7 +630,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffs1.num_elements(); ++i)
+        for(int i = 0; i < coeffs1.size(); ++i)
         {
             coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
             coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -693,7 +690,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffs1.num_elements(); ++i)
+        for(int i = 0; i < coeffs1.size(); ++i)
         {
             coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
             coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -763,7 +760,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffs1.num_elements(); ++i)
+        for(int i = 0; i < coeffs1.size(); ++i)
         {
             coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
             coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -821,7 +818,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffs1.num_elements(); ++i)
+        for(int i = 0; i < coeffs1.size(); ++i)
         {
             coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
             coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -879,7 +876,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffs1.num_elements(); ++i)
+        for(int i = 0; i < coeffs1.size(); ++i)
         {
             coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
             coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -937,7 +934,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffs1.num_elements(); ++i)
+        for(int i = 0; i < coeffs1.size(); ++i)
         {
             coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
             coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -1004,7 +1001,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffs.num_elements(); ++i)
+        for(int i = 0; i < coeffs.size(); ++i)
         {
             coeffsRef[i] = (std::abs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
             coeffs[i] = (std::abs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
@@ -1071,7 +1068,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffs.num_elements(); ++i)
+        for(int i = 0; i < coeffs.size(); ++i)
         {
             coeffsRef[i] = (std::abs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
             coeffs[i] = (std::abs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
@@ -1138,7 +1135,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffs.num_elements(); ++i)
+        for(int i = 0; i < coeffs.size(); ++i)
         {
             coeffsRef[i] = (std::abs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
             coeffs[i] = (std::abs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
@@ -1179,8 +1176,6 @@ namespace QuadCollectionTests
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
 
-
-
         const int nq = Exp->GetTotPoints();
         Array<OneD, NekDouble> xc(nq), yc(nq);
         Array<OneD, NekDouble> phys(nq),tmp,tmp1;
@@ -1198,7 +1193,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::ePhysDeriv, phys, diff2, tmp = diff2 + nq);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < diff1.num_elements(); ++i)
+        for(int i = 0; i < diff1.size(); ++i)
         {
             BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
         }
@@ -1264,7 +1259,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::ePhysDeriv, phys, diff2, tmp = diff2 + nelmts*nq);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < diff1.num_elements(); ++i)
+        for(int i = 0; i < diff1.size(); ++i)
         {
             diff1[i] = (std::abs(diff1[i]) < 1e-14)? 0.0: diff1[i];
             diff2[i] = (std::abs(diff2[i]) < 1e-14)? 0.0: diff2[i];
@@ -1330,7 +1325,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::ePhysDeriv, phys, deriv, tmp = deriv + nq);
 
         double epsilon = 1.0e-8;
-        for (int i = 0; i < derivRef.num_elements(); ++i)
+        for (int i = 0; i < derivRef.size(); ++i)
         {
             derivRef[i] = (std::abs(derivRef[i]) < 1e-14)? 0.0: derivRef[i];
             deriv[i] = (std::abs(deriv[i]) < 1e-14)? 0.0: deriv[i];
@@ -1396,7 +1391,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::ePhysDeriv, phys, deriv, tmp = deriv + nq);
 
         double epsilon = 1.0e-8;
-        for (int i = 0; i < derivRef.num_elements(); ++i)
+        for (int i = 0; i < derivRef.size(); ++i)
         {
             derivRef[i] = (std::abs(derivRef[i]) < 1e-14)? 0.0: derivRef[i];
             deriv[i] = (std::abs(deriv[i]) < 1e-14)? 0.0: deriv[i];
@@ -1453,7 +1448,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::ePhysDeriv, phys, diff2, tmp = diff2 + nq);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < diff1.num_elements(); ++i)
+        for(int i = 0; i < diff1.size(); ++i)
         {
             BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
         }
@@ -1521,7 +1516,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::ePhysDeriv, phys, diff2, tmp = diff2 + nelmts*nq);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < diff1.num_elements(); ++i)
+        for(int i = 0; i < diff1.size(); ++i)
         {
             diff1[i] = (std::abs(diff1[i]) < 1e-14)? 0.0: diff1[i];
             diff2[i] = (std::abs(diff2[i]) < 1e-14)? 0.0: diff2[i];
@@ -1577,7 +1572,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::ePhysDeriv, phys, diff2, tmp = diff2 + nq);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < diff1.num_elements(); ++i)
+        for(int i = 0; i < diff1.size(); ++i)
         {
             BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
         }
@@ -1644,7 +1639,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::ePhysDeriv, phys, diff2, tmp = diff2 + nelmts*nq);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < diff1.num_elements(); ++i)
+        for(int i = 0; i < diff1.size(); ++i)
         {
             diff1[i] = (std::abs(diff1[i]) < 1e-14)? 0.0: diff1[i];
             diff2[i] = (std::abs(diff2[i]) < 1e-14)? 0.0: diff2[i];
@@ -1710,7 +1705,7 @@ namespace QuadCollectionTests
                         phys1, phys2, coeffs2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffs1.num_elements(); ++i)
+        for(int i = 0; i < coeffs1.size(); ++i)
         {
             coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
             coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -1756,7 +1751,6 @@ namespace QuadCollectionTests
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
 
-
         const int nq = Exp->GetTotPoints();
         const int nm = Exp->GetNcoeffs();
         Array<OneD, NekDouble> xc(nq), yc(nq),tmp,tmp1;
@@ -1792,7 +1786,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1, phys2, coeffs2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffs1.num_elements(); ++i)
+        for(int i = 0; i < coeffs1.size(); ++i)
         {
             coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
             coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -1870,7 +1864,7 @@ namespace QuadCollectionTests
                         phys1, phys2, coeffs);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffsRef.num_elements(); ++i)
+        for(int i = 0; i < coeffsRef.size(); ++i)
         {
             coeffsRef[i] = (std::abs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
             coeffs[i] = (std::abs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
@@ -1948,7 +1942,7 @@ namespace QuadCollectionTests
                         phys1, phys2, coeffs);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffsRef.num_elements(); ++i)
+        for(int i = 0; i < coeffsRef.size(); ++i)
         {
             coeffsRef[i] = (std::abs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
             coeffs[i] = (std::abs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
@@ -2026,7 +2020,7 @@ namespace QuadCollectionTests
                         phys1, phys2, coeffs);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffsRef.num_elements(); ++i)
+        for(int i = 0; i < coeffsRef.size(); ++i)
         {
             coeffsRef[i] = (std::abs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
             coeffs[i] = (std::abs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
@@ -2092,7 +2086,7 @@ namespace QuadCollectionTests
                         phys2, coeffs2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffs1.num_elements(); ++i)
+        for(int i = 0; i < coeffs1.size(); ++i)
         {
             coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
             coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -2174,7 +2168,7 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1, phys2, coeffs2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffs1.num_elements(); ++i)
+        for(int i = 0; i < coeffs1.size(); ++i)
         {
             coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
             coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -2239,7 +2233,7 @@ namespace QuadCollectionTests
                         phys1, phys2, coeffs2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffs1.num_elements(); ++i)
+        for(int i = 0; i < coeffs1.size(); ++i)
         {
             coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
             coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
@@ -2319,12 +2313,12 @@ namespace QuadCollectionTests
         c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1, phys2, coeffs2);
 
         double epsilon = 1.0e-8;
-        for(int i = 0; i < coeffs1.num_elements(); ++i)
+        for(int i = 0; i < coeffs1.size(); ++i)
         {
             coeffs1[i] = (std::abs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
             coeffs2[i] = (std::abs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
             BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
         }
     }
-}
-}
+} // namespace QuadCollectionTests
+} // namespace Nektar

@@ -75,9 +75,9 @@ namespace Nektar
         m_explicitDiffusion = false;
 
         // Set m_pressure to point to last field of m_fields;
-        if (boost::iequals(m_session->GetVariable(m_fields.num_elements()-1), "p"))
+        if (boost::iequals(m_session->GetVariable(m_fields.size()-1), "p"))
         {
-            m_nConvectiveFields = m_fields.num_elements()-1;
+            m_nConvectiveFields = m_fields.size()-1;
             m_pressure = m_fields[m_nConvectiveFields];
         }
         else
@@ -143,8 +143,7 @@ namespace Nektar
                 m_velocity,
                 m_advObject);
 
-            m_extrapolation->SubSteppingTimeIntegration(
-                m_intScheme->GetIntegrationMethod(), m_intScheme);
+            m_extrapolation->SubSteppingTimeIntegration(m_intScheme);
             m_extrapolation->GenerateHOPBCMap(m_session);
         }
     }
@@ -219,7 +218,7 @@ namespace Nektar
             {
                 break;
             }
-
+            
             ASSERTL0(defined,
                      "A 'FlowrateForce' function must defined with components "
                      "[ForceX, ...] to define direction of flowrate forcing");
@@ -245,7 +244,7 @@ namespace Nektar
         }
 
         // Find the boundary condition that is tagged as the flowrate boundary.
-        for (int i = 0; i < bcs.num_elements(); ++i)
+        for (int i = 0; i < bcs.size(); ++i)
         {
             if (boost::iequals(bcs[i]->GetUserDefined(), "Flowrate"))
             {
@@ -273,7 +272,7 @@ namespace Nektar
             Array<OneD, unsigned int> zIDs = m_fields[0]->GetZIDs();
             int tmpId = -1;
 
-            for (int i = 0; i < zIDs.num_elements(); ++i)
+            for (int i = 0; i < zIDs.size(); ++i)
             {
                 if (zIDs[i] == 0)
                 {
@@ -313,7 +312,7 @@ namespace Nektar
             Array<OneD, unsigned int> zIDs = m_fields[0]->GetZIDs();
             m_planeID = -1;
 
-            for (int i = 0; i < zIDs.num_elements(); ++i)
+            for (int i = 0; i < zIDs.size(); ++i)
             {
                 if (zIDs[i] == 0)
                 {
@@ -454,7 +453,7 @@ namespace Nektar
         }
         else
         {
-            m_comm->AllReduce(flowrate, LibUtilities::ReduceSum); 
+            m_comm->AllReduce(flowrate, LibUtilities::ReduceSum);
         }
         return flowrate / m_flowrateArea;
     }
@@ -490,12 +489,10 @@ namespace Nektar
         SolverUtils::AddSummaryItem(s,
                 "Splitting Scheme", "Velocity correction (strong press. form)");
 
-        if (m_extrapolation->GetSubStepIntegrationMethod() !=
-            LibUtilities::eNoTimeIntegrationMethod)
+        if( m_extrapolation->GetSubStepName().size() )
         {
-            SolverUtils::AddSummaryItem(s, "Substepping",
-                             LibUtilities::TimeIntegrationMethodMap[
-                              m_extrapolation->GetSubStepIntegrationMethod()]);
+            SolverUtils::AddSummaryItem( s, "Substepping",
+                                         m_extrapolation->GetSubStepName() );
         }
 
         string dealias = m_homogen_dealiasing ? "Homogeneous1D" : "";
@@ -583,7 +580,7 @@ namespace Nektar
         SetBoundaryConditions(m_time);
 
 	// Ensure the initial conditions have correct BCs  
-        for(int i = 0; i < m_fields.num_elements(); ++i)
+        for(int i = 0; i < m_fields.size(); ++i)
         {
             m_fields[i]->ImposeDirichletConditions(m_fields[i]->UpdateCoeffs());
 	    m_fields[i]->LocalToGlobal();
@@ -599,7 +596,7 @@ namespace Nektar
      */
     void VelocityCorrectionScheme:: v_TransCoeffToPhys(void)
     {
-        int nfields = m_fields.num_elements() - 1;
+        int nfields = m_fields.size() - 1;
         for (int k=0 ; k < nfields; ++k)
         {
             //Backward Transformation in physical space for time evolution
@@ -614,7 +611,7 @@ namespace Nektar
     void VelocityCorrectionScheme:: v_TransPhysToCoeff(void)
     {
 
-        int nfields = m_fields.num_elements() - 1;
+        int nfields = m_fields.size() - 1;
         for (int k=0 ; k < nfields; ++k)
         {
             //Forward Transformation in physical space for time evolution
@@ -734,7 +731,7 @@ namespace Nektar
     {
         int i;
         int physTot = m_fields[0]->GetTotPoints();
-        int nvel = m_velocity.num_elements();
+        int nvel = m_velocity.size();
 
         m_fields[0]->PhysDeriv(eX,fields[0], Forcing[0]);
 
@@ -762,7 +759,7 @@ namespace Nektar
         // Grad p
         m_pressure->BwdTrans(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
 
-        int nvel = m_velocity.num_elements();
+        int nvel = m_velocity.size();
         if(nvel == 2)
         {
             m_pressure->PhysDeriv(m_pressure->GetPhys(),
@@ -804,8 +801,7 @@ namespace Nektar
         factors[StdRegions::eFactorLambda] = 0.0;
 
         // Solver Pressure Poisson Equation
-        m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(),
-                              NullFlagList, factors);
+        m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(), factors);
 
         // Add presure to outflow bc if using convective like BCs
         m_extrapolation->AddPressureToOutflowBCs(m_kinvis);
@@ -832,7 +828,7 @@ namespace Nektar
             // Setup coefficients for equation
             factors[StdRegions::eFactorLambda] = 1.0/aii_Dt/m_diffCoeff[i];
             m_fields[i]->HelmSolve(Forcing[i], m_fields[i]->UpdateCoeffs(),
-                                   NullFlagList,  factors, varCoeffMap,
+                                   factors, varCoeffMap,
                                    varFactorsMap);
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
         }
@@ -889,7 +885,7 @@ namespace Nektar
                     cout << "Seting up SVV velocity from "
                         "SVVVelocityMagnitude section in session file" << endl;
                 }
-                int nvel = m_velocity.num_elements();
+                int nvel = m_velocity.size();
                 int phystot = m_fields[0]->GetTotPoints();
                 SVVVelFields = Array<OneD, Array<OneD, NekDouble> >(nvel);
                 vector<string> vars;
@@ -965,7 +961,7 @@ namespace Nektar
                 Array<OneD, unsigned int> planes;
                 planes = m_fields[0]->GetZIDs();
 
-                int num_planes = planes.num_elements();
+                int num_planes = planes.size();
                 Array<OneD, NekDouble> SVV(num_planes,0.0);
                 NekDouble fac;
                 int kmodes = m_fields[0]->GetHomogeneousBasis()->GetNumModes();
@@ -983,7 +979,7 @@ namespace Nektar
                     }
                 }
 
-                for(int i = 0; i < m_velocity.num_elements(); ++i)
+                for(int i = 0; i < m_velocity.size(); ++i)
                 {
                     m_fields[m_velocity[i]]->SetHomo1DSpecVanVisc(SVV);
                 }
@@ -1008,7 +1004,7 @@ namespace Nektar
         if(vel != NullNekDoubleArrayofArray)
         {
             Array<OneD, NekDouble> Velmag(phystot);
-            nvel = vel.num_elements();
+            nvel = vel.size();
             // calculate magnitude of v
             Vmath::Vmul(phystot,vel[0],1,vel[0],1,Velmag,1);
             for(int n = 1; n < nvel; ++n)
@@ -1038,51 +1034,26 @@ namespace Nektar
             nvel = m_expdim;
         }
 
-        if(m_expdim == 3)
+
+        for (int e = 0; e < nel; e++)
         {
-            LocalRegions::Expansion3DSharedPtr exp3D;
-            for (int e = 0; e < nel; e++)
+            LocalRegions::ExpansionSharedPtr exp = m_fields[0]->GetExp(e);
+            NekDouble h = 0;
+
+            // Find maximum length of edge. 
+            for(int i = 0; i < exp->GetGeom()->GetNumEdges(); ++i)
             {
-                exp3D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion3D>();
-                NekDouble h = 0;
-                for(int i = 0; i < exp3D->GetNedges(); ++i)
-                {
-
-                    h = max(h, exp3D->GetGeom3D()->GetEdge(i)->GetVertex(0)->dist(
-                             *(exp3D->GetGeom3D()->GetEdge(i)->GetVertex(1))));
-                }
-
-                int p = 0;
-                for(int i = 0; i < 3; ++i)
-                {
-                    p = max(p,exp3D->GetBasisNumModes(i)-1);
-                }
-
-                diffcoeff[e] *= h/p;
+                h = max(h, exp->GetGeom()->GetEdge(i)->GetVertex(0)->dist
+                        (*(exp->GetGeom()->GetEdge(i)->GetVertex(1))));
             }
-        }
-        else
-        {
-            LocalRegions::Expansion2DSharedPtr exp2D;
-            for (int e = 0; e < nel; e++)
+
+            int p = 0;
+            for(int i = 0; i < m_expdim; ++i)
             {
-                exp2D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion2D>();
-                NekDouble h = 0;
-                for(int i = 0; i < exp2D->GetNedges(); ++i)
-                {
-
-                   h = max(h, exp2D->GetGeom2D()->GetEdge(i)->GetVertex(0)->dist(
-                             *(exp2D->GetGeom2D()->GetEdge(i)->GetVertex(1))));
-                }
-
-                int p = 0;
-                for(int i = 0; i < 2; ++i)
-                {
-                    p = max(p,exp2D->GetBasisNumModes(i)-1);
-                }
-
-                diffcoeff[e] *= h/p;
+                p = max(p,exp->GetBasisNumModes(i)-1);
             }
+            
+            diffcoeff[e] *= h/p;
         }
     }
 

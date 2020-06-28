@@ -43,18 +43,17 @@
 #include <LibUtilities/Interpreter/Interpreter.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
-/**
- * @brief class for meshing individual curves (1d meshing)
- */
 namespace Nektar
 {
 namespace NekMeshUtils
 {
 
-//forward
 class CurveMesh;
 typedef std::shared_ptr<CurveMesh> CurveMeshSharedPtr;
 
+/**
+ * @brief class for meshing individual curves (1d meshing)
+ */
 class CurveMesh
 {
 public:

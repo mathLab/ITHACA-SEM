@@ -58,8 +58,7 @@ ArtificialDiffusion::ArtificialDiffusion(
 
     m_diffusion = SolverUtils::GetDiffusionFactory()
                                     .CreateInstance("LDG", "LDG");
-    m_diffusion->SetArtificialDiffusionVector(
-                        &ArtificialDiffusion::GetArtificialViscosity, this);
+    m_diffusion->SetFluxVector(&ArtificialDiffusion::GetFluxVector, this);
     m_diffusion->InitObject (m_session, m_fields);
 
     // Get constant scaling
@@ -88,7 +87,7 @@ void ArtificialDiffusion::v_DoArtificialDiffusion(
             Array<OneD,       Array<OneD, NekDouble> > &outarray)
 {
     int i;
-    int nvariables = inarray.num_elements();
+    int nvariables = inarray.size();
     int npoints    = m_fields[0]->GetNpoints();
 
     Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
@@ -109,9 +108,38 @@ void ArtificialDiffusion::v_DoArtificialDiffusion(
     }
 }
 
-/**
- *
- */
+void ArtificialDiffusion::DoArtificialDiffusion_coeff(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+            Array<OneD,       Array<OneD, NekDouble> > &outarray)
+{
+    v_DoArtificialDiffusion_coeff(inarray, outarray);
+}
+
+void ArtificialDiffusion::v_DoArtificialDiffusion_coeff(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+            Array<OneD,       Array<OneD, NekDouble> > &outarray)
+{
+    size_t nvariables = inarray.size();
+    size_t ncoeffs    = m_fields[0]->GetNcoeffs();
+
+    Array<OneD, Array<OneD, NekDouble> > outarrayDiff {nvariables};
+
+    for (int i = 0; i < nvariables; ++i)
+    {
+        outarrayDiff[i] = Array<OneD, NekDouble>{ncoeffs, 0.0};
+    }
+
+    m_diffusion->DiffuseCoeffs(nvariables, m_fields, inarray, outarrayDiff);
+
+    for (int i = 0; i < nvariables; ++i)
+    {
+        Vmath::Vadd(ncoeffs,
+                    outarray[i], 1,
+                    outarrayDiff[i], 1,
+                    outarray[i], 1);
+    }
+}
+
 void ArtificialDiffusion::GetArtificialViscosity(
             const Array<OneD, Array<OneD, NekDouble> > &physfield,
                   Array<OneD, NekDouble  >             &mu)
@@ -126,5 +154,32 @@ void ArtificialDiffusion::SetElmtHP(const Array<OneD, NekDouble> &hOverP)
 {
     m_hOverP = hOverP;
 }
+
+/**
+ * @brief Return the flux vector for the artificial viscosity operator.
+ */
+void ArtificialDiffusion::GetFluxVector(
+    const Array<OneD, Array<OneD, NekDouble> > &inarray,
+    const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
+          Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&viscousTensor)
+{
+    unsigned int nDim = qfield.size();
+    unsigned int nConvectiveFields = qfield[0].size();
+    unsigned int nPts = qfield[0][0].size();
+
+    // Get Artificial viscosity
+    Array<OneD, NekDouble> mu{nPts, 0.0};
+    GetArtificialViscosity(inarray, mu);
+
+    // Compute viscous tensor
+    for (unsigned int j = 0; j < nDim; ++j)
+    {
+        for (unsigned int i = 0; i < nConvectiveFields; ++i)
+        {
+            Vmath::Vmul(nPts, qfield[j][i], 1, mu , 1, viscousTensor[j][i], 1);
+        }
+    }
+}
+
 
 }

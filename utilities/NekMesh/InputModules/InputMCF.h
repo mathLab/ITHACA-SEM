@@ -62,11 +62,10 @@ public:
 private:
     std::string m_minDelta, m_maxDelta, m_eps, m_cadfile, m_order, m_blsurfs,
         m_blthick, m_blprog, m_bllayers, m_refinement, m_nacadomain, m_periodic,
-        m_adjustment, m_spaceoutblthr, m_nospaceoutsurf;
+        m_adjustment, m_spaceoutblthr, m_nospaceoutsurf, m_voidPts;
 
     bool m_makeBL, m_surfopti, m_varopti, m_refine, m_woct, m_2D, m_splitBL,
-        m_naca, m_adjust, m_adjustall, m_smoothbl, m_manifold, m_cfiMesh,
-        m_spaceoutbl;
+        m_naca, m_adjust, m_adjustall, m_smoothbl, m_manifold, m_spaceoutbl;
 };
 }
 }

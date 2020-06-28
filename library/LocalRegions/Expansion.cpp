@@ -42,13 +42,16 @@ using namespace std;
 
 namespace Nektar
 {
-    namespace LocalRegions 
+    namespace LocalRegions
     {
         Expansion::Expansion(SpatialDomains::GeometrySharedPtr pGeom) :
-                    m_geom(pGeom),
-                    m_metricinfo(m_geom->GetGeomFactors()),
-                    m_elementTraceLeft(-1),
-                    m_elementTraceRight(-1)
+            m_indexMapManager
+               (std::bind(&Expansion::CreateIndexMap,this, std::placeholders::_1),
+                std::string("ExpansionIndexMap")),
+            m_geom(pGeom),
+            m_metricinfo(m_geom->GetGeomFactors()),
+            m_elementTraceLeft(-1),
+            m_elementTraceRight(-1)
         {
             if (!m_metricinfo)
             {
@@ -57,7 +60,7 @@ namespace Nektar
 
             if (!m_metricinfo->IsValid())
             {
-                int nDim = m_base.num_elements();
+                int nDim = m_base.size();
                 string type = "regular";
                 if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                 {
@@ -71,13 +74,13 @@ namespace Nektar
                 NEKERROR(ErrorUtil::ewarning, err.str());
             }
         }
-        
+
         Expansion::Expansion(const Expansion &pSrc) :
                 StdExpansion(pSrc),
+                m_indexMapManager(pSrc.m_indexMapManager),
                 m_geom(pSrc.m_geom),
                 m_metricinfo(pSrc.m_metricinfo)
         {
-
         }
 
         Expansion::~Expansion()
@@ -90,13 +93,13 @@ namespace Nektar
         }
 
         DNekMatSharedPtr Expansion::BuildTransformationMatrix(
-            const DNekScalMatSharedPtr &r_bnd, 
+            const DNekScalMatSharedPtr &r_bnd,
             const StdRegions::MatrixType matrixType)
         {
             return v_BuildTransformationMatrix(r_bnd,matrixType);
         }
 
-        
+
         DNekMatSharedPtr Expansion::BuildVertexMatrix(
             const DNekScalMatSharedPtr &r_bnd)
         {
@@ -180,6 +183,71 @@ namespace Nektar
             m_metricinfo = m_geom->GetGeomFactors();
         }
 
+        IndexMapValuesSharedPtr Expansion::CreateIndexMap(const IndexMapKey &ikey)
+        {
+            IndexMapValuesSharedPtr returnval;
+
+            IndexMapType itype = ikey.GetIndexMapType();
+
+            int entity = ikey.GetIndexEntity();
+
+            StdRegions::Orientation orient = ikey.GetIndexOrientation();
+
+            Array<OneD,unsigned int>     map;
+            Array<OneD,int>             sign;
+
+            switch(itype)
+            {
+                case eEdgeToElement:
+                {
+                    GetTraceToElementMap(entity,map,sign,orient);
+                }
+                break;
+                case eFaceToElement:
+                {
+                    GetTraceToElementMap(entity,map,sign,orient);
+                }
+                break;
+                case eEdgeInterior:
+                {
+                    ASSERTL0(false,"Boundary Index Map not implemented yet.");
+                    //v_GetEdgeInteriorMap(entity,orient,map,sign);
+                }
+                break;
+                case eFaceInterior:
+                {
+                    ASSERTL0(false,"Boundary Index Map not implemented yet.");
+                    //v_GetFaceInteriorMap(entity,orient,map,sign);
+                }
+                break;
+                case eBoundary:
+                {
+                    ASSERTL0(false,"Boundary Index Map not implemented yet.");
+                }
+                break;
+                case eVertex:
+                {
+                    ASSERTL0(false,"Vertex Index Map not implemented yet.");
+                }
+                break;
+                default:
+                {
+                    ASSERTL0(false,"The Index Map you are requiring "
+                             "is not between the possible options.");
+                }
+            }
+            
+            returnval = MemoryManager<IndexMapValues>::AllocateSharedPtr(map.size());
+            
+            for(int i = 0; i < map.size(); i++)
+            {
+                (*returnval)[i].index =  map[i];
+                (*returnval)[i].sign  =  sign[i];
+            }
+
+            return returnval;
+        }
+
         const SpatialDomains::GeomFactorsSharedPtr& Expansion::GetMetricInfo() const
         {
             return m_metricinfo;
@@ -206,6 +274,23 @@ namespace Nektar
             Vmath::Vmul(nqtot, m_metrics[eMetricQuadrature], 1, inarray, 1, outarray, 1);
         }
 
+        void Expansion::v_DivideByQuadratureMetric(
+            const Array<OneD, 
+            const NekDouble>& inarray,
+            Array<OneD, NekDouble> &outarray)
+        {
+            const int nqtot = GetTotPoints();
+
+            if (m_metrics.count(eMetricQuadrature) == 0)
+            {
+                ComputeQuadratureMetric();
+            }
+
+            Vmath::Vdiv(nqtot, inarray, 
+                        1, m_metrics[eMetricQuadrature], 
+                        1, outarray, 1);
+        }
+
         void Expansion::ComputeLaplacianMetric()
         {
             v_ComputeLaplacianMetric();
@@ -226,7 +311,7 @@ namespace Nektar
                 m_metrics[eMetricQuadrature] = m_metricinfo->GetJac(p);
             }
 
-            MultiplyByStdQuadratureMetric(m_metrics[eMetricQuadrature],
+            v_MultiplyByStdQuadratureMetric(m_metrics[eMetricQuadrature],
                                                    m_metrics[eMetricQuadrature]);
         }
 
@@ -240,7 +325,7 @@ namespace Nektar
             // get physical points defined in Geom
             m_geom->FillGeom();
 
-            const int expDim = m_base.num_elements();
+            const int expDim = m_base.size();
             int       nqGeom = 1;
             bool      doCopy = true;
 
@@ -316,9 +401,9 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &direction,
                 Array<OneD, Array<OneD, NekDouble> > &dfdir)
         {
-            int shapedim = dfdir.num_elements();
+            int shapedim = dfdir.size();
             int coordim = GetCoordim();
-            int nqtot = direction.num_elements()/coordim;
+            int nqtot = direction.size()/coordim;
 
             for(int j = 0; j < shapedim; j++)
             {
@@ -476,7 +561,7 @@ namespace Nektar
 
 
         DNekMatSharedPtr Expansion::v_BuildTransformationMatrix(
-            const DNekScalMatSharedPtr &r_bnd, 
+            const DNekScalMatSharedPtr &r_bnd,
             const StdRegions::MatrixType matrixType)
         {
             boost::ignore_unused(r_bnd, matrixType);
@@ -554,6 +639,58 @@ namespace Nektar
             return 0.0;
         }
 
+        StdRegions::Orientation Expansion::v_GetTraceOrient(int trace)
+        {
+            boost::ignore_unused(trace);
+            return StdRegions::eForwards;
+        }
+
+        void Expansion::v_SetCoeffsToOrientation(StdRegions::Orientation dir,
+                                                 Array<OneD, const NekDouble> &inarray,
+                                                 Array<OneD, NekDouble> &outarray)
+        {
+            boost::ignore_unused(dir, inarray, outarray);
+            NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+        }
+
+        void Expansion::v_GetTraceQFactors(const int trace,
+                                          Array<OneD, NekDouble> &outarray)
+        {
+            boost::ignore_unused(trace, outarray);
+            NEKERROR(ErrorUtil::efatal,
+                     "Method does not exist for this shape or library");
+        }
+        
+        void Expansion::v_GetTracePhysVals
+                    (const int trace,
+                     const StdRegions::StdExpansionSharedPtr &TraceExp,
+                     const Array<OneD, const NekDouble> &inarray,
+                     Array<OneD,       NekDouble> &outarray,
+                     StdRegions::Orientation  orient)
+        {
+            boost::ignore_unused(trace,TraceExp,inarray,outarray,orient);
+            NEKERROR(ErrorUtil::efatal,
+                     "Method does not exist for this shape or library" );
+        }
+
+        void Expansion::v_GetTracePhysMap(const int  edge,
+                                         Array<OneD, int>   &outarray)
+        {
+            boost::ignore_unused(edge, outarray);
+            NEKERROR(ErrorUtil::efatal,
+                     "Method does not exist for this shape or library" );
+        }
+        
+        void Expansion::v_ReOrientTracePhysMap(
+                                 const StdRegions::Orientation orient,
+                                 Array<OneD, int> &idmap,
+                                 const int nq0,  const int nq1)
+        {
+            boost::ignore_unused(orient,idmap,nq0,nq1);
+            NEKERROR(ErrorUtil::efatal,
+                     "Method does not exist for this shape or library" );
+        }
+ 
         const NormalVector & Expansion::v_GetTraceNormal(const int id) const
         {
             boost::ignore_unused(id);
@@ -566,19 +703,6 @@ namespace Nektar
         {
             boost::ignore_unused(id);
             ASSERTL0(false, "Cannot compute trace normal for this expansion.");
-        }
-
-        void Expansion::v_NegateTraceNormal(const int id)
-        {
-            boost::ignore_unused(id);
-            ASSERTL0(false, "Not implemented.");
-        }
-
-        bool Expansion::v_TraceNormalNegated(const int id)
-        {
-            boost::ignore_unused(id);
-            ASSERTL0(false, "Not implemented.");
-            return false;
         }
 
         const Array<OneD, const NekDouble>& Expansion::v_GetPhysNormals(void)
@@ -599,7 +723,34 @@ namespace Nektar
             boost::ignore_unused(edge);
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
         }
-        
+
+        void Expansion::v_AddRobinMassMatrix(
+            const int                            trace,
+            const Array<OneD, const NekDouble > &primCoeffs,
+                  DNekMatSharedPtr              &inoutmat)
+        {
+            boost::ignore_unused(trace,primCoeffs,inoutmat);
+            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+        }
+
+        void Expansion::v_AddRobinTraceContribution(
+                const int traceid,
+                const Array<OneD, const NekDouble> &primCoeffs,
+                const Array<OneD, NekDouble> &incoeffs,
+                Array<OneD, NekDouble> &coeffs)
+        {
+            boost::ignore_unused(traceid,primCoeffs,incoeffs, coeffs);
+            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+        }
+
+        const Array<OneD, const NekDouble > &Expansion::
+            GetElmtBndNormDirElmtLen(const int nbnd) const
+        {
+            auto x = m_elmtBndNormDirElmtLen.find(nbnd);
+            ASSERTL0 (x != m_elmtBndNormDirElmtLen.end(),
+                      "m_elmtBndNormDirElmtLen normal not computed.");
+            return x->second;
+        }
     } //end of namespace
 } //end of namespace
 

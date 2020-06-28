@@ -103,14 +103,14 @@ void RoeSolver::v_ArraySolve(
           Array<OneD,       Array<OneD, NekDouble> > &flux)
 {
     static auto gamma = m_params["gamma"]();
-    static auto nVars = fwd.num_elements();
+    static auto nVars = fwd.size();
     static auto spaceDim = nVars-2;
 
     using namespace tinysimd;
     using vec_t = simd<NekDouble>;
 
     // get limit of vectorizable chunk
-    size_t sizeScalar = fwd[0].num_elements();
+    size_t sizeScalar = fwd[0].size();
     size_t sizeVec = (sizeScalar / vec_t::width) * vec_t::width;
 
     // SIMD loop

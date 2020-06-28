@@ -81,7 +81,6 @@ namespace Nektar
 
             protected:
                 std::map<int, NormalVector>             m_vertexNormals;
-                std::map<int, bool>                     m_negatedNormals;
 
                 virtual DNekMatSharedPtr v_GenMatrix(
                     const StdRegions::StdMatrixKey      &mkey);
@@ -100,11 +99,12 @@ namespace Nektar
                 virtual NekDouble v_VectorFlux(
                     const Array<OneD, Array<OneD, NekDouble> > &vec);
 
-                virtual void v_NegateTraceNormal (const int vertex);
+                virtual const NormalVector &v_GetTraceNormal(const int edge) const final;
+                virtual void v_ReOrientTracePhysMap(
+                         const StdRegions::Orientation orient,
+                         Array<OneD, int> &idmap,
+                         const int nq0,  const int nq1);
 
-                virtual bool v_TraceNormalNegated(const int vertex);
-
-                virtual const NormalVector &v_GetTraceNormal(const int edge) const;
             private:
 
         };

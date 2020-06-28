@@ -35,7 +35,8 @@
 #ifndef NEKTAR_SOLVERUTILS_UNSTEADYSYSTEM_H
 #define NEKTAR_SOLVERUTILS_UNSTEADYSYSTEM_H
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
 #include <SolverUtils/EquationSystem.h>
 #include <SolverUtils/Filters/Filter.h>
 
@@ -56,6 +57,10 @@ public:
 
     /// CFL safety factor (comprise between 0 to 1).
     NekDouble m_cflSafetyFactor;
+    /// CFL growth rate
+    NekDouble m_CFLGrowth;
+    /// maximun cfl in cfl growth
+    NekDouble m_CFLEnd;
 
 protected:
     /// Number of time steps between outputting status information.
@@ -66,11 +71,11 @@ protected:
     int m_filtersInfosteps;
     int m_nanSteps;
     /// Wrapper to the time integration scheme
-    LibUtilities::TimeIntegrationWrapperSharedPtr m_intScheme;
+    LibUtilities::TimeIntegrationSchemeSharedPtr    m_intScheme;
     /// The time integration scheme operators to use.
-    LibUtilities::TimeIntegrationSchemeOperators m_ode;
+    LibUtilities::TimeIntegrationSchemeOperators    m_ode;
     ///
-    LibUtilities::TimeIntegrationSolutionSharedPtr m_intSoln;
+    LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr  m_intSoln;
     ///
     NekDouble m_epsilon;
     /// Indicates if explicit or implicit treatment of diffusion is used.

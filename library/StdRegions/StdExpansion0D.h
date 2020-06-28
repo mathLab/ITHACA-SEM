@@ -78,12 +78,7 @@ namespace Nektar
                 return 1;
             }
 
-            virtual int v_GetNedges() const
-            {
-                return 0;
-            }
-
-            virtual int v_GetNfaces() const
+            virtual int v_GetNtraces() const
             {
                 return 0;
             }

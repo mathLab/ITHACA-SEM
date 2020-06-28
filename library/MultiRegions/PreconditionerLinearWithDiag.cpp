@@ -36,7 +36,7 @@
 #include <MultiRegions/PreconditionerLinearWithDiag.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <LocalRegions/MatrixKey.h>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 
@@ -53,24 +53,24 @@ namespace Nektar
                     "FullLinearSpaceWithDiagonal",
                     PreconditionerLinearWithDiag::create,
                     "Full linear space and diagonal preconditioning");
- 
+
        /**
          * @class PreconditionerLinearWithDiag
          *
-         * This class implements preconditioning for the conjugate 
+         * This class implements preconditioning for the conjugate
 	 * gradient matrix solver.
 	 */
-        
+
         PreconditionerLinearWithDiag::PreconditionerLinearWithDiag(
             const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
             : Preconditioner(plinsys, pLocToGloMap)
         {
         }
-       
+
         /**
          *
-         */ 
+         */
         void PreconditionerLinearWithDiag::v_InitObject()
         {
             m_linSpacePrecon = GetPreconFactory().CreateInstance("FullLinearSpace",m_linsys.lock(),m_locToGloMap.lock());
@@ -94,8 +94,8 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            
-            Array<OneD, NekDouble> OutputDiag(pOutput.num_elements());
+
+            Array<OneD, NekDouble> OutputDiag(pOutput.size());
             m_diagonalPrecon->DoPreconditioner(pInput, OutputDiag);
 
             // Since linear preconditioner just copies other entries

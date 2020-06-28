@@ -235,7 +235,7 @@ NekDouble PyrGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         ptdist = sqrt(tmp1[min_i]);
 
         // Get collapsed coordinate
-        int qa = za.num_elements(), qb = zb.num_elements();
+        int qa = za.size(), qb = zb.size();
         Lcoords[2] = zc[min_i / (qa * qb)];
         min_i = min_i % (qa * qb);
         Lcoords[1] = zb[min_i / qa];
@@ -249,7 +249,7 @@ NekDouble PyrGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         NekDouble resid = 0.0;
         NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords, resid);
     }
-    
+
     return ptdist;
 }
 
@@ -788,41 +788,41 @@ void PyrGeom::SetUpXmap()
 
     if (m_forient[0] < 9)
     {
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(0));
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(2));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(0));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(2));
         order0 = *max_element(tmp.begin(), tmp.end());
     }
     else
     {
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(1));
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(3));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(1));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(3));
         order0 = *max_element(tmp.begin(), tmp.end());
     }
 
     if (m_forient[0] < 9)
     {
         tmp.clear();
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(1));
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(3));
-        tmp.push_back(m_faces[2]->GetXmap()->GetEdgeNcoeffs(2));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(1));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(3));
+        tmp.push_back(m_faces[2]->GetXmap()->GetTraceNcoeffs(2));
         order1 = *max_element(tmp.begin(), tmp.end());
     }
     else
     {
         tmp.clear();
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(0));
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(2));
-        tmp.push_back(m_faces[2]->GetXmap()->GetEdgeNcoeffs(2));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(0));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(2));
+        tmp.push_back(m_faces[2]->GetXmap()->GetTraceNcoeffs(2));
         order1 = *max_element(tmp.begin(), tmp.end());
     }
 
     tmp.clear();
     tmp.push_back(order0);
     tmp.push_back(order1);
-    tmp.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs(1));
-    tmp.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs(2));
-    tmp.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs(1));
-    tmp.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs(2));
+    tmp.push_back(m_faces[1]->GetXmap()->GetTraceNcoeffs(1));
+    tmp.push_back(m_faces[1]->GetXmap()->GetTraceNcoeffs(2));
+    tmp.push_back(m_faces[3]->GetXmap()->GetTraceNcoeffs(1));
+    tmp.push_back(m_faces[3]->GetXmap()->GetTraceNcoeffs(2));
     int order2 = *max_element(tmp.begin(), tmp.end());
 
 

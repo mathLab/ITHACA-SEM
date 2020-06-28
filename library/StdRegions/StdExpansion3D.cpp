@@ -49,10 +49,10 @@ namespace Nektar
         StdExpansion3D::StdExpansion3D()
         {
         }
-        
-        StdExpansion3D::StdExpansion3D(int                           numcoeffs, 
+
+        StdExpansion3D::StdExpansion3D(int                           numcoeffs,
                                        const LibUtilities::BasisKey &Ba,
-                                       const LibUtilities::BasisKey &Bb, 
+                                       const LibUtilities::BasisKey &Bb,
                                        const LibUtilities::BasisKey &Bc) :
             StdExpansion(numcoeffs,3,Ba,Bb,Bc)
         {
@@ -62,7 +62,7 @@ namespace Nektar
             StdExpansion(T)
         {
         }
-        
+
         StdExpansion3D::~StdExpansion3D()
         {
         }
@@ -77,11 +77,11 @@ namespace Nektar
             const int nquad2 = m_base[2]->GetNumPoints();
 
             Array<OneD, NekDouble> wsp(nquad0*nquad1*nquad2);
-            
+
             // copy inarray to wsp in case inarray is used as outarray
             Vmath::Vcopy(nquad0*nquad1*nquad2, &inarray[0], 1, &wsp[0], 1);
-            
-            if (out_dx.num_elements() > 0)
+
+            if (out_dx.size() > 0)
             {
                 NekDouble  *D0 = &((m_base[0]->GetD())->GetPtr())[0];
 
@@ -89,7 +89,7 @@ namespace Nektar
                             D0,nquad0,&wsp[0],nquad0,0.0,&out_dx[0],nquad0);
             }
 
-            if (out_dy.num_elements() > 0) 
+            if (out_dy.size() > 0)
             {
                 NekDouble   *D1 = &((m_base[1]->GetD())->GetPtr())[0];
                 for (int j = 0; j < nquad2; ++j)
@@ -101,7 +101,7 @@ namespace Nektar
                 }
             }
 
-            if (out_dz.num_elements() > 0) 
+            if (out_dz.size() > 0)
             {
                 NekDouble     *D2 = &((m_base[2]->GetD())->GetPtr())[0];
 
@@ -140,47 +140,64 @@ namespace Nektar
         }
 
         NekDouble StdExpansion3D::v_PhysEvaluate(
-            const Array<OneD, const NekDouble> &coords, 
+            const Array<OneD, const NekDouble> &coords,
             const Array<OneD, const NekDouble> &physvals)
         {
-            Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
-            Array<OneD, DNekMatSharedPtr>  I(3);
+            Array<OneD, NekDouble> eta(3);
 
-            WARNINGL2(coords[0] >= -1 - NekConstants::kNekZeroTol,"coord[0] < -1");
-            WARNINGL2(coords[0] <=  1 + NekConstants::kNekZeroTol,"coord[0] >  1");
-            WARNINGL2(coords[1] >= -1 - NekConstants::kNekZeroTol,"coord[1] < -1");
-            WARNINGL2(coords[1] <=  1 + NekConstants::kNekZeroTol,"coord[1] >  1");
-            WARNINGL2(coords[2] >= -1 - NekConstants::kNekZeroTol,"coord[2] < -1");
-            WARNINGL2(coords[2] <=  1 + NekConstants::kNekZeroTol,"coord[2] >  1");
+            WARNINGL2(coords[0] >= -1 - NekConstants::kNekZeroTol,
+                      "coord[0] < -1");
+            WARNINGL2(coords[0] <=  1 + NekConstants::kNekZeroTol,
+                      "coord[0] >  1");
+            WARNINGL2(coords[1] >= -1 - NekConstants::kNekZeroTol,
+                      "coord[1] < -1");
+            WARNINGL2(coords[1] <=  1 + NekConstants::kNekZeroTol,
+                      "coord[1] >  1");
+            WARNINGL2(coords[2] >= -1 - NekConstants::kNekZeroTol,
+                      "coord[2] < -1");
+            WARNINGL2(coords[2] <=  1 + NekConstants::kNekZeroTol,
+                      "coord[2] >  1");
 
-            // Obtain local collapsed corodinate from 
-            // cartesian coordinate. 
-            LocCoordToLocCollapsed(coords,eta);
+            // Obtain local collapsed corodinate from Cartesian coordinate.
+            LocCoordToLocCollapsed(coords, eta);
 
-            // Get Lagrange interpolants. 
-            I[0] = m_base[0]->GetI(eta);
-            I[1] = m_base[1]->GetI(eta+1);
-            I[2] = m_base[2]->GetI(eta+2);
+            const int nq0 = m_base[0]->GetNumPoints();
+            const int nq1 = m_base[1]->GetNumPoints();
+            const int nq2 = m_base[2]->GetNumPoints();
 
-            return v_PhysEvaluate(I,physvals);
+            Array<OneD, NekDouble> wsp1(nq1 * nq2), wsp2(nq2);
+
+            // Construct the 2D square...
+            const NekDouble *ptr = &physvals[0];
+            for (int i = 0; i < nq1 * nq2; ++i, ptr += nq0)
+            {
+                wsp1[i] = StdExpansion::BaryEvaluate<0>(eta[0], ptr);
+            }
+
+            for (int i = 0; i < nq2; ++i)
+            {
+                wsp2[i] = StdExpansion::BaryEvaluate<1>(eta[1], &wsp1[i * nq1]);
+            }
+
+            return StdExpansion::BaryEvaluate<2>(eta[2], &wsp2[0]);
         }
 
         NekDouble StdExpansion3D::v_PhysEvaluate(
-            const Array<OneD, DNekMatSharedPtr > &I, 
+            const Array<OneD, DNekMatSharedPtr > &I,
             const Array<OneD, const NekDouble> &physvals)
         {
             NekDouble  value;
-            
+
             int Qx = m_base[0]->GetNumPoints();
             int Qy = m_base[1]->GetNumPoints();
             int Qz = m_base[2]->GetNumPoints();
-            
+
             Array<OneD, NekDouble> sumFactorization_qr = Array<OneD, NekDouble>(Qy*Qz);
             Array<OneD, NekDouble> sumFactorization_r  = Array<OneD, NekDouble>(Qz);
-            
+
             // Lagrangian interpolation matrix
             NekDouble *interpolatingNodes = 0;
-            
+
             // Interpolate first coordinate direction
             interpolatingNodes = &I[0]->GetPtr()[0];
 
@@ -194,11 +211,11 @@ namespace Nektar
             // Interpolate in third coordinate direction
             interpolatingNodes = &I[2]->GetPtr()[0];
             value = Blas::Ddot(Qz, interpolatingNodes, 1, &sumFactorization_r[0], 1);
-            
+
             return value;
         }
-        
 
+        
         /**
          * @param   inarray     Input coefficients.
          * @param   output      Output coefficients.
@@ -306,7 +323,6 @@ namespace Nektar
             {
                 StdExpansion::HelmholtzMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
             }
-
         }
 
         NekDouble StdExpansion3D::v_Integral(
@@ -314,11 +330,32 @@ namespace Nektar
         {
             const int nqtot = GetTotPoints();
             Array<OneD, NekDouble> tmp(GetTotPoints());
-            MultiplyByStdQuadratureMetric(inarray, tmp);
+            v_MultiplyByStdQuadratureMetric(inarray, tmp);
             return Vmath::Vsum(nqtot, tmp, 1);
         }
-        
-        
+
+        int StdExpansion3D::v_GetNedges(void) const
+        {
+            ASSERTL0(false, "This function is not valid or not defined");
+            return 0;
+        }
+
+        int StdExpansion3D::v_GetEdgeNcoeffs(const int i) const
+        {
+            boost::ignore_unused(i);
+            ASSERTL0(false, "This function is not valid or not defined");
+            return 0;
+        }
+
+        void StdExpansion3D::v_GetEdgeInteriorToElementMap(
+               const int                  tid,
+               Array<OneD, unsigned int> &maparray,
+               Array<OneD,          int> &signarray,
+               Orientation                traceOrient)
+        {
+            boost::ignore_unused(tid,maparray,signarray,traceOrient);
+            NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+        }
 
         LibUtilities::BasisKey EvaluateQuadFaceBasisKey(
             const int                     facedir,
@@ -413,7 +450,7 @@ namespace Nektar
 //                                numpoints+1,
 //                                LibUtilities::eGaussLobattoLegendre);
                             const LibUtilities::PointsKey pkey(
-	 			numpoints, 	
+	 			numpoints,
 				LibUtilities::eGaussRadauMAlpha1Beta0);
                             return LibUtilities::BasisKey(
                                 LibUtilities::eModified_B, nummodes, pkey);
@@ -496,7 +533,7 @@ namespace Nektar
             }
 
             // Keep things happy by returning a value.
-            return LibUtilities::NullBasisKey; 
+            return LibUtilities::NullBasisKey;
         }
     }//end namespace
 }//end namespace

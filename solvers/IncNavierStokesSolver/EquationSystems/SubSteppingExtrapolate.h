@@ -35,14 +35,14 @@
 #ifndef NEKTAR_SOLVERS_SUBSTEPPINGEXTRAPOLATE_H
 #define NEKTAR_SOLVERS_SUBSTEPPINGEXTRAPOLATE_H
 
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <LibUtilities/BasicUtils/SessionReader.h>
-#include <MultiRegions/ExpList.h>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
-#include <SolverUtils/AdvectionSystem.h>
 #include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <MultiRegions/ExpList.h>
+#include <SolverUtils/AdvectionSystem.h>
 
 namespace Nektar
 {
@@ -89,9 +89,7 @@ namespace Nektar
                                            NekDouble kinvis);
 
         virtual void v_SubSteppingTimeIntegration(
-            int intMethod,
-            const LibUtilities::TimeIntegrationWrapperSharedPtr 
-            &IntegrationScheme);
+            const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme );
  
         virtual void v_SubStepSaveFields(
             int nstep);
@@ -102,7 +100,7 @@ namespace Nektar
             NekDouble kinvis);
 
         virtual void v_SubStepAdvance(
-            const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
+            const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln, 
             int nstep, 
             NekDouble time);
 
@@ -112,7 +110,7 @@ namespace Nektar
             Array<OneD, NekDouble> &Q, 
             Array<OneD, const NekDouble> &Advection);
         
-        virtual LibUtilities::TimeIntegrationMethod v_GetSubStepIntegrationMethod(void);
+        virtual std::string v_GetSubStepName(void);
 
         void SubStepAdvection(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,  
@@ -135,7 +133,7 @@ namespace Nektar
 
         NekDouble GetSubstepTimeStep();
 
-        LibUtilities::TimeIntegrationWrapperSharedPtr m_subStepIntegrationScheme;
+        LibUtilities::TimeIntegrationSchemeSharedPtr m_subStepIntegrationScheme;
         LibUtilities::TimeIntegrationSchemeOperators m_subStepIntegrationOps;
 
         Array<OneD, Array<OneD, NekDouble> > m_previousVelFields;

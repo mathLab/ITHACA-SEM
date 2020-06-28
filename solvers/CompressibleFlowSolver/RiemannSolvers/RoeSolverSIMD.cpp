@@ -66,7 +66,7 @@ void RoeSolverSIMD::v_Solve(
           Array<OneD,       Array<OneD, NekDouble> > &flux)
 {
     static auto gamma = m_params["gamma"]();
-    static auto nVars = fwd.num_elements();
+    static auto nVars = fwd.size();
     static auto spaceDim = nVars-2;
 
     // 3D case only so far
@@ -77,7 +77,7 @@ void RoeSolverSIMD::v_Solve(
     // using vec_t = typename tinysimd::abi::scalar<NekDouble>::type;
 
     // get limit of vectorizable chunk
-    size_t sizeScalar = fwd[0].num_elements();
+    size_t sizeScalar = fwd[0].size();
     size_t sizeVec = (sizeScalar / vec_t::width) * vec_t::width;
 
     // get normal, vellocs
@@ -93,7 +93,7 @@ void RoeSolverSIMD::v_Solve(
     // const unsigned int vz = (int)vecLocs[0][2];
 
     // Generate matrices if they don't already exist.
-    if (m_rotMat.num_elements() == 0)
+    if (m_rotMat.size() == 0)
     {
         GenerateRotationMatrices(normals);
     }

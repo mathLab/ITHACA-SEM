@@ -164,11 +164,11 @@ class BwdTrans_MatrixFree final : public Operator
             if (m_isPadded)
             {
                 // copy into padded vector
-                Vmath::Vcopy(input.num_elements(), input, 1, m_input, 1);
+                Vmath::Vcopy(input.size(), input, 1, m_input, 1);
                 // call op
                 (*m_oper)(m_input, m_output);
                 // copy out of padded vector
-                Vmath::Vcopy(output0.num_elements(), m_output, 1, output0, 1);
+                Vmath::Vcopy(output0.size(), m_output, 1, output0, 1);
             }
             else
             {
@@ -550,7 +550,7 @@ class BwdTrans_SumFac_Quad : public Operator
             }
             else
             {
-                ASSERTL1(wsp.num_elements() == m_wspSize,
+                ASSERTL1(wsp.size() == m_wspSize,
                          "Incorrect workspace size");
 
                 // Those two calls correpsond to the operation
@@ -636,7 +636,7 @@ class BwdTrans_SumFac_Tri : public Operator
         {
             boost::ignore_unused(output1, output2);
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
 
             int ncoeffs = m_stdExp->GetNcoeffs();
@@ -750,7 +750,7 @@ class BwdTrans_SumFac_Hex : public Operator
             }
             else
             {
-                ASSERTL1(wsp.num_elements() == m_wspSize,
+                ASSERTL1(wsp.size() == m_wspSize,
                          "Incorrect workspace size");
 
                 // Assign second half of workspace for 2nd DGEMM operation.
@@ -857,7 +857,7 @@ class BwdTrans_SumFac_Tet : public Operator
         {
             boost::ignore_unused(output1, output2);
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
 
             Array<OneD, NekDouble > tmp  = wsp;
@@ -1034,7 +1034,7 @@ class BwdTrans_SumFac_Prism : public Operator
         {
             boost::ignore_unused(output1, output2);
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                     "Incorrect workspace size");
 
             // Assign second half of workspace for 2nd DGEMM operation.
@@ -1178,7 +1178,7 @@ class BwdTrans_SumFac_Pyr : public Operator
         {
             boost::ignore_unused(output1, output2);
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                     "Incorrect workspace size");
 
             // Assign second half of workspace for 2nd DGEMM operation.

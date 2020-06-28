@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     // Print summary of solution details
     factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
     
-    const SpatialDomains::ExpansionInfoMap &expansions = graph1D->GetExpansionInfos();
+    const SpatialDomains::ExpansionInfoMap &expansions = graph1D->GetExpansionInfo();
     
     LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
     
@@ -109,13 +109,11 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Helmholtz solution taking physical forcing
-    //Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), lambda);
-    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), NullFlagList,  factors);
+    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), factors);
      //----------------------------------------------
 
     //----------------------------------------------
     // Backward Transform Solution to get solved values at
-    //Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
     Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
     //----------------------------------------------
 

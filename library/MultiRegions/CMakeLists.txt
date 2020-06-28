@@ -1,4 +1,5 @@
 SET(MULTI_REGIONS_SOURCES
+./AssemblyMap/AssemblyCommDG.cpp
 ./AssemblyMap/AssemblyMap.cpp
 ./AssemblyMap/AssemblyMapCG.cpp
 ./AssemblyMap/AssemblyMapDG.cpp
@@ -10,7 +11,6 @@ DisContField.cpp
 DisContField3DHomogeneous1D.cpp
 DisContField3DHomogeneous2D.cpp
 ExpList.cpp
-ExpListConstructors.cpp
 ExpListHomogeneous1D.cpp
 ExpListHomogeneous2D.cpp
 ExpList2DHomogeneous1D.cpp
@@ -70,6 +70,7 @@ SubStructuredGraph.h
 )
 
 SET(ASSEMBLY_MAP_HEADERS
+./AssemblyMap/AssemblyCommDG.h
 ./AssemblyMap/AssemblyMap.h
 ./AssemblyMap/AssemblyMapCG.h
 ./AssemblyMap/AssemblyMapDG.h

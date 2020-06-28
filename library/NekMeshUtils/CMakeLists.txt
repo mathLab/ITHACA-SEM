@@ -6,6 +6,7 @@ SET(NEKMESHUTILS_SOURCES
     MeshElements/Face.cpp
     MeshElements/BooleanOperators.cpp
     MeshElements/Point.cpp
+    MeshElements/Node.cpp
     MeshElements/Line.cpp
     MeshElements/Triangle.cpp
     MeshElements/Quadrilateral.cpp
@@ -40,6 +41,7 @@ IF(NEKTAR_USE_MESHGEN)
         CADSystem/OCE/CADVertOCE.cpp
         CADSystem/OCE/CADCurveOCE.cpp
         CADSystem/OCE/CADSurfOCE.cpp
+        CADSystem/OCE/TransfiniteSurface.cpp
         2DGenerator/2DGenerator.cpp
     )
 ENDIF()
@@ -92,6 +94,8 @@ IF(NEKTAR_USE_MESHGEN)
         CADSystem/OCE/CADVertOCE.h
         CADSystem/OCE/CADCurveOCE.h
         CADSystem/OCE/CADSurfOCE.h
+        CADSystem/OCE/GeoParser.hpp
+        CADSystem/OCE/TransfiniteSurface.h
         Optimisation/BGFS-B.h
         Optimisation/OptimiseObj.h
 #        2DGenerator/2DGenerator.h
@@ -99,19 +103,19 @@ IF(NEKTAR_USE_MESHGEN)
 ENDIF()
 
 IF(NEKTAR_USE_CFI)
+    ADD_DEFINITIONS(-DNEKTAR_USE_CFI)
     SET(NEKMESHUTILS_HEADERS ${NEKMESHUTILS_HEADERS}
         CADSystem/CFI/CADSystemCFI.h
         CADSystem/CFI/CADVertCFI.h
         CADSystem/CFI/CADCurveCFI.h
         CADSystem/CFI/CADSurfCFI.h
-        CFIMesh/CFIMesh.h
+        CADSystem/CFI/CADElementCFI.h
     )
     SET(NEKMESHUTILS_SOURCES ${NEKMESHUTILS_SOURCES}
         CADSystem/CFI/CADSystemCFI.cpp
         CADSystem/CFI/CADVertCFI.cpp
         CADSystem/CFI/CADCurveCFI.cpp
         CADSystem/CFI/CADSurfCFI.cpp
-        CFIMesh/CFIMesh.cpp
     )
 ENDIF()
 
@@ -132,8 +136,8 @@ IF(NEKTAR_USE_MESHGEN)
     ADD_DEPENDENCIES(NekMeshUtils oce-0.17 tetgen-1.5 triangle-1.6)
 
     IF(NEKTAR_USE_CFI)
-	TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${CFI_LIBRARY_API})
-	TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PRIVATE ${CFI_LIBRARY_CXX})
+	TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC ${CFI_LIBRARY_API})
+	TARGET_LINK_LIBRARIES(NekMeshUtils LINK_PUBLIC ${CFI_LIBRARY_CXX})
     ENDIF()
 ENDIF()
 

@@ -34,6 +34,12 @@ SET(NekMeshSources
     ProcessModules/ProcessVarOpti/ElUtil.cpp
 )
 
+IF (NEKTAR_USE_CFI)
+    ADD_DEFINITIONS(-DNEKTAR_USE_CFI)
+    SET(NekMeshSources ${NekMeshSources} InputModules/InputCADfix.cpp)
+    SET(NekMeshSources ${NekMeshSources} OutputModules/OutputCADfix.cpp)
+ENDIF (NEKTAR_USE_CFI)
+
 IF (NEKTAR_USE_CCM)
     SET(NekMeshSources ${NekMeshSources} InputModules/InputStar.cpp)
 ENDIF (NEKTAR_USE_CCM)
@@ -80,9 +86,10 @@ ADD_NEKTAR_TEST(Nektar++/linearise_invalid_quad)
 
 # MeshGen test
 IF(NEKTAR_USE_MESHGEN)
-
+    ADD_NEKTAR_TEST(MeshGen/GEO/2d_adapt)
     ADD_NEKTAR_TEST(MeshGen/GEO/2d_bl)
     ADD_NEKTAR_TEST(MeshGen/GEO/2d_t106c)
+    ADD_NEKTAR_TEST(MeshGen/GEO/annulus)
 
     ADD_NEKTAR_TEST(MeshGen/NACA/2d_bl)
 

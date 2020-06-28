@@ -66,15 +66,6 @@ Geometry3D::~Geometry3D()
 // Helper functions
 //---------------------------------------
 
-/**
- * @brief Returns the element coordinate direction corresponding to a given face
- * coordinate direction
- */
-int Geometry3D::GetDir(const int faceidx, const int facedir) const
-{
-    return v_GetDir(faceidx, facedir);
-}
-
 //---------------------------------------
 // 3D Geometry Methods
 //---------------------------------------
@@ -96,8 +87,8 @@ void Geometry3D::NewtonIterationForLocCoord(
     Array<OneD, const NekDouble> Jac =
         m_geomFactors->GetJac(m_xmap->GetPointsKeys());
 
-    NekDouble ScaledTol = Vmath::Vsum(Jac.num_elements(), Jac, 1) /
-                          ((NekDouble)Jac.num_elements());
+    NekDouble ScaledTol = Vmath::Vsum(Jac.size(), Jac, 1) /
+                          ((NekDouble)Jac.size());
     ScaledTol *= Tol;
 
     NekDouble xmap, ymap, zmap, F1, F2, F3;
@@ -108,15 +99,15 @@ void Geometry3D::NewtonIterationForLocCoord(
     // save intiial guess for later reference if required.
     NekDouble init0 = Lcoords[0], init1 = Lcoords[1], init2 = Lcoords[2];
 
-    Array<OneD, NekDouble> DxD1(ptsx.num_elements());
-    Array<OneD, NekDouble> DxD2(ptsx.num_elements());
-    Array<OneD, NekDouble> DxD3(ptsx.num_elements());
-    Array<OneD, NekDouble> DyD1(ptsx.num_elements());
-    Array<OneD, NekDouble> DyD2(ptsx.num_elements());
-    Array<OneD, NekDouble> DyD3(ptsx.num_elements());
-    Array<OneD, NekDouble> DzD1(ptsx.num_elements());
-    Array<OneD, NekDouble> DzD2(ptsx.num_elements());
-    Array<OneD, NekDouble> DzD3(ptsx.num_elements());
+    Array<OneD, NekDouble> DxD1(ptsx.size());
+    Array<OneD, NekDouble> DxD2(ptsx.size());
+    Array<OneD, NekDouble> DxD3(ptsx.size());
+    Array<OneD, NekDouble> DyD1(ptsx.size());
+    Array<OneD, NekDouble> DyD2(ptsx.size());
+    Array<OneD, NekDouble> DyD3(ptsx.size());
+    Array<OneD, NekDouble> DzD1(ptsx.size());
+    Array<OneD, NekDouble> DzD2(ptsx.size());
+    Array<OneD, NekDouble> DzD3(ptsx.size());
 
     // Ideally this will be stored in m_geomfactors
     m_xmap->PhysDeriv(ptsx, DxD1, DxD2, DxD3);
@@ -252,23 +243,23 @@ void Geometry3D::v_FillGeom()
 
         if (m_forient[i] < 9)
         {
-            m_xmap->GetFaceToElementMap(
+            m_xmap->GetTraceToElementMap(
                 i,
-                m_forient[i],
                 mapArray,
                 signArray,
-                m_faces[i]->GetXmap()->GetEdgeNcoeffs(0),
-                m_faces[i]->GetXmap()->GetEdgeNcoeffs(1));
+                m_forient[i],
+                m_faces[i]->GetXmap()->GetTraceNcoeffs(0),
+                m_faces[i]->GetXmap()->GetTraceNcoeffs(1));
         }
         else
         {
-            m_xmap->GetFaceToElementMap(
+            m_xmap->GetTraceToElementMap(
                 i,
-                m_forient[i],
                 mapArray,
                 signArray,
-                m_faces[i]->GetXmap()->GetEdgeNcoeffs(1),
-                m_faces[i]->GetXmap()->GetEdgeNcoeffs(0));
+                m_forient[i],
+                m_faces[i]->GetXmap()->GetTraceNcoeffs(1),
+                m_faces[i]->GetXmap()->GetTraceNcoeffs(0));
         }
 
         for (j = 0; j < m_coordim; j++)

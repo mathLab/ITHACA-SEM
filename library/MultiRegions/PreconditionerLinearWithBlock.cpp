@@ -36,7 +36,7 @@
 #include <MultiRegions/PreconditionerLinearWithBlock.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <LocalRegions/MatrixKey.h>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 
@@ -53,24 +53,24 @@ namespace Nektar
                     "FullLinearSpaceWithBlock",
                     PreconditionerLinearWithBlock::create,
                     "Full Linear space and block preconditioning");
- 
+
        /**
          * @class PreconditionerLinearWithBlock
          *
-         * This class implements preconditioning for the conjugate 
+         * This class implements preconditioning for the conjugate
 	 * gradient matrix solver.
 	 */
-        
+
         PreconditionerLinearWithBlock::PreconditionerLinearWithBlock(
             const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
             : Preconditioner(plinsys, pLocToGloMap)
         {
         }
-       
+
         /**
          *
-         */ 
+         */
         void PreconditionerLinearWithBlock::v_InitObject()
         {
             m_linSpacePrecon = GetPreconFactory().CreateInstance("FullLinearSpace",m_linsys.lock(),m_locToGloMap.lock());
@@ -94,7 +94,7 @@ namespace Nektar
             const Array<OneD, NekDouble>& pInput,
             Array<OneD, NekDouble>& pOutput)
         {
-            int nGlobal = pInput.num_elements();
+            int nGlobal = pInput.size();
 
             Array<OneD, NekDouble> OutputBlock(nGlobal, 0.0);
             Array<OneD, NekDouble> OutputLinear(nGlobal, 0.0);

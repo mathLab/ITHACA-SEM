@@ -53,7 +53,7 @@ MultiRegions::ExpListSharedPtr SetupExpList(
     SpatialDomains::MeshGraphSharedPtr   graph,
     Collections::ImplementationType      impType)
 {
-    graph->SetExpansionInfosToPolyOrder(N);
+    graph->SetExpansionInfoToNumModes(N);
 
     MultiRegions::ExpListSharedPtr expList =
         MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr(session, graph);

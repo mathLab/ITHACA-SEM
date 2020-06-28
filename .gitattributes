@@ -1,4 +1,5 @@
 # Files to ignore for export
+.gitlab-ci.yml export-ignore
 .gitignore export-ignore
 .gitattributes export-ignore
 .gitmodules export-ignore

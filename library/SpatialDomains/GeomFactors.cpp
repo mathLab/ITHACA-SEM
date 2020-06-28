@@ -196,7 +196,7 @@ namespace Nektar
                 Array<OneD, NekDouble> tmp(nqtot_map);
                 // Transform from coefficient space to physical space
                 m_xmap->BwdTrans(m_coords[i], tmp);
-
+                
                 // Allocate storage and take the derivative (calculated at the
                 // points as specified in 'Coords')
                 for (j = 0; j < m_expDim; ++j)
@@ -211,7 +211,7 @@ namespace Nektar
             {
                 // Interpolate the derivatives:
                 // - from the points as defined in the mapping ('Coords')
-                // - to the points we at which we want to know the metrics
+                // - to the points at which we want to know the metrics
                 //   ('tbasis')
                 bool same = true;
                 for (j = 0; j < m_expDim; ++j)
@@ -393,6 +393,8 @@ namespace Nektar
          * @param   keyTgt      Target point distributions.
          * @returns             Derivative factors evaluated at the target
          *                      point distributions.
+         * A 1D example: /f$ Jac =(\partial x/ \partial \xi) /f$ ; 
+         *               /f$ factor = 1/Jac = (\partial \xi/ \partial x) /f$ 
          */
         Array<TwoD, NekDouble> GeomFactors::ComputeDerivFactors(
                 const LibUtilities::PointsKeyVector& keyTgt) const
@@ -717,11 +719,11 @@ namespace Nektar
                     const Array<TwoD, const NekDouble>& src,
                     Array<TwoD, NekDouble>& tgt) const
         {
-            ASSERTL1(src.num_elements() == tgt.num_elements(),
+            ASSERTL1(src.size() == tgt.size(),
                      "Source matrix is of different size to destination"
                      "matrix for computing adjoint.");
 
-            int n = src[0].num_elements();
+            int n = src[0].size();
             switch (m_expDim)
             {
                 case 1:
@@ -767,7 +769,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &factors,
                   Array<OneD, Array<OneD,NekDouble> > &output)
         {
-            int nq = output[0].num_elements();
+            int nq = output[0].size();
 
             output = Array<OneD,Array<OneD,NekDouble> >(m_coordDim);
             for (int i = 0; i < m_coordDim; ++i)
@@ -832,7 +834,7 @@ namespace Nektar
                     NekDouble radius, xc=0.0, yc=0.0, xdis, ydis;
                     NekDouble la, lb;
 
-                    ASSERTL1(factors.num_elements() >= 4,
+                    ASSERTL1(factors.size() >= 4,
                              "factors is too short.");
 
                     la = factors[0];
@@ -934,15 +936,15 @@ namespace Nektar
         void GeomFactors::VectorNormalise(
             Array<OneD, Array<OneD, NekDouble> > &array)
         {
-            int ndim = array.num_elements();
+            int ndim = array.size();
             ASSERTL0(ndim > 0, "Number of components must be > 0.");
             for (int i = 1; i < ndim; ++i)
             {
-                ASSERTL0(array[i].num_elements() == array[0].num_elements(),
+                ASSERTL0(array[i].size() == array[0].size(),
                          "Array size mismatch in coordinates.");
             }
 
-            int nq        = array[0].num_elements();
+            int nq        = array[0].size();
             Array<OneD, NekDouble> norm (nq, 0.0);
 
             // Compute the norm of each vector.
@@ -978,14 +980,14 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &v2,
                   Array<OneD,       Array<OneD, NekDouble> > &v3)
         {
-            ASSERTL0(v1.num_elements() == 3,
+            ASSERTL0(v1.size() == 3,
                      "Input 1 has dimension not equal to 3.");
-            ASSERTL0(v2.num_elements() == 3,
+            ASSERTL0(v2.size() == 3,
                      "Input 2 has dimension not equal to 3.");
-            ASSERTL0(v3.num_elements() == 3,
+            ASSERTL0(v3.size() == 3,
                      "Output vector has dimension not equal to 3.");
 
-            int nq = v1[0].num_elements();
+            int nq = v1[0].size();
             Array<OneD, NekDouble> temp(nq);
 
             Vmath::Vmul (nq, v1[2], 1, v2[1], 1, temp, 1);

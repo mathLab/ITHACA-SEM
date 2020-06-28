@@ -187,7 +187,7 @@ NekDouble TetGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         ptdist = sqrt(tmp1[min_i]);
 
         // Get collapsed coordinate
-        int qa = za.num_elements(), qb = zb.num_elements();
+        int qa = za.size(), qb = zb.size();
         Lcoords[2] = zc[min_i / (qa * qb)];
         min_i = min_i % (qa * qb);
         Lcoords[1] = zb[min_i / qa];
@@ -747,21 +747,21 @@ void TetGeom::v_GenGeomFactors()
 void TetGeom::SetUpXmap()
 {
     vector<int> tmp;
-    tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(0));
+    tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(0));
     int order0 = *max_element(tmp.begin(), tmp.end());
 
     tmp.clear();
     tmp.push_back(order0);
-    tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(1));
-    tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(2));
+    tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(1));
+    tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(2));
     int order1 = *max_element(tmp.begin(), tmp.end());
 
     tmp.clear();
     tmp.push_back(order0);
     tmp.push_back(order1);
-    tmp.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs(1));
-    tmp.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs(2));
-    tmp.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs(1));
+    tmp.push_back(m_faces[1]->GetXmap()->GetTraceNcoeffs(1));
+    tmp.push_back(m_faces[1]->GetXmap()->GetTraceNcoeffs(2));
+    tmp.push_back(m_faces[3]->GetXmap()->GetTraceNcoeffs(1));
     int order2 = *max_element(tmp.begin(), tmp.end());
 
     const LibUtilities::BasisKey A(

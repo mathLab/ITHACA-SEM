@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Print summary of solution details
     factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
-    const SpatialDomains::ExpansionInfoMap &expansions = graph2D->GetExpansionInfos();
+    const SpatialDomains::ExpansionInfoMap &expansions = graph2D->GetExpansionInfo();
     LibUtilities::BasisKey bkey0 
         = expansions.begin()->second->m_basisKeyVector[0];
 
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Helmholtz solution taking physical forcing
-    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), NullFlagList, factors);
+    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), factors);
      //----------------------------------------------
 
     //----------------------------------------------

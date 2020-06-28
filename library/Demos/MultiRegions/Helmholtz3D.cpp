@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
         factors[StdRegions::eFactorLambda]             = 
             vSession->GetParameter("Lambda");
         const SpatialDomains::ExpansionInfoMap &expansions = 
-            graph3D->GetExpansionInfos();
+            graph3D->GetExpansionInfo();
         LibUtilities::BasisKey              bkey0      = 
             expansions.begin()->second->m_basisKeyVector[0];
         
@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
         //Helmholtz solution taking physical forcing after setting
         //initial condition to zero
         Vmath::Zero(Exp->GetNcoeffs(),Exp->UpdateCoeffs(),1);
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), NullFlagList, factors,
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), factors,
                        varcoeffs);
         //----------------------------------------------
         Timing("Helmholtz Solve ..");
@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
         for(i = 0; i < 20; ++i)
         {
             Vmath::Zero(Exp->GetNcoeffs(),Exp->UpdateCoeffs(),1);
-            Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), NullFlagList, factors);
+            Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), factors);
         }
 
         Timing("20 Helmholtz Solves:... ");

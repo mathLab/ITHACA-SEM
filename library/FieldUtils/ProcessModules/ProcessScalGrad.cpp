@@ -115,7 +115,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
     }
 
     // loop over the types of boundary conditions
-    for (cnt = n = 0; n < BndExp[0].num_elements(); ++n)
+    for (cnt = n = 0; n < BndExp[0].size(); ++n)
     {
         bool doneBnd = false;
         // identify if boundary has been defined
@@ -185,7 +185,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
 
                             for (j = 0; j < ngrad; ++j)
                             {
-                                elmt->GetFacePhysVals(boundary, bc, grad[j],
+                                elmt->GetTracePhysVals(boundary, bc, grad[j],
                                                       fgrad[j]);
                             }
 

@@ -165,7 +165,7 @@ MeshGraphSharedPtr MeshGraph::Read(
 
 void MeshGraph::FillGraph()
 {
-    ReadExpansionInfos();
+    ReadExpansionInfo();
 
     switch (m_meshDimension)
     {
@@ -652,7 +652,7 @@ void MeshGraph::GetCompositeList(const std::string &compositeStr,
 /**
  *
  */
-const ExpansionInfoMap &MeshGraph::GetExpansionInfos(const std::string variable)
+const ExpansionInfoMap &MeshGraph::GetExpansionInfo(const std::string variable)
 {
     ExpansionInfoMapShPtr returnval;
 
@@ -705,7 +705,7 @@ ExpansionInfoShPtr MeshGraph::GetExpansionInfo(GeometrySharedPtr geom,
 /**
  *
  */
-void MeshGraph::SetExpansionInfos(
+void MeshGraph::SetExpansionInfo(
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef)
 {
     int i, j, k, cnt, id;
@@ -1252,7 +1252,7 @@ void MeshGraph::SetExpansionInfos(
                 default:
                     ASSERTL0(
                         false,
-                        "Need to set up for pyramid and prism 3D ExpansionInfos");
+                        "Need to set up for pyramid and prism 3D ExpansionInfo");
                     break;
             }
 
@@ -1272,7 +1272,7 @@ void MeshGraph::SetExpansionInfos(
 /**
  *
  */
-void MeshGraph::SetExpansionInfos(
+void MeshGraph::SetExpansionInfo(
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
     std::vector<std::vector<LibUtilities::PointsType>> &pointstype)
 {
@@ -1474,7 +1474,7 @@ void MeshGraph::SetExpansionInfos(
                 default:
                     ASSERTL0(
                         false,
-                        "Need to set up for pyramid and prism 3D ExpansionInfos");
+                        "Need to set up for pyramid and prism 3D ExpansionInfo");
                     break;
             }
 
@@ -1496,7 +1496,7 @@ void MeshGraph::SetExpansionInfos(
  * optional arguemt of \a npoints which redefines how many
  * points are to be used.
  */
-void MeshGraph::SetExpansionInfosToEvenlySpacedPoints(int npoints)
+void MeshGraph::SetExpansionInfoToEvenlySpacedPoints(int npoints)
 {
     // iterate over all defined expansions
     for (auto it = m_expansionMapShPtrMap.begin();
@@ -1538,7 +1538,7 @@ void MeshGraph::SetExpansionInfosToEvenlySpacedPoints(int npoints)
  *  the number of points the same difference from the number
  *  of modes as the original expansion definition
  */
-void MeshGraph::SetExpansionInfosToPolyOrder(int nmodes)
+void MeshGraph::SetExpansionInfoToNumModes(int nmodes)
 {
     // iterate over all defined expansions
     for (auto it = m_expansionMapShPtrMap.begin();
@@ -1571,7 +1571,7 @@ void MeshGraph::SetExpansionInfosToPolyOrder(int nmodes)
  *  the number of points the same difference from the number
  *  of modes as the original expansion definition
  */
-void MeshGraph::SetExpansionInfosToPointOrder(int npts)
+void MeshGraph::SetExpansionInfoToPointOrder(int npts)
 {
     // iterate over all defined expansions
     for (auto it = m_expansionMapShPtrMap.begin();
@@ -2648,7 +2648,7 @@ std::string MeshGraph::GetCompositeString(CompositeSharedPtr comp)
     return s.str();
 }
 
-void MeshGraph::ReadExpansionInfos()
+void MeshGraph::ReadExpansionInfo()
 {
     // Find the Expansions tag
     TiXmlElement *expansionTypes = m_session->GetElement("NEKTAR/EXPANSIONS");
@@ -3184,7 +3184,7 @@ void MeshGraph::ReadExpansionInfos()
             f->ImportFieldDefs(LibUtilities::XmlDataSource::create(m_session->GetDocument()),
                                fielddefs, true);
             cout << "    Number of elements: " << fielddefs.size() << endl;
-            SetExpansionInfos(fielddefs);
+            SetExpansionInfo(fielddefs);
         }
         else if (expType == "F")
         {
@@ -3199,7 +3199,7 @@ void MeshGraph::ReadExpansionInfos()
             LibUtilities::FieldIOSharedPtr f =
                 LibUtilities::FieldIO::CreateForFile(m_session, filenameStr);
             f->Import(filenameStr, fielddefs);
-            SetExpansionInfos(fielddefs);
+            SetExpansionInfo(fielddefs);
         }
         else
         {

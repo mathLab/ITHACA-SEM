@@ -141,10 +141,10 @@ namespace Nektar
              */
             Array<OneD,MultiRegions::ExpListSharedPtr>         m_bndCondExpansions;
 
-            /**
-             * @brief An array which contains the information about
-             * the boundary condition on the different boundary regions.
-             */
+            Array<OneD,NekDouble> m_bndCondBndWeight;
+            
+            /// An array which contains the information about the boundary
+            /// condition on the different boundary regions.
             Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
 
             /// Global boundary matrix.
@@ -223,6 +223,12 @@ namespace Nektar
             {
                 return m_traceMap;
             }
+
+            virtual const LocTraceToTraceMapSharedPtr
+            &v_GetLocTraceToTraceMap(void) const
+            {
+                return m_locTraceToTraceMap;
+            }
             
             virtual void v_AddTraceIntegral(
                 const Array<OneD, const NekDouble> &Fn,
@@ -231,13 +237,10 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Fwd, 
                 const Array<OneD, const NekDouble> &Bwd, 
                       Array<OneD,       NekDouble> &outarray);
-            virtual void v_GetFwdBwdTracePhys(
-                      Array<OneD,       NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd);
-            virtual void v_GetFwdBwdTracePhys(
-                const Array<OneD, const NekDouble> &field,
-                      Array<OneD,       NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd);
+            virtual void v_AddTraceQuadPhysToField(
+                const Array<OneD, const NekDouble> &Fwd,
+                const Array<OneD, const NekDouble> &Bwd,
+                    Array<OneD,       NekDouble> &field);
             virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(
@@ -306,12 +309,38 @@ namespace Nektar
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
-                    const FlagList &flags,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
                     const MultiRegions::VarFactorsMap &varfactors,
                     const Array<OneD, const NekDouble> &dirForcing,
                     const bool PhysSpaceForcing);
+            
+            inline virtual void v_PeriodicBwdCopy(
+                const Array<OneD, const NekDouble> &Fwd,
+                      Array<OneD,       NekDouble> &Bwd);
+
+            virtual void v_FillBwdWithBwdWeight(
+                    Array<OneD,       NekDouble> &weightave,
+                    Array<OneD,       NekDouble> &weightjmp);
+
+            inline virtual void v_GetFwdBwdTracePhys(
+                Array<OneD, NekDouble> &Fwd,
+                Array<OneD, NekDouble> &Bwd);
+            
+            virtual void v_GetFwdBwdTracePhys(
+                const Array<OneD, const NekDouble> &field,
+                Array<OneD,       NekDouble> &Fwd,
+                Array<OneD,       NekDouble> &Bwd,
+                bool FillBnd           = true,
+                bool PutFwdInBwdOnBCs  = false, 
+                bool DoExchange        = true); 
+
+            inline virtual const Array<OneD,const NekDouble>
+                &v_GetBndCondBwdWeight();
+
+            inline virtual void v_SetBndCondBwdWeight(
+                const int index, 
+                const NekDouble value);
 
             void SetUpDG(const std::string = "DefaultVar");
             bool IsLeftAdjacentTrace(const int n, const int e);
@@ -341,6 +370,41 @@ namespace Nektar
         };
 
         typedef std::shared_ptr<DisContField>   DisContFieldSharedPtr;
+
+        /**
+         * Generate the forward or backward state for each trace point.
+         * @param   Fwd     Forward state.
+         * @param   Bwd     Backward state.
+         */
+        void DisContField::v_GetFwdBwdTracePhys(Array<OneD, NekDouble> &Fwd,
+                                                Array<OneD, NekDouble> &Bwd)
+        {
+            v_GetFwdBwdTracePhys(m_phys,Fwd,Bwd);
+        }
+
+        const Array<OneD,const NekDouble>
+        &DisContField::v_GetBndCondBwdWeight()
+        {
+            return m_bndCondBndWeight;
+        }
+        
+        void DisContField::v_SetBndCondBwdWeight(
+                         const int index, 
+                         const NekDouble value)
+        {
+            m_bndCondBndWeight[index]   =   value;
+        }
+        
+        void DisContField::v_PeriodicBwdCopy(
+            const Array<OneD, const NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd)
+        {
+            for (int n = 0; n < m_periodicFwdCopy.size(); ++n)
+            {
+                Bwd[m_periodicBwdCopy[n]] = Fwd[m_periodicFwdCopy[n]];
+            }
+        }
+
     } //end of namespace
 } //end of namespace
 

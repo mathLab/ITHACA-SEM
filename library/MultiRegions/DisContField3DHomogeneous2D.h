@@ -115,7 +115,9 @@ namespace Nektar
             
         protected:
            
-            Array<OneD,MultiRegions::ExpListSharedPtr>          m_bndCondExpansions;
+            Array<OneD, MultiRegions::ExpListSharedPtr>     m_bndCondExpansions;
+            
+            Array<OneD, NekDouble >                         m_bndCondBndWeight;
 
             Array<OneD,SpatialDomains::BoundaryConditionShPtr>  m_bndConditions;
 			
@@ -136,7 +138,6 @@ namespace Nektar
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
-                    const FlagList &flags,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
                     const MultiRegions::VarFactorsMap &varfactors,
@@ -156,6 +157,10 @@ namespace Nektar
             virtual std::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
 			
 			virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>& v_UpdateBndConditions();
+
+            inline virtual void v_SetBndCondBwdWeight(
+                const int index, 
+                const NekDouble value);
         };
 
         typedef std::shared_ptr<DisContField3DHomogeneous2D>  
@@ -180,6 +185,13 @@ namespace Nektar
 		{
 			return m_bndConditions;
 		}
+
+        inline void DisContField3DHomogeneous2D::v_SetBndCondBwdWeight(
+            const int index, 
+            const NekDouble value)
+        {
+            m_bndCondBndWeight[index]   =   value;
+        }
     } //end of namespace
 } //end of namespace
 

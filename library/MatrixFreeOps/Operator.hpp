@@ -415,14 +415,14 @@ protected:
             m_nm[i] = basis[i]->GetNumModes();
             m_nq[i] = basis[i]->GetNumPoints();
 
-            m_bdata[i].resize(bdata.num_elements());
-            for (auto j = 0; j < bdata.num_elements(); ++j)
+            m_bdata[i].resize(bdata.size());
+            for (auto j = 0; j < bdata.size(); ++j)
             {
                 m_bdata[i][j] = bdata[j];
             }
 
-            m_dbdata[i].resize(dbdata.num_elements());
-            for (auto j = 0; j < dbdata.num_elements(); ++j)
+            m_dbdata[i].resize(dbdata.size());
+            for (auto j = 0; j < dbdata.size(); ++j)
             {
                 m_dbdata[i][j] = dbdata[j];
             }
@@ -437,21 +437,21 @@ protected:
                 fac = 0.25;
             }
 
-            m_w[i].resize(w.num_elements());
-            for (auto j = 0; j < w.num_elements(); ++j)
+            m_w[i].resize(w.size());
+            for (auto j = 0; j < w.size(); ++j)
             {
                 m_w[i][j] = fac * w[j];
             }
 
             auto D = basis[i]->GetD()->GetPtr();
-            m_D[i].resize(D.num_elements());
-            for(int j = 0; j < D.num_elements(); j++){
+            m_D[i].resize(D.size());
+            for(int j = 0; j < D.size(); j++){
                 m_D[i][j] = D[j];
             }
 
             auto Z = basis[i]->GetZ();
-            m_Z[i].resize(Z.num_elements());
-            for(int j = 0; j < Z.num_elements(); j++){
+            m_Z[i].resize(Z.size());
+            for(int j = 0; j < Z.size(); j++){
                 m_Z[i][j] = Z[j];
             }
 

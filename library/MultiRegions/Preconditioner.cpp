@@ -37,7 +37,7 @@
 #include <MultiRegions/Preconditioner.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <LocalRegions/MatrixKey.h>
-#include <math.h>
+#include <cmath>
 
 namespace Nektar
 {
@@ -70,7 +70,7 @@ namespace Nektar
         /**
          * @class Preconditioner
          *
-         * This class implements preconditioning for the conjugate 
+         * This class implements preconditioning for the conjugate
 	 * gradient matrix solver.
 	 */
 
@@ -82,7 +82,7 @@ namespace Nektar
               m_locToGloMap(pLocToGloMap)
         {
         }
-        
+
         /**
          *
          */
@@ -99,7 +99,7 @@ namespace Nektar
 
         /**
          * \brief Apply a preconditioner to the conjugate gradient method
-         */ 
+         */
         void Preconditioner::v_DoPreconditioner(
             const Array<OneD, NekDouble>& pInput,
                   Array<OneD, NekDouble>& pOutput)
@@ -111,7 +111,7 @@ namespace Nektar
         /**
          * \brief Apply a preconditioner to the conjugate gradient method with
          * an output for non-vertex degrees of freedom.
-         */ 
+         */
         void Preconditioner::v_DoPreconditionerWithNonVertOutput(
             const Array<OneD, NekDouble> &pInput,
                   Array<OneD, NekDouble> &pOutput,

@@ -43,7 +43,7 @@
 #include <fstream>
 
 #include <LibUtilities/LinearAlgebra/SparseMatrixFwd.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp> ///< \todo: forward declare
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 #include <boost/call_traits.hpp>
 

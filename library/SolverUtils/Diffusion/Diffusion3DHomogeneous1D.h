@@ -51,7 +51,7 @@ namespace Nektar
                     new Diffusion3DHomogeneous1D(diffType));
             }
             static std::string type[];
-            
+
         protected:
             Diffusion3DHomogeneous1D(std::string diffType);
 
@@ -59,10 +59,10 @@ namespace Nektar
             std::string                                        m_diffType;
             SolverUtils::DiffusionSharedPtr                    m_planeDiff;
             NekDouble                                          m_homoLen;
-            int                                                m_numPoints;
-            int                                                m_numPointsPlane;
-            int                                                m_numPlanes;
-            int                                                m_planeCounter;
+            std::size_t                                        m_numPoints;
+            std::size_t                                        m_numPointsPlane;
+            std::size_t                                        m_numPlanes;
+            std::size_t                                        m_planeCounter;
             Array<OneD, unsigned int>                          m_planes;
             Array<OneD, unsigned int>                          m_planePos;
             Array<OneD, Array<OneD, NekDouble> >               m_homoDerivStore;
@@ -76,14 +76,14 @@ namespace Nektar
                 LibUtilities::SessionReaderSharedPtr               pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
             virtual void v_Diffuse(
-                const int                                          nConvective,
+                const std::size_t                                  nConvective,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
                 const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
-        }; 
+        };
     }
 }
-    
+
 #endif

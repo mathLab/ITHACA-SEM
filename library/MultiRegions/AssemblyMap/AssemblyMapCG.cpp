@@ -107,7 +107,7 @@ namespace Nektar
             m_numLocalBndCondCoeffs = 0;
             m_systemSingular = checkIfSystemSingular;
 
-            for(i = 0; i < bndCondExp.num_elements(); i++)
+            for(i = 0; i < bndCondExp.size(); i++)
             {
 
                 m_numLocalBndCondCoeffs += bndCondExp[i]->GetNcoeffs();
@@ -122,7 +122,7 @@ namespace Nektar
                 // value.  note this is a vector to manage coupled
                 // solver but for scalar will just be a vector of size 11
                 cnt = 0;
-                for(k = 0; k < bndConditions.num_elements(); ++k)
+                for(k = 0; k < bndConditions.size(); ++k)
                 {
                     if (bndConditions[k][i]->GetBoundaryConditionType() ==
                             SpatialDomains::eDirichlet)
@@ -151,7 +151,7 @@ namespace Nektar
                 }
 
                 // If all boundaries are Dirichlet fill in graph
-                if(cnt == bndConditions.num_elements())
+                if(cnt == bndConditions.size())
                 {
                     for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                     {
@@ -166,18 +166,21 @@ namespace Nektar
                             }
                         }
 
-                        for (k = 0; k < bndExp->GetNedges(); k++)
+                        const int bndDim = bndExp->GetNumBases();
+                        if(bndDim > 1)
                         {
-                            meshEdgeId = bndExp->GetGeom()->GetEid(k);
-                            if (graph[1].count(meshEdgeId) == 0)
+                            for (k = 0; k < bndExp->GetNtraces(); k++)
                             {
-                                graph[1][meshEdgeId] = graphVertId++;
+                                meshEdgeId = bndExp->GetGeom()->GetEid(k);
+                                if (graph[1].count(meshEdgeId) == 0)
+                                {
+                                    graph[1][meshEdgeId] = graphVertId++;
+                                }
                             }
                         }
 
                         // Possibility of a face in 3D or edge in 2D
                         meshFaceId = bndExp->GetGeom()->GetGlobalID();
-                        const int bndDim = bndExp->GetNumBases();
                         if (graph[bndDim].count(meshFaceId) == 0)
                         {
                             graph[bndDim][meshFaceId] = graphVertId++;
@@ -304,7 +307,7 @@ namespace Nektar
                         }
                     }
 
-                    for(k = 0; k < exp->GetNedges(); k++)
+                    for(k = 0; k < exp->GetGeom()->GetNumEdges(); k++)
                     {
                         meshEdgeId = exp->GetGeom()->GetEid(k);
                         if(graph[1].count(meshEdgeId) == 0)
@@ -315,7 +318,17 @@ namespace Nektar
                                 {
                                     extraDirEdgeIds[meshEdgeId] = i;
                                     graph[1][meshEdgeId] = graphVertId++;
-                                    nExtraDirichlet += exp->GetEdgeNcoeffs(k)-2;
+                                    if(exp->GetGeom()->GetNumFaces())
+                                    {
+                                        nExtraDirichlet +=
+                                            exp->as<LocalRegions::Expansion3D>()
+                                            ->GetEdgeNcoeffs(k)-2;
+                                    }
+                                    else
+                                    {
+                                        nExtraDirichlet +=
+                                            exp->GetTraceNcoeffs(k)-2;
+                                    }
                                 }
                             }
                         }
@@ -469,7 +482,7 @@ namespace Nektar
                         for (j = 0; j < locExpVector[i]->GetNverts(); ++j)
                         {
                             if (locExpVector[i]->GetGeom()->GetVid(j) !=
-                                    meshVertId)
+                                meshVertId)
                             {
                                 continue;
                             }
@@ -592,27 +605,39 @@ namespace Nektar
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 exp = locExpVector[i];
-                nTotalVerts += exp->GetNverts();
-                nTotalEdges += exp->GetNedges();
-                nTotalFaces += exp->GetNfaces();
+                nEdges = exp->GetGeom()->GetNumEdges(); 
+                nFaces = exp->GetGeom()->GetNumFaces(); 
 
-                nEdges = exp->GetNedges();
+                nTotalVerts += exp->GetNverts();
+                nTotalEdges += nEdges;
+                nTotalFaces += nFaces;
+
                 for(j = 0; j < nEdges; ++j)
                 {
                     meshEdgeId = exp->GetGeom()->GetEid(j);
-                    if (EdgeSize.count(meshEdgeId) > 0)
+                    int nEdgeInt;
+                    
+                    if(nFaces)
                     {
-                        EdgeSize[meshEdgeId] =
-                                min(EdgeSize[meshEdgeId],
-                                    exp->GetEdgeNcoeffs(j) - 2);
+                        nEdgeInt = exp->as<LocalRegions::Expansion3D>()
+                            ->GetEdgeNcoeffs(j)-2; 
                     }
                     else
                     {
-                        EdgeSize[meshEdgeId] = exp->GetEdgeNcoeffs(j) - 2;
+                        nEdgeInt = exp->GetTraceNcoeffs(j)-2;
+                    }
+
+                    if (EdgeSize.count(meshEdgeId) > 0)
+                    {
+                        EdgeSize[meshEdgeId] =
+                            min(EdgeSize[meshEdgeId], nEdgeInt);
+                    }
+                    else
+                    {
+                        EdgeSize[meshEdgeId] = nEdgeInt;
                     }
                 }
 
-                nFaces = exp->GetNfaces();
                 faceCnt = 0;
                 for(j = 0; j < nFaces; ++j)
                 {
@@ -621,13 +646,13 @@ namespace Nektar
                     {
                         FaceSize[meshFaceId] =
                                 min(FaceSize[meshFaceId],
-                                    exp->GetFaceIntNcoeffs(j));
+                                    exp->GetTraceIntNcoeffs(j));
                     }
                     else
                     {
-                        FaceSize[meshFaceId] = exp->GetFaceIntNcoeffs(j);
+                        FaceSize[meshFaceId] = exp->GetTraceIntNcoeffs(j);
                     }
-                    FaceSize[meshFaceId] = exp->GetFaceIntNcoeffs(j);
+                    FaceSize[meshFaceId] = exp->GetTraceIntNcoeffs(j);
                 }
             }
 
@@ -840,7 +865,7 @@ namespace Nektar
             {
                 exp = locExpVector[i];
                 edgeCnt = 0;
-                nEdges = exp->GetNedges();
+                nEdges = exp->GetGeom()->GetNumEdges();
 
                 for(j = 0; j < nEdges; ++j)
                 {
@@ -899,11 +924,11 @@ namespace Nektar
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 exp = locExpVector[i];
-                nFaces = exp->GetNfaces();
+                nFaces = exp->GetGeom()->GetNumFaces();
                 faceCnt = 0;
                 for(j = 0; j < nFaces; ++j)
                 {
-                    nFaceIntCoeffs = exp->GetFaceIntNcoeffs(j);
+                    nFaceIntCoeffs = exp->GetTraceIntNcoeffs(j);
                     meshFaceId = exp->GetGeom()->GetFid(j);
                     if(graph[2].count(meshFaceId) == 0)
                     {
@@ -915,8 +940,10 @@ namespace Nektar
 
                             m_numNonDirFaces++;
                         }
-                        localFaces[localFaceOffset+faceCnt++] = tempGraph[2][meshFaceId];
-                        vwgts_map[ tempGraph[2][meshFaceId] ] = nFaceIntCoeffs;
+                        localFaces[localFaceOffset+faceCnt++] =
+                            tempGraph[2][meshFaceId];
+                        vwgts_map[ tempGraph[2][meshFaceId] ] =
+                            nFaceIntCoeffs;
                     }
                 }
                 m_numLocalBndCoeffs += exp->NumBndryCoeffs();
@@ -931,8 +958,8 @@ namespace Nektar
             {
                 exp = locExpVector[i];
                 nVerts = exp->GetNverts();
-                nEdges = exp->GetNedges();
-                nFaces = exp->GetNfaces();
+                nEdges = exp->GetGeom()->GetNumEdges();
+                nFaces = exp->GetGeom()->GetNumFaces();
 
                 // Now loop over all local faces, edges and vertices of this
                 // element and define that all other faces, edges and verices of
@@ -1096,7 +1123,7 @@ namespace Nektar
                         }
                     }
 
-                    for (j = 0; j < exp->GetNedges(); ++j)
+                    for (j = 0; j < exp->GetGeom()->GetNumEdges(); ++j)
                     {
                         int eid = exp->GetGeom()->GetEid(j)+1;
 
@@ -1107,7 +1134,7 @@ namespace Nektar
                         }
                     }
 
-                    for (j = 0; j < exp->GetNfaces(); ++j)
+                    for (j = 0; j < exp->GetGeom()->GetNumFaces(); ++j)
                     {
                         int fid = exp->GetGeom()->GetFid(j)+1;
 
@@ -1324,7 +1351,6 @@ namespace Nektar
             int firstNonDirGraphVertId;
             LibUtilities::CommSharedPtr         vComm = m_comm->GetRowComm();
             LocalRegions::ExpansionSharedPtr    exp, bndExp;
-            LibUtilities::BasisType             bType;
             StdRegions::Orientation             edgeOrient;
             StdRegions::Orientation             faceOrient;
             Array<OneD, unsigned int>           edgeInteriorMap;
@@ -1358,43 +1384,52 @@ namespace Nektar
                     dofs[0][exp->GetGeom()->GetVid(j)] = 1;
                 }
 
-                for(j = 0; j < exp->GetNedges(); ++j)
+                for(j = 0; j < exp->GetGeom()->GetNumEdges(); ++j)
                 {
-                    if (dofs[1].count(exp->GetGeom()->GetEid(j)) > 0)
+                    int nEdgeInt; 
+                    if(exp->GetGeom()->GetNumFaces())
                     {
-                        if (dofs[1][exp->GetGeom()->GetEid(j)] !=
-                                    exp->GetEdgeNcoeffs(j)-2)
-                        {
-                            ASSERTL0( (exp->GetEdgeBasisType(j) == LibUtilities::eModified_A) ||
-                                      (exp->GetEdgeBasisType(j) == LibUtilities::eModified_B) ||
-                                      (exp->GetEdgeBasisType(j) == LibUtilities::eModified_C) ||
-                                      (exp->GetEdgeBasisType(j) == LibUtilities::eModifiedPyr_C),
-                                      "CG with variable order only available with modal expansion");
-                        }
-                        dofs[1][exp->GetGeom()->GetEid(j)] =
-                                min(dofs[1][exp->GetGeom()->GetEid(j)],
-                                    exp->GetEdgeNcoeffs(j)-2);
+                        nEdgeInt = exp->as<LocalRegions::Expansion3D>()->
+                            GetEdgeNcoeffs(j)-2;
                     }
                     else
                     {
+                        nEdgeInt = exp->GetTraceNcoeffs(j)-2;
+                    }
+                    
+                    if (dofs[1].count(exp->GetGeom()->GetEid(j)) > 0)
+                    {
+                        if (dofs[1][exp->GetGeom()->GetEid(j)] != nEdgeInt)
+                        {
+                            ASSERTL0( (exp->GetBasisType(0) == LibUtilities::eModified_A) ||
+                                      (exp->GetBasisType(1) == LibUtilities::eModified_B) ||
+                                      (exp->GetBasisType(2) == LibUtilities::eModified_C) ||
+                                      (exp->GetBasisType(2) == LibUtilities::eModifiedPyr_C),
+                                      "CG with variable order only available with modal expansion");
+                        }
                         dofs[1][exp->GetGeom()->GetEid(j)] =
-                            exp->GetEdgeNcoeffs(j) - 2;
+                            min(dofs[1][exp->GetGeom()->GetEid(j)],
+                                nEdgeInt);
+                    }
+                    else
+                    {
+                        dofs[1][exp->GetGeom()->GetEid(j)] = nEdgeInt;
                     }
                 }
 
-                for(j = 0; j < exp->GetNfaces(); ++j)
+                for(j = 0; j < exp->GetGeom()->GetNumFaces(); ++j)
                 {
                     faceOrient  = exp->GetGeom()->GetForient(j);
                     meshFaceId  = exp->GetGeom()->GetFid(j);
-                    exp->GetFaceNumModes(j, faceOrient, numModes0, numModes1);
+                    exp->GetTraceNumModes(j, numModes0, numModes1, faceOrient);
 
                     if (faceModes[0].count(meshFaceId) > 0)
                     {
                         faceModes[0][meshFaceId] =
-                                min(faceModes[0][meshFaceId], numModes0);
+                            min(faceModes[0][meshFaceId], numModes0);
 
                         faceModes[1][meshFaceId] =
-                                min(faceModes[1][meshFaceId], numModes1);
+                            min(faceModes[1][meshFaceId], numModes1);
                     }
                     else
                     {
@@ -1404,9 +1439,9 @@ namespace Nektar
                         // Get shape of this face
                         SpatialDomains::Geometry3DSharedPtr geom;
                         geom = std::dynamic_pointer_cast<SpatialDomains::
-                                Geometry3D> (exp->GetGeom());
+                                                         Geometry3D> (exp->GetGeom());
                         faceType[meshFaceId] =
-                                geom->GetFace(j)->GetShapeType();
+                            geom->GetFace(j)->GetShapeType();
                     }
                 }
             }
@@ -1517,15 +1552,15 @@ namespace Nektar
                 {
                     // Quad face
                     dofs[2][faceId[i]-1] =
-                      LibUtilities::StdQuadData::getNumberOfCoefficients(P,Q) -
-                      LibUtilities::StdQuadData::getNumberOfBndCoefficients(P,Q);
+                        LibUtilities::StdQuadData::getNumberOfCoefficients(P,Q) -
+                        LibUtilities::StdQuadData::getNumberOfBndCoefficients(P,Q);
                 }
                 else
                 {
                     // Tri face
                     dofs[2][faceId[i]-1] =
-                      LibUtilities::StdTriData::getNumberOfCoefficients(P,Q) -
-                      LibUtilities::StdTriData::getNumberOfBndCoefficients(P,Q);
+                        LibUtilities::StdTriData::getNumberOfCoefficients(P,Q) -
+                        LibUtilities::StdTriData::getNumberOfBndCoefficients(P,Q);
                 }
             }
 
@@ -1537,7 +1572,7 @@ namespace Nektar
             int nExtraDirichlet;
             int mdswitch;
             m_session->LoadParameter(
-                "MDSwitch", mdswitch, 10);
+                                     "MDSwitch", mdswitch, 10);
 
             int nGraphVerts =
                 CreateGraph(locExp, bndCondExp, bndCondVec,
@@ -1558,7 +1593,7 @@ namespace Nektar
              * where N is equal to the number of boundary modes on this edge.
              */
             Array<OneD, int> graphVertOffset(
-                graph[0].size() + graph[1].size() + graph[2].size() + 1);
+                                         graph[0].size() + graph[1].size() + graph[2].size() + 1,0);
 
             graphVertOffset[0] = 0;
 
@@ -1572,26 +1607,32 @@ namespace Nektar
                     graphVertOffset[graph[0][meshVertId]+1] = 1;
                 }
 
-                for(j = 0; j < exp->GetNedges(); ++j)
+                for(j = 0; j < exp->GetGeom()->GetNumEdges(); ++j)
                 {
-                    nEdgeInteriorCoeffs = exp->GetEdgeNcoeffs(j) - 2;
+                    if(exp->GetGeom()->GetNumFaces()) // 3D version
+                    {
+                        nEdgeInteriorCoeffs =
+                            exp->as<LocalRegions::Expansion3D>()->
+                            GetEdgeNcoeffs(j) - 2;
+                    }
+                    else
+                    {
+                        nEdgeInteriorCoeffs = exp->GetTraceNcoeffs(j) - 2;
+                    }
                     meshEdgeId = exp->GetGeom()->GetEid(j);
                     graphVertOffset[graph[1][meshEdgeId]+1]
                         = dofs[1][meshEdgeId];
 
-                    bType = exp->GetEdgeBasisType(j);
-
-                    // need a sign vector for modal expansions if nEdgeCoeffs
+                    // Need a sign vector for modal expansions if nEdgeCoeffs
                     // >=3 (not 4 because of variable order case)
                     if(nEdgeInteriorCoeffs &&
-                       (bType == LibUtilities::eModified_A ||
-                        bType == LibUtilities::eModified_B))
+                       (exp->GetBasisType(0) == LibUtilities::eModified_A))
                     {
                         m_signChange = true;
                     }
                 }
 
-                for(j = 0; j < exp->GetNfaces(); ++j)
+                for(j = 0; j < exp->GetGeom()->GetNumFaces(); ++j)
                 {
                     meshFaceId = exp->GetGeom()->GetFid(j);
                     graphVertOffset[graph[2][meshFaceId]+1] =
@@ -1599,7 +1640,7 @@ namespace Nektar
                 }
             }
 
-            for(i = 1; i < graphVertOffset.num_elements(); i++)
+            for(i = 1; i < graphVertOffset.size(); i++)
             {
                 graphVertOffset[i] += graphVertOffset[i-1];
             }
@@ -1686,9 +1727,18 @@ namespace Nektar
                         graphVertOffset[graph[0][meshVertId]];
                 }
 
-                for(j = 0; j < exp->GetNedges(); ++j)
+                for(j = 0; j < exp->GetGeom()->GetNumEdges(); ++j)
                 {
-                    nEdgeInteriorCoeffs = exp->GetEdgeNcoeffs(j)-2;
+                    if(exp->GetGeom()->GetNumFaces())
+                    {
+                        nEdgeInteriorCoeffs = exp->
+                            as<LocalRegions::Expansion3D>()->
+                            GetEdgeNcoeffs(j)-2;
+                    }
+                    else
+                    {
+                        nEdgeInteriorCoeffs = exp->GetTraceNcoeffs(j)-2;
+                    }
                     edgeOrient          = exp->GetGeom()->GetEorient(j);
                     meshEdgeId          = exp->GetGeom()->GetEid(j);
 
@@ -1705,7 +1755,17 @@ namespace Nektar
                         edgeOrient = idOrient.second;
                     }
 
-                    exp->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
+                    if(exp->GetGeom()->GetNumFaces())
+                    {
+                        exp->as<LocalRegions::Expansion3D>()->
+                            GetEdgeInteriorToElementMap(j,edgeInteriorMap,
+                                               edgeInteriorSign,edgeOrient);
+                    }
+                    else
+                    {
+                        exp->GetTraceInteriorToElementMap(j,edgeInteriorMap,
+                                                edgeInteriorSign,edgeOrient);
+                    }
 
                     // Set the global DOF's for the interior modes of edge j
                     for(k = 0; k < dofs[1][meshEdgeId]; ++k)
@@ -1717,7 +1777,7 @@ namespace Nektar
                     {
                         m_localToGlobalMap[cnt+edgeInteriorMap[k]] = 0;
                     }
-                    
+
                     // Fill the sign vector if required
                     if(m_signChange)
                     {
@@ -1733,7 +1793,7 @@ namespace Nektar
                     }
                 }
 
-                for(j = 0; j < exp->GetNfaces(); ++j)
+                for(j = 0; j < exp->GetGeom()->GetNumFaces(); ++j)
                 {
                     faceOrient          = exp->GetGeom()->GetForient(j);
                     meshFaceId          = exp->GetGeom()->GetFid(j);
@@ -1746,10 +1806,12 @@ namespace Nektar
                         faceOrient = DeterminePeriodicFaceOrient(faceOrient,pIt->second[0].orient);
                     }
 
-                    exp->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
+                    exp->GetTraceInteriorToElementMap(j,faceInteriorMap,
+                                                      faceInteriorSign,
+                                                      faceOrient);
 
                     // Set the global DOF's for the interior modes of face j
-                    exp->GetFaceNumModes(j, faceOrient, numModes0, numModes1);
+                    exp->GetTraceNumModes(j, numModes0, numModes1, faceOrient);
                     switch(faceType[meshFaceId])
                     {
                     case LibUtilities::eQuadrilateral:
@@ -1774,7 +1836,7 @@ namespace Nektar
                                 }
                                 else
                                 {
-                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] =  0; 
+                                    m_localToGlobalMap[cnt+faceInteriorMap[kLoc]] =  0;
                                     if(m_signChange)
                                     {
                                         m_localToGlobalSign[cnt+faceInteriorMap[kLoc]] = 0.0;
@@ -1849,7 +1911,7 @@ namespace Nektar
             
             cnt = 0;
             int offset = 0;
-            for(i = 0; i < bndCondExp.num_elements(); i++)
+            for(i = 0; i < bndCondExp.size(); i++)
             {
                 set<int> foundExtraVerts, foundExtraEdges;
                 for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
@@ -1877,16 +1939,19 @@ namespace Nektar
                     {
                         if(dim == 2)
                         {
-                            exp->GetEdgeToElementMap(tid,exp->GetEorient(tid),
-                                                     maparray,signarray,
-                                                     bndExp->GetBasisNumModes(0));
+                            exp->GetTraceToElementMap(tid,
+                                                      maparray,signarray,
+                                                      exp->GetGeom()->
+                                                      GetEorient(tid),
+                                                      bndExp->GetBasisNumModes(0));
                         }
                         else if (dim == 3)
                         {
-                            exp->GetFaceToElementMap(tid,exp->GetForient(tid),
-                                                     maparray,signarray,
-                                                     bndExp->GetBasisNumModes(0),
-                                                     bndExp->GetBasisNumModes(1));
+                            exp->GetTraceToElementMap(tid, maparray,signarray,
+                                                      exp->GetGeom()->
+                                                      GetForient(tid),
+                                                      bndExp->GetBasisNumModes(0),
+                                                      bndExp->GetBasisNumModes(1));
                         }
                         
                         for(k = 0; k < bndExp->GetNcoeffs(); k++)
@@ -1941,7 +2006,7 @@ namespace Nektar
             // local coeff that has been filled by the boundary
             // coeffs.
 
-            Array<OneD, NekDouble> gloParaDirBnd(m_numLocalCoeffs,-1.0);
+            Array<OneD, NekDouble> gloParaDirBnd(m_numGlobalBndCoeffs,-1.0);
 
             Array<OneD, unsigned int> bndmap; 
             cnt = 0; 
@@ -1953,7 +2018,7 @@ namespace Nektar
 
                 exp->GetBoundaryMap(bndmap);
                 
-                for(j = 0; j < bndmap.num_elements(); ++j)
+                for(j = 0; j < bndmap.size(); ++j)
                 {
                     k = cnt + bndmap[j];
                     
@@ -2006,7 +2071,7 @@ namespace Nektar
                     if(m_signChange)
                     {
                         m_localToGlobalBndSign[cnt]=m_localToGlobalSign[i];
-                    }
+                   }
                     m_localToGlobalBndMap[cnt++]=m_localToGlobalMap[i];
                 }
             }
@@ -2096,7 +2161,7 @@ namespace Nektar
                             }
                         }
 
-                        for (j = 0; j < exp->GetNedges(); ++j)
+                        for (j = 0; j < exp->GetGeom()->GetNumEdges(); ++j)
                         {
                             meshEdgeId = exp->GetGeom()->GetEid(j);
 
@@ -2108,7 +2173,7 @@ namespace Nektar
                             }
                         }
 
-                        for (j = 0; j < exp->GetNfaces(); ++j)
+                        for (j = 0; j < exp->GetGeom()->GetNumFaces(); ++j)
                         {
                             meshFaceId = exp->GetGeom()->GetFid(j);
                             
@@ -2301,22 +2366,37 @@ namespace Nektar
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 exp = locExpVector[i];
-                nVert += exp->GetNverts();
-                nEdge += exp->GetNedges();
-                nFace += exp->GetNfaces();
+
+                int nv = exp->GetNverts();
+                int ne = exp->GetGeom()->GetNumEdges(); 
+                int nf = exp->GetGeom()->GetNumFaces();
+                
+                nVert += nv; 
+                nEdge += ne; 
+                nFace += nf;
+                
                 // Loop over all edges (and vertices) of element i
-                for(j = 0; j < exp->GetNedges(); ++j)
+                for(j = 0; j < ne; ++j)
                 {
-                    dof = exp->GetEdgeNcoeffs(j)-2;
+                    if(nf)
+                    {
+                        dof = exp->as<LocalRegions::Expansion3D>()->
+                            GetEdgeNcoeffs(j)-2;
+                    }
+                    else
+                    {
+                        dof = exp->GetTraceNcoeffs(j)-2;
+                    }
+                        
                     maxEdgeDof = (dof > maxEdgeDof ? dof : maxEdgeDof);
                 }
-                for(j = 0; j < exp->GetNfaces(); ++j)
+                for(j = 0; j < nf; ++j)
                 {
-                    dof = exp->GetFaceIntNcoeffs(j);
+                    dof = exp->GetTraceIntNcoeffs(j);
                     maxFaceDof = (dof > maxFaceDof ? dof : maxFaceDof);
                 }
                 exp->GetInteriorMap(interiorMap);
-                dof = interiorMap.num_elements();
+                dof = interiorMap.size();
                 maxIntDof = (dof > maxIntDof ? dof : maxIntDof);
             }
 
@@ -2334,6 +2414,8 @@ namespace Nektar
                 exp = locExpVector[i];
                 cnt = locExp.GetCoeff_Offset(i);
 
+                int nf = exp->GetGeom()->GetNumFaces();
+                
                 // Loop over all vertices of element i
                 for(j = 0; j < exp->GetNverts(); ++j)
                 {
@@ -2350,12 +2432,14 @@ namespace Nektar
                     }
 
                     m_globalToUniversalMap[vGlobalId] = meshVertId + 1;
-                    m_globalToUniversalBndMap[vGlobalId]=m_globalToUniversalMap[vGlobalId];
-                    maxBndGlobalId = (vGlobalId > maxBndGlobalId ? vGlobalId : maxBndGlobalId);
+                    m_globalToUniversalBndMap[vGlobalId] =
+                        m_globalToUniversalMap[vGlobalId];
+                    maxBndGlobalId = (vGlobalId > maxBndGlobalId ?
+                                      vGlobalId : maxBndGlobalId);
                 }
 
                 // Loop over all edges of element i
-                for(j = 0; j < exp->GetNedges(); ++j)
+                for(j = 0; j < exp->GetGeom()->GetNumEdges(); ++j)
                 {
                     meshEdgeId = exp->GetGeom()->GetEid(j);
                     auto pIt = perEdges.find(meshEdgeId);
@@ -2370,8 +2454,20 @@ namespace Nektar
                         edgeOrient = idOrient.second;
                     }
 
-                    exp->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
-                    dof = exp->GetEdgeNcoeffs(j)-2;
+                    if(nf) // 3D version
+                    {
+                        exp->as<LocalRegions::Expansion3D>()->
+                            GetEdgeInteriorToElementMap(j,edgeInteriorMap,
+                                            edgeInteriorSign,edgeOrient);
+                        dof = exp->as<LocalRegions::Expansion3D>()->
+                            GetEdgeNcoeffs(j)-2;
+                    }
+                    else // 2D version
+                    {
+                        exp->GetTraceInteriorToElementMap(j,edgeInteriorMap,
+                                            edgeInteriorSign,edgeOrient);
+                        dof = exp->GetTraceNcoeffs(j)-2;
+                    }
 
                     // Set the global DOF's for the interior modes of edge j
                     //    for varP, ignore modes with sign == 0
@@ -2387,14 +2483,16 @@ namespace Nektar
                         vGlobalId = m_localToGlobalMap[cnt+edgeInteriorMap[k]];
                         m_globalToUniversalMap[vGlobalId]
                            = nVert + meshEdgeId * maxEdgeDof + l + 1;
-                        m_globalToUniversalBndMap[vGlobalId]=m_globalToUniversalMap[vGlobalId];
-                        maxBndGlobalId = (vGlobalId > maxBndGlobalId ? vGlobalId : maxBndGlobalId);
+                        m_globalToUniversalBndMap[vGlobalId]=
+                            m_globalToUniversalMap[vGlobalId];
+                        maxBndGlobalId = (vGlobalId > maxBndGlobalId ?
+                                          vGlobalId : maxBndGlobalId);
                         l++;
                     }
                 }
 
                 // Loop over all faces of element i
-                for(j = 0; j < exp->GetNfaces(); ++j)
+                for(j = 0; j < exp->GetGeom()->GetNumFaces(); ++j)
                 {
                     faceOrient = exp->GetGeom()->GetForient(j);
 
@@ -2405,14 +2503,16 @@ namespace Nektar
                     {
                         if(meshFaceId == min(meshFaceId, pIt->second[0].id))
                         {
-                            faceOrient = DeterminePeriodicFaceOrient(faceOrient,pIt->second[0].orient);
+                            faceOrient = DeterminePeriodicFaceOrient
+                                (faceOrient,pIt->second[0].orient);
                         }
                         meshFaceId = min(meshFaceId, pIt->second[0].id);
                     }
 
 
-                    exp->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
-                    dof = exp->GetFaceIntNcoeffs(j);
+                    exp->GetTraceInteriorToElementMap(j,faceInteriorMap,
+                                             faceInteriorSign,faceOrient);
+                    dof = exp->GetTraceIntNcoeffs(j);
 
                     for(k = 0, l = 0; k < dof; ++k)
                     {
@@ -2427,16 +2527,18 @@ namespace Nektar
                         m_globalToUniversalMap[vGlobalId]
                            = nVert + nEdge*maxEdgeDof + meshFaceId * maxFaceDof
                                    + l + 1;
-                        m_globalToUniversalBndMap[vGlobalId]=m_globalToUniversalMap[vGlobalId];
+                        m_globalToUniversalBndMap[vGlobalId]=
+                            m_globalToUniversalMap[vGlobalId];
 
-                        maxBndGlobalId = (vGlobalId > maxBndGlobalId ? vGlobalId : maxBndGlobalId);
+                        maxBndGlobalId = (vGlobalId > maxBndGlobalId ?
+                                          vGlobalId : maxBndGlobalId);
                         l++;
                     }
                 }
 
                 // Add interior DOFs to complete universal numbering
                 exp->GetInteriorMap(interiorMap);
-                dof = interiorMap.num_elements();
+                dof = interiorMap.size();
                 elementId = (exp->GetGeom())->GetGlobalID();
                 for (k = 0; k < dof; ++k)
                 {
@@ -2560,7 +2662,7 @@ namespace Nektar
             }
 
             // Set up global to universal map
-            if (m_globalToUniversalMap.num_elements())
+            if (m_globalToUniversalMap.size())
             {
                 LibUtilities::CommSharedPtr vCommRow
                     = m_session->GetComm()->GetRowComm();

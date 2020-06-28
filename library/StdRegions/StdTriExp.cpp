@@ -149,7 +149,7 @@ namespace Nektar
             Vmath::Sadd(nquad1, -1.0, z1, 1, wsp, 1);
             Vmath::Sdiv(nquad1, -2.0, wsp, 1, wsp, 1);
 
-            if (out_d0.num_elements() > 0)
+            if (out_d0.size() > 0)
             {
                 PhysTensorDeriv(inarray, out_d0, out_d1);
 
@@ -159,7 +159,7 @@ namespace Nektar
                 }
 
                 // if no d1 required do not need to calculate both deriv
-                if (out_d1.num_elements() > 0)
+                if (out_d1.size() > 0)
                 {
                     // set up geometric factor: (1_z0)/(1-z1)
                     Vmath::Sadd(nquad0, 1.0, z0, 1, wsp, 1);
@@ -173,7 +173,7 @@ namespace Nektar
                     }
                 }
             }
-            else if (out_d1.num_elements() > 0)
+            else if (out_d1.size() > 0)
             {
                 Array<OneD, NekDouble> diff0(nquad0*nquad1);
                 PhysTensorDeriv(inarray, diff0, out_d1);
@@ -286,7 +286,7 @@ namespace Nektar
             int  nmodes0 = m_base[0]->GetNumModes();
             int  nmodes1 = m_base[1]->GetNumModes();
 
-            ASSERTL1(wsp.num_elements() >= nquad0*nmodes1,
+            ASSERTL1(wsp.size() >= nquad0*nmodes1,
                      "Workspace size is not sufficient");
             ASSERTL2((m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)||
                      (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
@@ -372,10 +372,9 @@ namespace Nektar
 
             for (i = 0; i < 3; i++)
             {
-                //segexp[i!=0]->v_FwdTrans_BndConstrained(physEdge[i],coeffEdge[i]);
                 segexp[i!=0]->FwdTrans_BndConstrained(physEdge[i],coeffEdge[i]);
-
-                v_GetEdgeToElementMap(i,eForwards,mapArray,signArray);
+                
+                GetTraceToElementMap(i,mapArray,signArray);
                 for (j = 0; j < nmodes[i != 0]; j++)
                 {
                     sign = (NekDouble) signArray[j];
@@ -530,7 +529,7 @@ namespace Nektar
             int nmodes0 = m_base[0]->GetNumModes();
             int nmodes1 = m_base[1]->GetNumModes();
 
-            ASSERTL1(wsp.num_elements() >= nquad1*nmodes0,
+            ASSERTL1(wsp.size() >= nquad1*nmodes0,
                      "Workspace size is not sufficient");
 
             Blas::Dgemm('T','N',nquad1,nmodes0,nquad0,1.0,inarray.get(),nquad0,
@@ -678,7 +677,6 @@ namespace Nektar
         void StdTriExp::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,
                                                  Array<OneD, NekDouble>& eta)
         {
-
             // set up local coordinate system
             if (fabs(xi[1]-1.0) < NekConstants::kNekZeroTol)
             {
@@ -740,13 +738,34 @@ namespace Nektar
             }
         }
 
-
-        int StdTriExp::v_GetNverts() const
+        NekDouble StdTriExp::v_PhysEvaluateBasis(
+            const Array<OneD, const NekDouble>& coords,
+            int mode)
         {
-            return 3;
+            Array<OneD, NekDouble> coll(2);
+            LocCoordToLocCollapsed(coords, coll);
+
+            // From mode we need to determine mode0 and mode1 in the (p,q)
+            // direction. mode1 can be directly inferred from mode.
+            const int    nm1    = m_base[1]->GetNumModes();
+            const double c      = 1 + 2*nm1;
+            const int    mode0  = floor(0.5*(c - sqrt(c*c - 8*mode)));
+
+            if (mode == 1 &&
+                m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+            {
+                // Account for collapsed vertex.
+                return StdExpansion::BaryEvaluateBasis<1>(coll[1], 1);
+            }
+            else
+            {
+                return
+                    StdExpansion::BaryEvaluateBasis<0>(coll[0], mode0) *
+                    StdExpansion::BaryEvaluateBasis<1>(coll[1], mode);
+            }
         }
 
-        int StdTriExp::v_GetNedges() const
+        int StdTriExp::v_GetNverts() const
         {
             return 3;
         }
@@ -781,7 +800,7 @@ namespace Nektar
             return GetBasisNumModes(0) + 2*GetBasisNumModes(1);
         }
 
-        int StdTriExp::v_GetEdgeNcoeffs(const int i) const
+        int StdTriExp::v_GetTraceNcoeffs(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 2, "edge id is out of range");
 
@@ -795,7 +814,7 @@ namespace Nektar
             }
         }
 
-        int StdTriExp::v_GetEdgeNumPoints(const int i) const
+        int StdTriExp::v_GetTraceNumPoints(const int i) const
         {
             ASSERTL2((i >= 0)&&(i <= 2),"edge id is out of range");
 
@@ -820,21 +839,6 @@ namespace Nektar
 
             return nmodes;
         }
-
-        LibUtilities::BasisType StdTriExp::v_GetEdgeBasisType(const int i) const
-        {
-            ASSERTL2(i >= 0 && i <= 2, "edge id is out of range");
-
-            if (i == 0)
-            {
-                return GetBasisType(0);
-            }
-            else
-            {
-                return GetBasisType(1);
-            }
-        }
-
 
         void StdTriExp::v_GetCoords(Array<OneD, NekDouble> &coords_0,
                                     Array<OneD, NekDouble> &coords_1,
@@ -864,16 +868,10 @@ namespace Nektar
                    m_base[1]->GetBasisType() == LibUtilities::eModified_B;
         }
 
-        int StdTriExp::v_DetCartesianDirOfEdge(const int edge)
+        const LibUtilities::BasisKey StdTriExp::v_GetTraceBasisKey
+            (const int i, const int j) const
         {
-            ASSERTL2(edge >= 0 && edge <= 2, "edge id is out of range");
-
-            return edge == 0 ? 0 : 1;
-        }
-
-        const LibUtilities::BasisKey StdTriExp::v_DetEdgeBasisKey(
-            const int i) const
-        {
+            boost::ignore_unused(j);
             ASSERTL2(i >= 0 && i <= 2, "edge id is out of range");
 
             if (i == 0)
@@ -922,142 +920,12 @@ namespace Nektar
         // Mappings
         //--------------------------
 
-        void StdTriExp::v_GetEdgeToElementMap(
-            const int                  eid,
-            const Orientation      edgeOrient,
-            Array<OneD, unsigned int>& maparray,
-            Array<OneD,          int>& signarray,
-            int P)
-        {
-            ASSERTL1(GetEdgeBasisType(eid) == LibUtilities::eModified_A ||
-                     GetEdgeBasisType(eid) == LibUtilities::eModified_B,
-                     "Mapping not defined for this type of basis");
-
-            int i;
-            int numModes=0;
-            int order0 = m_base[0]->GetNumModes();
-            int order1 = m_base[1]->GetNumModes();
-
-            switch (eid)
-            {
-            case 0:
-                numModes = order0;
-                break;
-            case 1:
-            case 2:
-                numModes = order1;
-                break;
-            default:
-                ASSERTL0(false,"eid must be between 0 and 2");
-            }
-
-            bool checkForZeroedModes = false;
-            if (P == -1)
-            {
-                P = numModes;
-            }
-            else if(P != numModes)
-            {
-                checkForZeroedModes = true;
-            }
-
-
-            if(maparray.num_elements() != P)
-            {
-                maparray = Array<OneD, unsigned int>(P);
-            }
-
-            if(signarray.num_elements() != P)
-            {
-                signarray = Array<OneD, int>(P,1);
-            }
-            else
-            {
-                fill(signarray.get() , signarray.get()+P, 1);
-            }
-
-            switch(eid)
-            {
-                case 0:
-                {
-                    int cnt = 0;
-                    for(i = 0; i < P; cnt+=order1-i, ++i)
-                    {
-                        maparray[i] = cnt;
-                    }
-
-                    if(edgeOrient==eBackwards)
-                    {
-                        swap( maparray[0] , maparray[1] );
-
-                        for(i = 3; i < P; i+=2)
-                        {
-                            signarray[i] = -1;
-                        }
-                    }
-                    break;
-                }
-                case 1:
-                {
-                    maparray[0] = order1;
-                    maparray[1] = 1;
-                    for(i = 2; i < P; i++)
-                    {
-                        maparray[i] = order1-1+i;
-                    }
-
-                    if(edgeOrient==eBackwards)
-                    {
-                        swap( maparray[0] , maparray[1] );
-
-                        for(i = 3; i < P; i+=2)
-                        {
-                            signarray[i] = -1;
-                        }
-                    }
-                    break;
-                }
-                case 2:
-                {
-                    for(i = 0; i < P; i++)
-                    {
-                        maparray[i] = i;
-                    }
-
-                    if(edgeOrient==eBackwards)
-                    {
-                        swap( maparray[0] , maparray[1] );
-
-                        for(i = 3; i < P; i+=2)
-                        {
-                            signarray[i] = -1;
-                        }
-                    }
-                    break;
-                }
-            default:
-                ASSERTL0(false,"eid must be between 0 and 2");
-                break;
-            }
-
-
-            if (checkForZeroedModes)
-            {
-                // Zero signmap and set maparray to zero if
-                // elemental modes are not as large as face modes
-                for (int j = numModes; j < P; j++)
-                {
-                    signarray[j] = 0.0;
-                    maparray[j]  = maparray[0];
-                }
-            }
-        }
 
         int StdTriExp::v_GetVertexMap(const int localVertexId,bool useCoeffPacking)
         {
-            ASSERTL0(
-                GetEdgeBasisType(localVertexId) == LibUtilities::eModified_A ||
-                GetEdgeBasisType(localVertexId) == LibUtilities::eModified_B,
+            ASSERTL1(
+                GetBasisType(0) == LibUtilities::eModified_A ||
+                GetBasisType(1) == LibUtilities::eModified_B,
                 "Mapping not defined for this type of basis");
 
             int localDOF = 0;
@@ -1117,92 +985,6 @@ namespace Nektar
             return localDOF;
         }
 
-        void StdTriExp::v_GetEdgeInteriorMap(
-            const int                  eid,
-            const Orientation      edgeOrient,
-            Array<OneD, unsigned int>& maparray,
-            Array<OneD,          int>& signarray)
-        {
-            ASSERTL0(GetEdgeBasisType(eid) == LibUtilities::eModified_A||
-                     GetEdgeBasisType(eid) == LibUtilities::eModified_B,
-                     "Mapping not defined for this type of basis");
-            int i;
-            const int nummodes1 = m_base[1]->GetNumModes();
-            const int nEdgeIntCoeffs = GetEdgeNcoeffs(eid)-2;
-
-            if(maparray.num_elements() != nEdgeIntCoeffs)
-            {
-                maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
-            }
-
-            if(signarray.num_elements() != nEdgeIntCoeffs)
-            {
-                signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
-            }
-            else
-            {
-                fill( signarray.get() , signarray.get()+nEdgeIntCoeffs, 1 );
-            }
-
-            switch(eid)
-            {
-                case 0:
-                {
-                    int cnt = 2*nummodes1 - 1;
-                    for(i = 0; i < nEdgeIntCoeffs; cnt+=nummodes1-2-i, ++i)
-                    {
-                        maparray[i] = cnt;
-                    }
-
-                    if(edgeOrient==eBackwards)
-                    {
-                        for(i = 1; i < nEdgeIntCoeffs; i+=2)
-                        {
-                            signarray[i] = -1;
-                        }
-                    }
-                    break;
-                }
-                case 1:
-                {
-                    for(i = 0; i < nEdgeIntCoeffs; i++)
-                    {
-                        maparray[i] = nummodes1+1+i;
-                    }
-
-                    if(edgeOrient==eBackwards)
-                    {
-                        for(i = 1; i < nEdgeIntCoeffs; i+=2)
-                        {
-                            signarray[i] = -1;
-                        }
-                    }
-                    break;
-                }
-                case 2:
-                {
-                    for(i = 0; i < nEdgeIntCoeffs; i++)
-                    {
-                        maparray[i] = 2+i;
-                    }
-
-                    if(edgeOrient==eBackwards)
-                    {
-                        for(i = 1; i < nEdgeIntCoeffs; i+=2)
-                        {
-                            signarray[i] = -1;
-                        }
-                    }
-                    break;
-                }
-                default:
-                {
-                    ASSERTL0(false,"eid must be between 0 and 2");
-                    break;
-                }
-            }
-        }
-
         void StdTriExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A &&
@@ -1213,7 +995,7 @@ namespace Nektar
             int cnt = 0;
             int nummodes0, nummodes1;
             int startvalue;
-            if(outarray.num_elements()!=GetNcoeffs()-NumBndryCoeffs())
+            if(outarray.size()!=GetNcoeffs()-NumBndryCoeffs())
             {
                 outarray = Array<OneD, unsigned int>(GetNcoeffs()-NumBndryCoeffs());
             }
@@ -1243,7 +1025,7 @@ namespace Nektar
             int nummodes0, nummodes1;
             int value;
 
-            if (outarray.num_elements()!=NumBndryCoeffs())
+            if (outarray.size()!=NumBndryCoeffs())
             {
                 outarray = Array<OneD, unsigned int>(NumBndryCoeffs());
             }
@@ -1265,6 +1047,187 @@ namespace Nektar
             }
         }
 
+        void StdTriExp::v_GetTraceToElementMap(
+            const int                  eid,
+            Array<OneD, unsigned int>& maparray,
+            Array<OneD,          int>& signarray,
+            Orientation           edgeOrient,
+            int P, int Q)
+        {
+            boost::ignore_unused(Q);
+            
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(1) == LibUtilities::eModified_B,
+                     "Mapping not defined for this type of basis");
+
+            int i;
+            int numModes=0;
+            int order0 = m_base[0]->GetNumModes();
+            int order1 = m_base[1]->GetNumModes();
+
+            switch (eid)
+            {
+            case 0:
+                numModes = order0;
+                break;
+            case 1:
+            case 2:
+                numModes = order1;
+                break;
+            default:
+                ASSERTL0(false,"eid must be between 0 and 2");
+            }
+
+            bool checkForZeroedModes = false;
+            if (P == -1)
+            {
+                P = numModes;
+            }
+            else if(P != numModes)
+            {
+                checkForZeroedModes = true;
+            }
+
+
+            if(maparray.size() != P)
+            {
+                maparray = Array<OneD, unsigned int>(P);
+            }
+
+            if(signarray.size() != P)
+            {
+                signarray = Array<OneD, int>(P,1);
+            }
+            else
+            {
+                fill(signarray.get() , signarray.get()+P, 1);
+            }
+
+            switch(eid)
+            {
+                case 0:
+                {
+                    int cnt = 0;
+                    for(i = 0; i < P; cnt+=order1-i, ++i)
+                    {
+                        maparray[i] = cnt;
+                    }
+                    break;
+                }
+                case 1:
+                {
+                    maparray[0] = order1;
+                    maparray[1] = 1;
+                    for(i = 2; i < P; i++)
+                    {
+                        maparray[i] = order1-1+i;
+                    }
+                    break;
+                }
+                case 2:
+                {
+                    for(i = 0; i < P; i++)
+                    {
+                        maparray[i] = i;
+                    }
+                    break;
+                }
+            default:
+                ASSERTL0(false,"eid must be between 0 and 2");
+                break;
+            }
+            
+            if(edgeOrient==eBackwards)
+            {
+                swap( maparray[0] , maparray[1] );
+                
+                for(i = 3; i < P; i+=2)
+                {
+                    signarray[i] = -1;
+                }
+            }
+
+            if (checkForZeroedModes)
+            {
+                // Zero signmap and set maparray to zero if
+                // elemental modes are not as large as face modes
+                for (int j = numModes; j < P; j++)
+                {
+                    signarray[j] = 0.0;
+                    maparray[j]  = maparray[0];
+                }
+            }
+        }
+
+        void StdTriExp::v_GetTraceInteriorToElementMap(
+            const int                  eid,
+            Array<OneD, unsigned int>& maparray,
+            Array<OneD,          int>& signarray,
+            const Orientation          edgeOrient)
+        {
+            ASSERTL0(GetBasisType(0) == LibUtilities::eModified_A||
+                     GetBasisType(1) == LibUtilities::eModified_B,
+                     "Mapping not defined for this type of basis");
+            int i;
+            const int nummodes1 = m_base[1]->GetNumModes();
+            const int nEdgeIntCoeffs = GetTraceNcoeffs(eid)-2;
+
+            if(maparray.size() != nEdgeIntCoeffs)
+            {
+                maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
+            }
+
+            if(signarray.size() != nEdgeIntCoeffs)
+            {
+                signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
+            }
+            else
+            {
+                fill( signarray.get() , signarray.get()+nEdgeIntCoeffs, 1 );
+            }
+
+            switch(eid)
+            {
+                case 0:
+                {
+                    int cnt = 2*nummodes1 - 1;
+                    for(i = 0; i < nEdgeIntCoeffs; cnt+=nummodes1-2-i, ++i)
+                    {
+                        maparray[i] = cnt;
+                    }
+                    break;
+                }
+                case 1:
+                {
+                    for(i = 0; i < nEdgeIntCoeffs; i++)
+                    {
+                        maparray[i] = nummodes1+1+i;
+                    }
+                    break;
+                }
+                case 2:
+                {
+                    for(i = 0; i < nEdgeIntCoeffs; i++)
+                    {
+                        maparray[i] = 2+i;
+                    }
+                    break;
+                }
+                default:
+                {
+                    ASSERTL0(false,"eid must be between 0 and 2");
+                    break;
+                }
+            }
+
+            if(edgeOrient==eBackwards)
+            {
+                for(i = 1; i < nEdgeIntCoeffs; i+=2)
+                {
+                    signarray[i] = -1;
+                }
+            }
+        }
 
         //---------------------------------------
         // Wrapper functions
@@ -1417,7 +1380,7 @@ namespace Nektar
             LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,nmodes_a,pa);
             LibUtilities::BasisKey Bb(LibUtilities::eOrtho_B,nmodes_b,pb);
             StdTriExp OrthoExp(Ba,Bb);
-            
+
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
 
             // project onto physical space.
@@ -1425,7 +1388,7 @@ namespace Nektar
 
             if(mkey.ConstFactorExists(eFactorSVVPowerKerDiffCoeff)) // Rodrigo's power kern
             {
-                NekDouble cutoff =  mkey.GetConstFactor(eFactorSVVCutoffRatio); 
+                NekDouble cutoff =  mkey.GetConstFactor(eFactorSVVCutoffRatio);
                 NekDouble  SvvDiffCoeff  =
                     mkey.GetConstFactor(eFactorSVVPowerKerDiffCoeff)*
                     mkey.GetConstFactor(eFactorSVVDiffCoeff);
@@ -1452,7 +1415,7 @@ namespace Nektar
                                  nmodes_b-kSVVDGFiltermodesmin);
                 max_ab = max(max_ab,0);
                 max_ab = min(max_ab,kSVVDGFiltermodesmax-kSVVDGFiltermodesmin);
-                
+
                 int cnt = 0;
                 for(int j = 0; j < nmodes_a; ++j)
                 {
@@ -1460,7 +1423,7 @@ namespace Nektar
                     {
                         int maxjk = max(j,k);
                         maxjk = min(maxjk,kSVVDGFiltermodesmax-1);
-                        
+
                         orthocoeffs[cnt] *= SvvDiffCoeff *
                             kSVVDGFilter[max_ab][maxjk];
                     }
@@ -1473,7 +1436,7 @@ namespace Nektar
 
                 int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*
                                                         min(nmodes_a,nmodes_b));
-                
+
                 NekDouble epsilon = 1.0;
                 int nmodes = min(nmodes_a,nmodes_b);
 
@@ -1510,7 +1473,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
         {
-            int n_coeffs = inarray.num_elements();
+            int n_coeffs = inarray.size();
             int nquad0   = m_base[0]->GetNumPoints();
             int nquad1   = m_base[1]->GetNumPoints();
             Array<OneD, NekDouble> coeff(n_coeffs);

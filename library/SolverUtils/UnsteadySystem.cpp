@@ -32,6 +32,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+
 #include <iostream>
 #include <iomanip>
 using namespace std;
@@ -39,21 +40,20 @@ using namespace std;
 #include <boost/core/ignore_unused.hpp>
 #include <boost/format.hpp>
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SolverUtils/UnsteadySystem.h>
 
 namespace Nektar
-{	
+{
     namespace SolverUtils
     {
         /**
          * @class UnsteadySystem
          *
          * Provides the underlying timestepping framework for unsteady solvers
-         * including the general timestepping routines. This class is not 
-         * intended to be directly instantiated, but rather is a base class 
+         * including the general timestepping routines. This class is not
+         * intended to be directly instantiated, but rather is a base class
          * on which to define unsteady solvers.
          *
          * For details on implementing unsteady solvers see
@@ -80,7 +80,7 @@ namespace Nektar
         void UnsteadySystem::v_InitObject()
         {
             EquationSystem::v_InitObject();
-            
+
             m_initialStep = 0;
 
             // Load SolverInfo parameters
@@ -101,18 +101,23 @@ namespace Nektar
             // For steady problems, we do not initialise the time integration
             if (m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
             {
-                m_intScheme = LibUtilities::GetTimeIntegrationWrapperFactory().
-                    CreateInstance(m_session->GetSolverInfo(
-                                       "TIMEINTEGRATIONMETHOD"));
+                std::string methodName = m_session->GetSolverInfo(
+                                                "TIMEINTEGRATIONMETHOD" );
+                m_intScheme = LibUtilities::GetTimeIntegrationSchemeFactory()
+		    .CreateInstance( methodName, "", 0,
+				     std::vector<NekDouble>());
 
                 // Load generic input parameters
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
                 m_session->LoadParameter("IO_FiltersInfoSteps",
                     m_filtersInfosteps, 10.0 * m_infosteps);
                 m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.0);
+                m_session->LoadParameter("CFLEnd", m_CFLEnd, 0.0);
+                m_session->LoadParameter("CFLGrowth", m_CFLGrowth, 1.0);
 
                 // Time tolerance between filter update time and time integration
-                m_session->LoadParameter("FilterTimeWarning", m_filterTimeWarning, 1);
+                m_session->LoadParameter("FilterTimeWarning",
+                                         m_filterTimeWarning, 1);
 
                 // Ensure that there is no conflict of parameters
                 if(m_cflSafetyFactor > 0.0)
@@ -131,6 +136,14 @@ namespace Nektar
                              "Need to set either TimeStep or CFL");
                 }
 
+                // Ensure that there is no conflict of parameters
+                if (m_CFLGrowth > 1.0)
+                {
+                    // Check final condition
+                    ASSERTL0(m_CFLEnd >= m_cflSafetyFactor,
+                             "m_CFLEnd >= m_cflSafetyFactor required");
+                }
+
                 // Set up time to be dumped in field information
                 m_fieldMetaDataMap["Time"] =
                         boost::lexical_cast<std::string>(m_time);
@@ -146,7 +159,7 @@ namespace Nektar
                         x.first, m_session, shared_from_this(), x.second)));
             }
         }
-        
+
         /**
          * Destructor for the class UnsteadyAdvection.
          */
@@ -159,53 +172,20 @@ namespace Nektar
          */
         NekDouble UnsteadySystem::MaxTimeStepEstimator()
         {
-            NekDouble TimeStability = 0.0;
-            switch(m_intScheme->GetIntegrationMethod())
-            {
-                case LibUtilities::eForwardEuler:
-                case LibUtilities::eClassicalRungeKutta4:
-                case LibUtilities::eRungeKutta4:
-                {
-                    TimeStability = 2.784;
-                    break;
-                }
-                case LibUtilities::eAdamsBashforthOrder1:
-                case LibUtilities::eMidpoint:
-                case LibUtilities::eRungeKutta2:
-                case LibUtilities::eRungeKutta2_ImprovedEuler:
-                case LibUtilities::eRungeKutta2_SSP:
-                case LibUtilities::eRungeKutta3_SSP:
-                {
-                    TimeStability = 2.0;
-                    break;
-                }
-                case LibUtilities::eAdamsBashforthOrder2:
-                {
-                    TimeStability = 1.0;
-                    break;
-                }
-                default:
-                {
-                    ASSERTL0(
-                        false,
-                        "No CFL control implementation for this time"
-                        "integration scheme");
-                }
-            }
-            return TimeStability;
+            return m_intScheme->GetTimeStability();
         }
-        
+
         /**
-         * @brief Initialises the time integration scheme (as specified in the 
+         * @brief Initialises the time integration scheme (as specified in the
          * session file), and perform the time integration.
          */
         void UnsteadySystem::v_DoSolve()
         {
             ASSERTL0(m_intScheme != 0, "No time integration scheme.");
-
+            
             int i = 1;
             int nvariables = 0;
-            int nfields = m_fields.num_elements();
+            int nfields = m_fields.size();
 
             if (m_intVariables.empty())
             {
@@ -241,13 +221,13 @@ namespace Nektar
                 fields[i] = m_fields[m_intVariables[i]]->GetPhys();
                 m_fields[m_intVariables[i]]->SetPhysState(false);
             }
-            
+
             // Initialise time integration scheme
-            m_intSoln = m_intScheme->InitializeScheme(
-                m_timestep, fields, m_time, m_ode);
+            m_intSoln = m_intScheme->InitializeScheme( m_timestep, fields,
+                                                       m_time, m_ode );
 
             // Initialise filters
-            for (auto &x : m_filters)
+            for( auto &x : m_filters )
             {
                 x.second->Initialise(m_fields, m_time);
             }
@@ -270,14 +250,21 @@ namespace Nektar
                 abortFile = m_session->GetSolverInfo("CheckAbortFile");
             }
 
+            m_timestepMax = m_timestep;
             while ((step   < m_steps ||
                    m_time < m_fintime - NekConstants::kNekZeroTol) &&
                    abortFlags[1] == 0)
             {
+                if (m_CFLGrowth > 1.0 && m_cflSafetyFactor < m_CFLEnd)
+                {
+                    m_cflSafetyFactor = min(
+                        m_CFLEnd, m_CFLGrowth * m_cflSafetyFactor);
+                }
+                
                 if (m_cflSafetyFactor)
                 {
                     m_timestep = GetTimeStep(fields);
-        
+
                     // Ensure that the final timestep finishes at the final
                     // time, or at a prescribed IO_CheckTime.
                     if (m_time + m_timestep > m_fintime && m_fintime > 0.0)
@@ -292,7 +279,7 @@ namespace Nektar
                         doCheckTime    = true;
                     }
                 }
-        
+
                 // Perform any solver-specific pre-integration steps
                 timer.Start();
                 if (v_PreIntegrate(step))
@@ -308,9 +295,9 @@ namespace Nektar
                 elapsed  = timer.TimePerTest(1);
                 intTime += elapsed;
                 cpuTime += elapsed;
-		
+
                 // Write out status information
-                if (m_session->GetComm()->GetRank() == 0 && 
+                if (m_session->GetComm()->GetRank() == 0 &&
                     !((step+1) % m_infosteps))
                 {
                     cout << "Steps: " << setw(8)  << left << step+1 << " "
@@ -345,7 +332,7 @@ namespace Nektar
                     }
                     m_fields[m_intVariables[i]]->SetPhysState(false);
                 }
-
+                
                 // Perform any solver-specific post-integration steps
                 if (v_PostIntegrate(step))
                 {
@@ -372,7 +359,7 @@ namespace Nektar
                     abortFlags[0] = 0;
                     for (i = 0; i < nvariables; ++i)
                     {
-                        if (Vmath::Nnan(fields[i].num_elements(),
+                        if (Vmath::Nnan(fields[i].size(),
                                 fields[i], 1) > 0)
                         {
                             abortFlags[0] = 1;
@@ -388,7 +375,7 @@ namespace Nektar
                             boost::filesystem::remove(abortFile);
                             abortFlags[1] = 1;
                         }
-                    }                    
+                    }
 
                     m_session->GetComm()->AllReduce(abortFlags,
                                 LibUtilities::ReduceMax);
@@ -407,8 +394,8 @@ namespace Nektar
                     totFilterTime += elapsed;
 
                     // Write out individual filter status information
-                    if(m_session->GetComm()->GetRank() == 0 && 
-                    !((step+1) % m_filtersInfosteps) && !m_filters.empty() && 
+                    if(m_session->GetComm()->GetRank() == 0 &&
+                    !((step+1) % m_filtersInfosteps) && !m_filters.empty() &&
                     m_session->DefinesCmdLineArgument("verbose"))
                     {
                         stringstream s0;
@@ -417,15 +404,15 @@ namespace Nektar
                         s1 << elapsed << "s";
                         stringstream s2;
                         s2 << elapsed / cpuPrevious * 100 << "%";
-                        cout << "CPU time for filter " << setw(25) << left 
-                            << s0.str() << setw(12) << left << s1.str() << 
+                        cout << "CPU time for filter " << setw(25) << left
+                            << s0.str() << setw(12) << left << s1.str() <<
                             endl << "\t Percentage of time integration:     "
                              << setw(10) << left << s2.str() << endl;
                     }
                 }
 
                 // Write out overall filter status information
-                if (m_session->GetComm()->GetRank() == 0 && 
+                if (m_session->GetComm()->GetRank() == 0 &&
                     !((step+1) % m_filtersInfosteps) && !m_filters.empty())
                  {
                     stringstream ss;
@@ -479,7 +466,7 @@ namespace Nektar
                 ++step;
                 ++stepCounter;
             }
-        
+
             // Print out summary statistics
             if (m_session->GetComm()->GetRank() == 0)
             {
@@ -494,7 +481,7 @@ namespace Nektar
                     cout << "Time-integration  : " << intTime  << "s"   << endl;
                 }
             }
-        
+
             // If homogeneous, transform back into physical space if necessary.
             if(m_HomogeneousType != eNotHomogeneous)
             {
@@ -523,14 +510,14 @@ namespace Nektar
             {
                 x.second->Finalise(m_fields, m_time);
             }
-        
+
             // Print for 1D problems
             if(m_spacedim == 1)
             {
                 v_AppendOutput1D(fields);
             }
         }
-        
+
         /**
          * @brief Sets the initial conditions.
          */
@@ -541,9 +528,9 @@ namespace Nektar
             SetInitialConditions(m_time);
             InitializeSteadyState();
         }
-        
+
         /**
-         * @brief Prints a summary with some information regards the 
+         * @brief Prints a summary with some information regards the
          * time-stepping.
          */
         void UnsteadySystem::v_GenerateSummary(SummaryList& s)
@@ -568,16 +555,14 @@ namespace Nektar
                                m_explicitReaction  ? "explicit" : "implicit");
             }
 
-            AddSummaryItem(s, "Time Step", m_timestep);
-            AddSummaryItem(s, "No. of Steps", m_steps);
-            AddSummaryItem(s, "Checkpoints (steps)", m_checksteps);
-            AddSummaryItem(s, "Integration Type",
-                           LibUtilities::TimeIntegrationMethodMap[
-                               m_intScheme->GetIntegrationMethod()]);
+            AddSummaryItem( s, "Time Step", m_timestep );
+            AddSummaryItem( s, "No. of Steps", m_steps );
+            AddSummaryItem( s, "Checkpoints (steps)", m_checksteps );
+            AddSummaryItem( s, "Integration Type", m_intScheme->GetName() );
         }
-        
+
         /**
-         * Stores the solution in a file for 1D problems only. This method has 
+         * Stores the solution in a file for 1D problems only. This method has
          * been implemented to facilitate the post-processing for 1D problems.
          */
         void UnsteadySystem::v_AppendOutput1D(
@@ -588,7 +573,7 @@ namespace Nektar
             Array<OneD,NekDouble> y(GetNpoints());
             Array<OneD,NekDouble> z(GetNpoints());
             m_fields[0]->GetCoords(x, y, z);
-            
+
             // Print out the solution in a txt file
             ofstream outfile;
             outfile.open("solution1D.txt");
@@ -605,7 +590,7 @@ namespace Nektar
         {
             if (m_session->DefinesFunction("InitialConditions"))
             {
-                for (int i = 0; i < m_fields.num_elements(); ++i)
+                for (int i = 0; i < m_fields.size(); ++i)
                 {
                     LibUtilities::FunctionType vType;
 
@@ -650,13 +635,13 @@ namespace Nektar
                                     iter->second);
                             }
                         }
-                        
+
                         break;
                     }
                 }
             }
         }
-	
+
         /**
          * @brief Return the timestep to be used for the next step in the
          * time-marching loop.
@@ -670,7 +655,7 @@ namespace Nektar
         {
             return v_GetTimeStep(inarray);
         }
-        
+
         /**
          * @brief Return the timestep to be used for the next step in the
          * time-marching loop.
@@ -702,7 +687,7 @@ namespace Nektar
                   StdRegions::VarCoeffMap              &varCoeffMap)
         {
             int phystot = m_fields[0]->GetTotPoints();
-            int nvel = vel.num_elements();
+            int nvel = vel.size();
 
             Array<OneD, NekDouble> varcoeff(phystot),tmp;
 
@@ -744,9 +729,9 @@ namespace Nektar
             {
                 const int nPoints = m_fields[0]->GetTotPoints();
                 m_previousSolution = Array<OneD, Array<OneD, NekDouble> > (
-                            m_fields.num_elements());
+                            m_fields.size());
 
-                for (int i = 0; i < m_fields.num_elements(); ++i)
+                for (int i = 0; i < m_fields.size(); ++i)
                 {
                     m_previousSolution[i] = Array<OneD, NekDouble>(nPoints);
                     Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1,
@@ -760,7 +745,7 @@ namespace Nektar
                     m_errFile.open(fName.c_str());
                     m_errFile << setw(26) << left << "# Time";
 
-                    for (int i = 0; i < m_fields.num_elements(); ++i)
+                    for (int i = 0; i < m_fields.size(); ++i)
                     {
                         m_errFile << setw(26) << m_session->GetVariables()[i];
                     }
@@ -777,7 +762,7 @@ namespace Nektar
         bool UnsteadySystem::CheckSteadyState(int step)
         {
             const int nPoints = GetTotPoints();
-            const int nFields = m_fields.num_elements();
+            const int nFields = m_fields.size();
 
             // Holds L2 errors.
             Array<OneD, NekDouble> L2       (nFields);
@@ -836,7 +821,7 @@ namespace Nektar
                 return true;
             }
 
-            for (int i = 0; i < m_fields.num_elements(); ++i)
+            for (int i = 0; i < m_fields.size(); ++i)
             {
                 Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1,
                                       m_previousSolution[i], 1);

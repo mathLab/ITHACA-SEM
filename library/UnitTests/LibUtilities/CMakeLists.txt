@@ -3,6 +3,8 @@ SET(LibUtilitiesUnitTestSources
     TestRawType.cpp
     TestInterpreter.cpp
     TestSharedArray.cpp
+    TestCheckedCast.cpp
+    TestRealComparison.cpp
     TestVmathSIMD.cpp
     main.cpp
     ../util.cpp

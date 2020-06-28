@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="2" SPACE="2">
+        <VERTEX>
+            <V ID="0">-1.00000000e+00 0.00000000e+00 0.00000000e+00</V>
+            <V ID="1">-5.00000000e-01 0.00000000e+00 0.00000000e+00</V>
+            <V ID="2">-5.00000000e-01 5.00000000e-01 0.00000000e+00</V>
+            <V ID="3">-1.00000000e+00 5.00000000e-01 0.00000000e+00</V>
+            <V ID="4">-5.00000000e-01 1.00000000e+00 0.00000000e+00</V>
+            <V ID="5">-1.00000000e+00 1.00000000e+00 0.00000000e+00</V>
+            <V ID="6">-2.08166817e-12 0.00000000e+00 0.00000000e+00</V>
+            <V ID="7">-2.77555797e-17 5.00000000e-01 0.00000000e+00</V>
+            <V ID="8">2.08166817e-12 1.00000000e+00 0.00000000e+00</V>
+            <V ID="9">5.00000000e-01 0.00000000e+00 0.00000000e+00</V>
+            <V ID="10">5.00000000e-01 5.00000000e-01 0.00000000e+00</V>
+            <V ID="11">5.00000000e-01 1.00000000e+00 0.00000000e+00</V>
+            <V ID="12">1.00000000e+00 0.00000000e+00 0.00000000e+00</V>
+            <V ID="13">1.00000000e+00 5.00000000e-01 0.00000000e+00</V>
+            <V ID="14">1.00000000e+00 1.00000000e+00 0.00000000e+00</V>
+        </VERTEX>
+        <EDGE>
+            <E ID="0">    0  1   </E>
+            <E ID="1">    1  2   </E>
+            <E ID="2">    2  3   </E>
+            <E ID="3">    3  0   </E>
+            <E ID="4">    2  4   </E>
+            <E ID="5">    4  5   </E>
+            <E ID="6">    5  3   </E>
+            <E ID="7">    1  6   </E>
+            <E ID="8">    6  7   </E>
+            <E ID="9">    7  2   </E>
+            <E ID="10">    7  8   </E>
+            <E ID="11">    8  4   </E>
+            <E ID="12">    6  9   </E>
+            <E ID="13">    9  10   </E>
+            <E ID="14">   10  7   </E>
+            <E ID="15">   10  11   </E>
+            <E ID="16">   11  8   </E>
+            <E ID="17">    9  12   </E>
+            <E ID="18">   12  13   </E>
+            <E ID="19">   13  10   </E>
+            <E ID="20">   13  14   </E>
+            <E ID="21">   14  11   </E>
+        </EDGE>
+        <ELEMENT>
+            <Q ID="0">    0     1     2     3 </Q>
+            <Q ID="1">    2     4     5     6 </Q>
+            <Q ID="2">    7     8     9     1 </Q>
+            <Q ID="3">    9    10    11     4 </Q>
+            <Q ID="4">   12    13    14     8 </Q>
+            <Q ID="5">   14    15    16    10 </Q>
+            <Q ID="6">   17    18    19    13 </Q>
+            <Q ID="7">   19    20    21    15 </Q>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> Q[0-7]           </C>
+            <C ID="100"> E[0,7,12,17]   </C>
+            <C ID="200"> E[18,20]       </C>
+            <C ID="300"> E[5,11,16,21]  </C>
+            <C ID="400"> E[3,6]         </C>
+        </COMPOSITE>
+        <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" FIELDS="rho,rhou,rhov,E" BASISTYPE="GLL_Lagrange,GLL_Lagrange" NUMMODES="4,4" 
+           POINTSTYPE="GaussLobattoLegendre,GaussLobattoLegendre" NUMPOINTS="5,5" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+        <PARAMETERS>
+            <P> TimeStep              = 0.00005          </P>
+            <P> FinTime               = 0.01             </P>
+            <P> NumSteps              = FinTime/TimeStep </P>
+            <P> IO_CheckSteps         = 500000           </P>
+            <P> IO_InfoSteps          = 100              </P>
+            <P> GasConstant           = 287.1428571      </P>
+            <P> Gamma                 = 1.4              </P>
+            <P> Cp                    = 1005             </P>
+            <P> Uwall                 = 69.445           </P>
+            <P> Twall                 = 300              </P>
+            <P> pc                    = 100000           </P>
+            <P> Pr                    = 0.72             </P>
+            <P> mu                    = 0.417            </P>
+        </PARAMETERS>
+
+        <SOLVERINFO>
+            <I PROPERTY="EQType"                VALUE="NavierStokesCFE"     />
+            <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+            <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
+            <I PROPERTY="DiffusionType"         VALUE="LDGNS"               />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="RungeKutta2_ImprovedEuler"/>
+            <I PROPERTY="UpwindType"            VALUE="ExactToro"                />
+            <I PROPERTY="ProblemType"           VALUE="General"             />
+            <I PROPERTY="ViscosityType"         VALUE="Constant"            />
+        </SOLVERINFO>
+
+        <VARIABLES>
+            <V ID="0"> rho  </V>
+            <V ID="1"> rhou </V>
+            <V ID="2"> rhov </V>
+            <V ID="3"> E    </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[100] </B>
+            <B ID="1"> C[200] </B>
+            <B ID="2"> C[300] </B>
+            <B ID="3"> C[400] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="rho"  USERDEFINEDTYPE="WallViscous" VALUE="0" />
+                <D VAR="rhou" USERDEFINEDTYPE="WallViscous" VALUE="0" />
+                <D VAR="rhov" USERDEFINEDTYPE="WallViscous" VALUE="0" />
+                <D VAR="E"    USERDEFINEDTYPE="WallViscous" VALUE="0" />
+            </REGION>
+            <REGION REF="1">
+                <P VAR="rho"  VALUE="[3]" />
+                <P VAR="rhou" VALUE="[3]" />
+                <P VAR="rhov" VALUE="[3]" />
+                <P VAR="E"    VALUE="[3]" />
+            </REGION>
+            <REGION REF="2">
+                <D VAR="rho"  VALUE="Gamma / (Gamma-1) * (2 * pc) / (2 * Cp * Twall)" />
+                <D VAR="rhou" VALUE="(Gamma / (Gamma-1) * (2 * pc) / (2 * Cp * Twall)) * Uwall" />
+                <D VAR="rhov" VALUE="0" />
+                <D VAR="E"    VALUE="pc / (Gamma - 1) + 0.5 * (Gamma / (Gamma-1) * (2 * pc) / (2 * Cp * Twall)) * (Uwall*Uwall)" />
+            </REGION>      
+            <REGION REF="3">
+                <P VAR="rho"  VALUE="[1]" />
+                <P VAR="rhou" VALUE="[1]" />
+                <P VAR="rhov" VALUE="[1]" />
+                <P VAR="E"    VALUE="[1]" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="rho"  VALUE="Gamma / (Gamma-1) * (2 * pc) / (2 * Cp * Twall + Pr * Uwall * Uwall * y * (1-y))" />
+            <E VAR="rhou" VALUE="(Gamma / (Gamma-1) * (2 * pc) / (2 * Cp * Twall + Pr * Uwall * Uwall * y * (1-y))) * Uwall * y" />
+            <E VAR="rhov" VALUE="0" />
+            <E VAR="E"    VALUE="pc / (Gamma - 1) + 0.5 * (Gamma / (Gamma-1) * (2 * pc) / (2 * Cp * Twall + Pr * Uwall * Uwall * y * (1-y))) * (Uwall * Uwall * y * y)" />
+        </FUNCTION>
+        
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="rho"  VALUE="Gamma / (Gamma-1) * (2 * pc) / (2 * Cp * Twall + Pr * Uwall * Uwall * y * (1-y))" />
+            <E VAR="rhou" VALUE="Gamma / (Gamma-1) * (2 * pc) / (2 * Cp * Twall + Pr * Uwall * Uwall * y * (1-y)) * Uwall * y" />
+            <E VAR="rhov" VALUE="0" />
+            <E VAR="E"    VALUE="pc / (Gamma - 1) + 0.5 * (Gamma / (Gamma-1) * (2 * pc) / (2 * Cp * Twall + Pr * Uwall * Uwall * y * (1-y))) * (Uwall * Uwall * y * y)" />
+        </FUNCTION>
+        
+    </CONDITIONS>
+</NEKTAR>

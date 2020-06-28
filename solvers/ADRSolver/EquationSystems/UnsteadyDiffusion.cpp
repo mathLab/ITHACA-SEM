@@ -59,7 +59,7 @@ namespace Nektar
         UnsteadySystem::v_InitObject();
 
         m_session->LoadParameter("wavefreq",   m_waveFreq, 0.0);
-        m_session->LoadParameter("epsilon",    m_epsilon,  0.0);
+        m_session->LoadParameter("epsilon",    m_epsilon,  1.0);
 
         m_session->MatchSolverInfo(
             "SpectralVanishingViscosity", "True", m_useSpecVanVisc, false);
@@ -105,7 +105,7 @@ namespace Nektar
                 m_diffusion->InitObject(m_session, m_fields);
                 break;
             }
-        
+
             case MultiRegions::eGalerkin:
             case MultiRegions::eMixed_CG_Discontinuous:
             {
@@ -117,8 +117,8 @@ namespace Nektar
                 // In case of Galerkin implicit diffusion: do nothing
             }
         }
-        
-        
+
+
         if (m_explicitDiffusion)
         {
             m_ode.DefineOdeRhs    (&UnsteadyDiffusion::DoOdeRhs,        this);
@@ -149,10 +149,10 @@ namespace Nektar
             AddSummaryItem(s, "Smoothing", ss.str());
         }
     }
-    
-    
+
+
     /* @brief Compute the right-hand side for the unsteady diffusion problem.
-     * 
+     *
      * @param inarray    Given fields.
      * @param outarray   Calculated solution.
      * @param time       Time.
@@ -165,18 +165,18 @@ namespace Nektar
         boost::ignore_unused(time);
 
         // Number of fields (variables of the problem)
-        int nVariables = inarray.num_elements();
-        
+        int nVariables = inarray.size();
+
         // RHS computation using the new advection base class
-        m_diffusion->Diffuse(nVariables, 
-                             m_fields, 
-                             inarray, 
+        m_diffusion->Diffuse(nVariables,
+                             m_fields,
+                             inarray,
                              outarray);
     }
 
     /**
      * @brief Compute the projection for the unsteady diffusion problem.
-     * 
+     *
      * @param inarray    Given fields.
      * @param outarray   Calculated solution.
      * @param time       Time.
@@ -187,7 +187,7 @@ namespace Nektar
         const NekDouble time)
     {
         int i;
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         SetBoundaryConditions(time);
 
         switch(m_projectionType)
@@ -196,7 +196,7 @@ namespace Nektar
             {
                 // Just copy over array
                 int npoints = GetNpoints();
-                
+
                 for(i = 0; i < nvariables; ++i)
                 {
                     Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
@@ -222,8 +222,8 @@ namespace Nektar
             }
         }
     }
-    
-    /** 
+
+    /**
      * @brief Implicit solution of the unsteady diffusion problem.
      */
     void UnsteadyDiffusion::DoImplicitSolve(
@@ -236,11 +236,11 @@ namespace Nektar
 
         StdRegions::ConstFactorMap factors;
 
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         int npoints    = m_fields[0]->GetNpoints();
         factors[StdRegions::eFactorLambda] = 1.0 / lambda / m_epsilon;
         factors[StdRegions::eFactorTau]    = 1.0;
-        
+
         if(m_useSpecVanVisc)
         {
             factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
@@ -254,41 +254,45 @@ namespace Nektar
         for (int i = 0; i < nvariables; ++i)
         {
             // Multiply 1.0/timestep/lambda
-            Vmath::Smul(npoints, 
-                        -factors[StdRegions::eFactorLambda], 
-                        inarray[i], 1, 
+            Vmath::Smul(npoints,
+                        -factors[StdRegions::eFactorLambda],
+                        inarray[i], 1,
                         outarray[i], 1);
-            
+
             // Solve a system of equations with Helmholtz solver
             m_fields[i]->HelmSolve(outarray[i],
                                    m_fields[i]->UpdateCoeffs(),
-                                   NullFlagList, 
-                                   factors, 
+                                   factors,
                                    m_varcoeff);
-            
+
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
                                   outarray[i]);
-            
+
             m_fields[i]->SetPhysState(false);
         }
     }
-    
-    /** 
+
+    /**
      * @brief Return the flux vector for the unsteady diffusion problem.
      */
     void UnsteadyDiffusion::GetFluxVector(
-        const int i, 
-        const int j,
-        const Array<OneD, Array<OneD, NekDouble> > &physfield,
-              Array<OneD, Array<OneD, NekDouble> > &derivatives,
-              Array<OneD, Array<OneD, NekDouble> > &flux)
+        const Array<OneD, Array<OneD, NekDouble> > &inarray,
+        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&viscousTensor)
     {
-        boost::ignore_unused(derivatives);
+        boost::ignore_unused(inarray);
 
-        for(int k = 0; k < flux.num_elements(); ++k)
+        unsigned int nDim = qfield.size();
+        unsigned int nConvectiveFields = qfield[0].size();
+        unsigned int nPts = qfield[0][0].size();
+
+        for (unsigned int j = 0; j < nDim; ++j)
         {
-            Vmath::Zero(GetNpoints(), flux[k], 1);
+            for (unsigned int i = 0; i < nConvectiveFields; ++i)
+            {
+                Vmath::Smul(nPts, m_epsilon, qfield[j][i], 1,
+                    viscousTensor[j][i], 1 );
+            }
         }
-        Vmath::Vcopy(GetNpoints(), physfield[i], 1, flux[j], 1);
     }
 }

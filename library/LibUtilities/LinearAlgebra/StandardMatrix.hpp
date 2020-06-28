@@ -301,6 +301,8 @@ namespace Nektar
             
             LIB_UTILITIES_EXPORT ThisType& operator=(const ThisType& rhs);
 
+            LIB_UTILITIES_EXPORT ThisType& operator=(const DataType& rhs);
+
             template<typename InnerMatrixType>
             ThisType& operator=(const NekMatrix<InnerMatrixType, ScaledMatrixTag>& rhs)
             {

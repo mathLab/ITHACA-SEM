@@ -193,7 +193,8 @@ namespace Nektar
                                         CheckIfSingularSystem,
                                         variable,
                                         m_periodicVerts,
-                                        m_periodicEdges);
+                                        m_periodicEdges,
+                                        m_periodicFaces);
 
                 if (m_session->DefinesCmdLineArgument("verbose"))
                 {
@@ -384,7 +385,7 @@ namespace Nektar
                 GetBndCondCoeffsToLocalCoeffsMap();
 
             // Add weak boundary conditions to forcing
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                    SpatialDomains::eNeumann ||
@@ -617,13 +618,12 @@ namespace Nektar
             int i,j;
             int bndcnt=0;
 
-
             Array<OneD, NekDouble> sign = m_locToGloMap->
                 GetBndCondCoeffsToLocalCoeffsSign();
             const Array<OneD, const int> map= m_locToGloMap->
                 GetBndCondCoeffsToLocalCoeffsMap();
 
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                    SpatialDomains::eDirichlet)
@@ -649,7 +649,7 @@ namespace Nektar
                 bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
             }
 
-            // communicate local Dirichlet coeffsthat are just
+            // communicate local Dirichlet coeffs that are just
             // touching a dirichlet boundary on another partition
             set<int> &ParallelDirBndSign = m_locToGloMap->GetParallelDirBndSign();
 
@@ -658,7 +658,7 @@ namespace Nektar
                 outarray[it] *= -1;
             }
 
-            Gs::Gather(outarray, Gs::gs_amax, m_locToGloMap->GetDirBndGsh());
+            m_locToGloMap->UniversalAbsMaxBnd(outarray);
 
             for (auto &it : ParallelDirBndSign)
             {
@@ -683,8 +683,14 @@ namespace Nektar
             const Array<OneD, const int> bndmap= m_locToGloMap->
                 GetBndCondCoeffsToLocalCoeffsMap();
 
-            for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(int i = 0; i < m_bndCondExpansions.size(); ++i)
             {
+                if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                       SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[i]->UpdateCoeffs();
 
                 if(m_locToGloMap->GetSignChange())
@@ -711,7 +717,7 @@ namespace Nektar
         {
             int bndcnt = 0;
 
-            ASSERTL1(nreg < m_bndCondExpansions.num_elements(),
+            ASSERTL1(nreg < m_bndCondExpansions.size(),
                      "nreg is out or range since this many boundary "
                      "regions to not exist");
 
@@ -725,6 +731,12 @@ namespace Nektar
 
             for(int j = 0; j < nreg; ++j)
             {
+                if (m_bndConditions[j]->GetBoundaryConditionType() ==
+                    SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
                 bndcnt += m_bndCondExpansions[j]->GetNcoeffs();
             }
 
@@ -743,7 +755,6 @@ namespace Nektar
                 }
             }
         }
-
 
 
         /**
@@ -867,7 +878,6 @@ namespace Nektar
         void ContField::v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
-                const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
                 const MultiRegions::VarFactorsMap &varfactors,
@@ -875,10 +885,9 @@ namespace Nektar
                 const bool PhysSpaceForcing)
 
         {
-	    boost::ignore_unused(flags);
             int i,j;
 
-            //----------------------------------
+        //----------------------------------
             //  Setup RHS Inner product
             //----------------------------------
             // Inner product of forcing
@@ -901,7 +910,7 @@ namespace Nektar
             const Array<OneD, const int> map= m_locToGloMap->
                 GetBndCondCoeffsToLocalCoeffsMap();
             // Add weak boundary conditions to forcing
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                    SpatialDomains::eNeumann ||
@@ -926,7 +935,6 @@ namespace Nektar
                         }
                     }
                 }
-
                 bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
             }
 
@@ -995,7 +1003,7 @@ namespace Nektar
             const Array<OneD, const int> map= m_locToGloMap->
                 GetBndCondCoeffsToLocalCoeffsMap();
             // Add weak boundary conditions to forcing
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = 0; i < m_bndCondExpansions.size(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() ==
                    SpatialDomains::eNeumann ||

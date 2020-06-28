@@ -70,7 +70,7 @@ namespace Nektar
             ASSERTL1(Bc.GetBasisType() == LibUtilities::eModifiedPyr_C ||
                      Bc.GetBasisType() == LibUtilities::eOrthoPyr_C,
                      "Expected basis type in 'c' direction to be ModifiedPyr_C or OrthoPyr_C");
-            
+
         }
 
         StdPyrExp::StdPyrExp(const StdPyrExp &T)
@@ -125,8 +125,8 @@ namespace Nektar
             eta_z = m_base[2]->GetZ();
 
             int i, j, k, n;
-            
-            if (out_dxi1.num_elements() > 0)
+
+            if (out_dxi1.size() > 0)
             {
                 for (k = 0, n = 0; k < Qz; ++k)
                 {
@@ -141,7 +141,7 @@ namespace Nektar
                 }
             }
 
-            if (out_dxi2.num_elements() > 0)
+            if (out_dxi2.size() > 0)
             {
                 for (k = 0, n = 0; k < Qz; ++k)
                 {
@@ -156,7 +156,7 @@ namespace Nektar
                 }
             }
 
-            if (out_dxi3.num_elements() > 0)
+            if (out_dxi3.size() > 0)
             {
                 for (k = 0, n = 0; k < Qz; ++k)
                 {
@@ -345,7 +345,7 @@ namespace Nektar
             if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
 
-                // Not sure why we could not use basis as 1.0 
+                // Not sure why we could not use basis as 1.0
                 // top singular vertex - (1+c)/2 x (1+b)/2 x (1-a)/2 component
                 Blas::Daxpy(nquad2,inarray[1],base2.get()+nquad2,1,
                             &tmp[0]+nquad2,1);
@@ -357,7 +357,7 @@ namespace Nektar
                 // top singular vertex - (1+c)/2 x (1+b)/2 x (1+a)/2 component
                 Blas::Daxpy(nquad2,inarray[1],base2.get()+nquad2,1,
                             &tmp[0]+order1*nquad2+nquad2,1);
-}
+            }
 
             // Perform summation over '1' direction
             mode = 0;
@@ -375,7 +375,6 @@ namespace Nektar
                         1.0, base0.get(),    nquad0,
                              tmp1.get(),     nquad1*nquad2,
                         0.0, outarray.get(), nquad0);
-            
         }
 
 	/** \brief Forward transform from physical quadrature space
@@ -400,7 +399,7 @@ namespace Nektar
             StdMatrixKey      imasskey(eInvMass,DetShapeType(),*this);
             DNekMatSharedPtr  imatsys = GetStdMatrix(imasskey);
 
-            
+
             // copy inarray in case inarray == outarray
             DNekVec in (m_ncoeffs, outarray);
             DNekVec out(m_ncoeffs, outarray, eWrapper);
@@ -435,7 +434,7 @@ namespace Nektar
                 m_base[1]->Collocation() &&
                 m_base[2]->Collocation())
             {
-                MultiplyByStdQuadratureMetric(inarray, outarray);
+                v_MultiplyByStdQuadratureMetric(inarray, outarray);
             }
             else
             {
@@ -458,7 +457,7 @@ namespace Nektar
 
             if(multiplybyweights)
             {
-                Array<OneD, NekDouble> tmp(inarray.num_elements());
+                Array<OneD, NekDouble> tmp(inarray.size());
 
                 v_MultiplyByStdQuadratureMetric(inarray, tmp);
 
@@ -500,7 +499,7 @@ namespace Nektar
             int  order1 = m_base[1]->GetNumModes();
             int  order2 = m_base[2]->GetNumModes();
 
-            ASSERTL1(wsp.num_elements() >= nquad1*nquad2*order0 +
+            ASSERTL1(wsp.size() >= nquad1*nquad2*order0 +
                                            nquad2*order0*order1,
                      "Insufficient workspace size");
 
@@ -541,7 +540,7 @@ namespace Nektar
                     mode  += order2-ijmax;
                     mode1 += order2-ijmax;
                 }
-                
+
                 //increment mode in case order1!=order2
                 for(j = order1; j < order2; ++j)
                 {
@@ -636,7 +635,7 @@ namespace Nektar
                             &tmp0   [0] + i*nq01, 1);
             }
 
-            MultiplyByStdQuadratureMetric(tmp0, tmp0);
+            v_MultiplyByStdQuadratureMetric(tmp0, tmp0);
 
             switch(dir)
             {
@@ -690,14 +689,14 @@ namespace Nektar
                                             &tmp0[0] + i*nquad0, 1);
                     }
 
-                    MultiplyByStdQuadratureMetric(tmp0, tmp0);
+                    v_MultiplyByStdQuadratureMetric(tmp0, tmp0);
                     IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
                                                  m_base[1]->GetDbdata(),
                                                  m_base[2]->GetBdata(),
                                                  tmp0, tmp4,  wsp,
                                                  true, false, true);
 
-                    MultiplyByStdQuadratureMetric(inarray,tmp0);
+                    v_MultiplyByStdQuadratureMetric(inarray,tmp0);
                     IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
                                                  m_base[1]->GetBdata(),
                                                  m_base[2]->GetDbdata(),
@@ -775,11 +774,11 @@ namespace Nektar
             v_BwdTrans(tmp, outarray);
         }
 
-        void StdPyrExp::v_GetFaceNumModes(
-                    const int                  fid,
-                    const Orientation          faceOrient,
+        void StdPyrExp::v_GetTraceNumModes(
+                    const int       fid,
                     int &numModes0,
-                    int &numModes1)
+                    int &numModes1,
+                    Orientation     faceOrient)
         {
             int nummodes [3] = {m_base[0]->GetNumModes(),
                                 m_base[1]->GetNumModes(),
@@ -815,6 +814,66 @@ namespace Nektar
             }
         }
 
+        NekDouble StdPyrExp::v_PhysEvaluateBasis(
+            const Array<OneD, const NekDouble>& coords,
+            int mode)
+        {
+            Array<OneD, NekDouble> coll(3);
+            LocCoordToLocCollapsed(coords, coll);
+
+            const int nm0 = m_base[0]->GetNumModes();
+            const int nm1 = m_base[1]->GetNumModes();
+            const int nm2 = m_base[2]->GetNumModes();
+
+            int mode0 = 0, mode1 = 0, mode2 = 0, cnt = 0;
+
+            bool found = false;
+            for (mode0 = 0; mode0 < nm0; ++mode0)
+            {
+                for (mode1 = 0; mode1 < nm1; ++mode1)
+                {
+                    int maxpq = max(mode0, mode1);
+                    for (mode2 = 0; mode2 < nm2 - maxpq; ++mode2, ++cnt)
+                    {
+                        if (cnt == mode)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (found)
+                    {
+                        break;
+                    }
+                }
+
+                if (found)
+                {
+                    break;
+                }
+
+                for (int j = nm1; j < nm2; ++j)
+                {
+                    int ijmax = max(mode0, j);
+                    mode2 += nm2 - ijmax;
+                }
+            }
+
+            if (mode == 1 &&
+                m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+            {
+                return StdExpansion::BaryEvaluateBasis<2>(coll[2], 1);
+            }
+            else
+            {
+                return
+                    StdExpansion::BaryEvaluateBasis<0>(coll[0], mode0) *
+                    StdExpansion::BaryEvaluateBasis<1>(coll[1], mode1) *
+                    StdExpansion::BaryEvaluateBasis<2>(coll[2], mode2);
+            }
+        }
+
         //---------------------------------------
         // Helper functions
         //---------------------------------------
@@ -828,12 +887,7 @@ namespace Nektar
         {
             return 8;
         }
-
-        int StdPyrExp::v_GetNfaces() const
-        {
-            return 5;
-        }
-
+        
         int StdPyrExp::v_GetNtraces() const
         {
             return 5;
@@ -884,26 +938,9 @@ namespace Nektar
                 + 2*(R+1) + P*(1 + 2*R - P)  // 2 tri. (P,R) faces
                 + 2*(R+1) + Q*(1 + 2*R - Q); // 2 tri. (Q,R) faces
         }
-        
-        int StdPyrExp::v_GetEdgeNcoeffs(const int i) const
-        {
-            ASSERTL2(i >= 0 && i <= 7, "edge id is out of range");
 
-            if (i == 0 || i == 2)
-            {
-                return GetBasisNumModes(0);
-            }
-            else if (i == 1 || i == 3)
-            {
-                return GetBasisNumModes(1);
-            }
-            else
-            {
-                return GetBasisNumModes(2);
-            }
-        }
 
-        int StdPyrExp::v_GetFaceNcoeffs(const int i) const
+        int StdPyrExp::v_GetTraceNcoeffs(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
 
@@ -923,7 +960,7 @@ namespace Nektar
             }
         }
 
-        int StdPyrExp::v_GetFaceIntNcoeffs(const int i) const
+        int StdPyrExp::v_GetTraceIntNcoeffs(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
 
@@ -945,7 +982,7 @@ namespace Nektar
             }
         }
 
-        int StdPyrExp::v_GetFaceNumPoints(const int i) const
+        int StdPyrExp::v_GetTraceNumPoints(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
 
@@ -966,8 +1003,25 @@ namespace Nektar
             }
         }
 
+        int StdPyrExp::v_GetEdgeNcoeffs(const int i) const
+        {
+            ASSERTL2(i >= 0 && i <= 7, "edge id is out of range");
 
-        const LibUtilities::BasisKey StdPyrExp::v_DetFaceBasisKey(
+            if (i == 0 || i == 2)
+            {
+                return GetBasisNumModes(0);
+            }
+            else if (i == 1 || i == 3)
+            {
+                return GetBasisNumModes(1);
+            }
+            else
+            {
+                return GetBasisNumModes(2);
+            }
+        }
+        
+        const LibUtilities::BasisKey StdPyrExp::v_GetTraceBasisKey(
             const int i, const int k) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
@@ -1018,41 +1072,179 @@ namespace Nektar
             return nmodes;
         }
 
-        LibUtilities::BasisType StdPyrExp::v_GetEdgeBasisType(const int i) const
+        int StdPyrExp::v_GetVertexMap(int vId, bool useCoeffPacking)
         {
-            ASSERTL2(i >= 0 && i <= 7, "edge id is out of range");
-            if (i == 0 || i == 2)
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(1) == LibUtilities::eModified_A ||
+                     GetBasisType(2) == LibUtilities::eModifiedPyr_C,
+                     "Mapping not defined for this type of basis");
+
+            int l = 0;
+
+            if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
             {
-                return GetBasisType(0);
-            }
-            else if (i == 1 || i == 3)
-            {
-                return GetBasisType(1);
+                switch (vId)
+                {
+                case 0:
+                    l = GetMode(0,0,0);
+                    break;
+                case 1:
+                    l = GetMode(0,0,1);
+                    break;
+                case 2:
+                    l = GetMode(0,1,0);
+                    break;
+                case 3:
+                    l = GetMode(1,0,0);
+                    break;
+                case 4:
+                    l = GetMode(1,1,0);
+                    break;
+                default:
+                    ASSERTL0(false, "local vertex id must be between 0 and 4");
+                }
             }
             else
             {
-                return GetBasisType(2);
+                switch (vId)
+                {
+                case 0:
+                    l = GetMode(0,0,0);
+                    break;
+                case 1:
+                    l = GetMode(1,0,0);
+                    break;
+                case 2:
+                    l = GetMode(1,1,0);
+                    break;
+                case 3:
+                    l = GetMode(0,1,0);
+                    break;
+                case 4:
+                    l = GetMode(0,0,1);
+                    break;
+                default:
+                    ASSERTL0(false, "local vertex id must be between 0 and 4");
+                }
+            }
+
+            return l;
+        }
+
+        void StdPyrExp::v_GetInteriorMap(Array<OneD, unsigned int> &outarray)
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModifiedPyr_C ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+
+
+            int P   = m_base[0]->GetNumModes() - 1, p;
+            int Q   = m_base[1]->GetNumModes() - 1, q;
+            int R   = m_base[2]->GetNumModes() - 1, r;
+
+            int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
+
+            if(outarray.size()!=nIntCoeffs)
+            {
+                outarray = Array<OneD, unsigned int>(nIntCoeffs);
+            }
+
+            int idx = 0;
+
+            // Loop over all interior modes.
+            for (p = 2; p <= P; ++p)
+            {
+            	for (q = 2; q <= Q; ++q)
+            	{
+                    int maxpq = max(p,q);
+                    for (r = 1; r <= R-maxpq; ++r)
+                    {
+                        outarray[idx++] = GetMode(p,q,r);
+                    }
+                }
             }
         }
 
+        void StdPyrExp::v_GetBoundaryMap(Array<OneD, unsigned int> &maparray)
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModifiedPyr_C ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
 
-        //---------------------------------------
-        // Mappings
-        //---------------------------------------
+            int P   = m_base[0]->GetNumModes() - 1, p;
+            int Q   = m_base[1]->GetNumModes() - 1, q;
+            int R   = m_base[2]->GetNumModes() - 1, r;
+            int idx = 0;
 
-        void StdPyrExp::v_GetFaceToElementMap(
+            int nBnd = NumBndryCoeffs();
+
+            if (maparray.size() != nBnd)
+            {
+                maparray = Array<OneD, unsigned int>(nBnd);
+            }
+
+            // Loop over all boundary modes (in ascending order).
+            for (p = 0; p <= P; ++p)
+            {
+                // First two q-r planes are entirely boundary modes.
+                if (p <= 1)
+                {
+                    for (q = 0; q <= Q; ++q)
+                    {
+                        int maxpq = max(p,q);
+                        for (r = 0; r <= R-maxpq; ++r)
+                        {
+                            maparray[idx++] = GetMode(p,q,r);
+                        }
+                    }
+                }
+                else
+                {
+                    // Remaining q-r planes contain boundary modes on the two
+                    // front and back sides and edges 0 2.
+                    for (q = 0; q <= Q; ++q)
+                    {
+                        if (q <= 1)
+                        {
+                            for (r = 0; r <= R-p; ++r)
+                            {
+                                maparray[idx++] = GetMode(p,q,r);
+                            }
+                        }
+                        else
+                        {
+                            maparray[idx++] = GetMode(p,q,0);
+                        }
+                    }
+                }
+            }
+        }
+
+        void StdPyrExp::v_GetTraceToElementMap(
             const int                  fid,
-            const Orientation          faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray,
+            const Orientation          faceOrient,
             int                        P,
             int                        Q)
         {
-            ASSERTL1(GetEdgeBasisType(0) == GetEdgeBasisType(1),
+            ASSERTL1(GetBasisType(0) == GetBasisType(1),
                      "Method only implemented if BasisType is identical"
                      "in x and y directions");
-            ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A &&
-                     GetEdgeBasisType(4) == LibUtilities::eModifiedPyr_C,
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A &&
+                     GetBasisType(2) == LibUtilities::eModifiedPyr_C,
                      "Method only implemented for Modified_A BasisType"
                      "(x and y direction) and ModifiedPyr_C BasisType (z "
                      "direction)");
@@ -1090,7 +1282,7 @@ namespace Nektar
             {
                 P = nummodesA;
                 Q = nummodesB;
-                nFaceCoeffs = GetFaceNcoeffs(fid);
+                nFaceCoeffs = GetTraceNcoeffs(fid);
             }
             else if (fid > 0)
             {
@@ -1104,12 +1296,12 @@ namespace Nektar
             }
 
             // Allocate the map array and sign array; set sign array to ones (+)
-            if (maparray.num_elements() != nFaceCoeffs)
+            if (maparray.size() != nFaceCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nFaceCoeffs);
             }
 
-            if (signarray.num_elements() != nFaceCoeffs)
+            if (signarray.size() != nFaceCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceCoeffs,1);
             }
@@ -1372,72 +1564,11 @@ namespace Nektar
             }
         }
 
-        int StdPyrExp::v_GetVertexMap(int vId, bool useCoeffPacking)
-        {
-            ASSERTL0(GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
-                     GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
-                     GetEdgeBasisType(vId) == LibUtilities::eModifiedPyr_C,
-                     "Mapping not defined for this type of basis");
-
-
-
-            int l = 0;
-
-            if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
-            {
-                switch (vId)
-                {
-                case 0:
-                    l = GetMode(0,0,0);
-                    break;
-                case 1:
-                    l = GetMode(0,0,1);
-                    break;
-                case 2:
-                    l = GetMode(0,1,0);
-                    break;
-                case 3:
-                    l = GetMode(1,0,0);
-                    break;
-                case 4:
-                    l = GetMode(1,1,0);
-                    break;
-                default:
-                    ASSERTL0(false, "local vertex id must be between 0 and 4");
-                }
-            }
-            else
-            {
-                switch (vId)
-                {
-                case 0:
-                    l = GetMode(0,0,0);
-                    break;
-                case 1:
-                    l = GetMode(1,0,0);
-                    break;
-                case 2:
-                    l = GetMode(1,1,0);
-                    break;
-                case 3:
-                    l = GetMode(0,1,0);
-                    break;
-                case 4:
-                    l = GetMode(0,0,1);
-                    break;
-                default:
-                    ASSERTL0(false, "local vertex id must be between 0 and 4");
-                }
-            }
-            
-            return l;
-        }
-
-        void StdPyrExp::v_GetEdgeInteriorMap(
+        void StdPyrExp::v_GetEdgeInteriorToElementMap(
             const int                  eid,
-            const Orientation          edgeOrient,
             Array<OneD, unsigned int> &maparray,
-            Array<OneD, int>          &signarray)
+            Array<OneD, int>          &signarray,
+            const Orientation          edgeOrient)
         {
             int       i;
             bool      signChange;
@@ -1446,12 +1577,12 @@ namespace Nektar
             const int R              = m_base[2]->GetNumModes() - 1;
             const int nEdgeIntCoeffs = v_GetEdgeNcoeffs(eid) - 2;
 
-            if (maparray.num_elements() != nEdgeIntCoeffs)
+            if (maparray.size() != nEdgeIntCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
             }
 
-            if(signarray.num_elements() != nEdgeIntCoeffs)
+            if(signarray.size() != nEdgeIntCoeffs)
             {
                 signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
             }
@@ -1532,27 +1663,27 @@ namespace Nektar
             }
         }
 
-        void StdPyrExp::v_GetFaceInteriorMap(
+        void StdPyrExp::v_GetTraceInteriorToElementMap(
             const int                  fid,
-            const Orientation          faceOrient,
             Array<OneD, unsigned int> &maparray,
-            Array<OneD, int>          &signarray)
+            Array<OneD, int>          &signarray,
+            const Orientation          faceOrient)
         {
             const int P              = m_base[0]->GetNumModes() - 1;
             const int Q              = m_base[1]->GetNumModes() - 1;
             const int R              = m_base[2]->GetNumModes() - 1;
-            const int nFaceIntCoeffs = v_GetFaceIntNcoeffs(fid);
+            const int nFaceIntCoeffs = v_GetTraceIntNcoeffs(fid);
             int       p, q, r, idx   = 0;
             int       nummodesA      = 0;
             int       nummodesB      = 0;
             int       i, j;
 
-            if (maparray.num_elements() != nFaceIntCoeffs)
+            if (maparray.size() != nFaceIntCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nFaceIntCoeffs);
             }
 
-            if (signarray.num_elements() != nFaceIntCoeffs)
+            if (signarray.size() != nFaceIntCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceIntCoeffs, 1);
             }
@@ -1712,107 +1843,6 @@ namespace Nektar
             }
         }
 
-        void StdPyrExp::v_GetInteriorMap(Array<OneD, unsigned int> &outarray)
-        {
-            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
-                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
-                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(2) == LibUtilities::eModifiedPyr_C ||
-                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-
-
-            int P   = m_base[0]->GetNumModes() - 1, p;
-            int Q   = m_base[1]->GetNumModes() - 1, q;
-            int R   = m_base[2]->GetNumModes() - 1, r;
-
-            int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
-
-            if(outarray.num_elements()!=nIntCoeffs)
-            {
-                outarray = Array<OneD, unsigned int>(nIntCoeffs);
-            }
-
-            int idx = 0;
-
-            // Loop over all interior modes.
-            for (p = 2; p <= P; ++p)
-            {
-            	for (q = 2; q <= Q; ++q)
-            	{
-                    int maxpq = max(p,q);
-                    for (r = 1; r <= R-maxpq; ++r)
-                    {
-                        outarray[idx++] = GetMode(p,q,r);
-                    }
-                }
-            }
-        }
-
-        void StdPyrExp::v_GetBoundaryMap(Array<OneD, unsigned int> &maparray)
-        {
-            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
-                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
-                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(2) == LibUtilities::eModifiedPyr_C ||
-                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-
-            int P   = m_base[0]->GetNumModes() - 1, p;
-            int Q   = m_base[1]->GetNumModes() - 1, q;
-            int R   = m_base[2]->GetNumModes() - 1, r;
-            int idx = 0;
-
-            int nBnd = NumBndryCoeffs();
-
-            if (maparray.num_elements() != nBnd)
-            {
-                maparray = Array<OneD, unsigned int>(nBnd);
-            }
-
-            // Loop over all boundary modes (in ascending order).
-            for (p = 0; p <= P; ++p)
-            {
-                // First two q-r planes are entirely boundary modes.
-                if (p <= 1)
-                {
-                    for (q = 0; q <= Q; ++q)
-                    {
-                        int maxpq = max(p,q);
-                        for (r = 0; r <= R-maxpq; ++r)
-                        {
-                            maparray[idx++] = GetMode(p,q,r);
-                        }
-                    }
-                }
-                else
-                {
-                    // Remaining q-r planes contain boundary modes on the two
-                    // front and back sides and edges 0 2.
-                    for (q = 0; q <= Q; ++q)
-                    {
-                        if (q <= 1)
-                        {
-                            for (r = 0; r <= R-p; ++r)
-                            {
-                                maparray[idx++] = GetMode(p,q,r);
-                            }
-                        }
-                        else
-                        {
-                            maparray[idx++] = GetMode(p,q,0);
-                        }
-                    }
-                }
-            }
-        }
-
         //---------------------------------------
         // Wrapper functions
         //---------------------------------------
@@ -1834,8 +1864,8 @@ namespace Nektar
          *
          * Modes are numbered with the r index travelling fastest,
          * followed by q and then p, and each q-r plane is of size
-         * 
-         * (R+1-p)*(Q+1) - l(l+1)/2 where l = max(0,Q-p) 
+         *
+         * (R+1-p)*(Q+1) - l(l+1)/2 where l = max(0,Q-p)
          *
          * For example, when P=2, Q=3 and R=4 the indexing inside each
          * q-r plane (with r increasing upwards and q to the right)
@@ -1846,8 +1876,8 @@ namespace Nektar
          * 4
          * 3 8         17 21
          * 2 7 11      16 20 24     29 32 35
-         * 1 6 10 13   15 19 23 26  28 31 34 37 
-         * 0 5 9  12   14 18 22 25  27 30 33 36 
+         * 1 6 10 13   15 19 23 26  28 31 34 37
+         * 0 5 9  12   14 18 22 25  27 30 33 36
          *
          * Note that in this element, we must have that \f$ P,Q \leq
          * R\f$.
@@ -1857,7 +1887,7 @@ namespace Nektar
             const int Q = m_base[1]->GetNumModes()-1;
             const int R = m_base[2]->GetNumModes()-1;
 
-            int i,l; 
+            int i,l;
             int cnt = 0;
 
             // Traverse to q-r plane number I
@@ -1865,7 +1895,7 @@ namespace Nektar
             {
                 // Size of triangle part
                 l = max(0,Q-i);
-                
+
                 // Size of rectangle part
                 cnt += (R+1-i)*(Q+1) - l*(l+1)/2;
             }
@@ -1873,7 +1903,7 @@ namespace Nektar
             // Traverse to q column J (Pretend this is a face of width J)
             l = max(0,J-1-I);
             cnt += (R+1-I)*J - l*(l+1)/2;
-            
+
             // Traverse up stacks to K
             cnt += K;
 
@@ -1965,14 +1995,14 @@ namespace Nektar
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
 
-            if(mkey.ConstFactorExists(eFactorSVVPowerKerDiffCoeff)) 
+            if(mkey.ConstFactorExists(eFactorSVVPowerKerDiffCoeff))
             {
-                // Rodrigo's power kernel                
-                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio); 
+                // Rodrigo's power kernel
+                NekDouble cutoff = mkey.GetConstFactor(eFactorSVVCutoffRatio);
                 NekDouble  SvvDiffCoeff  =
                     mkey.GetConstFactor(eFactorSVVPowerKerDiffCoeff)*
                     mkey.GetConstFactor(eFactorSVVDiffCoeff);
-                
+
                 for(int i = 0; i < nmodes_a; ++i)
                 {
                     for(int j = 0; j < nmodes_b; ++j)
@@ -1986,7 +2016,7 @@ namespace Nektar
                         {
                             NekDouble fac = std::max(fac1,
                                    pow((1.0*k)/(nmodes_c-1),cutoff*nmodes_c));
-                            
+
                             orthocoeffs[cnt] *= SvvDiffCoeff * fac;
                             cnt++;
                         }
@@ -2005,7 +2035,7 @@ namespace Nektar
                 // clamp max_abc
                 max_abc = max(max_abc,0);
                 max_abc = min(max_abc,kSVVDGFiltermodesmax-kSVVDGFiltermodesmin);
-                
+
                 for(int i = 0; i < nmodes_a; ++i)
                 {
                     for(int j = 0; j < nmodes_b; ++j)
@@ -2016,7 +2046,7 @@ namespace Nektar
                         {
                             int maxijk = max(maxij,k);
                             maxijk = min(maxijk,kSVVDGFiltermodesmax-1);
-                        
+
                             orthocoeffs[cnt] *= SvvDiffCoeff *
                                 kSVVDGFilter[max_abc][maxijk];
                             cnt++;
@@ -2032,17 +2062,17 @@ namespace Nektar
                 //
                 NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
                 NekDouble  SVVCutOff    = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
-                
+
                 //Defining the cut of mode
                 int cutoff_a = (int) (SVVCutOff*nmodes_a);
                 int cutoff_b = (int) (SVVCutOff*nmodes_b);
                 int cutoff_c = (int) (SVVCutOff*nmodes_c);
                 //To avoid the fac[j] from blowing up
                 NekDouble epsilon = 1;
-                
+
                 int nmodes = min(min(nmodes_a,nmodes_b),nmodes_c);
                 NekDouble cutoff = min(min(cutoff_a,cutoff_b),cutoff_c);
-                
+
                 for(i = 0; i < nmodes_a; ++i)//P
                 {
                     for(j = 0; j < nmodes_b; ++j) //Q
@@ -2069,7 +2099,7 @@ namespace Nektar
                     }
                 }
             }
-            
+
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }
@@ -2121,7 +2151,7 @@ namespace Nektar
             {
                  for (i = 0; i < numMin; ++i)
                  {
-                     
+
                      int maxui = max(u,i);
                      Vmath::Vcopy(numMin - maxui, tmp  = coeff      + cnt, 1,
                                   tmp2 = coeff_tmp1 + cnt, 1);
@@ -2138,6 +2168,6 @@ namespace Nektar
             OrthoPyrExp->BwdTrans(coeff_tmp1, phys_tmp);
             StdPyrExp::FwdTrans(phys_tmp, outarray);
         }
-        
+
     }
 }

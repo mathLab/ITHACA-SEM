@@ -54,6 +54,7 @@ SymmetryBC::SymmetryBC(const LibUtilities::SessionReaderSharedPtr& pSession,
            const int cnt)
     : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion, cnt)
 {
+    m_diffusionAveWeight = 0.5;
 }
 
 void SymmetryBC::v_Apply(
@@ -64,7 +65,7 @@ void SymmetryBC::v_Apply(
     boost::ignore_unused(time);
 
     int i;
-    int nVariables = physarray.num_elements();
+    int nVariables = physarray.size();
 
     const Array<OneD, const int> &traceBndMap
         = m_fields[0]->GetTraceBndMap();

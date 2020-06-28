@@ -123,19 +123,19 @@ namespace Nektar
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                if(out_d0.num_elements())
+                if(out_d0.size())
                 {
                     Vmath::Vmul  (nqtot,df[0],1,diff0,1, out_d0, 1);
                     Vmath::Vvtvp (nqtot,df[1],1,diff1,1, out_d0, 1, out_d0,1);
                 }
 
-                if(out_d1.num_elements())
+                if(out_d1.size())
                 {
                     Vmath::Vmul  (nqtot,df[2],1,diff0,1, out_d1, 1);
                     Vmath::Vvtvp (nqtot,df[3],1,diff1,1, out_d1, 1, out_d1,1);
                 }
 
-                if(out_d2.num_elements())
+                if(out_d2.size())
                 {
                     Vmath::Vmul  (nqtot,df[4],1,diff0,1, out_d2, 1);
                     Vmath::Vvtvp (nqtot,df[5],1,diff1,1, out_d2, 1, out_d2,1);
@@ -143,19 +143,19 @@ namespace Nektar
             }
             else // regular geometry
             {
-                if(out_d0.num_elements())
+                if(out_d0.size())
                 {
                     Vmath::Smul (nqtot, df[0][0], diff0, 1, out_d0, 1);
                     Blas::Daxpy (nqtot, df[1][0], diff1, 1, out_d0, 1);
                 }
 
-                if(out_d1.num_elements())
+                if(out_d1.size())
                 {
                     Vmath::Smul (nqtot, df[2][0], diff0, 1, out_d1, 1);
                     Blas::Daxpy (nqtot, df[3][0], diff1, 1, out_d1, 1);
                 }
 
-                if(out_d2.num_elements())
+                if(out_d2.size())
                 {
                     Vmath::Smul (nqtot, df[4][0], diff0, 1, out_d2, 1);
                     Blas::Daxpy (nqtot, df[5][0], diff1, 1, out_d2, 1);
@@ -198,7 +198,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &direction,
                   Array<OneD,       NekDouble> &out)
         {
-            if(! out.num_elements())
+            if(! out.size())
             {
                 return;
             }
@@ -304,7 +304,7 @@ namespace Nektar
             for(i = 0; i < 3; i++)
             {
                 // define physEdge and add 1 so can interpolate grl10 points if necessary
-                physEdge[i]  = Array<OneD, NekDouble>(max(npoints[i!=0],npoints[0])); 
+                physEdge[i]  = Array<OneD, NekDouble>(max(npoints[i!=0],npoints[0]));
                 coeffEdge[i] = Array<OneD, NekDouble>(nmodes[i!=0]);
             }
 
@@ -322,7 +322,7 @@ namespace Nektar
 
             SegExpSharedPtr segexp[3];
             segexp[0] = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(m_base[0]->GetBasisKey(),GetGeom2D()->GetEdge(0));
-            
+
             if(m_base[1]->GetPointsType() == LibUtilities::eGaussLobattoLegendre)
             {
                 for(i = 1; i < 3; i++)
@@ -341,12 +341,12 @@ namespace Nektar
                 }
                 npoints[1] = npoints[0];
             }
-            
+
 
             Array<OneD, unsigned int> mapArray;
             Array<OneD, int>          signArray;
             NekDouble sign;
-            // define an orientation to get EdgeToElmtMapping from Cartesian data 
+            // define an orientation to get EdgeToElmtMapping from Cartesian data
             StdRegions::Orientation orient[3] = {StdRegions::eForwards,StdRegions::eForwards,
                                                  StdRegions::eForwards};
 
@@ -356,7 +356,7 @@ namespace Nektar
 
                 // this orient goes with the one above and so could
                 // probably set both to eForwards
-                GetEdgeToElementMap(i,orient[i],mapArray,signArray);
+                GetTraceToElementMap(i,mapArray,signArray,orient[i]);
                 for(j=0; j < nmodes[i!=0]; j++)
                 {
                     sign = (NekDouble) signArray[j];
@@ -431,14 +431,14 @@ namespace Nektar
             {
                 Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad1*order0);
                 Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);
-                
+
                 MultiplyByQuadratureMetric(inarray,tmp);
                 IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),m_base[1]->GetBdata(),tmp,outarray,wsp);
             }
             else
             {
                 Array<OneD,NekDouble> wsp(+nquad1*order0);
-                
+
                 IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
                                              inarray,outarray,wsp);
             }
@@ -690,7 +690,7 @@ namespace Nektar
 
         StdRegions::StdExpansionSharedPtr TriExp::v_GetStdExp(void) const
         {
-            
+
             return MemoryManager<StdRegions::StdTriExp>
                 ::AllocateSharedPtr(m_base[0]->GetBasisKey(),
                                     m_base[1]->GetBasisKey());
@@ -731,9 +731,9 @@ namespace Nektar
         {
             Expansion::v_GetCoords(coords_0, coords_1, coords_2);
         }
-        
 
-        /** 
+
+        /**
          * Given the local cartesian coordinate \a Lcoord evaluate the
          * value of physvals at this point by calling through to the
          * StdExpansion method
@@ -761,70 +761,8 @@ namespace Nektar
                 const int edge,
                 const StdRegions::StdExpansionSharedPtr &EdgeExp,
                 const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,NekDouble> &outarray,
-                      StdRegions::Orientation  orient)
-        {
-            boost::ignore_unused(orient);
-            v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
-        }
-
-        void TriExp::v_GetEdgePhysVals(
-            const int edge,
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,NekDouble> &outarray)
-        {
-            int nquad0 = m_base[0]->GetNumPoints();
-            int nquad1 = m_base[1]->GetNumPoints();
-
-            StdRegions::Orientation edgedir = GetEorient(edge);
-            switch(edge)
-            {
-                case 0:
-                    if (edgedir == StdRegions::eForwards)
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0]),1,&(outarray[0]),1);
-                    }
-                    else
-                    {
-                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0-1),-1,
-                                     &(outarray[0]),1);
-                    }
-                    break;
-                case 1:
-                    if (edgedir == StdRegions::eForwards)
-                    {
-                        Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1),nquad0,
-                                     &(outarray[0]),1);
-                    }
-                    else
-                    {
-                        Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0*nquad1-1),
-                                     -nquad0, &(outarray[0]),1);
-                    }
-                    break;
-                case 2:
-                    if (edgedir == StdRegions::eForwards)
-                    {
-                        Vmath::Vcopy(nquad1,&(inarray[0]) + nquad0*(nquad1-1),
-                                     -nquad0,&(outarray[0]),1);
-                    }
-                    else
-                    {
-                        Vmath::Vcopy(nquad1,&(inarray[0]),nquad0,
-                                     &(outarray[0]),1);
-                    }
-                break;
-            default:
-                ASSERTL0(false,"edge value (< 3) is out of range");
-                break;
-            }
-        }
-
-        void TriExp::v_GetEdgePhysVals(
-            const int                                edge,
-            const StdRegions::StdExpansionSharedPtr &EdgeExp,
-            const Array<OneD, const NekDouble>      &inarray,
-            Array<OneD, NekDouble>                  &outarray)
+                Array<OneD,NekDouble> &outarray,
+                StdRegions::Orientation  orient)
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
@@ -856,16 +794,19 @@ namespace Nektar
             if(m_base[edge?1:0]->GetPointsKey() != EdgeExp->GetBasis(0)->GetPointsKey())
             {
                 Array<OneD,NekDouble> outtmp(max(nquad0,nquad1));
-		
+
                 outtmp = outarray;
-                
+
                 LibUtilities::Interp1D(m_base[edge?1:0]->GetPointsKey(),
                                        outtmp,
                                        EdgeExp->GetBasis(0)->GetPointsKey(),
                                        outarray);
             }
 
-            StdRegions::Orientation orient = GetEorient(edge);
+            if (orient == StdRegions::eNoOrientation)
+            {
+                orient = GetTraceOrient(edge);
+            }
 
             //Reverse data if necessary
             if(orient == StdRegions::eBackwards)
@@ -875,8 +816,8 @@ namespace Nektar
             }
 
         }
-        
-        
+
+
         void TriExp::v_GetEdgeInterpVals(
                 const int edge,const Array<OneD, const NekDouble> &inarray,
                 Array<OneD, NekDouble> &outarray)
@@ -885,25 +826,25 @@ namespace Nektar
             ASSERTL0(false,
                      "Routine not implemented for triangular elements");
         }
-        
-        void TriExp::v_GetEdgeQFactors(
-                const int edge, 
+
+        void TriExp::v_GetTraceQFactors(
+                const int edge,
                 Array<OneD, NekDouble> &outarray)
         {
             boost::ignore_unused(edge, outarray);
-            ASSERTL0(false, 
+            ASSERTL0(false,
                      "Routine not implemented for triangular elements");
         }
-        
-        
-        
-        void TriExp::v_GetEdgePhysMap(
+
+
+
+        void TriExp::v_GetTracePhysMap(
             const int                edge,
             Array<OneD, int>        &outarray)
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
-            
+
             // Get points in Cartesian orientation
             switch (edge)
             {
@@ -932,7 +873,7 @@ namespace Nektar
                     ASSERTL0(false, "edge value (< 3) is out of range");
                     break;
             }
-            
+
         }
 
 
@@ -964,6 +905,11 @@ namespace Nektar
             {
                 normal[i] = Array<OneD, NekDouble>(nqe);
             }
+
+            size_t nqb = nqe;
+            size_t nbnd= edge;
+            m_elmtBndNormDirElmtLen[nbnd] = Array<OneD, NekDouble> {nqb, 0.0};
+            Array<OneD, NekDouble>  &length = m_elmtBndNormDirElmtLen[nbnd];
 
             // Regular geometry case
             if((type == SpatialDomains::eRegular)||(type == SpatialDomains::eMovingRegular))
@@ -1001,6 +947,9 @@ namespace Nektar
                     fac += normal[i][0]*normal[i][0];
                 }
                 fac = 1.0/sqrt(fac);
+
+                Vmath::Fill(nqb, fac, length, 1);
+
                 for (i = 0; i < GetCoordim(); ++i)
                 {
                     Vmath::Smul(nqe,fac,normal[i],1,normal[i],1);
@@ -1084,6 +1033,8 @@ namespace Nektar
 
                 Vmath::Vsqrt(nqe,work,1,work,1);
                 Vmath::Sdiv(nqe,1.0,work,1,work,1);
+                
+                Vmath::Vcopy(nqb, work, 1, length, 1);
 
                 for(i = 0; i < GetCoordim(); ++i)
                 {
@@ -1151,7 +1102,7 @@ namespace Nektar
         }
 
 
-        StdRegions::Orientation TriExp::v_GetEorient(int edge)
+        StdRegions::Orientation TriExp::v_GetTraceOrient(int edge)
         {
             return GetGeom2D()->GetEorient(edge);
         }
@@ -1723,7 +1674,7 @@ namespace Nektar
         {
             StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
         }
-    
+
 
         void TriExp::v_WeakDirectionalDerivMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,NekDouble> &outarray,
@@ -1788,7 +1739,7 @@ namespace Nektar
             int       nmodes1 = m_base[1]->GetNumModes();
             int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
 
-            ASSERTL1(wsp.num_elements() >= 3*wspsize,
+            ASSERTL1(wsp.size() >= 3*wspsize,
                      "Workspace is of insufficient size.");
 
             const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
@@ -1958,7 +1909,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
         {
-            int n_coeffs = inarray.num_elements();
+            int n_coeffs = inarray.size();
             int nquad0   = m_base[0]->GetNumPoints();
             int nquad1   = m_base[1]->GetNumPoints();
             int nqtot    = nquad0*nquad1;
@@ -2014,15 +1965,15 @@ namespace Nektar
             m_OrthoTriExp->BwdTrans(coeff,phys_tmp);
             m_TriExp     ->FwdTrans(phys_tmp, outarray);
         }
-        
+
         void TriExp::v_SVVLaplacianFilter(
                     Array<OneD, NekDouble> &array,
                     const StdRegions::StdMatrixKey &mkey)
         {
             int nq = GetTotPoints();
-            
+
             // Calculate sqrt of the Jacobian
-            Array<OneD, const NekDouble> jac = 
+            Array<OneD, const NekDouble> jac =
                                     m_metricinfo->GetJac(GetPointsKeys());
             Array<OneD, NekDouble> sqrt_jac(nq);
             if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
@@ -2033,17 +1984,17 @@ namespace Nektar
             {
                 Vmath::Fill(nq,sqrt(jac[0]),sqrt_jac,1);
             }
-            
+
             // Multiply array by sqrt(Jac)
             Vmath::Vmul(nq,sqrt_jac,1,array,1,array,1);
-            
+
             // Apply std region filter
             StdTriExp::v_SVVLaplacianFilter( array, mkey);
-            
+
             // Divide by sqrt(Jac)
             Vmath::Vdiv(nq,array,1,sqrt_jac,1,array,1);
         }
-        
+
     }
 }
 

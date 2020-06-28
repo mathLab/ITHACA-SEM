@@ -33,7 +33,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/EquationSystems/SubSteppingExtrapolate.h>
+
 #include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
 
 using namespace std;
 
@@ -81,73 +83,56 @@ namespace Nektar
         ASSERTL0(false,"This method should not be called by Substepping routine");
     }
 
-
     void SubSteppingExtrapolate::v_SubSteppingTimeIntegration(
-        int intMethod,
-        const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
+        const LibUtilities::TimeIntegrationSchemeSharedPtr & IntegrationScheme )
     {
-        int i;
+        unsigned int order = IntegrationScheme->GetOrder();
 
         // Set to 1 for first step and it will then be increased in
         // time advance routines
-        switch(intMethod)
+        if( IntegrationScheme->GetName() == "BackwardEuler" ||
+            (IntegrationScheme->GetName() == "BDFImplicit" &&
+             (order == 1 || order == 2)) )
         {
-            case LibUtilities::eBackwardEuler:
-            case LibUtilities::eBDFImplicitOrder1:
+            // Note RK first order SSP is just Forward Euler.
+            std::string vSubStepIntScheme        = "RungeKutta";
+            std::string vSubStepIntSchemeVariant = "SSP";
+            int         vSubStepIntSchemeOrder   = order;
+
+            if( m_session->DefinesSolverInfo( "SubStepIntScheme" ) )
             {
-                std::string vSubStepIntScheme = "ForwardEuler";
-
-                if(m_session->DefinesSolverInfo("SubStepIntScheme"))
-                {
-                    vSubStepIntScheme = m_session->GetSolverInfo("SubStepIntScheme");
-                }
-
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(vSubStepIntScheme);
-
-                int nvel = m_velocity.num_elements();
-
-                // Fields for linear interpolation
-                m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(2*nvel);
-                int ntotpts  = m_fields[0]->GetTotPoints();
-                m_previousVelFields[0] = Array<OneD, NekDouble>(2*nvel*ntotpts);
-                for(i = 1; i < 2*nvel; ++i)
-                {
-                    m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts;
-                }
-
+                vSubStepIntScheme =
+		  m_session->GetSolverInfo( "SubStepIntScheme" );
+                vSubStepIntSchemeVariant = "";
+                vSubStepIntSchemeOrder = order;
             }
-            break;
-            case LibUtilities::eBDFImplicitOrder2:
+
+            m_subStepIntegrationScheme =
+                LibUtilities::GetTimeIntegrationSchemeFactory().CreateInstance(
+                    vSubStepIntScheme,
+                    vSubStepIntSchemeVariant,
+                    vSubStepIntSchemeOrder,
+		    std::vector<NekDouble>() );
+
+            int nvel = m_velocity.size();
+            int ndim = order+1;
+
+            // Fields for linear/quadratic interpolation
+            m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(ndim*nvel);
+            int ntotpts  = m_fields[0]->GetTotPoints();
+            m_previousVelFields[0] = Array<OneD, NekDouble>(ndim*nvel*ntotpts);
+
+            for( int i = 1; i < ndim*nvel; ++i )
             {
-                std::string vSubStepIntScheme = "RungeKutta2_ImprovedEuler";
-
-                if(m_session->DefinesSolverInfo("SubStepIntScheme"))
-                {
-                    vSubStepIntScheme = m_session->GetSolverInfo("SubStepIntScheme");
-                }
-
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(vSubStepIntScheme);
-
-                int nvel = m_velocity.num_elements();
-
-                // Fields for quadratic interpolation
-                m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(3*nvel);
-
-                int ntotpts  = m_fields[0]->GetTotPoints();
-                m_previousVelFields[0] = Array<OneD, NekDouble>(3*nvel*ntotpts);
-                for(i = 1; i < 3*nvel; ++i)
-                {
-                    m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts;
-                }
-
+                m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts;
             }
-            break;
-            default:
-                ASSERTL0(0,"Integration method not suitable: Options include BackwardEuler or BDFImplicitOrder1");
-                break;
+        }
+        else
+        {
+            ASSERTL0(0,"Integration method not suitable: Options include BackwardEuler or BDFImplicitOrder{1,2}");
         }
 
-        m_intSteps = IntegrationScheme->GetIntegrationSteps();
+        m_intSteps = IntegrationScheme->GetNumIntegrationPhases();
 
         // set explicit time-integration class operators
         m_subStepIntegrationOps.DefineOdeRhs(&SubSteppingExtrapolate::SubStepAdvection, this);
@@ -163,8 +148,8 @@ namespace Nektar
         const NekDouble time)
     {
         int i;
-        int nVariables     = inarray.num_elements();
-        int nQuadraturePts = inarray[0].num_elements();
+        int nVariables     = inarray.size();
+        int nQuadraturePts = inarray[0].size();
 
         /// Get the number of coefficients
         int ncoeffs = m_fields[0]->GetNcoeffs();
@@ -177,18 +162,18 @@ namespace Nektar
             WeakAdv[i] = WeakAdv[i-1] + ncoeffs;
         }
 
-        Array<OneD, Array<OneD, NekDouble> > Velfields(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > Velfields(m_velocity.size());
 
-        Velfields[0] = Array<OneD, NekDouble> (nQuadraturePts*m_velocity.num_elements());
+        Velfields[0] = Array<OneD, NekDouble> (nQuadraturePts*m_velocity.size());
 
-        for(i = 1; i < m_velocity.num_elements(); ++i)
+        for(i = 1; i < m_velocity.size(); ++i)
         {
             Velfields[i] = Velfields[i-1] + nQuadraturePts;
         }
 
         SubStepExtrapolateField(fmod(time,m_timestep), Velfields);
 
-        m_advObject->Advect(m_velocity.num_elements(), m_fields, Velfields, inarray, outarray, time);
+        m_advObject->Advect(m_velocity.size(), m_fields, Velfields, inarray, outarray, time);
 
         for(i = 0; i < nVariables; ++i)
         {
@@ -221,11 +206,11 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &outarray,
         const NekDouble time)
     {
-        ASSERTL1(inarray.num_elements() == outarray.num_elements(),"Inarray and outarray of different sizes ");
+        ASSERTL1(inarray.size() == outarray.size(),"Inarray and outarray of different sizes ");
 
-        for(int i = 0; i < inarray.num_elements(); ++i)
+        for(int i = 0; i < inarray.size(); ++i)
         {
-            Vmath::Vcopy(inarray[i].num_elements(),inarray[i],1,outarray[i],1);
+            Vmath::Vcopy(inarray[i].size(),inarray[i],1,outarray[i],1);
         }
     }
 
@@ -238,7 +223,7 @@ namespace Nektar
         const NekDouble Aii_Dt,
         NekDouble kinvis)
     {
-        //int nConvectiveFields =m_fields.num_elements()-1;
+        //int nConvectiveFields =m_fields.size()-1;
         Array<OneD, Array<OneD, NekDouble> > nullvelfields;
 
         m_pressureCalls++;
@@ -267,11 +252,11 @@ namespace Nektar
     void SubSteppingExtrapolate::v_SubStepSaveFields(const int nstep)
     {
         int i,n;
-        int nvel = m_velocity.num_elements();
+        int nvel = m_velocity.size();
         int npts = m_fields[0]->GetTotPoints();
 
         // rotate fields
-        int nblocks = m_previousVelFields.num_elements()/nvel;
+        int nblocks = m_previousVelFields.size()/nvel;
         Array<OneD, NekDouble> save;
 
         // rotate storage space
@@ -314,9 +299,9 @@ namespace Nektar
      *
      */
     void SubSteppingExtrapolate::v_SubStepAdvance(
-                                                  const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln,
-                                                  int nstep,
-                                                  NekDouble time)
+        const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln,
+        int nstep,
+        NekDouble time )
     {
         int n;
         int nsubsteps;
@@ -356,9 +341,8 @@ namespace Nektar
             // Initialise NS solver which is set up to use a GLM method
             // with calls to EvaluateAdvection_SetPressureBCs and
             // SolveUnsteadyStokesSystem
-            LibUtilities::TimeIntegrationSolutionSharedPtr
-                SubIntegrationSoln = m_subStepIntegrationScheme->
-                InitializeScheme(dt, fields, time, m_subStepIntegrationOps);
+            LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr
+                SubIntegrationSoln = m_subStepIntegrationScheme->InitializeScheme( dt, fields, time, m_subStepIntegrationOps );
 
             for(n = 0; n < nsubsteps; ++n)
             {
@@ -388,9 +372,9 @@ namespace Nektar
 
         Array<OneD, NekDouble> tstep      (n_element, 0.0);
         Array<OneD, NekDouble> stdVelocity(n_element, 0.0);
-        Array<OneD, Array<OneD, NekDouble> > velfields(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > velfields(m_velocity.size());
 
-        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        for(int i = 0; i < m_velocity.size(); ++i)
         {
             velfields[i] = m_fields[m_velocity[i]]->UpdatePhys();
         }
@@ -418,7 +402,7 @@ namespace Nektar
                                                          Array<OneD, Array<OneD, NekDouble> > &Outarray)
     {
         ASSERTL1(
-                 physfield.num_elements() == Outarray.num_elements(),
+                 physfield.size() == Outarray.size(),
                  "Physfield and outarray are of different dimensions");
 
         int i;
@@ -448,7 +432,7 @@ namespace Nektar
             Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Fwd, 1, Vn, 1, Vn, 1);
         }
 
-        for(i = 0; i < physfield.num_elements(); ++i)
+        for(i = 0; i < physfield.size(); ++i)
         {
             /// Extract forwards/backwards trace spaces
             /// Note: Needs to have correct i value to get boundary conditions
@@ -479,7 +463,7 @@ namespace Nektar
                                                          Array< OneD, Array<OneD, NekDouble> > &ExtVel)
     {
         int npts = m_fields[0]->GetTotPoints();
-        int nvel = m_velocity.num_elements();
+        int nvel = m_velocity.size();
         int i,j;
         Array<OneD, NekDouble> l(4);
 
@@ -524,9 +508,9 @@ namespace Nektar
         Vmath::Smul(HBCdata,-kinvis,Q,1,Q,1);
     }
 
-    LibUtilities::TimeIntegrationMethod SubSteppingExtrapolate::v_GetSubStepIntegrationMethod(void)
+    std::string SubSteppingExtrapolate::v_GetSubStepName(void)
     {
-        return m_subStepIntegrationScheme->GetIntegrationMethod();
+        return m_subStepIntegrationScheme->GetName();
     }
 
 }

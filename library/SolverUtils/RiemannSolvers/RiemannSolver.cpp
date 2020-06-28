@@ -116,11 +116,11 @@ namespace Nektar
                 const Array<OneD, const Array<OneD, NekDouble> > vecLocs =
                     m_auxVec["vecLocs"]();
 
-                int nFields = Fwd   .num_elements();
-                int nPts    = Fwd[0].num_elements();
+                int nFields = Fwd   .size();
+                int nPts    = Fwd[0].size();
 
-                if (m_rotStorage[0].num_elements()    != nFields ||
-                    m_rotStorage[0][0].num_elements() != nPts)
+                if (m_rotStorage[0].size()    != nFields ||
+                    m_rotStorage[0][0].size() != nPts)
                 {
                     for (int i = 0; i < 3; ++i)
                     {
@@ -178,22 +178,22 @@ LIKWID_MARKER_STOP("RotationFrom");
             const Array<OneD, const Array<OneD, NekDouble> > &vecLocs,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray)
         {
-            for (int i = 0; i < inarray.num_elements(); ++i)
+            for (int i = 0; i < inarray.size(); ++i)
             {
-                Vmath::Vcopy(inarray[i].num_elements(), inarray[i], 1,
+                Vmath::Vcopy(inarray[i].size(), inarray[i], 1,
                              outarray[i], 1);
             }
 
-            for (int i = 0; i < vecLocs.num_elements(); i++)
+            for (int i = 0; i < vecLocs.size(); i++)
             {
-                ASSERTL1(vecLocs[i].num_elements() == normals.num_elements(),
+                ASSERTL1(vecLocs[i].size() == normals.size(),
                          "vecLocs[i] element count mismatch");
 
-                switch (normals.num_elements())
+                switch (normals.size())
                 {
                     case 1:
                     {    // do nothing
-                        const int nq = inarray[0].num_elements();
+                        const int nq = inarray[0].size();
                         const int vx = (int)vecLocs[i][0];
                         Vmath::Vmul (nq, inarray [vx], 1, normals [0],  1,
                                          outarray[vx], 1);
@@ -201,7 +201,7 @@ LIKWID_MARKER_STOP("RotationFrom");
                     }
                     case 2:
                     {
-                        const int nq = inarray[0].num_elements();
+                        const int nq = inarray[0].size();
                         const int vx = (int)vecLocs[i][0];
                         const int vy = (int)vecLocs[i][1];
 
@@ -218,13 +218,13 @@ LIKWID_MARKER_STOP("RotationFrom");
 
                     case 3:
                     {
-                        const int nq = inarray[0].num_elements();
+                        const int nq = inarray[0].size();
                         const int vx = (int)vecLocs[i][0];
                         const int vy = (int)vecLocs[i][1];
                         const int vz = (int)vecLocs[i][2];
 
                         // Generate matrices if they don't already exist.
-                        if (m_rotMat.num_elements() == 0)
+                        if (m_rotMat.size() == 0)
                         {
                             GenerateRotationMatrices(normals);
                         }
@@ -269,22 +269,22 @@ LIKWID_MARKER_STOP("RotationFrom");
             const Array<OneD, const Array<OneD, NekDouble> > &vecLocs,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray)
         {
-            for (int i = 0; i < inarray.num_elements(); ++i)
+            for (int i = 0; i < inarray.size(); ++i)
             {
-                Vmath::Vcopy(inarray[i].num_elements(), inarray[i], 1,
+                Vmath::Vcopy(inarray[i].size(), inarray[i], 1,
                              outarray[i], 1);
             }
 
-            for (int i = 0; i < vecLocs.num_elements(); i++)
+            for (int i = 0; i < vecLocs.size(); i++)
             {
-                ASSERTL1(vecLocs[i].num_elements() == normals.num_elements(),
+                ASSERTL1(vecLocs[i].size() == normals.size(),
                          "vecLocs[i] element count mismatch");
 
-                switch (normals.num_elements())
+                switch (normals.size())
                 {
                     case 1:
                     {    // do nothing
-                        const int nq = normals[0].num_elements();
+                        const int nq = normals[0].size();
                         const int vx = (int)vecLocs[i][0];
                         Vmath::Vmul (nq, inarray [vx], 1, normals [0],  1,
                                          outarray[vx], 1);
@@ -292,7 +292,7 @@ LIKWID_MARKER_STOP("RotationFrom");
                     }
                     case 2:
                     {
-                        const int nq = normals[0].num_elements();
+                        const int nq = normals[0].size();
                         const int vx = (int)vecLocs[i][0];
                         const int vy = (int)vecLocs[i][1];
 
@@ -309,7 +309,7 @@ LIKWID_MARKER_STOP("RotationFrom");
 
                     case 3:
                     {
-                        const int nq = normals[0].num_elements();
+                        const int nq = normals[0].size();
                         const int vx = (int)vecLocs[i][0];
                         const int vy = (int)vecLocs[i][1];
                         const int vz = (int)vecLocs[i][2];
@@ -398,7 +398,7 @@ LIKWID_MARKER_STOP("RotationFrom");
             Array<OneD, NekDouble> xdir(3,0.0);
             Array<OneD, NekDouble> tn  (3);
             NekDouble tmp[9];
-            const int nq = normals[0].num_elements();
+            const int nq = normals[0].size();
             int i, j;
             xdir[0] = 1.0;
 
@@ -409,7 +409,7 @@ LIKWID_MARKER_STOP("RotationFrom");
             {
                 m_rotMat[i] = Array<OneD, NekDouble>(nq);
             }
-            for (i = 0; i < normals[0].num_elements(); ++i)
+            for (i = 0; i < normals[0].size(); ++i)
             {
                 // Generate matrix which takes us from (1,0,0) vector to trace
                 // normal.

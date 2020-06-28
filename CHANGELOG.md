@@ -4,11 +4,68 @@ Changelog
 v5.1.0
 ------
 **Library**
-- Added IMEXOrder4, RK5 and AB4 time integration schemes (!1037)
-- Restructure library to use local coefficient storage down to the GlobalLinSys level. Removed GlobalCeoffs functionality (!963)
+- Restructure library to use local coefficient storage down to the GlobalLinSys
+  level. Removed GlobalCoeffs functionality (!963)
+- Add interior penalty method to DG framework (!1101)
+- Add an error filter for the time-evolution of the L2 and Linf errors (!1147)
 
 **FieldConvert**
-- Add field conversion from Halfmode to SingleMode (!1032)
+- Refactored time integration code using factory pattern (!1034)
+- Fix to preprocessor logic for boost with Visual Studio >= 2015 (!1115)
+- Fix type consistency and real comparison in SharedArray.hpp, replaced
+  num_elements with size() (!1127)
+- Use base MPI functions instead of the GS library in the trace exchange
+  for parallel DG simulations (!1112)
+  num_elements with size() (!1127, !1137, !1141)
+- Add phifile module to compute shape functions for the SPM solver (!1065)
+
+**CardiacEPSolver**
+- Added additional parameter sets to Fenton-Karma model (!1119)
+
+**IncNavierStokesSolver**
+- Add Smoothed Profile Method (SPM) for the formulation of immersed boundaries
+  (!1065)
+- Add new filter AeroForcesSPM to compute aerodynamic forces in immersed
+  boundaries (!1065)
+**Documentation**:
+- Updated Windows source build instructions in user guide (!1152)
+
+**NekMesh**
+- Improved boundary layer splitting and output to CADfix (!938)
+- Improve .geo reader and support 3D geometries with voids (!1031)
+- Added r-adaptation code (!1109)
+
+**BuildSystem**
+- Toggle build type (!1135)
+- Updated minimum required CMake version to 3.5.1 (!1152)
+- Updated third party Boost version 1.71 (!1152)
+
+v5.0.1
+------
+**Library**
+- Fix incorrect coordinate dimension used in history point filter (!1118)
+- Fix compile errors with GCC 9.x (!1108)
+- Correct the Energy/Enstropy integral for the 3DH1 flow (!1132)
+- Added IsRealEqual method to compare real numbers with relative tolerance.
+  Started using it in SharedArray and in NekMesh to fix peralign-extrude tool
+  chain (!1134)
+
+**IncNavierStokesSolver**
+- Change the baseflow time in the Adjoint advection (!1133)
+
+**FieldConvert**
+- Fix OutputTecplot skipping final plane in 3DH1D (!1016)
+- Fix Interppoints in 3DH1D (!1140)
+
+**NekMesh**
+- Fix compile errors when using intel cc (!1114)
+
+**Documentation**
+- Fix error in compilation of developer guide (!1136)
+
+**CI**
+- Added checked conversion from double to int in SessionReader (!1113)
+- Switched to Gitlab CI (!1120, !1120, !1128, !1129, !1131, !1141)
 
 v5.0.0
 ------
@@ -141,6 +198,7 @@ v5.0.0
 - Fix surface extraction, added regression test (!994)
 - Fix 2D meshing running out of memory due to missing else (!1012)
 - Add support for .msh v4.1 file input (!1054)
+- Added penalty term to LDG and LDGNS, slight generalization of LDG (!1080)
 
 **FieldConvert**:
 - Add input module for Semtex field files (!777)
@@ -166,6 +224,7 @@ v5.0.0
 - Fixed scaling for compressed xml, fixed error printout for mesh only (!1040)
 - Add field conversion from Halfmode to SingleMode (!1032)
 - Fix double precision output in .dat format (!1059)
+- Add phase sampling feature in FilterFieldConvert (!1068)
 
 **IncNavierStokesSolver**
 - Replace steady-state check based on difference of norms by check based on
@@ -221,7 +280,8 @@ v5.0.0
 - Extend to support MPI tests with multiple executables (!1085)
 
 **Packaging:**
-- Add Dockerfiles and gitlab CI configuration for automatic builds (!1021)
+- Add Dockerfiles and gitlab CI configuration for automatic builds (!1021,
+  !1092, !1098)
 
 v4.4.2
 ------

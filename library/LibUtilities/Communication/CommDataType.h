@@ -126,10 +126,16 @@ public:
     }
     static void *GetPointer(std::vector<elemT> &val)
     {
+        ASSERTL1(!val.empty(),
+                 "Vector cannot be empty when trying to use GetPointer to "
+                 "access a pointer to the first element.");
         return &val[0];
     }
     static const void *GetPointer(const std::vector<elemT> &val)
     {
+        ASSERTL1(!val.empty(),
+                 "Vector cannot be empty when trying to use GetPointer to "
+                 "access a pointer to the first element.");
         return &val[0];
     }
     static size_t GetCount(const std::vector<elemT> &val)
@@ -159,7 +165,7 @@ public:
     }
     static size_t GetCount(const Array<OneD, elemT> &val)
     {
-        return val.num_elements();
+        return val.size();
     }
     const static bool IsVector = true;
 };

@@ -245,7 +245,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
         {
-            int n_coeffs = inarray.num_elements();
+            int n_coeffs = inarray.size();
 
             Array<OneD, NekDouble> coeff(n_coeffs);
             Array<OneD, NekDouble> coeff_tmp(n_coeffs,0.0);
@@ -524,12 +524,11 @@ namespace Nektar
             Vmath::Vcopy(nquad,(NekDouble *)base+mode*nquad,1, &outarray[0],1);
         }
 
-
-        NekDouble StdSegExp::v_PhysEvaluate(
-                const Array<OneD, const NekDouble>& coords,
-                const Array<OneD, const NekDouble>& physvals)
+        NekDouble StdSegExp::v_PhysEvaluateBasis(
+            const Array<OneD, const NekDouble>& coords,
+            int mode)
         {
-            return  StdExpansion1D::v_PhysEvaluate(coords, physvals);
+            return StdExpansion::BaryEvaluateBasis<0>(coords[0], mode);
         }
 
         void StdSegExp::v_LaplacianMatrixOp(
@@ -696,6 +695,18 @@ namespace Nektar
             return 2;
         }
 
+        int StdSegExp::v_GetTraceNcoeffs(const int i) const
+        {
+            boost::ignore_unused(i);
+            return 1;
+        }
+
+        int StdSegExp::v_GetTraceNumPoints(const int i) const
+        {
+            boost::ignore_unused(i);
+            return 1;
+        }
+        
         int StdSegExp::v_NumBndryCoeffs() const
         {
             return 2;
@@ -798,7 +809,7 @@ namespace Nektar
 
         void StdSegExp::v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
         {
-            if(outarray.num_elements() != NumBndryCoeffs())
+            if(outarray.size() != NumBndryCoeffs())
             {
                 outarray = Array<OneD, unsigned int>(NumBndryCoeffs());
             }
@@ -828,7 +839,7 @@ namespace Nektar
         void StdSegExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
         {
             int i;
-            if(outarray.num_elements()!=GetNcoeffs()-NumBndryCoeffs())
+            if(outarray.size()!=GetNcoeffs()-NumBndryCoeffs())
             {
                 outarray = Array<OneD, unsigned int>(GetNcoeffs()-NumBndryCoeffs());
             }
@@ -887,6 +898,51 @@ namespace Nektar
             {
                 conn[cnt++] = i;
                 conn[cnt++] = i+1;
+            }
+        }
+
+        void StdSegExp::v_GetTraceToElementMap(
+             const int                  tid,
+             Array<OneD, unsigned int>& maparray,
+             Array<OneD, int>&          signarray,
+             Orientation                orient,
+             int P,  int Q)
+        {
+            boost::ignore_unused(P,Q,orient);
+            int order0 = m_base[0]->GetNumModes();
+    
+            ASSERTL0(tid < 2,"eid must be between 0 and 1");
+
+            if (maparray.size() != 2)
+            {
+                maparray = Array<OneD, unsigned int>(2);
+            }
+
+            if(signarray.size() != 2)
+            {
+                signarray = Array<OneD, int>(2, 1);
+            }
+            else
+            {
+                fill(signarray.get(), signarray.get()+2, 1);
+            }
+
+            const LibUtilities::BasisType bType = GetBasisType(0);
+
+            if (bType == LibUtilities::eModified_A)
+            {
+                maparray[0] = 0;
+                maparray[1] = 1;
+            }
+            else if(bType == LibUtilities::eGLL_Lagrange ||
+                    bType == LibUtilities::eGauss_Lagrange)
+            {
+                maparray[0] = 0;
+                maparray[1] = order0-1;
+            }
+            else
+            {
+                ASSERTL0(false,"Unknown Basis");
             }
         }
 

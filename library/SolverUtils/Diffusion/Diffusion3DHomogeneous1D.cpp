@@ -72,7 +72,7 @@ namespace Nektar
         };
 
         /**
-         * @brief Diffusion3DHomogeneous1D  uses the 2D WeakDG approach 
+         * @brief Diffusion3DHomogeneous1D  uses the 2D WeakDG approach
          * to compute the diffusion term looping on the planes in the z
          * direction and adding the flux in z direction at the end.
          */
@@ -80,12 +80,12 @@ namespace Nektar
         {
             // Strip trailing string "3DHomogeneous1D" to determine 2D diffusion
             // type, and create a diffusion object for the plane.
-            string name = diffType.substr(0, diffType.length()-15);
-            m_planeDiff = GetDiffusionFactory().CreateInstance(name, name);
+            m_diffType = diffType.substr(0, diffType.length()-15);
+            m_planeDiff = GetDiffusionFactory().CreateInstance(m_diffType, m_diffType);
         }
-        
+
         /**
-         * @brief Initiliase Diffusion3DHomogeneous1D objects and store 
+         * @brief Initiliase Diffusion3DHomogeneous1D objects and store
          * them before starting the time-stepping.
          *
          * @param pSession  Pointer to session reader.
@@ -95,7 +95,7 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
-            int nConvectiveFields = pFields.num_elements();
+            int nConvectiveFields = pFields.size();
 
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields_plane0(
                 nConvectiveFields);
@@ -109,12 +109,31 @@ namespace Nektar
 
             m_numPoints      = pFields[0]->GetTotPoints();
             m_planes         = pFields[0]->GetZIDs();
-            m_numPlanes      = m_planes.num_elements();
+            m_numPlanes      = m_planes.size();
             m_numPointsPlane = m_numPoints/m_numPlanes;
             m_homoLen        = pFields[0]->GetHomoLen();
             m_trans          = pFields[0]->GetTransposition();
             m_planeCounter = 0;
-            m_planeDiff->SetFluxVectorNS(m_fluxVectorNS);
+
+            if (m_diffType == "LDG")
+            {
+                // Set viscous flux for LDG
+                m_planeDiff->SetFluxVector(m_fluxVector);
+            }
+            else if (m_diffType == "LDGNS")
+            {
+                // Set viscous flux for LDGNS
+                m_planeDiff->SetFluxVectorNS(m_fluxVectorNS);
+                // Set penalty flux
+                m_planeDiff->SetFluxPenaltyNS(m_fluxPenaltyNS);
+            }
+            else if (m_diffType == "LFRDGNS" ||
+                     m_diffType == "LFRHUNS" ||
+                     m_diffType == "LFRSDNS" )
+            {
+                // Set viscous flux for FR cases
+                m_planeDiff->SetFluxVectorNS(m_fluxVectorNS);
+            }
 
             m_fieldsPlane   = Array<OneD, MultiRegions::ExpListSharedPtr>
                                                             (nConvectiveFields);
@@ -169,7 +188,7 @@ namespace Nektar
          * using an LDG interface flux and the the flux in the third direction.
          */
         void Diffusion3DHomogeneous1D::v_Diffuse(
-            const int                                         nConvectiveFields,
+            const std::size_t                                 nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray,
@@ -181,26 +200,25 @@ namespace Nektar
             Array<OneD, NekDouble> tmp(m_numPoints), tmp2;
             Array<OneD, Array<OneD, NekDouble> > viscHComp;
             const int nPointsTot = fields[0]->GetNpoints();
-            int i, j;
             NekDouble beta;
-            
+
 
             if (m_fluxVectorNS)
             {
                 viscHComp = Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
-                for (i = 0; i < nConvectiveFields - 1; ++i)
+                for (int i = 0; i < nConvectiveFields - 1; ++i)
                 {
                     fields[0]->PhysDeriv(2, inarray[i], m_homoDerivStore[i]);
                     viscHComp[i] = Array<OneD, NekDouble>(m_numPoints);
                 }
             }
-            
 
-            for (i = 0; i < m_numPlanes; ++i)
+
+            for (int i = 0; i < m_numPlanes; ++i)
             {
                 // Set up memory references for fields, inarray and outarray for
                 // this plane.
-                for (int j = 0; j < inarray.num_elements(); ++j)
+                for (int j = 0; j < inarray.size(); ++j)
                 {
                     m_inarrayPlane [j] = Array<OneD, NekDouble>(
                         m_numPointsPlane, tmp2 = inarray [j] + m_planePos[i]);
@@ -212,7 +230,7 @@ namespace Nektar
                     m_outarrayPlane[j] = Array<OneD, NekDouble>(
                         m_numPointsPlane, tmp2 = outarray[j] + m_planePos[i]);
                 }
-                
+
 
                 if (m_fluxVectorNS)
                 {
@@ -220,15 +238,43 @@ namespace Nektar
                 }
 
 
-                
-                m_planeDiff->Diffuse(nConvectiveFields,
-                                     m_fieldsPlane,
-                                     m_inarrayPlane,
-                                     m_outarrayPlane);
-                
+                if (m_diffType == "LDGNS")
+                {
+                    // Store plane Fwd/Bwd traces
+                    std::size_t nTracePts = m_fieldsPlane[0]->GetTrace()
+                        ->GetTotPoints();
+                    std::size_t nScalar = m_inarrayPlane.size();
+                    Array<OneD, Array<OneD, NekDouble> > Fwd(nScalar);
+                    Array<OneD, Array<OneD, NekDouble> > Bwd(nScalar);
+                    {
+                        for(std::size_t k = 0; k < nScalar; ++k)
+                        {
+                            Fwd[k] = Array<OneD, NekDouble>(nTracePts, 0.0);
+                            Bwd[k] = Array<OneD, NekDouble>(nTracePts, 0.0);
+                            m_fieldsPlane[k]->GetFwdBwdTracePhys(
+                                m_inarrayPlane[k], Fwd[k], Bwd[k]);
+                        }
+                    }
+
+                    m_planeDiff->Diffuse(nConvectiveFields,
+                                         m_fieldsPlane,
+                                         m_inarrayPlane,
+                                         m_outarrayPlane,
+                                         Fwd,
+                                         Bwd);
+                }
+                else
+                {
+                    m_planeDiff->Diffuse(nConvectiveFields,
+                                         m_fieldsPlane,
+                                         m_inarrayPlane,
+                                         m_outarrayPlane);
+                }
+
                 if (m_fluxVectorNS)
                 {
-                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscTensor = m_planeDiff->GetFluxTensor();
+                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                        &viscTensor = m_planeDiff->GetFluxTensor();
 
                     // Extract H (viscTensor[2])
                     for (int j = 0; j < nConvectiveFields - 1; ++j)
@@ -239,24 +285,25 @@ namespace Nektar
                     }
                 }
             }
-            
+
 
 
             if (m_fluxVectorNS)
             {
-                for (j = 0; j < nConvectiveFields - 1; ++j)
+                for (int j = 0; j < nConvectiveFields - 1; ++j)
                 {
                     fields[j+1]->PhysDeriv(2, viscHComp[j], tmp);
-                    Vmath::Vadd(nPointsTot, outarray[j+1], 1, tmp, 1, outarray[j+1], 1);
+                    Vmath::Vadd(nPointsTot, outarray[j+1], 1, tmp, 1,
+                        outarray[j+1], 1);
                 }
             }
             else
             {
-                for (j = 0; j < nConvectiveFields; ++j)
+                for (int j = 0; j < nConvectiveFields; ++j)
                 {
                     fields[j]->HomogeneousFwdTrans(inarray[j], tmp);
 
-                    for (i = 0; i < m_numPlanes; ++i)
+                    for (int i = 0; i < m_numPlanes; ++i)
                     {
                         beta  = 2*M_PI*m_trans->GetK(i)/m_homoLen;
                         beta *= beta;

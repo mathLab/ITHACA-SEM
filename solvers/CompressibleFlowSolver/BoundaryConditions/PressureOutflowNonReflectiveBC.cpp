@@ -74,7 +74,7 @@ void PressureOutflowNonReflectiveBC::v_Apply(
 
     int i, j;
     int nTracePts = m_fields[0]->GetTrace()->GetNpoints();
-    int nVariables = physarray.num_elements();
+    int nVariables = physarray.size();
     int nDimensions = m_spacedim;
 
     const Array<OneD, const int> &traceBndMap = m_fields[0]->GetTraceBndMap();

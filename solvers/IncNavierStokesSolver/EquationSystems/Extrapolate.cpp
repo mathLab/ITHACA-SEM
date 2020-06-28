@@ -63,15 +63,15 @@ namespace Nektar
           m_pressure(pPressure),
           m_velocity(pVel),
           m_advObject(advObject)
-    {      
+    {
         m_session->LoadParameter("TimeStep", m_timestep,   0.01);
         m_comm = m_session->GetComm();
     }
-    
+
     Extrapolate::~Extrapolate()
     {
     }
-    
+
     std::string Extrapolate::def =
         LibUtilities::SessionReader::RegisterDefaultSolverInfo(
             "StandardExtrapolate", "StandardExtrapolate");
@@ -86,10 +86,10 @@ namespace Nektar
             // Update velocity BF at n+1 (actually only needs doing if
             // velocity is time dependent on HBCs)
             IProductNormVelocityBCOnHBC(m_iprodnormvel[m_intSteps]);
-            
+
             //Calculate acceleration term at level n based on previous steps
             AccelerationBDF(m_iprodnormvel);
-            
+
             // Subtract acceleration term off m_pressureHBCs[nlevels-1]
             Vmath::Svtvp(m_numHBCDof, -1.0/m_timestep,
                          m_iprodnormvel[m_intSteps],  1,
@@ -106,11 +106,11 @@ namespace Nektar
         if(m_numHBCDof)
         {
             int order = std::min(m_pressureCalls,m_intSteps);
-            
+
             // Update velocity BF at n+1 (actually only needs doing if
             // velocity is time dependent on HBCs)
             IProductNormVelocityBCOnHBC(m_iprodnormvel[0]);
-            
+
             // Subtract acceleration term off m_pressureHBCs[nlevels-1]
             Vmath::Svtvp(m_numHBCDof,
                          -1.0*StifflyStable_Gamma0_Coeffs[order-1]/m_timestep,
@@ -119,7 +119,7 @@ namespace Nektar
                          m_pressureHBCs[m_intSteps-1], 1);
         }
     }
- 
+
     /**
      * Unified routine for calculation high-oder terms
      */
@@ -139,7 +139,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > Q(m_curl_dim);
 
         MultiRegions::ExpListSharedPtr BndElmtExp;
-        for(n = cnt = 0; n < m_PBndConds.num_elements(); ++n)
+        for(n = cnt = 0; n < m_PBndConds.size(); ++n)
         {
             // High order boundary condition;
             if((m_hbcType[n] == eHBCNeumann)||(m_hbcType[n] == eConvectiveOBC))
@@ -163,8 +163,8 @@ namespace Nektar
                 {
                     m_fields[0]->ExtractPhysToBndElmt(n, fields[i],Velocity[i]);
                 }
-                
-                if(N.num_elements()) // not required for some extrapolation
+
+                if(N.size()) // not required for some extrapolation
                 {
                     for(int i = 0; i < m_bnd_dim; i++)
                     {
@@ -189,7 +189,7 @@ namespace Nektar
                 {
                     m_fields[0]->ExtractElmtToBndPhys(n, Q[i],BndValues[i]);
                 }
-                
+
                 m_PBndExp[n]->NormVectorIProductWRTBase(BndValues, Pvals);
 
                 // Get offset for next terms
@@ -198,17 +198,17 @@ namespace Nektar
         }
     }
 
-    // do nothing unless otherwise defined. 
+    // do nothing unless otherwise defined.
     void Extrapolate::v_CorrectPressureBCs( const Array<OneD, NekDouble>  &pressure)
-    {    
-    } 
+    {
+    }
 
-    // do nothing unless otherwise defined. 
+    // do nothing unless otherwise defined.
     void  Extrapolate::v_AddNormVelOnOBC(const int nbcoeffs, const int nreg,
                                          Array<OneD, Array<OneD, NekDouble> > &u)
-    {    
-    } 
-    
+    {
+    }
+
     void Extrapolate::CalcOutflowBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &fields,
         NekDouble kinvis)
@@ -227,8 +227,8 @@ namespace Nektar
         // updated whem m_int > 1 Currently not using this update
         // since we only using u^n at outflow instead of BDF rule.
         UpdateRobinPrimCoeff();
-        
-        for(int n  = 0; n < m_PBndConds.num_elements(); ++n)
+
+        for(int n  = 0; n < m_PBndConds.size(); ++n)
         {
             if((m_hbcType[n] == eOBC)||(m_hbcType[n] == eConvectiveOBC))
             {
@@ -282,7 +282,7 @@ namespace Nektar
                         BndElmtExp->PhysDeriv(Velocity[i], grad[0], grad[1],
                                                                     grad[2]);
                     }
-                    
+
                     for( int j = 0; j < m_curl_dim; j++)
                     {
                         m_fields[0]->ExtractElmtToBndPhys(n, grad[j],bndVal);
@@ -350,7 +350,7 @@ namespace Nektar
                 // desired pressure value. This is now precribed from
                 // the velocity forcing to be consistent with the
                 // paper except f_b = -f_b
-                
+
                 // Calculate (E(n,u) + f_b).n
                 Array<OneD, NekDouble> En (nqb, 0.0);
                 for( int i = 0; i < m_bnd_dim; i++)
@@ -371,7 +371,7 @@ namespace Nektar
 
                 if(m_hbcType[n] == eOBC)
                 {
-                    
+
                     if ( m_PBndExp[n]->GetWaveSpace())
                     {
                         m_PBndExp[n]->HomogeneousFwdTrans(pbc, bndVal);
@@ -412,20 +412,20 @@ namespace Nektar
                                         m_outflowVelBnd[cnt][i][m_intSteps-1]);
 
                         EvaluateBDFArray(m_houtflow->m_outflowVelBnd[cnt][i]);
-                        
+
                         // point u[i] to BDF evalauted value \hat{u}
                         u[i] = m_houtflow->m_outflowVelBnd[cnt][i]
                             [m_intSteps-1];
                     }
-                    
+
                     // Add normal velocity if weak pressure
                     // formulation. In this case there is an
                     // additional \int \hat{u}.n ds on the outflow
                     // boundary since we use the inner product wrt
-                    // deriv of basis in pressure solve.  
+                    // deriv of basis in pressure solve.
                     AddNormVelOnOBC(cnt, n, u);
                 }
-                
+
                 // Calculate velocity boundary conditions
                 if(m_hbcType[n] == eOBC)
                 {
@@ -440,7 +440,7 @@ namespace Nektar
 
                     // pbc  needs to be added after pressure solve
                 }
-                
+
                 for(int i = 0; i < m_curl_dim; ++i)
                 {
                     // Reuse divU  -> En
@@ -452,8 +452,8 @@ namespace Nektar
                                  1, divU, 1);
                     // * 1/kinvis
                     Vmath::Smul(nqb, 1.0/kinvis, divU, 1, divU, 1);
-                    
-                    if(m_hbcType[n] == eConvectiveOBC) 
+
+                    if(m_hbcType[n] == eConvectiveOBC)
                     {
                         Vmath::Svtvp(nqb,m_houtflow->m_velocityPrimCoeff[i][n],
                                      u[i], 1,divU,1,divU,1);
@@ -483,15 +483,15 @@ namespace Nektar
         {
             return;
         }
-        
-        
-        for(int n  = 0; n < m_PBndConds.num_elements(); ++n)
+
+
+        for(int n  = 0; n < m_PBndConds.size(); ++n)
         {
             if(m_hbcType[n] == eConvectiveOBC)
             {
                 int nqb = m_PBndExp[n]->GetTotPoints();
                 int ncb = m_PBndExp[n]->GetNcoeffs();
-                
+
                 m_pressure->FillBndCondFromField(n);
                 Array<OneD, NekDouble> pbc(nqb);
 
@@ -504,16 +504,16 @@ namespace Nektar
 
                 Array<OneD, NekDouble> wk(nqb);
                 Array<OneD, NekDouble> wk1(ncb);
-           
+
                 // Get normal vector
                 Array<OneD, Array<OneD, NekDouble> > normals;
                 m_fields[0]->GetBoundaryNormals(n, normals);
 
-                //  Add  1/kinvis * (pbc n ) 
+                //  Add  1/kinvis * (pbc n )
                 for(int i = 0; i < m_curl_dim; ++i)
                 {
                     Vmath::Vmul(nqb, normals[i], 1, pbc, 1, wk, 1);
-                    
+
                     Vmath::Smul(nqb, 1.0/kinvis, wk, 1, wk, 1);
 
                     if (m_houtflow->m_UBndExp[i][n]->GetWaveSpace())
@@ -531,17 +531,17 @@ namespace Nektar
             }
         }
     }
-    
+
 
     void Extrapolate::IProductNormVelocityOnHBC(
-                       const Array<OneD, const Array<OneD, NekDouble> >  &Vel, 
+                       const Array<OneD, const Array<OneD, NekDouble> >  &Vel,
                        Array<OneD, NekDouble> &IProdVn)
     {
         int i,n,cnt;
-        Array<OneD, NekDouble> IProdVnTmp; 
+        Array<OneD, NekDouble> IProdVnTmp;
         Array<OneD, Array<OneD, NekDouble> > velbc(m_bnd_dim);
 
-        for(n = cnt = 0; n < m_PBndConds.num_elements(); ++n)
+        for(n = cnt = 0; n < m_PBndConds.size(); ++n)
         {
             // High order boundary condition;
             if(m_hbcType[n] == eHBCNeumann)
@@ -560,7 +560,7 @@ namespace Nektar
             }
         }
     }
-    
+
     void Extrapolate::IProductNormVelocityBCOnHBC(Array<OneD, NekDouble> &IProdVn)
     {
 
@@ -569,7 +569,7 @@ namespace Nektar
             return;
         }
         int i,n,cnt;
-        Array<OneD, NekDouble> IProdVnTmp; 
+        Array<OneD, NekDouble> IProdVnTmp;
         Array<OneD, Array<OneD, NekDouble> > velbc(m_bnd_dim);
         Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> > VelBndExp(m_bnd_dim);
         for(i = 0; i < m_bnd_dim; ++i)
@@ -577,14 +577,14 @@ namespace Nektar
             VelBndExp[i] = m_fields[m_velocity[i]]->GetBndCondExpansions();
         }
 
-        for(n = cnt = 0; n < m_PBndConds.num_elements(); ++n)
+        for(n = cnt = 0; n < m_PBndConds.size(); ++n)
         {
             // High order boundary condition;
             if(m_hbcType[n] == eHBCNeumann)
             {
                 for(i = 0; i < m_bnd_dim; ++i)
                 {
-                    velbc[i] = Array<OneD, NekDouble> 
+                    velbc[i] = Array<OneD, NekDouble>
                         (VelBndExp[i][n]->GetTotPoints(), 0.0);
                     VelBndExp[i][n]->SetWaveSpace(
                             m_fields[m_velocity[i]]->GetWaveSpace());
@@ -602,30 +602,30 @@ namespace Nektar
             }
         }
     }
-    
-    /** 
+
+    /**
      * Function to roll time-level storages to the next step layout.
-     * The stored data associated with the oldest time-level 
+     * The stored data associated with the oldest time-level
      * (not required anymore) are moved to the top, where they will
      * be overwritten as the solution process progresses.
      */
     void Extrapolate::RollOver(Array<OneD, Array<OneD, NekDouble> > &input)
     {
-        int  nlevels = input.num_elements();
-        
+        int  nlevels = input.size();
+
         Array<OneD, NekDouble> tmp;
-    
+
         tmp = input[nlevels-1];
-    
+
         for(int n = nlevels-1; n > 0; --n)
         {
             input[n] = input[n-1];
         }
-    
+
         input[0] = tmp;
     }
-    
-    
+
+
     /**
      * Initialize HOBCs
      */
@@ -635,7 +635,7 @@ namespace Nektar
         m_PBndExp     = m_pressure->GetBndCondExpansions();
 
         int cnt, n;
-    
+
         // Storage array for high order pressure BCs
         m_pressureHBCs = Array<OneD, Array<OneD, NekDouble> > (m_intSteps);
         m_iprodnormvel = Array<OneD, Array<OneD, NekDouble> > (m_intSteps + 1);
@@ -647,17 +647,17 @@ namespace Nektar
         int outHBCnumber = 0;
         int numOutHBCPts = 0;
 
-        m_hbcType = Array<OneD, HBCType> (m_PBndConds.num_elements(),eNOHBC);
-        for( n = 0; n < m_PBndConds.num_elements(); ++n)
+        m_hbcType = Array<OneD, HBCType> (m_PBndConds.size(),eNOHBC);
+        for( n = 0; n < m_PBndConds.size(); ++n)
         {
-            // High order boundary Neumann Condiiton 
+            // High order boundary Neumann Condiiton
             if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"H"))
             {
                 m_hbcType[n] = eHBCNeumann;
                 m_numHBCDof += m_PBndExp[n]->GetNcoeffs();
                 m_HBCnumber += m_PBndExp[n]->GetExpSize();
             }
-                       
+
             // High order outflow convective condition
             if(m_PBndConds[n]->GetBoundaryConditionType() ==
                SpatialDomains::eRobin &&
@@ -688,7 +688,7 @@ namespace Nektar
         }
 
         m_pressureCalls = 0;
-        
+
         switch(m_pressure->GetExpType())
         {
         case MultiRegions::e2D:
@@ -724,17 +724,17 @@ namespace Nektar
         if(numOutHBCPts > 0)
         {
             m_houtflow  = MemoryManager<HighOrderOutflow>::AllocateSharedPtr(numOutHBCPts,  outHBCnumber, m_curl_dim, pSession);
-                        
+
             MultiRegions::ExpListSharedPtr BndElmtExp;
 
-            // set up boundary expansions link 
+            // set up boundary expansions link
             for (int i = 0; i < m_curl_dim; ++i)
             {
                 m_houtflow->m_UBndExp[i] =
                     m_fields[m_velocity[i]]->GetBndCondExpansions();
             }
 
-            for(n = 0, cnt = 0; n < m_PBndConds.num_elements(); ++n)
+            for(n = 0, cnt = 0; n < m_PBndConds.size(); ++n)
             {
                 if(boost::iequals(m_PBndConds[n]->GetUserDefined(),"HOutflow"))
                 {
@@ -745,7 +745,7 @@ namespace Nektar
                     m_houtflow->m_outflowVelBnd[cnt] =
                         Array<OneD, Array<OneD,
                                  Array<OneD, NekDouble> > > (m_curl_dim);
-                    
+
                     m_fields[0]->GetBndElmtExpansion(n, BndElmtExp, false);
                     int nqb = m_PBndExp[n]->GetTotPoints();
                     int nq  = BndElmtExp->GetTotPoints();
@@ -774,68 +774,68 @@ namespace Nektar
                 {
                     // initialise convective members of
                     // HighOrderOutflow struct
-                    if(m_houtflow->m_pressurePrimCoeff.num_elements() == 0)
+                    if(m_houtflow->m_pressurePrimCoeff.size() == 0)
                     {
                         m_houtflow->m_pressurePrimCoeff =
                             Array<OneD, NekDouble>
-                            (m_PBndConds.num_elements(),0.0);
+                            (m_PBndConds.size(),0.0);
                         m_houtflow->m_velocityPrimCoeff =
                             Array<OneD, Array< OneD, NekDouble> >(m_curl_dim);
-                        
-                    
+
+
                         for(int i = 0; i < m_curl_dim; ++i)
                         {
                             m_houtflow->m_velocityPrimCoeff[i] =
                                 Array<OneD, NekDouble> (m_PBndConds.
-                                                        num_elements(),0.0);
+                                                        size(),0.0);
                         }
                     }
-                    
-                    LibUtilities::Equation coeff = 
+
+                    LibUtilities::Equation coeff =
                         std::static_pointer_cast<
                             SpatialDomains::RobinBoundaryCondition
                         >(m_PBndConds[n])->m_robinPrimitiveCoeff;
-                    
+
                     // checkout equation evaluation options!!
                     m_houtflow->m_pressurePrimCoeff[n] = coeff.Evaluate();
-                
+
                     for (int i = 0; i < m_curl_dim; ++i)
                     {
                         Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                             UBndConds = m_fields[m_velocity[i]]->GetBndConditions();
-                        
-                        LibUtilities::Equation coeff1 = 
+
+                        LibUtilities::Equation coeff1 =
                             std::static_pointer_cast<
                                 SpatialDomains::RobinBoundaryCondition
                             >(UBndConds[n])->m_robinPrimitiveCoeff;
 
-                        
-                        m_houtflow->m_defVelPrimCoeff[i] = coeff1.GetExpression(); 
-                        
+
+                        m_houtflow->m_defVelPrimCoeff[i] = coeff1.GetExpression();
+
                         ASSERTL1(UBndConds[n]->GetBoundaryConditionType()
                                  == SpatialDomains::eRobin,"Require Velocity "
                                  "conditions to be of Robin type when pressure"
                                  "outflow is specticied as Robin Boundary type");
-                        
-                        
+
+
                         // checkout equation evaluation options!!
                         m_houtflow->m_velocityPrimCoeff[i][n] = coeff1.Evaluate();
                     }
-                }                
+                }
             }
-                        
+
         }
     }
 
     void Extrapolate::UpdateRobinPrimCoeff(void)
     {
-        
+
         if((m_pressureCalls == 1) || (m_pressureCalls > m_intSteps))
         {
             return;
         }
-        
-        for(int n  = 0; n < m_PBndConds.num_elements(); ++n)
+
+        for(int n  = 0; n < m_PBndConds.size(); ++n)
         {
             // Get expansion with element on this boundary
             if(m_hbcType[n] == eConvectiveOBC)
@@ -844,29 +844,29 @@ namespace Nektar
                 {
                     Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                         UBndConds = m_fields[m_velocity[i]]->UpdateBndConditions();
-                    
+
                     std::string primcoeff = m_houtflow->m_defVelPrimCoeff[i] + "*" +
                         boost::lexical_cast<std::string>(StifflyStable_Gamma0_Coeffs
                                                          [m_pressureCalls-1]);
-                    
-                    SpatialDomains::RobinBCShPtr rcond = 
+
+                    SpatialDomains::RobinBCShPtr rcond =
                         std::dynamic_pointer_cast<
                             SpatialDomains::RobinBoundaryCondition >(UBndConds[n]);
-                    
+
                     SpatialDomains::BoundaryConditionShPtr bcond =
                         MemoryManager<SpatialDomains::RobinBoundaryCondition>::AllocateSharedPtr(
                                              m_session,rcond->m_robinFunction.GetExpression(),
                                              primcoeff,
                                              rcond->GetUserDefined(),
                                              rcond->m_filename);
-                    
+
                     UBndConds[n] = bcond;
                 }
-                
+
             }
         }
     }
-    
+
     /**
      *
      */
@@ -878,7 +878,7 @@ namespace Nektar
 
         int n_points_0      = m_fields[0]->GetExp(0)->GetTotPoints();
         int n_element       = m_fields[0]->GetExpSize();
-        int nvel            = inarray.num_elements();
+        int nvel            = inarray.size();
         int cnt;
 
         NekDouble pntVelocity;
@@ -967,9 +967,9 @@ namespace Nektar
     }
 
 
-    LibUtilities::TimeIntegrationMethod Extrapolate::v_GetSubStepIntegrationMethod(void)
+    std::string Extrapolate::v_GetSubStepName(void)
     {
-        return LibUtilities::eNoTimeIntegrationMethod;
+        return "";
     }
 
     /**
@@ -977,13 +977,13 @@ namespace Nektar
      *        and the previous values in the first positions
      *    At the end, the extrapolated value is stored in array[nlevels-1]
      *        and the storage has been updated to included the new value
-     */    
+     */
     void Extrapolate::ExtrapolateArray(
             Array<OneD, Array<OneD, NekDouble> > &array)
     {
         int nint     = min(m_pressureCalls,m_intSteps);
-        int nlevels  = array.num_elements();
-        int nPts     = array[0].num_elements();
+        int nlevels  = array.size();
+        int nPts     = array[0].size();
 
         // Update array
         RollOver(array);
@@ -1007,13 +1007,13 @@ namespace Nektar
      *        and the previous values in the first positions
      *    At the end, the value of the bdf explicit part is stored in array[nlevels-1]
      *        and the storage has been updated to included the new value
-     */    
+     */
     void Extrapolate::EvaluateBDFArray(
             Array<OneD, Array<OneD, NekDouble> > &array)
     {
         int nint     = min(m_pressureCalls,m_intSteps);
-        int nlevels  = array.num_elements();
-        int nPts     = array[0].num_elements();
+        int nlevels  = array.size();
+        int nPts     = array[0].size();
 
         // Update array
         RollOver(array);
@@ -1030,7 +1030,7 @@ namespace Nektar
                          array[nlevels-1],1);
         }
     }
-    
+
     /**
      *    At the start, the newest value is stored in array[nlevels-1]
      *        and the previous values in the first positions
@@ -1040,15 +1040,15 @@ namespace Nektar
     void Extrapolate::AccelerationBDF(
             Array<OneD, Array<OneD, NekDouble> > &array)
     {
-        int nlevels  = array.num_elements();
-        int nPts     = array[0].num_elements();
+        int nlevels  = array.size();
+        int nPts     = array[0].size();
 
 
         if(nPts)
         {
             // Update array
             RollOver(array);
-            
+
             // Calculate acceleration using Backward Differentiation Formula
             Array<OneD, NekDouble> accelerationTerm (nPts, 0.0);
             if (m_pressureCalls > 2)
@@ -1058,7 +1058,7 @@ namespace Nektar
                             StifflyStable_Gamma0_Coeffs[acc_order-1],
                             array[0], 1,
                              accelerationTerm,  1);
-                
+
                 for(int i = 0; i < acc_order; i++)
                 {
                     Vmath::Svtvp(nPts,
@@ -1071,11 +1071,11 @@ namespace Nektar
             array[nlevels-1] = accelerationTerm;
         }
     }
-    
+
     void Extrapolate::CopyPressureHBCsToPbndExp(void)
     {
         int n, cnt;
-        for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
+        for(cnt = n = 0; n < m_PBndConds.size(); ++n)
         {
             if((m_hbcType[n] == eHBCNeumann)||(m_hbcType[n] == eConvectiveOBC))
             {

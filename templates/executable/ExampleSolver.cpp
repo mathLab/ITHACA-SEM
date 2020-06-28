@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File IncNavierStokesSolver.cpp
+// File: ExampleSolver.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -34,23 +34,30 @@
 
 #include <SolverUtils/Driver.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <SpatialDomains/MeshGraph.h>
 
-
+using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    Nektar::LibUtilities::SessionReaderSharedPtr session;
-    string vDriverModule;
-    Nektar::SolverUtils::DriverSharedPtr drv;
+    LibUtilities::SessionReaderSharedPtr session;
+    SpatialDomains::MeshGraphSharedPtr graph;
+    SolverUtils::DriverSharedPtr drv;
+
+    std::string vDriverModule;
 
     try
     {
         // Create session reader.
-        session = Nektar::LibUtilities::SessionReader::CreateInstance(argc, argv);
-        
+        session = LibUtilities::SessionReader::CreateInstance(argc, argv);
+
+        // Create MeshGraph
+        graph = SpatialDomains::MeshGraph::Read(session);
+
         // Create driver
         session->LoadSolverInfo("Driver", vDriverModule, "Standard");
-        drv = Nektar::SolverUtils::GetDriverFactory().CreateInstance(vDriverModule, session);
+        drv = SolverUtils::GetDriverFactory().CreateInstance(
+            vDriverModule, session, graph);
 
         // Execute driver
         drv->Execute();
@@ -64,8 +71,8 @@ int main(int argc, char *argv[])
     }
     catch (const std::string& eStr)
     {
-        cout << "Error: " << eStr << endl;
+        std::cout << "Error: " << eStr << std::endl;
     }
-    
+
     return 0;
 }

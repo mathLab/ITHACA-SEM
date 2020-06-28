@@ -248,22 +248,22 @@ class PhysDeriv_MatrixFree : public Operator
             if (m_isPadded)
             {
                 // copy into padded vector
-                Vmath::Vcopy(input.num_elements(), input, 1, m_input, 1);
+                Vmath::Vcopy(input.size(), input, 1, m_input, 1);
                 // call op
                 if (m_coordim == 2)
                 {
                     (*m_oper)(m_input, m_output[0], m_output[1]);
                     // copy out of padded vector
-                    Vmath::Vcopy(output0.num_elements(), m_output[0], 1, output0, 1);
-                    Vmath::Vcopy(output1.num_elements(), m_output[1], 1, output1, 1);
+                    Vmath::Vcopy(output0.size(), m_output[0], 1, output0, 1);
+                    Vmath::Vcopy(output1.size(), m_output[1], 1, output1, 1);
                 }
                 else
                 {
                     (*m_oper)(m_input, m_output[0], m_output[1], m_output[2]);
                     // copy out of padded vector
-                    Vmath::Vcopy(output0.num_elements(), m_output[0], 1, output0, 1);
-                    Vmath::Vcopy(output1.num_elements(), m_output[1], 1, output1, 1);
-                    Vmath::Vcopy(output2.num_elements(), m_output[2], 1, output2, 1);
+                    Vmath::Vcopy(output0.size(), m_output[0], 1, output0, 1);
+                    Vmath::Vcopy(output1.size(), m_output[1], 1, output1, 1);
+                    Vmath::Vcopy(output2.size(), m_output[2], 1, output2, 1);
                 }
             }
             else
@@ -692,9 +692,9 @@ class PhysDeriv_SumFac_Seg : public Operator
         {
             const int nqcol   = m_nquad0*m_numElmt;
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
-            ASSERTL1(input.num_elements() >= nqcol,
+            ASSERTL1(input.size() >= nqcol,
                      "Incorrect input size");
 
             Array<OneD, NekDouble> diff0(nqcol, wsp);
@@ -725,9 +725,9 @@ class PhysDeriv_SumFac_Seg : public Operator
         {
             const int nqcol   = m_nquad0*m_numElmt;
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
-            ASSERTL1(input.num_elements() >= nqcol,
+            ASSERTL1(input.size() >= nqcol,
                      "Incorrect input size");
 
             Array<OneD, NekDouble> diff0(nqcol, wsp);
@@ -794,9 +794,9 @@ class PhysDeriv_SumFac_Quad : public Operator
             const int nqtot   = m_nquad0 * m_nquad1;
             const int nqcol   = nqtot*m_numElmt;
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
-            ASSERTL1(input.num_elements() >= nqcol,
+            ASSERTL1(input.size() >= nqcol,
                      "Incorrect input size");
 
             Array<OneD, NekDouble> diff0(nqcol, wsp             );
@@ -840,9 +840,9 @@ class PhysDeriv_SumFac_Quad : public Operator
             const int nqtot   = m_nquad0 * m_nquad1;
             const int nqcol   = nqtot*m_numElmt;
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
-            ASSERTL1(input.num_elements() >= nqcol,
+            ASSERTL1(input.size() >= nqcol,
                      "Incorrect input size");
 
             Array<OneD, NekDouble> diff0(nqcol, wsp             );
@@ -923,9 +923,9 @@ class PhysDeriv_SumFac_Tri : public Operator
             const int nqtot   = m_nquad0 * m_nquad1;
             const int nqcol   = nqtot*m_numElmt;
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
-            ASSERTL1(input.num_elements() >= nqcol,
+            ASSERTL1(input.size() >= nqcol,
                      "Incorrect input size");
 
             Array<OneD, NekDouble> diff0(nqcol, wsp             );
@@ -980,9 +980,9 @@ class PhysDeriv_SumFac_Tri : public Operator
             const int nqtot   = m_nquad0 * m_nquad1;
             const int nqcol   = nqtot*m_numElmt;
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
-            ASSERTL1(input.num_elements() >= nqcol,
+            ASSERTL1(input.size() >= nqcol,
                      "Incorrect input size");
 
             Array<OneD, NekDouble> diff0(nqcol, wsp             );

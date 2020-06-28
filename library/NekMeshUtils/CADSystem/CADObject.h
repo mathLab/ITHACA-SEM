@@ -36,6 +36,7 @@
 #define NEKMESHUTILS_CADSYSTEM_CADOBJ
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <NekMeshUtils/NekMeshUtilsDeclspec.h>
 
 namespace Nektar
 {
@@ -48,7 +49,8 @@ enum cadType
 {
     eVert,
     eCurve,
-    eSurf
+    eSurf,
+    eOther
 };
 }
 

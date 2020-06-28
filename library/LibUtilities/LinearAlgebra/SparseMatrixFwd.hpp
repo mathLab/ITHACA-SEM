@@ -42,7 +42,7 @@
 #include <memory>
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp> ///< \todo: forward declare
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 
 namespace Nektar

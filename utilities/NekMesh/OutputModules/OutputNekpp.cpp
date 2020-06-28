@@ -44,6 +44,7 @@ using namespace std;
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/thread.hpp>
 namespace io = boost::iostreams;
 
 #include <tinyxml.h>
@@ -80,6 +81,8 @@ OutputNekpp::OutputNekpp(MeshSharedPtr m) : OutputModule(m)
     m_config["order"] = ConfigOption(false, "-1", "Enforce a polynomial order");
     m_config["testcond"] = ConfigOption(
         false, "", "Test a condition.");
+    m_config["varopti"] =
+        ConfigOption(true, "0", "Run the variational optimser");
 }
 
 OutputNekpp::~OutputNekpp()
@@ -152,6 +155,29 @@ void OutputNekpp::Process()
     if (order != -1)
     {
         m_mesh->MakeOrder(order, LibUtilities::ePolyEvenlySpaced);
+    }
+
+    // Useful when doing r-adaptation
+    if (m_config["varopti"].beenSet)
+    {
+        unsigned int np        = boost::thread::physical_concurrency();
+        ModuleSharedPtr module = GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "varopti"), m_mesh);
+        module->RegisterConfig("hyperelastic", "");
+        module->RegisterConfig("numthreads", boost::lexical_cast<string>(np));
+
+        try
+        {
+            module->SetDefaults();
+            module->Process();
+        }
+        catch (runtime_error &e)
+        {
+            cout << "Variational optimisation has failed with message:" << endl;
+            cout << e.what() << endl;
+            cout << "The mesh will be written as is, it may be invalid" << endl;
+            return;
+        }
     }
 
     string file = m_config["outfile"].as<string>();
@@ -519,7 +545,6 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
         }
     }
 
-    /*
     if(m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
     {
         //manifold case
@@ -552,7 +577,6 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
             }
         }
     }
-    */
 }
 
 void OutputNekpp::TransferComposites(MeshGraphSharedPtr graph)

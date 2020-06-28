@@ -15,13 +15,13 @@ void TransposeData(const int       nElmt,
                    Array<OneD, T> &inout)
 {
     // Make a copy of the data.
-    Array<OneD, T> tmp(inout.num_elements(), &inout[0]);
+    Array<OneD, T> tmp(inout.size(), &inout[0]);
 
     // Loop over 4 elements at a time and interleave data
     auto *inptr = &tmp[0];
     auto *outptr = &inout[0];
 
-    size_t totSize = inout.num_elements();
+    size_t totSize = inout.size();
     ASSERTL0(totSize % nElmt == 0, "Should be uniform");
 
     // Size of each element's contributions, e.g. number of coefficients per
@@ -53,13 +53,13 @@ void InvTransposeData(const int       nElmt,
                       Array<OneD, T> &inout)
 {
     // Make a copy of the data.
-    Array<OneD, T> tmp(inout.num_elements(), &inout[0]);
+    Array<OneD, T> tmp(inout.size(), &inout[0]);
 
     // Loop over 4 elements at a time and interleave data
     auto *inptr = &tmp[0];
     auto *outptr = &inout[0];
 
-    size_t totSize = inout.num_elements();
+    size_t totSize = inout.size();
     ASSERTL0(totSize % nElmt == 0, "Should be uniform");
 
     // Size of each element's contributions, e.g. number of coefficients per

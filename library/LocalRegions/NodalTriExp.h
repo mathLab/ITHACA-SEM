@@ -182,9 +182,6 @@ namespace Nektar
 
             virtual StdRegions::StdExpansionSharedPtr v_GetLinStdExp(void) const;
             
-            LOCAL_REGIONS_EXPORT virtual
-                StdRegions::Orientation v_GetEorient(int edge);
-
             virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
 
         private:           

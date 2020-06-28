@@ -77,12 +77,11 @@ namespace Nektar
         UnsteadySystem::v_GenerateSummary(s);
 
         SolverUtils::AddSummaryItem(s, "Splitting Scheme", "Velocity correction (weak press. form)");
-        if (m_extrapolation->GetSubStepIntegrationMethod() !=
-            LibUtilities::eNoTimeIntegrationMethod)
+
+        if( m_extrapolation->GetSubStepName().size() )
         {
-            SolverUtils::AddSummaryItem(s, "Substepping", 
-                             LibUtilities::TimeIntegrationMethodMap[
-                              m_extrapolation->GetSubStepIntegrationMethod()]);
+            SolverUtils::AddSummaryItem( s, "Substepping", 
+                                         m_extrapolation->GetSubStepName() );
         }
 
         string dealias = m_homogen_dealiasing ? "Homogeneous1D" : "";
@@ -139,7 +138,6 @@ namespace Nektar
 
         // Solver Pressure Poisson Equation
         m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(),
-                              NullFlagList,
                               factors, StdRegions::NullVarCoeffMap,
                               MultiRegions::NullVarFactorsMap,
                               NullNekDouble1DArray, false);

@@ -113,7 +113,7 @@ void DriverAdaptive::v_Execute(ostream &out)
     if (isHomogeneous1D)
     {
         nExp    = m_equ[0]->UpdateFields()[0]->GetPlane(0)->GetExpSize();
-        nPlanes = m_equ[0]->UpdateFields()[0]->GetZIDs().num_elements();
+        nPlanes = m_equ[0]->UpdateFields()[0]->GetZIDs().size();
     }
     else
     {
@@ -122,7 +122,7 @@ void DriverAdaptive::v_Execute(ostream &out)
     }
     int  expdim   = m_equ[0]->UpdateFields()[0]->GetGraph()->GetMeshDimension();
 
-    int       nFields  = m_equ[0]->UpdateFields().num_elements();
+    int       nFields  = m_equ[0]->UpdateFields().size();
     int       numSteps = m_session->GetParameter("NumSteps");
     NekDouble period   = m_session->GetParameter("TimeStep") * numSteps;
 
@@ -349,7 +349,7 @@ void DriverAdaptive::v_Execute(ostream &out)
 
         // Write new expansion section to the session reader and re-read graph.
         ReplaceExpansion(fields, deltaP);
-        m_graph->ReadExpansionInfos();
+        m_graph->ReadExpansionInfo();
 
         // Reset GlobalLinSys Manager to avoid using too much memory
         //
@@ -467,7 +467,7 @@ void DriverAdaptive::ReplaceExpansion(
     // Add variables to field definition
     for (int i = 0; i < fielddefs.size(); ++i)
     {
-        for (int j = 0; j < fields.num_elements(); ++j)
+        for (int j = 0; j < fields.size(); ++j)
         {
             fielddefs[i]->m_fields.push_back(m_session->GetVariable(j));
         }

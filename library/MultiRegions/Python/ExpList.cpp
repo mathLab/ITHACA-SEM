@@ -119,9 +119,7 @@ Array<OneD, NekDouble> ExpList_HelmSolve(
         coeffMap = py::extract<StdRegions::VarCoeffMap>(varCoeffMap);
     }
 
-    FlagList notUsed;
-
-    exp->HelmSolve(in, out, notUsed, facMap, coeffMap);
+    exp->HelmSolve(in, out, facMap, coeffMap);
     return out;
 }
 

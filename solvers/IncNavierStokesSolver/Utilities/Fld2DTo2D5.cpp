@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
         }
         pointstype2d.push_back(ptype2d);
     }
-    graphShPt2d->SetExpansionInfos(field2ddef,pointstype2d);
+    graphShPt2d->SetExpansionInfo(field2ddef,pointstype2d);
     for(i = 0; i < field3ddef.size(); ++i)
     {
         vector<LibUtilities::PointsType> ptype3d;
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
         }
         pointstype3d.push_back(ptype3d);
     }
-    graphShPt3d->SetExpansionInfos(field3ddef,pointstype3d);
+    graphShPt3d->SetExpansionInfo(field3ddef,pointstype3d);
     bool useFFT = false;
     bool dealiasing = false;
     // Define Expansion
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
         }
     }
     Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(vSession3d->GetVariables().size());
-    for(j = 0; j < fieldcoeffs.num_elements(); ++j)
+    for(j = 0; j < fieldcoeffs.size(); ++j)
     {
         fieldcoeffs[j] = Exp3d[j]->UpdateCoeffs();
         for(int i = 0; i < field3ddef.size(); ++i)

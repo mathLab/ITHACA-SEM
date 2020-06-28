@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     // Print summary of solution details
     lambda = vSession->GetParameter("Lambda");
     cout << "            Lambda         : " << lambda << endl;
-    const SpatialDomains::ExpansionInfoMap &expansions = graph2D->GetExpansionInfos();
+    const SpatialDomains::ExpansionInfoMap &expansions = graph2D->GetExpansionInfo();
     LibUtilities::BasisKey bkey0 
                             = expansions.begin()->second->m_basisKeyVector[0];
     LibUtilities::BasisKey bkey1 

@@ -35,6 +35,62 @@ In the following we document the filters implemented. Note that some filters are
 solver-specific and will therefore only work for a given subset of the available
 solvers.
 
+\subsection{Phase sampling}
+\begin{notebox}
+  This feature is currently only supported for filters derived from the
+  FieldConvert filter: AverageFields, MovingAverage, ReynoldsStresses.
+\end{notebox}
+
+When analysing certain time-dependent problems, it might be of interest to
+activate a filter in a specific physical phase and with a certain period
+(for instance, to carry out phase averaging).
+The simulation time can be written as
+$t = m \mathcal{T} + n_{\mathcal{T}} \mathcal{T}$,
+where $m$ is an integer representing the number of periods $\mathcal{T}$
+elapsed, and $0 \leq n_{\mathcal{T}} \leq 1$ is the phase.
+This feature is not a filter in itself and it is activated by adding the
+parameters below to the filter of interest:
+
+\begin{center}
+  \begin{tabularx}{0.99\textwidth}{lllX}
+    \toprule
+    \textbf{Option name} & \textbf{Required} & \textbf{Default} &
+    \textbf{Description} \\
+    \midrule
+    \inltt{PhaseAverage}      & \cmark   &  &
+    Feature activation\\
+    \inltt{PhaseAveragePeriod}      & \cmark   &  &
+    Period $\mathcal{T}$\\
+    \inltt{PhaseAveragePhase} & \cmark   &  &
+    Phase $n_{\mathcal{T}}$.\\
+    \bottomrule
+  \end{tabularx}
+\end{center}
+
+For instance, to activate phase averaging with a period of $\mathcal{T}=10$
+at phase $n_{\mathcal{T}}=0.5$:
+
+\begin{lstlisting}[style=XMLStyle,gobble=2]
+  <FILTER TYPE="FilterName">
+      <PARAM NAME="Param1"> Value1 </PARAM>
+      <PARAM NAME="Param2"> Value2 </PARAM>
+      <PARAM NAME="PhaseAverage"> True </PARAM>
+      <PARAM NAME="PhaseAveragePeriod"> 10 </PARAM>
+      <PARAM NAME="PhaseAveragePhase"> 0.5 </PARAM>
+  </FILTER>
+\end{lstlisting}
+
+Since this feature monitors $n_{\mathcal{T}}$ every \inltt{SampleFrequency},
+for best results it is recommended to set \inltt{SampleFrequency}$=1$. \\
+The maximum error in sampling phase is $n_{\mathcal{T}, \text{tol}} =
+\frac{\Delta t}{ 2\mathcal{T}}\cdot$ \inltt{SampleFrequency}, which is displayed
+at the beginning of the simulation if the solver is run with the verbose
+\inltt{-v} option.\\
+The number of periods elapsed is calculated based on simulation time. Caution
+is therefore recommended when modifying time information in the restart field,
+because if the new time does not correspond to the same phase, the feature
+will produce erroneous results.
+
 \subsection{Aerodynamic forces}\label{filters:AeroForces}
 
 \begin{notebox}
@@ -76,6 +132,56 @@ An example is given below:
 During the execution a file named \inltt{DragLift.fce} will be created and the
 value of the aerodynamic forces on boundaries 1 and 2, defined in the
 \inltt{GEOMETRY} section, will be output every 10 time steps.
+
+\subsubsection{Extension for the SPM formulation}\label{filters:sub:ForcesSPM}
+
+\begin{notebox}
+    This filter is only supported for the incompressible Navier-Stokes solver
+    with the Smoothed Profile Method.
+\end{notebox}
+
+The lack of physical boundaries in the Smoothed Profile Method requires an
+alternative formulation to calculate the aerodynamic forces. Since the method
+imposes the boundary geometry by adding an impulse to the flow proportional to
+the difference between the flow velocity and the expected velocity of the
+immersed bodies, the forces in this filter are computed by integrating this
+difference where $\Phi \neq 0$~\cite{LuoSPM}:
+
+\begin{equation*}
+    \frac{\mathbf{F}^n}{\rho} = \frac{1}{\Delta t} \int_{\Omega}
+        \Phi^{n+1}(\mathbf{u^*} - \mathbf{u^n}_p)~\text{d}\Omega
+\end{equation*}
+
+\begin{center}
+  \begin{tabularx}{0.99\textwidth}{lllX}
+    \toprule
+    \textbf{Option name} & \textbf{Required} & \textbf{Default} &
+    \textbf{Description} \\
+    \midrule
+    \inltt{OutputFile}      & \xmark   & \inltt{session} &
+    Prefix of the output filename to which the forces are written.\\
+    \inltt{Frequency}       & \xmark   & 1 &
+    Number of timesteps after which the output is written.\\
+    \inltt{StartTime}       & \xmark   & 0 &
+    Forces before this instant are not written to the output.\\
+    \bottomrule
+  \end{tabularx}
+\end{center}
+
+For instance, a block like the following
+
+\begin{lstlisting}[style=XMLStyle]
+  <FILTER TYPE="AeroForcesSPM">
+      <PARAM NAME="OutputFile"> Forces </PARAM>
+      <PARAM NAME="OutputFrequency"> 10 </PARAM>
+      <PARAM NAME="StartTime"> 50.0 </PARAM>
+  </FILTER>
+\end{lstlisting}
+
+will generate a file called \inltt{Forces.fce} with the values of the forces
+in the ($X,Y,Z$) directions, that must be scaled with the density of the
+fluid to get the real values. It is important to remark that the computed
+values are the sum of all the boundaries defined by $\Phi$.
 
 \subsection{Benchmark}\label{filters:Benchmark}
 
@@ -223,6 +329,37 @@ Filter \inltt{Electrogram} computes virtual unipolar electrograms at a
     \item \inltt{Points} specifies a list of coordinates at which electrograms
     are desired. \emph{They must not lie within the domain.}
     \end{itemize}
+
+\subsection{Error}\label{filters:Error}
+
+This filter produces a file containing the time-evolution of the $L_2$ and
+$L_{inf}$ errors. By default this file is called \inltt{session.err} where
+\inltt{session} is the session name.
+
+The following parameters are supported:
+
+\begin{center}
+  \begin{tabularx}{0.99\textwidth}{lllX}
+    \toprule
+    \textbf{Option name} & \textbf{Required} & \textbf{Default} &
+    \textbf{Description} \\
+    \midrule
+    \inltt{OutputFile}      & \xmark   & \inltt{session} &
+    Prefix of the output filename to which the errors are written.\\
+    \inltt{OutputFrequency} & \xmark   & 1 &
+    Number of timesteps after which output is written.\\
+    \bottomrule
+  \end{tabularx}
+\end{center}
+
+An example syntax is given below:
+
+\begin{lstlisting}[style=XMLStyle,gobble=2]
+  <FILTER TYPE="Error">
+      <PARAM NAME="OutputFile">ErrorFile</PARAM>
+      <PARAM NAME="OutputFrequency">10</PARAM>
+  </FILTER>
+\end{lstlisting}
 
 \subsection{FieldConvert checkpoints}
 

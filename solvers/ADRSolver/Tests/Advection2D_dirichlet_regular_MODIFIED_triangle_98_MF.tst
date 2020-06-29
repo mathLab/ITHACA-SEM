@@ -2,9 +2,9 @@
 <test>
     <description>2D unsteady WeakDG advection MODIFIED, P=3 Dirichlet bcs, regular triangular elements using AVX BwdTrans</description>
     <executable>ADRSolver</executable>
-    <parameters>Advection2D_dirichlet_regular_MODIFIED_triangle_98_AVX.xml</parameters>
+    <parameters>Advection2D_dirichlet_regular_MODIFIED_triangle_98_MF.xml</parameters>
     <files>
-        <file description="Session File">Advection2D_dirichlet_regular_MODIFIED_triangle_98_AVX.xml</file>
+        <file description="Session File">Advection2D_dirichlet_regular_MODIFIED_triangle_98_MF.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

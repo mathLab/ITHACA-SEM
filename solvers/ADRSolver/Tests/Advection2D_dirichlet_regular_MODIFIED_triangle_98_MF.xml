@@ -69,7 +69,10 @@
 
     <COLLECTIONS>
         <OPERATOR TYPE="BwdTrans">
-            <ELEMENT TYPE="T" ORDER="2-15" IMPTYPE="MatrixFree" />
+            <ELEMENT TYPE="T" ORDER="2-8" IMPTYPE="MatrixFree" />
+        </OPERATOR>
+        <OPERATOR TYPE="IProductWRTDerivBase">
+            <ELEMENT TYPE="T" ORDER="2-8" IMPTYPE="MatrixFree" />
         </OPERATOR>
     </COLLECTIONS>
 

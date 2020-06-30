@@ -340,14 +340,28 @@ class PhysDeriv_MatrixFree : public Operator
                 jacSizePad = nElmtPad * nqElmt;
             }
 
-            // Store derivative factors
+            // Get derivative factors
             const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
             Array<TwoD, NekDouble> df(dim * dim, jacSizePad, 0.0);
-            for (int j = 0; j < dim * dim; ++j)
+            if (deformed)
             {
-                Vmath::Vcopy(jacSizeNoPad,
-                    &(pGeomData->GetDerivFactors(pCollExp))[j][0], 1,
-                    &df[j][0], 1);
+                for (unsigned int j = 0; j < dim * dim; ++j)
+                {
+                    Vmath::Vcopy(jacSizeNoPad,
+                        &(pGeomData->GetDerivFactors(pCollExp))[j][0], 1,
+                        &df[j][0], 1);
+                }
+            }
+            else
+            {
+                for (unsigned int e = 0; e < nElmtNoPad; ++e)
+                {
+                    for (unsigned int j = 0; j < dim * dim; ++j)
+                    {
+                        df[j][e] =
+                            (pGeomData->GetDerivFactors(pCollExp))[j][e*nqElmt];
+                    }
+                }
             }
 
             // Basis vector.

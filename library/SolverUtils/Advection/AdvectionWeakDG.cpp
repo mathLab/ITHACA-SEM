@@ -164,7 +164,7 @@ timer.AccumulateRegion("IProductWRTDerivBase");
             }
 
             v_AdvectTraceFlux(nConvectiveFields, fields, advVel, inarray,
-                                numflux,time, pFwd, pBwd);
+                numflux, time, pFwd, pBwd);
 
             for (int i = 0; i < nConvectiveFields; ++i)
             {
@@ -173,10 +173,10 @@ timer.Start();
                 fields[i]->AddTraceIntegral     (numflux[i], outarray[i]);
 timer.Stop();
 timer.AccumulateRegion("AddTraceIntegral");
-timer.Stop();
-timer.AccumulateRegion("MultiplyByElmtInvMass");
 timer.Start();
                 fields[i]->MultiplyByElmtInvMass(outarray[i], outarray[i]);
+timer.Stop();
+timer.AccumulateRegion("MultiplyByElmtInvMass");
             }
 
         }

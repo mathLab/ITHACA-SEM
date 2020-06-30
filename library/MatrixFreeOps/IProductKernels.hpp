@@ -129,7 +129,7 @@ inline static void IProductTriKernel(
             {
                 //eta0_sum += phi_p(eta0) * fn(eta0, eta1) * J * w0(eta0)
                 vec_t jac_val;
-                if(DEFORMED)
+                if (DEFORMED)
                 {
                     jac_val = jac[eta1*nq0 + eta0];
                 }
@@ -169,7 +169,7 @@ inline static void IProductTriKernel(
         for (int eta1 = 0; eta1 < nq1; ++eta1)
         {
             vec_t preweight_eta1;
-            if(DEFORMED)
+            if (DEFORMED)
             {
                 preweight_eta1 = w1[eta1] * basis1[nq1 + eta1];
             }
@@ -182,7 +182,7 @@ inline static void IProductTriKernel(
             {
                 vec_t prod = in[eta_idx] * preweight_eta1 * w0[eta0];
 
-                if(DEFORMED)
+                if (DEFORMED)
                 {
                     prod = prod * jac[eta1*nq0 + eta0];
                 }

@@ -445,13 +445,15 @@ protected:
 
             auto D = basis[i]->GetD()->GetPtr();
             m_D[i].resize(D.size());
-            for(int j = 0; j < D.size(); j++){
+            for (int j = 0; j < D.size(); ++j)
+            {
                 m_D[i][j] = D[j];
             }
 
             auto Z = basis[i]->GetZ();
             m_Z[i].resize(Z.size());
-            for(int j = 0; j < Z.size(); j++){
+            for (int j = 0; j < Z.size(); ++j)
+            {
                 m_Z[i][j] = Z[j];
             }
 

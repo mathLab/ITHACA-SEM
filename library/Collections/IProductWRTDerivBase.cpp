@@ -348,16 +348,30 @@ class IProductWRTDerivBase_MatrixFree : public Operator
             // Get derivative factors
             const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
             Array<TwoD, NekDouble> df(dim * dim, jacSizePad, 0.0);
-            for (int j = 0; j < dim * dim; ++j)
+            if (deformed)
             {
-                Vmath::Vcopy(jacSizeNoPad,
-                    &(pGeomData->GetDerivFactors(pCollExp))[j][0], 1,
-                    &df[j][0], 1);
+                for (unsigned int j = 0; j < dim * dim; ++j)
+                {
+                    Vmath::Vcopy(jacSizeNoPad,
+                        &(pGeomData->GetDerivFactors(pCollExp))[j][0], 1,
+                        &df[j][0], 1);
+                }
+            }
+            else
+            {
+                for (unsigned int e = 0; e < nElmtNoPad; ++e)
+                {
+                    for (unsigned int j = 0; j < dim * dim; ++j)
+                    {
+                        df[j][e] =
+                            (pGeomData->GetDerivFactors(pCollExp))[j][e*nqElmt];
+                    }
+                }
             }
 
             // Basis vector
             std::vector<LibUtilities::BasisSharedPtr> basis(dim);
-            for (auto i = 0; i < dim; ++i)
+            for (unsigned int i = 0; i < dim; ++i)
             {
                 basis[i] = pCollExp[0]->GetBasis(i);
             }
@@ -927,13 +941,11 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
             tmp[0] = wsp; tmp[1] = wsp + nmax;
             wsp1   = wsp + 2*nmax;
 
-            for(int i = 0; i < 2; ++i)
+            for (int i = 0; i < 2; ++i)
             {
-                Vmath::Vmul (ntot,m_derivFac[i],1, in[0],1, tmp[i],1);
-
-                //  vvtvp (vector times vector plus vector): z = w*x + y
-                Vmath::Vvtvp (ntot,m_derivFac[i +2],1,
-                    in[1],1, tmp[i], 1, tmp[i],1);
+                Vmath::Vmul(ntot, m_derivFac[i], 1, in[0], 1, tmp[i], 1);
+                Vmath::Vvtvp(ntot, m_derivFac[i+2], 1, in[1], 1, tmp[i], 1,
+                    tmp[i], 1);
 
             }
 
@@ -945,8 +957,6 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
                             tmp[0].get()+i*nPhys,1);
 
                 // scale tmp[1] by geometric factor (1+z0)/(1-z1)
-                //  vvtvp (vector times vector plus vector): z = w*x + y
-                // m_fac1*tmp1 + tmp0
                 Vmath::Vvtvp(nPhys,&m_fac1[0],1,tmp[1].get()+i*nPhys,1,
                              tmp[0].get()+i*nPhys,1,tmp[0].get()+i*nPhys,1);
             }

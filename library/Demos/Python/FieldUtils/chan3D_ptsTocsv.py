@@ -4,5 +4,5 @@ from NekPy.FieldUtils import *
 
 field = Field(sys.argv, forceoutput=True, error=True)
 
-InputPts(field, "chan3D_pts.pts").Run()
-OutputPts(field, "chan3D_pts.csv").Run()
+InputModule.Create("pts", field, infile="chan3D_pts.pts", addfiles="pts:chan3D_pts.pts").Run()
+OutputModule.Create("csv", field, outfile="chan3D_pts.csv").Run()

@@ -5,9 +5,9 @@ from NekPy.FieldUtils import *
 nParts = 2
 field = Field(sys.argv, nParts, forceoutput=True, error=True)
 
-inputxml = InputXml(field, "chan3D_xml")
-inputfld = InputFld(field, "chan3D.fld")
-outputplt = OutputTecplotBinary(field, "chan3D.plt")
+inputxml  = InputModule.Create("xml" , field, infile="chan3D_xml", addfiles="xml:chan3D_xml")
+inputfld  = InputModule.Create("fld",  field, infile="chan3D.fld", addfiles="fld:chan3D.fld")
+outputplt = OutputModule.Create("plt", field, outfile="chan3D.plt")
 
 for part in range(nParts):
 	field.NewPartition(sys.argv, part)

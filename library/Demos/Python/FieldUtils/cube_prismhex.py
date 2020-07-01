@@ -4,6 +4,6 @@ from NekPy.FieldUtils import *
 
 field = Field(sys.argv, forceoutput=True, error=True)
 
-InputXml(field, "cube_prismhex.xml").Run()
-ProcessSurfDistance(field, bnd="0").Run()
-OutputFld(field, "out.fld").Run()
+InputModule.Create("xml", field, infile="cube_prismhex.xml", addfiles="xml:cube_prismhex.xml").Run()
+ProcessModule.Create("surfdistance", field, bnd="0").Run()
+OutputModule.Create("fld", field, "out.fld").Run()

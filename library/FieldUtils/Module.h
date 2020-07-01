@@ -42,6 +42,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <typeinfo>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/Communication/CommSerial.h>
@@ -87,9 +88,9 @@ enum ModulePriority
     SIZE_ModulePriority
 };
 
-const char *const ModulePriorityMap[] = 
+const char *const ModulePriorityMap[] =
 	{"CreateGraph", "CreateFieldData", "ModifyFieldData", "CreateExp",
-		"FillExp", "ModifyExp", "BndExtraction", "CreatePts", 
+		"FillExp", "ModifyExp", "BndExtraction", "CreatePts",
 		"ConvertExpToPts", "ModifyPts", "Output"};
 
 /**
@@ -150,7 +151,8 @@ struct ConfigOption
      * @brief Re-interpret the value stored in #value as some type using
      * boost::lexical_cast.
      */
-    template <typename T> T as()
+    template <typename T>
+    T as() const
     {
         try
         {
@@ -158,7 +160,9 @@ struct ConfigOption
         }
         catch (const std::exception &e)
         {
-            std::cerr << e.what() << std::endl;
+            std::cerr << "We are not able to cast m_value " << m_value
+                      << " to " << typeid(T).name() << std::endl
+                      << e.what() << std::endl;
             abort();
         }
     }
@@ -198,27 +202,37 @@ public:
         return " ";
     }
 
+    const ConfigOption& GetConfigOption(const std::string& key) const
+    {
+        auto it = m_config.find(key);
+        ASSERTL0(it != m_config.end(), "Configuration key not found!");
+        return it->second;
+    }
+
     virtual ModulePriority GetModulePriority() = 0;
 
     FIELD_UTILS_EXPORT void RegisterConfig(std::string key,
                                            std::string value = "");
     FIELD_UTILS_EXPORT void PrintConfig();
     FIELD_UTILS_EXPORT void SetDefaults();
+    FIELD_UTILS_EXPORT void AddFiles();
+    FIELD_UTILS_EXPORT void AddFile(std::string fileType, std::string fileName);
 
     FIELD_UTILS_EXPORT void EvaluateTriFieldAtEquiSpacedPts(
         LocalRegions::ExpansionSharedPtr &exp,
         const Array<OneD, const NekDouble> &infield,
         Array<OneD, NekDouble> &outfield);
-   
+
     /// Field object
     FieldSharedPtr m_f;
 
 protected:
     Module(){};
 
-
     /// List of configuration values.
     std::map<std::string, ConfigOption> m_config;
+    /// List of allowed file formats.
+    std::set<std::string> m_allowedFiles;
 };
 
 /**
@@ -234,13 +248,8 @@ class InputModule : public Module
 {
 public:
     InputModule(FieldSharedPtr p_m);
-    FIELD_UTILS_EXPORT void AddFile(std::string fileType, std::string fileName);
     FIELD_UTILS_EXPORT static std::string GuessFormat(std::string fileName);
     void PrintSummary();
-
-protected:
-    /// Print summary of elements.
-    std::set<std::string> m_allowedFiles;
 };
 
 typedef std::shared_ptr<InputModule> InputModuleSharedPtr;

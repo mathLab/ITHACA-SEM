@@ -4,7 +4,7 @@ from NekPy.FieldUtils import *
 
 field = Field(sys.argv, forceoutput=True, error=True, output_points_hom_z=16)
 
-InputXml(field, "chan3DH1D.xml").Run()
-InputFld(field, "chan3DH1D.fld").Run()
-ProcessHomogeneousStretch(field, factor="2").Run()
-OutputFld(field, "chan3DH1D_stretch.fld").Run()
+InputModule.Create("xml", field, infile="chan3DH1D.xml", addfiles="xml:chan3DH1D.xml").Run()
+InputModule.Create("fld", field, infile="chan3DH1D.fld", addfiles="xml:chan3DH1D.xml").Run()
+ProcessModule.Create("homstretch", field, factor="2").Run()
+OutputModule.Create("fld", field, outfile="chan3DH1D_stretch.fld").Run()

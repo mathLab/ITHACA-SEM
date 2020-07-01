@@ -2,6 +2,7 @@
 #include <FieldUtils/Field.hpp>
 #include <FieldUtils/FieldConvertComm.hpp>
 
+
 using namespace Nektar;
 using namespace Nektar::FieldUtils;
 
@@ -33,8 +34,8 @@ char** ConvertCommandLine(py::list &py_argv)
 }
 
 // Called at the start of every loop over nparts.
-// Args: FieldSharedPtr "f", 
-// Python's sys.argv stored as a Python list called "py_argv", 
+// Args: FieldSharedPtr "f",
+// Python's sys.argv stored as a Python list called "py_argv",
 // and the partition number stored as an integer called "part".
 // Function: clears data stored in f, defines f->m_partComm.
 void NewPartition(FieldSharedPtr f, py::list &py_argv, int part)
@@ -49,10 +50,10 @@ void NewPartition(FieldSharedPtr f, py::list &py_argv, int part)
 
 // Wrapper around the Field constructor
 // Args: FieldConvert command line arguments.
-// Function: constructs a FieldSharedPtr "f", defines f->m_defComm if 
+// Function: constructs a FieldSharedPtr "f", defines f->m_defComm if
 // nparts specified, and stores a line arguments in f->m_vm.
 // Returns: f
-FieldSharedPtr Field_Init(py::list &py_argv, 
+FieldSharedPtr Field_Init(py::list &py_argv,
 							int nparts = 0,
 							int output_points = 0,
 							int output_points_hom_z = 0,
@@ -84,48 +85,48 @@ FieldSharedPtr Field_Init(py::list &py_argv,
 			f->m_nParts = nparts;
 			f->m_defComm = f->m_comm;
 		}
-	}    
-	// Populate m_vm. 
-	if (output_points) 
+	}
+	// Populate m_vm.
+	if (output_points)
 	{
 		f->m_vm.insert(std::make_pair("output-points", po::variable_value(output_points, false)));
 	}
-	if (output_points_hom_z) 
+	if (output_points_hom_z)
 	{
 		f->m_vm.insert(std::make_pair("output-points-hom-z", po::variable_value(output_points_hom_z, false)));
 	}
-	if (error) 
+	if (error)
 	{
 		f->m_vm.insert(std::make_pair("error", po::variable_value()));
 	}
-	if (forceoutput) 
+	if (forceoutput)
 	{
 		f->m_vm.insert(std::make_pair("forceoutput", po::variable_value()));
 	}
-	if (domain.size()) 
+	if (domain.size())
 	{
 		f->m_vm.insert(std::make_pair("range", po::variable_value(domain, false)));
 	}
 	if (noequispaced) {
 		f->m_vm.insert(std::make_pair("noequispaced", po::variable_value()));
 	}
-	if (npz) 
+	if (npz)
 	{
 		f->m_vm.insert(std::make_pair("npz", po::variable_value(npz, false)));
 	}
-	if (onlyshape.size()) 
+	if (onlyshape.size())
 	{
 		f->m_vm.insert(std::make_pair("onlyshape", po::variable_value(onlyshape, false)));
 	}
-	if (part_only) 
+	if (part_only)
 	{
 		f->m_vm.insert(std::make_pair("part-only", po::variable_value(part_only, false)));
 	}
-	if (part_only_overlapping) 
+	if (part_only_overlapping)
 	{
 		f->m_vm.insert(std::make_pair("part-only-overlapping", po::variable_value(part_only_overlapping, false)));
 	}
-	if (useSessionVariables) 
+	if (useSessionVariables)
 	{
 		f->m_vm.insert(std::make_pair("useSessionVariables", po::variable_value()));
 	}
@@ -133,7 +134,7 @@ FieldSharedPtr Field_Init(py::list &py_argv,
 	{
 		f->m_vm.insert(std::make_pair("useSessionExpansion", po::variable_value()));
 	}
-	if (verbose) 
+	if (verbose)
 	{
 		f->m_vm.insert(std::make_pair("verbose", po::variable_value()));
 	}
@@ -145,8 +146,8 @@ void export_Field()
 	py::class_<Field, std::shared_ptr<Field> >("Field", py::no_init)
 		.def("ClearField", &Field::ClearField)
 		.def("NewPartition", &NewPartition)
-		.def("__init__", py::make_constructor(&Field_Init, 
-			py::default_call_policies(), 
+		.def("__init__", py::make_constructor(&Field_Init,
+			py::default_call_policies(),
 			(py::arg("py_argv"),
 			py::arg("nparts") = 0,
 			py::arg("output_points") = 0,

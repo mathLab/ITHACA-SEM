@@ -4,6 +4,6 @@ from NekPy.FieldUtils import *
 
 field = Field(sys.argv, forceoutput=True, error=True)
 
-InputXml(field, "chan3D.xml").Run()
-InputFld(field, "chan3D.fld").Run()
-OutputTecplot(field, "chan3D.dat").Run()
+InputModule.Create("xml", field, infile="chan3D.xml", addfiles="xml:chan3D.xml").Run()
+InputModule.Create("fld", field, infile="chan3D.fld", addfiles="fld:chan3D.fld").Run()
+OutputModule.Create("dat", field, outfile="chan3D.dat").Run()

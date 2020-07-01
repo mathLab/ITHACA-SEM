@@ -4,8 +4,7 @@ from NekPy.FieldUtils import *
 
 field = Field(sys.argv, forceoutput=True, error=True)
 
-InputXml(field, "bfs_tg.xml").Run()
-InputFld(field, "bfs_tg.fld").Run()
-ProcessVorticity(field).Run()
-OutputFld(field, "bfs_tg_vort.fld").Run()
-
+InputModule.Create("xml", field, infile="bfs_tg.xml", addfiles="xml:bfs_tg.xml").Run()
+InputModule.Create("fld", field, infile="bfs_tg.fld", addfiles="fld:bfs_tg.fld").Run()
+ProcessModule.Create("vorticity", field).Run()
+OutputModule.Create("dat", field, outfile="bfs_tg_vort.fld").Run()

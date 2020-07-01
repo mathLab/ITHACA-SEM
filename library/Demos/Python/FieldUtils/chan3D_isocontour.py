@@ -4,8 +4,8 @@ from NekPy.FieldUtils import *
 
 field = Field(sys.argv, forceoutput=True, error=True)
 
-InputXml(field, "chan3D.xml").Run()
-InputFld(field, "chan3D.fld").Run()
-ProcessEquiSpacedOutput(field).Run()
-ProcessIsoContour(field, fieldstr="u+v", fieldvalue="0.5", fieldname="UplusV", globalcondense=True, smooth=True).Run()
-OutputTecplot(field, "isocontour.dat").Run()
+InputModule.Create("xml", field, infile="chan3D.xml", addfiles="xml:chan3D.xml").Run()
+InputModule.Create("fld", field, infile="chan3D.fld", addfiles="fld:chan3D.fld").Run()
+ProcessModule.Create("equispacedoutput", field).Run()
+ProcessModule.Create("isocontour", field, fieldstr="u+v", fieldvalue="0.5", fieldname="UplusV", globalcondense=True, smooth=True).Run()
+OutputModule.Create("dat", field, outfile="isocontour.dat").Run()

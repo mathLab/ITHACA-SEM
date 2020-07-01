@@ -9,13 +9,12 @@
     </files>
      <metrics>
         <metric type="L2" id="1">
-            <value variable="x" tolerance="1e-6">289.252</value>
-            <value variable="y" tolerance="1e-6">6.0553</value>
-            <value variable="u" tolerance="1e-6">4.6773</value>
-            <value variable="v" tolerance="1e-4">0.172191</value>
-            <value variable="p" tolerance="1e-6">0.359627</value>
-            <value variable="W_z" tolerance="1e-6">10.8071</value>
+            <value variable="x" tolerance="1e-3">289.252</value>
+            <value variable="y" tolerance="1e-3">6.0553</value>
+            <value variable="u" tolerance="1e-3">4.6773</value>
+            <value variable="v" tolerance="1e-3">0.172191</value>
+            <value variable="p" tolerance="1e-3">0.359627</value>
+            <value variable="W_z" tolerance="1e-3">10.8071</value>
         </metric>
     </metrics>
 </test>
-

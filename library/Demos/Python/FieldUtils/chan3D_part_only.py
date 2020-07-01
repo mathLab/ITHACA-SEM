@@ -4,4 +4,4 @@ from NekPy.FieldUtils import *
 
 field = Field(sys.argv, part_only=2)
 
-InputXml(field, "chan3D.xml").Run()
+InputModule.Create("xml", field, infile="chan3D.xml", addfiles="xml:chan3D.xml").Run()

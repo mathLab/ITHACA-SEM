@@ -4,6 +4,6 @@ from NekPy.FieldUtils import *
 
 field = Field(sys.argv, forceoutput=True, error=True)
 
-InputXml(field, "interptest.xml").Run()
-ProcessInterpField(field, fromxml="interptest.xml", fromfld="interptest.fld").Run()
-OutputFld(field, "new.fld").Run()
+InputModule.Create("xml", field, infile="interptest.xml", addfiles="xml:interptest.xml").Run()
+ProcessModule.Create("interpfield", field, fromxml="interptest.xml", fromfld="interptest.fld").Run()
+OutputModule.Create("fld", field, outfile="new.fld").Run()

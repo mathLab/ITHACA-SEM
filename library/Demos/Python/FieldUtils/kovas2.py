@@ -4,6 +4,6 @@ from NekPy.FieldUtils import *
 
 field = Field(sys.argv, error=True)
 
-InputXml(field, "kovas2.xml").Run()
-InputSemtex(field, "kovas2.sem.fld").Run()
-OutputTecplot(field, "kovas2.dat").Run()
+InputModule.Create("xml", field, infile="kovas2.xml", addfiles="xml:kovas2.xml").Run()
+InputModule.Create("fldsem", field, infile="kovas2.sem.fld").Run()
+OutputModule.Create("dat", field, outfile="kovas2.dat").Run()

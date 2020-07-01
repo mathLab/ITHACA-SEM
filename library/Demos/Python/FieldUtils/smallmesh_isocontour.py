@@ -4,8 +4,8 @@ from NekPy.FieldUtils import *
 
 field = Field(sys.argv, forceoutput=True, error=True, output_points=6)
 
-InputXml(field, "smallmesh.xml").Run()
-InputFld(field, "smallmesh.fld").Run()
-ProcessEquiSpacedOutput(field).Run()
-ProcessIsoContour(field, fieldstr="p", fieldvalue="0.1", globalcondense=True, smooth=True).Run()
-OutputTecplot(field, "iso.dat").Run()
+InputModule.Create("xml", field, infile="smallmesh.xml", addfiles="xml:smallmesh.xml").Run()
+InputModule.Create("fld", field, infile="smallmesh.fld", addfiles="fld:smallmesh.fld").Run()
+ProcessModule.Create("equispacedoutput", field).Run()
+ProcessModule.Create("isocontour", field, fieldstr="p", fieldvalue="0.1", globalcondense=True, smooth=True).Run()
+OutputModule.Create("dat", field, outfile="iso.dat").Run()

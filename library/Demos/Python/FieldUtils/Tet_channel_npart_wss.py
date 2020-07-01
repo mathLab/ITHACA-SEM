@@ -2,12 +2,12 @@
 import sys
 from NekPy.FieldUtils import *
 
-field = Field(sys.argv, nparts = 2, forceoutput=True, error=True)
+field = Field(sys.argv, nparts=2, forceoutput=True, error=True)
 
-inputxml = InputXml(field, "Tet_channel_m3_xml")
-inputfld = InputFld(field, "Tet_channel_m3.fld")
-processwss = ProcessWSS(field, bnd="2")
-outputfld = OutputFld(field, "wss.fld")
+inputxml   = InputModule.Create("xml", field, infile="Tet_channel_m3_xml", addfiles="xml:Tet_channel_m3_xml")
+inputfld   = InputModule.Create("fld", field, infile="Tet_channel_m3.fld", addfiles="fld:Tet_channel_m3.fld")
+processwss = ProcessModule.Create("wss", field, bnd="2")
+outputfld  = OutputModule.Create("fld", field, outfile="wss.fld")
 
 for part in range(2):
 	field.NewPartition(sys.argv, part)
@@ -15,6 +15,5 @@ for part in range(2):
 	inputfld.Run()
 	processwss.Run()
 	outputfld.Run()
-	
-OutputInfo(field, "wss_b2.fld").Run()
 
+OutputModule.Create("info", field, nparts=2, outfile="wss_b2.fld").Run()

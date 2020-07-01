@@ -36,6 +36,7 @@
 #define FIELDUTILS_FIELD
 
 #include <memory>
+#include <iomanip>
 #include <boost/program_options.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
@@ -91,13 +92,13 @@ struct Field
     bool m_requireBoundaryExpansion;
 
     bool m_useFFT;
-    
+
     LibUtilities::CommSharedPtr m_comm;
     LibUtilities::CommSharedPtr m_defComm;
     LibUtilities::CommSharedPtr m_partComm;
     int m_nParts = 1;
     po::variables_map m_vm;
-    
+
     LibUtilities::SessionReaderSharedPtr m_session;
     SpatialDomains::MeshGraphSharedPtr m_graph;
     std::map<std::string, std::vector<std::string> > m_inputfiles;
@@ -109,10 +110,10 @@ struct Field
     LibUtilities::PtsFieldSharedPtr m_fieldPts;
 
     LibUtilities::FieldMetaDataMap m_fieldMetaDataMap;
-	
-    FIELD_UTILS_EXPORT void SetUpExp(boost::program_options::variables_map &vm) 
+
+    FIELD_UTILS_EXPORT void SetUpExp(boost::program_options::variables_map &vm)
     {
-        if (m_graph && !m_exp.size()) 
+        if (m_graph && !m_exp.size())
         {
             CreateExp(vm, true);
         }
@@ -121,10 +122,10 @@ struct Field
             CreateExp(vm, false);
         }
     }
-    
+
     FIELD_UTILS_EXPORT void CreateExp(boost::program_options::variables_map &vm, bool newExp)
     {
-        
+
         bool fldfilegiven = (m_fielddef.size() != 0);
         if (newExp)
         {
@@ -138,16 +139,16 @@ struct Field
             }
             // check to see if fld file defined so can use in
             // expansion defintion if required
-            
+
             bool expFromFld = fldfilegiven  && !vm.count("useSessionExpansion");
-            
+
             // load fielddef header if fld file is defined. This gives
             // precedence to Homogeneous definition in fld file
             m_numHomogeneousDir = 0;
             if (expFromFld)
             {
                 m_numHomogeneousDir = m_fielddef[0]->m_numHomogeneousDir;
-                
+
                 // Set up Expansion information to use mode order from field
                 m_graph->SetExpansions(m_fielddef);
             }
@@ -155,9 +156,9 @@ struct Field
             {
                 if (m_session->DefinesSolverInfo("HOMOGENEOUS"))
                 {
-                    std::string HomoStr = 
+                    std::string HomoStr =
                         m_session->GetSolverInfo("HOMOGENEOUS");
-                    
+
                     if ((HomoStr == "HOMOGENEOUS1D") ||
                         (HomoStr == "Homogeneous1D") ||
                         (HomoStr == "1D") || (HomoStr == "Homo1D"))
@@ -172,7 +173,7 @@ struct Field
                     }
                 }
             }
-            
+
             m_exp.resize(1);
             // Check  if there are any elements to process
             std::vector<int> IDs;
@@ -196,21 +197,21 @@ struct Field
                     AllocateSharedPtr();
                 return;
             }
-            
+
             // Adjust number of quadrature points
             if (vm.count("output-points"))
             {
                 int nPointsNew = vm["output-points"].as<int>();
                 m_graph->SetExpansionsToPointOrder(nPointsNew);
             }
-            
+
             if (m_verbose)
             {
                 if (m_comm->TreatAsRankZero())
                 {
                     timerpart.Stop();
                     NekDouble cpuTime = timerpart.TimePerTest(1);
-                    
+
                     std::stringstream ss;
                     ss << cpuTime << "s";
                     std::cout << "\t CreateExp setexpansion CPU Time: "
@@ -223,9 +224,9 @@ struct Field
             if (m_numHomogeneousDir == 1 && vm.count("output-points-hom-z"))
             {
                 int expdim = m_graph->GetMeshDimension();
-                m_fielddef[0]->m_numModes[expdim] = 
+                m_fielddef[0]->m_numModes[expdim] =
                     vm["output-points-hom-z"].as<int>();
-		
+
             }
             m_exp[0] = SetUpFirstExpList(m_numHomogeneousDir,
                                          expFromFld);
@@ -235,9 +236,9 @@ struct Field
                 {
                     timerpart.Stop();
                     NekDouble cpuTime = timerpart.TimePerTest(1);
-                    
+
                     std::stringstream ss1;
-                    
+
                     ss1 << cpuTime << "s";
                     std::cout << "\t CreateExp set first exp CPU Time: "
                               << std::setw(8)   << std::left
@@ -245,8 +246,8 @@ struct Field
                 }
             }
         }
-	
-        if (fldfilegiven) 
+
+        if (fldfilegiven)
         {
             int i, j, nfields, nstrips;
             m_session->LoadParameter("Strip_Z", nstrips, 1);
@@ -257,7 +258,7 @@ struct Field
                 m_variables = vars;
             }
             nfields = m_variables.size();
-            
+
             m_exp.resize(nfields * nstrips);
             // declare other fields;
             for (int s = 0; s < nstrips; ++s) // homogeneous strip varient
@@ -272,12 +273,12 @@ struct Field
                             m_exp[s * nfields + i] = AppendExpList(
                                                                    m_numHomogeneousDir, vars[i]);
                         }
-                        
+
                     }
                     else
                     {
                         if (vars.size())
-                        {	
+                        {
                             m_exp[s * nfields + i] = AppendExpList(
                                                                    m_numHomogeneousDir, vars[0]);
                         }
@@ -286,11 +287,11 @@ struct Field
                             m_exp[s * nfields + i] = AppendExpList(
                                                                    m_numHomogeneousDir);
                         }
-			
+
                     }
-                }		
+                }
             }
-            
+
             // Extract data to coeffs and bwd transform
             for (int s = 0; s < nstrips; ++s) // homogeneous strip varient
             {
@@ -322,10 +323,10 @@ struct Field
             //    (they should not be used after running this module)
             m_fielddef = std::vector<LibUtilities::FieldDefinitionsSharedPtr>();
             m_data     = std::vector<std::vector<NekDouble> >();
-        }	
+        }
     }
-	
-	
+
+
     FIELD_UTILS_EXPORT MultiRegions::ExpListSharedPtr SetUpFirstExpList(
         int NumHomogeneousDir, bool fldfilegiven = false)
     {
@@ -547,7 +548,7 @@ struct Field
                                               m_session->GetVariable(0),
                                               Collections::eNoCollection);
                     }
-                    
+
                     else if (m_declareExpansionAsDisContField)
                     {
                         Exp3DH1 = MemoryManager<
@@ -557,7 +558,7 @@ struct Field
                                               m_session->GetVariable(0),
                                               Collections::eNoCollection);
                     }
-                    
+
                     else
                     {
                         Exp3DH1 = MemoryManager<
@@ -581,7 +582,7 @@ struct Field
                                               true,false,
                                               Collections::eNoCollection);
                     }
- 
+
                     else if (m_declareExpansionAsDisContField)
                     {
                         Exp2D = MemoryManager<MultiRegions::DisContField2D>::
@@ -594,7 +595,7 @@ struct Field
                     {
                         Exp2D = MemoryManager<MultiRegions::ExpList2D>::
                             AllocateSharedPtr(m_session, m_graph,
-                                              true, 
+                                              true,
                                               "DefaultVar",
                                               Collections::eNoCollection);
                     }

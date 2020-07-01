@@ -4,6 +4,6 @@ from NekPy.FieldUtils import *
 
 field = Field(sys.argv, forceoutput=True, error=True)
 
-InputXml(field, "compositeid.xml").Run()
-ProcessAddCompositeID(field).Run()
-OutputFld(field, "compositeid.fld").Run()
+InputModule.Create("xml", field, infile="compositeid.xml", addfiles="xml:compositeid.xml").Run()
+ProcessModule.Create("addcompositeid", field).Run()
+OutputModule.Create("fld", field, outfile="compositeid.fld").Run()

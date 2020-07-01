@@ -4,5 +4,5 @@ from NekPy.FieldUtils import *
 
 field = Field(sys.argv, orceoutput=True)
 
-ProcessInterpPoints(field, fromxml="chan3D.xml", fromfld="chan3D.fld", topts="chan3D_probe.pts").Run()
-OutputTecplot(field, "chan3D_probe.dat").Run()
+ProcessModule.Create("interppoints", field, fromxml="chan3D.xml", fromfld="chan3D.fld", topts="chan3D_probe.pts").Run()
+OutputModule.Create("dat", field, outfile="chan3D_probe.dat").Run()

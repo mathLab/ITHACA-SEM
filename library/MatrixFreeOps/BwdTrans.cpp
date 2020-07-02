@@ -21,9 +21,9 @@ std::string __register_BwdTrans_Hex = GetOperatorFactory().
 //     RegisterCreatorFunction( std::string("BwdTrans_Tet_Regular"),
 //     &BwdTransTet::Create);
 
-// std::string __register_BwdTrans_Prism = GetOperatorFactory().
-//     RegisterCreatorFunction( std::string("BwdTrans_Prism_Regular"),
-//     &BwdTransPrism::Create);
+std::string __register_BwdTrans_Prism = GetOperatorFactory().
+    RegisterCreatorFunction( std::string("BwdTrans_Prism_Regular"),
+    &BwdTransPrism::Create);
 
 } // namespace MatrixFree
 } // namespace Nektar

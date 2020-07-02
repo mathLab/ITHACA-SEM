@@ -366,6 +366,186 @@ namespace Nektar
 
         }
 
+    BOOST_AUTO_TEST_CASE(TestPrismBwdTrans_MatrixFree_UniformP_MultiElmt)
+    {
+        SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(
+            3u, 0u, -1.0, -1.0, -1.0));
+        SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(
+            3u, 1u,  1.0, -1.0, -1.0));
+        SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(
+            3u, 2u,  1.0,  1.0, -1.0));
+        SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(
+            3u, 3u, -1.0,  1.0, -1.0));
+        SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(
+            3u, 4u, -1.0, -1.0,  1.0));
+        SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(
+            3u, 5u, -1.0,  1.0,  1.0));
+
+        SpatialDomains::PrismGeomSharedPtr prismGeom =
+            CreatePrism(v0, v1, v2, v3, v4, v5);
+
+
+        unsigned int numQuadPoints = 5;
+        unsigned int numModes = 4;
+
+        Nektar::LibUtilities::PointsType PointsTypeDir1 =
+            Nektar::LibUtilities::eGaussLobattoLegendre;
+        const Nektar::LibUtilities::PointsKey PointsKeyDir1(numQuadPoints,
+            PointsTypeDir1);
+        Nektar::LibUtilities::BasisType basisTypeDir1 =
+            Nektar::LibUtilities::eModified_A;
+        const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,
+            numModes, PointsKeyDir1);
+
+        Nektar::LibUtilities::PointsType PointsTypeDir2 =
+            Nektar::LibUtilities::eGaussLobattoLegendre;
+        const Nektar::LibUtilities::PointsKey PointsKeyDir2(numQuadPoints,
+            PointsTypeDir2);
+        Nektar::LibUtilities::BasisType basisTypeDir2 =
+            Nektar::LibUtilities::eModified_A;
+        const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,
+            numModes, PointsKeyDir2);
+
+        Nektar::LibUtilities::PointsType PointsTypeDir3 =
+            Nektar::LibUtilities::eGaussRadauMAlpha1Beta0;
+        const Nektar::LibUtilities::PointsKey PointsKeyDir3(numQuadPoints-1,
+            PointsTypeDir3);
+        Nektar::LibUtilities::BasisType basisTypeDir3 =
+            Nektar::LibUtilities::eModified_B;
+        const Nektar::LibUtilities::BasisKey  basisKeyDir3(basisTypeDir3,
+            numModes, PointsKeyDir3);
+
+        Nektar::LocalRegions::PrismExpSharedPtr Exp =
+            MemoryManager<Nektar::LocalRegions::PrismExp>::AllocateSharedPtr(
+            basisKeyDir1, basisKeyDir2, basisKeyDir3, prismGeom);
+
+        unsigned int nelmts = 2;
+
+        std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+        for (unsigned int i = 0; i < nelmts; ++i)
+        {
+            CollExp.push_back(Exp);
+        }
+
+        LibUtilities::SessionReaderSharedPtr dummySession;
+        Collections::CollectionOptimisation colOpt(dummySession,
+            Collections::eIterPerExp);
+        Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+
+        // ... only one op at the time ...
+        impTypes[Collections::eBwdTrans] = Collections::eMatrixFree;
+        Collections::Collection              c(CollExp, impTypes);
+
+        Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(),  1.0);
+        Array<OneD, NekDouble> physRef(nelmts*Exp->GetTotPoints(), 0.0);
+        Array<OneD, NekDouble> phys(nelmts*Exp->GetTotPoints(), 0.0);
+        Array<OneD, NekDouble> tmp;
+
+        for (unsigned int i = 0; i < nelmts; ++i)
+        {
+            Exp->BwdTrans(coeffs + i*Exp->GetNcoeffs(),
+                tmp = physRef+i*Exp->GetTotPoints());
+        }
+        c.ApplyOperator(Collections::eBwdTrans, coeffs, phys);
+
+        double epsilon = 1.0e-8;
+        for (unsigned int i = 0; i < physRef.size(); ++i)
+        {
+            BOOST_CHECK_CLOSE(physRef[i], phys[i], epsilon);
+        }
+
+    }
+
+    BOOST_AUTO_TEST_CASE(TestPrismBwdTrans_MatrixFree_UniformP_OverInt_MultiElmt)
+    {
+        SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(
+            3u, 0u, -1.0, -1.0, -1.0));
+        SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(
+            3u, 1u,  1.0, -1.0, -1.0));
+        SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(
+            3u, 2u,  1.0,  1.0, -1.0));
+        SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(
+            3u, 3u, -1.0,  1.0, -1.0));
+        SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(
+            3u, 4u, -1.0, -1.0,  1.0));
+        SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(
+            3u, 5u, -1.0,  1.0,  1.0));
+
+        SpatialDomains::PrismGeomSharedPtr prismGeom =
+            CreatePrism(v0, v1, v2, v3, v4, v5);
+
+
+        unsigned int numQuadPoints = 8;
+        unsigned int numModes = 4;
+
+        Nektar::LibUtilities::PointsType PointsTypeDir1 =
+            Nektar::LibUtilities::eGaussLobattoLegendre;
+        const Nektar::LibUtilities::PointsKey PointsKeyDir1(numQuadPoints,
+            PointsTypeDir1);
+        Nektar::LibUtilities::BasisType basisTypeDir1 =
+            Nektar::LibUtilities::eModified_A;
+        const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,
+            numModes, PointsKeyDir1);
+
+        Nektar::LibUtilities::PointsType PointsTypeDir2 =
+            Nektar::LibUtilities::eGaussLobattoLegendre;
+        const Nektar::LibUtilities::PointsKey PointsKeyDir2(numQuadPoints,
+            PointsTypeDir2);
+        Nektar::LibUtilities::BasisType basisTypeDir2 =
+            Nektar::LibUtilities::eModified_A;
+        const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,
+            numModes, PointsKeyDir2);
+
+        Nektar::LibUtilities::PointsType PointsTypeDir3 =
+            Nektar::LibUtilities::eGaussRadauMAlpha1Beta0;
+        const Nektar::LibUtilities::PointsKey PointsKeyDir3(numQuadPoints-1,
+            PointsTypeDir3);
+        Nektar::LibUtilities::BasisType basisTypeDir3 =
+            Nektar::LibUtilities::eModified_B;
+        const Nektar::LibUtilities::BasisKey  basisKeyDir3(basisTypeDir3,
+            numModes, PointsKeyDir3);
+
+        Nektar::LocalRegions::PrismExpSharedPtr Exp =
+            MemoryManager<Nektar::LocalRegions::PrismExp>::AllocateSharedPtr(
+            basisKeyDir1, basisKeyDir2, basisKeyDir3, prismGeom);
+
+        unsigned int nelmts = 2;
+
+        std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+        for (unsigned int i = 0; i < nelmts; ++i)
+        {
+            CollExp.push_back(Exp);
+        }
+
+        LibUtilities::SessionReaderSharedPtr dummySession;
+        Collections::CollectionOptimisation colOpt(dummySession,
+            Collections::eIterPerExp);
+        Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+
+        // ... only one op at the time ...
+        impTypes[Collections::eBwdTrans] = Collections::eMatrixFree;
+        Collections::Collection              c(CollExp, impTypes);
+
+        Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(),  1.0);
+        Array<OneD, NekDouble> physRef(nelmts*Exp->GetTotPoints(), 0.0);
+        Array<OneD, NekDouble> phys(nelmts*Exp->GetTotPoints(), 0.0);
+        Array<OneD, NekDouble> tmp;
+
+        for (unsigned int i = 0; i < nelmts; ++i)
+        {
+            Exp->BwdTrans(coeffs + i*Exp->GetNcoeffs(),
+                tmp = physRef+i*Exp->GetTotPoints());
+        }
+        c.ApplyOperator(Collections::eBwdTrans, coeffs, phys);
+
+        double epsilon = 1.0e-8;
+        for (unsigned int i = 0; i < physRef.size(); ++i)
+        {
+            BOOST_CHECK_CLOSE(physRef[i], phys[i], epsilon);
+        }
+
+    }
+
 
         BOOST_AUTO_TEST_CASE(TestPrismBwdTrans_StdMat_VariableP_MultiElmt)
         {

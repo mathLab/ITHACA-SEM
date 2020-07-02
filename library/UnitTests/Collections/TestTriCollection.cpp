@@ -335,7 +335,7 @@ namespace Nektar
             numModes, triPointsKeyDir1);
 
         Nektar::LibUtilities::PointsType triPointsTypeDir2 =
-            Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::eGaussRadauMAlpha1Beta0;
         const Nektar::LibUtilities::PointsKey triPointsKeyDir2(numQuadPoints-1,
             triPointsTypeDir2);
         Nektar::LibUtilities::BasisType basisTypeDir2 =

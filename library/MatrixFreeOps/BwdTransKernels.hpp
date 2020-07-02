@@ -104,78 +104,86 @@ inline static void BwdTransTriKernel(
     }
 }
 
-// template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
-//          int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
-//          bool CORRECT, class BasisType>
-// inline static void BwdTransPrismKernel(
-//     const NekDouble *inptr,
-//     const std::vector<vec_t, allocator<vec_t>> &bdata0,
-//     const std::vector<vec_t, allocator<vec_t>> &bdata1,
-//     const std::vector<vec_t, allocator<vec_t>> &bdata2,
-//     vec_t *fpq,
-//     vec_t *fp,
-//     NekDouble *outptr)
-// {
-//     constexpr auto nm0 = NUMMODE0, nm1 = NUMMODE1, nm2 = NUMMODE2;
-//     constexpr auto nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD2;
+template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
+         int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
+         bool CORRECT>
+inline static void BwdTransPrismKernel(
+    const std::vector<vec_t, allocator<vec_t>> &in,
+    const std::vector<vec_t, allocator<vec_t>> &bdata0,
+    const std::vector<vec_t, allocator<vec_t>> &bdata1,
+    const std::vector<vec_t, allocator<vec_t>> &bdata2,
+    vec_t* fpq,
+    vec_t* fp,
+    std::vector<vec_t, allocator<vec_t>> &out)
+{
+    constexpr auto nm0 = NUMMODE0, nm1 = NUMMODE1, nm2 = NUMMODE2;
+    constexpr auto nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD2;
 
-//     int cnt_kji = 0;
-//     for(int k = 0; k < nq2; k++)
-//     {
+    for (int k = 0, cnt_kji = 0; k < nq2; ++k)
+    {
 
-//         int mode_pqr = 0, mode_pq = 0, mode_pr = 0;
-//         for(int p = 0; p < nm0; p++){
-//             for(int q = 0; q < nm1; q++, mode_pq++){
-//                 vec_t prod = T(0.0);
-//                 for(int r = 0; r < nm2-p; r++, mode_pqr++){
-//                     vec_t coef = T(inptr + mode_pqr*VW); //Load 1x
-//                     prod.fma(coef, bdata2[(mode_pr + r)*nq2 + k]); //Load 1x
-//                 }
+        int mode_pqr = 0, mode_pq = 0, mode_pr = 0;
+        for (int p = 0; p < nm0; ++p)
+        {
+            for (int q = 0; q < nm1; ++q, ++mode_pq)
+            {
+                vec_t prod = 0.0;
+                for (int r = 0; r < nm2-p; ++r, ++mode_pqr)
+                {
+                    vec_t coef = in[mode_pqr]; //Load 1x
+                    prod.fma(coef, bdata2[(mode_pr + r)*nq2 + k]); //Load 1x
+                }
 
-//                 fpq[mode_pq] = prod; //Store 1x
-//             }
+                fpq[mode_pq] = prod; //Store 1x
+            }
 
-//             mode_pr += nm2 - p;
-//         }
+            mode_pr += nm2 - p;
+        }
 
-//         for(int j = 0; j < nq1; j++){
+        for (int j = 0; j < nq1; ++j)
+        {
 
-//             mode_pq = 0;
-//             for(int p = 0; p < nm0; p++){
-//                 T prod = T(0.0);
-//                 for(int q = 0; q < nm1; q++, mode_pq++){
-//                     prod.fma(fpq[mode_pq], bdata1[q*nq1 + j]); //Load 2x
-//                 }
-//                 fp[p] = prod; //Store 1x
+            mode_pq = 0;
+            for (int p = 0; p < nm0; ++p)
+            {
+                vec_t prod = 0.0;
+                for (int q = 0; q < nm1; ++q, ++mode_pq)
+                {
+                    prod.fma(fpq[mode_pq], bdata1[q*nq1 + j]); //Load 2x
+                }
+                fp[p] = prod; //Store 1x
 
-//             }
+            }
 
-//             for(int i = 0; i < nq0; i++, cnt_kji++){
+            for (int i = 0; i < nq0; ++i, ++cnt_kji)
+            {
 
-//                 T val_kji = T(0.0);
-//                 for(int p = 0; p < nm0; p++){
-//                     val_kji.fma(fp[p], bdata0[p*nq0 + i]); //Load 2x
-//                 }
+                vec_t val_kji = 0.0;
+                for (int p = 0; p < nm0; ++p)
+                {
+                    val_kji.fma(fp[p], bdata0[p*nq0 + i]); //Load 2x
+                }
 
-//                 if (CORRECT)
-//                 {
-//                     T basis_2 = bdata2[nq2 + k]; //Load 1x
-//                     T basis_0 = bdata0[nq0 + i]; //Load 1x
+                if (CORRECT)
+                {
+                    vec_t basis_2 = bdata2[nq2 + k]; //Load 1x
+                    vec_t basis_0 = bdata0[nq0 + i]; //Load 1x
 
-//                     for(int q = 0; q < nm1; q++){
-//                         T coef_0q1 = T(inptr + (q*nm2 + 1)*VW ); //Load 1x
-//                         T basis_1 = bdata1[q*nq1 + j]; //Load 1x
-//                         val_kji.fma(basis_2*basis_1, basis_0*coef_0q1);
-//                     }
-//                 }
+                    for (int q = 0; q < nm1; ++q)
+                    {
+                        vec_t coef_0q1 = in[q*nm2 + 1]; //Load 1x
+                        vec_t basis_1 = bdata1[q*nq1 + j]; //Load 1x
+                        val_kji.fma(basis_2*basis_1, basis_0*coef_0q1);
+                    }
+                }
 
-//                 val_kji.store(outptr + cnt_kji*VW); //store 1x
-//             }
+                out[cnt_kji] = val_kji; //store 1x
+            }
 
-//         }
-//     }
+        }
+    }
 
-// }
+}
 
 
 template<int NUMMODE0, int NUMMODE1, int NUMMODE2,

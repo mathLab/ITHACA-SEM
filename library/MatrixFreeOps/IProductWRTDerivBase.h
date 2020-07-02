@@ -38,6 +38,11 @@ public:
     void operator()( const Array<OneD, Array<OneD, NekDouble>> &in,
         Array<OneD, NekDouble> &out) final
     {
+        // Check preconditions
+        ASSERTL0(m_basis[0]->GetNumModes() == m_basis[1]->GetNumModes() &&
+            m_basis[0]->GetNumPoints() == m_basis[1]->GetNumPoints(),
+            "MatrixFree requires homogenous modes/points");
+
         switch(m_basis[0]->GetNumModes())
         {
             case 2:

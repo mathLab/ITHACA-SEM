@@ -72,6 +72,9 @@
         <OPERATOR TYPE="BwdTrans">
             <ELEMENT TYPE="Q" ORDER="2-8" IMPTYPE="MatrixFree" />
         </OPERATOR>
+        <OPERATOR TYPE="IProductWRTDerivBase">
+            <ELEMENT TYPE="Q" ORDER="2-8" IMPTYPE="MatrixFree" />
+        </OPERATOR>
      </COLLECTIONS>
 
     <GEOMETRY DIM="2" SPACE="2">

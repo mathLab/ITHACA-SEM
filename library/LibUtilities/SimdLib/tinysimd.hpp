@@ -28,7 +28,8 @@ namespace abi
 // pick the most specialiazed available match out of available ABIs.
 template <typename T> struct default_abi
 {
-    using type = typename first_not_void_of<
+    using type = typename first_not_void_of
+    <
         typename avx512<T>::type,
         typename avx2<T>::type,
         typename sse2<T>::type,
@@ -47,6 +48,4 @@ template <typename ScalarType,
 using simd = typename abi<ScalarType>::type;
 
 
-
 } // namespace tinysimd
-

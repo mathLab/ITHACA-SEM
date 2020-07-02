@@ -131,6 +131,9 @@
       <OPERATOR TYPE="BwdTrans">
           <ELEMENT TYPE="H" ORDER="2-8" IMPTYPE="MatrixFree" />
       </OPERATOR>
+      <OPERATOR TYPE="IProductWRTDerivBase">
+          <ELEMENT TYPE="H" ORDER="2-8" IMPTYPE="MatrixFree" />
+      </OPERATOR>
   </COLLECTIONS>
 
   <EXPANSIONS>

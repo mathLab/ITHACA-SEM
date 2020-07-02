@@ -2707,6 +2707,183 @@ namespace Nektar
             }
         }
 
+        BOOST_AUTO_TEST_CASE(TestHexIProductWRTDerivBase_MatrixFree_UniformP_Deformed)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(
+                3u, 0u, -1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(
+                3u, 1u, 1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(
+                3u, 2u, 1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(
+                3u, 3u, -1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(
+                3u, 4u, -1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(
+                3u, 5u, 1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v6(new SpatialDomains::PointGeom(
+                3u, 6u, 2.0, 3.0, 4.0));
+            SpatialDomains::PointGeomSharedPtr v7(new SpatialDomains::PointGeom(
+                3u, 7u, -1.0, 1.0, 1.0));
+
+            SpatialDomains::HexGeomSharedPtr hexGeom =
+                CreateHex(v0, v1, v2, v3, v4, v5, v6, v7);
+
+            Nektar::LibUtilities::PointsType quadPointsTypeDir1 =
+                Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::BasisType basisTypeDir1 =
+                Nektar::LibUtilities::eModified_A;
+            unsigned int numQuadPoints = 5;
+            unsigned int numModes = 4;
+            const Nektar::LibUtilities::PointsKey
+                quadPointsKeyDir1(numQuadPoints, quadPointsTypeDir1);
+            const Nektar::LibUtilities::BasisKey
+                basisKeyDir1(basisTypeDir1, numModes, quadPointsKeyDir1);
+
+            Nektar::LocalRegions::HexExpSharedPtr Exp =
+                MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(
+                basisKeyDir1, basisKeyDir1, basisKeyDir1, hexGeom);
+
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp =
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(
+                basisKeyDir1, basisKeyDir1, basisKeyDir1);
+
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+            CollExp.push_back(Exp);
+
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession,
+                Collections::eMatrixFree);
+            Collections::OperatorImpMap impTypes =
+                colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(CollExp, impTypes);
+
+            const int nq = Exp->GetTotPoints();
+            const int nm = Exp->GetNcoeffs();
+            Array<OneD, NekDouble> phys1(nq,   0.0);
+            Array<OneD, NekDouble> phys2(nq,   0.0);
+            Array<OneD, NekDouble> phys3(nq,   0.0);
+            Array<OneD, NekDouble> coeffsRef(nm, 0.0);
+            Array<OneD, NekDouble> coeffs(nm, 0.0);
+
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+
+            Exp->GetCoords(xc, yc, zc);
+
+            for (int i = 0; i < nq; ++i)
+            {
+                phys1[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
+                phys2[i] = cos(xc[i])*sin(yc[i])*cos(zc[i]);
+                phys2[i] = cos(xc[i])*sin(yc[i])*sin(zc[i]);
+            }
+
+            // Standard routines
+            Exp->IProductWRTDerivBase(0, phys1, coeffsRef);
+            Exp->IProductWRTDerivBase(1, phys2, coeffs);
+            Vmath::Vadd(nm, coeffsRef, 1, coeffs, 1, coeffsRef, 1);
+            Exp->IProductWRTDerivBase(2, phys3, coeffs);
+            Vmath::Vadd(nm, coeffsRef, 1, coeffs, 1, coeffsRef, 1);
+
+            c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1,
+                            phys2, phys3, coeffs);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < nm; ++i)
+            {
+                coeffsRef[i] = (std::abs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
+                coeffs[i] = (std::abs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
+                BOOST_CHECK_CLOSE(coeffsRef[i], coeffs[i], epsilon);
+            }
+        }
+
+        BOOST_AUTO_TEST_CASE(TestHexIProductWRTDerivBase_MatrixFree_UniformP_Deformed_OverInt)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(
+                3u, 0u, -1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(
+                3u, 1u, 1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(
+                3u, 2u, 1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(
+                3u, 3u, -1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(
+                3u, 4u, -1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(
+                3u, 5u, 1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v6(new SpatialDomains::PointGeom(
+                3u, 6u, 2.0, 3.0, 4.0));
+            SpatialDomains::PointGeomSharedPtr v7(new SpatialDomains::PointGeom(
+                3u, 7u, -1.0, 1.0, 1.0));
+
+            SpatialDomains::HexGeomSharedPtr hexGeom =
+                CreateHex(v0, v1, v2, v3, v4, v5, v6, v7);
+
+            Nektar::LibUtilities::PointsType quadPointsTypeDir1 =
+                Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::BasisType basisTypeDir1 =
+                Nektar::LibUtilities::eModified_A;
+            unsigned int numQuadPoints = 8;
+            unsigned int numModes = 4;
+            const Nektar::LibUtilities::PointsKey
+                quadPointsKeyDir1(numQuadPoints, quadPointsTypeDir1);
+            const Nektar::LibUtilities::BasisKey
+                basisKeyDir1(basisTypeDir1, numModes, quadPointsKeyDir1);
+
+            Nektar::LocalRegions::HexExpSharedPtr Exp =
+                MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(
+                basisKeyDir1, basisKeyDir1, basisKeyDir1, hexGeom);
+
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp =
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(
+                basisKeyDir1, basisKeyDir1, basisKeyDir1);
+
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+            CollExp.push_back(Exp);
+
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession,
+                Collections::eMatrixFree);
+            Collections::OperatorImpMap impTypes =
+                colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(CollExp, impTypes);
+
+            const int nq = Exp->GetTotPoints();
+            const int nm = Exp->GetNcoeffs();
+            Array<OneD, NekDouble> phys1(nq,   0.0);
+            Array<OneD, NekDouble> phys2(nq,   0.0);
+            Array<OneD, NekDouble> phys3(nq,   0.0);
+            Array<OneD, NekDouble> coeffsRef(nm, 0.0);
+            Array<OneD, NekDouble> coeffs(nm, 0.0);
+
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+
+            Exp->GetCoords(xc, yc, zc);
+
+            for (int i = 0; i < nq; ++i)
+            {
+                phys1[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
+                phys2[i] = cos(xc[i])*sin(yc[i])*cos(zc[i]);
+                phys2[i] = cos(xc[i])*sin(yc[i])*sin(zc[i]);
+            }
+
+            // Standard routines
+            Exp->IProductWRTDerivBase(0, phys1, coeffsRef);
+            Exp->IProductWRTDerivBase(1, phys2, coeffs);
+            Vmath::Vadd(nm, coeffsRef, 1, coeffs, 1, coeffsRef, 1);
+            Exp->IProductWRTDerivBase(2, phys3, coeffs);
+            Vmath::Vadd(nm, coeffsRef, 1, coeffs, 1, coeffsRef, 1);
+
+            c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1,
+                            phys2, phys3, coeffs);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < nm; ++i)
+            {
+                coeffsRef[i] = (std::abs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
+                coeffs[i] = (std::abs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
+                BOOST_CHECK_CLOSE(coeffsRef[i], coeffs[i], epsilon);
+            }
+        }
 
         BOOST_AUTO_TEST_CASE(TestHexIProductWRTDerivBase_IterPerExp_VariableP_MultiElmt)
         {

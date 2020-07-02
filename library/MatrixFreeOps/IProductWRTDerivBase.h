@@ -691,28 +691,144 @@ public:
     void operator()(const Array<OneD, Array<OneD, NekDouble>> &in,
         Array<OneD,       NekDouble> &out) final
     {
-        switch(m_basis[0]->GetNumModes())
+        auto nm0 = m_basis[0]->GetNumModes();
+        auto nm1 = m_basis[1]->GetNumModes();
+        auto nm2 = m_basis[2]->GetNumModes();
+        ASSERTL0( nm0 == nm1 && nm0 == nm2,
+            "IProductWRTDBHex: anisotropy not implemented.");
+
+        auto np0 = m_basis[0]->GetNumPoints();
+
+        switch(nm0)
         {
-            case 2:  IProductWRTDerivBaseHexImpl<2 ,2 ,2 ,3 ,3 ,3 >
-                (in[0], in[1], in[2], out); break;
-            case 3:  IProductWRTDerivBaseHexImpl<3 ,3 ,3 ,4 ,4 ,4 >
-                (in[0], in[1], in[2], out); break;
-            case 4:  IProductWRTDerivBaseHexImpl<4 ,4 ,4 ,5 ,5 ,5 >
-                (in[0], in[1], in[2], out); break;
-            case 5:  IProductWRTDerivBaseHexImpl<5 ,5 ,5 ,6 ,6 ,6 >
-                (in[0], in[1], in[2], out); break;
-            case 6:  IProductWRTDerivBaseHexImpl<6 ,6 ,6 ,7 ,7 ,7 >
-                (in[0], in[1], in[2], out); break;
-            case 7:  IProductWRTDerivBaseHexImpl<7 ,7 ,7 ,8 ,8 ,8 >
-                (in[0], in[1], in[2], out); break;
-            case 8:  IProductWRTDerivBaseHexImpl<8 ,8 ,8 ,9 ,9 ,9 >
-                (in[0], in[1], in[2], out); break;
-            case 9:  IProductWRTDerivBaseHexImpl<9 ,9 ,9 ,10,10,10>
-                (in[0], in[1], in[2], out); break;
-            case 10: IProductWRTDerivBaseHexImpl<10,10,10,11,11,11>
-                (in[0], in[1], in[2], out); break;
-            case 11: IProductWRTDerivBaseHexImpl<11,11,11,12,12,12>
-                (in[0], in[1], in[2], out); break;
+            case 2:
+                switch(np0)
+                {
+                    case 2: IProductWRTDerivBaseHexImpl<2, 2, 2, 2, 2, 2>
+                        (in[0], in[1], in[2], out); break;
+                    case 3: IProductWRTDerivBaseHexImpl<2, 2, 2, 3, 3, 3>
+                        (in[0], in[1], in[2], out); break;
+                    case 4: IProductWRTDerivBaseHexImpl<2, 2, 2, 4, 4, 4>
+                        (in[0], in[1], in[2], out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductWRTDBHex: # of modes / points combo not implemented.");
+                } break;
+            case 3:
+                switch(np0)
+                {
+                    case 3: IProductWRTDerivBaseHexImpl<3, 3, 3, 3, 3, 3>
+                        (in[0], in[1], in[2], out); break;
+                    case 4: IProductWRTDerivBaseHexImpl<3, 3, 3, 4, 4, 4>
+                        (in[0], in[1], in[2], out); break;
+                    case 5: IProductWRTDerivBaseHexImpl<3, 3, 3, 5, 5, 5>
+                        (in[0], in[1], in[2], out); break;
+                    case 6: IProductWRTDerivBaseHexImpl<3, 3, 3, 6, 6, 6>
+                        (in[0], in[1], in[2], out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductWRTDBHex: # of modes / points combo not implemented.");
+                } break;
+            case 4:
+                switch(np0)
+                {
+                    case 4: IProductWRTDerivBaseHexImpl<4, 4, 4, 4, 4 ,4>
+                        (in[0], in[1], in[2], out); break;
+                    case 5: IProductWRTDerivBaseHexImpl<4, 4, 4, 5, 5 ,5>
+                        (in[0], in[1], in[2], out); break;
+                    case 6: IProductWRTDerivBaseHexImpl<4, 4, 4, 6, 6 ,6>
+                        (in[0], in[1], in[2], out); break;
+                    case 7: IProductWRTDerivBaseHexImpl<4, 4, 4, 7, 7 ,7>
+                        (in[0], in[1], in[2], out); break;
+                    case 8: IProductWRTDerivBaseHexImpl<4, 4, 4, 8, 8 ,8>
+                        (in[0], in[1], in[2], out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductWRTDBHex: # of modes / points combo not implemented.");
+                } break;
+            case 5:
+                switch(np0)
+                {
+                    case 5: IProductWRTDerivBaseHexImpl<5, 5, 5, 5, 5, 5>
+                        (in[0], in[1], in[2], out); break;
+                    case 6: IProductWRTDerivBaseHexImpl<5, 5, 5, 6, 6, 6>
+                        (in[0], in[1], in[2], out); break;
+                    case 7: IProductWRTDerivBaseHexImpl<5, 5, 5, 7, 7, 7>
+                        (in[0], in[1], in[2], out); break;
+                    case 8: IProductWRTDerivBaseHexImpl<5, 5, 5, 8, 8, 8>
+                        (in[0], in[1], in[2], out); break;
+                    case 9: IProductWRTDerivBaseHexImpl<5, 5, 5, 9, 9, 9>
+                        (in[0], in[1], in[2], out); break;
+                    case 10: IProductWRTDerivBaseHexImpl<5, 5, 5, 10, 10, 10>
+                        (in[0], in[1], in[2], out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductWRTDBHex: # of modes / points combo not implemented.");
+                } break;
+            case 6:
+                switch(np0)
+                {
+                    case 6: IProductWRTDerivBaseHexImpl<6, 6, 6, 6, 6, 6>
+                        (in[0], in[1], in[2], out); break;
+                    case 7: IProductWRTDerivBaseHexImpl<6, 6, 6, 7, 7, 7>
+                        (in[0], in[1], in[2], out); break;
+                    case 8: IProductWRTDerivBaseHexImpl<6, 6, 6, 8, 8, 8>
+                        (in[0], in[1], in[2], out); break;
+                    case 9: IProductWRTDerivBaseHexImpl<6, 6, 6, 9, 9, 9>
+                        (in[0], in[1], in[2], out); break;
+                    case 10: IProductWRTDerivBaseHexImpl<6, 6, 6, 10, 10, 10>
+                        (in[0], in[1], in[2], out); break;
+                    case 11: IProductWRTDerivBaseHexImpl<6, 6, 6, 11, 11, 11>
+                        (in[0], in[1], in[2], out); break;
+                    case 12: IProductWRTDerivBaseHexImpl<6, 6, 6, 12, 12, 12>
+                        (in[0], in[1], in[2], out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductWRTDBHex: # of modes / points combo not implemented.");
+                } break;
+            case 7:
+                switch(np0)
+                {
+                    case 7: IProductWRTDerivBaseHexImpl<7, 7, 7, 7, 7, 7>
+                        (in[0], in[1], in[2], out); break;
+                    case 8: IProductWRTDerivBaseHexImpl<7, 7, 7, 8, 8, 8>
+                        (in[0], in[1], in[2], out); break;
+                    case 9: IProductWRTDerivBaseHexImpl<7, 7, 7, 9, 9, 9>
+                        (in[0], in[1], in[2], out); break;
+                    case 10: IProductWRTDerivBaseHexImpl<7, 7, 7, 10, 10, 10>
+                        (in[0], in[1], in[2], out); break;
+                    case 11: IProductWRTDerivBaseHexImpl<7, 7, 7, 11, 11, 11>
+                        (in[0], in[1], in[2], out); break;
+                    case 12: IProductWRTDerivBaseHexImpl<7, 7, 7, 12, 12, 12>
+                        (in[0], in[1], in[2], out); break;
+                    case 13: IProductWRTDerivBaseHexImpl<7, 7, 7, 13, 13, 13>
+                        (in[0], in[1], in[2], out); break;
+                    case 14: IProductWRTDerivBaseHexImpl<7, 7, 7, 14, 14, 14>
+                        (in[0], in[1], in[2], out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductWRTDBHex: # of modes / points combo not implemented.");
+                } break;
+            case 8:
+                switch(np0)
+                {
+                    case 8: IProductWRTDerivBaseHexImpl<8, 8, 8, 8, 8, 8>
+                        (in[0], in[1], in[2], out); break;
+                    case 9: IProductWRTDerivBaseHexImpl<8, 8, 8, 9, 9, 9>
+                        (in[0], in[1], in[2], out); break;
+                    case 10: IProductWRTDerivBaseHexImpl<8, 8, 8, 10, 10, 10>
+                        (in[0], in[1], in[2], out); break;
+                    case 11: IProductWRTDerivBaseHexImpl<8, 8, 8, 11, 11, 11>
+                        (in[0], in[1], in[2], out); break;
+                    case 12: IProductWRTDerivBaseHexImpl<8, 8, 8, 12, 12, 12>
+                        (in[0], in[1], in[2], out); break;
+                    case 13: IProductWRTDerivBaseHexImpl<8, 8, 8, 13, 13, 13>
+                        (in[0], in[1], in[2], out); break;
+                    case 14: IProductWRTDerivBaseHexImpl<8, 8, 8, 14, 14, 14>
+                        (in[0], in[1], in[2], out); break;
+                    case 15: IProductWRTDerivBaseHexImpl<8, 8, 8, 15, 15, 15>
+                        (in[0], in[1], in[2], out); break;
+                    case 16: IProductWRTDerivBaseHexImpl<8, 8, 8, 16, 16, 16>
+                        (in[0], in[1], in[2], out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductWRTDBHex: # of modes / points combo not implemented.");
+                } break;;
+            default: NEKERROR(ErrorUtil::efatal,
+                "IProductWRTDBHex: # of modes / points combo not implemented.");
         }
     }
 

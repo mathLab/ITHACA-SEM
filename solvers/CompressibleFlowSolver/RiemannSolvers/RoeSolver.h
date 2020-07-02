@@ -161,11 +161,11 @@ inline void RoeKernel(
     {
         uRoeAbs = 0.5*alpha[i]*lambda[i];
 
-        rhof  = rhof  - uRoeAbs*k[i][0];
-        rhouf = rhouf - uRoeAbs*k[i][1];
-        rhovf = rhovf - uRoeAbs*k[i][2];
-        rhowf = rhowf - uRoeAbs*k[i][3];
-        Ef    = Ef    - uRoeAbs*k[i][4];
+        rhof  -= uRoeAbs*k[i][0];
+        rhouf -= uRoeAbs*k[i][1];
+        rhovf -= uRoeAbs*k[i][2];
+        rhowf -= uRoeAbs*k[i][3];
+        Ef    -= uRoeAbs*k[i][4];
     }
 }
 

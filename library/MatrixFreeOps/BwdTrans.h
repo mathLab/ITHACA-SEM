@@ -41,7 +41,7 @@ struct BwdTransQuad : public BwdTrans, public Helper<2>
         return loop_i + loop_j;
     }
 
-    virtual NekDouble GFlops()
+    NekDouble GFlops() final
     {
 
         const int nm = m_basis[0]->GetNumModes();
@@ -52,7 +52,7 @@ struct BwdTransQuad : public BwdTrans, public Helper<2>
         return flops * 1e-9;
     }
 
-    virtual NekDouble NLoads()
+    NekDouble NLoads() final
     {
         const int nm0 = m_basis[0]->GetNumModes();
         const int nm1 = m_basis[1]->GetNumModes();
@@ -67,7 +67,7 @@ struct BwdTransQuad : public BwdTrans, public Helper<2>
 
     }
 
-    virtual NekDouble NStores()
+    NekDouble NStores() final
     {
         // const int nm0 = m_basis[0]->GetNumModes();
         const int nm1 = m_basis[1]->GetNumModes();
@@ -81,13 +81,13 @@ struct BwdTransQuad : public BwdTrans, public Helper<2>
         return m_nElmt * store_expected;
     }
 
-    virtual NekDouble Ndof()
+    NekDouble Ndof() final
     {
         return m_nmTot * this->m_nElmt;
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &in,
-                                  Array<OneD,       NekDouble> &out) final
+    void operator()(const Array<OneD, const NekDouble> &in,
+        Array<OneD,       NekDouble> &out) final
     {
         // Check preconditions
         ASSERTL0(m_basis[0]->GetNumModes() == m_basis[1]->GetNumModes() &&
@@ -252,7 +252,7 @@ struct BwdTransTri : public BwdTrans, public Helper<2>
         return nq1 * (2*pq_loop + nq0*inner);
     }
 
-    virtual NekDouble GFlops()
+    NekDouble GFlops() final
     {
         const int nm = m_basis[0]->GetNumModes();
         const int nq0 = m_basis[0]->GetNumPoints();
@@ -263,7 +263,7 @@ struct BwdTransTri : public BwdTrans, public Helper<2>
         return flops * 1e-9;
     }
 
-    virtual NekDouble NLoads()
+    NekDouble NLoads() final
     {
         const int nm0 = m_basis[0]->GetNumModes();
         // const int nm1 = m_basis[1]->GetNumModes();
@@ -279,7 +279,7 @@ struct BwdTransTri : public BwdTrans, public Helper<2>
 
     }
 
-    virtual NekDouble NStores()
+    NekDouble NStores() final
     {
         const int nm0 = m_basis[0]->GetNumModes();
         // const int nm1 = m_basis[1]->GetNumModes();
@@ -293,13 +293,13 @@ struct BwdTransTri : public BwdTrans, public Helper<2>
         return m_nElmt * store_expected;
     }
 
-    virtual NekDouble Ndof()
+    NekDouble Ndof() final
     {
         return m_nmTot * this->m_nElmt;
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &in,
-                                  Array<OneD,       NekDouble> &out) final
+    void operator()(const Array<OneD, const NekDouble> &in,
+        Array<OneD,       NekDouble> &out) final
     {
         // Check preconditions
         ASSERTL0(m_basis[0]->GetNumModes() == m_basis[1]->GetNumModes() &&

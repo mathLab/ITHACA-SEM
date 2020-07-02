@@ -23,11 +23,11 @@ std::string __register_IProduct_Tri_Deformed = GetOperatorFactory().RegisterCrea
 // std::string __register_IProduct_Tet_Deformed = GetOperatorFactory().RegisterCreatorFunction(
 //     std::string("IProduct_Tet_Deformed"), &IProductTet<4, true>::Create);
 
-// std::string __register_IProduct_Prism = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("IProduct_Prism_Regular"), &IProductPrism<4>::Create);
+std::string __register_IProduct_Prism = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("IProduct_Prism_Regular"), &IProductPrism<>::Create);
 
-// std::string __register_IProduct_Prism_Deformed = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("IProduct_Prism_Deformed"), &IProductPrism<4, true>::Create);
+std::string __register_IProduct_Prism_Deformed = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("IProduct_Prism_Deformed"), &IProductPrism<true>::Create);
 
 std::string __register_IProduct_Hex = GetOperatorFactory().RegisterCreatorFunction(
     std::string("IProduct_Hex_Regular"), &IProductHex<>::Create);

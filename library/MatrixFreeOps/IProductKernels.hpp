@@ -276,128 +276,142 @@ inline static void IProductHexKernel(
     }
 }
 
-// template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
-//          int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
-//          int VW, bool CORRECT, bool SCALE, bool APPEND, bool DEFORMED,
-//          class BasisType>
-// inline static void IProductPrismKernel(
-//     const double *inptr,
-//     const AlignedVector<BasisType> &bdata0,
-//     const AlignedVector<BasisType> &bdata1,
-//     const AlignedVector<BasisType> &bdata2,
-//     const AlignedVector<BasisType> &w0,
-//     const AlignedVector<BasisType> &w1,
-//     const AlignedVector<BasisType> &w2,
-//     const VecData<double, VW> *jac,
-//     VecData<double, VW> *sums_kj,
-//     VecData<double, VW> *sums_k,
-//     VecData<double, VW> *corr_q,
-//     double *outptr,
-//     double scale = 1.0)
-// {
-//     using T = VecData<double, VW>;
+template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
+         int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
+         bool CORRECT, bool SCALE, bool APPEND, bool DEFORMED>
+inline static void IProductPrismKernel(
+    const std::vector<vec_t, allocator<vec_t>>& in,
+    const std::vector<vec_t, allocator<vec_t>>& bdata0,
+    const std::vector<vec_t, allocator<vec_t>>& bdata1,
+    const std::vector<vec_t, allocator<vec_t>>& bdata2,
+    const std::vector<vec_t, allocator<vec_t>>& w0,
+    const std::vector<vec_t, allocator<vec_t>>& w1,
+    const std::vector<vec_t, allocator<vec_t>>& w2,
+    const vec_t* jac,
+    vec_t* sums_kj,
+    vec_t* sums_k,
+    vec_t* corr_q,
+    std::vector<vec_t, allocator<vec_t>>& out,
+    NekDouble scale = 1.0)
+{
 
-//     constexpr int nm0 = NUMMODE0, nm1 = NUMMODE1, nm2 = NUMMODE2;
-//     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD2;
+    constexpr auto nm0 = NUMMODE0, nm1 = NUMMODE1, nm2 = NUMMODE2;
+    constexpr auto nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD2;
 
-//     int mode_pr = 0, mode_pqr = 0;
-//     for(int p = 0; p < nm0; p++){
+    int mode_pr = 0, mode_pqr = 0;
+    for (int p = 0; p < nm0; ++p)
+    {
 
-//         int cnt_kji = 0, cnt_kj = 0;
-//         for(int k = 0; k < nq2; k++){
-//             for(int j = 0; j < nq1; j++, cnt_kj++){
-//                 T sum_kj = T(0.0);
+        int cnt_kji = 0, cnt_kj = 0;
+        for (int k = 0; k < nq2; ++k)
+        {
+            for (int j = 0; j < nq1; ++j, ++cnt_kj)
+            {
+                vec_t sum_kj = 0.0;
 
-//                 for(int i = 0; i < nq0; i++, cnt_kji++){
-//                     T jac_val;
-//                     if(DEFORMED){
-//                         jac_val = jac[nq0*nq1*k + nq0*j + i];
-//                     }
-//                     else{
-//                         jac_val = jac[0];
-//                     }
+                for (int i = 0; i < nq0; ++i, ++cnt_kji)
+                {
+                    vec_t jac_val;
+                    if (DEFORMED)
+                    {
+                        jac_val = jac[nq0*nq1*k + nq0*j + i];
+                    }
+                    else{
+                        jac_val = jac[0];
+                    }
 
-//                     T prod = bdata0[nq0*p + i] * jac_val * w0[i]; // load 2x
-//                     T fn = T(inptr + cnt_kji*VW); //load 1x
-//                     sum_kj.fma(prod, fn);
-//                 }
+                    vec_t prod = bdata0[nq0*p + i] * jac_val * w0[i]; // load 2x
+                    vec_t fn = in[cnt_kji]; //load 1x
+                    sum_kj.fma(prod, fn);
+                }
 
-//                 sums_kj[cnt_kj] = sum_kj; //store 1x
-//             }
-//         }
+                sums_kj[cnt_kj] = sum_kj; //store 1x
+            }
+        }
 
-//         for(int q = 0; q < nm1; q++){
-//             cnt_kj = 0;
-//             for(int k = 0; k < nq2; k++){
+        for (int q = 0; q < nm1; ++q)
+        {
+            cnt_kj = 0;
+            for (int k = 0; k < nq2; ++k)
+            {
 
-//                 T sum_k = T(0.0);
-//                 for(int j = 0; j < nq1; j++, cnt_kj++)
-//                 {
-//                     sum_k.fma(bdata1[q*nq1 + j] * w1[j], sums_kj[cnt_kj]); //Load 3x
-//                 }
+                vec_t sum_k = 0.0;
+                for (int j = 0; j < nq1; ++j, ++cnt_kj)
+                {
+                    sum_k.fma(bdata1[q*nq1 + j] * w1[j], sums_kj[cnt_kj]); //Load 3x
+                }
 
-//                 sums_k[k] = sum_k; //Store 1x
-//             }
+                sums_k[k] = sum_k; //Store 1x
+            }
 
-//             //Start with nesting. Should be able to move out of q loop and sotre identical copies...
-//             for(int r = 0; r < nm2-p; r++, mode_pqr++){
-//                 T k_sum = T(0.0);
-//                 for(int k = 0; k < nq2; k++){
-//                     k_sum.fma(bdata2[(mode_pr + r)*nq2 + k] * w2[k], sums_k[k]); //Load 3x
-//                 }
+            //Start with nesting. Should be able to move out of q loop and sotre identical copies...
+            for (int r = 0; r < nm2-p; ++r, ++mode_pqr)
+            {
+                vec_t k_sum = 0.0;
+                for (int k = 0; k < nq2; ++k)
+                {
+                    k_sum.fma(bdata2[(mode_pr + r)*nq2 + k] * w2[k], sums_k[k]); //Load 3x
+                }
 
-//                 ScaleAppend<VW, SCALE, APPEND>(outptr + mode_pqr*VW, k_sum, scale); //Store 1x
-//             }
-//         }
+                ScaleAppend<SCALE, APPEND>(out[mode_pqr], k_sum, scale); //Store 1x
+            }
+        }
 
-//         mode_pr += nm2-p;
+        mode_pr += nm2 - p;
 
-//     }
+    }
 
-//     if (CORRECT)
-//     {
-//         //Corrections for singular edge
-//         for(int q = 0; q < nm1; q++){
-//             corr_q[q] = 0.0;//T(outptr + (nm2*q + 1)*VW);
-//         }
+    if (CORRECT)
+    {
+        // Corrections for singular edge
+        for (int q = 0; q < nm1; ++q)
+        {
+            corr_q[q] = 0.0;//T(outptr + (nm2*q + 1)*VW);
+        }
 
-//         int cnt_kji = 0;
-//         for(int k = 0; k < nq2; k++){
+        int cnt_kji = 0;
+        for (int k = 0; k < nq2; ++k)
+        {
 
-//             T k_weight = w2[k];
-//             if(!DEFORMED){
-//                 k_weight = k_weight * jac[0];
-//             }
+            vec_t k_weight = w2[k];
+            if (!DEFORMED)
+            {
+                k_weight = k_weight * jac[0];
+            }
 
-//             for(int j = 0; j < nq1; j++){
-//                 T kj_weight = k_weight * w1[j];
-//                 for(int i = 0; i < nq0; i++, cnt_kji++){
+            for (int j = 0; j < nq1; ++j)
+            {
+                vec_t kj_weight = k_weight * w1[j];
+                for (int i = 0; i < nq0; ++i, ++cnt_kji)
+                {
 
-//                     T kji_weight = kj_weight * w0[i];
-//                     T prod = kji_weight * T(inptr + cnt_kji*VW);
+                    vec_t kji_weight = kj_weight * w0[i];
+                    vec_t prod = kji_weight * in[cnt_kji];
 
-//                     if(DEFORMED){
-//                         prod = prod * jac[k*nq1*nq0 + j*nq0 + i];
-//                     }
+                    if (DEFORMED)
+                    {
+                        prod *= jac[k*nq1*nq0 + j*nq0 + i];
+                    }
 
-//                     T basis_2 = bdata2[nq2 + k];
-//                     T basis_0 = bdata0[nq0 + i];
-//                     //Add phi_1q1 to phi_0q1
-//                     for(int q = 0; q < nm1; q++)
-//                     {
-//                         T basis_1 = bdata1[q*nq1 + j];
+                    vec_t basis_2 = bdata2[nq2 + k];
+                    vec_t basis_0 = bdata0[nq0 + i];
+                    //Add phi_1q1 to phi_0q1
+                    for (int q = 0; q < nm1; ++q)
+                    {
+                        vec_t basis_1 = bdata1[q*nq1 + j];
 
-//                         corr_q[q].fma(basis_2*basis_1, basis_0*prod);
-//                     }
-//                 }
-//             }
-//         }
+                        corr_q[q].fma(basis_2*basis_1, basis_0*prod);
+                    }
+                }
+            }
+        }
 
-//         for(int q = 0; q < nm1; q++){
-//             ScaleAppend<VW, SCALE, true>(outptr + (nm2*q + 1)*VW, corr_q[q], scale);
-//         }
-//     }
-// }
+        for (int q = 0; q < nm1; ++q)
+        {
+            ScaleAppend<SCALE, true>(out[nm2*q + 1], corr_q[q], scale);
+        }
+    }
+}
 
 // template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
 //          int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,

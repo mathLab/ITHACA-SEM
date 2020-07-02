@@ -268,10 +268,10 @@ struct PhysDerivTri : public PhysDeriv, public Helper<2,DEFORMED>
                           Array<OneD,       NekDouble> &out_d1,
                           Array<OneD,       NekDouble> &out_d2) final
     {
-        //Only for 3D, but need to implement since its abstract
+        // Only for 3D, but need to implement since its abstract
         boost::ignore_unused(in, out_d0, out_d1, out_d2);
         NEKERROR(ErrorUtil::efatal,
-                "Something went horribly wrong... calling 3D op for 2D op");
+                "Something went horribly wrong... calling 3D op for 2D element");
     }
 
     void operator()(const Array<OneD, const NekDouble> &in,
@@ -285,53 +285,37 @@ struct PhysDerivTri : public PhysDeriv, public Helper<2,DEFORMED>
         switch(m_basis[0]->GetNumPoints())
         {
             case 2:
-                PhysDerivTriImpl<2,1>(in, out_d0, out_d1);
-                break;
+                PhysDerivTriImpl<2,1>(in, out_d0, out_d1); break;
             case 3:
-                PhysDerivTriImpl<3,2>(in, out_d0, out_d1);
-                break;
+                PhysDerivTriImpl<3,2>(in, out_d0, out_d1); break;
             case 4:
-                PhysDerivTriImpl<4,3>(in, out_d0, out_d1);
-                break;
+                PhysDerivTriImpl<4,3>(in, out_d0, out_d1); break;
             case 5:
-                PhysDerivTriImpl<5,4>(in, out_d0, out_d1);
-                break;
+                PhysDerivTriImpl<5,4>(in, out_d0, out_d1); break;
             case 6:
-                PhysDerivTriImpl<6,5>(in, out_d0, out_d1);
-                break;
+                PhysDerivTriImpl<6,5>(in, out_d0, out_d1); break;
             case 7:
-                PhysDerivTriImpl<7,6>(in, out_d0, out_d1);
-                break;
+                PhysDerivTriImpl<7,6>(in, out_d0, out_d1); break;
             case 8:
-                PhysDerivTriImpl<8,7>(in, out_d0, out_d1);
-                break;
+                PhysDerivTriImpl<8,7>(in, out_d0, out_d1); break;
             case 9:
-                PhysDerivTriImpl<9,8>(in, out_d0, out_d1);
-                break;
+                PhysDerivTriImpl<9,8>(in, out_d0, out_d1); break;
             case 10:
-                PhysDerivTriImpl<10,9>(in, out_d0, out_d1);
-                break;
+                PhysDerivTriImpl<10,9>(in, out_d0, out_d1); break;
             case 11:
-                PhysDerivTriImpl<11,10>(in, out_d0, out_d1);
-                break;
+                PhysDerivTriImpl<11,10>(in, out_d0, out_d1); break;
             case 12:
-                PhysDerivTriImpl<12,11>(in, out_d0, out_d1);
-                break;
+                PhysDerivTriImpl<12,11>(in, out_d0, out_d1); break;
             case 13:
-                PhysDerivTriImpl<13,12>(in, out_d0, out_d1);
-                break;
+                PhysDerivTriImpl<13,12>(in, out_d0, out_d1); break;
             case 14:
-                PhysDerivTriImpl<14,13>(in, out_d0, out_d1);
-                break;
+                PhysDerivTriImpl<14,13>(in, out_d0, out_d1); break;
             case 15:
-                PhysDerivTriImpl<15,14>(in, out_d0, out_d1);
-                break;
+                PhysDerivTriImpl<15,14>(in, out_d0, out_d1); break;
             case 16:
-                PhysDerivTriImpl<16,15>(in, out_d0, out_d1);
-                break;
+                PhysDerivTriImpl<16,15>(in, out_d0, out_d1); break;
             case 17:
-                PhysDerivTriImpl<17,16>(in, out_d0, out_d1);
-                break;
+                PhysDerivTriImpl<17,16>(in, out_d0, out_d1); break;
             default: NEKERROR(ErrorUtil::efatal,
                 "PhysDerivTri: # of modes / points combo not implemented.");
         }
@@ -483,50 +467,43 @@ struct PhysDerivHex : public PhysDeriv, public Helper<3,DEFORMED>
                                   Array<OneD,       NekDouble> &out_d1,
                                   Array<OneD,       NekDouble> &out_d2) override
     {
+        // Check preconditions
+        ASSERTL0(m_basis[0]->GetNumPoints() == m_basis[1]->GetNumPoints() &&
+            m_basis[0]->GetNumPoints() == m_basis[2]->GetNumPoints(),
+            "MatrixFree op requires homogenous points");
+
         switch(m_basis[0]->GetNumPoints())
         {
             case 2:
-                PhysDerivHexImpl<2,2,2>(in, out_d0, out_d1, out_d2);
-                break;
+                PhysDerivHexImpl<2,2,2>(in, out_d0, out_d1, out_d2); break;
             case 3:
-                PhysDerivHexImpl<3,3,3>(in, out_d0, out_d1, out_d2);
-                break;
+                PhysDerivHexImpl<3,3,3>(in, out_d0, out_d1, out_d2); break;
             case 4:
-                PhysDerivHexImpl<4,4,4>(in, out_d0, out_d1, out_d2);
-                break;
+                PhysDerivHexImpl<4,4,4>(in, out_d0, out_d1, out_d2); break;
             case 5:
-                PhysDerivHexImpl<5,5,5>(in, out_d0, out_d1, out_d2);
-                break;
+                PhysDerivHexImpl<5,5,5>(in, out_d0, out_d1, out_d2); break;
             case 6:
-                PhysDerivHexImpl<6,6,6>(in, out_d0, out_d1, out_d2);
-                break;
+                PhysDerivHexImpl<6,6,6>(in, out_d0, out_d1, out_d2); break;
             case 7:
-                PhysDerivHexImpl<7,7,7>(in, out_d0, out_d1, out_d2);
-                break;
+                PhysDerivHexImpl<7,7,7>(in, out_d0, out_d1, out_d2); break;
             case 8:
-                PhysDerivHexImpl<8,8,8>(in, out_d0, out_d1, out_d2);
-                break;
+                PhysDerivHexImpl<8,8,8>(in, out_d0, out_d1, out_d2); break;
             case 9:
-                PhysDerivHexImpl<9,9,9>(in, out_d0, out_d1, out_d2);
-                break;
+                PhysDerivHexImpl<9,9,9>(in, out_d0, out_d1, out_d2); break;
             case 10:
-                PhysDerivHexImpl<10,10,10>(in, out_d0, out_d1, out_d2);
-                break;
+                PhysDerivHexImpl<10,10,10>(in, out_d0, out_d1, out_d2); break;
             case 11:
-                PhysDerivHexImpl<11,11,11>(in, out_d0, out_d1, out_d2);
-                break;
+                PhysDerivHexImpl<11,11,11>(in, out_d0, out_d1, out_d2); break;
             case 12:
-                PhysDerivHexImpl<12,12,12>(in, out_d0, out_d1, out_d2);
-                break;
+                PhysDerivHexImpl<12,12,12>(in, out_d0, out_d1, out_d2); break;
             case 13:
-                PhysDerivHexImpl<13,13,13>(in, out_d0, out_d1, out_d2);
-                break;
+                PhysDerivHexImpl<13,13,13>(in, out_d0, out_d1, out_d2); break;
             case 14:
-                PhysDerivHexImpl<14,14,14>(in, out_d0, out_d1, out_d2);
-                break;
+                PhysDerivHexImpl<14,14,14>(in, out_d0, out_d1, out_d2); break;
             case 15:
-                PhysDerivHexImpl<15,15,15>(in, out_d0, out_d1, out_d2);
-                break;
+                PhysDerivHexImpl<15,15,15>(in, out_d0, out_d1, out_d2); break;
+            case 16:
+                PhysDerivHexImpl<16,16,16>(in, out_d0, out_d1, out_d2); break;
             default: NEKERROR(ErrorUtil::efatal,
                 "PhysDerivHex: # of modes / points combo not implemented.");
         }
@@ -596,195 +573,203 @@ private:
 };
 
 
-// template<int VW, bool DEFORMED = false>
-// struct PhysDerivPrism : public PhysDeriv, public Helper<VW,3,DEFORMED>
-// {
-//     PhysDerivPrism(std::vector<LibUtilities::BasisSharedPtr> basis,
-//                       int nElmt)
-//         : PhysDeriv(basis, nElmt),
-//           Helper<VW, 3,DEFORMED>(basis, nElmt),
-//           m_nmTot(LibUtilities::StdPrismData::getNumberOfCoefficients(
-//                       this->m_nm[0], this->m_nm[1], this->m_nm[2]))
-//     {
-//     }
+template<bool DEFORMED = false>
+struct PhysDerivPrism : public PhysDeriv, public Helper<3, DEFORMED>
+{
+    PhysDerivPrism(std::vector<LibUtilities::BasisSharedPtr> basis,
+                      int nElmt)
+        : PhysDeriv(basis, nElmt),
+          Helper<3, DEFORMED>(basis, nElmt),
+          m_nmTot(LibUtilities::StdPrismData::getNumberOfCoefficients(
+                      this->m_nm[0], this->m_nm[1], this->m_nm[2]))
+    {
+    }
 
-//     static std::shared_ptr<Operator> Create(
-//         std::vector<LibUtilities::BasisSharedPtr> basis,
-//         int nElmt)
-//     {
-//         return std::make_shared<PhysDerivPrism<VW,DEFORMED>>(basis, nElmt);
-//     }
+    static std::shared_ptr<Operator> Create(
+        std::vector<LibUtilities::BasisSharedPtr> basis,
+        int nElmt)
+    {
+        return std::make_shared<PhysDerivPrism<DEFORMED>>(basis, nElmt);
+    }
 
-//     virtual NekDouble Ndof() override
-//     {
-//         return m_nmTot * this->m_nElmt;
-//     }
+    NekDouble Ndof() final
+    {
+        return m_nmTot * this->m_nElmt;
+    }
 
-//     static NekDouble FlopsPerElement(
-//         const int nq0,
-//         const int nq1,
-//         const int nq2)
-//     {
-//         //PhysDerivTensor
-//         int pdt0 = nq0 * nq1 * nq2 * nq0 * 2;
-//         int pdt1 = nq2 * nq0 * nq1 * nq1 * 2;
-//         int pdt2 = nq0 * nq1 * nq2 * nq2 * 2;
-//         int physDerivTensor = pdt0 + pdt1 + pdt2;
+    static NekDouble FlopsPerElement(
+        const int nq0,
+        const int nq1,
+        const int nq2)
+    {
+        //PhysDerivTensor
+        int pdt0 = nq0 * nq1 * nq2 * nq0 * 2;
+        int pdt1 = nq2 * nq0 * nq1 * nq1 * 2;
+        int pdt2 = nq0 * nq1 * nq2 * nq2 * 2;
+        int physDerivTensor = pdt0 + pdt1 + pdt2;
 
-//         //PhysDeriv
-//         int physDeriv = nq2*(2 + nq1*nq0*(20));
+        //PhysDeriv
+        int physDeriv = nq2*(2 + nq1*nq0*(20));
 
-//         return (physDeriv + physDerivTensor);
-//     }
+        return (physDeriv + physDerivTensor);
+    }
 
-//     virtual double GFlops() override
-//     {
-//         const int nq0 = m_basis[0]->GetNumPoints();
-//         const int nq1 = m_basis[1]->GetNumPoints();
-//         const int nq2 = m_basis[2]->GetNumPoints();
+    double GFlops() final
+    {
+        const int nq0 = m_basis[0]->GetNumPoints();
+        const int nq1 = m_basis[1]->GetNumPoints();
+        const int nq2 = m_basis[2]->GetNumPoints();
 
-//         int flops = m_nElmt * PhysDerivPrism::FlopsPerElement(nq0, nq1, nq2);
-//         return flops * 1e-9;
-//     }
+        int flops = m_nElmt * PhysDerivPrism::FlopsPerElement(nq0, nq1, nq2);
+        return flops * 1e-9;
+    }
 
-//     virtual NekDouble NLoads() override
-//     {
-//         const int nq0 = m_basis[0]->GetNumPoints();
-//         const int nq1 = m_basis[1]->GetNumPoints();
-//         const int nq2 = m_basis[2]->GetNumPoints();
+    NekDouble NLoads() final
+    {
+        const int nq0 = m_basis[0]->GetNumPoints();
+        const int nq1 = m_basis[1]->GetNumPoints();
+        const int nq2 = m_basis[2]->GetNumPoints();
 
-//         int load_d0 = nq0 * nq1 * nq2 * nq0 * 2;
-//         int load_d1 = nq2 * nq0 * nq1 * nq1 * 2;
-//         int load_d2 = nq0 * nq1 * nq2 * nq2 * 2;;
-//         int physDerivTensor = load_d0 + load_d1 + load_d2;
-//         int physDeriv = nq2 * (1 + nq1 * nq0 *4);
+        int load_d0 = nq0 * nq1 * nq2 * nq0 * 2;
+        int load_d1 = nq2 * nq0 * nq1 * nq1 * 2;
+        int load_d2 = nq0 * nq1 * nq2 * nq2 * 2;;
+        int physDerivTensor = load_d0 + load_d1 + load_d2;
+        int physDeriv = nq2 * (1 + nq1 * nq0 *4);
 
-//         return m_nElmt * (physDeriv + physDerivTensor);
+        return m_nElmt * (physDeriv + physDerivTensor);
 
-//     }
+    }
 
-//     virtual NekDouble NStores() override
-//     {
-//         const int nq0 = m_basis[0]->GetNumPoints();
-//         const int nq1 = m_basis[1]->GetNumPoints();
-//         const int nq2 = m_basis[2]->GetNumPoints();
+    NekDouble NStores() final
+    {
+        const int nq0 = m_basis[0]->GetNumPoints();
+        const int nq1 = m_basis[1]->GetNumPoints();
+        const int nq2 = m_basis[2]->GetNumPoints();
 
-//         int store_d0 = nq0 * nq1 * nq2;
-//         int store_d1 = nq2 * nq0 * nq1;
-//         int store_d2 = nq0 * nq1 * nq2;
-//         int physDerivTensor = store_d0 + store_d1 + store_d2;
-//         int physDeriv = nq2*nq1*nq0*3;
+        int store_d0 = nq0 * nq1 * nq2;
+        int store_d1 = nq2 * nq0 * nq1;
+        int store_d2 = nq0 * nq1 * nq2;
+        int physDerivTensor = store_d0 + store_d1 + store_d2;
+        int physDeriv = nq2*nq1*nq0*3;
 
-//         return m_nElmt * (physDeriv + physDerivTensor);
-//     }
+        return m_nElmt * (physDeriv + physDerivTensor);
+    }
 
-//     virtual void operator()(const Array<OneD, const NekDouble> &in,
-//                                 Array<OneD,       NekDouble> &out_d0,
-//                                 Array<OneD,       NekDouble> &out_d1) override
-//     {
-//         throw; //Only for 2D, but need to implement since its abstract
-//     }
+    void operator()(const Array<OneD, const NekDouble> &in,
+                          Array<OneD,       NekDouble> &out_d0,
+                          Array<OneD,       NekDouble> &out_d1) final
+    {
+        // Only for 2D, but need to implement since its abstract
+        boost::ignore_unused(in, out_d0, out_d1);
+        NEKERROR(ErrorUtil::efatal,
+                "Something went horribly wrong... calling 2D op for 3D element");
+    }
 
-//     virtual void operator()(const Array<OneD, const NekDouble> &in,
-//                                   Array<OneD,       NekDouble> &out_d0,
-//                                   Array<OneD,       NekDouble> &out_d1,
-//                                   Array<OneD,       NekDouble> &out_d2) override
-//     {
-//         switch(m_basis[0]->GetNumModes())
-//         {
-//             case 2:
-//                 PhysDerivPrismImpl<3,3,2>(in, out_d0, out_d1, out_d2);
-//                 break;
-//             case 3:
-//                 PhysDerivPrismImpl<4,4,3>(in, out_d0, out_d1, out_d2);
-//                 break;
-//             case 4:
-//                 PhysDerivPrismImpl<5,5,4>(in, out_d0, out_d1, out_d2);
-//                 break;
-//             case 5:
-//                 PhysDerivPrismImpl<6,6,5>(in, out_d0, out_d1, out_d2);
-//                 break;
-//             case 6:
-//                 PhysDerivPrismImpl<7,7,6>(in, out_d0, out_d1, out_d2);
-//                 break;
-//             case 7:
-//                 PhysDerivPrismImpl<8,8,7>(in, out_d0, out_d1, out_d2);
-//                 break;
-//             case 8:
-//                 PhysDerivPrismImpl<9,9,8>(in, out_d0, out_d1, out_d2);
-//                 break;
-//             case 9:
-//                 PhysDerivPrismImpl<10,10,9>(in, out_d0, out_d1, out_d2);
-//                 break;
-//             case 10:
-//                 PhysDerivPrismImpl<11,11,10>(in, out_d0, out_d1, out_d2);
-//                 break;
-//             case 11:
-//                 PhysDerivPrismImpl<12,12,11>(in, out_d0, out_d1, out_d2);
-//                 break;
-//             case 12:
-//                 PhysDerivPrismImpl<13,13,12>(in, out_d0, out_d1, out_d2);
-//                 break;
-//             case 13:
-//                 PhysDerivPrismImpl<14,14,13>(in, out_d0, out_d1, out_d2);
-//                 break;
-//             case 14:
-//                 PhysDerivPrismImpl<15,15,14>(in, out_d0, out_d1, out_d2);
-//                 break;
-//             case 15:
-//                 PhysDerivPrismImpl<16,16,15>(in, out_d0, out_d1, out_d2);
-//                 break;
-//             case 16:
-//                 PhysDerivPrismImpl<17,17,16>(in, out_d0, out_d1, out_d2);
-//                 break;
-//         }
-//     }
+    void operator()(const Array<OneD, const NekDouble> &in,
+                          Array<OneD,       NekDouble> &out_d0,
+                          Array<OneD,       NekDouble> &out_d1,
+                          Array<OneD,       NekDouble> &out_d2) final
+    {
+         // Check preconditions
+        ASSERTL0(m_basis[0]->GetNumPoints() == m_basis[1]->GetNumPoints() &&
+            m_basis[0]->GetNumPoints() == (m_basis[2]->GetNumPoints()+1),
+            "MatrixFree op requires homogenous points");
 
-//     template<int NQ0, int NQ1, int NQ2>
-//     void PhysDerivPrismImpl(
-//         const Array<OneD, const NekDouble> &input,
-//               Array<OneD,       NekDouble> &out_d0,
-//               Array<OneD,       NekDouble> &out_d1,
-//               Array<OneD,       NekDouble> &out_d2)
-//     {
-//         using T = VecData<double, VW>;
-//         const NekDouble *inptr = &input[0];
-//         NekDouble *outptr_d0 = &out_d0[0];
-//         NekDouble *outptr_d1 = &out_d1[0];
-//         NekDouble *outptr_d2 = &out_d2[0];
+        switch(m_basis[0]->GetNumPoints())
+        {
+            case 2:
+                PhysDerivPrismImpl<2,2,1>(in, out_d0, out_d1, out_d2); break;
+            case 3:
+                PhysDerivPrismImpl<3,3,2>(in, out_d0, out_d1, out_d2); break;
+            case 4:
+                PhysDerivPrismImpl<4,4,3>(in, out_d0, out_d1, out_d2); break;
+            case 5:
+                PhysDerivPrismImpl<5,5,4>(in, out_d0, out_d1, out_d2); break;
+            case 6:
+                PhysDerivPrismImpl<6,6,5>(in, out_d0, out_d1, out_d2); break;
+            case 7:
+                PhysDerivPrismImpl<7,7,6>(in, out_d0, out_d1, out_d2); break;
+            case 8:
+                PhysDerivPrismImpl<8,8,7>(in, out_d0, out_d1, out_d2); break;
+            case 9:
+                PhysDerivPrismImpl<9,9,8>(in, out_d0, out_d1, out_d2); break;
+            case 10:
+                PhysDerivPrismImpl<10,10,9>(in, out_d0, out_d1, out_d2); break;
+            case 11:
+                PhysDerivPrismImpl<11,11,10>(in, out_d0, out_d1, out_d2); break;
+            case 12:
+                PhysDerivPrismImpl<12,12,11>(in, out_d0, out_d1, out_d2); break;
+            case 13:
+                PhysDerivPrismImpl<13,13,12>(in, out_d0, out_d1, out_d2); break;
+            case 14:
+                PhysDerivPrismImpl<14,14,13>(in, out_d0, out_d1, out_d2); break;
+            case 15:
+                PhysDerivPrismImpl<15,15,14>(in, out_d0, out_d1, out_d2); break;
+            case 16:
+                PhysDerivPrismImpl<16,16,15>(in, out_d0, out_d1, out_d2); break;
+            default: NEKERROR(ErrorUtil::efatal,
+                "PhysDerivPrism: # of modes / points combo not implemented.");
 
-//         constexpr int nqBlocks = NQ0 * NQ1 * NQ2 * VW;
-//         constexpr int ndf = 9;
-//         constexpr int nq = NQ0*NQ1*NQ2;
+        }
+    }
 
-//         const VecData<double, VW> *df_ptr;
+    template<int NQ0, int NQ1, int NQ2>
+    void PhysDerivPrismImpl(
+        const Array<OneD, const NekDouble> &input,
+              Array<OneD,       NekDouble> &out_d0,
+              Array<OneD,       NekDouble> &out_d1,
+              Array<OneD,       NekDouble> &out_d2)
+    {
 
-//         for(int e = 0; e < this->m_nBlocks; e++){
+        const auto* inptr = &input[0];
+        auto* outptr_d0 = &out_d0[0];
+        auto* outptr_d1 = &out_d1[0];
+        auto* outptr_d2 = &out_d2[0];
 
-//             if(DEFORMED){
-//                 df_ptr = &(this->m_df[e*ndf*nq]);
-//             }
-//             else{
-//                 df_ptr = &(this->m_df[e*ndf]);
-//             }
+        constexpr auto ndf = 9;
+        constexpr auto nqTot = NQ0 * NQ1 * NQ2;
+        constexpr auto nqBlocks = nqTot * vec_t::width;
 
-//             PhysDerivPrismKernel<NQ0, NQ1, NQ2, VW,DEFORMED>(
-//                 inptr,
-//                 this->m_Z[0], this->m_Z[1], this->m_Z[2],
-//                 this->m_D[0], this->m_D[1], this->m_D[2],
-//                 df_ptr,
-//                 outptr_d0, outptr_d1, outptr_d2);
+        // Get size of derivative factor block
+        auto dfSize = ndf;
+        if (DEFORMED)
+        {
+            dfSize *= nqTot;
+        }
 
-//             inptr += nqBlocks;
-//             outptr_d0 += nqBlocks;
-//             outptr_d1 += nqBlocks;
-//             outptr_d2 += nqBlocks;
-//         }
-//     }
-// private:
-//     int m_nmTot;
+        std::vector<vec_t, allocator<vec_t>> tmpIn(nqTot), tmpOut_d0(nqTot),
+            tmpOut_d1(nqTot), tmpOut_d2(nqTot);
+        const vec_t* df_ptr;
+        for (int e = 0; e < this->m_nBlocks; ++e)
+        {
 
-// };
+            df_ptr = &(this->m_df[e*dfSize]);
+
+            // Load and transpose data
+            load_interleave(inptr, nqTot, tmpIn);
+
+            PhysDerivPrismKernel<NQ0, NQ1, NQ2, DEFORMED>(
+                tmpIn,
+                this->m_Z[0], this->m_Z[1], this->m_Z[2],
+                this->m_D[0], this->m_D[1], this->m_D[2],
+                df_ptr,
+                tmpOut_d1, tmpOut_d1, tmpOut_d2);
+
+            // de-interleave and store data
+            deinterleave_store(tmpOut_d0, nqTot, outptr_d0);
+            deinterleave_store(tmpOut_d1, nqTot, outptr_d1);
+            deinterleave_store(tmpOut_d2, nqTot, outptr_d2);
+
+            inptr += nqBlocks;
+            outptr_d0 += nqBlocks;
+            outptr_d1 += nqBlocks;
+            outptr_d2 += nqBlocks;
+        }
+    }
+private:
+    int m_nmTot;
+
+};
 
 // template<int VW, bool DEFORMED = false>
 // struct PhysDerivTet : public PhysDeriv, public Helper<VW,3, DEFORMED>

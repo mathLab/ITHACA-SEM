@@ -30,11 +30,11 @@ std::string __register_PhysDeriv_Hex = GetOperatorFactory().RegisterCreatorFunct
 std::string __register_PhysDeriv_Hex_Deformed = GetOperatorFactory().RegisterCreatorFunction(
     std::string("PhysDeriv_Hex_Deformed"), &PhysDerivHex<true>::Create);
 
-// std::string __register_PhysDeriv_Prism = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("PhysDeriv_Prism_Regular"), &PhysDerivPrism<4>::Create);
+std::string __register_PhysDeriv_Prism = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("PhysDeriv_Prism_Regular"), &PhysDerivPrism<>::Create);
 
-// std::string __register_PhysDeriv_Prism_Deformed = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("PhysDeriv_Prism_Deformed"), &PhysDerivPrism<4, true>::Create);
+std::string __register_PhysDeriv_Prism_Deformed = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("PhysDeriv_Prism_Deformed"), &PhysDerivPrism<true>::Create);
 
 } // namespace MatrixFree
 } // namespace Nektar

@@ -40,7 +40,7 @@ template <> struct avx2<double> { using type = avx2Double4; };
 
 } // namespace abi
 
-// concrete types, could add enable if to allow only unsigned long and long...
+// concrete types, could add enable if to allow only unsigned int and int...
 template<typename T>
 struct avx2Int8
 {

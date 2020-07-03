@@ -137,8 +137,15 @@ namespace SimdLibTests
         BOOST_CHECK_EQUAL(has_alignment<double>::value, false);
         BOOST_CHECK_EQUAL(has_alignment<vec_t>::value, true);
 
+        BOOST_CHECK_EQUAL(has_scalarType<double>::value, false);
+        BOOST_CHECK_EQUAL(has_scalarType<vec_t>::value, true);
+
         BOOST_CHECK_EQUAL(is_vector<double>::value, false);
         BOOST_CHECK_EQUAL(is_vector<vec_t>::value, true);
+
+        BOOST_CHECK_EQUAL(is_vector_floating_point<double>::value, false);
+        BOOST_CHECK_EQUAL(is_vector_floating_point<simd<int>>::value, false);
+        BOOST_CHECK_EQUAL(is_vector_floating_point<vec_t>::value, true);
     }
 
     BOOST_AUTO_TEST_CASE(SimdLib_mem_size)

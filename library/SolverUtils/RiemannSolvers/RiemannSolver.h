@@ -38,9 +38,11 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <LibUtilities/SimdLib/traits.hpp>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
 #include <string>
+
 
 namespace Nektar
 {
@@ -207,7 +209,12 @@ namespace Nektar
         SOLVER_UTILS_EXPORT RiemannSolverFactory& GetRiemannSolverFactory();
 
 
-        template<class T>
+        template <class T, typename = typename std::enable_if
+            <
+                std::is_floating_point<T>::value ||
+                tinysimd::is_vector_floating_point<T>::value
+            >::type
+        >
         inline void rotateToNormalKernel(T* in, T* rotMat, T* out)
         {
 
@@ -225,7 +232,12 @@ namespace Nektar
                    + in[2] * rotMat[8];
         }
 
-        template<class T>
+        template <class T, typename = typename std::enable_if
+            <
+                std::is_floating_point<T>::value ||
+                tinysimd::is_vector_floating_point<T>::value
+            >::type
+        >
         inline void rotateFromNormalKernel(T* in, T* rotMat, T* out)
         {
 

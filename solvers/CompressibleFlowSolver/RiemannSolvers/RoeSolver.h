@@ -70,7 +70,12 @@ protected:
               Array<OneD,       Array<OneD, ND> > &flux) final;
 };
 
-template<class T>
+template <class T, typename = typename std::enable_if
+    <
+        std::is_floating_point<T>::value ||
+        tinysimd::is_vector_floating_point<T>::value
+    >::type
+>
 inline void RoeKernel(
     T& rhoL, T& rhouL, T& rhovL, T& rhowL, T& EL,
     T& rhoR, T& rhouR, T& rhovR, T& rhowR, T& ER,

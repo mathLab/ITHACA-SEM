@@ -721,10 +721,10 @@ struct PhysDerivPrism : public PhysDeriv, public Helper<3, DEFORMED>
               Array<OneD,       NekDouble> &out_d2)
     {
 
-        const auto* inptr = &input[0];
-        auto* outptr_d0 = &out_d0[0];
-        auto* outptr_d1 = &out_d1[0];
-        auto* outptr_d2 = &out_d2[0];
+        const auto* inptr = input.data();
+        auto* outptr_d0 = out_d0.data();
+        auto* outptr_d1 = out_d1.data();
+        auto* outptr_d2 = out_d2.data();
 
         constexpr auto ndf = 9;
         constexpr auto nqTot = NQ0 * NQ1 * NQ2;
@@ -753,7 +753,7 @@ struct PhysDerivPrism : public PhysDeriv, public Helper<3, DEFORMED>
                 this->m_Z[0], this->m_Z[1], this->m_Z[2],
                 this->m_D[0], this->m_D[1], this->m_D[2],
                 df_ptr,
-                tmpOut_d1, tmpOut_d1, tmpOut_d2);
+                tmpOut_d0, tmpOut_d1, tmpOut_d2);
 
             // de-interleave and store data
             deinterleave_store(tmpOut_d0, nqTot, outptr_d0);

@@ -11,7 +11,6 @@ std::string __register_PhysDeriv_Quad = GetOperatorFactory().RegisterCreatorFunc
 std::string __register_PhysDeriv_Quad_Deformed = GetOperatorFactory().RegisterCreatorFunction(
     std::string("PhysDeriv_Quad_Deformed"), &PhysDerivQuad<true>::Create);
 
-
 std::string __register_PhysDeriv_Tri = GetOperatorFactory().RegisterCreatorFunction(
     std::string("PhysDeriv_Tri_Regular"), &PhysDerivTri<>::Create);
 

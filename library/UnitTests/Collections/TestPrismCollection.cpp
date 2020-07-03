@@ -1991,6 +1991,8 @@ namespace Nektar
         double epsilon = 1.0e-8;
         for(int i = 0; i < diffRef.size(); ++i)
         {
+            diffRef[i] = (std::abs(diffRef[i]) < 1e-14)? 0.0: diffRef[i];
+            diff[i] = (std::abs(diff[i]) < 1e-14)? 0.0: diff[i];
             BOOST_CHECK_CLOSE(diffRef[i], diff[i], epsilon);
         }
     }

@@ -23,11 +23,11 @@ std::string __register_IProductWRTDerivBase_Tri_Deformed = GetOperatorFactory().
 // std::string __register_IProductWRTDerivBase_Tet_Deformed = GetOperatorFactory().RegisterCreatorFunction(
 //     std::string("IProductWRTDerivBase_Tet_Deformed"), &IProductWRTDerivBaseTet<4, true>::Create);
 
-// std::string __register_IProductWRTDerivBase_Prism = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("IProductWRTDerivBase_Prism_Regular"), &IProductWRTDerivBasePrism<4>::Create);
+std::string __register_IProductWRTDerivBase_Prism = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("IProductWRTDerivBase_Prism_Regular"), &IProductWRTDerivBasePrism<>::Create);
 
-// std::string __register_IProductWRTDerivBase_Prism_Deformed = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("IProductWRTDerivBase_Prism_Deformed"), &IProductWRTDerivBasePrism<4, true>::Create);
+std::string __register_IProductWRTDerivBase_Prism_Deformed = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("IProductWRTDerivBase_Prism_Deformed"), &IProductWRTDerivBasePrism<true>::Create);
 
 std::string __register_IProductWRTDerivBase_Hex = GetOperatorFactory().RegisterCreatorFunction(
     std::string("IProductWRTDerivBase_Hex_Regular"), &IProductWRTDerivBaseHex<>::Create);

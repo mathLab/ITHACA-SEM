@@ -26,6 +26,8 @@ ADD_NEKTAR_EXECUTABLE(Deriv3DHomo1D
     COMPONENT demos DEPENDS MultiRegions SOURCES Deriv3DHomo1D.cpp)
 ADD_NEKTAR_EXECUTABLE(Deriv3DHomo2D
     COMPONENT demos DEPENDS MultiRegions SOURCES Deriv3DHomo2D.cpp)
+ADD_NEKTAR_EXECUTABLE(Int3DHomo1D
+    COMPONENT demos DEPENDS MultiRegions SOURCES Int3Dhomo1D.cpp)
 ADD_NEKTAR_EXECUTABLE(SteadyAdvectionDiffusionReaction2D
     COMPONENT demos DEPENDS MultiRegions SOURCES SteadyAdvectionDiffusionReaction2D.cpp)
 
@@ -79,6 +81,7 @@ ADD_NEKTAR_TEST(Helmholtz3D_HDG_Tet)
 ADD_NEKTAR_TEST(LinearAdvDiffReact2D_P7_Modes)
 ADD_NEKTAR_TEST(Deriv3D_Homo1D)
 ADD_NEKTAR_TEST(Deriv3D_Homo2D)
+ADD_NEKTAR_TEST(Int3D_Homo1D)
 
 # Tests exclusively for multi-level static condensation (which will not run
 # using Windows).

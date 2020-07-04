@@ -27,7 +27,7 @@ ADD_NEKTAR_EXECUTABLE(Deriv3DHomo1D
 ADD_NEKTAR_EXECUTABLE(Deriv3DHomo2D
     COMPONENT demos DEPENDS MultiRegions SOURCES Deriv3DHomo2D.cpp)
 ADD_NEKTAR_EXECUTABLE(Int3DHomo1D
-    COMPONENT demos DEPENDS MultiRegions SOURCES Int3Dhomo1D.cpp)
+    COMPONENT demos DEPENDS MultiRegions SOURCES Int3DHomo1D.cpp)
 ADD_NEKTAR_EXECUTABLE(SteadyAdvectionDiffusionReaction2D
     COMPONENT demos DEPENDS MultiRegions SOURCES SteadyAdvectionDiffusionReaction2D.cpp)
 

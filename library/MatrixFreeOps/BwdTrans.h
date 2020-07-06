@@ -550,7 +550,7 @@ struct BwdTransHex : public BwdTrans, public Helper<3>
         return (loop_i + loop_j + loop_k);
     }
 
-    virtual NekDouble GFlops() override
+    NekDouble GFlops() final
     {
         const int nm = m_basis[0]->GetNumModes();
         const int nq0 = m_basis[0]->GetNumPoints();
@@ -561,12 +561,12 @@ struct BwdTransHex : public BwdTrans, public Helper<3>
         return flops * 1e-9;
     }
 
-    virtual NekDouble Ndof()
+    NekDouble Ndof()
     {
         return m_nmTot * this->m_nElmt;
     }
 
-    virtual NekDouble NLoads() override
+    NekDouble NLoads() final
     {
         const int nm0 = m_basis[0]->GetNumModes();
         const int nm1 = m_basis[1]->GetNumModes();
@@ -583,7 +583,7 @@ struct BwdTransHex : public BwdTrans, public Helper<3>
         return load_expected * m_nElmt;
     }
 
-    virtual NekDouble NStores() override
+    NekDouble NStores() final
     {
         // const int nm0 = m_basis[0]->GetNumModes();
         const int nm1 = m_basis[1]->GetNumModes();
@@ -600,7 +600,7 @@ struct BwdTransHex : public BwdTrans, public Helper<3>
         return store_expected * m_nElmt;
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &in,
+    void operator()(const Array<OneD, const NekDouble> &in,
                                   Array<OneD,       NekDouble> &out) final
     {
         switch(m_basis[0]->GetNumModes())
@@ -736,154 +736,380 @@ private:
     int m_nmTot;
 };
 
-// template<int VW>
-// struct BwdTransTet : public BwdTrans, public Helper<VW, 3>
-// {
-//     AVXBwdTransTet(std::vector<LibUtilities::BasisSharedPtr> basis,
-//                    int nElmt)
-//     : BwdTrans(basis, nElmt),
-//         Helper<VW, 3>(basis, nElmt),
-//         m_nmTot(LibUtilities::StdTetData::getNumberOfCoefficients(
-//                     this->m_nm[0], this->m_nm[1], this->m_nm[2]))
-//     {
-//     }
+struct BwdTransTet : public BwdTrans, public Helper<3>
+{
+    BwdTransTet(std::vector<LibUtilities::BasisSharedPtr> basis,
+                   int nElmt)
+    : BwdTrans(basis, nElmt),
+        Helper<3>(basis, nElmt),
+        m_nmTot(LibUtilities::StdTetData::getNumberOfCoefficients(
+                    this->m_nm[0], this->m_nm[1], this->m_nm[2]))
+    {
+    }
 
-//     static std::shared_ptr<Operator> Create(
-//         std::vector<LibUtilities::BasisSharedPtr> basis,
-//         int nElmt)
-//     {
-//         return std::make_shared<AVXBwdTransTet<VW>>(basis, nElmt);
-//     }
+    static std::shared_ptr<Operator> Create(
+        std::vector<LibUtilities::BasisSharedPtr> basis,
+        int nElmt)
+    {
+        return std::make_shared<BwdTransTet>(basis, nElmt);
+    }
 
-//     static NekDouble FlopsPerElement(
-//         const int nm,
-//         const int nq0,
-//         const int nq1,
-//         const int nq2)
-//     {
-//         int pqr_loop = 2.0 * nm*(nm+1)*(nm+2) / 6;
-//         int pq_loop = 2.0 * nm*(nm+1) / 2;
-//         int i_loop = 2.0 * nm + 8 + 4*(nm - 1);
+    static NekDouble FlopsPerElement(
+        const int nm,
+        const int nq0,
+        const int nq1,
+        const int nq2)
+    {
+        int pqr_loop = 2.0 * nm*(nm+1)*(nm+2) / 6;
+        int pq_loop = 2.0 * nm*(nm+1) / 2;
+        int i_loop = 2.0 * nm + 8 + 4*(nm - 1);
 
-//         return ( nq2 * (pqr_loop + nq1*(pq_loop + nq0*(i_loop) )) );
-//     }
+        return ( nq2 * (pqr_loop + nq1*(pq_loop + nq0*(i_loop) )) );
+    }
 
-//     virtual NekDouble GFlops() override
-//     {
-//         const int nm = m_basis[0]->GetNumModes();
-//         const int nq0 = m_basis[0]->GetNumPoints();
-//         const int nq1 = m_basis[1]->GetNumPoints();
-//         const int nq2 = m_basis[2]->GetNumPoints();
+    NekDouble GFlops() final
+    {
+        const int nm = m_basis[0]->GetNumModes();
+        const int nq0 = m_basis[0]->GetNumPoints();
+        const int nq1 = m_basis[1]->GetNumPoints();
+        const int nq2 = m_basis[2]->GetNumPoints();
 
-//         int flop_estimate = m_nElmt * AVXBwdTransTet::FlopsPerElement(nm, nq0, nq1, nq2);
-//         return flop_estimate * 1e-9; //Convert to gigaflops.
-//     }
+        int flop_estimate = m_nElmt * BwdTransTet::FlopsPerElement(nm, nq0, nq1, nq2);
+        return flop_estimate * 1e-9; //Convert to gigaflops.
+    }
 
-//     virtual NekDouble Ndof() override
-//     {
-//         return m_nmTot * this->m_nElmt;
-//     }
+    NekDouble Ndof() final
+    {
+        return m_nmTot * this->m_nElmt;
+    }
 
-//     virtual NekDouble NLoads() override
-//     {
-//         const int nm0 = m_basis[0]->GetNumModes();
-//         const int nm1 = m_basis[1]->GetNumModes();
-//         // const int nm2 = m_basis[2]->GetNumModes();
-//         const int nq0 = m_basis[0]->GetNumPoints();
-//         const int nq1 = m_basis[1]->GetNumPoints();
-//         const int nq2 = m_basis[2]->GetNumPoints();
+    NekDouble NLoads() final
+    {
+        const int nm0 = m_basis[0]->GetNumModes();
+        const int nm1 = m_basis[1]->GetNumModes();
+        // const int nm2 = m_basis[2]->GetNumModes();
+        const int nq0 = m_basis[0]->GetNumPoints();
+        const int nq1 = m_basis[1]->GetNumPoints();
+        const int nq2 = m_basis[2]->GetNumPoints();
 
-//         int load_kpqr = nq2 * (nm0*(nm0+1)/2) * nm1 * 2;
-//         int load_kjpq = nq2 * nq1 * nm0 * nm1 * 2;
-//         int load_kjip = nq2 * nq1 * nq0 * nm0 * 2;
-//         int corr = nq2 * nq1 * nq0 * (2 + nm1*2);
-//         int load_expected = load_kpqr + load_kjpq + load_kjip + corr;
+        int load_kpqr = nq2 * (nm0*(nm0+1)/2) * nm1 * 2;
+        int load_kjpq = nq2 * nq1 * nm0 * nm1 * 2;
+        int load_kjip = nq2 * nq1 * nq0 * nm0 * 2;
+        int corr = nq2 * nq1 * nq0 * (2 + nm1*2);
+        int load_expected = load_kpqr + load_kjpq + load_kjip + corr;
 
-//         return load_expected * m_nElmt;
-//     }
+        return load_expected * m_nElmt;
+    }
 
-//     virtual NekDouble NStores() override
-//     {
-//         const int nm0 = m_basis[0]->GetNumModes();
-//         const int nm1 = m_basis[1]->GetNumModes();
-//         // const int nm2 = m_basis[2]->GetNumModes();
-//         const int nq0 = m_basis[0]->GetNumPoints();
-//         const int nq1 = m_basis[1]->GetNumPoints();
-//         const int nq2 = m_basis[2]->GetNumPoints();
+    NekDouble NStores() final
+    {
+        const int nm0 = m_basis[0]->GetNumModes();
+        const int nm1 = m_basis[1]->GetNumModes();
+        // const int nm2 = m_basis[2]->GetNumModes();
+        const int nq0 = m_basis[0]->GetNumPoints();
+        const int nq1 = m_basis[1]->GetNumPoints();
+        const int nq2 = m_basis[2]->GetNumPoints();
 
-//         int store_kpq = nq2 * nm0 * nm1;
-//         int store_kjp = nq2 * nq1 * nm0;
-//         int store_kji = nq2 * nq1 * nq0;
-//         int store_expected = store_kpq + store_kjp + store_kji;
+        int store_kpq = nq2 * nm0 * nm1;
+        int store_kjp = nq2 * nq1 * nm0;
+        int store_kji = nq2 * nq1 * nq0;
+        int store_expected = store_kpq + store_kjp + store_kji;
 
-//         return store_expected * m_nElmt;
-//     }
+        return store_expected * m_nElmt;
+    }
 
-//     virtual void operator()(const Array<OneD, const NekDouble> &in,
-//                                     Array<OneD,       NekDouble> &out)
-//     {
-//         if (m_basis[0]->GetBasisType() == LibUtilities::eModified_A)
-//         {
-//             switch(m_basis[0]->GetNumModes())
-//             {
-//                 case 2:  AVXBwdTransTetImpl<2 ,2 ,2 ,3 ,2 ,2 ,true>(in, out); break;
-//                 case 3:  AVXBwdTransTetImpl<3 ,3 ,3 ,4 ,3 ,3 ,true>(in, out); break;
-//                 case 4:  AVXBwdTransTetImpl<4 ,4 ,4 ,5 ,4 ,4 ,true>(in, out); break;
-//                 case 5:  AVXBwdTransTetImpl<5 ,5 ,5 ,6 ,5 ,5 ,true>(in, out); break;
-//                 case 6:  AVXBwdTransTetImpl<6 ,6 ,6 ,7 ,6 ,6 ,true>(in, out); break;
-//                 case 7:  AVXBwdTransTetImpl<7 ,7 ,7 ,8 ,7 ,7 ,true>(in, out); break;
-//                 case 8:  AVXBwdTransTetImpl<8 ,8 ,8 ,9 ,8 ,8 ,true>(in, out); break;
-//                 case 9:  AVXBwdTransTetImpl<9 ,9 ,9 ,10,9 ,9 ,true>(in, out); break;
-//                 case 10: AVXBwdTransTetImpl<10,10,10,11,10,10,true>(in, out); break;
-//                 case 11: AVXBwdTransTetImpl<11,11,11,12,11,11,true>(in, out); break;
-//             }
-//         }
-//         else
-//         {
-//             switch(m_basis[0]->GetNumModes())
-//             {
-//                 case 2:  AVXBwdTransTetImpl<2 ,2 ,2 ,3 ,2 ,2 ,false>(in, out); break;
-//                 case 3:  AVXBwdTransTetImpl<3 ,3 ,3 ,4 ,3 ,3 ,false>(in, out); break;
-//                 case 4:  AVXBwdTransTetImpl<4 ,4 ,4 ,5 ,4 ,4 ,false>(in, out); break;
-//                 case 5:  AVXBwdTransTetImpl<5 ,5 ,5 ,6 ,5 ,5 ,false>(in, out); break;
-//                 case 6:  AVXBwdTransTetImpl<6 ,6 ,6 ,7 ,6 ,6 ,false>(in, out); break;
-//                 case 7:  AVXBwdTransTetImpl<7 ,7 ,7 ,8 ,7 ,7 ,false>(in, out); break;
-//                 case 8:  AVXBwdTransTetImpl<8 ,8 ,8 ,9 ,8 ,8 ,false>(in, out); break;
-//                 case 9:  AVXBwdTransTetImpl<9 ,9 ,9 ,10,9 ,9 ,false>(in, out); break;
-//                 case 10: AVXBwdTransTetImpl<10,10,10,11,10,10,false>(in, out); break;
-//                 case 11: AVXBwdTransTetImpl<11,11,11,12,11,11,false>(in, out); break;
-//             }
-//         }
-//     }
+    void operator()(const Array<OneD, const NekDouble> &in,
+        Array<OneD, NekDouble> &out) final
+    {
+        // Check preconditions
+        ASSERTL0(m_basis[0]->GetNumModes() == m_basis[1]->GetNumModes() &&
+            m_basis[0]->GetNumModes() == m_basis[2]->GetNumModes() &&
+            m_basis[0]->GetNumPoints() == m_basis[1]->GetNumPoints()+1 &&
+            m_basis[0]->GetNumPoints() == m_basis[2]->GetNumPoints()+1,
+            "MatrixFree requires homogenous modes/points");
 
-//     template<int NM0, int NM1, int NM2, int NQ0, int NQ1, int NQ2, bool CORRECT>
-//     void AVXBwdTransTetImpl(
-//         const Array<OneD, const NekDouble> &input,
-//               Array<OneD,       NekDouble> &output)
-//     {
-//         using T = VecData<double, VW>;
-//         auto *inptr = &input[0];
-//         auto *outptr = &output[0];
+        if (m_basis[0]->GetBasisType() == LibUtilities::eModified_A)
+        {
+            switch(m_basis[0]->GetNumModes())
+            {
+                case 2: switch(m_basis[0]->GetNumPoints())
+                {
+                    case 3: BwdTransTetImpl<2, 2, 2, 3, 2, 2, true>
+                        (in, out); break;
+                    case 4: BwdTransTetImpl<2, 2, 2, 4, 3, 3, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransTet: # of modes / points combo not implemented.");
+                } break;
+            case 3:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 4: BwdTransTetImpl<3, 3, 3, 4, 3, 3, true>
+                        (in, out); break;
+                    case 5: BwdTransTetImpl<3, 3, 3, 5, 4, 4, true>
+                        (in, out); break;
+                    case 6: BwdTransTetImpl<3, 3, 3, 6, 5, 5, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransTet: # of modes / points combo not implemented.");
+                } break;
+            case 4:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 5: BwdTransTetImpl<4, 4, 4, 5, 4, 4, true>
+                        (in, out); break;
+                    case 6: BwdTransTetImpl<4, 4, 4, 6, 5, 5, true>
+                        (in, out); break;
+                    case 7: BwdTransTetImpl<4, 4, 4, 7, 6, 6, true>
+                        (in, out); break;
+                    case 8: BwdTransTetImpl<4, 4, 4, 8, 7, 7, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransTet: # of modes / points combo not implemented.");
+                } break;
+            case 5:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 6: BwdTransTetImpl<5, 5, 5, 6, 5, 5, true>
+                        (in, out); break;
+                    case 7: BwdTransTetImpl<5, 5, 5, 7, 6, 6, true>
+                        (in, out); break;
+                    case 8: BwdTransTetImpl<5, 5, 5, 8, 7, 7, true>
+                        (in, out); break;
+                    case 9: BwdTransTetImpl<5, 5, 5, 9, 8, 8, true>
+                        (in, out); break;
+                    case 10: BwdTransTetImpl<5, 5, 5, 10, 9, 9, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransTet: # of modes / points combo not implemented.");
+                } break;
+            case 6:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 7: BwdTransTetImpl<6, 6, 6, 7, 6, 6, true>
+                        (in, out); break;
+                    case 8: BwdTransTetImpl<6, 6, 6, 8, 7, 7, true>
+                        (in, out); break;
+                    case 9: BwdTransTetImpl<6, 6, 6, 9, 8, 8, true>
+                        (in, out); break;
+                    case 10: BwdTransTetImpl<6, 6, 6, 10, 9, 9, true>
+                        (in, out); break;
+                    case 11: BwdTransTetImpl<6, 6, 6, 11, 10, 10, true>
+                        (in, out); break;
+                    case 12: BwdTransTetImpl<6, 6, 6, 12, 11, 11, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransTet: # of modes / points combo not implemented.");
+                } break;
+            case 7:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 8: BwdTransTetImpl<7, 7, 7, 8, 7, 7, true>
+                        (in, out); break;
+                    case 9: BwdTransTetImpl<7, 7, 7, 9, 8, 8, true>
+                        (in, out); break;
+                    case 10: BwdTransTetImpl<7, 7, 7, 10, 9, 9, true>
+                        (in, out); break;
+                    case 11: BwdTransTetImpl<7, 7, 7, 11, 10, 10, true>
+                        (in, out); break;
+                    case 12: BwdTransTetImpl<7, 7, 7, 12, 11, 11, true>
+                        (in, out); break;
+                    case 13: BwdTransTetImpl<7, 7, 7, 13, 12, 12, true>
+                        (in, out); break;
+                    case 14: BwdTransTetImpl<7, 7, 7, 14, 13, 13, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransTet: # of modes / points combo not implemented.");
+                } break;
+            case 8:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 9: BwdTransTetImpl<8, 8, 8, 9, 8, 8, true>
+                        (in, out); break;
+                    case 10: BwdTransTetImpl<8, 8, 8, 10, 9, 9, true>
+                        (in, out); break;
+                    case 11: BwdTransTetImpl<8, 8, 8, 11, 10, 10, true>
+                        (in, out); break;
+                    case 12: BwdTransTetImpl<8, 8, 8, 12, 11, 11, true>
+                        (in, out); break;
+                    case 13: BwdTransTetImpl<8, 8, 8, 13, 12, 12, true>
+                        (in, out); break;
+                    case 14: BwdTransTetImpl<8, 8, 8, 14, 13, 13, true>
+                        (in, out); break;
+                    case 15: BwdTransTetImpl<8, 8, 8, 15, 14, 14, true>
+                        (in, out); break;
+                    case 16: BwdTransTetImpl<8, 8, 8, 16, 15, 15, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransTet: # of modes / points combo not implemented.");
+                } break;
+            default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransTet: # of modes / points combo not implemented.");
 
-//         constexpr int nqBlocks = NQ0 * NQ1 * NQ2 * VW;
-//         const int nmBlocks = m_nmTot * VW;
+            }
+        }
+        else
+        {
+            switch(m_basis[0]->GetNumModes())
+            {
+                case 2: switch(m_basis[0]->GetNumPoints())
+                {
+                    case 3: BwdTransTetImpl<2, 2, 2, 3, 2, 2, false>
+                        (in, out); break;
+                    case 4: BwdTransTetImpl<2, 2, 2, 4, 3, 3, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransTet: # of modes / points combo not implemented.");
+                } break;
+            case 3:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 4: BwdTransTetImpl<3, 3, 3, 4, 3, 3, false>
+                        (in, out); break;
+                    case 5: BwdTransTetImpl<3, 3, 3, 5, 4, 4, false>
+                        (in, out); break;
+                    case 6: BwdTransTetImpl<3, 3, 3, 6, 5, 5, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransTet: # of modes / points combo not implemented.");
+                } break;
+            case 4:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 5: BwdTransTetImpl<4, 4, 4, 5, 4, 4, false>
+                        (in, out); break;
+                    case 6: BwdTransTetImpl<4, 4, 4, 6, 5, 5, false>
+                        (in, out); break;
+                    case 7: BwdTransTetImpl<4, 4, 4, 7, 6, 6, false>
+                        (in, out); break;
+                    case 8: BwdTransTetImpl<4, 4, 4, 8, 7, 7, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransTet: # of modes / points combo not implemented.");
+                } break;
+            case 5:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 6: BwdTransTetImpl<5, 5, 5, 6, 5, 5, false>
+                        (in, out); break;
+                    case 7: BwdTransTetImpl<5, 5, 5, 7, 6, 6, false>
+                        (in, out); break;
+                    case 8: BwdTransTetImpl<5, 5, 5, 8, 7, 7, false>
+                        (in, out); break;
+                    case 9: BwdTransTetImpl<5, 5, 5, 9, 8, 8, false>
+                        (in, out); break;
+                    case 10: BwdTransTetImpl<5, 5, 5, 10, 9, 9, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransTet: # of modes / points combo not implemented.");
+                } break;
+            case 6:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 7: BwdTransTetImpl<6, 6, 6, 7, 6, 6, false>
+                        (in, out); break;
+                    case 8: BwdTransTetImpl<6, 6, 6, 8, 7, 7, false>
+                        (in, out); break;
+                    case 9: BwdTransTetImpl<6, 6, 6, 9, 8, 8, false>
+                        (in, out); break;
+                    case 10: BwdTransTetImpl<6, 6, 6, 10, 9, 9, false>
+                        (in, out); break;
+                    case 11: BwdTransTetImpl<6, 6, 6, 11, 10, 10, false>
+                        (in, out); break;
+                    case 12: BwdTransTetImpl<6, 6, 6, 12, 11, 11, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransTet: # of modes / points combo not implemented.");
+                } break;
+            case 7:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 8: BwdTransTetImpl<7, 7, 7, 8, 7, 7, false>
+                        (in, out); break;
+                    case 9: BwdTransTetImpl<7, 7, 7, 9, 8, 8, false>
+                        (in, out); break;
+                    case 10: BwdTransTetImpl<7, 7, 7, 10, 9, 9, false>
+                        (in, out); break;
+                    case 11: BwdTransTetImpl<7, 7, 7, 11, 10, 10, false>
+                        (in, out); break;
+                    case 12: BwdTransTetImpl<7, 7, 7, 12, 11, 11, false>
+                        (in, out); break;
+                    case 13: BwdTransTetImpl<7, 7, 7, 13, 12, 12, false>
+                        (in, out); break;
+                    case 14: BwdTransTetImpl<7, 7, 7, 14, 13, 13, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransTet: # of modes / points combo not implemented.");
+                } break;
+            case 8:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 9: BwdTransTetImpl<8, 8, 8, 9, 8, 8, false>
+                        (in, out); break;
+                    case 10: BwdTransTetImpl<8, 8, 8, 10, 9, 9, false>
+                        (in, out); break;
+                    case 11: BwdTransTetImpl<8, 8, 8, 11, 10, 10, false>
+                        (in, out); break;
+                    case 12: BwdTransTetImpl<8, 8, 8, 12, 11, 11, false>
+                        (in, out); break;
+                    case 13: BwdTransTetImpl<8, 8, 8, 13, 12, 12, false>
+                        (in, out); break;
+                    case 14: BwdTransTetImpl<8, 8, 8, 14, 13, 13, false>
+                        (in, out); break;
+                    case 15: BwdTransTetImpl<8, 8, 8, 15, 14, 14, false>
+                        (in, out); break;
+                    case 16: BwdTransTetImpl<8, 8, 8, 16, 15, 15, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransTet: # of modes / points combo not implemented.");
+                } break;
+            default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransTet: # of modes / points combo not implemented.");
 
-//         T fpq[NM0 * NM1], fp[NM0];
+            }
 
-//         for(int e = 0; e < this->m_nBlocks; e++){
-//             AVXBwdTransTetKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, VW, CORRECT>(
-//                 inptr,
-//                 this->m_bdata[0], this->m_bdata[1], this->m_bdata[2],
-//                 fpq, fp,
-//                 outptr);
+        }
+    }
 
-//             inptr += nmBlocks;
-//             outptr += nqBlocks;
-//         }
-//     }
-// private:
-//     int m_nmTot;
-// };
+    template<int NM0, int NM1, int NM2, int NQ0, int NQ1, int NQ2, bool CORRECT>
+    void BwdTransTetImpl(
+        const Array<OneD, const NekDouble> &input,
+              Array<OneD,       NekDouble> &output)
+    {
+        using namespace tinysimd;
+        using vec_t = simd<NekDouble>;
+
+        auto *inptr = input.data();
+        auto *outptr = output.data();
+
+        constexpr auto nqTot = NQ0 * NQ1 * NQ2;
+        constexpr auto nqBlocks = nqTot * vec_t::width;
+        const auto nmBlocks = m_nmTot * vec_t::width;
+
+        vec_t fpq[NM0 * NM1], fp[NM0];
+        std::vector<vec_t, allocator<vec_t>> tmpIn(m_nmTot), tmpOut(nqTot);
+
+        for (int e = 0; e < this->m_nBlocks; ++e)
+        {
+            // Load and transpose data
+            load_interleave(inptr, m_nmTot, tmpIn);
+
+            BwdTransTetKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, CORRECT>(
+                tmpIn,
+                this->m_bdata[0], this->m_bdata[1], this->m_bdata[2],
+                fpq, fp,
+                tmpOut);
+
+            // de-interleave and store data
+            deinterleave_store(tmpOut, nqTot, outptr);
+
+            inptr += nmBlocks;
+            outptr += nqBlocks;
+        }
+    }
+private:
+    int m_nmTot;
+};
 
 struct BwdTransPrism : public BwdTrans, public Helper<3>
 {
@@ -916,7 +1142,7 @@ struct BwdTransPrism : public BwdTrans, public Helper<3>
         return nq2 * (loop_pqr + nq1 *( loop_pq + nq0*(loop_p + q_correction)));
     }
 
-    virtual double GFlops() override
+    double GFlops() final
     {
         const int nm = m_basis[0]->GetNumModes();
         const int nq0 = m_basis[0]->GetNumPoints();
@@ -929,12 +1155,12 @@ struct BwdTransPrism : public BwdTrans, public Helper<3>
 
     }
 
-    virtual NekDouble Ndof() override
+    NekDouble Ndof() final
     {
         return m_nmTot * this->m_nElmt;
     }
 
-    virtual NekDouble NLoads() override
+    NekDouble NLoads() final
     {
         const int nm0 = m_basis[0]->GetNumModes();
         // const int nm1 = m_basis[1]->GetNumModes();
@@ -952,7 +1178,7 @@ struct BwdTransPrism : public BwdTrans, public Helper<3>
         return load_expected * m_nElmt;
     }
 
-    virtual NekDouble NStores() override
+    NekDouble NStores() final
     {
         const int nm0 = m_basis[0]->GetNumModes();
         // const int nm1 = m_basis[1]->GetNumModes();
@@ -969,7 +1195,7 @@ struct BwdTransPrism : public BwdTrans, public Helper<3>
         return store_expected * m_nElmt;
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &in,
+    void operator()(const Array<OneD, const NekDouble> &in,
                                     Array<OneD,       NekDouble> &out)
     {
         // Check preconditions
@@ -1232,8 +1458,8 @@ struct BwdTransPrism : public BwdTrans, public Helper<3>
         using namespace tinysimd;
         using vec_t = simd<NekDouble>;
 
-        auto *inptr = &input[0];
-        auto *outptr = &output[0];
+        auto *inptr = input.data();
+        auto *outptr = output.data();
 
         constexpr auto nqTot = NQ0 * NQ1 * NQ2;
         constexpr auto nqBlocks = nqTot * vec_t::width;

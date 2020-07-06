@@ -259,121 +259,117 @@ inline static void BwdTransHexKernel(
 
 }
 
-// template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
-//          int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
-//          int VW, bool CORRECT, class BasisType>
-// inline static void BwdTransTetKernel(
-//     const NekDouble *inptr,
-//     const AlignedVector<BasisType> &bdata0,
-//     const AlignedVector<BasisType> &bdata1,
-//     const AlignedVector<BasisType> &bdata2,
-//     VecData<NekDouble, VW> *fpq,
-//     VecData<NekDouble, VW> *fp,
-//     NekDouble *outptr)
-// {
-//     using T = VecData<NekDouble, VW>;
+template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
+         int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
+         bool CORRECT>
+inline static void BwdTransTetKernel(
+    const std::vector<vec_t, allocator<vec_t>> &in,
+    const std::vector<vec_t, allocator<vec_t>> &bdata0,
+    const std::vector<vec_t, allocator<vec_t>> &bdata1,
+    const std::vector<vec_t, allocator<vec_t>> &bdata2,
+    vec_t* fpq,
+    vec_t* fp,
+    std::vector<vec_t, allocator<vec_t>> &out)
+{
+    constexpr auto nm0 = NUMMODE0, nm1 = NUMMODE1, nm2 = NUMMODE2;
+    constexpr auto nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD1;
 
-//     constexpr int nm0 = NUMMODE0, nm1 = NUMMODE1, nm2 = NUMMODE2;
-//     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD1;
+    for (int k = 0, cnt_kji = 0; k < nq2; ++k)
+    {
+        int cnt_pq = 0, mode = 0;
+        for (int p = 0; p < nm0; ++p)
+        {
+            for (int q = 0; q < nm1-p; ++q, ++cnt_pq)
+            {
+                vec_t prod = in[mode] * bdata2[k + nq2*mode]; //Load 2x
+                ++mode;
 
-//     int cnt_kji = 0;
-//     for (int k = 0; k < nq2; ++k)
-//     {
-//         int cnt_pqr = 0, cnt_pq = 0, mode = 0;
-//         for (int p = 0; p < nm0; ++p)
-//         {
-//             for (int q = 0; q < nm1-p; ++q, ++cnt_pq)
-//             {
-//                 T prod = T(inptr + cnt_pqr) * bdata2[k + nq2*mode]; //Load 2x
-//                 ++mode;
-//                 cnt_pqr += VW;
+                for (int r = 1; r < nm2-p-q; ++r, ++mode)
+                {
+                    vec_t inxmm = in[mode]; //Load 1x
+                    prod.fma(inxmm, bdata2[k + nq2*mode]); //Load 1x
+                }
 
-//                 for (int r = 1; r < nm2-p-q; ++r, ++mode, cnt_pqr += VW)
-//                 {
-//                     T inxmm = T(inptr + cnt_pqr); //Load 1x
-//                     prod.fma(inxmm, bdata2[k + nq2*mode]); //Load 1x
-//                 }
+                fpq[cnt_pq] = prod; //Store 1x
+            }
 
-//                 fpq[cnt_pq] = prod; //Store 1x
-//             }
+            //increment mode in case order1!=order2
+            for(int q = nm1-p; q < nm2-p; ++q)
+            {
+                mode += nm2-p-q;
+            }
+        }
 
-//             //increment mode in case order1!=order2
-//             for(int q = nm1-p; q < nm2-p; ++q)
-//             {
-//                 mode += nm2-p-q;
-//             }
-//         }
+        for (int j = 0; j < nq1; ++j)
+        {
+            mode = cnt_pq = 0;
+            for (int p = 0; p < nm0; ++p)
+            {
+                vec_t prod = fpq[cnt_pq] * bdata1[mode*nq1+j]; //Load 2x
+                ++cnt_pq;
 
-//         for (int j = 0; j < nq1; ++j)
-//         {
-//             mode = cnt_pq = 0;
-//             for (int p = 0; p < nm0; ++p)
-//             {
-//                 T prod = fpq[cnt_pq] * bdata1[mode*nq1+j]; //Load 2x
-//                 ++cnt_pq;
+                for (int q = 1; q < nm1 - p; ++q, ++cnt_pq)
+                {
+                    prod.fma(fpq[cnt_pq], bdata1[(mode+q)*nq1+j]); //Load 2x
+                }
 
-//                 for (int q = 1; q < nm1 - p; ++q, ++cnt_pq)
-//                 {
-//                     prod.fma(fpq[cnt_pq], bdata1[(mode+q)*nq1+j]); //Load 2x
-//                 }
+                fp[p] = prod; //Store 1x
+                mode += nm1 - p;
+            }
 
-//                 fp[p] = prod; //Store 1x
-//                 mode += nm1 - p;
-//             }
+            for (int i = 0; i < nq0; ++i, ++cnt_kji)
+            {
+                vec_t tmp = bdata0[i] * fp[0]; //Load 2x
 
-//             for (int i = 0; i < nq0; ++i, cnt_kji += VW)
-//             {
-//                 T tmp = bdata0[i] * fp[0]; //Load 2x
+                for (int p = 1; p < nm0; ++p)
+                {
+                    tmp.fma(bdata0[p*nq0+i], fp[p]); //Load 2x
+                }
 
-//                 for (int p = 1; p < nm0; ++p)
-//                 {
-//                     tmp.fma(bdata0[p*nq0+i], fp[p]); //Load 2x
-//                 }
+                if (CORRECT)
+                {
+                    // top vertex
+                    //
+                    // sum += inarray[1] * base2[nquad2 + k] * (
+                    //     base0[i] * base1[nquad1+j] +
+                    //     base0[nquad0+i] * base1[j] +
+                    //     base0[nquad0+i] * base1[nquad1+j]);
 
-//                 if (CORRECT)
-//                 {
-//                     // top vertex
-//                     //
-//                     // sum += inarray[1] * base2[nquad2 + k] * (
-//                     //     base0[i] * base1[nquad1+j] +
-//                     //     base0[nquad0+i] * base1[j] +
-//                     //     base0[nquad0+i] * base1[nquad1+j]);
+                    vec_t tmp1 = bdata0[i] * bdata1[nq1+j]; //Load 2x
+                    tmp1.fma(bdata0[nq0+i], bdata1[j]); //Load 2x
+                    tmp1.fma(bdata0[nq0+i], bdata1[nq1+j]); //Load 2x
+                    tmp1 = tmp1 * bdata2[nq2+k]; //Load 1x
 
-//                     T tmp1 = bdata0[i] * bdata1[nq1+j]; //Load 2x
-//                     tmp1.fma(bdata0[nq0+i], bdata1[j]); //Load 2x
-//                     tmp1.fma(bdata0[nq0+i], bdata1[nq1+j]); //Load 2x
-//                     tmp1 = tmp1 * bdata2[nq2+k]; //Load 1x
+                    vec_t inarray1 = in[1]; //Load 1x
+                    tmp.fma(tmp1, inarray1);
 
-//                     T inarray1 = T(inptr + VW); //Load 1x
-//                     tmp.fma(tmp1, inarray1);
+                    // bottom vertex
+                    //
+                    // sum += inarray[order2] * base2[k] * (
+                    //     base0[nquad0+i] * base1[nquad1+j]);
+                    tmp1 = bdata0[nq0+i] * bdata1[nq1+j]; //Load 2x
+                    tmp1 = tmp1 * bdata2[k]; //Load 1x
+                    inarray1 = in[nm2]; //Load 1x
+                    tmp.fma(inarray1, tmp1);
 
-//                     // bottom vertex
-//                     //
-//                     // sum += inarray[order2] * base2[k] * (
-//                     //     base0[nquad0+i] * base1[nquad1+j]);
-//                     tmp1 = bdata0[nq0+i] * bdata1[nq1+j]; //Load 2x
-//                     tmp1 = tmp1 * bdata2[k]; //Load 1x
-//                     inarray1 = T(inptr + VW*nm2); //Load 1x
-//                     tmp.fma(inarray1, tmp1);
+                    // singular edge
+                    for (int r = 1; r < nm2-1; ++r)
+                    {
+                        // sum += inarray[order2+r] * base2[(r+1)*nquad2+k] *
+                        //     base1[nquad1+j] * base0[nquad0+i];
+                        tmp1 = bdata1[nq1+j] * bdata0[nq0+i]; //Load 2x
+                        tmp1 = tmp1 * bdata2[(r+1)*nq2+k]; //Load 1x
+                        inarray1 = in[nm2+r]; //Load 1x
+                        tmp.fma(inarray1, tmp1);
+                        // multiply by (1-a)/2
+                    }
+                }
 
-//                     // singular edge
-//                     for (int r = 1; r < nm2-1; ++r)
-//                     {
-//                         // sum += inarray[order2+r] * base2[(r+1)*nquad2+k] *
-//                         //     base1[nquad1+j] * base0[nquad0+i];
-//                         tmp1 = bdata1[nq1+j] * bdata0[nq0+i]; //Load 2x
-//                         tmp1 = tmp1 * bdata2[(r+1)*nq2+k]; //Load 1x
-//                         inarray1 = T(inptr + (nm2+r)*VW); //Load 1x
-//                         tmp.fma(inarray1, tmp1);
-//                         // multiply by (1-a)/2
-//                     }
-//                 }
-
-//                 tmp.store(outptr + cnt_kji); //Store 1x
-//             }
-//         }
-//     }
-//  }
+                out[cnt_kji] = tmp; //Store 1x
+            }
+        }
+    }
+ }
 
 } // namespace MatrixFree
 } // namespace Nektar

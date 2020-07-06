@@ -2579,8 +2579,8 @@ namespace Nektar
             CreatePrism(v0, v1, v2, v3, v4, v5);
 
 
-        unsigned int numQuadPoints = 5;
-        unsigned int numModes = 4;
+        unsigned int numQuadPoints = 7;
+        unsigned int numModes = 6;
 
         Nektar::LibUtilities::PointsType PointsTypeDir1 =
             Nektar::LibUtilities::eGaussLobattoLegendre;

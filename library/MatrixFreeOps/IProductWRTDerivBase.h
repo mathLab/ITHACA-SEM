@@ -506,8 +506,8 @@ struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, D
         const vec_t* df_ptr;
         const vec_t* jac_ptr;
 
-        std::vector<vec_t, allocator<vec_t>> Z0 = this->m_Z[0];
-        std::vector<vec_t, allocator<vec_t>> Z1 = this->m_Z[1];
+        std::vector<vec_t, allocator<vec_t>>& Z0 = this->m_Z[0];
+        std::vector<vec_t, allocator<vec_t>>& Z1 = this->m_Z[1];
 
         for (int e =0; e < this->m_nBlocks; ++e)
         {
@@ -809,7 +809,7 @@ public:
 
             // Calculate dx/dxi in[0] + dy/dxi in[1] + dz/dxi in[2]
             vec_t df0, df1, df2, df3, df4, df5, df6, df7, df8;
-            if(!DEFORMED)
+            if (!DEFORMED)
             {
                 df0 = df_ptr[0];
                 df1 = df_ptr[1];
@@ -823,7 +823,7 @@ public:
             }
             for (int i = 0; i < nqTot; ++i)
             {
-                if(DEFORMED)
+                if (DEFORMED)
                 {
                     df0 = df_ptr[i * ndf];
                     df1 = df_ptr[i * ndf + 1];
@@ -835,9 +835,12 @@ public:
                     df7 = df_ptr[i * ndf + 7];
                     df8 = df_ptr[i * ndf + 8];
                 }
-                tmp0[i] = df0 * tmpIn0[i] + df3 * tmpIn1[i] + df6 *tmpIn2[i];
-                tmp1[i] = df1 * tmpIn0[i] + df4 * tmpIn1[i] + df7 *tmpIn2[i];
-                tmp2[i] = df2 * tmpIn0[i] + df5 * tmpIn1[i] + df8 *tmpIn2[i];
+                vec_t tI0 = tmpIn0[i]; // load 1x
+                vec_t tI1 = tmpIn1[i]; // load 1x
+                vec_t tI2 = tmpIn2[i]; // load 1x
+                tmp0[i] = df0 * tI0 + df3 * tI1 + df6 * tI2;
+                tmp1[i] = df1 * tI0 + df4 * tI1 + df7 * tI2;
+                tmp2[i] = df2 * tI0 + df5 * tI1 + df8 * tI2;
             }
 
             // IP DB0 B1 B2
@@ -1174,7 +1177,7 @@ struct IProductWRTDerivBasePrism : public IProductWRTDerivBase, public Helper<3,
         // Get size of jacobian factor block
         auto dJSize = 1u;
         auto dfSize = ndf;
-        if(DEFORMED)
+        if (DEFORMED)
         {
             dJSize = nqTot;
             dfSize = ndf*nqTot;
@@ -1191,9 +1194,9 @@ struct IProductWRTDerivBasePrism : public IProductWRTDerivBase, public Helper<3,
         const vec_t* df_ptr;
         const vec_t* jac_ptr;
 
-        std::vector<vec_t, allocator<vec_t>> Z0 = this->m_Z[0];
-        std::vector<vec_t, allocator<vec_t>> Z1 = this->m_Z[1];
-        std::vector<vec_t, allocator<vec_t>> Z2 = this->m_Z[2];
+        std::vector<vec_t, allocator<vec_t>>& Z0 = this->m_Z[0];
+        // std::vector<vec_t, allocator<vec_t>>& Z1 = this->m_Z[1];
+        std::vector<vec_t, allocator<vec_t>>& Z2 = this->m_Z[2];
 
         for (int e =0; e < this->m_nBlocks; ++e)
         {
@@ -1209,7 +1212,7 @@ struct IProductWRTDerivBasePrism : public IProductWRTDerivBase, public Helper<3,
             load_interleave(inptr2, nqTot, tmpIn2);
 
             vec_t df0, df1, df2, df3, df4, df5, df6, df7, df8;
-            if(!DEFORMED)
+            if (!DEFORMED)
             {
                 df0 = df_ptr[0];
                 df1 = df_ptr[1];
@@ -1222,19 +1225,16 @@ struct IProductWRTDerivBasePrism : public IProductWRTDerivBase, public Helper<3,
                 df8 = df_ptr[8];
             }
 
-            size_t cnt_kji = 0;
-            for (size_t j = 0; j < NQ1; ++j)
+            for (size_t k = 0, cnt_kji = 0; k < NQ2; ++k)
             {
                 // div in most external loop
-                vec_t hf0 = 4.0 / (1.0 - Z1[j]); //Load 1x
+                vec_t f0 = 2.0 / (1.0 - Z2[k]); // Load 1x
 
-                for (size_t k = 0; k < NQ2; ++k)
+                for (size_t j = 0; j < NQ1; ++j)
                 {
-                    vec_t f0 = hf0 * (1.0 - Z2[k]); // Load 1x
-
                     for (size_t i = 0; i < NQ0; ++i, ++cnt_kji)
                     {
-                        if(DEFORMED)
+                        if (DEFORMED)
                         {
                             df0 = df_ptr[cnt_kji * ndf];
                             df1 = df_ptr[cnt_kji * ndf + 1];
@@ -1256,12 +1256,12 @@ struct IProductWRTDerivBasePrism : public IProductWRTDerivBase, public Helper<3,
                         vec_t t2 = df2 * tI0 + df5 * tI1 + df8 * tI2;
 
                         // Multiply by geometric factors
-                        vec_t f1 = 0.5 * (1.0 + Z0[i]); //Load 1x
-                        // Scale by geometric factor 4.0*(1-z2)/(1-z1)
+                        vec_t hf1 = 0.5 * (1.0 + Z0[i]); //Load 1x
+                        // Scale by geometric factor 2/(1-z2)
                         t0 *= f0;
-                        // Scale by geometric factor 0.5/(1-z0)
-                        vec_t c2 = t2 * f1;
-                        t0.fma(c2, f0);
+                        // Scale by geometric factor (1+z0)/(1-z2)
+                        vec_t f1t2 = hf1 * t2;
+                        t0.fma(f1t2, f0);
 
                         // Store
                         tmp0[cnt_kji] = t0; // store 1x

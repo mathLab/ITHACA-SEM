@@ -280,7 +280,11 @@ OperatorKey IProductWRTBase_MatrixFree::m_typeArr[] = {
         IProductWRTBase_MatrixFree::create, "IProductWRTBase_MatrixFree_Hex"),
     GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(ePrism, eIProductWRTBase, eMatrixFree, false),
-        IProductWRTBase_MatrixFree::create, "IProductWRTBase_MatrixFree_Prism")
+        IProductWRTBase_MatrixFree::create, "IProductWRTBase_MatrixFree_Prism"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eTetrahedron, eIProductWRTBase, eMatrixFree, false),
+        IProductWRTBase_MatrixFree::create, "IProductWRTBase_MatrixFree_Tet")
+
 };
 
 

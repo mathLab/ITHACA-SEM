@@ -294,7 +294,6 @@ inline static void IProductPrismKernel(
     std::vector<vec_t, allocator<vec_t>>& out,
     NekDouble scale = 1.0)
 {
-
     constexpr auto nm0 = NUMMODE0, nm1 = NUMMODE1, nm2 = NUMMODE2;
     constexpr auto nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD2;
 
@@ -413,167 +412,167 @@ inline static void IProductPrismKernel(
     }
 }
 
-// template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
-//          int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
-//          int VW, bool CORRECT, bool SCALE, bool APPEND,
-//          bool DEFORMED, class BasisType>
-// inline static void IProductTetKernel(
-//     const double *in,
-//     const AlignedVector<BasisType> &bdata0,
-//     const AlignedVector<BasisType> &bdata1,
-//     const AlignedVector<BasisType> &bdata2,
-//     const AlignedVector<BasisType> &w0,
-//     const AlignedVector<BasisType> &w1,
-//     const AlignedVector<BasisType> &w2,
-//     const VecData<double, VW> *jac,
-//     VecData<double, VW> *wsp,
-//     double *out,
-//     double scale = 1.0)
-// {
-//     using T = VecData<double, VW>;
+template<int NUMMODE0, int NUMMODE1, int NUMMODE2,
+         int NUMQUAD0, int NUMQUAD1, int NUMQUAD2,
+         bool CORRECT, bool SCALE, bool APPEND,
+         bool DEFORMED>
+inline static void IProductTetKernel(
+    const std::vector<vec_t, allocator<vec_t>>& in,
+    const std::vector<vec_t, allocator<vec_t>>& bdata0,
+    const std::vector<vec_t, allocator<vec_t>>& bdata1,
+    const std::vector<vec_t, allocator<vec_t>>& bdata2,
+    const std::vector<vec_t, allocator<vec_t>>& w0,
+    const std::vector<vec_t, allocator<vec_t>>& w1,
+    const std::vector<vec_t, allocator<vec_t>>& w2,
+    const vec_t* jac,
+    vec_t* wsp,
+    std::vector<vec_t, allocator<vec_t>>& out,
+    NekDouble scale = 1.0)
+{
+    constexpr auto nm0 = NUMMODE0, nm1 = NUMMODE1, nm2 = NUMMODE2;
+    constexpr auto nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD2;
 
-//     constexpr int nm0 = NUMMODE0, nm1 = NUMMODE1, nm2 = NUMMODE2;
-//     constexpr int nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD2;
+    vec_t* f = wsp;
+    vec_t* fb = wsp + nq1 * nq2;
 
-//     T *f = wsp, *fb = wsp + nq1 * nq2;
-//     int mode = 0, mode2 = 0, cnt_pqr = 0;
+    for (int p = 0, mode = 0, mode2 = 0, cnt_pqr = 0; p < nm0; ++p)
+    {
+        int cnt_kji = 0;
+        for (int k = 0, cnt_kj = 0; k < nq2; ++k)
+        {
+            for (int j = 0; j < nq1; ++j, ++cnt_kj)
+            {
+                // Unroll first entry of for loop below and multiply by
+                // quadrature weights in dir0 & jacobian.
+                vec_t jac_val;
+                if (DEFORMED)
+                {
+                    jac_val = jac[nq0*nq1*k + nq0*j];
+                }
+                else
+                {
+                    jac_val = jac[0];
+                }
 
-//     for (int p = 0; p < nm0; ++p)
-//     {
-//         int cnt_kji = 0, cnt_kj = 0;
-//         for (int k = 0; k < nq2; ++k)
-//         {
-//             for (int j = 0; j < nq1; ++j, ++cnt_kj)
-//             {
-//                 // Unroll first entry of for loop below and multiply by
-//                 // quadrature weights in dir0 & jacobian.
-//                 T jac_val;
-//                 if(DEFORMED){
-//                     jac_val = jac[nq0*nq1*k + nq0*j];
-//                 }
-//                 else{
-//                     jac_val = jac[0];
-//                 }
+                vec_t f_kj = in[cnt_kji] * bdata0[nq0*p] * jac_val * w0[0]; //Load 3x
+                ++cnt_kji;
 
-//                 T f_kj = T(in + cnt_kji) * bdata0[nq0*p] * jac_val * w0[0]; //Load 3x
-//                 cnt_kji += VW;
+                for (int i = 1; i < nq0; ++i, ++cnt_kji)
+                {
+                    if (DEFORMED)
+                    {
+                        jac_val = jac[nq0*nq1*k + nq0*j + i];
+                    }
+                    else
+                    {
+                        jac_val = jac[0];
+                    }
 
-//                 for (int i = 1; i < nq0; ++i, cnt_kji += VW)
-//                 {
-//                     if(DEFORMED){
-//                         jac_val = jac[nq0*nq1*k + nq0*j + i];
-//                     }
-//                     else{
-//                         jac_val = jac[0];
-//                     }
+                    vec_t inxmm = in[cnt_kji] * bdata0[i + nq0*p] * jac_val; //Load 2x
+                    f_kj.fma(inxmm, w0[i]); //Load 1x
+                }
 
-//                     T inxmm = T(in + cnt_kji) * bdata0[i + nq0*p] * jac_val; //Load 2x
-//                     f_kj.fma(inxmm, w0[i]); //Load 1x
-//                 }
+                f[cnt_kj] =  f_kj; //Store 1x
+            }
+        }
 
-//                 f[cnt_kj] =  f_kj; //Store 1x
-//             }
-//         }
+        for (int q = 0, cnt_kj = 0; q < nm1-p; ++q, ++mode)
+        {
+            for (int k = 0; k < nq2; ++k)
+            {
+                vec_t f_k = bdata1[mode*nq1] * f[cnt_kj] * w1[0]; //Load 3x
+                ++cnt_kj;
 
-//         for (int q = 0; q < nm1-p; ++q, ++mode)
-//         {
-//             cnt_kj = 0;
-//             for (int k = 0; k < nq2; ++k)
-//             {
-//                 T f_k = bdata1[mode*nq1] * f[cnt_kj] * w1[0]; //Load 3x
-//                 ++cnt_kj;
+                for (int j = 1; j < nq1; ++j, ++cnt_kj)
+                {
+                    vec_t tmp2 = bdata1[mode*nq1 + j] * f[cnt_kj]; //Load 2x
+                    f_k.fma(tmp2, w1[j]); //Load 1x
+                }
 
-//                 for (int j = 1; j < nq1; ++j, ++cnt_kj)
-//                 {
-//                     T tmp2 = bdata1[mode*nq1 + j] * f[cnt_kj]; //Load 2x
-//                     f_k.fma(tmp2, w1[j]); //Load 1x
-//                 }
+                fb[k] = f_k; //Store 1x
+            }
 
-//                 fb[k] = f_k; //Store 1x
-//             }
+            for (int r = 0; r < nm2-p-q; ++r, ++mode2, ++cnt_pqr)
+            {
+                vec_t tmp = fb[0] * bdata2[mode2*nq2] * w2[0]; //Load 3x
 
-//             // TODO increase mode somehow here
+                for (int k = 1; k < nq2; ++k)
+                {
+                    vec_t tmp2 = fb[k] * bdata2[mode2*nq2 + k]; //Load 2x
+                    tmp.fma(tmp2, w2[k]); //Load 1x
+                }
 
-//             for (int r = 0; r < nm2-p-q; ++r, ++mode2, cnt_pqr += VW)
-//             {
-//                 T tmp = fb[0] * bdata2[mode2*nq2] * w2[0]; //Load 3x
+                ScaleAppend<SCALE, APPEND>(out[cnt_pqr], tmp, scale); //Store 1x
 
-//                 for (int k = 1; k < nq2; ++k)
-//                 {
-//                     T tmp2 = fb[k] * bdata2[mode2*nq2 + k]; //Load 2x
-//                     tmp.fma(tmp2, w2[k]); //Load 1x
-//                 }
+            }
+        }
+    }
 
-//                 ScaleAppend<VW, SCALE, APPEND>(out + cnt_pqr, tmp, scale); //Store 1x
+    if (CORRECT)
+    {
+        for (int k = 0, cnt = 0; k < nq2; ++k)
+        {
 
-//                 // TODO increase mode2 somehow here
-//             }
-//         }
-//     }
+            vec_t tmpQ2 = w2[k]; //Load 1x
+            if (!DEFORMED)
+            {
+                tmpQ2 = tmpQ2 * jac[0];
+            }
 
-//     if (CORRECT)
-//     {
-//         for (int k = 0, cnt = 0; k < nq2; ++k)
-//         {
+            for (int j = 0; j < nq1; ++j)
+            {
+                vec_t tmpQ1 = tmpQ2 * w1[j]; //Load 1x
 
-//             T tmpQ2 = w2[k]; //Load 1x
-//             if(!DEFORMED){
-//                 tmpQ2 = tmpQ2 * jac[0];
-//             }
+                for (int i = 0; i < nq0; ++i, ++cnt)
+                {
+                    // Store jac * quadrature weight
+                    vec_t tmpQ = tmpQ1 * w0[i]; //Load 1x
+                    vec_t tmpIn = in[cnt]; //Load 1x
 
-//             for (int j = 0; j < nq1; ++j)
-//             {
-//                 T tmpQ1 = tmpQ2 * w1[j]; //Load 1x
+                    if (DEFORMED)
+                    {
+                        tmpQ = tmpQ * jac[k*nq0*nq1 + j*nq0 + i];
+                    }
 
-//                 for (int i = 0; i < nq0; ++i, cnt += VW)
-//                 {
-//                     // Store jac * quadrature weight
-//                     T tmpQ = tmpQ1 * w0[i]; //Load 1x
-//                     T tmpIn = T(in + cnt); //Load 1x
+                    // top vertex
+                    //
+                    // outarray[1] += inarray[cnt] * bdata2[nq2 + k] * (
+                    //     bdata0[i]*bdata1[nq1+j] + bdata0[nq0+i]*bdata1[j] +
+                    //     bdata0[nq0+i]*bdata1[nq1+j]);
 
-//                     if(DEFORMED){
-//                         tmpQ = tmpQ * jac[k*nq0*nq1 + j*nq0 + i];
-//                     }
+                    vec_t tmp = bdata0[i] * bdata1[nq1+j]; //Load 2x
+                    tmp.fma(bdata0[nq0+i], bdata1[j]); //Load 2x
+                    tmp.fma(bdata0[nq0+i], bdata1[nq1+j]); //Load 2x
+                    tmp = tmp * bdata2[nq2+k]; //Load 1x
+                    tmp = tmp * tmpIn;
 
-//                     // top vertex
-//                     //
-//                     // outarray[1] += inarray[cnt] * bdata2[nq2 + k] * (
-//                     //     bdata0[i]*bdata1[nq1+j] + bdata0[nq0+i]*bdata1[j] +
-//                     //     bdata0[nq0+i]*bdata1[nq1+j]);
+                    // add to existing entry
+                    vec_t tmpOut = tmp * tmpQ;
+                    ScaleAppend<SCALE, true>(out[1], tmpOut, scale); //Store 1x
 
-//                     T tmp = bdata0[i] * bdata1[nq1+j]; //Load 2x
-//                     tmp.fma(bdata0[nq0+i], bdata1[j]); //Load 2x
-//                     tmp.fma(bdata0[nq0+i], bdata1[nq1+j]); //Load 2x
-//                     tmp = tmp * bdata2[nq2+k]; //Load 1x
-//                     tmp = tmp * tmpIn;
+                    // bottom vertex
+                    //
+                    // outarray[nm2] += inarray[cnt] * bdata2[k] * (
+                    //    bdata0[nq0+i] * bdata1[nq1+j]);
 
-//                     // add to existing entry
-//                     T tmpOut = tmp * tmpQ;
-//                     ScaleAppend<VW, SCALE, true>(out + VW, tmpOut, scale); //Store 1x
+                    tmp = bdata0[nq0+i] * bdata1[nq1+j] * bdata2[k] * tmpIn; //Load 3x
+                    tmpOut = tmp * tmpQ;
+                    ScaleAppend<SCALE, true>(out[nm2], tmpOut, scale); //Store 1x
 
-//                     // bottom vertex
-//                     //
-//                     // outarray[nm2] += inarray[cnt] * bdata2[k] * (
-//                     //    bdata0[nq0+i] * bdata1[nq1+j]);
-
-//                     tmp = bdata0[nq0+i] * bdata1[nq1+j] * bdata2[k] * tmpIn; //Load 3x
-//                     tmpOut = tmp * tmpQ;
-//                     ScaleAppend<VW, SCALE, true>(out + nm2 * VW, tmpOut, scale); //Store 1x
-
-//                     // singular edge
-//                     for (int r = 1; r < nm2-1; ++r)
-//                     {
-//                         // outarray[nm2+r] += inarray[cnt] *
-//                         //     bdata2[(r+1)*nq2+k] * bdata1[nq1+j] * bdata0[nq0+i];
-//                         tmp = bdata2[(r+1)*nq2+k] * bdata1[nq1+j] * bdata0[nq0+i] * tmpIn; //Load 3x
-//                         tmpOut = tmp * tmpQ;
-//                         ScaleAppend<VW, SCALE, true>(out + (nm2+r) * VW, tmpOut, scale); //Store 1x
-//                     }
-//                 }
-//             }
-//         }
-//     }
-// }
+                    // singular edge
+                    for (int r = 1; r < nm2-1; ++r)
+                    {
+                        // outarray[nm2+r] += inarray[cnt] *
+                        //     bdata2[(r+1)*nq2+k] * bdata1[nq1+j] * bdata0[nq0+i];
+                        tmp = bdata2[(r+1)*nq2+k] * bdata1[nq1+j] * bdata0[nq0+i] * tmpIn; //Load 3x
+                        tmpOut = tmp * tmpQ;
+                        ScaleAppend<SCALE, true>(out[nm2+r], tmpOut, scale); //Store 1x
+                    }
+                }
+            }
+        }
+    }
+}
 
 } // namespace MatrixFree
 } // namespace Nektar

@@ -2677,6 +2677,240 @@ namespace Nektar
         }
     }
 
+    BOOST_AUTO_TEST_CASE(TestPrismIProductWRTDerivBase_MatriFree_UniformP_Deformed_MultiElmt)
+    {
+        SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(
+            3u, 0u, -2.0, -3.0, -4.0));
+        SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(
+            3u, 1u,  1.0, -1.0, -1.0));
+        SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(
+            3u, 2u,  1.0,  1.0, -1.0));
+        SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(
+            3u, 3u, -1.0,  1.0, -1.0));
+        SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(
+            3u, 4u, -1.0, -1.0,  1.0));
+        SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(
+            3u, 5u, -1.0,  1.0,  1.0));
+
+        SpatialDomains::PrismGeomSharedPtr prismGeom =
+            CreatePrism(v0, v1, v2, v3, v4, v5);
+
+
+        unsigned int numQuadPoints = 7;
+        unsigned int numModes = 6;
+
+        Nektar::LibUtilities::PointsType PointsTypeDir1 =
+            Nektar::LibUtilities::eGaussLobattoLegendre;
+        const Nektar::LibUtilities::PointsKey PointsKeyDir1(numQuadPoints,
+            PointsTypeDir1);
+        Nektar::LibUtilities::BasisType basisTypeDir1 =
+            Nektar::LibUtilities::eModified_A;
+        const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,
+            numModes, PointsKeyDir1);
+
+        Nektar::LibUtilities::PointsType PointsTypeDir2 =
+            Nektar::LibUtilities::eGaussLobattoLegendre;
+        const Nektar::LibUtilities::PointsKey PointsKeyDir2(numQuadPoints,
+            PointsTypeDir2);
+        Nektar::LibUtilities::BasisType basisTypeDir2 =
+            Nektar::LibUtilities::eModified_A;
+        const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,
+            numModes, PointsKeyDir2);
+
+        Nektar::LibUtilities::PointsType PointsTypeDir3 =
+            Nektar::LibUtilities::eGaussRadauMAlpha1Beta0;
+        const Nektar::LibUtilities::PointsKey PointsKeyDir3(numQuadPoints-1,
+            PointsTypeDir3);
+        Nektar::LibUtilities::BasisType basisTypeDir3 =
+            Nektar::LibUtilities::eModified_B;
+        const Nektar::LibUtilities::BasisKey  basisKeyDir3(basisTypeDir3,
+            numModes, PointsKeyDir3);
+
+        Nektar::LocalRegions::PrismExpSharedPtr Exp =
+            MemoryManager<Nektar::LocalRegions::PrismExp>::AllocateSharedPtr(
+            basisKeyDir1, basisKeyDir2, basisKeyDir3, prismGeom);
+
+        unsigned int nelmts = 1;
+
+        std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+        for (unsigned int i = 0; i < nelmts; ++i)
+        {
+            CollExp.push_back(Exp);
+        }
+
+        LibUtilities::SessionReaderSharedPtr dummySession;
+        Collections::CollectionOptimisation colOpt(dummySession,
+            Collections::eIterPerExp);
+        Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+
+        // ... only one op at the time ...
+        impTypes[Collections::eIProductWRTDerivBase] = Collections::eMatrixFree;
+        Collections::Collection c(CollExp, impTypes);
+
+        const int nq = Exp->GetTotPoints();
+        const int nm = Exp->GetNcoeffs();
+        Array<OneD, NekDouble> phys1(nelmts*nq),tmp;
+        Array<OneD, NekDouble> phys2(nelmts*nq);
+        Array<OneD, NekDouble> phys3(nelmts*nq);
+        Array<OneD, NekDouble> coeffsRef(nelmts*nm);
+        Array<OneD, NekDouble> coeffs(nelmts*nm);
+
+        Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+
+        Exp->GetCoords(xc, yc, zc);
+
+        for (int i = 0; i < nq; ++i)
+        {
+            phys1[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
+            phys2[i] = cos(xc[i])*sin(yc[i])*cos(zc[i]);
+            phys3[i] = cos(xc[i])*sin(yc[i])*sin(zc[i]);
+        }
+        for(int i = 1; i < nelmts; ++i)
+        {
+            Vmath::Vcopy(nq, phys1, 1, tmp = phys1+i*nq, 1);
+            Vmath::Vcopy(nq, phys2, 1, tmp = phys2+i*nq, 1);
+            Vmath::Vcopy(nq, phys3, 1, tmp = phys3+i*nq, 1);
+        }
+
+        // Standard routines
+        for(int i = 0; i < nelmts; ++i)
+        {
+            Exp->IProductWRTDerivBase(0, phys1 + i*nq, tmp = coeffsRef + i*nm);
+            Exp->IProductWRTDerivBase(1, phys2 + i*nq, tmp = coeffs + i*nm);
+            Vmath::Vadd(nm,coeffsRef+i*nm ,1,coeffs+i*nm ,1,tmp = coeffsRef + i*nm,1);
+            Exp->IProductWRTDerivBase(2, phys3 + i*nq, tmp = coeffs + i*nm);
+            Vmath::Vadd(nm,coeffsRef+i*nm ,1,coeffs+i*nm ,1,tmp = coeffsRef + i*nm,1);
+        }
+
+        c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1, phys2, phys3,
+            coeffs);
+
+        double epsilon = 1.0e-8;
+        for(int i = 0; i < coeffsRef.size(); ++i)
+        {
+            coeffsRef[i] = (std::abs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
+            coeffs[i] = (std::abs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
+            BOOST_CHECK_CLOSE(coeffsRef[i], coeffs[i], epsilon);
+        }
+    }
+
+    BOOST_AUTO_TEST_CASE(TestPrismIProductWRTDerivBase_MatriFree_UniformP_Deformed_OverInt_MultiElmt)
+    {
+        SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(
+            3u, 0u, -2.0, -3.0, -4.0));
+        SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(
+            3u, 1u,  1.0, -1.0, -1.0));
+        SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(
+            3u, 2u,  1.0,  1.0, -1.0));
+        SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(
+            3u, 3u, -1.0,  1.0, -1.0));
+        SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(
+            3u, 4u, -1.0, -1.0,  1.0));
+        SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(
+            3u, 5u, -1.0,  1.0,  1.0));
+
+        SpatialDomains::PrismGeomSharedPtr prismGeom =
+            CreatePrism(v0, v1, v2, v3, v4, v5);
+
+
+        unsigned int numQuadPoints = 12;
+        unsigned int numModes = 6;
+
+        Nektar::LibUtilities::PointsType PointsTypeDir1 =
+            Nektar::LibUtilities::eGaussLobattoLegendre;
+        const Nektar::LibUtilities::PointsKey PointsKeyDir1(numQuadPoints,
+            PointsTypeDir1);
+        Nektar::LibUtilities::BasisType basisTypeDir1 =
+            Nektar::LibUtilities::eModified_A;
+        const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,
+            numModes, PointsKeyDir1);
+
+        Nektar::LibUtilities::PointsType PointsTypeDir2 =
+            Nektar::LibUtilities::eGaussLobattoLegendre;
+        const Nektar::LibUtilities::PointsKey PointsKeyDir2(numQuadPoints,
+            PointsTypeDir2);
+        Nektar::LibUtilities::BasisType basisTypeDir2 =
+            Nektar::LibUtilities::eModified_A;
+        const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,
+            numModes, PointsKeyDir2);
+
+        Nektar::LibUtilities::PointsType PointsTypeDir3 =
+            Nektar::LibUtilities::eGaussRadauMAlpha1Beta0;
+        const Nektar::LibUtilities::PointsKey PointsKeyDir3(numQuadPoints-1,
+            PointsTypeDir3);
+        Nektar::LibUtilities::BasisType basisTypeDir3 =
+            Nektar::LibUtilities::eModified_B;
+        const Nektar::LibUtilities::BasisKey  basisKeyDir3(basisTypeDir3,
+            numModes, PointsKeyDir3);
+
+        Nektar::LocalRegions::PrismExpSharedPtr Exp =
+            MemoryManager<Nektar::LocalRegions::PrismExp>::AllocateSharedPtr(
+            basisKeyDir1, basisKeyDir2, basisKeyDir3, prismGeom);
+
+        unsigned int nelmts = 1;
+
+        std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+        for (unsigned int i = 0; i < nelmts; ++i)
+        {
+            CollExp.push_back(Exp);
+        }
+
+        LibUtilities::SessionReaderSharedPtr dummySession;
+        Collections::CollectionOptimisation colOpt(dummySession,
+            Collections::eIterPerExp);
+        Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+
+        // ... only one op at the time ...
+        impTypes[Collections::eIProductWRTDerivBase] = Collections::eMatrixFree;
+        Collections::Collection c(CollExp, impTypes);
+
+        const int nq = Exp->GetTotPoints();
+        const int nm = Exp->GetNcoeffs();
+        Array<OneD, NekDouble> phys1(nelmts*nq),tmp;
+        Array<OneD, NekDouble> phys2(nelmts*nq);
+        Array<OneD, NekDouble> phys3(nelmts*nq);
+        Array<OneD, NekDouble> coeffsRef(nelmts*nm);
+        Array<OneD, NekDouble> coeffs(nelmts*nm);
+
+        Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+
+        Exp->GetCoords(xc, yc, zc);
+
+        for (int i = 0; i < nq; ++i)
+        {
+            phys1[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
+            phys2[i] = cos(xc[i])*sin(yc[i])*cos(zc[i]);
+            phys3[i] = cos(xc[i])*sin(yc[i])*sin(zc[i]);
+        }
+        for(int i = 1; i < nelmts; ++i)
+        {
+            Vmath::Vcopy(nq, phys1, 1, tmp = phys1+i*nq, 1);
+            Vmath::Vcopy(nq, phys2, 1, tmp = phys2+i*nq, 1);
+            Vmath::Vcopy(nq, phys3, 1, tmp = phys3+i*nq, 1);
+        }
+
+        // Standard routines
+        for(int i = 0; i < nelmts; ++i)
+        {
+            Exp->IProductWRTDerivBase(0, phys1 + i*nq, tmp = coeffsRef + i*nm);
+            Exp->IProductWRTDerivBase(1, phys2 + i*nq, tmp = coeffs + i*nm);
+            Vmath::Vadd(nm,coeffsRef+i*nm ,1,coeffs+i*nm ,1,tmp = coeffsRef + i*nm,1);
+            Exp->IProductWRTDerivBase(2, phys3 + i*nq, tmp = coeffs + i*nm);
+            Vmath::Vadd(nm,coeffsRef+i*nm ,1,coeffs+i*nm ,1,tmp = coeffsRef + i*nm,1);
+        }
+
+        c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1, phys2, phys3,
+            coeffs);
+
+        double epsilon = 1.0e-8;
+        for(int i = 0; i < coeffsRef.size(); ++i)
+        {
+            coeffsRef[i] = (std::abs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
+            coeffs[i] = (std::abs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
+            BOOST_CHECK_CLOSE(coeffsRef[i], coeffs[i], epsilon);
+        }
+    }
+
 
     } // namespace
 }

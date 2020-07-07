@@ -63,7 +63,6 @@ std::ostream &operator<<(std::ostream &os, const ModuleKey &rhs)
 InputModule::InputModule(FieldSharedPtr m) : Module(m)
 {
     m_config["infile"] = ConfigOption(false, "", "Input filename.");
-    m_config["addfiles"] = ConfigOption(false, "", "List of registered filename.");
 }
 
 OutputModule::OutputModule(FieldSharedPtr m) : Module(m)
@@ -81,38 +80,6 @@ void Module::AddFile(string fileType, string fileName)
     }
 
     m_f->m_inputfiles[fileType].push_back(fileName);
-}
-
-void Module::AddFiles()
-{
-    const std::string file_separator = "|";
-    const std::string filetype_filename_separator = ":";
-
-    auto it = m_config.find("addfiles");
-    if (it != m_config.end()) {
-        std::string files_str = (it->second).m_value;
-        std::vector<std::string> files_vec;
-        boost::split(files_vec, files_str, boost::is_any_of(file_separator));
-        for (const auto& ftype_fname_str : files_vec) {
-              std::vector<std::string> ftype_fname_vec;
-              boost::split(ftype_fname_vec, ftype_fname_str,
-                           boost::is_any_of(filetype_filename_separator));
-              if (ftype_fname_vec.size() == 2) {
-                  auto ftype = ftype_fname_vec[0];
-                  auto fname = ftype_fname_vec[1];
-                  AddFile(ftype, fname);
-              } else {
-                cerr << "Invalid infile config entry! " << endl
-                     << "Supported format:"             << endl
-                     << "file_type1" << filetype_filename_separator
-                     << "file_name1" << file_separator
-                     << "file_type2" << filetype_filename_separator
-                     << "file_name2" << file_separator
-                     << "file_type3" << filetype_filename_separator
-                     << "file_name3" << endl;
-              }
-        }
-    }
 }
 
 /**
@@ -187,7 +154,6 @@ void Module::SetDefaults()
             it.second.m_value = it.second.m_defValue;
         }
     }
-    AddFiles();
 }
 
 /**

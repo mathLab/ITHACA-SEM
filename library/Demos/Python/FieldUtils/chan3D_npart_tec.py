@@ -5,8 +5,8 @@ from NekPy.FieldUtils import *
 nParts = 2
 field = Field(sys.argv, nParts, forceoutput=True, error=True)
 
-inputxml  = InputModule.Create("xml" , field, infile="chan3D_xml", addfiles="xml:chan3D_xml")
-inputfld  = InputModule.Create("fld",  field, infile="chan3D.fld", addfiles="fld:chan3D.fld")
+inputxml  = InputModule.Create("xml" , field, infile={"xml":"chan3D_xml"})
+inputfld  = InputModule.Create("fld",  field, infile={"fld":"chan3D.fld"})
 outputplt = OutputModule.Create("plt", field, outfile="chan3D.plt")
 
 for part in range(nParts):

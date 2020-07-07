@@ -4,8 +4,8 @@ from NekPy.FieldUtils import *
 
 field = Field(sys.argv, nparts=2, forceoutput=True, error=True)
 
-inputxml   = InputModule.Create("xml", field, infile="Tet_channel_m3_xml", addfiles="xml:Tet_channel_m3_xml")
-inputfld   = InputModule.Create("fld", field, infile="Tet_channel_m3.fld", addfiles="fld:Tet_channel_m3.fld")
+inputxml   = InputModule.Create("xml", field, infile={"xml":"Tet_channel_m3_xml"})
+inputfld   = InputModule.Create("fld", field, infile={"fld":"Tet_channel_m3.fld"})
 processwss = ProcessModule.Create("wss", field, bnd="2")
 outputfld  = OutputModule.Create("fld", field, outfile="wss.fld")
 

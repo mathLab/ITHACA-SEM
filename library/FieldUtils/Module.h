@@ -215,7 +215,6 @@ public:
                                            std::string value = "");
     FIELD_UTILS_EXPORT void PrintConfig();
     FIELD_UTILS_EXPORT void SetDefaults();
-    FIELD_UTILS_EXPORT void AddFiles();
     FIELD_UTILS_EXPORT void AddFile(std::string fileType, std::string fileName);
 
     FIELD_UTILS_EXPORT void EvaluateTriFieldAtEquiSpacedPts(

@@ -175,8 +175,19 @@ ModuleSharedPtr Module_Create(py::tuple args, py::dict kwargs)
     for (int i = 0; i < py::len(items); ++i)
     {
         std::string arg = py::extract<std::string>(items[i][0]);
-        std::string val = py::extract<std::string>(items[i][1].attr("__str__")());
-        mod->RegisterConfig(arg, val);
+        if (arg == "infile" && modKey.first == eInputModule) {
+            py::dict ftype_fname_dict = py::extract<py::dict>(items[i][1]);
+            py::list ft_fn_items = ftype_fname_dict.items();
+            for (int i  = 0; i < py::len(ft_fn_items); ++i) {
+              std::string f_type = py::extract<std::string>(ft_fn_items[i][0]);
+              std::string f_name = py::extract<std::string>(ft_fn_items[i][1].attr("__str__")());
+              mod->RegisterConfig(arg, f_name);
+              mod->AddFile(f_type, f_name);
+            }
+        } else {
+          std::string val = py::extract<std::string>(items[i][1].attr("__str__")());
+          mod->RegisterConfig(arg, val);
+        }
     }
 
     mod->SetDefaults();

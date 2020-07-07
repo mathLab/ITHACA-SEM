@@ -4,7 +4,7 @@ from NekPy.FieldUtils import *
 
 field = Field(sys.argv, forceoutput=True, error=True)
 
-InputModule.Create("xml", field, infile="naca0012_bnd.xml", addfiles="xml:naca0012_bnd.xml").Run()
-InputModule.Create("fld", field, infile="naca0012_b0.fld",  addfiles="fld:naca0012_b0.fld").Run()
+InputModule.Create("xml", field, infile={"xml":"naca0012_bnd.xml"}).Run()
+InputModule.Create("fld", field, infile={"fld":"naca0012_b0.fld"}).Run()
 ProcessModule.Create("equispacedoutput", field).Run()
 OutputModule.Create("vtu", field, outfile="output.vtu").Run()

@@ -1208,37 +1208,253 @@ struct IProductTet : public IProduct, public Helper<3, DEFORMED>
     void operator()(const Array<OneD, const NekDouble> &in,
         Array<OneD, NekDouble> &out) final
     {
+        // Check preconditions
+        ASSERTL0(m_basis[0]->GetNumModes() == m_basis[1]->GetNumModes() &&
+            m_basis[0]->GetNumModes() == m_basis[2]->GetNumModes() &&
+            m_basis[0]->GetNumPoints() == m_basis[1]->GetNumPoints()+1 &&
+            m_basis[0]->GetNumPoints() == m_basis[2]->GetNumPoints()+1,
+            "MatrixFree requires homogenous modes/points");
+
         if (m_basis[0]->GetBasisType() == LibUtilities::eModified_A)
         {
             switch(m_basis[0]->GetNumModes())
             {
-                case 2:  IProductTetImpl<2 ,2 ,2 ,3 ,2 ,2 ,true>(in, out); break;
-                case 3:  IProductTetImpl<3 ,3 ,3 ,4 ,3 ,3 ,true>(in, out); break;
-                case 4:  IProductTetImpl<4 ,4 ,4 ,5 ,4 ,4 ,true>(in, out); break;
-                case 5:  IProductTetImpl<5 ,5 ,5 ,6 ,5 ,5 ,true>(in, out); break;
-                case 6:  IProductTetImpl<6 ,6 ,6 ,7 ,6 ,6 ,true>(in, out); break;
-                case 7:  IProductTetImpl<7 ,7 ,7 ,8 ,7 ,7 ,true>(in, out); break;
-                case 8:  IProductTetImpl<8 ,8 ,8 ,9 ,8 ,8 ,true>(in, out); break;
-                case 9:  IProductTetImpl<9 ,9 ,9 ,10,9 ,9 ,true>(in, out); break;
-                case 10: IProductTetImpl<10,10,10,11,10,10,true>(in, out); break;
-                case 11: IProductTetImpl<11,11,11,12,11,11,true>(in, out); break;
+                case 2: switch(m_basis[0]->GetNumPoints())
+                {
+                    case 3: IProductTetImpl<2, 2, 2, 3, 2, 2, true>
+                        (in, out); break;
+                    case 4: IProductTetImpl<2, 2, 2, 4, 3, 3, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductTet: # of modes / points combo not implemented.");
+                } break;
+            case 3:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 4: IProductTetImpl<3, 3, 3, 4, 3, 3, true>
+                        (in, out); break;
+                    case 5: IProductTetImpl<3, 3, 3, 5, 4, 4, true>
+                        (in, out); break;
+                    case 6: IProductTetImpl<3, 3, 3, 6, 5, 5, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductTet: # of modes / points combo not implemented.");
+                } break;
+            case 4:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 5: IProductTetImpl<4, 4, 4, 5, 4, 4, true>
+                        (in, out); break;
+                    case 6: IProductTetImpl<4, 4, 4, 6, 5, 5, true>
+                        (in, out); break;
+                    case 7: IProductTetImpl<4, 4, 4, 7, 6, 6, true>
+                        (in, out); break;
+                    case 8: IProductTetImpl<4, 4, 4, 8, 7, 7, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductTet: # of modes / points combo not implemented.");
+                } break;
+            case 5:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 6: IProductTetImpl<5, 5, 5, 6, 5, 5, true>
+                        (in, out); break;
+                    case 7: IProductTetImpl<5, 5, 5, 7, 6, 6, true>
+                        (in, out); break;
+                    case 8: IProductTetImpl<5, 5, 5, 8, 7, 7, true>
+                        (in, out); break;
+                    case 9: IProductTetImpl<5, 5, 5, 9, 8, 8, true>
+                        (in, out); break;
+                    case 10: IProductTetImpl<5, 5, 5, 10, 9, 9, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductTet: # of modes / points combo not implemented.");
+                } break;
+            case 6:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 7: IProductTetImpl<6, 6, 6, 7, 6, 6, true>
+                        (in, out); break;
+                    case 8: IProductTetImpl<6, 6, 6, 8, 7, 7, true>
+                        (in, out); break;
+                    case 9: IProductTetImpl<6, 6, 6, 9, 8, 8, true>
+                        (in, out); break;
+                    case 10: IProductTetImpl<6, 6, 6, 10, 9, 9, true>
+                        (in, out); break;
+                    case 11: IProductTetImpl<6, 6, 6, 11, 10, 10, true>
+                        (in, out); break;
+                    case 12: IProductTetImpl<6, 6, 6, 12, 11, 11, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductTet: # of modes / points combo not implemented.");
+                } break;
+            case 7:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 8: IProductTetImpl<7, 7, 7, 8, 7, 7, true>
+                        (in, out); break;
+                    case 9: IProductTetImpl<7, 7, 7, 9, 8, 8, true>
+                        (in, out); break;
+                    case 10: IProductTetImpl<7, 7, 7, 10, 9, 9, true>
+                        (in, out); break;
+                    case 11: IProductTetImpl<7, 7, 7, 11, 10, 10, true>
+                        (in, out); break;
+                    case 12: IProductTetImpl<7, 7, 7, 12, 11, 11, true>
+                        (in, out); break;
+                    case 13: IProductTetImpl<7, 7, 7, 13, 12, 12, true>
+                        (in, out); break;
+                    case 14: IProductTetImpl<7, 7, 7, 14, 13, 13, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductTet: # of modes / points combo not implemented.");
+                } break;
+            case 8:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 9: IProductTetImpl<8, 8, 8, 9, 8, 8, true>
+                        (in, out); break;
+                    case 10: IProductTetImpl<8, 8, 8, 10, 9, 9, true>
+                        (in, out); break;
+                    case 11: IProductTetImpl<8, 8, 8, 11, 10, 10, true>
+                        (in, out); break;
+                    case 12: IProductTetImpl<8, 8, 8, 12, 11, 11, true>
+                        (in, out); break;
+                    case 13: IProductTetImpl<8, 8, 8, 13, 12, 12, true>
+                        (in, out); break;
+                    case 14: IProductTetImpl<8, 8, 8, 14, 13, 13, true>
+                        (in, out); break;
+                    case 15: IProductTetImpl<8, 8, 8, 15, 14, 14, true>
+                        (in, out); break;
+                    case 16: IProductTetImpl<8, 8, 8, 16, 15, 15, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductTet: # of modes / points combo not implemented.");
+                } break;
+            default: NEKERROR(ErrorUtil::efatal,
+                "IProductTet: # of modes / points combo not implemented.");
+
             }
         }
         else
         {
             switch(m_basis[0]->GetNumModes())
             {
-                case 2:  IProductTetImpl<2 ,2 ,2 ,3 ,2 ,2 ,false>(in, out); break;
-                case 3:  IProductTetImpl<3 ,3 ,3 ,4 ,3 ,3 ,false>(in, out); break;
-                case 4:  IProductTetImpl<4 ,4 ,4 ,5 ,4 ,4 ,false>(in, out); break;
-                case 5:  IProductTetImpl<5 ,5 ,5 ,6 ,5 ,5 ,false>(in, out); break;
-                case 6:  IProductTetImpl<6 ,6 ,6 ,7 ,6 ,6 ,false>(in, out); break;
-                case 7:  IProductTetImpl<7 ,7 ,7 ,8 ,7 ,7 ,false>(in, out); break;
-                case 8:  IProductTetImpl<8 ,8 ,8 ,9 ,8 ,8 ,false>(in, out); break;
-                case 9:  IProductTetImpl<9 ,9 ,9 ,10,9 ,9 ,false>(in, out); break;
-                case 10: IProductTetImpl<10,10,10,11,10,10,false>(in, out); break;
-                case 11: IProductTetImpl<11,11,11,12,11,11,false>(in, out); break;
+                case 2: switch(m_basis[0]->GetNumPoints())
+                {
+                    case 3: IProductTetImpl<2, 2, 2, 3, 2, 2, false>
+                        (in, out); break;
+                    case 4: IProductTetImpl<2, 2, 2, 4, 3, 3, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductTet: # of modes / points combo not implemented.");
+                } break;
+            case 3:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 4: IProductTetImpl<3, 3, 3, 4, 3, 3, false>
+                        (in, out); break;
+                    case 5: IProductTetImpl<3, 3, 3, 5, 4, 4, false>
+                        (in, out); break;
+                    case 6: IProductTetImpl<3, 3, 3, 6, 5, 5, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductTet: # of modes / points combo not implemented.");
+                } break;
+            case 4:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 5: IProductTetImpl<4, 4, 4, 5, 4, 4, false>
+                        (in, out); break;
+                    case 6: IProductTetImpl<4, 4, 4, 6, 5, 5, false>
+                        (in, out); break;
+                    case 7: IProductTetImpl<4, 4, 4, 7, 6, 6, false>
+                        (in, out); break;
+                    case 8: IProductTetImpl<4, 4, 4, 8, 7, 7, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductTet: # of modes / points combo not implemented.");
+                } break;
+            case 5:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 6: IProductTetImpl<5, 5, 5, 6, 5, 5, false>
+                        (in, out); break;
+                    case 7: IProductTetImpl<5, 5, 5, 7, 6, 6, false>
+                        (in, out); break;
+                    case 8: IProductTetImpl<5, 5, 5, 8, 7, 7, false>
+                        (in, out); break;
+                    case 9: IProductTetImpl<5, 5, 5, 9, 8, 8, false>
+                        (in, out); break;
+                    case 10: IProductTetImpl<5, 5, 5, 10, 9, 9, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductTet: # of modes / points combo not implemented.");
+                } break;
+            case 6:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 7: IProductTetImpl<6, 6, 6, 7, 6, 6, false>
+                        (in, out); break;
+                    case 8: IProductTetImpl<6, 6, 6, 8, 7, 7, false>
+                        (in, out); break;
+                    case 9: IProductTetImpl<6, 6, 6, 9, 8, 8, false>
+                        (in, out); break;
+                    case 10: IProductTetImpl<6, 6, 6, 10, 9, 9, false>
+                        (in, out); break;
+                    case 11: IProductTetImpl<6, 6, 6, 11, 10, 10, false>
+                        (in, out); break;
+                    case 12: IProductTetImpl<6, 6, 6, 12, 11, 11, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductTet: # of modes / points combo not implemented.");
+                } break;
+            case 7:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 8: IProductTetImpl<7, 7, 7, 8, 7, 7, false>
+                        (in, out); break;
+                    case 9: IProductTetImpl<7, 7, 7, 9, 8, 8, false>
+                        (in, out); break;
+                    case 10: IProductTetImpl<7, 7, 7, 10, 9, 9, false>
+                        (in, out); break;
+                    case 11: IProductTetImpl<7, 7, 7, 11, 10, 10, false>
+                        (in, out); break;
+                    case 12: IProductTetImpl<7, 7, 7, 12, 11, 11, false>
+                        (in, out); break;
+                    case 13: IProductTetImpl<7, 7, 7, 13, 12, 12, false>
+                        (in, out); break;
+                    case 14: IProductTetImpl<7, 7, 7, 14, 13, 13, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductTet: # of modes / points combo not implemented.");
+                } break;
+            case 8:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 9: IProductTetImpl<8, 8, 8, 9, 8, 8, false>
+                        (in, out); break;
+                    case 10: IProductTetImpl<8, 8, 8, 10, 9, 9, false>
+                        (in, out); break;
+                    case 11: IProductTetImpl<8, 8, 8, 11, 10, 10, false>
+                        (in, out); break;
+                    case 12: IProductTetImpl<8, 8, 8, 12, 11, 11, false>
+                        (in, out); break;
+                    case 13: IProductTetImpl<8, 8, 8, 13, 12, 12, false>
+                        (in, out); break;
+                    case 14: IProductTetImpl<8, 8, 8, 14, 13, 13, false>
+                        (in, out); break;
+                    case 15: IProductTetImpl<8, 8, 8, 15, 14, 14, false>
+                        (in, out); break;
+                    case 16: IProductTetImpl<8, 8, 8, 16, 15, 15, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductTet: # of modes / points combo not implemented.");
+                } break;
+            default: NEKERROR(ErrorUtil::efatal,
+                "IProductTet: # of modes / points combo not implemented.");
+
             }
+
         }
     }
 

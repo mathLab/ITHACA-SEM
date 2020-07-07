@@ -476,8 +476,9 @@ inline static void IProductTetKernel(
             }
         }
 
-        for (int q = 0, cnt_kj = 0; q < nm1-p; ++q, ++mode)
+        for (int q = 0; q < nm1-p; ++q, ++mode)
         {
+            int cnt_kj = 0;
             for (int k = 0; k < nq2; ++k)
             {
                 vec_t f_k = bdata1[mode*nq1] * f[cnt_kj] * w1[0]; //Load 3x

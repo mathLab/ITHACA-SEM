@@ -44,6 +44,50 @@ namespace Vmath
 namespace SIMD
 {
 
+    /// \brief Multiply vector z = x*y
+    template<class T>
+    void Vmul(const size_t n, const T *x,  const T *y, T *z)
+    {
+        using namespace tinysimd;
+        using vec_t = simd<T>;
+
+        size_t cnt = n;
+        // Vectorized loop
+        while (cnt >= vec_t::width)
+        {
+            // load
+            vec_t yChunk;
+            yChunk.load(y, is_not_aligned);
+            vec_t xChunk;
+            xChunk.load(x, is_not_aligned);
+
+            // z = x * y
+            vec_t zChunk = xChunk * yChunk;
+
+            // store
+            zChunk.store(z, is_not_aligned);
+
+            // update pointers
+            x += vec_t::width;
+            y += vec_t::width;
+            z += vec_t::width;
+            cnt-= vec_t::width;
+        }
+
+        // spillover loop
+        while(cnt)
+        {
+            // z = x * y;
+            *z = (*x) * (*y);
+            // update pointers
+            ++x;
+            ++y;
+            ++z;
+            --cnt;
+        }
+    }
+
+
     /// \brief  vvtvp (vector times vector plus vector): z = w*x + y
     template<class T>
     void Vvtvp(const size_t n, const T *w,  const T *x,  const T *y, T *z)
@@ -91,6 +135,52 @@ namespace SIMD
         }
     }
 
+    /// \brief  vvtvm (vector times vector plus vector): z = w*x - y
+    template<class T>
+    void Vvtvm(const size_t n, const T *w,  const T *x,  const T *y, T *z)
+    {
+        using namespace tinysimd;
+        using vec_t = simd<T>;
+
+        size_t cnt = n;
+        // Vectorized loop
+        while (cnt >= vec_t::width)
+        {
+            // load
+            vec_t wChunk;
+            wChunk.load(w, is_not_aligned);
+            vec_t yChunk;
+            yChunk.load(y, is_not_aligned);
+            vec_t xChunk;
+            xChunk.load(x, is_not_aligned);
+
+            // z = w * x - y
+            vec_t zChunk = wChunk * xChunk - yChunk;
+
+            // store
+            zChunk.store(z, is_not_aligned);
+
+            // update pointers
+            w += vec_t::width;
+            x += vec_t::width;
+            y += vec_t::width;
+            z += vec_t::width;
+            cnt-= vec_t::width;
+        }
+
+        // spillover loop
+        while(cnt)
+        {
+            // z = w * x - y;
+            *z = (*w) * (*x) - (*y);
+            // update pointers
+            ++w;
+            ++x;
+            ++y;
+            ++z;
+            --cnt;
+        }
+    }
 
     /// \brief  vvtvvtp (vector times vector plus vector times vector):
     // z = v*w + x*y

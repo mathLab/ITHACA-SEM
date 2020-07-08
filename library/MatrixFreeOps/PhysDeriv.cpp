@@ -17,11 +17,11 @@ std::string __register_PhysDeriv_Tri = GetOperatorFactory().RegisterCreatorFunct
 std::string __register_PhysDeriv_Tri_Deformed = GetOperatorFactory().RegisterCreatorFunction(
     std::string("PhysDeriv_Tri_Deformed"), &PhysDerivTri<true>::Create);
 
-// std::string __register_PhysDeriv_Tet = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("PhysDeriv_Tet_Regular"), &PhysDerivTet<4>::Create);
+std::string __register_PhysDeriv_Tet = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("PhysDeriv_Tet_Regular"), &PhysDerivTet<>::Create);
 
-// std::string __register_PhysDeriv_Tet_Deformed = GetOperatorFactory().RegisterCreatorFunction(
-//     std::string("PhysDeriv_Tet_Deformed"), &PhysDerivTet<4, true>::Create);
+std::string __register_PhysDeriv_Tet_Deformed = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("PhysDeriv_Tet_Deformed"), &PhysDerivTet<true>::Create);
 
 std::string __register_PhysDeriv_Hex = GetOperatorFactory().RegisterCreatorFunction(
     std::string("PhysDeriv_Hex_Regular"), &PhysDerivHex<>::Create);

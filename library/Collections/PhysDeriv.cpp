@@ -403,7 +403,10 @@ OperatorKey PhysDeriv_MatrixFree::m_typeArr[] =
         PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Hex"),
     GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(ePrism, ePhysDeriv, eMatrixFree, false),
-        PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Prism")
+        PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Prism"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eTetrahedron, ePhysDeriv, eMatrixFree, false),
+        PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Tet")
 
 };
 

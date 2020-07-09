@@ -1084,5 +1084,76 @@ namespace Nektar
                 BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
             }
         }
+        BOOST_AUTO_TEST_CASE(TestSegIProductWRTDerivBase_SumFac_UniformP_MultiElmt_CoordimTwo)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.0, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 1.0, 0.0));
+
+            SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1,2);
+
+            Nektar::LibUtilities::PointsType segPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            unsigned int numSegPoints = 6;
+            const Nektar::LibUtilities::PointsKey segPointsKeyDir1(numSegPoints, segPointsTypeDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,segPointsKeyDir1);
+
+            Nektar::LocalRegions::SegExpSharedPtr Exp =
+                MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1, segGeom);
+
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+
+            int nelmts = 10;
+            for(int i = 0; i < nelmts; ++i)
+            {
+                CollExp.push_back(Exp);
+            }
+
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
+
+            const int nq = Exp->GetTotPoints();
+            const int nm = Exp->GetNcoeffs();
+            Array<OneD, NekDouble> xc(nq),yc(nq), tmp,tmp1;
+            Array<OneD, NekDouble> phys1(nelmts*nq);
+            Array<OneD, NekDouble> phys2(nelmts*nq);
+            Array<OneD, NekDouble> coeffs1(nelmts*nm);
+            Array<OneD, NekDouble> coeffs2(nelmts*nm);
+
+            Exp->GetCoords(xc,yc);
+
+            for (int i = 0; i < nq; ++i)
+            {
+                phys1[i] = sin(xc[i]);
+                phys2[i] = cos(yc[i]);
+            }
+            Exp->IProductWRTDerivBase(0, phys1, coeffs1);
+            Exp->IProductWRTDerivBase(1, phys2, coeffs2);
+
+            for(int i = 1; i < nelmts; ++i)
+            {
+                Vmath::Vcopy(nq,phys1,1,tmp = phys1+i*nq,1);
+                Vmath::Vcopy(nq,phys2,1,tmp = phys2+i*nq,1);
+
+                // Standard routines
+                Exp->IProductWRTDerivBase(0, phys1 + i*nq,
+                                          tmp  = coeffs1 + i*nm);
+                Exp->IProductWRTDerivBase(1, phys2 + i*nq,
+                                          tmp  = coeffs2 + i*nm);
+            }
+            Vmath::Vadd(nelmts*nm,coeffs1,1,coeffs2,1,coeffs1,1);
+
+            c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1,
+                            phys2, coeffs2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < coeffs1.size(); ++i)
+            {
+                coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+                coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+                BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
+            }
+        }
     }
 }

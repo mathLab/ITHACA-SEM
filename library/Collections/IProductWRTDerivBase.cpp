@@ -702,19 +702,30 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
         }
 
         virtual void operator()(
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &output1,
-                      Array<OneD,       NekDouble> &output2,
+                const Array<OneD, const NekDouble> &entry0,
+                      Array<OneD,       NekDouble> &entry1,
+                      Array<OneD,       NekDouble> &entry2,
+                      Array<OneD,       NekDouble> &entry3,
                       Array<OneD,       NekDouble> &wsp)
         {
-            boost::ignore_unused(output1, output2);
+            Array<OneD, Array<OneD, const NekDouble> > in(3);
+            Array<OneD, NekDouble> output;
 
-            Vmath::Vmul(m_numElmt*m_nquad0, m_jac, 1, input, 1, wsp, 1);
-            Vmath::Vmul(m_numElmt*m_nquad0, &m_derivFac[0][0], 1,
-                                            &wsp[0],           1,
-                                            &wsp[0],           1);
+            output = (m_coordim == 3)? entry3: (m_coordim == 2)?
+                entry2: entry1;
 
+            in[0] = entry0; in[1] = entry1;
+            in[2] = entry2;
+
+            // calculate dx/dxi in[0] + dy/dxi in[1] + dz/dxi in[2]
+            Vmath::Vmul (m_wspSize,m_derivFac[0], 1, in[0], 1, wsp, 1);
+            for(int i = 1; i < m_coordim; ++i)
+            {
+                Vmath::Vvtvp (m_wspSize,m_derivFac[i],1,in[i],1,wsp,1,wsp,1);
+            }
+            Vmath::Vmul(m_wspSize, m_jac, 1, wsp, 1, wsp, 1);
+
+            
             // out = B0*in;
             Blas::Dgemm('T', 'N', m_nmodes0, m_numElmt, m_nquad0,
                         1.0, m_derbase0.get(), m_nquad0,
@@ -735,6 +746,7 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
     protected:
         const int                       m_nquad0;
         const int                       m_nmodes0;
+        int                             m_coordim;
         Array<OneD, const NekDouble>    m_jac;
         Array<OneD, const NekDouble>    m_derbase0;
         Array<TwoD, const NekDouble>    m_derivFac;
@@ -748,6 +760,7 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
               m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
               m_derbase0(m_stdExp->GetBasis(0)->GetDbdata())
         {
+            m_coordim  = pCollExp[0]->GetCoordim();
             m_wspSize = m_numElmt*m_nquad0;
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
             m_jac = pGeomData->GetJacWithStdWeights(pCollExp);
@@ -800,7 +813,11 @@ class IProductWRTDerivBase_SumFac_Quad : public Operator
             for(int i = 0; i < 2; ++i)
             {
                 Vmath::Vmul(ntot, m_derivFac[i], 1, in[0], 1, tmp[i], 1);
-                Vmath::Vvtvp(ntot, m_derivFac[i + 2], 1, in[1], 1, tmp[i], 1, tmp[i], 1);
+                for(int j = 1; j < m_coordim; ++j)
+                {
+                    Vmath::Vvtvp(ntot, m_derivFac[i + 2*j], 1, in[j], 1,
+                                 tmp[i], 1, tmp[i], 1);
+                }
             }
 
             // Iproduct wrt derivative of base 0
@@ -947,9 +964,11 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
             for (int i = 0; i < 2; ++i)
             {
                 Vmath::Vmul(ntot, m_derivFac[i], 1, in[0], 1, tmp[i], 1);
-                Vmath::Vvtvp(ntot, m_derivFac[i+2], 1, in[1], 1, tmp[i], 1,
-                    tmp[i], 1);
-
+                for(int j = 1; j < m_coordim; ++j)
+                {
+                    Vmath::Vvtvp(ntot, m_derivFac[i+2*j], 1, in[j], 1,
+                                 tmp[i], 1, tmp[i], 1);
+                }
             }
 
             // Multiply by factor: 2/(1-z1)

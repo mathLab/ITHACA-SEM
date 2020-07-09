@@ -1314,6 +1314,434 @@ private:
     int m_nmTot;
 };
 
+template<bool DEFORMED = false>
+struct IProductWRTDerivBaseTet : public IProductWRTDerivBase, public Helper<3, DEFORMED>
+{
+    IProductWRTDerivBaseTet(std::vector<LibUtilities::BasisSharedPtr> basis,
+                   int nElmt)
+        : IProductWRTDerivBase(basis, nElmt),
+          Helper<3, DEFORMED>(basis, nElmt),
+          m_nmTot(LibUtilities::StdTetData::getNumberOfCoefficients(
+                      this->m_nm[0], this->m_nm[1], this->m_nm[2]))
+    {
+    }
+
+    static std::shared_ptr<Operator> Create(
+        std::vector<LibUtilities::BasisSharedPtr> basis,
+        int nElmt)
+    {
+        return std::make_shared<IProductWRTDerivBaseTet<DEFORMED>>(basis, nElmt);
+    }
+
+   void operator()( const Array<OneD, Array<OneD, NekDouble>> &in,
+        Array<OneD, NekDouble> &out) final
+    {
+        // Check preconditions
+        ASSERTL0(m_basis[0]->GetNumModes() == m_basis[1]->GetNumModes() &&
+            m_basis[0]->GetNumModes() == m_basis[2]->GetNumModes() &&
+            m_basis[0]->GetNumPoints() == m_basis[1]->GetNumPoints()+1 &&
+            m_basis[0]->GetNumPoints() == m_basis[2]->GetNumPoints()+1,
+            "MatrixFree requires homogenous modes/points");
+
+        if (m_basis[0]->GetBasisType() == LibUtilities::eModified_A)
+        {
+            switch(m_basis[0]->GetNumModes())
+            {
+                case 2:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 3: IProductWRTDerivBaseTetImpl<2, 2, 2, 3, 2, 2, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 4: IProductWRTDerivBaseTetImpl<2, 2, 2, 4, 3, 3, true>
+                            (in[0], in[1], in[2], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTet: # of modes / points combo not implemented.");
+                    } break;
+                case 3:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 4: IProductWRTDerivBaseTetImpl<3, 3, 3, 4, 3, 3, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 5: IProductWRTDerivBaseTetImpl<3, 3, 3, 5, 4, 4, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 6: IProductWRTDerivBaseTetImpl<3, 3, 3, 6, 5, 5, true>
+                            (in[0], in[1], in[2], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTet: # of modes / points combo not implemented.");
+                    } break;
+                case 4:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 5: IProductWRTDerivBaseTetImpl<4, 4, 4, 5, 4, 4, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 6: IProductWRTDerivBaseTetImpl<4, 4, 4, 6, 5, 5, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 7: IProductWRTDerivBaseTetImpl<4, 4, 4, 7, 6, 6, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 8: IProductWRTDerivBaseTetImpl<4, 4, 4, 8, 7, 7, true>
+                            (in[0], in[1], in[2], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTet: # of modes / points combo not implemented.");
+                    } break;
+                case 5:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 6: IProductWRTDerivBaseTetImpl<5 ,5, 5, 6, 5, 5, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 7: IProductWRTDerivBaseTetImpl<5 ,5, 5, 7, 6, 6, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 8: IProductWRTDerivBaseTetImpl<5 ,5, 5, 8, 7, 7, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 9: IProductWRTDerivBaseTetImpl<5 ,5, 5, 9, 8, 8, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 10: IProductWRTDerivBaseTetImpl<5 ,5, 5, 10, 9, 9, true>
+                            (in[0], in[1], in[2], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTet: # of modes / points combo not implemented.");
+                    } break;
+                case 6:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 7: IProductWRTDerivBaseTetImpl<6, 6, 6, 7, 6, 6, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 8: IProductWRTDerivBaseTetImpl<6, 6, 6, 8, 7, 7, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 9: IProductWRTDerivBaseTetImpl<6, 6, 6, 9, 8, 8, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 10: IProductWRTDerivBaseTetImpl<6, 6, 6, 10, 9, 9, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 11: IProductWRTDerivBaseTetImpl<6, 6, 6, 11, 10, 10, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 12: IProductWRTDerivBaseTetImpl<6, 6, 6, 12, 11, 11, true>
+                            (in[0], in[1], in[2], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTet: # of modes / points combo not implemented.");
+                    } break;
+                case 7:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 8: IProductWRTDerivBaseTetImpl<7, 7, 7, 8, 7, 7, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 9: IProductWRTDerivBaseTetImpl<7, 7, 7, 9, 8, 8, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 10: IProductWRTDerivBaseTetImpl<7, 7, 7, 10, 9, 9, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 11: IProductWRTDerivBaseTetImpl<7, 7, 7, 11, 10, 10, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 12: IProductWRTDerivBaseTetImpl<7, 7, 7, 12, 11, 11, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 13: IProductWRTDerivBaseTetImpl<7, 7, 7, 13, 12, 12, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 14: IProductWRTDerivBaseTetImpl<7, 7, 7, 14, 13, 13, true>
+                            (in[0], in[1], in[2], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTet: # of modes / points combo not implemented.");
+                    } break;
+                case 8:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 9: IProductWRTDerivBaseTetImpl<8, 8, 8, 9, 8, 8, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 10: IProductWRTDerivBaseTetImpl<8, 8, 8, 10, 9, 9, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 11: IProductWRTDerivBaseTetImpl<8, 8, 8, 11, 10, 10, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 12: IProductWRTDerivBaseTetImpl<8, 8, 8, 12, 11, 11, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 13: IProductWRTDerivBaseTetImpl<8, 8, 8, 13, 12, 12, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 14: IProductWRTDerivBaseTetImpl<8, 8, 8, 14, 13, 13, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 15: IProductWRTDerivBaseTetImpl<8, 8, 8, 15, 14, 14, true>
+                            (in[0], in[1], in[2], out); break;
+                        case 16: IProductWRTDerivBaseTetImpl<8, 8, 8, 16, 15, 15, true>
+                            (in[0], in[1], in[2], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTet: # of modes / points combo not implemented.");
+                    } break;
+                default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTet: # of modes / points combo not implemented.");
+            }
+        }
+        else
+        {
+            switch(m_basis[0]->GetNumModes())
+            {
+                case 2:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 3: IProductWRTDerivBaseTetImpl<2, 2, 2, 3, 2, 2, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 4: IProductWRTDerivBaseTetImpl<2, 2, 2, 4, 3, 3, false>
+                            (in[0], in[1], in[2], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTet: # of modes / points combo not implemented.");
+                    } break;
+                case 3:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 4: IProductWRTDerivBaseTetImpl<3, 3, 3, 4, 3, 3, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 5: IProductWRTDerivBaseTetImpl<3, 3, 3, 5, 4, 4, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 6: IProductWRTDerivBaseTetImpl<3, 3, 3, 6, 5, 5, false>
+                            (in[0], in[1], in[2], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTet: # of modes / points combo not implemented.");
+                    } break;
+                case 4:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 5: IProductWRTDerivBaseTetImpl<4, 4, 4, 5, 4, 4, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 6: IProductWRTDerivBaseTetImpl<4, 4, 4, 6, 5, 5, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 7: IProductWRTDerivBaseTetImpl<4, 4, 4, 7, 6, 6, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 8: IProductWRTDerivBaseTetImpl<4, 4, 4, 8, 7, 7, false>
+                            (in[0], in[1], in[2], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTet: # of modes / points combo not implemented.");
+                    } break;
+                case 5:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 6: IProductWRTDerivBaseTetImpl<5 ,5, 5, 6, 5, 5, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 7: IProductWRTDerivBaseTetImpl<5 ,5, 5, 7, 6, 6, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 8: IProductWRTDerivBaseTetImpl<5 ,5, 5, 8, 7, 7, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 9: IProductWRTDerivBaseTetImpl<5 ,5, 5, 9, 8, 8, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 10: IProductWRTDerivBaseTetImpl<5 ,5, 5, 10, 9, 9, false>
+                            (in[0], in[1], in[2], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTet: # of modes / points combo not implemented.");
+                    } break;
+                case 6:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 7: IProductWRTDerivBaseTetImpl<6, 6, 6, 7, 6, 6, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 8: IProductWRTDerivBaseTetImpl<6, 6, 6, 8, 7, 7, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 9: IProductWRTDerivBaseTetImpl<6, 6, 6, 9, 8, 8, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 10: IProductWRTDerivBaseTetImpl<6, 6, 6, 10, 9, 9, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 11: IProductWRTDerivBaseTetImpl<6, 6, 6, 11, 10, 10, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 12: IProductWRTDerivBaseTetImpl<6, 6, 6, 12, 11, 11, false>
+                            (in[0], in[1], in[2], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTet: # of modes / points combo not implemented.");
+                    } break;
+                case 7:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 8: IProductWRTDerivBaseTetImpl<7, 7, 7, 8, 7, 7, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 9: IProductWRTDerivBaseTetImpl<7, 7, 7, 9, 8, 8, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 10: IProductWRTDerivBaseTetImpl<7, 7, 7, 10, 9, 9, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 11: IProductWRTDerivBaseTetImpl<7, 7, 7, 11, 10, 10, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 12: IProductWRTDerivBaseTetImpl<7, 7, 7, 12, 11, 11, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 13: IProductWRTDerivBaseTetImpl<7, 7, 7, 13, 12, 12, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 14: IProductWRTDerivBaseTetImpl<7, 7, 7, 14, 13, 13, false>
+                            (in[0], in[1], in[2], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTet: # of modes / points combo not implemented.");
+                    } break;
+                case 8:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 9: IProductWRTDerivBaseTetImpl<8, 8, 8, 9, 8, 8, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 10: IProductWRTDerivBaseTetImpl<8, 8, 8, 10, 9, 9, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 11: IProductWRTDerivBaseTetImpl<8, 8, 8, 11, 10, 10, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 12: IProductWRTDerivBaseTetImpl<8, 8, 8, 12, 11, 11, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 13: IProductWRTDerivBaseTetImpl<8, 8, 8, 13, 12, 12, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 14: IProductWRTDerivBaseTetImpl<8, 8, 8, 14, 13, 13, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 15: IProductWRTDerivBaseTetImpl<8, 8, 8, 15, 14, 14, false>
+                            (in[0], in[1], in[2], out); break;
+                        case 16: IProductWRTDerivBaseTetImpl<8, 8, 8, 16, 15, 15, false>
+                            (in[0], in[1], in[2], out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTet: # of modes / points combo not implemented.");
+                    } break;
+                default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBTet: # of modes / points combo not implemented.");
+            }
+        }
+    }
+
+
+    template<int NM0, int NM1, int NM2, int NQ0, int NQ1, int NQ2, bool CORRECT>
+    void IProductWRTDerivBaseTetImpl(
+        const Array<OneD, const NekDouble> &input0,
+        const Array<OneD, const NekDouble> &input1,
+        const Array<OneD, const NekDouble> &input2,
+              Array<OneD,       NekDouble> &output)
+    {
+        auto* inptr0 = input0.data();
+        auto* inptr1 = input1.data();
+        auto* inptr2 = input2.data();
+        auto* outptr = output.data();
+
+        constexpr auto ndf = 9u;
+        constexpr auto nqTot = NQ0 * NQ1 * NQ2;
+        constexpr auto nqBlocks = nqTot * vec_t::width;
+        const auto nmBlocks = m_nmTot * vec_t::width;
+
+
+        // Get size of jacobian factor block
+        auto dJSize = 1u;
+        auto dfSize = ndf;
+        if (DEFORMED)
+        {
+            dJSize = nqTot;
+            dfSize = ndf*nqTot;
+        }
+
+        vec_t wsp[NQ1 * NQ2 + NQ2];
+
+        std::vector<vec_t, allocator<vec_t>>
+            tmpIn0(nqTot), tmpIn1(nqTot), tmpIn2(nqTot),
+            tmp0(nqTot), tmp1(nqTot), tmp2(nqTot), tmpOut(m_nmTot);
+
+        const vec_t* df_ptr;
+        const vec_t* jac_ptr;
+
+        std::vector<vec_t, allocator<vec_t>>& Z0 = this->m_Z[0];
+        std::vector<vec_t, allocator<vec_t>>& Z1 = this->m_Z[1];
+        std::vector<vec_t, allocator<vec_t>>& Z2 = this->m_Z[2];
+
+        for (int e =0; e < this->m_nBlocks; ++e)
+        {
+            // Jacobian
+            jac_ptr = &(this->m_jac[dJSize*e]);
+
+            // Derivative factor
+            df_ptr = &(this->m_df[dfSize*e]);
+
+            // Load and transpose data
+            load_interleave(inptr0, nqTot, tmpIn0);
+            load_interleave(inptr1, nqTot, tmpIn1);
+            load_interleave(inptr2, nqTot, tmpIn2);
+
+            vec_t df0, df1, df2, df3, df4, df5, df6, df7, df8;
+            if (!DEFORMED)
+            {
+                df0 = df_ptr[0];
+                df1 = df_ptr[1];
+                df2 = df_ptr[2];
+                df3 = df_ptr[3];
+                df4 = df_ptr[4];
+                df5 = df_ptr[5];
+                df6 = df_ptr[6];
+                df7 = df_ptr[7];
+                df8 = df_ptr[8];
+            }
+
+            for (size_t k = 0, cnt_kji = 0; k < NQ2; ++k)
+            {
+                vec_t f2 = 2.0 / (1.0 - Z2[k]); // Load 1x
+
+                for (size_t j = 0; j < NQ1; ++j)
+                {
+                    vec_t Z1Load = Z1[j]; // Load1x
+                    vec_t f3 = 0.5 * (1.0 + Z1Load);
+                    vec_t f0 = 2.0 * f2 / (1.0 - Z1Load);
+
+                    for (size_t i = 0; i < NQ0; ++i, ++cnt_kji)
+                    {
+                        if (DEFORMED)
+                        {
+                            df0 = df_ptr[cnt_kji * ndf];
+                            df1 = df_ptr[cnt_kji * ndf + 1];
+                            df2 = df_ptr[cnt_kji * ndf + 2];
+                            df3 = df_ptr[cnt_kji * ndf + 3];
+                            df4 = df_ptr[cnt_kji * ndf + 4];
+                            df5 = df_ptr[cnt_kji * ndf + 5];
+                            df6 = df_ptr[cnt_kji * ndf + 6];
+                            df7 = df_ptr[cnt_kji * ndf + 7];
+                            df8 = df_ptr[cnt_kji * ndf + 8];
+                        }
+
+                        // Calculate dx/dxi in[0] + dy/dxi in[1] + dz/dxi in[2]
+                        vec_t tI0 = tmpIn0[cnt_kji]; // load 1x
+                        vec_t tI1 = tmpIn1[cnt_kji]; // load 1x
+                        vec_t tI2 = tmpIn2[cnt_kji]; // load 1x
+                        vec_t t0 = df0 * tI0 + df3 * tI1 + df6 * tI2;
+                        vec_t t1 = df1 * tI0 + df4 * tI1 + df7 * tI2;
+                        vec_t t2 = df2 * tI0 + df5 * tI1 + df8 * tI2;
+
+                        // Multiply by geometric factors
+                        vec_t f1 = 0.5 * (1.0 + Z0[i]); // Load 1x
+
+                        // Scale by geometric factor 1 and add to t0
+                        t0.fma(t1+t2, f1);
+                        // Scale by geometric factor 0
+                        t0 *= f0;
+
+                        // Scale by geometric factor 3 and add to t1
+                        t1.fma(t2, f3);
+                        // Scale by geometric factor 2
+                        t1 *= f2;
+
+                        // Store
+                        tmp0[cnt_kji] = t0; // store 1x
+                        tmp1[cnt_kji] = t1; // store 1x
+                        tmp2[cnt_kji] = t2; // store 1x
+                    }
+                }
+            }
+
+            // IP DB0 B1 B2
+            IProductTetKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, CORRECT, false,
+                false, DEFORMED>(
+                tmp0, this->m_dbdata[0], this->m_bdata[1], this->m_bdata[2],
+                this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
+                wsp, tmpOut);
+
+            // IP B0 DB1 B2
+            IProductTetKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, CORRECT, false,
+                true, DEFORMED>(
+                tmp1, this->m_bdata[0], this->m_dbdata[1], this->m_bdata[2],
+                this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
+                wsp, tmpOut);
+
+            // IP B0 B1 DB2
+            IProductTetKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, CORRECT, false,
+                true, DEFORMED>(
+                tmp2, this->m_bdata[0], this->m_bdata[1], this->m_dbdata[2],
+                this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
+                wsp, tmpOut);
+
+            // de-interleave and store data
+            deinterleave_store(tmpOut, m_nmTot, outptr);
+
+            inptr0 += nqBlocks;
+            inptr1 += nqBlocks;
+            inptr2 += nqBlocks;
+            outptr += nmBlocks;
+        }
+    }
+
+private:
+    int m_nmTot;
+};
+
 } // namespace MatrixFree
 } // namespace Nektar
 

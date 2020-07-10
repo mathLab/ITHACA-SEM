@@ -411,17 +411,11 @@ struct avx2Double4
         _data = _mm256_set1_pd(rhs);
     }
 
-    //gather
+    // gather/scatter with sse2
     template <typename T>
     inline void gather(scalarType const* p, const sse2Int4<T>& indices)
     {
         _data = _mm256_i32gather_pd(p, indices._data, 8);
-    }
-
-    template <typename T>
-    inline void gather(scalarType const* p, const avx2Long4<T>& indices)
-    {
-        _data = _mm256_i64gather_pd(p, indices._data, 8);
     }
 
     template <typename T>
@@ -431,10 +425,17 @@ struct avx2Double4
         alignas(alignment) scalarArray tmp;
         _mm256_store_pd(tmp, _data);
 
-        out[_mm_extract_epi32(indices._data, 0)] = tmp[0];
+        out[_mm_extract_epi32(indices._data, 0)] = tmp[0]; // SSE4.1
         out[_mm_extract_epi32(indices._data, 1)] = tmp[1];
         out[_mm_extract_epi32(indices._data, 2)] = tmp[2];
         out[_mm_extract_epi32(indices._data, 3)] = tmp[3];
+    }
+
+    // gather scatter with avx2
+    template <typename T>
+    inline void gather(scalarType const* p, const avx2Long4<T>& indices)
+    {
+        _data = _mm256_i64gather_pd(p, indices._data, 8);
     }
 
     template <typename T>

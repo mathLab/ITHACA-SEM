@@ -30,7 +30,6 @@ void TransposeData(const int       nElmt,
 
     // Number of blocks
     size_t numBlocks = nElmt / vecWidth;
-    size_t pad = nElmt % vecWidth;
 
     for (size_t i = 0; i < numBlocks; ++i)
     {
@@ -68,7 +67,6 @@ void InvTransposeData(const int       nElmt,
 
     // Number of blocks
     size_t numBlocks = nElmt / vecWidth;
-    size_t pad = nElmt % vecWidth;
 
     for (size_t i = 0; i < numBlocks; ++i)
     {

@@ -2320,5 +2320,92 @@ namespace QuadCollectionTests
             BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
         }
     }
+
+    BOOST_AUTO_TEST_CASE(TestQuadIProductWRTDerivBase_SumFac_VariableP_MultiElmt_threedim)
+    {
+        SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.0, -1.5, 0.0));
+        SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(3u, 1u,  1.0, -1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u,  1.0,  1.0, 1.0));
+        SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3, 3, -1.0,  1.0, 1.0));
+        
+        SpatialDomains::QuadGeomSharedPtr quadGeom = CreateQuad(v0, v1, v2, v3);
+        
+        Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+        Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+        const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(7, quadPointsTypeDir1);
+        const Nektar::LibUtilities::PointsKey quadPointsKeyDir2(5, quadPointsTypeDir1);
+        const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,6,quadPointsKeyDir1);
+        const Nektar::LibUtilities::BasisKey basisKeyDir2(basisTypeDir1,4,quadPointsKeyDir2);
+        
+        Nektar::LocalRegions::QuadExpSharedPtr Exp =
+            MemoryManager<Nektar::LocalRegions::QuadExp>::AllocateSharedPtr(basisKeyDir1, basisKeyDir2, quadGeom);
+
+        Nektar::StdRegions::StdQuadExpSharedPtr stdExp =
+            MemoryManager<Nektar::StdRegions::StdQuadExp>::AllocateSharedPtr(basisKeyDir1, basisKeyDir2);
+
+        int nelmts = 10;
+        
+        std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+        for(int i = 0; i < nelmts; ++i)
+        {
+            CollExp.push_back(Exp);
+        }
+        
+        LibUtilities::SessionReaderSharedPtr dummySession;
+        Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
+        Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+        Collections::Collection     c(CollExp, impTypes);
+        
+        const int nq = Exp->GetTotPoints();
+        const int nm = Exp->GetNcoeffs();
+        Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq), tmp,tmp1;
+        Array<OneD, NekDouble> phys1(nelmts*nq);
+        Array<OneD, NekDouble> phys2(nelmts*nq);
+        Array<OneD, NekDouble> phys3(nelmts*nq);
+        Array<OneD, NekDouble> coeffs1(nelmts*nm);
+        Array<OneD, NekDouble> coeffs2(nelmts*nm);
+        
+        Exp->GetCoords(xc, yc, zc);
+
+        for (int i = 0; i < nq; ++i)
+        {
+            phys1[i] = sin(xc[i])*cos(yc[i]);
+            phys2[i] = cos(xc[i])*sin(yc[i]);
+            phys2[i] = cos(xc[i])*sin(zc[i]);
+        }
+        for(int i = 1; i < nelmts; ++i)
+        {
+            Vmath::Vcopy(nq,phys1,1,tmp = phys1+i*nq,1);
+            Vmath::Vcopy(nq,phys2,1,tmp = phys2+i*nq,1);
+            Vmath::Vcopy(nq,phys3,1,tmp = phys3+i*nq,1);
+        }
+        
+        for(int i = 0; i < nelmts; ++i)
+        {
+            // Standard routines
+            Exp->IProductWRTDerivBase(0, phys1 + i*nq,
+                                      tmp  = coeffs1 + i*nm);
+            Exp->IProductWRTDerivBase(1, phys2 + i*nq,
+                                      tmp1 = coeffs2 + i*nm);
+            Vmath::Vadd(nm,coeffs1 +i*nm ,1,coeffs2 + i*nm ,1,
+                        tmp = coeffs1 + i*nm,1);
+            Exp->IProductWRTDerivBase(2, phys3 + i*nq,
+                                      tmp1 = coeffs2 + i*nm);
+            Vmath::Vadd(nm,coeffs1 +i*nm ,1,coeffs2 + i*nm ,1,
+                        tmp = coeffs1 + i*nm,1);
+        }
+        
+        c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1,
+                        phys2, phys3, coeffs2);
+        
+        double epsilon = 1.0e-8;
+        for(int i = 0; i < coeffs1.size(); ++i)
+        {
+            coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+            coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+            BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
+        }
+    }
+
 } // namespace QuadCollectionTests
 } // namespace Nektar

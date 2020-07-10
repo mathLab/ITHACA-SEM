@@ -108,6 +108,7 @@ namespace Nektar
 	double end_param_dir1;
 	int use_fine_grid_VV;
 	int use_fine_grid_VV_and_load_ref;
+	int use_fine_grid_VV_random;
 
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm;
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm_Coeffs;

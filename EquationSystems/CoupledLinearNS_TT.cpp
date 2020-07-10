@@ -7146,14 +7146,36 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			current_nu = current_param[1];
 			if (debug_mode)
 			{
-//				cout << " VV online phase current nu " << current_nu << endl;
-//				cout << " VV online phase current w " << w << endl;
+	//			cout << " VV online phase current nu " << current_nu << endl;
+	//			cout << " VV online phase current w " << w << endl;
 			}
 			Set_m_kinvis( current_nu );
 			if (use_Newton)
 			{
 				DoInitialiseAdv(cluster_mean_x, cluster_mean_y);
 			}
+
+			// test for debug purpose
+			cluster_mean_x = snapshot_x_collection_VV[iter_index];
+			cluster_mean_y = snapshot_y_collection_VV[iter_index];
+			Eigen::VectorXd snap_x = Eigen::VectorXd::Zero(cluster_mean_x.num_elements());
+			Eigen::VectorXd snap_y = Eigen::VectorXd::Zero(cluster_mean_x.num_elements());
+			for (int index_recr = 0; index_recr < cluster_mean_x.num_elements(); ++index_recr)
+			{
+				snap_x(index_recr) = snapshot_x_collection_VV[iter_index][index_recr];
+				snap_y(index_recr) = snapshot_y_collection_VV[iter_index][index_recr];
+			}
+			cout << "snap_x.norm() " << snap_x.norm() << endl;
+			cout << "snap_y.norm() " << snap_y.norm() << endl;
+			for (int index_recr = 0; index_recr < cluster_mean_x.num_elements(); ++index_recr)
+			{
+				snap_x(index_recr) = snapshot_x_collection[iter_index][index_recr];
+				snap_y(index_recr) = snapshot_y_collection[iter_index][index_recr];
+			}
+			cout << "sample snap_x.norm() " << snap_x.norm() << endl;
+			cout << "sample snap_y.norm() " << snap_y.norm() << endl;
+
+
 			Eigen::MatrixXd curr_xy_proj = project_onto_basis(cluster_mean_x, cluster_mean_y);
 			Eigen::MatrixXd affine_mat_proj;
 			Eigen::VectorXd affine_vec_proj;
@@ -7185,18 +7207,31 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 				}
 				else if (parameter_space_dimension == 2)
 				{
+					cout << " VV online phase current nu " << current_nu << endl;
+					cout << " VV online phase current w " << w << endl;
 					affine_mat_proj = gen_affine_mat_proj_2d(current_nu, w);
 					affine_vec_proj = gen_affine_vec_proj_2d(current_nu, w, current_index);
 				}
 				solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
 				relative_change_error = (solve_affine - prev_solve_affine).norm() / prev_solve_affine.norm();
-//				cout << "relative_change_error " << relative_change_error << endl;
+				cout << "relative_change_error " << relative_change_error << " no_iter " << no_iter << endl;
 				no_iter++;
 			} 
-			while( ((relative_change_error > 1e-5) && (no_iter < 100)) );
+			while( ((relative_change_error > 1e-12) && (no_iter < 10000)) );
 //			cout << "ROM solve no iters used " << no_iter << endl;
 			Eigen::VectorXd repro_solve_affine = RB * solve_affine;
 			Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+			recover_snapshot_loop(reconstruct_solution, field_x, field_y);
+			snap_x = Eigen::VectorXd::Zero(cluster_mean_x.num_elements());
+			snap_y = Eigen::VectorXd::Zero(cluster_mean_x.num_elements());
+			for (int index_recr = 0; index_recr < cluster_mean_x.num_elements(); ++index_recr)
+			{
+				snap_x(index_recr) = field_x[index_recr];
+				snap_y(index_recr) = field_y[index_recr];
+			}
+			cout << "solved snap_x.norm() " << snap_x.norm() << endl;
+			cout << "solved snap_y.norm() " << snap_y.norm() << endl;
+
 			if (write_ROM_field || (qoi_dof >= 0))
 			{
 				locROM_qoi = recover_snapshot_data(reconstruct_solution, 0);
@@ -7439,7 +7474,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //				cout << "relative_change_error " << relative_change_error << endl;
 				no_iter++;
 			} 
-			while( ((relative_change_error > 1e-3) && (no_iter < 20)) );
+			while( ((relative_change_error > 1e-12) && (no_iter < 20000)) );
 //			cout << "ROM solve no iters used " << no_iter << endl;
 			repro_solve_affine = RB.leftCols(RBsize-reduction_int)  * solve_affine;
 			Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
@@ -8149,6 +8184,14 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		{
 			use_fine_grid_VV_and_load_ref = 0;
 		} 
+		if (m_session->DefinesParameter("use_fine_grid_VV_random")) 
+		{
+			use_fine_grid_VV_random = m_session->GetParameter("use_fine_grid_VV_random");
+		}
+		else
+		{
+			use_fine_grid_VV_random = 0;
+		} 
 		if (m_session->DefinesParameter("fine_grid_dir0")) 
 		{
 			fine_grid_dir0 = m_session->GetParameter("fine_grid_dir0");
@@ -8288,6 +8331,37 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 					current_index++;
 //					cout << "p0 " << p0 << " p1 " << p1 << endl;
 				}
+			}
+
+			// or alternatively overwrite with given random vector
+			if (use_fine_grid_VV_random)
+			{
+				int current_index = 0;
+				for (int i1 = 0; i1 < fine_grid_dir0; i1++)
+				{
+					// generate the correct string
+					std::stringstream sstm;
+					sstm << "VV_param" << i1 << "_dir0";
+					std::string result = sstm.str();
+					double param_dir0 = m_session->GetParameter(result);
+		
+					for (int i2 = 0; i2 < fine_grid_dir1; i2++)
+					{
+
+						// generate the correct string
+						std::stringstream sstm1;
+						sstm1 << "VV_param" << i2 << "_dir1";
+						std::string result1 = sstm1.str();
+						double param_dir1 = m_session->GetParameter(result1);
+
+
+						fine_general_param_vector[current_index][0] = param_dir0;
+						fine_general_param_vector[current_index][1] = param_dir1;
+						current_index++;
+ 					//	cout << "p0 " << param_dir0 << " p1 " << param_dir1 << endl;
+					}
+				}
+				
 			}
 
 			// output fine sample grid as *.txt

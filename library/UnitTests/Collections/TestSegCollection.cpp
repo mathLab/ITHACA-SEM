@@ -46,10 +46,11 @@ namespace Nektar
     {
         SpatialDomains::SegGeomSharedPtr CreateSegGeom(unsigned int id,
                                                        SpatialDomains::PointGeomSharedPtr v0,
-                                                       SpatialDomains::PointGeomSharedPtr v1)
+                                                       SpatialDomains::PointGeomSharedPtr v1,
+						       int coordim = 1)
         {
             SpatialDomains::PointGeomSharedPtr vertices[] = {v0, v1};
-            SpatialDomains::SegGeomSharedPtr result(new SpatialDomains::SegGeom(id, 1, vertices));
+            SpatialDomains::SegGeomSharedPtr result(new SpatialDomains::SegGeom(id, coordim, vertices));
             return result;
         }
 
@@ -1089,7 +1090,7 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.0, 0.0, 0.0));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 1.0, 0.0));
 
-            SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1,2);
+            SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1, 2);
 
             Nektar::LibUtilities::PointsType segPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
             Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;

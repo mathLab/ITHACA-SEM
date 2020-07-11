@@ -506,7 +506,8 @@ protected:
 
     virtual void SetDF(const Array<TwoD, const NekDouble> &df) override
     {
-        constexpr unsigned int n_df = DIM * DIM;
+        //constexpr unsigned int n_df = DIM * DIM;
+        unsigned int n_df = df.GetRows(); 
         alignas(vec_t::alignment) NekDouble vec[vec_t::width];
 
         if (DEFORMED)

@@ -347,21 +347,21 @@ class IProductWRTDerivBase_MatrixFree : public Operator
 
             // Get derivative factors
             const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
-            Array<TwoD, NekDouble> df(dim * dim, jacSizePad, 0.0);
+            Array<TwoD, NekDouble> df(dim * m_coordim, jacSizePad, 0.0);
             if (deformed)
             {
-                for (unsigned int j = 0; j < dim * dim; ++j)
+                for (unsigned int j = 0; j < dim * m_coordim; ++j)
                 {
                     Vmath::Vcopy(jacSizeNoPad,
-                        &(pGeomData->GetDerivFactors(pCollExp))[j][0], 1,
-                        &df[j][0], 1);
+                                 &(pGeomData->GetDerivFactors(pCollExp))[j][0], 1,
+                                 &df[j][0], 1);
                 }
             }
             else
             {
                 for (unsigned int e = 0; e < nElmtNoPad; ++e)
                 {
-                    for (unsigned int j = 0; j < dim * dim; ++j)
+                    for (unsigned int j = 0; j < dim * m_coordim; ++j)
                     {
                         df[j][e] =
                             (pGeomData->GetDerivFactors(pCollExp))[j][e*nqElmt];

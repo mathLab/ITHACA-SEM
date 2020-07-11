@@ -2331,16 +2331,7 @@ namespace Nektar
         LocalRegions::ExpansionSharedPtr& ExpList::GetExp(
                     const Array<OneD, const NekDouble> &gloCoord)
         {
-            Array<OneD, NekDouble> stdCoord(GetCoordim(0),0.0);
-            for (int i = 0; i < (*m_exp).size(); ++i)
-            {
-                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoord))
-                {
-                    return (*m_exp)[i];
-                }
-            }
-            ASSERTL0(false, "Cannot find element for this point.");
-            return (*m_exp)[0]; // avoid warnings
+            return GetExp(GetExpIndex(gloCoord));
         }
 
 

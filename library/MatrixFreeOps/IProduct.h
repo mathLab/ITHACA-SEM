@@ -13,6 +13,11 @@ namespace Nektar
 namespace MatrixFree
 {
 
+// vec_t typedef is in IProductKernels.hpp as well, in theory is redundant,
+// but MSVC 19.0 complains otherwise
+using namespace tinysimd;
+using vec_t = simd<NekDouble>;
+
 template<bool DEFORMED = false>
 struct IProductQuad : public IProduct, public Helper<2, DEFORMED>
 {
@@ -136,8 +141,8 @@ struct IProductQuad : public IProduct, public Helper<2, DEFORMED>
         const Array<OneD, const NekDouble> &input,
               Array<OneD,       NekDouble> &output)
     {
-        auto *inptr = &input[0];
-        auto *outptr = &output[0];
+        auto* inptr = input.data();
+        auto* outptr = output.data();
 
         constexpr auto nqTot = NQ0 * NQ1;
         constexpr auto nqBlocks = nqTot * vec_t::width;
@@ -435,8 +440,8 @@ struct IProductTri : public IProduct, public Helper<2, DEFORMED>
         const Array<OneD, const NekDouble> &input,
               Array<OneD,       NekDouble> &output)
     {
-        auto *inptr = &input[0];
-        auto *outptr = &output[0];
+        auto *inptr = input.data();
+        auto *outptr = output.data();
 
         constexpr auto nqTot = NQ0 * NQ1;
         constexpr auto nqBlocks = nqTot * vec_t::width;
@@ -672,8 +677,8 @@ struct IProductHex : public IProduct, public Helper<3, DEFORMED>
         using namespace tinysimd;
         using vec_t = simd<NekDouble>;
 
-        auto* inptr = &input[0];
-        auto* outptr = &output[0];
+        auto* inptr = input.data();
+        auto* outptr = output.data();
 
         constexpr auto nqTot = NQ0 * NQ1 * NQ2;
         constexpr auto nqBlocks = nqTot * vec_t::width;
@@ -1059,11 +1064,8 @@ struct IProductPrism : public IProduct, public Helper<3, DEFORMED>
         const Array<OneD, const NekDouble> &input,
               Array<OneD,       NekDouble> &output)
     {
-        using namespace tinysimd;
-        using vec_t = simd<NekDouble>;
-
-        auto* inptr = &input[0];
-        auto* outptr = &output[0];
+        auto* inptr = input.data();
+        auto* outptr = output.data();
 
         constexpr auto nqTot = NQ0 * NQ1 * NQ2;
         constexpr auto nqBlocks = NQ0 * NQ1 * NQ2 * vec_t::width;

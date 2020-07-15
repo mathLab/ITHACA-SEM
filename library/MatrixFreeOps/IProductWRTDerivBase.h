@@ -193,6 +193,7 @@ public:
 
         auto* inptr0 = input[0].data();
         auto* inptr1 = input[1].data();
+        auto* inptr2 = input[1].data();
         auto* outptr = output.data();
 
         constexpr auto nqTot = NQ0 * NQ1;
@@ -203,6 +204,7 @@ public:
         if(inputdim3)
         {
             ndf = 6u;
+            inptr2 = input[2].data();
         }
         
         // Get size of jacobian factor block
@@ -233,7 +235,7 @@ public:
             load_interleave(inptr1, nqTot, tmpIn1);
             if(inputdim3)
             {
-                load_interleave(input[2].data(), nqTot, tmpIn2);
+                load_interleave(inptr2, nqTot, tmpIn2);
             }
 
             // Calculate dxi/dx in[0] + dxi/dy in[1] + dxi/dz in[2]
@@ -301,6 +303,7 @@ public:
 
             inptr0 += nqBlocks;
             inptr1 += nqBlocks;
+            inptr2 += nqBlocks;
             outptr += nmBlocks;
         }
     }
@@ -539,6 +542,7 @@ struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, D
 
         auto* inptr0 = input[0].data();
         auto* inptr1 = input[1].data();
+        auto* inptr2 = input[1].data();
         auto* outptr = output.data();
 
         constexpr auto nqTot = NQ0 * NQ1;
@@ -549,6 +553,7 @@ struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, D
         if(inputdim3)
         {
             ndf = 6u;
+            inptr2 = input[2].data();
         }
 
         // Get size of jacobian factor block
@@ -583,7 +588,7 @@ struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, D
             load_interleave(inptr1, nqTot, tmpIn1);
             if(inputdim3)
             {
-                load_interleave(input[2].data(), nqTot, tmpIn2);
+                load_interleave(inptr2, nqTot, tmpIn2);
             }
 
             vec_t df0, df1, df2, df3, df4, df5;
@@ -695,6 +700,7 @@ struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, D
 
             inptr0 += nqBlocks;
             inptr1 += nqBlocks;
+            inptr2 += nqBlocks;
             outptr += nmBlocks;
         }
     }

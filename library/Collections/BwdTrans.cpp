@@ -870,17 +870,15 @@ class BwdTrans_SumFac_Tet : public Operator
             Array<OneD, NekDouble > tmp1 = tmp
                     + m_numElmt*m_nquad2*m_nmodes0*(2*m_nmodes1-m_nmodes0+1)/2;
 
-            int i       = 0;
-            int j       = 0;
             int mode    = 0;
             int mode1   = 0;
             int cnt     = 0;
             int ncoeffs = m_stdExp->GetNcoeffs();
 
             // Perform summation over '2' direction
-            for(i = 0; i < m_nmodes0; ++i)
+            for (int i = 0; i < m_nmodes0; ++i)
             {
-                for(j = 0; j < m_nmodes1-i; ++j, ++cnt)
+                for (int j = 0; j < m_nmodes1-i; ++j, ++cnt)
                 {
                     Blas::Dgemm('N', 'N', m_nquad2, m_numElmt, m_nmodes2-i-j,
                                 1.0, m_base2.get()+mode*m_nquad2, m_nquad2,
@@ -896,9 +894,9 @@ class BwdTrans_SumFac_Tet : public Operator
 
             // vertex mode - currently (1+c)/2 x (1-b)/2 x (1-a)/2
             // component is evaluated
-            if(m_sortTopEdge)
+            if (m_sortTopEdge)
             {
-                for(i = 0; i < m_numElmt; ++i)
+                for (int i = 0; i < m_numElmt; ++i)
                 {
                     // top singular vertex
                     // (1+c)/2 x (1+b)/2 x (1-a)/2 component
@@ -917,7 +915,7 @@ class BwdTrans_SumFac_Tet : public Operator
 
             // Perform summation over '1' direction
             mode = 0;
-            for(i = 0; i < m_nmodes0; ++i)
+            for (int i = 0; i < m_nmodes0; ++i)
             {
                 Blas::Dgemm('N', 'T', m_nquad1, m_nquad2*m_numElmt, m_nmodes1-i,
                             1.0, m_base1.get()+mode*m_nquad1, m_nquad1,
@@ -931,16 +929,16 @@ class BwdTrans_SumFac_Tet : public Operator
             // fix for modified basis by adding additional split of
             // top and base singular vertex modes as well as singular
             // edge
-            if(m_sortTopEdge)
+            if (m_sortTopEdge)
             {
                 // this could probably be a dgemv or higher if we
                 // made a specialised m_base1[m_nuqad1] array
                 // containing multiply copies
-                for(i = 0; i < m_numElmt; ++i)
+                for (int i = 0; i < m_numElmt; ++i)
                 {
                     // sort out singular vertices and singular
                     // edge components with (1+b)/2 (1+a)/2 form
-                    for(int j = 0; j < m_nquad2; ++j)
+                    for (int j = 0; j < m_nquad2; ++j)
                     {
                         Blas::Daxpy(m_nquad1,
                                     tmp[m_nquad2*m_numElmt + i*m_nquad2 + j],

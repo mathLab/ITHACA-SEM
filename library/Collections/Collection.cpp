@@ -43,7 +43,7 @@ namespace Collections {
 /**
  *
  */
-Collection::Collection(
+COLLECTIONS_EXPORT Collection::Collection(
         vector<StdRegions::StdExpansionSharedPtr>    pCollExp,
         OperatorImpMap                              &impTypes)
 {

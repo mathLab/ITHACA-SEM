@@ -332,8 +332,8 @@ class PhysDeriv_MatrixFree : public Operator
             bool deformed{pGeomData->IsDeformed(pCollExp)};
 
             // Size of jacobian
-            int jacSizeNoPad{nElmtNoPad};
-            int jacSizePad{nElmtPad};
+            auto jacSizeNoPad{nElmtNoPad};
+            auto jacSizePad{nElmtPad};
             if (deformed)
             {
                 jacSizeNoPad = nElmtNoPad * nqElmt;
@@ -366,7 +366,7 @@ class PhysDeriv_MatrixFree : public Operator
 
             // Basis vector.
             std::vector<LibUtilities::BasisSharedPtr> basis(dim);
-            for (auto i = 0; i < dim; ++i)
+            for (unsigned int i = 0; i < dim; ++i)
             {
                 basis[i] = pCollExp[0]->GetBasis(i);
             }

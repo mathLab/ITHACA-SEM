@@ -13,11 +13,6 @@ namespace Nektar
 namespace MatrixFree
 {
 
-// vec_t typedef is in IProductKernels.hpp as well, in theory is redundant,
-// but MSVC 19.0 complains otherwise
-using namespace tinysimd;
-using vec_t = simd<NekDouble>;
-
 template<bool DEFORMED = false>
 struct IProductQuad : public IProduct, public Helper<2, DEFORMED>
 {

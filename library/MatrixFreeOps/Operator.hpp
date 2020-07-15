@@ -10,9 +10,12 @@
 
 #include <LibUtilities/SimdLib/tinysimd.hpp>
 
-namespace Nektar {
-namespace MatrixFree {
+namespace Nektar
+{
+namespace MatrixFree
+{
 
+using vec_t = tinysimd::simd<NekDouble>;
 
 /// Operator base class
 class Operator
@@ -20,13 +23,6 @@ class Operator
 public:
     virtual ~Operator()
     {
-    }
-
-    /// Returns the vector width that's used in the operator, e.g. AVX = 4,
-    /// AVX-512 = 8.
-    virtual size_t VectorWidth()
-    {
-        return 1;
     }
 
     /// Number of gigflops required to compute the operator.
@@ -391,7 +387,6 @@ protected:
 template <int DIM, bool DEFORMED = false>
 class Helper : virtual public Operator
 {
-    using vec_t = tinysimd::simd<NekDouble>;
 protected:
     Helper(std::vector<LibUtilities::BasisSharedPtr> basis,
               int nElmt)
@@ -551,11 +546,6 @@ protected:
             }
         }
 
-    }
-
-    virtual size_t VectorWidth() override
-    {
-        return vec_t::width;
     }
 
     int m_nBlocks;

@@ -171,6 +171,10 @@ namespace SimdLibTests
         vec_t::vectorType anative;
         vec_t avec9(anative);
         vec_t avec10{anative};
+
+
+        boost::ignore_unused(avec2, avec3, avec5, avec6, avec7, avec8, avec9,
+            avec10);
     }
 
 

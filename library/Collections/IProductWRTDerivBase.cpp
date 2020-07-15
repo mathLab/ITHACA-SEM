@@ -333,8 +333,8 @@ class IProductWRTDerivBase_MatrixFree : public Operator
             bool deformed{pGeomData->IsDeformed(pCollExp)};
 
             // Size of jacobian
-            auto jacSizeNoPad{nElmtNoPad};
-            auto jacSizePad{nElmtPad};
+            auto jacSizeNoPad = nElmtNoPad;
+            auto jacSizePad = nElmtPad;
             if (deformed)
             {
                 jacSizeNoPad = nElmtNoPad * nqElmt;

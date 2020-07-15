@@ -462,7 +462,7 @@ protected:
 
     /// Set up Jacobian array for those operators that require geometric
     /// information.
-    void SetJac(const Array<OneD, const NekDouble> &jac) override
+    void SetJac(const Array<OneD, const NekDouble> &jac) final
     {
         if (DEFORMED)
         {
@@ -504,7 +504,7 @@ protected:
         }
     }
 
-    virtual void SetDF(const Array<TwoD, const NekDouble> &df) override
+    void SetDF(const Array<TwoD, const NekDouble> &df) final
     {
         constexpr unsigned int n_df = DIM * DIM;
         alignas(vec_t::alignment) NekDouble vec[vec_t::width];

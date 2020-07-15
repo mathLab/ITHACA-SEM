@@ -1059,6 +1059,9 @@ struct IProductPrism : public IProduct, public Helper<3, DEFORMED>
         const Array<OneD, const NekDouble> &input,
               Array<OneD,       NekDouble> &output)
     {
+        using namespace tinysimd;
+        using vec_t = simd<NekDouble>;
+
         auto* inptr = &input[0];
         auto* outptr = &output[0];
 

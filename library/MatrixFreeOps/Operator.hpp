@@ -28,25 +28,25 @@ public:
     }
 
     /// Number of gigflops required to compute the operator.
-    virtual NekDouble GFlops()
+    MATRIXFREE_EXPORT virtual NekDouble GFlops()
     {
         return 0.0;
     }
 
     /// Number of degrees of freedom that this operator will process.
-    virtual NekDouble Ndof()
+    MATRIXFREE_EXPORT virtual NekDouble Ndof()
     {
         return 0.0;
     }
 
     /// Number of stores to memory
-    virtual NekDouble NStores()
+    MATRIXFREE_EXPORT virtual NekDouble NStores()
     {
         return 0.0;
     }
 
     /// Number of loads from memory
-    virtual NekDouble NLoads()
+    MATRIXFREE_EXPORT virtual NekDouble NLoads()
     {
         return 0.0;
     }
@@ -121,16 +121,6 @@ public:
     MATRIXFREE_EXPORT virtual void operator()(
         const Array<OneD, const NekDouble> &input,
         Array<OneD, NekDouble> &output) = 0; //Abstract Method
-
-    // void Ref(MultiRegions::ExpListSharedPtr expList,
-    //          Array<OneD, NekDouble> &ref_exp,
-    //          Array<OneD, NekDouble> &ref_bwd)
-    // {
-    //     Array<OneD, NekDouble> ref_fn(expList->GetNpoints());
-    //     this->RefFn(expList, ref_fn);
-    //     expList->FwdTrans_IterPerExp(ref_fn, ref_exp);
-    //     expList->BwdTrans(ref_exp, ref_bwd);
-    // }
 
 protected:
     std::vector<LibUtilities::BasisSharedPtr> m_basis;
@@ -211,12 +201,12 @@ public:
     {
     }
 
-    MATRIXFREE_EXPORT bool NeedsJac() final
+    bool NeedsJac() final
     {
         return true;
     }
 
-    MATRIXFREE_EXPORT bool NeedsDF() final
+    bool NeedsDF() final
     {
         return true;
     }

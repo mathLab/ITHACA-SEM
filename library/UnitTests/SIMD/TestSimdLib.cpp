@@ -181,7 +181,7 @@ namespace SimdLibTests
     BOOST_AUTO_TEST_CASE(SimdLib_load)
     {
         alignas(vec_t::alignment) std::array<double, vec_t::width>
-            ascalararr{};
+            ascalararr{{}}; // double brace to deal with gcc 4.8.5 ...
         vec_t avec;
         avec.load(ascalararr.data());
     }
@@ -189,7 +189,7 @@ namespace SimdLibTests
     BOOST_AUTO_TEST_CASE(SimdLib_load_implicit)
     {
         alignas(vec_t::alignment) std::array<double, vec_t::width>
-            ascalararr{};
+            ascalararr{{}}; // double brace to deal with gcc 4.8.5 ...
         vec_t avec;
         avec = *(reinterpret_cast<vec_t*>(ascalararr.data()));
     }
@@ -197,14 +197,14 @@ namespace SimdLibTests
     BOOST_AUTO_TEST_CASE(SimdLib_load_aligned)
     {
         alignas(vec_t::alignment) std::array<double, vec_t::width>
-            ascalararr = {};
+            ascalararr{{}}; // double brace to deal with gcc 4.8.5 ...
         vec_t avec;
         avec.load(ascalararr.data(), is_aligned);
     }
 
     BOOST_AUTO_TEST_CASE(SimdLib_load_unaligned)
     {
-        std::array<double, vec_t::width> ascalararr = {};
+        std::array<double, vec_t::width> ascalararr{{}}; // double brace to deal with gcc 4.8.5 ...
         vec_t avec;
         avec.load(ascalararr.data(), is_not_aligned);
     }
@@ -213,7 +213,7 @@ namespace SimdLibTests
     {
         double val = 4.0;
         vec_t avec(val);
-        alignas(vec_t::alignment) std::array<double, vec_t::width> ascalararr{};
+        alignas(vec_t::alignment) std::array<double, vec_t::width> ascalararr{{}}; // double brace to deal with gcc 4.8.5 ...
         avec.store(ascalararr.data());
 
         for (size_t i = 0; i < vec_t::width; ++i)
@@ -226,7 +226,7 @@ namespace SimdLibTests
     {
         double val = 4.0;
         vec_t avec(val);
-        alignas(vec_t::alignment) std::array<double, vec_t::width> ascalararr{};
+        alignas(vec_t::alignment) std::array<double, vec_t::width> ascalararr{{}}; // double brace to deal with gcc 4.8.5 ...
         avec.store(ascalararr.data(), is_aligned);
 
         for (size_t i = 0; i < vec_t::width; ++i)
@@ -239,7 +239,7 @@ namespace SimdLibTests
     {
         double val = 4.0;
         vec_t avec(val);
-        std::array<double, vec_t::width> ascalararr{};
+        std::array<double, vec_t::width> ascalararr{{}}; // double brace to deal with gcc 4.8.5 ...
         avec.store(ascalararr.data(), is_not_aligned);
 
         for (size_t i = 0; i < vec_t::width; ++i)
@@ -252,7 +252,7 @@ namespace SimdLibTests
     {
         double val = 4.0;
         vec_t avec(val);
-        alignas(vec_t::alignment) std::array<double, vec_t::width> ascalararr{};
+        alignas(vec_t::alignment) std::array<double, vec_t::width> ascalararr{{}}; // double brace to deal with gcc 4.8.5 ...
         avec.store(ascalararr.data(), is_not_reused);
 
         for (size_t i = 0; i < vec_t::width; ++i)
@@ -264,7 +264,7 @@ namespace SimdLibTests
     BOOST_AUTO_TEST_CASE(SimdLib_subscript_assign_read)
     {
         vec_t avec;
-        std::array<double, vec_t::width> ascalararr{};
+        std::array<double, vec_t::width> ascalararr{{}}; // double brace to deal with gcc 4.8.5 ...
 
         for (size_t i = 0; i < vec_t::width; ++i)
         {
@@ -412,7 +412,7 @@ namespace SimdLibTests
         vec_t avec(val2);
         res += avec;
         alignas(vec_t::alignment) std::array<double, vec_t::width>
-            ascalararr{};
+            ascalararr{{}}; // double brace to deal with gcc 4.8.5 ...
         res.store(ascalararr.data());
 
         for (size_t i = 0; i < vec_t::width; ++i)
@@ -429,7 +429,7 @@ namespace SimdLibTests
         vec_t avec(val2);
         res -= avec;
         alignas(vec_t::alignment) std::array<double, vec_t::width>
-            ascalararr{};
+            ascalararr{{}}; // double brace to deal with gcc 4.8.5 ...
         res.store(ascalararr.data());
 
         for (size_t i = 0; i < vec_t::width; ++i)
@@ -446,7 +446,7 @@ namespace SimdLibTests
         vec_t avec(val2);
         res *= avec;
         alignas(vec_t::alignment) std::array<double, vec_t::width>
-            ascalararr{};
+            ascalararr{{}}; // double brace to deal with gcc 4.8.5 ...
         res.store(ascalararr.data());
 
         for (size_t i = 0; i < vec_t::width; ++i)
@@ -463,7 +463,7 @@ namespace SimdLibTests
         vec_t avec(val2);
         res /= avec;
         alignas(vec_t::alignment) std::array<double, vec_t::width>
-            ascalararr{};
+            ascalararr{{}}; // double brace to deal with gcc 4.8.5 ...
         res.store(ascalararr.data());
 
         for (size_t i = 0; i < vec_t::width; ++i)
@@ -482,7 +482,7 @@ namespace SimdLibTests
         vec_t avec3(val3);
         vec_t res = avec1 + avec2 * avec3;
         alignas(vec_t::alignment) std::array<double, vec_t::width>
-            ascalararr{};
+            ascalararr{{}}; // double brace to deal with gcc 4.8.5 ...
         res.store(ascalararr.data());
 
         for (size_t i = 0; i < vec_t::width; ++i)
@@ -498,7 +498,7 @@ namespace SimdLibTests
         vec_t avec(val);
         vec_t asqrt = sqrt(avec);
         alignas(vec_t::alignment) std::array<double, vec_t::width>
-            ascalararr{};
+            ascalararr{{}}; // double brace to deal with gcc 4.8.5 ...
         asqrt.store(ascalararr.data());
 
         for (size_t i = 0; i < vec_t::width; ++i)
@@ -514,7 +514,7 @@ namespace SimdLibTests
         vec_t avec(val);
         vec_t aabs = abs(avec);
         alignas(vec_t::alignment) std::array<double, vec_t::width>
-            ascalararr{};
+            ascalararr{{}}; // double brace to deal with gcc 4.8.5 ...
         aabs.store(ascalararr.data());
 
         for (size_t i = 0; i < vec_t::width; ++i)

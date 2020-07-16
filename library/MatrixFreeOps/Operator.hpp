@@ -1,6 +1,8 @@
 #ifndef OPERATOR_HPP
 #define OPERATOR_HPP
 
+#include "MatrixFreeDeclspec.h"
+
 #include <iostream>
 
 #include <LibUtilities/Foundations/Basis.h>
@@ -50,20 +52,20 @@ public:
     }
 
     /// This operator requires derivative factors.
-    virtual bool NeedsDF()
+    MATRIXFREE_EXPORT virtual bool NeedsDF()
     {
         return false;
     }
 
     /// This operator requires Jacobian.
-    virtual bool NeedsJac()
+    MATRIXFREE_EXPORT virtual bool NeedsJac()
     {
         return false;
     }
 
-    virtual void SetJac(const Array<OneD, const NekDouble> &jac) = 0;
+    MATRIXFREE_EXPORT virtual void SetJac(const Array<OneD, const NekDouble> &jac) = 0;
 
-    virtual void SetDF(const Array<TwoD, const NekDouble> &df) = 0;
+    MATRIXFREE_EXPORT virtual void SetDF(const Array<TwoD, const NekDouble> &df) = 0;
 
     // virtual void set_asmMap(MultiRegions::AssemblyMapSharedPtr asmMap)
     // {
@@ -116,7 +118,7 @@ public:
     {
     }
 
-    virtual void operator()(
+    MATRIXFREE_EXPORT virtual void operator()(
         const Array<OneD, const NekDouble> &input,
         Array<OneD, NekDouble> &output) = 0; //Abstract Method
 
@@ -148,22 +150,14 @@ public:
     {
     }
 
-    virtual bool NeedsJac() override
+    bool NeedsJac() final
     {
         return true;
     }
 
-    virtual void operator()(
+    MATRIXFREE_EXPORT virtual void operator()(
         const Array<OneD, const NekDouble> &input,
         Array<OneD, NekDouble> &output) = 0;
-
-    // void Ref(MultiRegions::ExpListSharedPtr expList,
-    //             Array<OneD, NekDouble> &ref_fn,
-    //             Array<OneD, NekDouble> &ref_iprod)
-    // {
-    //     this->RefFn(expList, ref_fn);
-    //     expList->IProductWRTBase(ref_fn, ref_iprod);
-    // }
 
 protected:
     /// Vector of tensor product basis directions
@@ -184,38 +178,20 @@ public:
     {
     }
 
-    virtual bool NeedsDF() override
+    bool NeedsDF() final
     {
         return true;
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &in,
+    MATRIXFREE_EXPORT virtual void operator()(const Array<OneD, const NekDouble> &in,
                                 Array<OneD,       NekDouble> &out_d0,
                                 Array<OneD,       NekDouble> &out_d1) = 0;
 
-    virtual void operator()(
+    MATRIXFREE_EXPORT virtual void operator()(
         const Array<OneD, const NekDouble> &input,
         Array<OneD, NekDouble> &output0,
         Array<OneD, NekDouble> &output1,
         Array<OneD, NekDouble> &output2) = 0;
-
-    // void Ref(MultiRegions::ExpListSharedPtr expList,
-    //             Array<OneD, NekDouble> &ref_fn,
-    //             Array<OneD, NekDouble> &d0,
-    //             Array<OneD, NekDouble> &d1,
-    //             Array<OneD, NekDouble> &d2 = NullNekDouble1DArray)
-    // {
-    //     const int dim = expList->GetExp(0)->GetShapeDimension();
-
-    //     this->RefFn(expList, ref_fn);
-
-    //     if(dim == 2){
-    //         expList->PhysDeriv(ref_fn, d0, d1);
-    //     }
-    //     else if(dim == 3){
-    //         expList->PhysDeriv(ref_fn, d0, d1, d2);
-    //     }
-    // }
 
 protected:
     std::vector<LibUtilities::BasisSharedPtr> m_basis;
@@ -235,17 +211,17 @@ public:
     {
     }
 
-    virtual bool NeedsJac() override
+    MATRIXFREE_EXPORT bool NeedsJac() final
     {
         return true;
     }
 
-    virtual bool NeedsDF() override
+    MATRIXFREE_EXPORT bool NeedsDF() final
     {
         return true;
     }
 
-    virtual void operator()(
+    MATRIXFREE_EXPORT virtual void operator()(
         const Array<OneD, Array<OneD, NekDouble>> &in,
         Array<OneD, NekDouble> &out) = 0;
 
@@ -267,38 +243,19 @@ public:
     {
     }
 
-    virtual bool NeedsJac() override
+    bool NeedsJac() final
     {
         return true;
     }
 
-    virtual bool NeedsDF() override
+    bool NeedsDF() final
     {
         return true;
     }
 
-    virtual void operator()(
+    MATRIXFREE_EXPORT virtual void operator()(
         const Array<OneD, const NekDouble> &input,
         Array<OneD, NekDouble> &output) = 0;
-
-    // void Ref(MultiRegions::ExpListSharedPtr expList,
-    //          Array<OneD, NekDouble> &ref_exp,
-    //          Array<OneD, NekDouble> &ref_helm)
-    // {
-    //     Array<OneD, NekDouble> ref_fn(expList->GetNpoints());
-    //     this->RefFn(expList, ref_fn);
-    //     expList->FwdTrans_IterPerExp(ref_fn, ref_exp);
-
-    //     StdRegions::ConstFactorMap factors;
-    //     factors[StdRegions::eFactorLambda] = 1.0;
-
-    //     MultiRegions::GlobalMatrixKey mkey(
-    //         StdRegions::eHelmholtz,
-    //         MultiRegions::NullAssemblyMapSharedPtr,
-    //         factors);
-
-    //     expList->GeneralMatrixOp_IterPerExp(mkey, ref_exp, ref_helm);
-    // }
 
 protected:
     std::vector<LibUtilities::BasisSharedPtr> m_basis;

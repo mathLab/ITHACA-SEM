@@ -532,7 +532,7 @@ namespace SimdLibTests
         constexpr size_t nDofBlock = nDof * vec_t::width;
 
         constexpr size_t size{nDof*nEle};
-        std::array<double,size> dofScalarArr{};
+        std::array<double,size> dofScalarArr{{}};
         for (size_t i = 0; i < size; ++i)
         {
             dofScalarArr[i] = i;

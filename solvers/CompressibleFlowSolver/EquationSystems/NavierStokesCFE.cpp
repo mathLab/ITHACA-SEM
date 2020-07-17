@@ -820,6 +820,9 @@ namespace Nektar
 
     /**
      * @brief Calculate diffusion flux using the Jacobian form.
+     *
+     * @param
+     * outarray [nvars][npts]
      */
     void NavierStokesCFE::GetViscousFluxBilinearForm(
         const int                                           nSpaceDim,
@@ -833,6 +836,7 @@ namespace Nektar
         size_t nPts = inaverg[nConvectiveFields - 1].size();
         size_t nDim=nSpaceDim;
 
+        // unless moved to the npts loop these can be pre-allocated
         Array<OneD, NekDouble > temperature        {nPts, 0.0};
         Array<OneD, NekDouble > mu                 {nPts, 0.0};
         Array<OneD, NekDouble > thermalConductivity        {nPts, 0.0};
@@ -840,115 +844,136 @@ namespace Nektar
         GetViscosityAndThermalCondFromTemp(temperature, mu,
                                             thermalConductivity);
 
-        Array<OneD, Array<OneD, NekDouble>> outtmp = outarray;
-        for (int i = 0; i < nConvectiveFields; ++i)
-        {
-            Vmath::Zero(nPts, &outarray[i][0], 1);
-        }
+        // Constants
+        size_t nDim_plus_one = nDim + 1;
+        size_t FluxDirection_plus_one = FluxDirection + 1;
 
-        Array<OneD, Array<OneD, NekDouble>> u{nDim};
-        Array<OneD, Array<OneD, NekDouble>> u2{nDim};
-        for (int i = 0; i < nDim; ++i)
-        {
-            u[i]=Array<OneD, NekDouble> {nPts, 0.0};
-            u2[i]=Array<OneD, NekDouble> {nPts, 0.0};
-        }
-        Array<OneD, NekDouble> q2{nPts, 0.0};
-        Array<OneD, NekDouble> E_minus_q2{nPts, 0.0};
-        Array<OneD, NekDouble> orho{nPts, 0.0};
-        Array<OneD, NekDouble> tmp {nPts, 0.0};
-        Array<OneD, NekDouble> tmp1{nPts, 0.0};
-
-        //Constants
-        int nDim_plus_one = nDim + 1;
-        int FluxDirection_plus_one = FluxDirection + 1;
-        NekDouble gamma = m_gamma;
-        NekDouble Pr = m_Prandtl;
-        NekDouble gammaoPr = gamma / Pr;
+        NekDouble gammaoPr = m_gamma / m_Prandtl;
         NekDouble one_minus_gammaoPr = 1.0 - gammaoPr;
+
         constexpr NekDouble OneThird = 1. / 3.;
         constexpr NekDouble TwoThird = 2. * OneThird;
         constexpr NekDouble FourThird = 4. * OneThird;
 
-        Vmath::Sdiv(nPts, 1.0, &inaverg[0][0], 1, &orho[0], 1);
-        m_varConv->GetVelocityVector(inaverg, u);
-        for (int i = 0; i < nDim; ++i)
-        {
-            Vmath::Vmul(nPts, u[i], 1, u[i], 1, u2[i], 1);
-            Vmath::Vadd(nPts, q2, 1, u2[i], 1, q2, 1);
-        }
-        Vmath::Vmul(nPts, inaverg[nDim_plus_one], 1, orho, 1, E_minus_q2, 1);
-        Vmath::Vsub(nPts, E_minus_q2, 1, q2, 1, E_minus_q2, 1);
-        Vmath::Vmul(nPts, mu, 1, orho, 1, tmp, 1);
-
-        int DerivDirection_plus_one = DerivDirection + 1;
+        size_t DerivDirection_plus_one = DerivDirection + 1;
         if (DerivDirection == FluxDirection)
         {
-            Vmath::Svtvp(nPts, OneThird, u2[FluxDirection], 1, q2, 1, tmp1, 1);
-            Vmath::Svtvp(nPts, gammaoPr, E_minus_q2, 1, tmp1, 1, tmp1, 1);
-            Vmath::Vmul(nPts, tmp1, 1, injumpp[0], 1, tmp1, 1);
-            //orho is tmperary array
-            Vmath::Svtvm(nPts, gammaoPr, injumpp[nDim_plus_one], 1, tmp1, 1,
-                orho, 1);
-
-            for (int i = 0; i < nDim; ++i)
+            // Loop over the points
+            for (size_t p = 0; p < nPts; ++p)
             {
-                int i_plus_one = i + 1;
-                //flux[rhou, rhov, rhow]
-                Vmath::Vvtvm(nPts, u[i], 1, injumpp[0], 1,
-                    injumpp[i_plus_one], 1, outtmp[i_plus_one], 1);
-                Vmath::Neg(nPts, &outtmp[i_plus_one][0], 1);
-                Vmath::Vmul(nPts, tmp, 1, outtmp[i_plus_one], 1,
-                    outtmp[i_plus_one], 1);
-                //flux rhoE
-                Vmath::Smul(nPts, one_minus_gammaoPr, &u[i][0], 1, &tmp1[0], 1);
-                Vmath::Vvtvp(nPts, tmp1, 1, injumpp[i_plus_one], 1,
-                    outtmp[nDim_plus_one], 1, outtmp[nDim_plus_one], 1);
+                // necessary???
+                outarray[0][p] = 0.0; // store 1x
 
-                if (i == FluxDirection)
+                // load 1/rho
+                NekDouble oneOrho = 1.0 / inaverg[0][p]; // load 1x
+                // get vel, vel^2, sum of vel^2
+                std::array<NekDouble, 3> u{}, u2{};
+                NekDouble u2sum{};
+                for (size_t d = 0; d < nDim; ++d)
                 {
-                    Vmath::Smul(nPts, FourThird, &outtmp[i_plus_one][0], 1,
-                                &outtmp[i_plus_one][0], 1);
-                    Vmath::Smul(nPts, OneThird,
-                                &u[FluxDirection][0], 1, &tmp1[0], 1);
-                    Vmath::Vvtvp(nPts, tmp1, 1,
-                        injumpp[FluxDirection_plus_one], 1,
-                        outtmp[nDim_plus_one], 1,
-                        outtmp[nDim_plus_one], 1);
+                    u[d] = inaverg[d+1][p] * oneOrho; // load 1x
+                    u2[d] = u[d]*u[d];
+                    u2sum += u2[d];
                 }
-            }
-            Vmath::Vadd(nPts, &orho[0], 1, &outtmp[nDim_plus_one][0], 1,
-                        &outtmp[nDim_plus_one][0], 1);
-            Vmath::Vmul(nPts, tmp, 1, outtmp[nDim_plus_one], 1,
-                outtmp[nDim_plus_one], 1);
 
+                // get E - sum v^2
+                NekDouble E_minus_u2sum = inaverg[nDim_plus_one][p]; // load 1x
+                E_minus_u2sum *= oneOrho;
+                E_minus_u2sum -= u2sum;
+
+                // get nu = mu/rho
+                NekDouble nu = mu[p] * oneOrho; // load 1x
+
+
+                // ^^^^ above is the same for both loops
+
+                NekDouble tmp1 = OneThird * u2[FluxDirection] + u2sum;
+                tmp1 += gammaoPr * E_minus_u2sum;
+                tmp1 *= injumpp[0][p]; //load 1x
+
+                NekDouble tmp2 = gammaoPr * injumpp[nDim_plus_one][p] - tmp1; //load 1x
+
+                // local var for energy output
+                NekDouble outTmpE = 0.0;
+                for (size_t d = 0; d < nDim; ++d)
+                {
+                    size_t d_plus_one = d + 1;
+                    //flux[rhou, rhov, rhow]
+                    NekDouble outTmpD = injumpp[d_plus_one][p] - u[d] * injumpp[0][p];
+                    outTmpD *= nu;
+                    //flux rhoE
+                    NekDouble tmp3 = one_minus_gammaoPr * u[d];
+                    outTmpE +=  tmp3 * injumpp[d_plus_one][p];
+
+                    if (d == FluxDirection)
+                    {
+                        outTmpD *= FourThird;
+                        NekDouble tmp4 = OneThird * u[FluxDirection];
+                        outTmpE += tmp4 * injumpp[FluxDirection_plus_one][p];
+                    }
+
+                    outarray[d_plus_one][p] = outTmpD; //store 1x
+                }
+
+                outTmpE += tmp2;
+                outTmpE *= nu;
+                outarray[nDim_plus_one][p] = outTmpE; //store 1x
+
+            }
         }
         else
         {
-            Vmath::Vvtvm(nPts, u[DerivDirection], 1, injumpp[0], 1,
-                injumpp[DerivDirection_plus_one], 1, tmp1, 1);
-            Vmath::Smul(nPts, TwoThird, &tmp1[0], 1, &tmp1[0], 1);
-            Vmath::Vmul(nPts, tmp, 1, tmp1, 1,
-                outtmp[FluxDirection_plus_one], 1);
+            // Loop over the points
+            for (size_t p = 0; p < nPts; ++p)
+            {
+                // necessary???
+                outarray[0][p] = 0.0; // store 1x
 
-            Vmath::Vvtvm(nPts, u[FluxDirection], 1, injumpp[0], 1,
-                injumpp[FluxDirection_plus_one], 1, tmp1, 1);
-            Vmath::Neg(nPts, &tmp1[0], 1);
-            Vmath::Vmul(nPts, tmp, 1, tmp1, 1,
-                        outtmp[DerivDirection_plus_one], 1);
+                // load 1/rho
+                NekDouble oneOrho = 1.0 / inaverg[0][p]; // load 1x
+                // get vel, vel^2, sum of vel^2
+                std::array<NekDouble, 3> u{}, u2{};
+                NekDouble u2sum{};
+                for (size_t d = 0; d < nDim; ++d)
+                {
+                    u[d] = inaverg[d+1][p] * oneOrho; // load 1x
+                    u2[d] = u[d]*u[d];
+                    u2sum += u2[d];
+                }
 
-            Vmath::Smul(nPts, OneThird, &u[FluxDirection][0], 1, &tmp1[0], 1);
-            Vmath::Vmul(nPts, tmp1, 1, u[DerivDirection], 1, tmp1, 1);
-            Vmath::Vmul(nPts, tmp1, 1, injumpp[0], 1, tmp1, 1);
-            //previous orho as a tmperary memory because it is non-used any more
-            Vmath::Smul(nPts, TwoThird, &u[FluxDirection][0], 1, &orho[0], 1);
-            Vmath::Vmul(nPts, orho, 1, injumpp[DerivDirection_plus_one], 1,
-                        orho, 1);
-            Vmath::Vadd(nPts, tmp1, 1, orho, 1, tmp1, 1);
-            Vmath::Neg(nPts, tmp1, 1);
-            Vmath::Vvtvp(nPts, u[DerivDirection], 1,
-                injumpp[FluxDirection_plus_one], 1, tmp1, 1, tmp1, 1);
-            Vmath::Vmul(nPts, tmp, 1, tmp1, 1, outtmp[nDim_plus_one], 1);
+                // get E - sum v^2
+                NekDouble E_minus_u2sum = inaverg[nDim_plus_one][p]; // load 1x
+                E_minus_u2sum *= oneOrho;
+                E_minus_u2sum -= u2sum;
+
+                // get nu = mu/rho
+                NekDouble nu = mu[p] * oneOrho; // load 1x
+
+
+                // ^^^^ above is the same for both loops
+
+                NekDouble tmp1 = u[DerivDirection] * injumpp[0][p] -
+                    injumpp[DerivDirection_plus_one][p]; // load 2x
+                tmp1 *= TwoThird;
+                outarray[FluxDirection_plus_one][p] = nu * tmp1; // store 1x
+
+                tmp1 = - u[FluxDirection] * injumpp[0][p] +
+                    injumpp[FluxDirection_plus_one][p];
+                outarray[DerivDirection_plus_one][p] = nu * tmp1; // store 1x
+
+                tmp1 = OneThird * u[FluxDirection] * u[DerivDirection];
+                tmp1 *= injumpp[0][p];
+
+                NekDouble tmp2 = TwoThird * u[FluxDirection] *
+                    injumpp[DerivDirection_plus_one][p];
+
+                tmp1 += tmp2;
+
+                tmp1 = u[DerivDirection] * injumpp[FluxDirection_plus_one][p] -
+                    tmp1;
+                outarray[nDim_plus_one][p] = nu * tmp1; // store 1x
+
+            }
         }
     }
 

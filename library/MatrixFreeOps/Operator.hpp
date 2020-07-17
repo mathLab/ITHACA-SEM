@@ -514,10 +514,10 @@ using OperatorFactory = LibUtilities::NekFactory<
     int
     >;
 
-OperatorFactory &GetOperatorFactory();
+MATRIXFREE_EXPORT OperatorFactory &GetOperatorFactory();
 
 /// Helper function, get operator string
-std::string GetOpstring(LibUtilities::ShapeType shape, bool deformed=false);
+MATRIXFREE_EXPORT std::string GetOpstring(LibUtilities::ShapeType shape, bool deformed=false);
 
 } // namespace MatrixFree
 } // namespace Nektar

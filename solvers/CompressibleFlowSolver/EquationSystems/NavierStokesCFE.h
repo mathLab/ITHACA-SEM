@@ -78,26 +78,26 @@ namespace Nektar
 
     NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession,
                     const SpatialDomains::MeshGraphSharedPtr& pGraph);
-    
+
     void GetViscousFluxVectorConservVar(
         const int                                                nDim,
         const Array<OneD, Array<OneD, NekDouble> >               &inarray,
         const TensorOfArray3D<NekDouble>                         &qfields,
         TensorOfArray3D<NekDouble>                               &outarray,
-        Array< OneD, int >                                       
-            &nonZeroIndex       =   NullInt1DArray,    
-        const Array<OneD, Array<OneD, NekDouble> >               
-            &normal             =   NullNekDoubleArrayofArray,           
-        const Array<OneD, NekDouble>                             
+        Array< OneD, int >
+            &nonZeroIndex       =   NullInt1DArray,
+        const Array<OneD, Array<OneD, NekDouble> >
+            &normal             =   NullNekDoubleArrayofArray,
+        const Array<OneD, NekDouble>
             &ArtifDiffFactor    =   NullNekDouble1DArray);
     void GetViscousSymmtrFluxConservVar(
             const int                                           nSpaceDim,
             const Array<OneD, Array<OneD, NekDouble> >          &inaverg,
             const Array<OneD, Array<OneD, NekDouble > >         &inarray,
             TensorOfArray3D<NekDouble>                          &outarray,
-            Array< OneD, int >                                  &nonZeroIndex,    
+            Array< OneD, int >                                  &nonZeroIndex,
             const Array<OneD, Array<OneD, NekDouble> >          &normals);
-    
+
     void SpecialBndTreat(
               Array<OneD,       Array<OneD, NekDouble> >    &consvar);
 
@@ -111,8 +111,9 @@ namespace Nektar
         const int                                           DerivDirection,
         const Array<OneD, const Array<OneD, NekDouble> >    &inaverg,
         const Array<OneD, const Array<OneD, NekDouble> >    &injumpp,
+        const Array<OneD, NekDouble>                        &mu,
         Array<OneD, Array<OneD, NekDouble> >                &outarray);
-    
+
     virtual void v_InitObject();
 
     virtual void v_DoDiffusion(

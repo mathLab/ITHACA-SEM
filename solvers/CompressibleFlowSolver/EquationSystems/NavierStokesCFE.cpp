@@ -580,17 +580,19 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >             &normal,
         const Array<OneD, NekDouble>                           &ArtifDiffFactor)
     {
-        size_t nConvectiveFields   = inarray.size();
-        size_t nPts=inarray[0].size();
-        int n_nonZero   =   nConvectiveFields - 1;
+        size_t nConvectiveFields = inarray.size();
+        size_t nPts = inarray[0].size();
+        int n_nonZero = nConvectiveFields - 1;
+
         TensorOfArray3D<NekDouble> fluxVec;
         Array<OneD, Array<OneD, NekDouble>> outtmp{nConvectiveFields};
 
         for (int i = 0; i < nConvectiveFields; ++i)
         {
-            outtmp[i]=Array<OneD, NekDouble>{nPts, 0.0};
+            outtmp[i] = Array<OneD, NekDouble>{nPts, 0.0};
         }
 
+        // is this zeroing necessary?
         for (int i = 0; i < outarray.size(); ++i)
         {
             for (int j = 0; j < nConvectiveFields; ++j)
@@ -599,6 +601,15 @@ namespace Nektar
             }
         }
 
+        // unless moved to the npts loop these can be pre-allocated
+        Array<OneD, NekDouble > temperature        {nPts, 0.0};
+        Array<OneD, NekDouble > mu                 {nPts, 0.0};
+        Array<OneD, NekDouble > thermalConductivity        {nPts, 0.0};
+        m_varConv->GetTemperature(inarray, temperature);
+        GetViscosityAndThermalCondFromTemp(temperature, mu,
+                                            thermalConductivity);
+
+
         if (normal.size())
         {
             for (int nd = 0; nd < nDim; ++nd)
@@ -606,7 +617,7 @@ namespace Nektar
                 for (int nderiv = 0; nderiv < nDim; ++nderiv)
                 {
                     GetViscousFluxBilinearForm(nDim, nd, nderiv, inarray,
-                                                qfields[nderiv], outtmp);
+                                                qfields[nderiv], mu, outtmp);
 
                     for (int j = 0; j < nConvectiveFields; ++j)
                     {
@@ -625,7 +636,7 @@ namespace Nektar
                 for (int nderiv = 0; nderiv < nDim; ++nderiv)
                 {
                     GetViscousFluxBilinearForm(nDim, nd, nderiv, inarray,
-                                                qfields[nderiv], outtmp);
+                                                qfields[nderiv], mu, outtmp);
 
                     for (int j = 0; j < nConvectiveFields; ++j)
                     {
@@ -797,6 +808,16 @@ namespace Nektar
         {
             nonZeroIndex[i] =   i + 1;
         }
+
+        // unless moved to the npts loop these can be pre-allocated
+        Array<OneD, NekDouble > temperature        {nPts, 0.0};
+        Array<OneD, NekDouble > mu                 {nPts, 0.0};
+        Array<OneD, NekDouble > thermalConductivity        {nPts, 0.0};
+        m_varConv->GetTemperature(inaverg, temperature);
+        GetViscosityAndThermalCondFromTemp(temperature, mu,
+                                            thermalConductivity);
+
+
         Array<OneD, Array<OneD, NekDouble> > outtmp{nConvectiveFields};
         for (int i = 0; i < nConvectiveFields; ++i)
         {
@@ -807,7 +828,7 @@ namespace Nektar
             for (int nderiv = 0; nderiv < nSpaceDim; ++nderiv)
             {
                 GetViscousFluxBilinearForm(nSpaceDim, nd, nderiv, inaverg,
-                                            inarray, outtmp);
+                                            inarray, mu, outtmp);
 
                 for (int i = 0; i < nConvectiveFields; ++i)
                 {
@@ -830,19 +851,12 @@ namespace Nektar
         const int                                           DerivDirection,
         const Array<OneD, const Array<OneD, NekDouble> >    &inaverg,
         const Array<OneD, const Array<OneD, NekDouble> >    &injumpp,
+        const Array<OneD, NekDouble>                        &mu,
         Array<OneD, Array<OneD, NekDouble> >                &outarray)
     {
         size_t nConvectiveFields   = inaverg.size();
         size_t nPts = inaverg[nConvectiveFields - 1].size();
-        size_t nDim=nSpaceDim;
-
-        // unless moved to the npts loop these can be pre-allocated
-        Array<OneD, NekDouble > temperature        {nPts, 0.0};
-        Array<OneD, NekDouble > mu                 {nPts, 0.0};
-        Array<OneD, NekDouble > thermalConductivity        {nPts, 0.0};
-        m_varConv->GetTemperature(inaverg, temperature);
-        GetViscosityAndThermalCondFromTemp(temperature, mu,
-                                            thermalConductivity);
+        size_t nDim = nSpaceDim;
 
         // Constants
         size_t nDim_plus_one = nDim + 1;

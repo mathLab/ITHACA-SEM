@@ -66,14 +66,14 @@ namespace SimdLibTests
 
         #if !defined(USING_SSE2) && !defined(USING_AVX2) && !defined(USING_AVX512)
         std::cout << "scalar" << std::endl;
-        // int
-        width = simd<int>::width;
-        alignment = simd<int>::alignment;
+        // std::int32_t aka (usually) int
+        width = simd<std::int32_t>::width;
+        alignment = simd<std::int32_t>::alignment;
         BOOST_CHECK_EQUAL(width, 1);
         BOOST_CHECK_EQUAL(alignment, 4);
-        // long
-        width = simd<long>::width;
-        alignment = simd<long>::alignment;
+        // std::int64_t aka (usually) long
+        width = simd<std::int64_t>::width;
+        alignment = simd<std::int64_t>::alignment;
         BOOST_CHECK_EQUAL(width, 1);
         BOOST_CHECK_EQUAL(alignment, 8);
         // double
@@ -85,23 +85,23 @@ namespace SimdLibTests
 
         #if defined(USING_SSE2) && !defined(USING_AVX2) && !defined(USING_AVX512)
         std::cout << "sse2" << std::endl;
-        // int
-        width = simd<int>::width;
-        alignment = simd<int>::alignment;
+        // std::int32_t
+        width = simd<std::int32_t>::width;
+        alignment = simd<std::int32_t>::alignment;
         BOOST_CHECK_EQUAL(width, 4);
         BOOST_CHECK_EQUAL(alignment, 16);
         #endif
 
         #if defined(USING_AVX2) && !defined(USING_AVX512)
         std::cout << "avx2" << std::endl;
-        // int
-        width = simd<int>::width;
-        alignment = simd<int>::alignment;
+        // std::int32_t
+        width = simd<std::int32_t>::width;
+        alignment = simd<std::int32_t>::alignment;
         BOOST_CHECK_EQUAL(width, 8);
         BOOST_CHECK_EQUAL(alignment, 32);
-        // long
-        width = simd<long>::width;
-        alignment = simd<long>::alignment;
+        // std::int64_t
+        width = simd<std::int64_t>::width;
+        alignment = simd<std::int64_t>::alignment;
         BOOST_CHECK_EQUAL(width, 4);
         BOOST_CHECK_EQUAL(alignment, 32);
         // double
@@ -113,9 +113,9 @@ namespace SimdLibTests
 
         #if defined(USING_AVX512)
         std::cout << "avx512" << std::endl;
-        // long
-        width = simd<long>::width;
-        alignment = simd<long>::alignment;
+        // std::int64_t
+        width = simd<std::int64_t>::width;
+        alignment = simd<std::int64_t>::alignment;
         BOOST_CHECK_EQUAL(width, 8);
         BOOST_CHECK_EQUAL(alignment, 64);
         // double
@@ -162,18 +162,18 @@ namespace SimdLibTests
         vec_t avec3{ascalar};
         vec_t avec4 = ascalar;
 
-        vec_t avec5(avec1);
+        vec_t avec5(avec2);
         vec_t avec6{avec4};
 
-        vec_t avec7(avec1._data);
-        vec_t avec8{avec1._data};
+        vec_t avec7(avec2._data);
+        vec_t avec8{avec2._data};
 
         vec_t::vectorType anative;
         vec_t avec9(anative);
         vec_t avec10{anative};
 
 
-        boost::ignore_unused(avec2, avec3, avec5, avec6, avec7, avec8, avec9,
+        boost::ignore_unused(avec1, avec3, avec5, avec6, avec7, avec8, avec9,
             avec10);
     }
 

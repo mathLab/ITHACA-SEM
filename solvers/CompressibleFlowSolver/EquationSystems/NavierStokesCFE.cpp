@@ -885,7 +885,7 @@ namespace Nektar
                 NekDouble nu = mu[p] * oneOrho; // load 1x
 
 
-                // ^^^^ above is the same for both loops
+                // ^^^^ above is almost the same for both loops
 
                 NekDouble tmp1 = OneThird * u2[FluxDirection] + u2sum;
                 tmp1 += gammaoPr * E_minus_u2sum;
@@ -926,7 +926,7 @@ namespace Nektar
             // Loop over the points
             for (size_t p = 0; p < nPts; ++p)
             {
-                // necessary???
+                // Always zero
                 outarray[0][p] = 0.0; // store 1x
 
                 // load 1/rho
@@ -936,9 +936,13 @@ namespace Nektar
                 NekDouble u2sum{};
                 for (size_t d = 0; d < nDim; ++d)
                 {
-                    u[d] = inaverg[d+1][p] * oneOrho; // load 1x
+                    size_t d_plus_one = d + 1;
+                    u[d] = inaverg[d_plus_one][p] * oneOrho; // load 1x
                     u2[d] = u[d]*u[d];
                     u2sum += u2[d];
+                    // Not all directions are set
+                    // one could work out the one that is not set
+                    outarray[d_plus_one][p] = 0.0; // store 1x
                 }
 
                 // get E - sum v^2
@@ -950,7 +954,7 @@ namespace Nektar
                 NekDouble nu = mu[p] * oneOrho; // load 1x
 
 
-                // ^^^^ above is the same for both loops
+                // ^^^^ above is almost the same for both loops
 
                 NekDouble tmp1 = u[DerivDirection] * injumpp[0][p] -
                     injumpp[DerivDirection_plus_one][p]; // load 2x

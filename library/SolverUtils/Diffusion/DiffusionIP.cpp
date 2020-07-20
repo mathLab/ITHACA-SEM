@@ -705,9 +705,8 @@ void DiffusionIP::CalTraceNumFlux(
     {
         for (int i = 0; i < nConvectiveFields; ++i)
         {
-            Vmath::Zero(nTracePts, Bwd, 1);
-            Vmath::Zero(nTracePts, Fwd, 1);
-            fields[i]->GetFwdBwdTracePhys(qfield[nd][i], Fwd,Bwd,true,true,false);
+            fields[i]->GetFwdBwdTracePhys(qfield[nd][i], Fwd, Bwd, true, true,
+                false);
             Vmath::Svtvp(nTracePts, 0.5, Bwd, 1, numDerivBwd[nd][i], 1,
                          numDerivBwd[nd][i], 1);
             Vmath::Svtvp(nTracePts, 0.5, Fwd, 1, numDerivFwd[nd][i], 1,
@@ -730,24 +729,21 @@ void DiffusionIP::CalTraceNumFlux(
     ConsVarAveJump(nConvectiveFields, nTracePts, vFwd, vBwd, solution_Aver,
                    solution_jump);
 
-    Array<OneD, NekDouble> jumpTmp       = Fwd;
-    Array<OneD, NekDouble> PenaltyFactor = Bwd;
-    GetPenaltyFactor_const(fields, PenaltyFactor);
 
-    Vmath::Vmul(nTracePts, PenaltyFactor, 1, m_traceNormDirctnElmtLengthRecip,
-                1, PenaltyFactor, 1);
-    for (int i = 0; i < nConvectiveFields; ++i)
+    for (size_t p = 0; p < nTracePts; ++p)
     {
-        Vmath::Vmul(nTracePts, solution_jump[i], 1, PenaltyFactor, 1, jumpTmp,
-                    1);
-        for (int nd = 0; nd < nDim; ++nd)
+        NekDouble PenaltyFactor = m_IPPenaltyCoeff * m_traceNormDirctnElmtLengthRecip[p]; // load 1x
+
+        for (size_t f = 0; f < nConvectiveFields; ++f)
         {
-            Vmath::Vvtvp(nTracePts, m_traceNormals[nd], 1, jumpTmp, 1,
-                         numDerivFwd[nd][i], 1, numDerivFwd[nd][i], 1);
+            NekDouble jumpTmp = solution_jump[f][p] * PenaltyFactor; // load 1x
+            for (size_t d = 0; d < nDim; ++d)
+            {
+                NekDouble tmp = m_traceNormals[d][p] * jumpTmp + numDerivFwd[d][f][p]; // load 2x
+                numDerivFwd[d][f][p] = tmp; // store 1x
+            }
         }
     }
-    jumpTmp       = NullNekDouble1DArray;
-    PenaltyFactor = NullNekDouble1DArray;
 
     // Calculate normal viscous flux
     m_FunctorDiffusionfluxCons(nDim, solution_Aver, numDerivFwd, traceflux,

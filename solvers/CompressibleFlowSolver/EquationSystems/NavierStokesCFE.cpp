@@ -582,11 +582,10 @@ namespace Nektar
     {
         size_t nConvectiveFields = inarray.size();
         size_t nPts = inarray[0].size();
-        int n_nonZero = nConvectiveFields - 1;
+        size_t n_nonZero = nConvectiveFields - 1;
 
-        TensorOfArray3D<NekDouble> fluxVec;
+        // if necessary to keep it can be pre-allocated
         Array<OneD, Array<OneD, NekDouble>> outtmp{nConvectiveFields};
-
         for (int i = 0; i < nConvectiveFields; ++i)
         {
             outtmp[i] = Array<OneD, NekDouble>{nPts, 0.0};
@@ -609,7 +608,6 @@ namespace Nektar
         GetViscosityAndThermalCondFromTemp(temperature, mu,
                                             thermalConductivity);
 
-
         if (normal.size())
         {
             for (int nd = 0; nd < nDim; ++nd)
@@ -629,8 +627,6 @@ namespace Nektar
         }
         else
         {
-            fluxVec = outarray;
-
             for (int nd = 0; nd < nDim; ++nd)
             {
                 for (int nderiv = 0; nderiv < nDim; ++nderiv)
@@ -641,16 +637,17 @@ namespace Nektar
                     for (int j = 0; j < nConvectiveFields; ++j)
                     {
                         Vmath::Vadd(nPts, &outtmp[j][0], 1,
-                                    &fluxVec[nd][j][0], 1,
-                                    &fluxVec[nd][j][0], 1);
+                                    &outarray[nd][j][0], 1,
+                                    &outarray[nd][j][0], 1);
                     }
                 }
             }
         }
 
+        // couldn't this scale mu directly?
         if (ArtifDiffFactor.size())
         {
-            n_nonZero   =   nConvectiveFields;
+            n_nonZero = nConvectiveFields;
 
             if (normal.size())
             {
@@ -679,7 +676,7 @@ namespace Nektar
             }
         }
 
-        nonZeroIndex = Array< OneD, int > {size_t(n_nonZero), 0};
+        nonZeroIndex = Array< OneD, int > {n_nonZero, 0};
         for (int i = 1; i < n_nonZero + 1; ++i)
         {
             nonZeroIndex[n_nonZero - i] =   nConvectiveFields - i;

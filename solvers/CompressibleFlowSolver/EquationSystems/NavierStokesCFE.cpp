@@ -584,13 +584,6 @@ namespace Nektar
         size_t nPts = inarray[0].size();
         size_t n_nonZero = nConvectiveFields - 1;
 
-        // if necessary to keep it can be pre-allocated
-        Array<OneD, Array<OneD, NekDouble>> outtmp{nConvectiveFields};
-        for (int i = 0; i < nConvectiveFields; ++i)
-        {
-            outtmp[i] = Array<OneD, NekDouble>{nPts, 0.0};
-        }
-
         // is this zeroing necessary?
         for (int i = 0; i < outarray.size(); ++i)
         {
@@ -608,37 +601,60 @@ namespace Nektar
         GetViscosityAndThermalCondFromTemp(temperature, mu,
                                             thermalConductivity);
 
+        std::vector<NekDouble> inTmp(nConvectiveFields);
+        std::vector<NekDouble> qfieldsTmp(nConvectiveFields);
+        std::vector<NekDouble> outTmp(nConvectiveFields);
         if (normal.size())
         {
-            for (int nd = 0; nd < nDim; ++nd)
+            for (int d = 0; d < nDim; ++d)
             {
                 for (int nderiv = 0; nderiv < nDim; ++nderiv)
                 {
-                    GetViscousFluxBilinearForm(nDim, nd, nderiv, inarray,
-                                                qfields[nderiv], mu, outtmp);
-
-                    for (int j = 0; j < nConvectiveFields; ++j)
+                    for (size_t p = 0; p < nPts; ++p)
                     {
-                        Vmath::Vvtvp(nPts, normal[nd], 1, outtmp[j], 1,
-                            outarray[0][j], 1, outarray[0][j], 1);
+
+                        // rearrenge data
+                        for (int f = 0; f < nConvectiveFields; ++f)
+                        {
+                            inTmp[f] = inarray[f][p];
+                            qfieldsTmp[f] = qfields[nderiv][f][p];
+                        }
+
+                        GetViscousFluxBilinearFormKernel(nDim, d, nderiv,
+                            inTmp, qfieldsTmp, mu[p], outTmp);
+
+                        for (int f = 0; f < nConvectiveFields; ++f)
+                        {
+                            outarray[0][f][p] += normal[d][p] * outTmp[f];
+                        }
+
                     }
                 }
             }
         }
         else
         {
-            for (int nd = 0; nd < nDim; ++nd)
+            for (int d = 0; d < nDim; ++d)
             {
                 for (int nderiv = 0; nderiv < nDim; ++nderiv)
                 {
-                    GetViscousFluxBilinearForm(nDim, nd, nderiv, inarray,
-                                                qfields[nderiv], mu, outtmp);
-
-                    for (int j = 0; j < nConvectiveFields; ++j)
+                    for (size_t p = 0; p < nPts; ++p)
                     {
-                        Vmath::Vadd(nPts, &outtmp[j][0], 1,
-                                    &outarray[nd][j][0], 1,
-                                    &outarray[nd][j][0], 1);
+
+                        // rearrenge data
+                        for (int f = 0; f < nConvectiveFields; ++f)
+                        {
+                            inTmp[f] = inarray[f][p];
+                            qfieldsTmp[f] = qfields[nderiv][f][p];
+                        }
+
+                        GetViscousFluxBilinearFormKernel(nDim, d, nderiv,
+                            inTmp, qfieldsTmp, mu[p], outTmp);
+
+                        for (int f = 0; f < nConvectiveFields; ++f)
+                        {
+                            outarray[d][f][p] += outTmp[f];
+                        }
                     }
                 }
             }
@@ -867,10 +883,10 @@ namespace Nektar
         constexpr NekDouble FourThird = 4. * OneThird;
 
         size_t DerivDirection_plus_one = DerivDirection + 1;
-        if (DerivDirection == FluxDirection)
+        // Loop over the points
+        for (size_t p = 0; p < nPts; ++p)
         {
-            // Loop over the points
-            for (size_t p = 0; p < nPts; ++p)
+            if (DerivDirection == FluxDirection)
             {
                 // necessary???
                 outarray[0][p] = 0.0; // store 1x
@@ -931,11 +947,7 @@ namespace Nektar
                 outarray[nDim_plus_one][p] = outTmpE; //store 1x
 
             }
-        }
-        else
-        {
-            // Loop over the points
-            for (size_t p = 0; p < nPts; ++p)
+            else
             {
                 // Always zero
                 outarray[0][p] = 0.0; // store 1x

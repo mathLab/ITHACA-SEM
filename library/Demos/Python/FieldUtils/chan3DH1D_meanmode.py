@@ -4,7 +4,7 @@ from NekPy.FieldUtils import *
 
 field = Field(sys.argv, forceoutput=True, error=True)
 
-InputModule.Create("xml", field, infile={"xml":"chan3DH1D.xml"}).Run()
-InputModule.Create("fld", field, infile={"fld":"chan3DH1D.fld"}).Run()
+InputModule.Create("xml",  field, "chan3DH1D.xml").Run()
+InputModule.Create("fld",  field, "chan3DH1D.fld").Run()
 ProcessModule.Create("meanmode", field).Run()
-OutputModule.Create("fld", field, outfile="chan3DH1D_mean.fld").Run()
+OutputModule.Create("fld", field, "chan3DH1D_mean.fld").Run()

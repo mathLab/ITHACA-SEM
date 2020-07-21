@@ -4,6 +4,6 @@ from NekPy.FieldUtils import *
 
 field = Field(sys.argv, forceoutput=True, error=True)
 
-InputModule.Create("xml", field, infile={"xml":"bfs_tg.xml"}).Run()
-InputModule.Create("fld", field, infile={"fld":"bfs_tg.fld"}).Run()
-OutputModule.Create("dat", field, infile="bfs_tg.dat").Run()
+InputModule.Create("xml",  field, "bfs_tg.xml").Run()
+InputModule.Create("fld",  field, "bfs_tg.fld").Run()
+OutputModule.Create("dat", field, "bfs_tg.dat").Run()

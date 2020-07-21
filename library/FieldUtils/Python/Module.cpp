@@ -169,6 +169,30 @@ ModuleSharedPtr Module_Create(py::tuple args, py::dict kwargs)
     FieldSharedPtr field = py::extract<FieldSharedPtr>(args[1]);
     ModuleSharedPtr mod  = GetModuleFactory().CreateInstance(modKey, field);
 
+    // for input modules we can try to interpret
+    // the remaining arguments as input files
+    if (modKey.first == eInputModule) {
+        const std::string infile_arg{"infile"};
+        // assume that the file's type is identical with
+        // the module name
+        const std::string infile_type = modName;
+        for (int i = 2; i < py::len(args); ++i) {
+            std::string in_fname = py::extract<std::string>(args[i]);
+            mod->RegisterConfig(infile_arg, in_fname);
+            mod->AddFile(infile_type, in_fname);
+        }
+    }
+
+    // for output modules we can try to interpret the
+    // remaining arguments as output files
+    if (modKey.first == eOutputModule) {
+        const std::string outfile_arg{"outfile"};
+        for (int i = 2; i < py::len(args); ++i) {
+            std::string out_fname = py::extract<std::string>(args[i]);
+            mod->RegisterConfig(outfile_arg, out_fname);
+        }
+    }
+
     // Process keyword arguments.
     py::list items = kwargs.items();
 

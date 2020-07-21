@@ -4,6 +4,6 @@ from NekPy.FieldUtils import *
 
 field = Field(sys.argv, forceoutput=True, error=True)
 
-InputModule.Create("xml", field, infile={"xml":"chan3D.xml"}).Run()
+InputModule.Create("xml",  field, "chan3D.xml").Run()
 ProcessModule.Create("interppointdatatofld", field, frompts="chan3D_pts1D.pts", interpcoord="1").Run()
-OutputModule.Create("fld", field, outfile="chan3D_pts.fld").Run()
+OutputModule.Create("fld", field, "chan3D_pts.fld").Run()

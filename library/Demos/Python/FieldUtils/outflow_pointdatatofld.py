@@ -4,7 +4,7 @@ from NekPy.FieldUtils import *
 
 field = Field(sys.argv, forceoutput=True, error=True, noequispaced=True)
 
-InputModule.Create("pts", field, infile={"pts":"outflow.pts"}).Run()
-InputModule.Create("xml", field, infile={"xml":"outflow.xml"}).Run()
+InputModule.Create("pts",  field, "outflow.pts").Run()
+InputModule.Create("xml",  field, "outflow.xml").Run()
 ProcessModule.Create("pointdatatofld", field).Run()
-OutputModule.Create("fld", field, output="outflow.fld").Run()
+OutputModule.Create("fld", field, "outflow.fld").Run()

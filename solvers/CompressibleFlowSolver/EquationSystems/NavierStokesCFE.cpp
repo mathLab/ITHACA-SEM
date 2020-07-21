@@ -593,14 +593,6 @@ namespace Nektar
             }
         }
 
-        // unless moved to the npts loop these can be pre-allocated
-        Array<OneD, NekDouble > temperature        {nPts, 0.0};
-        Array<OneD, NekDouble > mu                 {nPts, 0.0};
-        Array<OneD, NekDouble > thermalConductivity        {nPts, 0.0};
-        m_varConv->GetTemperature(inarray, temperature);
-        GetViscosityAndThermalCondFromTemp(temperature, mu,
-                                            thermalConductivity);
-
         std::vector<NekDouble> inTmp(nConvectiveFields);
         std::vector<NekDouble> qfieldsTmp(nConvectiveFields);
         std::vector<NekDouble> outTmp(nConvectiveFields);
@@ -620,8 +612,14 @@ namespace Nektar
                             qfieldsTmp[f] = qfields[nderiv][f][p];
                         }
 
+                        // get temp
+                        NekDouble temperature = m_varConv->GetTemperature(inTmp);
+                        // get viscosity
+                        NekDouble mu;
+                        GetViscosityFromTempScalar(temperature, mu);
+
                         GetViscousFluxBilinearFormKernel(nDim, d, nderiv,
-                            inTmp, qfieldsTmp, mu[p], outTmp);
+                            inTmp, qfieldsTmp, mu, outTmp);
 
                         for (int f = 0; f < nConvectiveFields; ++f)
                         {
@@ -648,8 +646,15 @@ namespace Nektar
                             qfieldsTmp[f] = qfields[nderiv][f][p];
                         }
 
+                        // get temp
+                        NekDouble temperature = m_varConv->GetTemperature(inTmp);
+                        // get viscosity
+                        NekDouble mu;
+                        GetViscosityFromTempScalar(temperature, mu);
+
+                        // get flux
                         GetViscousFluxBilinearFormKernel(nDim, d, nderiv,
-                            inTmp, qfieldsTmp, mu[p], outTmp);
+                            inTmp, qfieldsTmp, mu, outTmp);
 
                         for (int f = 0; f < nConvectiveFields; ++f)
                         {
@@ -807,12 +812,12 @@ namespace Nektar
      * @brief Calculate and return the Symmetric flux in IP method.
      */
     void NavierStokesCFE::GetViscousSymmtrFluxConservVar(
-        const int                                           nSpaceDim,
+        const int                                           nDim,
         const Array<OneD, Array<OneD, NekDouble> >          &inaverg,
         const Array<OneD, Array<OneD, NekDouble > >         &inarray,
         TensorOfArray3D<NekDouble>                          &outarray,
         Array< OneD, int >                                  &nonZeroIndex,
-        const Array<OneD, Array<OneD, NekDouble> >          &normals)
+        const Array<OneD, Array<OneD, NekDouble> >          &normal)
     {
         size_t nConvectiveFields   = inarray.size();
         size_t nPts                = inaverg[nConvectiveFields - 1].size();
@@ -822,31 +827,35 @@ namespace Nektar
             nonZeroIndex[i] =   i + 1;
         }
 
-        // unless moved to the npts loop these can be pre-allocated
-        Array<OneD, NekDouble > temperature        {nPts, 0.0};
-        Array<OneD, NekDouble > mu                 {nPts, 0.0};
-        Array<OneD, NekDouble > thermalConductivity        {nPts, 0.0};
-        m_varConv->GetTemperature(inaverg, temperature);
-        GetViscosityAndThermalCondFromTemp(temperature, mu,
-                                            thermalConductivity);
-
-
-        Array<OneD, Array<OneD, NekDouble> > outtmp{nConvectiveFields};
-        for (int i = 0; i < nConvectiveFields; ++i)
+        std::vector<NekDouble> inAvgTmp(nConvectiveFields);
+        std::vector<NekDouble> inTmp(nConvectiveFields);
+        std::vector<NekDouble> outTmp(nConvectiveFields);
+        for (int d = 0; d < nDim; ++d)
         {
-            outtmp[i] =   Array<OneD, NekDouble> {nPts, 0.0};
-        }
-        for (int nd = 0; nd < nSpaceDim; ++nd)
-        {
-            for (int nderiv = 0; nderiv < nSpaceDim; ++nderiv)
+            for (int nderiv = 0; nderiv < nDim; ++nderiv)
             {
-                GetViscousFluxBilinearForm(nSpaceDim, nd, nderiv, inaverg,
-                                            inarray, mu, outtmp);
-
-                for (int i = 0; i < nConvectiveFields; ++i)
+                for (size_t p = 0; p < nPts; ++p)
                 {
-                    Vmath::Vvtvp(nPts, outtmp[i], 1, normals[nderiv], 1,
-                        outarray[nd][i], 1, outarray[nd][i], 1);
+                    // rearrenge data
+                    for (int f = 0; f < nConvectiveFields; ++f)
+                    {
+                        inAvgTmp[f] = inaverg[f][p];
+                        inTmp[f] = inarray[f][p];
+                    }
+
+                    // get temp
+                    NekDouble temperature = m_varConv->GetTemperature(inTmp);
+                    // get viscosity
+                    NekDouble mu;
+                    GetViscosityFromTempScalar(temperature, mu);
+
+                    GetViscousFluxBilinearFormKernel(nDim, d, nderiv,
+                        inAvgTmp, inTmp, mu, outTmp);
+
+                    for (int f = 0; f < nConvectiveFields; ++f)
+                    {
+                        outarray[d][f][p] += normal[d][p] * outTmp[f];
+                    }
                 }
             }
         }
@@ -1055,20 +1064,13 @@ namespace Nektar
         Array<OneD, NekDouble> &mu,
         Array<OneD, NekDouble> &thermalCond)
     {
-        int nPts       = temperature.size();
+        int nPts = temperature.size();
 
-        // Variable viscosity through the Sutherland's law
-        if (m_ViscosityType == "Variable")
+        for (size_t p = 0; p < nPts; ++p)
         {
-            m_varConv->GetDynamicViscosity(temperature, mu);
+            GetViscosityAndThermalCondFromTempScalar(temperature[p], mu[p],
+                thermalCond[p]);
         }
-        else
-        {
-            Vmath::Fill(nPts, m_muRef, mu, 1);
-        }
-        NekDouble tRa = m_Cp / m_Prandtl;
-        Vmath::Smul(nPts, tRa, mu, 1, thermalCond, 1);
-
     }
 
 }

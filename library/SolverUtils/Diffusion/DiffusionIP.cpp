@@ -707,10 +707,15 @@ void DiffusionIP::CalTraceNumFlux(
         {
             fields[i]->GetFwdBwdTracePhys(qfield[nd][i], Fwd, Bwd, true, true,
                 false);
-            Vmath::Svtvp(nTracePts, 0.5, Bwd, 1, numDerivBwd[nd][i], 1,
-                         numDerivBwd[nd][i], 1);
-            Vmath::Svtvp(nTracePts, 0.5, Fwd, 1, numDerivFwd[nd][i], 1,
-                         numDerivFwd[nd][i], 1);
+            for (size_t p = 0; p < nTracePts; ++p)
+            {
+                numDerivBwd[nd][i][p] += 0.5 * Bwd[p];
+                numDerivFwd[nd][i][p] += 0.5 * Fwd[p];
+            }
+            // Vmath::Svtvp(nTracePts, 0.5, Bwd, 1, numDerivBwd[nd][i], 1,
+            //              numDerivBwd[nd][i], 1);
+            // Vmath::Svtvp(nTracePts, 0.5, Fwd, 1, numDerivFwd[nd][i], 1,
+            //              numDerivFwd[nd][i], 1);
             TraceMap->GetAssemblyCommDG()->PerformExchange(numDerivFwd[nd][i],
                                                            numDerivBwd[nd][i]);
             Vmath::Vadd(nTracePts, numDerivFwd[nd][i], 1, numDerivBwd[nd][i], 1,

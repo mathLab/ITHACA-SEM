@@ -194,15 +194,10 @@ void VariableConverter::GetDynamicViscosity(
     const Array<OneD, const NekDouble> &temperature, Array<OneD, NekDouble> &mu)
 {
     const int nPts    = temperature.size();
-    const NekDouble C = .38175;
-    NekDouble mu_star = m_mu;
-    NekDouble T_star  = m_pInf / (m_rhoInf * m_gasConstant);
-    NekDouble ratio;
 
     for (int i = 0; i < nPts; ++i)
     {
-        ratio = temperature[i] / T_star;
-        mu[i] = mu_star * ratio * sqrt(ratio) * (1 + C) / (ratio + C);
+        mu[i] = GetDynamicViscosityScalar(temperature[i]);
     }
 }
 

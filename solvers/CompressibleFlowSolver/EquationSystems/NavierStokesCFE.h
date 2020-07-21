@@ -138,6 +138,40 @@ namespace Nektar
               Array<OneD, NekDouble> &mu,
               Array<OneD, NekDouble> &thermalCond);
 
+    template <class T, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    inline void GetViscosityAndThermalCondFromTempScalar(
+        const T& temperature, T& mu, T& thermalCond)
+    {
+        GetViscosityFromTempScalar(temperature, mu);
+        NekDouble tRa = m_Cp / m_Prandtl;
+        thermalCond = tRa * mu;
+    }
+
+    template <class T, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    inline void GetViscosityFromTempScalar(
+        const T& temperature, T& mu)
+    {
+        // Variable viscosity through the Sutherland's law
+        if (m_ViscosityType == "Variable")
+        {
+            mu = m_varConv->GetDynamicViscosityScalar(temperature);
+        }
+        else
+        {
+            mu = m_muRef;
+        }
+    }
+
     void GetViscousFluxBilinearForm(
         const int                                           nSpaceDim,
         const int                                           FluxDirection,
@@ -154,7 +188,7 @@ namespace Nektar
             tinysimd::is_vector_floating_point<T>::value
         >::type
     >
-    void GetViscousFluxBilinearFormKernel(
+    inline void GetViscousFluxBilinearFormKernel(
         const int               nDim,
         const int               FluxDirection,
         const int               DerivDirection,
@@ -179,128 +213,123 @@ namespace Nektar
         constexpr NekDouble TwoThird = 2. * OneThird;
         constexpr NekDouble FourThird = 4. * OneThird;
 
-        // Loop over the points
-        // for (size_t p = 0; p < nPts; ++p)
-        // {
-            if (DerivDirection == FluxDirection)
+
+        if (DerivDirection == FluxDirection)
+        {
+            // necessary???
+            outarray[0] = 0.0; // store 1x
+
+            // load 1/rho
+            T oneOrho = 1.0 / inaverg[0]; // load 1x
+            // get vel, vel^2, sum of vel^2
+            std::array<T, 3> u{}, u2{};
+            T u2sum{};
+            for (size_t d = 0; d < nDim; ++d)
             {
-                // necessary???
-                outarray[0] = 0.0; // store 1x
-
-                // load 1/rho
-                T oneOrho = 1.0 / inaverg[0]; // load 1x
-                // get vel, vel^2, sum of vel^2
-                std::array<T, 3> u{}, u2{};
-                T u2sum{};
-                for (size_t d = 0; d < nDim; ++d)
-                {
-                    u[d] = inaverg[d+1] * oneOrho; // load 1x
-                    u2[d] = u[d]*u[d];
-                    u2sum += u2[d];
-                }
-
-                // get E - sum v^2
-                T E_minus_u2sum = inaverg[nDim_plus_one]; // load 1x
-                E_minus_u2sum *= oneOrho;
-                E_minus_u2sum -= u2sum;
-
-                // get nu = mu/rho
-                T nu = mu * oneOrho; // load 1x
-
-
-                // ^^^^ above is almost the same for both loops
-
-                T tmp1 = OneThird * u2[FluxDirection] + u2sum;
-                tmp1 += gammaoPr * E_minus_u2sum;
-                tmp1 *= injumpp[0]; //load 1x
-
-                T tmp2 = gammaoPr * injumpp[nDim_plus_one] - tmp1; //load 1x
-
-                // local var for energy output
-                T outTmpE = 0.0;
-                for (size_t d = 0; d < nDim; ++d)
-                {
-                    size_t d_plus_one = d + 1;
-                    //flux[rhou, rhov, rhow]
-                    T outTmpD = injumpp[d_plus_one] - u[d] * injumpp[0];
-                    outTmpD *= nu;
-                    //flux rhoE
-                    T tmp3 = one_minus_gammaoPr * u[d];
-                    outTmpE +=  tmp3 * injumpp[d_plus_one];
-
-                    if (d == FluxDirection)
-                    {
-                        outTmpD *= FourThird;
-                        T tmp4 = OneThird * u[FluxDirection];
-                        outTmpE += tmp4 * injumpp[FluxDirection_plus_one];
-                    }
-
-                    outarray[d_plus_one] = outTmpD; //store 1x
-                }
-
-                outTmpE += tmp2;
-                outTmpE *= nu;
-                outarray[nDim_plus_one] = outTmpE; //store 1x
-
+                u[d] = inaverg[d+1] * oneOrho; // load 1x
+                u2[d] = u[d]*u[d];
+                u2sum += u2[d];
             }
-            else
+
+            // get E - sum v^2
+            T E_minus_u2sum = inaverg[nDim_plus_one]; // load 1x
+            E_minus_u2sum *= oneOrho;
+            E_minus_u2sum -= u2sum;
+
+            // get nu = mu/rho
+            T nu = mu * oneOrho; // load 1x
+
+
+            // ^^^^ above is almost the same for both loops
+
+            T tmp1 = OneThird * u2[FluxDirection] + u2sum;
+            tmp1 += gammaoPr * E_minus_u2sum;
+            tmp1 *= injumpp[0]; //load 1x
+
+            T tmp2 = gammaoPr * injumpp[nDim_plus_one] - tmp1; //load 1x
+
+            // local var for energy output
+            T outTmpE = 0.0;
+            for (size_t d = 0; d < nDim; ++d)
             {
-                // Always zero
-                outarray[0] = 0.0; // store 1x
+                size_t d_plus_one = d + 1;
+                //flux[rhou, rhov, rhow]
+                T outTmpD = injumpp[d_plus_one] - u[d] * injumpp[0];
+                outTmpD *= nu;
+                //flux rhoE
+                T tmp3 = one_minus_gammaoPr * u[d];
+                outTmpE +=  tmp3 * injumpp[d_plus_one];
 
-                // load 1/rho
-                T oneOrho = 1.0 / inaverg[0]; // load 1x
-                // get vel, vel^2, sum of vel^2
-                std::array<T, 3> u{}, u2{};
-                T u2sum{};
-                for (size_t d = 0; d < nDim; ++d)
+                if (d == FluxDirection)
                 {
-                    size_t d_plus_one = d + 1;
-                    u[d] = inaverg[d_plus_one] * oneOrho; // load 1x
-                    u2[d] = u[d]*u[d];
-                    u2sum += u2[d];
-                    // Not all directions are set
-                    // one could work out the one that is not set
-                    outarray[d_plus_one] = 0.0; // store 1x
+                    outTmpD *= FourThird;
+                    T tmp4 = OneThird * u[FluxDirection];
+                    outTmpE += tmp4 * injumpp[FluxDirection_plus_one];
                 }
 
-                // get E - sum v^2
-                T E_minus_u2sum = inaverg[nDim_plus_one]; // load 1x
-                E_minus_u2sum *= oneOrho;
-                E_minus_u2sum -= u2sum;
-
-                // get nu = mu/rho
-                T nu = mu * oneOrho; // load 1x
-
-
-                // ^^^^ above is almost the same for both loops
-
-                T tmp1 = u[DerivDirection] * injumpp[0] -
-                    injumpp[DerivDirection_plus_one]; // load 2x
-                tmp1 *= TwoThird;
-                outarray[FluxDirection_plus_one] = nu * tmp1; // store 1x
-
-                tmp1 = - u[FluxDirection] * injumpp[0] +
-                    injumpp[FluxDirection_plus_one];
-                outarray[DerivDirection_plus_one] = nu * tmp1; // store 1x
-
-                tmp1 = OneThird * u[FluxDirection] * u[DerivDirection];
-                tmp1 *= injumpp[0];
-
-                T tmp2 = TwoThird * u[FluxDirection] *
-                    injumpp[DerivDirection_plus_one];
-
-                tmp1 += tmp2;
-
-                tmp1 = u[DerivDirection] * injumpp[FluxDirection_plus_one] -
-                    tmp1;
-                outarray[nDim_plus_one] = nu * tmp1; // store 1x
-
+                outarray[d_plus_one] = outTmpD; //store 1x
             }
-        // }
+
+            outTmpE += tmp2;
+            outTmpE *= nu;
+            outarray[nDim_plus_one] = outTmpE; //store 1x
+
+        }
+        else
+        {
+            // Always zero
+            outarray[0] = 0.0; // store 1x
+
+            // load 1/rho
+            T oneOrho = 1.0 / inaverg[0]; // load 1x
+            // get vel, vel^2, sum of vel^2
+            std::array<T, 3> u{}, u2{};
+            T u2sum{};
+            for (size_t d = 0; d < nDim; ++d)
+            {
+                size_t d_plus_one = d + 1;
+                u[d] = inaverg[d_plus_one] * oneOrho; // load 1x
+                u2[d] = u[d]*u[d];
+                u2sum += u2[d];
+                // Not all directions are set
+                // one could work out the one that is not set
+                outarray[d_plus_one] = 0.0; // store 1x
+            }
+
+            // get E - sum v^2
+            T E_minus_u2sum = inaverg[nDim_plus_one]; // load 1x
+            E_minus_u2sum *= oneOrho;
+            E_minus_u2sum -= u2sum;
+
+            // get nu = mu/rho
+            T nu = mu * oneOrho; // load 1x
+
+
+            // ^^^^ above is almost the same for both loops
+
+            T tmp1 = u[DerivDirection] * injumpp[0] -
+                injumpp[DerivDirection_plus_one]; // load 2x
+            tmp1 *= TwoThird;
+            outarray[FluxDirection_plus_one] = nu * tmp1; // store 1x
+
+            tmp1 = - u[FluxDirection] * injumpp[0] +
+                injumpp[FluxDirection_plus_one];
+            outarray[DerivDirection_plus_one] = nu * tmp1; // store 1x
+
+            tmp1 = OneThird * u[FluxDirection] * u[DerivDirection];
+            tmp1 *= injumpp[0];
+
+            T tmp2 = TwoThird * u[FluxDirection] *
+                injumpp[DerivDirection_plus_one];
+
+            tmp1 += tmp2;
+
+            tmp1 = u[DerivDirection] * injumpp[FluxDirection_plus_one] -
+                tmp1;
+            outarray[nDim_plus_one] = nu * tmp1; // store 1x
+
+        }
     }
-
-
 
 
 

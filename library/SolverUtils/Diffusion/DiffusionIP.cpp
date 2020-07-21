@@ -572,90 +572,53 @@ void DiffusionIP::GetPenaltyFactor_const(
 }
 
 void DiffusionIP::v_ConsVarAveJump(
-    const std::size_t nConvectiveFields, const size_t npnts,
+    const std::size_t nConvectiveFields, const size_t nPts,
     const Array<OneD, const Array<OneD, NekDouble>> &vFwd,
     const Array<OneD, const Array<OneD, NekDouble>> &vBwd,
     Array<OneD, Array<OneD, NekDouble>> &aver,
     Array<OneD, Array<OneD, NekDouble>> &jump)
 {
-    ConsVarAve(nConvectiveFields, npnts, vFwd, vBwd, aver);
+    // ConsVarAve(nConvectiveFields, nPts, vFwd, vBwd, aver);
 
+    std::vector<NekDouble> vFwdTmp(nConvectiveFields),
+        vBwdTmp(nConvectiveFields), averTmp(nConvectiveFields) ;
+    for (size_t p = 0; p < nPts; ++p)
+    {
+        // re-arrange data
+        for (size_t f = 0; f < nConvectiveFields; ++f)
+        {
+            vFwdTmp[f] = vFwd[f][p];
+            vBwdTmp[f] = vBwd[f][p];
+        }
+
+        ConsVarAve(nConvectiveFields, m_tracBwdWeightAver[p], vFwdTmp, vBwdTmp,
+            averTmp);
+
+        // store
+        for (size_t f = 0; f < nConvectiveFields; ++f)
+        {
+            aver[f][p] = averTmp[f];
+        }
+    }
+
+    // if this can be make function of points, the nPts loop can be lifted more
     m_SpecialBndTreat(aver);
 
     // note: here the jump is 2.0*(aver-vFwd)
     //       because Viscous wall use a symmetry value as the Bwd,
     //       not the target one
-    Array<OneD, NekDouble> tmpF{npnts, 0.0};
-    Array<OneD, NekDouble> tmpB{npnts, 0.0};
 
-    Array<OneD, NekDouble> Fweight{npnts, 2.0};
-    Array<OneD, NekDouble> Bweight;
-    Bweight = m_tracBwdWeightJump;
-    Vmath::Vsub(npnts, Fweight, 1, Bweight, 1, Fweight, 1);
-
-    for (int i = 0; i < nConvectiveFields; ++i)
+    for (size_t f = 0; f < nConvectiveFields; ++f)
     {
-        Vmath::Vsub(npnts, aver[i], 1, vFwd[i], 1, tmpF, 1);
-        Vmath::Vsub(npnts, vBwd[i], 1, aver[i], 1, tmpB, 1);
-
-        Vmath::Vmul(npnts, tmpF, 1, Fweight, 1, tmpF, 1);
-        Vmath::Vmul(npnts, tmpB, 1, Bweight, 1, tmpB, 1);
-        Vmath::Vadd(npnts, tmpF, 1, tmpB, 1, jump[i], 1);
-    }
-}
-
-void DiffusionIP::ConsVarAve(
-    const std::size_t nConvectiveFields, const size_t npnts,
-    const Array<OneD, const Array<OneD, NekDouble>> &vFwd,
-    const Array<OneD, const Array<OneD, NekDouble>> &vBwd,
-    Array<OneD, Array<OneD, NekDouble>> &aver)
-{
-    NekDouble LinternalEngy = 0.0;
-    NekDouble RinternalEngy = 0.0;
-    NekDouble AinternalEngy = 0.0;
-
-    Array<OneD, NekDouble> Fweight{npnts, 1.0};
-    Array<OneD, NekDouble> Bweight;
-
-    Bweight = m_tracBwdWeightAver;
-
-    Vmath::Vsub(npnts, Fweight, 1, Bweight, 1, Fweight, 1);
-
-    for (int i = 0; i < nConvectiveFields - 1; ++i)
-    {
-        Vmath::Vmul(npnts, Fweight, 1, vFwd[i], 1, aver[i], 1);
-        Vmath::Vvtvp(npnts, Bweight, 1, vBwd[i], 1, aver[i], 1, aver[i], 1);
-    }
-
-    int nengy  = nConvectiveFields - 1;
-    int nvelst = 1;
-    int nveled = nengy;
-    for (int nt = 0; nt < npnts; ++nt)
-    {
-        LinternalEngy = 0.0;
-        for (int j = nvelst; j < nveled; ++j)
+        for (size_t p = 0; p < nPts; ++p)
         {
-            LinternalEngy += vFwd[j][nt] * vFwd[j][nt];
-        }
-        LinternalEngy *= -0.5 / vFwd[0][nt];
-        LinternalEngy += vFwd[nengy][nt];
+            NekDouble Bweight = m_tracBwdWeightJump[p];
+            NekDouble Fweight = 2.0 - Bweight;
 
-        RinternalEngy = 0.0;
-        for (int j = nvelst; j < nveled; ++j)
-        {
-            RinternalEngy += vBwd[j][nt] * vBwd[j][nt];
+            NekDouble tmpF = aver[f][p] - vFwd[f][p];
+            NekDouble tmpB = vBwd[f][p] - aver[f][p];
+            jump[f][p] = tmpF * Fweight + tmpB * Bweight;
         }
-        RinternalEngy *= -0.5 / vBwd[0][nt];
-        RinternalEngy += vBwd[nengy][nt];
-
-        AinternalEngy = 0.0;
-        aver[nengy][nt] =
-            Fweight[nt] * LinternalEngy + Bweight[nt] * RinternalEngy;
-        for (int j = nvelst; j < nveled; ++j)
-        {
-            AinternalEngy += aver[j][nt] * aver[j][nt];
-        }
-        aver[nengy][nt] += AinternalEngy * (0.5 / aver[0][nt]);
     }
 }
 

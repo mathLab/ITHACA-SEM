@@ -76,6 +76,10 @@ namespace Nektar
         m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
         m_session->LoadParameter ("mu",            m_muRef,           1.78e-05);
         m_mu = Array<OneD, NekDouble>(nPts, m_muRef);
+        if (m_ViscosityType == "Variable")
+        {
+            m_is_mu_variable = true;
+        }
 
         // Thermal conductivity or Prandtl
         if ( m_session->DefinesParameter("thermalConductivity"))

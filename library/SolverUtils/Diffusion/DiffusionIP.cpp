@@ -135,6 +135,7 @@ void DiffusionIP::v_Diffuse(
 {
 
     size_t nCoeffs = fields[0]->GetNcoeffs();
+    // this should be preallocated
     Array<OneD, Array<OneD, NekDouble>> tmp{nConvectiveFields};
     for (int i = 0; i < nConvectiveFields; ++i)
     {

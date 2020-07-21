@@ -65,11 +65,12 @@ namespace Nektar
 
   protected:
     std::string                         m_ViscosityType;
+    bool                                m_is_mu_variable{false};
     NekDouble                           m_Cp;
     NekDouble                           m_Cv;
     NekDouble                           m_Prandtl;
 
-    NekDouble                            m_Twall;
+    NekDouble                           m_Twall;
     NekDouble                           m_muRef;
     NekDouble                           m_thermalConductivityRef;
     Array<OneD, NekDouble>              m_mu;
@@ -162,7 +163,7 @@ namespace Nektar
         const T& temperature, T& mu)
     {
         // Variable viscosity through the Sutherland's law
-        if (m_ViscosityType == "Variable")
+        if (m_is_mu_variable)
         {
             mu = m_varConv->GetDynamicViscosityScalar(temperature);
         }

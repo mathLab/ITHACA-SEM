@@ -101,7 +101,7 @@ public:
             tinysimd::is_vector_floating_point<T>::value
         >::type
     >
-    inline T GetDynamicViscosityScalar(T &temperature)
+    inline T GetDynamicViscosity(T &temperature)
     {
 
         constexpr NekDouble C = .38175;

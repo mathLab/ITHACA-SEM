@@ -127,7 +127,15 @@
             ASSERTL1(static_cast<unsigned int>(n*incy) <= y.size()+y.GetOffset(),"Array out of bounds");
             ASSERTL1(static_cast<unsigned int>(n*incz) <= z.size()+z.GetOffset(),"Array out of bounds");
 
+#ifdef NEKTAR_ENABLE_SIMD_VMATH
+            boost::ignore_unused(incx, incy, incz);
+            ASSERTL1(incx == 1, "Simd vmath requires inc = 1");
+            ASSERTL1(incy == 1, "Simd vmath requires inc = 1");
+            ASSERTL1(incz == 1, "Simd vmath requires inc = 1");
+            SIMD::Vadd(n,&x[0],&y[0],&z[0]);
+#else
             Vadd(n,&x[0],incx,&y[0],incy,&z[0],incz);
+#endif
         }
 
         /// \brief Add vector y = alpha + x

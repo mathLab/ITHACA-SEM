@@ -106,6 +106,7 @@ namespace Nektar
                                     .CreateInstance(diffName, diffName);
         if ("InteriorPenalty" == diffName)
         {
+            m_is_diffIP = true;
             SetBoundaryConditionsBwdWeight();
         }
 
@@ -171,15 +172,14 @@ namespace Nektar
         size_t npoints    = GetNpoints();
         size_t nTracePts  = GetTraceTotPoints();
 
+        // this should be preallocated
         Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
         for (int i = 0; i < nvariables; ++i)
         {
             outarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);
         }
 
-        string diffName;
-        m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-        if ("InteriorPenalty" == diffName)
+        if (m_is_diffIP)
         {
             if (m_BndEvaluateTime < 0.0)
             {
@@ -271,9 +271,7 @@ namespace Nektar
             outarrayDiff[i] = Array<OneD, NekDouble>{ncoeffs, 0.0};
         }
 
-        string diffName;
-        m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-        if ("InteriorPenalty" == diffName)
+        if (m_is_diffIP)
         {
             if (m_BndEvaluateTime < 0.0)
             {
@@ -620,7 +618,7 @@ namespace Nektar
                         NekDouble temperature = m_varConv->GetTemperature(inTmp);
                         // get viscosity
                         NekDouble mu;
-                        GetViscosityFromTempScalar(temperature, mu);
+                        GetViscosityFromTempKernel(temperature, mu);
 
                         GetViscousFluxBilinearFormKernel(nDim, d, nderiv,
                             inTmp, qfieldsTmp, mu, outTmp);
@@ -654,7 +652,7 @@ namespace Nektar
                         NekDouble temperature = m_varConv->GetTemperature(inTmp);
                         // get viscosity
                         NekDouble mu;
-                        GetViscosityFromTempScalar(temperature, mu);
+                        GetViscosityFromTempKernel(temperature, mu);
 
                         // get flux
                         GetViscousFluxBilinearFormKernel(nDim, d, nderiv,
@@ -851,7 +849,7 @@ namespace Nektar
                     NekDouble temperature = m_varConv->GetTemperature(inTmp);
                     // get viscosity
                     NekDouble mu;
-                    GetViscosityFromTempScalar(temperature, mu);
+                    GetViscosityFromTempKernel(temperature, mu);
 
                     GetViscousFluxBilinearFormKernel(nDim, d, nderiv,
                         inAvgTmp, inTmp, mu, outTmp);
@@ -861,158 +859,6 @@ namespace Nektar
                         outarray[d][f][p] += normal[d][p] * outTmp[f];
                     }
                 }
-            }
-        }
-    }
-
-    /**
-     * @brief Calculate diffusion flux using the Jacobian form.
-     *
-     * @param
-     * outarray [nvars][npts]
-     */
-    void NavierStokesCFE::GetViscousFluxBilinearForm(
-        const int                                           nSpaceDim,
-        const int                                           FluxDirection,
-        const int                                           DerivDirection,
-        const Array<OneD, const Array<OneD, NekDouble> >    &inaverg,
-        const Array<OneD, const Array<OneD, NekDouble> >    &injumpp,
-        const Array<OneD, NekDouble>                        &mu,
-        Array<OneD, Array<OneD, NekDouble> >                &outarray)
-    {
-        size_t nConvectiveFields   = inaverg.size();
-        size_t nPts = inaverg[nConvectiveFields - 1].size();
-        size_t nDim = nSpaceDim;
-
-        // Constants
-        size_t nDim_plus_one = nDim + 1;
-        size_t FluxDirection_plus_one = FluxDirection + 1;
-
-        NekDouble gammaoPr = m_gamma / m_Prandtl;
-        NekDouble one_minus_gammaoPr = 1.0 - gammaoPr;
-
-        constexpr NekDouble OneThird = 1. / 3.;
-        constexpr NekDouble TwoThird = 2. * OneThird;
-        constexpr NekDouble FourThird = 4. * OneThird;
-
-        size_t DerivDirection_plus_one = DerivDirection + 1;
-        // Loop over the points
-        for (size_t p = 0; p < nPts; ++p)
-        {
-            if (DerivDirection == FluxDirection)
-            {
-                // necessary???
-                outarray[0][p] = 0.0; // store 1x
-
-                // load 1/rho
-                NekDouble oneOrho = 1.0 / inaverg[0][p]; // load 1x
-                // get vel, vel^2, sum of vel^2
-                std::array<NekDouble, 3> u{}, u2{};
-                NekDouble u2sum{};
-                for (size_t d = 0; d < nDim; ++d)
-                {
-                    u[d] = inaverg[d+1][p] * oneOrho; // load 1x
-                    u2[d] = u[d]*u[d];
-                    u2sum += u2[d];
-                }
-
-                // get E - sum v^2
-                NekDouble E_minus_u2sum = inaverg[nDim_plus_one][p]; // load 1x
-                E_minus_u2sum *= oneOrho;
-                E_minus_u2sum -= u2sum;
-
-                // get nu = mu/rho
-                NekDouble nu = mu[p] * oneOrho; // load 1x
-
-
-                // ^^^^ above is almost the same for both loops
-
-                NekDouble tmp1 = OneThird * u2[FluxDirection] + u2sum;
-                tmp1 += gammaoPr * E_minus_u2sum;
-                tmp1 *= injumpp[0][p]; //load 1x
-
-                NekDouble tmp2 = gammaoPr * injumpp[nDim_plus_one][p] - tmp1; //load 1x
-
-                // local var for energy output
-                NekDouble outTmpE = 0.0;
-                for (size_t d = 0; d < nDim; ++d)
-                {
-                    size_t d_plus_one = d + 1;
-                    //flux[rhou, rhov, rhow]
-                    NekDouble outTmpD = injumpp[d_plus_one][p] - u[d] * injumpp[0][p];
-                    outTmpD *= nu;
-                    //flux rhoE
-                    NekDouble tmp3 = one_minus_gammaoPr * u[d];
-                    outTmpE +=  tmp3 * injumpp[d_plus_one][p];
-
-                    if (d == FluxDirection)
-                    {
-                        outTmpD *= FourThird;
-                        NekDouble tmp4 = OneThird * u[FluxDirection];
-                        outTmpE += tmp4 * injumpp[FluxDirection_plus_one][p];
-                    }
-
-                    outarray[d_plus_one][p] = outTmpD; //store 1x
-                }
-
-                outTmpE += tmp2;
-                outTmpE *= nu;
-                outarray[nDim_plus_one][p] = outTmpE; //store 1x
-
-            }
-            else
-            {
-                // Always zero
-                outarray[0][p] = 0.0; // store 1x
-
-                // load 1/rho
-                NekDouble oneOrho = 1.0 / inaverg[0][p]; // load 1x
-                // get vel, vel^2, sum of vel^2
-                std::array<NekDouble, 3> u{}, u2{};
-                NekDouble u2sum{};
-                for (size_t d = 0; d < nDim; ++d)
-                {
-                    size_t d_plus_one = d + 1;
-                    u[d] = inaverg[d_plus_one][p] * oneOrho; // load 1x
-                    u2[d] = u[d]*u[d];
-                    u2sum += u2[d];
-                    // Not all directions are set
-                    // one could work out the one that is not set
-                    outarray[d_plus_one][p] = 0.0; // store 1x
-                }
-
-                // get E - sum v^2
-                NekDouble E_minus_u2sum = inaverg[nDim_plus_one][p]; // load 1x
-                E_minus_u2sum *= oneOrho;
-                E_minus_u2sum -= u2sum;
-
-                // get nu = mu/rho
-                NekDouble nu = mu[p] * oneOrho; // load 1x
-
-
-                // ^^^^ above is almost the same for both loops
-
-                NekDouble tmp1 = u[DerivDirection] * injumpp[0][p] -
-                    injumpp[DerivDirection_plus_one][p]; // load 2x
-                tmp1 *= TwoThird;
-                outarray[FluxDirection_plus_one][p] = nu * tmp1; // store 1x
-
-                tmp1 = - u[FluxDirection] * injumpp[0][p] +
-                    injumpp[FluxDirection_plus_one][p];
-                outarray[DerivDirection_plus_one][p] = nu * tmp1; // store 1x
-
-                tmp1 = OneThird * u[FluxDirection] * u[DerivDirection];
-                tmp1 *= injumpp[0][p];
-
-                NekDouble tmp2 = TwoThird * u[FluxDirection] *
-                    injumpp[DerivDirection_plus_one][p];
-
-                tmp1 += tmp2;
-
-                tmp1 = u[DerivDirection] * injumpp[FluxDirection_plus_one][p] -
-                    tmp1;
-                outarray[nDim_plus_one][p] = nu * tmp1; // store 1x
-
             }
         }
     }
@@ -1072,7 +918,7 @@ namespace Nektar
 
         for (size_t p = 0; p < nPts; ++p)
         {
-            GetViscosityAndThermalCondFromTempScalar(temperature[p], mu[p],
+            GetViscosityAndThermalCondFromTempKernel(temperature[p], mu[p],
                 thermalCond[p]);
         }
     }

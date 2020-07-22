@@ -48,6 +48,62 @@ namespace Nektar
 {
 namespace VmathSIMDUnitTests
 {
+    BOOST_AUTO_TEST_CASE(TestVadd)
+    {
+        using dataType = double;
+        constexpr size_t n = 11;
+        alignas(tinysimd::simd<dataType>::alignment)
+            std::array<dataType, n> x, y, z;
+        dataType epsilon = std::numeric_limits<dataType>::epsilon();
+
+        // init
+        for (size_t i = 0; i < n; ++i)
+        {
+            x[i] = 1.0;
+            y[i] = 1.0;
+        }
+        // test z = x + y
+        Vmath::SIMD::Vadd(n, x.data(), y.data(), z.data());
+
+        for (size_t i = 0; i < n; ++i)
+        {
+            BOOST_CHECK_CLOSE(z[i], 2.0, epsilon);
+        }
+
+        // ---------------------------------------------------------------------
+
+        // init
+        for (size_t i = 0; i < n; ++i)
+        {
+            x[i] = 2.0;
+            y[i] = 0.0;
+        }
+        // test z = x + y
+        Vmath::SIMD::Vadd(n, x.data(), y.data(), z.data());
+
+        for (size_t i = 0; i < n; ++i)
+        {
+            BOOST_CHECK_CLOSE(z[i], 2.0, epsilon);
+        }
+
+        // ---------------------------------------------------------------------
+
+        // init
+        for (size_t i = 0; i < n; ++i)
+        {
+            x[i] = 0.0;
+            y[i] = -2.0;
+        }
+        // test z = x + y
+        Vmath::SIMD::Vadd(n, x.data(), y.data(), z.data());
+
+        for (size_t i = 0; i < n; ++i)
+        {
+            BOOST_CHECK_CLOSE(z[i], -2.0, epsilon);
+        }
+
+    }
+
     BOOST_AUTO_TEST_CASE(TestVvtvp)
     {
         using dataType = double;

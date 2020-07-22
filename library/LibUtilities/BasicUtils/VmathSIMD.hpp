@@ -43,8 +43,52 @@ namespace Vmath
 {
 namespace SIMD
 {
+    /// \brief Multiply vector z = x + y
+    template<class T>
+    void Vadd(const size_t n, const T *x,  const T *y, T *z)
+    {
+        using namespace tinysimd;
+        using vec_t = simd<T>;
 
-    /// \brief Multiply vector z = x*y
+        size_t cnt = n;
+        // Vectorized loop
+        while (cnt >= vec_t::width)
+        {
+            // load
+            vec_t yChunk;
+            yChunk.load(y, is_not_aligned);
+            vec_t xChunk;
+            xChunk.load(x, is_not_aligned);
+
+            // z = x + y
+            vec_t zChunk = xChunk + yChunk;
+
+            // store
+            zChunk.store(z, is_not_aligned);
+
+            // update pointers
+            x += vec_t::width;
+            y += vec_t::width;
+            z += vec_t::width;
+            cnt-= vec_t::width;
+        }
+
+        // spillover loop
+        while(cnt)
+        {
+            // z = x + y;
+            *z = (*x) + (*y);
+            // update pointers
+            ++x;
+            ++y;
+            ++z;
+            --cnt;
+        }
+    }
+
+
+
+    /// \brief Multiply vector z = x * y
     template<class T>
     void Vmul(const size_t n, const T *x,  const T *y, T *z)
     {

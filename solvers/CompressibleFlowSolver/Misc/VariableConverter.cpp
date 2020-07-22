@@ -197,7 +197,7 @@ void VariableConverter::GetDynamicViscosity(
 
     for (int i = 0; i < nPts; ++i)
     {
-        mu[i] = GetDynamicViscosityScalar(temperature[i]);
+        mu[i] = GetDynamicViscosity(temperature[i]);
     }
 }
 

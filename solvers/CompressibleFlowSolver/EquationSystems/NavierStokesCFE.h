@@ -65,7 +65,13 @@ namespace Nektar
 
   protected:
     std::string                         m_ViscosityType;
+    /// flag to switch between constant viscosity and Sutherland
+    /// an enum could be added for more options
     bool                                m_is_mu_variable{false};
+    /// flag to switch between IP and LDG
+    /// an enum could be added for more options
+    bool                                m_is_diffIP{false};
+
     NekDouble                           m_Cp;
     NekDouble                           m_Cv;
     NekDouble                           m_Prandtl;
@@ -145,10 +151,10 @@ namespace Nektar
             tinysimd::is_vector_floating_point<T>::value
         >::type
     >
-    inline void GetViscosityAndThermalCondFromTempScalar(
+    inline void GetViscosityAndThermalCondFromTempKernel(
         const T& temperature, T& mu, T& thermalCond)
     {
-        GetViscosityFromTempScalar(temperature, mu);
+        GetViscosityFromTempKernel(temperature, mu);
         NekDouble tRa = m_Cp / m_Prandtl;
         thermalCond = tRa * mu;
     }
@@ -159,13 +165,13 @@ namespace Nektar
             tinysimd::is_vector_floating_point<T>::value
         >::type
     >
-    inline void GetViscosityFromTempScalar(
+    inline void GetViscosityFromTempKernel(
         const T& temperature, T& mu)
     {
         // Variable viscosity through the Sutherland's law
         if (m_is_mu_variable)
         {
-            mu = m_varConv->GetDynamicViscosityScalar(temperature);
+            mu = m_varConv->GetDynamicViscosity(temperature);
         }
         else
         {
@@ -173,16 +179,13 @@ namespace Nektar
         }
     }
 
-    void GetViscousFluxBilinearForm(
-        const int                                           nSpaceDim,
-        const int                                           FluxDirection,
-        const int                                           DerivDirection,
-        const Array<OneD, const Array<OneD, NekDouble> >    &inaverg,
-        const Array<OneD, const Array<OneD, NekDouble> >    &injumpp,
-        const Array<OneD, NekDouble>                        &mu,
-        Array<OneD, Array<OneD, NekDouble> >                &outarray);
-
-
+    /**
+     * @brief Calculate diffusion flux using the Jacobian form.
+     *
+     * @param
+     *
+     * outarray[nvars] flux
+     */
     template <class T, typename = typename std::enable_if
         <
             std::is_floating_point<T>::value ||

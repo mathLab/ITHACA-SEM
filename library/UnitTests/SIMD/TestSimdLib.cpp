@@ -94,11 +94,11 @@ namespace SimdLibTests
 
         #if defined(USING_AVX2) && !defined(USING_AVX512)
         std::cout << "avx2" << std::endl;
-        // int
+        // int (sse2int4)
         width = simd<int>::width;
         alignment = simd<int>::alignment;
-        BOOST_CHECK_EQUAL(width, 8);
-        BOOST_CHECK_EQUAL(alignment, 32);
+        BOOST_CHECK_EQUAL(width, 4);
+        BOOST_CHECK_EQUAL(alignment, 16);
         // long
         width = simd<long>::width;
         alignment = simd<long>::alignment;
@@ -113,6 +113,11 @@ namespace SimdLibTests
 
         #if defined(USING_AVX512)
         std::cout << "avx512" << std::endl;
+        // int (avx2int8)
+        width = simd<int>::width;
+        alignment = simd<int>::alignment;
+        BOOST_CHECK_EQUAL(width, 8);
+        BOOST_CHECK_EQUAL(alignment, 32);
         // long
         width = simd<long>::width;
         alignment = simd<long>::alignment;

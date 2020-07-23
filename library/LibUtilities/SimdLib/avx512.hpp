@@ -31,9 +31,9 @@ namespace abi
 {
 
 // mapping between abstract types and concrete types
+template <> struct avx512<double> { using type = avx512Double8; };
 template <> struct avx512<std::int64_t> { using type = avx512Long8<std::int64_t>; };
 template <> struct avx512<std::uint64_t> { using type = avx512Long8<std::uint64_t>; };
-template <> struct avx512<double> { using type = avx512Double8; };
 
 } // namespace abi
 

@@ -37,6 +37,8 @@
 #include <iomanip>
 #include <iostream>
 
+#include <LibUtilities/BasicUtils/Timer.h>
+
 namespace Nektar
 {
 namespace SolverUtils
@@ -123,10 +125,18 @@ void DiffusionIP::v_InitObject(
     {
         m_MuVarTrace = Array<OneD, NekDouble>{nTracePts, 0.0};
     }
+
+    // workspace for v_diffuse
+    size_t nCoeffs = pFields[0]->GetNcoeffs();
+    m_wspDiff = Array<OneD, Array<OneD, NekDouble>>{nVariable};
+    for (int i = 0; i < nVariable; ++i)
+    {
+        m_wspDiff[i] = Array<OneD, NekDouble>{nCoeffs, 0.0};
+    }
 }
 
 void DiffusionIP::v_Diffuse(
-    const std::size_t nConvectiveFields,
+    const size_t nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     const Array<OneD, Array<OneD, NekDouble>> &inarray,
     Array<OneD, Array<OneD, NekDouble>> &outarray,
@@ -134,23 +144,16 @@ void DiffusionIP::v_Diffuse(
     const Array<OneD, Array<OneD, NekDouble>> &pBwd)
 {
 
-    size_t nCoeffs = fields[0]->GetNcoeffs();
-    // this should be preallocated
-    Array<OneD, Array<OneD, NekDouble>> tmp{nConvectiveFields};
+    DiffusionIP::v_DiffuseCoeffs(nConvectiveFields, fields, inarray, m_wspDiff,
+        pFwd, pBwd);
     for (int i = 0; i < nConvectiveFields; ++i)
     {
-        tmp[i] = Array<OneD, NekDouble>{nCoeffs, 0.0};
-    }
-    DiffusionIP::v_DiffuseCoeffs(nConvectiveFields, fields, inarray, tmp, pFwd,
-                                 pBwd);
-    for (int i = 0; i < nConvectiveFields; ++i)
-    {
-        fields[i]->BwdTrans(tmp[i], outarray[i]);
+        fields[i]->BwdTrans(m_wspDiff[i], outarray[i]);
     }
 }
 
 void DiffusionIP::v_DiffuseCoeffs(
-    const std::size_t nConvectiveFields,
+    const size_t nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     const Array<OneD, Array<OneD, NekDouble>> &inarray,
     Array<OneD, Array<OneD, NekDouble>> &outarray,
@@ -162,9 +165,9 @@ void DiffusionIP::v_DiffuseCoeffs(
     size_t nCoeffs   = fields[0]->GetNcoeffs();
     size_t nTracePts = fields[0]->GetTrace()->GetTotPoints();
 
+    // pre-allocate this?
     Array<OneD, NekDouble> Fwd{nTracePts, 0.0};
     Array<OneD, NekDouble> Bwd{nTracePts, 0.0};
-
     TensorOfArray3D<NekDouble> elmtFlux{nDim};
     TensorOfArray3D<NekDouble> qfield{nDim};
     for (int j = 0; j < nDim; ++j)
@@ -181,8 +184,10 @@ void DiffusionIP::v_DiffuseCoeffs(
         }
     }
 
+    // pre-allocate this?
     Array<OneD, Array<OneD, NekDouble>> vFwd{nConvectiveFields};
     Array<OneD, Array<OneD, NekDouble>> vBwd{nConvectiveFields};
+    // when does this happen?
     if (pFwd == NullNekDoubleArrayofArray || pBwd == NullNekDoubleArrayofArray)
     {
         for (int i = 0; i < nConvectiveFields; ++i)
@@ -209,6 +214,7 @@ void DiffusionIP::v_DiffuseCoeffs(
     Array<OneD, int> nonZeroIndex;
     DiffuseVolumeFlux(fields, inarray, qfield, elmtFlux, nonZeroIndex);
 
+    // pre-allocate this?
     Array<OneD, Array<OneD, NekDouble>> tmpFluxIprdct{nDim};
     // volume intergration: the nonZeroIndex indicates which flux is nonzero
     for (int i = 0; i < nonZeroIndex.size(); ++i)
@@ -227,6 +233,7 @@ void DiffusionIP::v_DiffuseCoeffs(
         elmtFlux[j] = NullNekDoubleArrayofArray;
     }
 
+    // pre-allocate this?
     Array<OneD, Array<OneD, NekDouble>> Traceflux{nConvectiveFields};
     for (int j = 0; j < nConvectiveFields; ++j)
     {
@@ -300,8 +307,12 @@ void DiffusionIP::v_DiffuseVolumeFlux(
 
     Array<OneD, Array<OneD, NekDouble>> tmparray2D = NullNekDoubleArrayofArray;
 
+    LibUtilities::Timer timer;
+    timer.Start();
     m_FunctorDiffusionfluxCons(nDim, inarray, qfield, VolumeFlux, nonZeroIndex,
                                tmparray2D, muvar);
+    timer.Stop();
+    timer.AccumulateRegion("m_FunctorDiffusionfluxCons");
 }
 
 void DiffusionIP::v_DiffuseTraceFlux(

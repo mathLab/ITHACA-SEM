@@ -340,13 +340,23 @@
         /************ Misc routine from Veclib (and extras)  ************/
 
         /// \brief Gather vector z[i] = x[y[i]]
-        template<class T>  void Gathr(int n, const Array<OneD, const T> &x, const Array<OneD, const int> &y,  Array<OneD,T> &z)
+        template<class T, class I, typename = typename std::enable_if
+            <
+                std::is_floating_point<T>::value &&
+                std::is_integral<I>::value
+            >::type
+        >
+        void Gathr(I n, const Array<OneD, const T> &x, const Array<OneD, I> &y,
+            Array<OneD,T> &z)
         {
             ASSERTL1(n <= y.size()+y.GetOffset(),"Array out of bounds");
             ASSERTL1(n <= z.size()+z.GetOffset(),"Array out of bounds");
 
+#ifdef NEKTAR_ENABLE_SIMD_VMATH
+            SIMD::Gathr(n,&x[0],&y[0],&z[0]);
+#else
             Gathr(n,&x[0],&y[0],&z[0]);
-
+#endif
         }
 
         /// \brief Scatter vector z[y[i]] = x[i]

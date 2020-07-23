@@ -109,6 +109,9 @@ protected:
     Array<OneD, Array<OneD, NekDouble>> m_traceNormals;
     Array<OneD, Array<OneD, NekDouble>> m_traceAver;
     Array<OneD, Array<OneD, NekDouble>> m_traceJump;
+    /// Workspace for v_Diffusion
+    Array<OneD, Array<OneD, NekDouble>> m_wspDiff;
+
     Array<OneD, NekDouble> m_tracBwdWeightAver;
     Array<OneD, NekDouble> m_tracBwdWeightJump;
     Array<OneD, NekDouble> m_traceNormDirctnElmtLength;

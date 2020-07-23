@@ -32,15 +32,21 @@ namespace abi
 {
 
 // mapping between abstract types and concrete types
-template <> struct avx2<std::int32_t> { using type = avx2Int8<std::int32_t>; };
-template <> struct avx2<std::uint32_t> { using type = avx2Int8<std::uint32_t>; };
+template <> struct avx2<double> { using type = avx2Double4; };
 template <> struct avx2<std::int64_t> { using type = avx2Long4<std::int64_t>; };
 template <> struct avx2<std::uint64_t> { using type = avx2Long4<std::uint64_t>; };
-template <> struct avx2<double> { using type = avx2Double4; };
+#if defined(__AVX512F__) && defined(NEKTAR_ENABLE_SIMD_AVX512)
+// these types are used for indexes only
+// should be enabled only with avx512 otherwise they get selected by the wrapper
+// instead of sse2int4. The concrete type avx2Int8 is available in case someone
+// wants to explicity use it
+template <> struct avx2<std::int32_t> { using type = avx2Int8<std::int32_t>; };
+template <> struct avx2<std::uint32_t> { using type = avx2Int8<std::uint32_t>; };
+#endif
 
 } // namespace abi
 
-// concrete types, could add enable if to allow only unsigned int and int...
+// concrete types
 template<typename T>
 struct avx2Int8
 {

@@ -44,13 +44,79 @@ namespace Vmath
 namespace SIMD
 {
     /// \brief Multiply vector z = x + y
-    template<class T>
+    template<class T,typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value
+        >::type
+    >
     void Vadd(const size_t n, const T *x,  const T *y, T *z)
     {
         using namespace tinysimd;
         using vec_t = simd<T>;
 
         size_t cnt = n;
+        // Vectorized loop unroll 4x
+        while (cnt >= 4*vec_t::width)
+        {
+            // load
+            vec_t yChunk0, yChunk1, yChunk2, yChunk3;
+            yChunk0.load(y, is_not_aligned);
+            yChunk1.load(y + vec_t::width, is_not_aligned);
+            yChunk2.load(y + 2*vec_t::width, is_not_aligned);
+            yChunk3.load(y + 3*vec_t::width, is_not_aligned);
+
+            vec_t xChunk0, xChunk1, xChunk2, xChunk3;
+            xChunk0.load(x, is_not_aligned);
+            xChunk1.load(x + vec_t::width, is_not_aligned);
+            xChunk2.load(x + 2*vec_t::width, is_not_aligned);
+            xChunk3.load(x + 3*vec_t::width, is_not_aligned);
+
+            // z = x + y
+            vec_t zChunk0 = xChunk0 + yChunk0;
+            vec_t zChunk1 = xChunk1 + yChunk1;
+            vec_t zChunk2 = xChunk2 + yChunk2;
+            vec_t zChunk3 = xChunk3 + yChunk3;
+
+            // store
+            zChunk0.store(z, is_not_aligned);
+            zChunk1.store(z + vec_t::width, is_not_aligned);
+            zChunk2.store(z + 2*vec_t::width, is_not_aligned);
+            zChunk3.store(z + 3*vec_t::width, is_not_aligned);
+
+            // update pointers
+            x += 4*vec_t::width;
+            y += 4*vec_t::width;
+            z += 4*vec_t::width;
+            cnt-= 4*vec_t::width;
+        }
+
+        // Vectorized loop unroll 2x
+        while (cnt >= 2*vec_t::width)
+        {
+            // load
+            vec_t yChunk0, yChunk1;
+            yChunk0.load(y, is_not_aligned);
+            yChunk1.load(y + vec_t::width, is_not_aligned);
+
+            vec_t xChunk0, xChunk1;
+            xChunk0.load(x, is_not_aligned);
+            xChunk1.load(x + vec_t::width, is_not_aligned);
+
+            // z = x + y
+            vec_t zChunk0 = xChunk0 + yChunk0;
+            vec_t zChunk1 = xChunk1 + yChunk1;
+
+            // store
+            zChunk0.store(z, is_not_aligned);
+            zChunk1.store(z + vec_t::width, is_not_aligned);
+
+            // update pointers
+            x += 2*vec_t::width;
+            y += 2*vec_t::width;
+            z += 2*vec_t::width;
+            cnt-= 2*vec_t::width;
+        }
+
         // Vectorized loop
         while (cnt >= vec_t::width)
         {
@@ -282,6 +348,107 @@ namespace SIMD
             --cnt;
         }
     }
+
+    /// \brief Gather vector z[i] = x[y[i]]
+    template<class T, class I, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value &&
+            std::is_integral<I>::value
+        >::type
+    >
+    void Gathr(const I n, const T* x,  const I* y, T* z)
+    {
+        using namespace tinysimd;
+        using vec_t = simd<T>;
+        using vec_t_i = simd<I>;
+
+        I cnt = n;
+        // Unroll 4x Vectorized loop
+        while (cnt >= 4*vec_t::width)
+        {
+            // load index
+            vec_t_i yChunk0, yChunk1, yChunk2, yChunk3;
+            yChunk0.load(y, is_not_aligned);
+            yChunk1.load(y + vec_t_i::width, is_not_aligned);
+            yChunk2.load(y + 2*vec_t_i::width, is_not_aligned);
+            yChunk3.load(y + 3*vec_t_i::width, is_not_aligned);
+
+            // z = x[y[i]]
+            vec_t zChunk0, zChunk1, zChunk2, zChunk3;
+            zChunk0.gather(x, yChunk0);
+            zChunk1.gather(x, yChunk1);
+            zChunk2.gather(x, yChunk2);
+            zChunk3.gather(x, yChunk3);
+
+            // store
+            zChunk0.store(z, is_not_aligned);
+            zChunk1.store(z + vec_t_i::width, is_not_aligned);
+            zChunk2.store(z + 2*vec_t_i::width, is_not_aligned);
+            zChunk3.store(z + 3*vec_t_i::width, is_not_aligned);
+
+            // update pointers
+            y += 4*vec_t_i::width;
+            z += 4*vec_t::width;
+            cnt-= 4*vec_t::width;
+        }
+
+        // Unroll 2x Vectorized loop
+        while (cnt >= 2*vec_t::width)
+        {
+            // load index
+            vec_t_i yChunk0, yChunk1;
+            yChunk0.load(y, is_not_aligned);
+            yChunk1.load(y + vec_t_i::width, is_not_aligned);
+
+            // z = x[y[i]]
+            vec_t zChunk0, zChunk1;
+            zChunk0.gather(x, yChunk0);
+            zChunk1.gather(x, yChunk1);
+
+            // store
+            zChunk0.store(z, is_not_aligned);
+            zChunk1.store(z + vec_t_i::width, is_not_aligned);
+
+            // update pointers
+            y += 2*vec_t_i::width;
+            z += 2*vec_t::width;
+            cnt-= 2*vec_t::width;
+        }
+
+        // Vectorized loop
+        while (cnt >= vec_t::width)
+        {
+            // load index
+            vec_t_i yChunk;
+            yChunk.load(y, is_not_aligned);
+
+            // z = x[y[i]]
+            vec_t zChunk;
+            zChunk.gather(x, yChunk);
+
+            // store
+            zChunk.store(z, is_not_aligned);
+
+            // update pointers
+            y += vec_t_i::width;
+            z += vec_t::width;
+            cnt-= vec_t::width;
+        }
+
+        // spillover loop
+        while(cnt)
+        {
+            // z = x[y[i]]
+            *z = *(x + *y);
+            // update pointers
+            ++y;
+            ++z;
+            --cnt;
+        }
+    }
+
+
+
 
 
 } // namespace SIMD

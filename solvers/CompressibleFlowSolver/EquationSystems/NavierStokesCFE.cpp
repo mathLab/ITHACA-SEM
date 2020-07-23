@@ -600,25 +600,26 @@ namespace Nektar
         std::vector<NekDouble> outTmp(nConvectiveFields);
         if (normal.size())
         {
-            for (int d = 0; d < nDim; ++d)
+            for (int nderiv = 0; nderiv < nDim; ++nderiv)
             {
-                for (int nderiv = 0; nderiv < nDim; ++nderiv)
+                for (size_t p = 0; p < nPts; ++p)
                 {
-                    for (size_t p = 0; p < nPts; ++p)
+
+                    // rearrenge data
+                    for (int f = 0; f < nConvectiveFields; ++f)
                     {
+                        inTmp[f] = inarray[f][p];
+                        qfieldsTmp[f] = qfields[nderiv][f][p];
+                    }
 
-                        // rearrenge data
-                        for (int f = 0; f < nConvectiveFields; ++f)
-                        {
-                            inTmp[f] = inarray[f][p];
-                            qfieldsTmp[f] = qfields[nderiv][f][p];
-                        }
+                    // get temp
+                    NekDouble temperature = m_varConv->GetTemperature(inTmp);
+                    // get viscosity
+                    NekDouble mu;
+                    GetViscosityFromTempKernel(temperature, mu);
 
-                        // get temp
-                        NekDouble temperature = m_varConv->GetTemperature(inTmp);
-                        // get viscosity
-                        NekDouble mu;
-                        GetViscosityFromTempKernel(temperature, mu);
+                    for (int d = 0; d < nDim; ++d)
+                    {
 
                         GetViscousFluxBilinearFormKernel(nDim, d, nderiv,
                             inTmp, qfieldsTmp, mu, outTmp);
@@ -634,26 +635,26 @@ namespace Nektar
         }
         else
         {
-            for (int d = 0; d < nDim; ++d)
+            for (int nderiv = 0; nderiv < nDim; ++nderiv)
             {
-                for (int nderiv = 0; nderiv < nDim; ++nderiv)
+                for (size_t p = 0; p < nPts; ++p)
                 {
-                    for (size_t p = 0; p < nPts; ++p)
+
+                    // rearrenge data
+                    for (int f = 0; f < nConvectiveFields; ++f)
                     {
+                        inTmp[f] = inarray[f][p];
+                        qfieldsTmp[f] = qfields[nderiv][f][p];
+                    }
 
-                        // rearrenge data
-                        for (int f = 0; f < nConvectiveFields; ++f)
-                        {
-                            inTmp[f] = inarray[f][p];
-                            qfieldsTmp[f] = qfields[nderiv][f][p];
-                        }
+                    // get temp
+                    NekDouble temperature = m_varConv->GetTemperature(inTmp);
+                    // get viscosity
+                    NekDouble mu;
+                    GetViscosityFromTempKernel(temperature, mu);
 
-                        // get temp
-                        NekDouble temperature = m_varConv->GetTemperature(inTmp);
-                        // get viscosity
-                        NekDouble mu;
-                        GetViscosityFromTempKernel(temperature, mu);
-
+                    for (int d = 0; d < nDim; ++d)
+                    {
                         // get flux
                         GetViscousFluxBilinearFormKernel(nDim, d, nderiv,
                             inTmp, qfieldsTmp, mu, outTmp);

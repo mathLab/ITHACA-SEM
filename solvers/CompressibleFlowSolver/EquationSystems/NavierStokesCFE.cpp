@@ -586,37 +586,34 @@ namespace Nektar
         size_t nPts = inarray[0].size();
         size_t n_nonZero = nConvectiveFields - 1;
 
-        // is this zeroing necessary?
-        for (int i = 0; i < outarray.size(); ++i)
-        {
-            for (int j = 0; j < nConvectiveFields; ++j)
-            {
-                Vmath::Zero(nPts, outarray[i][j], 1);
-            }
-        }
-
         std::vector<NekDouble> inTmp(nConvectiveFields);
         std::vector<NekDouble> qfieldsTmp(nConvectiveFields);
         std::vector<NekDouble> outTmp(nConvectiveFields);
         if (normal.size())
         {
-            for (int nderiv = 0; nderiv < nDim; ++nderiv)
+            for (size_t p = 0; p < nPts; ++p)
             {
-                for (size_t p = 0; p < nPts; ++p)
+                // rearrenge data
+                for (int f = 0; f < nConvectiveFields; ++f)
                 {
+                    inTmp[f] = inarray[f][p];
+                    // zero output vector
+                    outarray[0][f][p] = 0.0;
+                }
 
+                // get temp
+                NekDouble temperature = m_varConv->GetTemperature(inTmp);
+                // get viscosity
+                NekDouble mu;
+                GetViscosityFromTempKernel(temperature, mu);
+
+                for (int nderiv = 0; nderiv < nDim; ++nderiv)
+                {
                     // rearrenge data
                     for (int f = 0; f < nConvectiveFields; ++f)
                     {
-                        inTmp[f] = inarray[f][p];
                         qfieldsTmp[f] = qfields[nderiv][f][p];
                     }
-
-                    // get temp
-                    NekDouble temperature = m_varConv->GetTemperature(inTmp);
-                    // get viscosity
-                    NekDouble mu;
-                    GetViscosityFromTempKernel(temperature, mu);
 
                     for (int d = 0; d < nDim; ++d)
                     {
@@ -635,23 +632,32 @@ namespace Nektar
         }
         else
         {
-            for (int nderiv = 0; nderiv < nDim; ++nderiv)
+            for (size_t p = 0; p < nPts; ++p)
             {
-                for (size_t p = 0; p < nPts; ++p)
+                for (int f = 0; f < nConvectiveFields; ++f)
                 {
+                    // rearrenge data
+                    inTmp[f] = inarray[f][p];
+                    // zero output vector
+                    for (int d = 0; d < nDim; ++d)
+                    {
+                        outarray[d][f][p] = 0.0;
+                    }
+                }
 
+                // get temp
+                NekDouble temperature = m_varConv->GetTemperature(inTmp);
+                // get viscosity
+                NekDouble mu;
+                GetViscosityFromTempKernel(temperature, mu);
+
+                for (int nderiv = 0; nderiv < nDim; ++nderiv)
+                {
                     // rearrenge data
                     for (int f = 0; f < nConvectiveFields; ++f)
                     {
-                        inTmp[f] = inarray[f][p];
                         qfieldsTmp[f] = qfields[nderiv][f][p];
                     }
-
-                    // get temp
-                    NekDouble temperature = m_varConv->GetTemperature(inTmp);
-                    // get viscosity
-                    NekDouble mu;
-                    GetViscosityFromTempKernel(temperature, mu);
 
                     for (int d = 0; d < nDim; ++d)
                     {

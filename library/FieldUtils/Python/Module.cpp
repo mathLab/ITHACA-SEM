@@ -171,12 +171,14 @@ ModuleSharedPtr Module_Create(py::tuple args, py::dict kwargs)
 
     // for input modules we can try to interpret
     // the remaining arguments as input files
-    if (modKey.first == eInputModule) {
+    if (modKey.first == eInputModule)
+    {
         const std::string infile_arg{"infile"};
         // assume that the file's type is identical with
         // the module name
         const std::string infile_type = modName;
-        for (int i = 2; i < py::len(args); ++i) {
+        for (int i = 2; i < py::len(args); ++i)
+        {
             std::string in_fname = py::extract<std::string>(args[i]);
             mod->RegisterConfig(infile_arg, in_fname);
             mod->AddFile(infile_type, in_fname);
@@ -184,13 +186,12 @@ ModuleSharedPtr Module_Create(py::tuple args, py::dict kwargs)
     }
 
     // for output modules we can try to interpret the
-    // remaining arguments as output files
-    if (modKey.first == eOutputModule) {
+    // remaining argument as an output file
+    if (modKey.first == eOutputModule && py::len(args) >= 3)
+    {
         const std::string outfile_arg{"outfile"};
-        for (int i = 2; i < py::len(args); ++i) {
-            std::string out_fname = py::extract<std::string>(args[i]);
-            mod->RegisterConfig(outfile_arg, out_fname);
-        }
+        std::string out_fname = py::extract<std::string>(args[2]);
+        mod->RegisterConfig(outfile_arg, out_fname);
     }
 
     // Process keyword arguments.
@@ -199,18 +200,22 @@ ModuleSharedPtr Module_Create(py::tuple args, py::dict kwargs)
     for (int i = 0; i < py::len(items); ++i)
     {
         std::string arg = py::extract<std::string>(items[i][0]);
-        if (arg == "infile" && modKey.first == eInputModule) {
+        if (arg == "infile" && modKey.first == eInputModule)
+        {
             py::dict ftype_fname_dict = py::extract<py::dict>(items[i][1]);
             py::list ft_fn_items = ftype_fname_dict.items();
-            for (int i  = 0; i < py::len(ft_fn_items); ++i) {
-              std::string f_type = py::extract<std::string>(ft_fn_items[i][0]);
-              std::string f_name = py::extract<std::string>(ft_fn_items[i][1].attr("__str__")());
-              mod->RegisterConfig(arg, f_name);
-              mod->AddFile(f_type, f_name);
+            for (int i  = 0; i < py::len(ft_fn_items); ++i)
+            {
+                std::string f_type = py::extract<std::string>(ft_fn_items[i][0]);
+                std::string f_name = py::extract<std::string>(ft_fn_items[i][1].attr("__str__")());
+                mod->RegisterConfig(arg, f_name);
+                mod->AddFile(f_type, f_name);
             }
-        } else {
-          std::string val = py::extract<std::string>(items[i][1].attr("__str__")());
-          mod->RegisterConfig(arg, val);
+        }
+        else
+        {
+            std::string val = py::extract<std::string>(items[i][1].attr("__str__")());
+            mod->RegisterConfig(arg, val);
         }
     }
 

@@ -1,15 +1,16 @@
 \chapter{FieldConvert in NekPy}
 
-This chapter describes how to emulate the functionality of the
-FieldConvert utility in Python using the bindings and wrappers
-created for the \verb+FieldUtils+ library.
+This chapter describes the FieldConvert utility in Python using the bindings
+and wrappers created for the \verb+FieldUtils+ library. For detailed
+instructions on how to use the interface please refer to the
+{\nek} User Guide section 5.5.
 
 \section{Idea and motivation}
 
 The primary objective is to allow the user to execute a sequence of
 commands from a Python script that implement the functionality of
 FieldConvert, thereby giving freedom to customise the order in which
-modules are used and which command lines options are passed to them.
+modules are used and which command line options are passed to them.
 One problem with FieldConvert is when the user wishes to perform the same
 task on many files; for example converting a number of .chk files to VTK
 format. To achieve this using FieldConvert, one must run a command like
@@ -27,90 +28,8 @@ populated by the modules \verb+InputFld+, \verb+ProcessCreateExp+, and
 implementation, we are able to initialise instances of these classes only
 once, and then for each file populate and clear the variables that differ.
 
-\section{User workflow}
-
-The design of the Python interface is to allow the user to instantiate
-modules by calling the static \verb+Create+ method of the
-\verb+InputModule+,\verb+ProcessModule+, and \verb+OutputModule+,
-register configuration options, and run them. For example, consider the command:
-
-\begin{lstlisting}[style=BashInputStyle]
-FieldConvert -n 10 -m wss:bnd=0 session.xml field.fld  field_wss.fld
-\end{lstlisting}
-
-
-A Python script performing the same task is given below.
-
-\begin{lstlisting}[style=C++Style, language=Python]
-import sys
-from NekPy.FieldUtils import *
-
-field = Field(sys.argv, output_points=10)
-
-InputModule.Create("xml",   field, "session.xml").Run()
-InputModule.Create("fld",   field, "field.fld").Run()
-ProcessModule.Create("wss", field,  bnd="0").Run()
-OutputModule.Create("fld" , field, "field_wss.fld").Run()
-\end{lstlisting}
-
-The key points are that the FieldConvert command line options, in this
-case \inltt{output-points}, are passed to the constructor of \verb+Field+.
-The configuration options for a given module are passed to the static
-\verb+Create+ method of the \verb+InputModule+,\verb+ProcessModule+, and
-\verb+OutputModule+. This creates the corresponding module and the
-modules can be run immediately after instantiation. Note that the first
-parameter of the \verb+Create+ method has to be the key for a given module,
-the second is the field variable and for input and output modules the remaining
-arguments may identify the input and output files for a given module.
-Optionally we can explicitly specify the file type of an input module
-using the "infile" keyword and the "outfile" keyword for output modules.
-
-
-\begin{lstlisting}[style=C++Style, language=Python]
-import sys
-from NekPy.FieldUtils import *
-
-field = Field(sys.argv, output_points=10)
-
-InputModule.Create("xml",   field, infile={"xml": "session.xml"}).Run()
-InputModule.Create("fld",   field, infile={"fld": "field.fld"}).Run()
-ProcessModule.Create("wss", field, bnd="0").Run()
-OutputModule.Create("fld" , field, outfile="field_wss.fld").Run()
-\end{lstlisting}
-
-Or can also emulate the functionality of FieldConvert when using the
-\inltt{nparts} option in the following way. Here \verb+session_xml+ is a
-directory containing the mesh partitioned into 2.
-
-\begin{lstlisting}[style=C++Style, language=Python]
-import sys
-from NekPy.FieldUtils import *
-
-field = Field(sys.argv, nparts=2, forceoutput=True, error=True)
-
-inputxml   = InputModule.Create("xml",   field, "session_xml")
-inputfld   = InputModule.Create("fld",   field, "field.fld")
-processwss = ProcessModule.Create("wss", field,  bnd="2")
-outputfld  = OutputModule.Create("fld",  field, "field_wss.fld")
-
-for part in range(2):
-	field.NewPartition(sys.argv, part)
-	inputxml.Run()
-	inputfld.Run()
-	processwss.Run()
-	outputfld.Run()
-
-OutputModule.Create("info", field, "field_wss_b0.fld", nparts=2).Run()
-\end{lstlisting}
-
-The number of partitions is looped over, with \verb+NewPartition+ called at
-the start of each. When using \verb+OutputModule+, the \verb+info+ module
-must be used in order to obtain the correct result.
 
 \subsection{Bindings}
-
-\paragraph{Directory structure}
-
 
 The bindings are stored within a directory named 'Python' in the
 \texttt{FieldUtils} directory.

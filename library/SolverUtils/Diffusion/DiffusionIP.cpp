@@ -133,6 +133,22 @@ void DiffusionIP::v_InitObject(
     {
         m_wspDiff[i] = Array<OneD, NekDouble>{nCoeffs, 0.0};
     }
+
+    // workspace for callnumtraceflux
+    m_wspNumDerivBwd = TensorOfArray3D<NekDouble>{nDim};
+    m_wspNumDerivFwd = TensorOfArray3D<NekDouble>{nDim};
+    for (int nd = 0; nd < nDim; ++nd)
+    {
+        m_wspNumDerivBwd[nd] =
+            Array<OneD, Array<OneD, NekDouble>>{nVariable};
+        m_wspNumDerivFwd[nd] =
+            Array<OneD, Array<OneD, NekDouble>>{nVariable};
+        for (int i = 0; i < nVariable; ++i)
+        {
+            m_wspNumDerivBwd[nd][i] = Array<OneD, NekDouble>{nTracePts, 0.0};
+            m_wspNumDerivFwd[nd][i] = Array<OneD, NekDouble>{nTracePts, 0.0};
+        }
+    }
 }
 
 void DiffusionIP::v_Diffuse(
@@ -333,9 +349,14 @@ void DiffusionIP::v_DiffuseTraceFlux(
     traceflux3D[0] = TraceFlux;
 
     size_t nConvectiveFields = fields.size();
+
+    LibUtilities::Timer timer;
+    timer.Start();
     CalTraceNumFlux(nConvectiveFields, nDim, nPts, nTracePts, m_IP2ndDervCoeff,
                     fields, inarray, qfield, pFwd, pBwd, m_MuVarTrace,
                     nonZeroIndex, traceflux3D, m_traceAver, m_traceJump);
+    timer.Stop();
+    timer.AccumulateRegion("CalTraceNumFlux");
 }
 
 void DiffusionIP::v_AddDiffusionSymmFluxToCoeff(
@@ -650,60 +671,73 @@ void DiffusionIP::CalTraceNumFlux(
     const MultiRegions::AssemblyMapDGSharedPtr TraceMap =
         fields[0]->GetTraceMap();
 
-    TensorOfArray3D<NekDouble> numDerivBwd{nDim};
-    // Fwd is also used for final numerical results
-    TensorOfArray3D<NekDouble> numDerivFwd{nDim};
+
+    LibUtilities::Timer timer;
+    timer.Start();
+    // with further restructuring this iniziatilization could be eliminated
     for (int nd = 0; nd < nDim; ++nd)
     {
-        numDerivBwd[nd] =
-            Array<OneD, Array<OneD, NekDouble>>{nConvectiveFields};
-        numDerivFwd[nd] =
-            Array<OneD, Array<OneD, NekDouble>>{nConvectiveFields};
         for (int i = 0; i < nConvectiveFields; ++i)
         {
-            numDerivBwd[nd][i] = Array<OneD, NekDouble>{nTracePts, 0.0};
-            numDerivFwd[nd][i] = Array<OneD, NekDouble>{nTracePts, 0.0};
+            Vmath::Zero(nTracePts, m_wspNumDerivBwd[nd][i], 1);
+            Vmath::Zero(nTracePts, m_wspNumDerivFwd[nd][i], 1);
         }
     }
 
+    // could this be pre-allocated?
     Array<OneD, NekDouble> Fwd{nTracePts, 0.0};
     Array<OneD, NekDouble> Bwd{nTracePts, 0.0};
 
+    timer.Stop();
+    timer.AccumulateRegion("CalTraceNumFlux_alloc");
+
+
+    timer.Start();
     if (fabs(PenaltyFactor2) > 1.0E-12)
     {
         AddSecondDerivToTrace(nConvectiveFields, nDim, nPts, nTracePts,
-                              PenaltyFactor2, fields, qfield, numDerivFwd,
-                              numDerivBwd);
+                              PenaltyFactor2, fields, qfield, m_wspNumDerivFwd,
+                              m_wspNumDerivBwd);
     }
+
+    timer.Stop();
+    timer.AccumulateRegion("AddSecondDerivToTrace");
 
     for (int nd = 0; nd < nDim; ++nd)
     {
         for (int i = 0; i < nConvectiveFields; ++i)
         {
+            // this sequence of operations is really exepensive,
+            // it should be done collectively for all fields together instead of
+            // one by one
+            timer.Start();
             fields[i]->GetFwdBwdTracePhys(qfield[nd][i], Fwd, Bwd, true, true,
                 false);
+            timer.Stop();
+            timer.AccumulateRegion("GetFwdBwdTracePhys");
+
             for (size_t p = 0; p < nTracePts; ++p)
             {
-                numDerivBwd[nd][i][p] += 0.5 * Bwd[p];
-                numDerivFwd[nd][i][p] += 0.5 * Fwd[p];
+                m_wspNumDerivBwd[nd][i][p] += 0.5 * Bwd[p];
+                m_wspNumDerivFwd[nd][i][p] += 0.5 * Fwd[p];
             }
-            TraceMap->GetAssemblyCommDG()->PerformExchange(numDerivFwd[nd][i],
-                                                           numDerivBwd[nd][i]);
-            Vmath::Vadd(nTracePts, numDerivFwd[nd][i], 1, numDerivBwd[nd][i], 1,
-                        numDerivFwd[nd][i], 1);
+
+            timer.Start();
+            TraceMap->GetAssemblyCommDG()->PerformExchange(m_wspNumDerivFwd[nd][i],
+                                                           m_wspNumDerivBwd[nd][i]);
+            timer.Stop();
+            timer.AccumulateRegion("PerformExchange");
+
+            Vmath::Vadd(nTracePts, m_wspNumDerivFwd[nd][i], 1, m_wspNumDerivBwd[nd][i], 1,
+                        m_wspNumDerivFwd[nd][i], 1);
         }
     }
 
-    for (int nd = 0; nd < nDim; ++nd)
-    {
-        for (int i = 0; i < nConvectiveFields; ++i)
-        {
-            numDerivBwd[nd][i] = NullNekDouble1DArray;
-        }
-    }
-
+    timer.Start();
     ConsVarAveJump(nConvectiveFields, nTracePts, vFwd, vBwd, solution_Aver,
                    solution_jump);
+    timer.Stop();
+    timer.AccumulateRegion("ConsVarAveJump");
 
     for (size_t p = 0; p < nTracePts; ++p)
     {
@@ -714,15 +748,18 @@ void DiffusionIP::CalTraceNumFlux(
             NekDouble jumpTmp = solution_jump[f][p] * PenaltyFactor; // load 1x
             for (size_t d = 0; d < nDim; ++d)
             {
-                NekDouble tmp = m_traceNormals[d][p] * jumpTmp + numDerivFwd[d][f][p]; // load 2x
-                numDerivFwd[d][f][p] = tmp; // store 1x
+                NekDouble tmp = m_traceNormals[d][p] * jumpTmp + m_wspNumDerivFwd[d][f][p]; // load 2x
+                m_wspNumDerivFwd[d][f][p] = tmp; // store 1x
             }
         }
     }
 
+    timer.Start();
     // Calculate normal viscous flux
-    m_FunctorDiffusionfluxCons(nDim, solution_Aver, numDerivFwd, traceflux,
+    m_FunctorDiffusionfluxConsTrace(nDim, solution_Aver, m_wspNumDerivFwd, traceflux,
                                nonZeroIndexflux, m_traceNormals, MuVarTrace);
+    timer.Stop();
+    timer.AccumulateRegion("m_FunctorDiffusionfluxConsTrace");
 }
 
 void DiffusionIP::AddSecondDerivToTrace(
@@ -765,7 +802,7 @@ void DiffusionIP::AddSecondDerivToTrace(
             for (int nd2 = nd1; nd2 < nDim; ++nd2)
             {
                 Vmath::Zero(nTracePts, Bwd, 1);
-                fields[i]->GetFwdBwdTracePhys(elmt2ndDerv[nd2],Fwd,Bwd,
+                fields[i]->GetFwdBwdTracePhys(elmt2ndDerv[nd2], Fwd, Bwd,
                                               true, true, false);
                 Vmath::Vmul(nTracePts, tmp, 1, Bwd, 1, Bwd, 1);
                 Vmath::Vvtvp(nTracePts, m_traceNormals[nd2], 1, Bwd, 1,

@@ -58,7 +58,7 @@ VanDerWaalsEoS::VanDerWaalsEoS(
     m_b = 1.0 / 8.0 * m_gasConstant * Tcrit / Pcrit;
 }
 
-NekDouble VanDerWaalsEoS::v_GetTemperature(const NekDouble &rho,
+NekDouble VanDerWaalsEoS::GetTemperature(const NekDouble &rho,
                                            const NekDouble &e)
 {
     return (e + m_a * rho) * (m_gamma - 1) / m_gasConstant;

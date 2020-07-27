@@ -67,25 +67,26 @@ protected:
     NekDouble m_a;
     NekDouble m_b;
 
-    virtual NekDouble v_GetTemperature(const NekDouble &rho,
-                                       const NekDouble &e);
+    NekDouble GetTemperature(const NekDouble &rho, const NekDouble &e) final;
 
-    virtual NekDouble v_GetPressure(const NekDouble &rho, const NekDouble &e);
+    vec_t GetTemperature(const vec_t &rho, const vec_t &e) final;
 
-    virtual NekDouble v_GetEntropy(const NekDouble &rho, const NekDouble &e);
+    NekDouble v_GetPressure(const NekDouble &rho, const NekDouble &e) final;
 
-    virtual NekDouble v_GetDPDrho_e(const NekDouble &rho, const NekDouble &e);
+    NekDouble v_GetEntropy(const NekDouble &rho, const NekDouble &e) final;
 
-    virtual NekDouble v_GetDPDe_rho(const NekDouble &rho, const NekDouble &e);
+    NekDouble v_GetDPDrho_e(const NekDouble &rho, const NekDouble &e) final;
 
-    virtual NekDouble v_GetEFromRhoP(const NekDouble &rho, const NekDouble &p);
+    NekDouble v_GetDPDe_rho(const NekDouble &rho, const NekDouble &e) final;
 
-    virtual NekDouble v_GetRhoFromPT(const NekDouble &rho, const NekDouble &p);
+    NekDouble v_GetEFromRhoP(const NekDouble &rho, const NekDouble &p) final;
+
+    NekDouble v_GetRhoFromPT(const NekDouble &rho, const NekDouble &p) final;
 
 private:
     VanDerWaalsEoS(const LibUtilities::SessionReaderSharedPtr &pSession);
 
-    virtual ~VanDerWaalsEoS(void){};
+    ~VanDerWaalsEoS(void){};
 };
 }
 

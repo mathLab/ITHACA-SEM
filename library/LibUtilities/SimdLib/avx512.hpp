@@ -369,6 +369,25 @@ inline avx512Double8 abs(avx512Double8 in)
     return _mm512_abs_pd(in._data);
 }
 
+inline avx512Double8 log(avx512Double8 in)
+{
+    // there is no avx512 log intrinsic
+    // this is a dreadful implementation and is simply a stop gap measure
+    alignas(avx512Double8::alignment) avx512Double8::scalarArray tmp;
+    in.store(tmp);
+    tmp[0] = std::log(tmp[0]);
+    tmp[1] = std::log(tmp[1]);
+    tmp[2] = std::log(tmp[2]);
+    tmp[3] = std::log(tmp[3]);
+    tmp[4] = std::log(tmp[4]);
+    tmp[5] = std::log(tmp[5]);
+    tmp[6] = std::log(tmp[6]);
+    tmp[7] = std::log(tmp[7]);
+    avx512Double8 ret;
+    ret.load(tmp);
+    return ret;
+}
+
 inline void load_interleave(
     const double* in,
     size_t dataLen,

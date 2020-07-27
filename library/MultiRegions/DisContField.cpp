@@ -2855,12 +2855,12 @@ namespace Nektar
            (const Array<OneD, const NekDouble> &field,
             Array<OneD, NekDouble> &Fwd,
             Array<OneD, NekDouble> &Bwd,
-            bool FillBnd,
+            bool FillBnd,           // these should be template params so that compiler can remove them
             bool PutFwdInBwdOnBCs,
             bool DoExchange)
         {
+            // Is this zeroing necessary?
             // Zero forward/backward vectors.
-
             Vmath::Zero(Fwd.size(), Fwd, 1);
             Vmath::Zero(Bwd.size(), Bwd, 1);
 

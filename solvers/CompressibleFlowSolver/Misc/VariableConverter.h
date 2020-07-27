@@ -68,13 +68,12 @@ public:
             tinysimd::is_vector_floating_point<T>::value
         >::type
     >
-    inline T GetInternalEnergy(std::vector<T>& physfield)
+    inline T GetInternalEnergy(T* physfield)
     {
         // get dynamic energy
         T rho = physfield[0];
         T dynEne{};
-        size_t nVar = physfield.size();
-        for (size_t d = 1; d < nVar - 1; ++d)
+        for (size_t d = 1; d < m_spacedim + 1; ++d)
         {
             T tmp = physfield[d]; //load 1x
             dynEne = tmp * tmp;
@@ -82,7 +81,7 @@ public:
         dynEne = 0.5 * dynEne / rho;
 
         // Calculate rhoe = E - rho*V^2/2
-        T energy = physfield[nVar - 1] - dynEne;
+        T energy = physfield[m_spacedim + 1] - dynEne;
         return energy / rho;
     }
     void GetEnthalpy(const Array<OneD, const Array<OneD, NekDouble>> &physfield,
@@ -103,14 +102,13 @@ public:
     >
     inline T GetDynamicViscosity(T &temperature)
     {
-
         constexpr NekDouble C = .38175;
-        NekDouble mu_star = m_mu;
-        NekDouble T_star  = m_pInf / (m_rhoInf * m_gasConstant);
-        NekDouble ratio;
+        constexpr NekDouble onePlusC = 1.0 + C;
 
-        ratio = temperature / T_star;
-        return mu_star * ratio * sqrt(ratio) * (1 + C) / (ratio + C);
+        NekDouble mu_star = m_mu;
+
+        T ratio = temperature * m_oneOverT_star;
+        return mu_star * ratio * sqrt(ratio) * onePlusC / (ratio + C);
     }
 
     void GetAbsoluteVelocity(
@@ -132,7 +130,7 @@ public:
             tinysimd::is_vector_floating_point<T>::value
         >::type
     >
-    inline T GetTemperature(std::vector<T>& physfield)
+    inline T GetTemperature(T* physfield)
     {
         T energy = GetInternalEnergy(physfield);
         return m_eos->GetTemperature(physfield[0], energy);
@@ -162,6 +160,7 @@ protected:
     NekDouble m_mu;
     NekDouble m_Skappa;
     NekDouble m_Kappa;
+    NekDouble m_oneOverT_star;
 };
 
 

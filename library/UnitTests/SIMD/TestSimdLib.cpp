@@ -529,6 +529,21 @@ namespace SimdLibTests
 
     }
 
+    BOOST_AUTO_TEST_CASE(SimdLib_log)
+    {
+        double val = 4.0;
+        vec_t avec(val);
+        vec_t alog = log(avec);
+        alignas(vec_t::alignment) std::array<double, vec_t::width>
+            ascalararr{{}}; // double brace to deal with gcc 4.8.5 ...
+        alog.store(ascalararr.data());
+
+        for (size_t i = 0; i < vec_t::width; ++i)
+        {
+            BOOST_CHECK_EQUAL(ascalararr[i], std::log(val));
+        }
+    }
+
     BOOST_AUTO_TEST_CASE(SimdLib_load_interleave_unload)
     {
         constexpr size_t nDof{5};

@@ -52,11 +52,18 @@ IdealGasEoS::IdealGasEoS(const LibUtilities::SessionReaderSharedPtr& pSession)
 
 }
 
-NekDouble IdealGasEoS::v_GetTemperature(
+NekDouble IdealGasEoS::GetTemperature(
     const NekDouble &rho, const NekDouble &e)
 {
     boost::ignore_unused(rho);
-    return e*(m_gamma-1)/m_gasConstant;
+    return GetTemperatureKernel(e);
+}
+
+vec_t IdealGasEoS::GetTemperature(
+    const vec_t &rho, const vec_t &e)
+{
+    boost::ignore_unused(rho);
+    return GetTemperatureKernel(e);
 }
 
 NekDouble IdealGasEoS::v_GetPressure(

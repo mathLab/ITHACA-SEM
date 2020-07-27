@@ -73,32 +73,73 @@ protected:
     NekDouble m_omega;
     NekDouble m_fw;
 
-    virtual NekDouble v_GetTemperature(const NekDouble &rho,
-                                       const NekDouble &e);
+    NekDouble GetTemperature(const NekDouble& rho, const NekDouble& e) final;
 
-    virtual NekDouble v_GetPressure(const NekDouble &rho, const NekDouble &e);
+    vec_t GetTemperature(const vec_t& rho, const vec_t& e) final;
 
-    virtual NekDouble v_GetEntropy(const NekDouble &rho, const NekDouble &e);
+    NekDouble v_GetPressure(const NekDouble &rho, const NekDouble &e) final;
 
-    virtual NekDouble v_GetDPDrho_e(const NekDouble &rho, const NekDouble &e);
+    NekDouble v_GetEntropy(const NekDouble &rho, const NekDouble &e) final;
 
-    virtual NekDouble v_GetDPDe_rho(const NekDouble &rho, const NekDouble &e);
+    NekDouble v_GetDPDrho_e(const NekDouble &rho, const NekDouble &e) final;
 
-    virtual NekDouble v_GetEFromRhoP(const NekDouble &rho, const NekDouble &p);
+    NekDouble v_GetDPDe_rho(const NekDouble &rho, const NekDouble &e) final;
 
-    virtual NekDouble v_GetRhoFromPT(const NekDouble &rho, const NekDouble &p);
+    NekDouble v_GetEFromRhoP(const NekDouble &rho, const NekDouble &p) final;
+
+    NekDouble v_GetRhoFromPT(const NekDouble &rho, const NekDouble &p) final;
 
 private:
     PengRobinsonEoS(const LibUtilities::SessionReaderSharedPtr &pSession);
 
-    virtual ~PengRobinsonEoS(void){};
+    ~PengRobinsonEoS(void){};
 
     // Alpha term of Peng-Robinson EoS
     NekDouble Alpha(const NekDouble &T);
 
     // Log term term of Peng-Robinson EoS
-    NekDouble LogTerm(const NekDouble &rho);
+    template <class T, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    T LogTerm(const T& rho)
+    {
+        return log((1.0 / rho + m_b - m_b * sqrt(2)) /
+                   (1.0 / rho + m_b + m_b * sqrt(2)));
+    }
+
+    template <class T, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    inline T GetTemperatureKernel(const T& rho, const T& e)
+    {
+        // First we need to evaluate the log term
+        //    ln[(1/rho + b - b*sqrt(2)) / (1/rho + b + b*sqrt(2))]
+        NekDouble sqrt2   = sqrt(2.0);
+        T logTerm = LogTerm(rho);
+
+        // The temperature can be expressed as an equation in the form
+        //      A * (T^1/2)^2 + B * T^1/2 + C = 0
+
+        NekDouble A = m_gasConstant / (m_gamma - 1.0);
+        NekDouble f1 = m_a / (m_b * 2.0 * sqrt2);
+        NekDouble f2 = (1.0 + m_fw);
+        T B = -f1 * logTerm / sqrt(m_Tc) * m_fw * f2;
+        T C = f1 * logTerm * f2 * f2 - e;
+
+        // Solve for T^1/2 (positive root)
+        T sqrtT = (sqrt(B * B - 4 * A * C) - B) / (2 * A);
+        // Calculate the temperature
+        return sqrtT * sqrtT;
+    }
+
+
 };
-}
+} // namespace
 
 #endif

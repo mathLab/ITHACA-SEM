@@ -57,26 +57,16 @@ PengRobinsonEoS::PengRobinsonEoS(
     m_fw = 0.37464 + 1.54226 * m_omega - 0.2699 * m_omega * m_omega;
 }
 
-NekDouble PengRobinsonEoS::v_GetTemperature(const NekDouble &rho,
-                                            const NekDouble &e)
+NekDouble PengRobinsonEoS::GetTemperature(
+    const NekDouble& rho, const NekDouble& e)
 {
-    // First we need to evaluate the log term
-    //    ln[(1/rho + b - b*sqrt(2)) / (1/rho + b + b*sqrt(2))]
-    NekDouble sqrt2   = sqrt(2.0);
-    NekDouble logTerm = LogTerm(rho);
+    return GetTemperatureKernel(rho, e);
+}
 
-    // The temperature can be expressed as an equation in the form
-    //      A * (T^1/2)^2 + B * T^1/2 + C = 0
-    NekDouble A, B, C;
-
-    A = m_gasConstant / (m_gamma - 1);
-    B = -m_a / (m_b * 2 * sqrt2) * logTerm / sqrt(m_Tc) * m_fw * (1 + m_fw);
-    C = m_a / (m_b * 2 * sqrt2) * logTerm * (1 + m_fw) * (1 + m_fw) - e;
-
-    // Solve for T^1/2 (positive root)
-    NekDouble sqrtT = (-B + sqrt(B * B - 4 * A * C)) / (2 * A);
-    // Calculate the temperature
-    return sqrtT * sqrtT;
+vec_t PengRobinsonEoS::GetTemperature(
+    const vec_t& rho, const vec_t& e)
+{
+    return GetTemperatureKernel(rho, e);
 }
 
 NekDouble PengRobinsonEoS::v_GetPressure(const NekDouble &rho,
@@ -236,9 +226,4 @@ NekDouble PengRobinsonEoS::Alpha(const NekDouble &T)
     return sqrtAlpha * sqrtAlpha;
 }
 
-NekDouble PengRobinsonEoS::LogTerm(const NekDouble &rho)
-{
-    return log((1.0 / rho + m_b - m_b * sqrt(2)) /
-               (1.0 / rho + m_b + m_b * sqrt(2)));
-}
 }

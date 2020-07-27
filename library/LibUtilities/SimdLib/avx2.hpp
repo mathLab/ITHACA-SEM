@@ -536,6 +536,21 @@ inline avx2Double4 abs(avx2Double4 in)
     return _mm256_andnot_pd(sign_mask, in._data);        // !sign_mask & x
 }
 
+inline avx2Double4 log(avx2Double4 in)
+{
+    // there is no avx2 log intrinsic
+    // this is a dreadful implementation and is simply a stop gap measure
+    alignas(avx2Double4::alignment) avx2Double4::scalarArray tmp;
+    in.store(tmp);
+    tmp[0] = std::log(tmp[0]);
+    tmp[1] = std::log(tmp[1]);
+    tmp[2] = std::log(tmp[2]);
+    tmp[3] = std::log(tmp[3]);
+    avx2Double4 ret;
+    ret.load(tmp);
+    return ret;
+}
+
 inline void load_interleave(
     const double* in,
     size_t dataLen,

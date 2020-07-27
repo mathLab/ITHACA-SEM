@@ -217,6 +217,12 @@ inline scalarT<T> abs(scalarT<T> in)
 }
 
 template<typename T>
+inline scalarT<T> log(scalarT<T> in)
+{
+    return std::log(in._data);
+}
+
+template<typename T>
 inline void load_interleave(
     const T* in,
     size_t dataLen,

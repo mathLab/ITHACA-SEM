@@ -55,10 +55,12 @@ VariableConverter::VariableConverter(
     m_session->LoadParameter("rhoInf", m_rhoInf, 1.225);
     m_session->LoadParameter("GasConstant", m_gasConstant, 287.058);
     m_session->LoadParameter("mu", m_mu, 1.78e-05);
+    m_oneOverT_star  = (m_rhoInf * m_gasConstant) / m_pInf;
 
     // Parameters for sensor
     m_session->LoadParameter("Skappa", m_Skappa, -1.0);
     m_session->LoadParameter("Kappa", m_Kappa, 0.25);
+
 
 }
 

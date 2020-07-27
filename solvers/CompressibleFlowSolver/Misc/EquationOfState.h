@@ -38,6 +38,8 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 
+#include <LibUtilities/SimdLib/tinysimd.hpp>
+
 namespace Nektar
 {
 //  Forward declaration
@@ -54,6 +56,8 @@ typedef LibUtilities::NekFactory<std::string, EquationOfState,
 /// Declaration of the equation of state factory singleton
 EquationOfStateFactory &GetEquationOfStateFactory();
 
+using vec_t = tinysimd::simd<NekDouble>;
+
 /**
  * @class EquationOfState
  * @brief Encapsulates equations of state allowing us to obtain thermodynamic
@@ -66,8 +70,11 @@ public:
     {
     }
 
+
     /// Calculate the temperature
-    NekDouble GetTemperature(const NekDouble &rho, const NekDouble &e);
+    virtual NekDouble GetTemperature(const NekDouble &rho, const NekDouble &e) = 0;
+
+    virtual vec_t GetTemperature(const vec_t &rho, const vec_t &e) = 0;
 
     /// Calculate the pressure
     NekDouble GetPressure(const NekDouble &rho, const NekDouble &e);
@@ -99,9 +106,6 @@ protected:
 
     /// Programmatic Constructor
     EquationOfState(const NekDouble &gamma, const NekDouble &gasConstant);
-
-    virtual NekDouble v_GetTemperature(const NekDouble &rho,
-                                       const NekDouble &e) = 0;
 
     virtual NekDouble v_GetPressure(const NekDouble &rho,
                                     const NekDouble &e) = 0;

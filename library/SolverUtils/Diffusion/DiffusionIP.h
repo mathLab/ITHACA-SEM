@@ -111,6 +111,9 @@ protected:
     Array<OneD, Array<OneD, NekDouble>> m_traceJump;
     /// Workspace for v_Diffusion
     Array<OneD, Array<OneD, NekDouble>> m_wspDiff;
+    /// Workspace for CallTraceNumFlux
+    TensorOfArray3D<NekDouble> m_wspNumDerivBwd;
+    TensorOfArray3D<NekDouble> m_wspNumDerivFwd;
 
     Array<OneD, NekDouble> m_tracBwdWeightAver;
     Array<OneD, NekDouble> m_tracBwdWeightJump;

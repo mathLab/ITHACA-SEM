@@ -115,39 +115,29 @@ namespace Nektar
             m_diffusion->SetFluxVectorNS(
                 &NavierStokesCFE::v_GetViscousFluxVectorDeAlias,
                 this);
-            m_diffusion->SetDiffusionFluxCons(
-                &NavierStokesCFE::GetViscousFluxVectorConservVar, this);
-
-            m_diffusion->SetSpecialBndTreat(
-                &NavierStokesCFE::SpecialBndTreat, this);
-
-            m_diffusion->SetDiffusionSymmFluxCons(
-                &NavierStokesCFE::GetViscousSymmtrFluxConservVar, this);
-
-            if (m_shockCaptureType != "Off")
-            {
-                m_diffusion->SetArtificialDiffusionVector(
-                    &NavierStokesCFE::GetArtificialViscosity, this);
-            }
         }
         else
         {
             m_diffusion->SetFluxVectorNS(&NavierStokesCFE::
                                           v_GetViscousFluxVector, this);
-            m_diffusion->SetDiffusionFluxCons(
-                &NavierStokesCFE::GetViscousFluxVectorConservVar, this);
+        }
 
-            m_diffusion->SetSpecialBndTreat(
-                &NavierStokesCFE::SpecialBndTreat, this);
+        m_diffusion->SetDiffusionFluxCons(
+            &NavierStokesCFE::GetViscousFluxVectorConservVar<false>, this);
 
-            m_diffusion->SetDiffusionSymmFluxCons(
-                &NavierStokesCFE::GetViscousSymmtrFluxConservVar, this);
+        m_diffusion->SetDiffusionFluxConsTrace(
+            &NavierStokesCFE::GetViscousFluxVectorConservVar<true>, this);
 
-            if (m_shockCaptureType != "Off")
-            {
-                m_diffusion->SetArtificialDiffusionVector(
-                    &NavierStokesCFE::GetArtificialViscosity, this);
-            }
+        m_diffusion->SetSpecialBndTreat(
+            &NavierStokesCFE::SpecialBndTreat, this);
+
+        m_diffusion->SetDiffusionSymmFluxCons(
+            &NavierStokesCFE::GetViscousSymmtrFluxConservVar, this);
+
+        if (m_shockCaptureType != "Off")
+        {
+            m_diffusion->SetArtificialDiffusionVector(
+                &NavierStokesCFE::GetArtificialViscosity, this);
         }
 
         // Set up penalty term for LDGNS
@@ -569,150 +559,6 @@ namespace Nektar
         }
     }
 
-      /**
-     * @brief Return the flux vector for the IP diffusion problem, based on
-     * conservative variables
-     */
-    void NavierStokesCFE::GetViscousFluxVectorConservVar(
-        const int                                              nDim,
-        const Array<OneD, Array<OneD, NekDouble> >             &inarray,
-        const TensorOfArray3D<NekDouble>                       &qfields,
-        TensorOfArray3D<NekDouble>                             &outarray,
-        Array< OneD, int >                                     &nonZeroIndex,
-        const Array<OneD, Array<OneD, NekDouble> >             &normal,
-        const Array<OneD, NekDouble>                           &ArtifDiffFactor)
-    {
-        size_t nConvectiveFields = inarray.size();
-        size_t nPts = inarray[0].size();
-        size_t n_nonZero = nConvectiveFields - 1;
-
-        std::vector<NekDouble> inTmp(nConvectiveFields);
-        std::vector<NekDouble> qfieldsTmp(nConvectiveFields);
-        std::vector<NekDouble> outTmp(nConvectiveFields);
-        if (normal.size())
-        {
-            for (size_t p = 0; p < nPts; ++p)
-            {
-                // rearrenge data
-                for (int f = 0; f < nConvectiveFields; ++f)
-                {
-                    inTmp[f] = inarray[f][p];
-                    // zero output vector
-                    outarray[0][f][p] = 0.0;
-                }
-
-                // get temp
-                NekDouble temperature = m_varConv->GetTemperature(inTmp);
-                // get viscosity
-                NekDouble mu;
-                GetViscosityFromTempKernel(temperature, mu);
-
-                for (int nderiv = 0; nderiv < nDim; ++nderiv)
-                {
-                    // rearrenge data
-                    for (int f = 0; f < nConvectiveFields; ++f)
-                    {
-                        qfieldsTmp[f] = qfields[nderiv][f][p];
-                    }
-
-                    for (int d = 0; d < nDim; ++d)
-                    {
-
-                        GetViscousFluxBilinearFormKernel(nDim, d, nderiv,
-                            inTmp, qfieldsTmp, mu, outTmp);
-
-                        for (int f = 0; f < nConvectiveFields; ++f)
-                        {
-                            outarray[0][f][p] += normal[d][p] * outTmp[f];
-                        }
-
-                    }
-                }
-            }
-        }
-        else
-        {
-            for (size_t p = 0; p < nPts; ++p)
-            {
-                for (int f = 0; f < nConvectiveFields; ++f)
-                {
-                    // rearrenge data
-                    inTmp[f] = inarray[f][p];
-                    // zero output vector
-                    for (int d = 0; d < nDim; ++d)
-                    {
-                        outarray[d][f][p] = 0.0;
-                    }
-                }
-
-                // get temp
-                NekDouble temperature = m_varConv->GetTemperature(inTmp);
-                // get viscosity
-                NekDouble mu;
-                GetViscosityFromTempKernel(temperature, mu);
-
-                for (int nderiv = 0; nderiv < nDim; ++nderiv)
-                {
-                    // rearrenge data
-                    for (int f = 0; f < nConvectiveFields; ++f)
-                    {
-                        qfieldsTmp[f] = qfields[nderiv][f][p];
-                    }
-
-                    for (int d = 0; d < nDim; ++d)
-                    {
-                        // get flux
-                        GetViscousFluxBilinearFormKernel(nDim, d, nderiv,
-                            inTmp, qfieldsTmp, mu, outTmp);
-
-                        for (int f = 0; f < nConvectiveFields; ++f)
-                        {
-                            outarray[d][f][p] += outTmp[f];
-                        }
-                    }
-                }
-            }
-        }
-
-        // couldn't this scale mu directly?
-        if (ArtifDiffFactor.size())
-        {
-            n_nonZero = nConvectiveFields;
-
-            if (normal.size())
-            {
-                Array<OneD, NekDouble> tmparray{nPts, 0.0};
-                for (int i = 0; i < nDim; ++i)
-                {
-                    Vmath::Vmul(nPts, ArtifDiffFactor, 1, normal[i], 1,
-                                tmparray, 1);
-                    for (int j = 0; j < nConvectiveFields; ++j)
-                    {
-                        Vmath::Vvtvp(nPts, tmparray, 1, qfields[i][j], 1,
-                                    outarray[0][j], 1, outarray[0][j], 1);
-                    }
-                }
-            }
-            else
-            {
-                for (int i = 0; i < nDim; ++i)
-                {
-                    for (int j = 0; j < nConvectiveFields; ++j)
-                    {
-                        Vmath::Vvtvp(nPts, ArtifDiffFactor, 1, qfields[i][j], 1,
-                                    outarray[i][j], 1, outarray[i][j], 1);
-                    }
-                }
-            }
-        }
-
-        nonZeroIndex = Array< OneD, int > {n_nonZero, 0};
-        for (int i = 1; i < n_nonZero + 1; ++i)
-        {
-            nonZeroIndex[n_nonZero - i] =   nConvectiveFields - i;
-        }
-    }
-
     /**
      * @brief For very special treatment. For general boundaries it does nothing
      * But for WallViscous and WallAdiabatic, special treatment is needed
@@ -853,13 +699,13 @@ namespace Nektar
                     }
 
                     // get temp
-                    NekDouble temperature = m_varConv->GetTemperature(inTmp);
+                    NekDouble temperature = m_varConv->GetTemperature(inTmp.data());
                     // get viscosity
                     NekDouble mu;
                     GetViscosityFromTempKernel(temperature, mu);
 
                     GetViscousFluxBilinearFormKernel(nDim, d, nderiv,
-                        inAvgTmp, inTmp, mu, outTmp);
+                        inAvgTmp.data(), inTmp.data(), mu, outTmp.data());
 
                     for (int f = 0; f < nConvectiveFields; ++f)
                     {

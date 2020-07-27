@@ -55,47 +55,16 @@ RedlichKwongEoS::RedlichKwongEoS(
     m_b = 0.08664 * m_gasConstant * m_Tc / m_Pc;
 }
 
-NekDouble RedlichKwongEoS::v_GetTemperature(const NekDouble &rho,
-                                            const NekDouble &e)
+NekDouble RedlichKwongEoS::GetTemperature(
+    const NekDouble& rho, const NekDouble& e)
 {
-    // First we need to evaluate the log term
-    //    ln[1 + b*rho]
-    NekDouble logTerm = LogTerm(rho);
+    return GetTemperatureKernel(rho, e);
+}
 
-    // The temperature can be expressed as an equation in the form
-    //      (T^1/2)^3 + A* T^1/2 + B = 0, which we solve iteratively
-    NekDouble A, B;
-
-    A = -e * (m_gamma - 1) / m_gasConstant;
-    B = -3.0 * m_a / (2.0 * m_b * m_gasConstant) * (m_gamma - 1) * sqrt(m_Tc) *
-        logTerm;
-
-    // Use ideal gas solution as starting guess for iteration
-    NekDouble sqrtT = sqrt(e * (m_gamma - 1) / m_gasConstant);
-    // Newton-Raphson iteration to find T^(1/2)
-    NekDouble tol      = 1e-6;
-    NekDouble maxIter  = 100;
-    NekDouble residual = 1;
-    NekDouble f, df;
-    unsigned int cnt = 0;
-    while (abs(residual) > tol && cnt < maxIter)
-    {
-        f        = sqrtT * sqrtT * sqrtT + A * sqrtT + B;
-        df       = 3 * sqrtT * sqrtT + A;
-        residual = f / df;
-        sqrtT -= residual;
-        ++cnt;
-    }
-    if (cnt == maxIter)
-    {
-        cout << "Newton-Raphson in RedlichKwongEoS::v_GetTemperature did not "
-                "converge in "
-             << maxIter << " iterations (residual = " << residual << ")"
-             << endl;
-    }
-
-    // Calculate the temperature
-    return sqrtT * sqrtT;
+vec_t RedlichKwongEoS::GetTemperature(
+    const vec_t& rho, const vec_t& e)
+{
+    return GetTemperatureKernel(rho, e);
 }
 
 NekDouble RedlichKwongEoS::v_GetPressure(const NekDouble &rho,
@@ -259,8 +228,4 @@ NekDouble RedlichKwongEoS::Alpha(const NekDouble &T)
     return 1.0 / sqrt(T / m_Tc);
 }
 
-NekDouble RedlichKwongEoS::LogTerm(const NekDouble &rho)
-{
-    return log(1 + m_b * rho);
-}
 }

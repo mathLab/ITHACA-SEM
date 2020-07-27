@@ -36,6 +36,7 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <memory>
 
 namespace Nektar
 {
@@ -76,6 +77,7 @@ class LogOutput
 public:
     /// Default constructor.
     LogOutput() = default;
+    virtual ~LogOutput() = default;
 
     /**
      * @brief Write a log message.

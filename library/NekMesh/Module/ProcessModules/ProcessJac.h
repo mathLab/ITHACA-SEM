@@ -62,7 +62,12 @@ public:
     virtual ~ProcessJac();
 
     /// Write mesh to output file.
-    virtual void Process();
+    void Process() override;
+
+    std::string GetModuleName() override
+    {
+        return "ProcessJac";
+    }
 };
 }
 }

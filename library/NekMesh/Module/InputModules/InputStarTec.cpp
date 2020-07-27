@@ -76,10 +76,8 @@ void InputTec::Process()
     m_mesh->m_expDim   = 3;
     m_mesh->m_spaceDim = 3;
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "InputStarTec: Start reading file..." << endl;
-    }
+    m_log(VERBOSE) << "Reading Tecplot .dat file '"
+                   << m_config["infile"].as<string>() << "'" << endl;
 
     string line, word;
 
@@ -184,8 +182,8 @@ void InputTec::ReadZone(int &nComposite)
             if ((line.find("FEPOLYGON") == string::npos) &&
                 (line.find("FEPOLYHEDRON") == string::npos))
             {
-                ASSERTL0(false,
-                         "Routine only set up for FEPolygon or FEPolyhedron");
+                m_log(FATAL) << "Routine only set up for FEPolygon or "
+                             << "FEPolyhedron" << endl;
             }
         }
     }
@@ -193,8 +191,6 @@ void InputTec::ReadZone(int &nComposite)
     {
         return;
     }
-
-    cout << "Setting up zone " << zcnt++;
 
     int nodeCount = 3 * nnodes;
     vector<NekDouble> nodeLocs;
@@ -214,8 +210,11 @@ void InputTec::ReadZone(int &nComposite)
         }
     }
 
-    ASSERTL0(nodeLocs.size() == 3*nnodes, "Unable to read correct number of "
-             "nodes from Tecplot file");
+    if (nodeLocs.size() != 3*nnodes)
+    {
+        m_log(FATAL) << "Unable to read correct number of nodes from Tecplot "
+                     << "file" << endl;
+    }
 
     std::vector<NodeSharedPtr> Nodes;
     for (i = 0; i < nnodes; ++i)
@@ -246,9 +245,11 @@ void InputTec::ReadZone(int &nComposite)
         for (i = 0; i < nfaces; ++i)
         {
             m_mshFile >> nodes;
-            ASSERTL0(nodes <= 4,
-                     "Can only handle meshes with "
-                     "up to four nodes per face");
+            if (nodes > 4)
+            {
+                m_log(FATAL) << "Can only handle meshes with "
+                             << "up to four nodes per face" << endl;
+            }
             Nodes_per_face.push_back(nodes);
         }
         // Read next line
@@ -267,7 +268,6 @@ void InputTec::ReadZone(int &nComposite)
 
     if (line.find("face nodes") != string::npos)
     {
-
         for (i = 0; i < nfaces; ++i)
         {
             // check to see if Nodes_per_face is defined and
@@ -289,7 +289,8 @@ void InputTec::ReadZone(int &nComposite)
     }
     else
     {
-        ASSERTL0(false, "Failed to find face node section");
+        m_log(FATAL) << "Failed to find 'face nodes' section, check your file "
+                     << "format is correct." << endl;
     }
 
     // Read left elements
@@ -318,7 +319,8 @@ void InputTec::ReadZone(int &nComposite)
     }
     else
     {
-        ASSERTL0(false, "Left element not found");
+        m_log(FATAL) << "Failed to find 'left elements' section, check your "
+                     << "file format is correct." << endl;
     }
 
     // check to see if next line contains right elements
@@ -329,7 +331,6 @@ void InputTec::ReadZone(int &nComposite)
     }
 
     if (line.find("right elements") != string::npos)
-
     {
         int elmtID;
 
@@ -348,12 +349,13 @@ void InputTec::ReadZone(int &nComposite)
     }
     else
     {
-        ASSERTL0(false, "Left element not found");
+        m_log(FATAL) << "Failed to find 'right elements' section, check your "
+                     << "file format is correct." << endl;
     }
 
     if (Nodes_per_face.size()) // 3D Zone
     {
-        cout << " (3D) " << endl;
+        m_log(VERBOSE) << "Setting up zone " << zcnt++ << " (3D)" << endl;
 
         // Reset node ordering so that all prism faces have
         // consistent numbering for singular vertex re-ordering
@@ -388,7 +390,7 @@ void InputTec::ReadZone(int &nComposite)
     }
     else // 2D Zone
     {
-        cout << " (2D)" << endl;
+        m_log(VERBOSE) << "Setting up zone " << zcnt++ << " (2D)" << endl;
 
         // find ids of VertNodes from m_mesh->m_vertexSet so that we can
         // identify
@@ -398,7 +400,7 @@ void InputTec::ReadZone(int &nComposite)
 
             if (it == m_mesh->m_vertexSet.end())
             {
-                ASSERTL0(false, "Failed to find face vertex in 3D list");
+                m_log(FATAL) << "Failed to find face vertex in 3D list" << endl;
             }
             else
             {
@@ -772,7 +774,8 @@ void InputTec::GenElement3D(vector<NodeSharedPtr> &VertNodes,
     }
     else
     {
-        cout << "Warning: Pyramid detected " << endl;
+        m_log(WARNING) << "Pyramid detected: this element type is not yet "
+                       << "fully supported." << endl;
     }
 }
 
@@ -1012,9 +1015,8 @@ Array<OneD, int> InputTec::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
                 }
                 else
                 {
-                    ASSERTL0(
-                        false,
-                        "More than two vertices do not match triangular face");
+                    m_log(FATAL) << "More than two vertices do not match "
+                                 << "triangular face" << endl;
                 }
             }
             else // if found match then set indx0,indx1;
@@ -1125,7 +1127,8 @@ Array<OneD, int> InputTec::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
     }
     else
     {
-        ASSERTL0(false, "SortFaceNodes not set up for this number of faces");
+        m_log(FATAL) << "SortFaceNodes not set up for this number of faces"
+                     << endl;
     }
 
     return returnval;

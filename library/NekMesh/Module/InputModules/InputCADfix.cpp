@@ -85,10 +85,8 @@ void InputCADfix::Process()
     module->SetDefaults();
     module->Process();
 
-    if (m_mesh->m_verbose)
-    {
-        cout << endl << "Loading mesh from CFI" << endl;
-    }
+    m_log(VERBOSE) << "Loading mesh from CFI file '"
+                   << m_config["infile"].as<string>() << "'" << endl;
 
     m_mesh->m_expDim   = 3;
     m_mesh->m_spaceDim = 3;
@@ -117,10 +115,7 @@ void InputCADfix::Process()
     map<int, NodeSharedPtr> nodes;
     vector<cfi::NodeDefinition> *cfinodes = m_model->getFenodes();
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "Nodes " << cfinodes->size() << endl;
-    }
+    m_log(VERBOSE) << "Nodes " << cfinodes->size() << endl;
 
     // filter all mesh nodes into a indexed map and project to CAD
     for (auto &it : *cfinodes)
@@ -254,10 +249,7 @@ void InputCADfix::Process()
 
     int prefix = m_mesh->m_cad->GetNumSurf() > 100 ? 1000 : 100;
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "prisms " << prisms->size() << endl;
-    }
+    m_log(VERBOSE) << "Prisms " << prisms->size() << endl;
 
     int nm[6] = {3, 2, 5, 0, 1, 4};
     for (auto &it : *prisms)
@@ -287,10 +279,7 @@ void InputCADfix::Process()
     }
     delete prisms;
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "tets " << tets->size() << endl;
-    }
+    m_log(VERBOSE) << "tets " << tets->size() << endl;
 
     for (auto &it : *tets)
     {
@@ -317,10 +306,7 @@ void InputCADfix::Process()
     }
     delete tets;
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "hexes " << hexs->size() << endl;
-    }
+    m_log(VERBOSE) << "hexes " << hexs->size() << endl;
 
     for (auto &it : *hexs)
     {
@@ -355,10 +341,8 @@ void InputCADfix::Process()
 
     vector<cfi::ElementDefinition> *tris =
         m_model->getElements(cfi::SUBTYPE_TR3, 3);
-    if (m_mesh->m_verbose)
-    {
-        cout << "tris " << tris->size() << endl;
-    }
+
+    m_log(VERBOSE) << "tris " << tris->size() << endl;
 
     for (auto &it : *tris)
     {
@@ -386,8 +370,10 @@ void InputCADfix::Process()
                          E->GetEdgeList(), LibUtilities::ePolyEvenlySpaced));
 
             FaceSet::iterator fnd = m_mesh->m_faceSet.find(fc);
-            ASSERTL0(fnd != m_mesh->m_faceSet.end(),
-                     "surface element not found in mesh");
+            if (fnd == m_mesh->m_faceSet.end())
+            {
+                m_log(FATAL) << "Surface element not found in mesh" << endl;
+            }
 
             FaceSharedPtr mf = *fnd;
 
@@ -402,10 +388,8 @@ void InputCADfix::Process()
 
     vector<cfi::ElementDefinition> *quads =
         m_model->getElements(cfi::SUBTYPE_QU4, 4);
-    if (m_mesh->m_verbose)
-    {
-        cout << "quads " << quads->size() << endl;
-    }
+
+    m_log(VERBOSE) << "quads " << quads->size() << endl;
 
     for (auto &it : *quads)
     {
@@ -434,8 +418,10 @@ void InputCADfix::Process()
                          E->GetEdgeList(), LibUtilities::ePolyEvenlySpaced));
 
             FaceSet::iterator fnd = m_mesh->m_faceSet.find(fc);
-            ASSERTL0(fnd != m_mesh->m_faceSet.end(),
-                     "surface element not found in mesh");
+            if (fnd == m_mesh->m_faceSet.end())
+            {
+                m_log(FATAL) << "Surface element not found in mesh" << endl;
+            }
 
             FaceSharedPtr mf = *fnd;
 
@@ -470,10 +456,8 @@ void InputCADfix::Process()
 
     vector<cfi::ElementDefinition> *beams =
         m_model->getElements(cfi::SUBTYPE_BE2, 2);
-    if (m_mesh->m_verbose)
-    {
-        cout << "beams " << beams->size() << endl;
-    }
+
+    m_log(VERBOSE) << "beams " << beams->size() << endl;
 
     for (auto &it : *beams)
     {
@@ -527,11 +511,12 @@ void InputCADfix::Process()
     }
     catch (runtime_error &e)
     {
-        cout << "High-order surface meshing has failed with message:" << endl;
-        cout << e.what() << endl;
-        cout << "The mesh will be written as normal but the incomplete surface "
-                "will remain faceted"
-             << endl;
+        m_log(WARNING) << "High-order surface meshing has failed with message:"
+                       << endl;
+        m_log(WARNING) << e.what() << endl;
+        m_log(WARNING) << "The mesh will be written as normal but the "
+                       << "incomplete surface will remain faceted (linear)."
+                       << endl;
         return;
     }
 

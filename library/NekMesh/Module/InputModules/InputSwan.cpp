@@ -65,10 +65,8 @@ void InputSwan::Process()
     vector<int> tmp, tets;
     vector<double> pts;
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "InputSwan: Start reading file..." << endl;
-    }
+    m_log(VERBOSE) << "Reading Swansea mesh file '"
+                   << m_config["infile"].as<string>() << "'" << endl;
 
     m_mesh->m_expDim   = 3;
     m_mesh->m_spaceDim = 3;
@@ -82,9 +80,7 @@ void InputSwan::Process()
 
     if (tmp[0] != tmp[5] || tmp[0] != 4 * sizeof(int))
     {
-        cout << "Header data broken" << endl;
-        m_mshFile.reset();
-        return;
+        m_log(FATAL) << "Header data broken" << endl;
     }
 
     int NB_Tet    = tmp[1];
@@ -92,14 +88,13 @@ void InputSwan::Process()
     int GridOrder = tmp[4];
     int ND        = (GridOrder + 1) * (GridOrder + 2) * (GridOrder + 3) / 6;
 
-    cout << "NB_Tet    = " << NB_Tet << endl;
-    cout << "NB_Points = " << NB_Points << endl;
-    cout << "GridOrder = " << GridOrder << endl;
-    cout << "ND        = " << ND << endl;
+    m_log(VERBOSE) << "# tetrahedra : " << NB_Tet << endl;
+    m_log(VERBOSE) << "# points     : " << NB_Points << endl;
+    m_log(VERBOSE) << "mesh order   : " << GridOrder << endl;
+    m_log(VERBOSE) << "ND           : " << ND << endl;
 
-    // Now read in list of tetrahedra. Each tet has ND points, and
-    // data are ordered with memory traversed fastest with point
-    // number.
+    // Now read in list of tetrahedra. Each tet has ND points, and data are
+    // ordered with memory traversed fastest with point number.
     tets.resize(ND * NB_Tet + 2);
     m_mshFile.read(reinterpret_cast<char *>(&tets[0]),
                    static_cast<int>((ND * NB_Tet + 2) * sizeof(int)));
@@ -107,9 +102,7 @@ void InputSwan::Process()
     if (tets[0] != tets[ND * NB_Tet + 1] ||
         tets[0] != ND * NB_Tet * sizeof(int))
     {
-        cout << "ERROR [InputSwan]: Tetrahedron data broken." << endl;
-        m_mshFile.reset();
-        return;
+        m_log(FATAL) << "Tetrahedron data broken." << endl;
     }
 
     // Finally, read point data: NB_Points tuples (x,y,z).
@@ -124,9 +117,7 @@ void InputSwan::Process()
 
     if (tmp[0] != tmp[1] || tmp[0] != 3 * NB_Points * sizeof(double))
     {
-        cout << "ERROR [InputSwan]: Point data broken." << endl;
-        m_mshFile.reset();
-        return;
+        m_log(FATAL) << "Point data broken." << endl;
     }
 
     int vid                        = 0, i, j;
@@ -178,9 +169,7 @@ void InputSwan::Process()
 
     if (tmp[0] != tmp[1])
     {
-        cout << "ERROR [InputSwan]: Surface data broken." << endl;
-        m_mshFile.reset();
-        return;
+        m_log(FATAL) << "Surface data broken." << endl;
     }
 
     elType = LibUtilities::eTriangle;
@@ -213,6 +202,8 @@ void InputSwan::Process()
     ProcessFaces();
     ProcessElements();
     ProcessComposites();
+
+    PrintSummary();
 }
 }
 }

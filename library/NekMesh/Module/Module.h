@@ -35,6 +35,8 @@
 #ifndef NEKMESH_MODULE
 #define NEKMESH_MODULE
 
+#include <NekMesh/Module/Log.hpp>
+
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
@@ -156,13 +158,21 @@ namespace NekMesh
     class Module
     {
     public:
-        NEKMESH_EXPORT Module(MeshSharedPtr p_m) : m_mesh(p_m) {}
-        NEKMESH_EXPORT virtual void Process() = 0;
+        NEKMESH_EXPORT Module(MeshSharedPtr p_m) : m_mesh(p_m), m_log()
+        {
+        }
 
+        NEKMESH_EXPORT virtual void Process() = 0;
         NEKMESH_EXPORT virtual ~Module() = default;
 
+        NEKMESH_EXPORT void SetLogger(Logger &log)
+        {
+            m_log = log;
+            m_log.SetPrefix(GetModuleName());
+        }
+
         NEKMESH_EXPORT void RegisterConfig(std::string key,
-                                                std::string value = std::string());
+                                           std::string value = std::string());
         NEKMESH_EXPORT void PrintConfig();
         NEKMESH_EXPORT void SetDefaults();
 
@@ -176,6 +186,11 @@ namespace NekMesh
             auto it = m_config.find(key);
             ASSERTL0(it != m_config.end(), "Configuration key not found!");
             return it->second;
+        }
+
+        virtual std::string GetModuleName()
+        {
+            return "";
         }
 
         /// Extract element vertices
@@ -196,12 +211,14 @@ namespace NekMesh
         MeshSharedPtr m_mesh;
         /// List of configuration values.
         std::map<std::string, ConfigOption> m_config;
+        /// Logger object.
+        Logger m_log;
 
         NEKMESH_EXPORT void ReorderPrisms(PerMap &perFaces);
         NEKMESH_EXPORT void PrismLines(int                     prism,
-                                            PerMap                  &perFaces,
-                                            std::set<int>           &prismsDone,
-                                            std::vector<ElementSharedPtr> &line);
+                                       PerMap                  &perFaces,
+                                       std::set<int>           &prismsDone,
+                                       std::vector<ElementSharedPtr> &line);
     };
 
     /**

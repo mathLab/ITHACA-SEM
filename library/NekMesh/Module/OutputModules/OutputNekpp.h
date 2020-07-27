@@ -57,7 +57,12 @@ public:
     virtual ~OutputNekpp();
 
     /// Write mesh to output file.
-    virtual void Process();
+    void Process() override;
+
+    std::string GetModuleName() override
+    {
+        return "OutputNekpp";
+    }
 
 private:
     LibUtilities::Interpreter m_strEval;

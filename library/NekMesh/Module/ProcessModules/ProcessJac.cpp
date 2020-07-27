@@ -62,13 +62,10 @@ ProcessJac::~ProcessJac()
 
 void ProcessJac::Process()
 {
-    if (m_mesh->m_verbose)
-    {
-        cout << "ProcessJac: Calculating Jacobians... " << endl;
-    }
+    m_log(VERBOSE) << "Calculating elemental Jacobians" << endl;
 
     bool extract   = m_config["extract"].beenSet;
-    bool printList = m_config["list"].as<bool>();
+    bool printList = m_config["list"].beenSet;
     NekDouble thres = m_config["extract"].as<NekDouble>();
 
     vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
@@ -80,7 +77,7 @@ void ProcessJac::Process()
 
     if (printList)
     {
-        cout << "Elements with negative Jacobian:" << endl;
+        m_log << "Elements with negative Jacobian:" << endl;
     }
 
     int nNeg = 0;
@@ -143,10 +140,10 @@ void ProcessJac::Process()
 
             if (printList)
             {
-                cout << "  - " << el[i]->GetId() << " ("
-                     << LibUtilities::ShapeTypeMap[el[i]->GetConf().m_e] << ")"
-                     << "  " << scaledJac
-                     << endl;
+                m_log << "  - " << el[i]->GetId() << " ("
+                      << LibUtilities::ShapeTypeMap[el[i]->GetConf().m_e] << ")"
+                      << "  " << scaledJac
+                      << endl;
             }
         }
     }
@@ -163,12 +160,13 @@ void ProcessJac::Process()
 
     if (printList || m_mesh->m_verbose)
     {
-        cout << "Total negative Jacobians: " << nNeg << endl;
+        m_log << "Total negative Jacobians: " << nNeg << endl;
     }
     else if (nNeg > 0)
     {
-        cout << "WARNING: Detected " << nNeg << " element"
-             << (nNeg == 1 ? "" : "s") << " with negative Jacobian." << endl;
+        m_log(WARNING) << "Detected " << nNeg << " element"
+                       << (nNeg == 1 ? "" : "s") << " with negative Jacobian."
+                       << endl;
     }
 }
 }

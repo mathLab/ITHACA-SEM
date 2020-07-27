@@ -88,10 +88,8 @@ void InputNek5000::Process()
     m_mesh->m_expDim   = 0;
     m_mesh->m_spaceDim = 0;
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "InputNek5000: Start reading file..." << endl;
-    }
+    m_log(VERBOSE) << "Reading Nek5000 .rea file '"
+                   << m_config["infile"].as<string>() << "'" << endl;
 
     // -- Read in parameters.
 
@@ -148,8 +146,7 @@ void InputNek5000::Process()
 
     if (!foundMesh)
     {
-        cerr << "Couldn't find MESH tag inside file." << endl;
-        abort();
+        m_log(FATAL) << "Couldn't find MESH tag inside file." << endl;
     }
 
     // Now read in number of elements and space dimension.
@@ -241,8 +238,7 @@ void InputNek5000::Process()
     getline(m_mshFile, line);
     if (line.find("CURVE") == string::npos)
     {
-        cerr << "Cannot find curved side data." << endl;
-        abort();
+        m_log(FATAL) << "Cannot find curved side data." << endl;
     }
 
     // Read number of curves.
@@ -346,7 +342,8 @@ void InputNek5000::Process()
 
                     if (fabs(P1.m_z - P2.m_z) > 1e-8)
                     {
-                        cout << "warning: detected non x-y edge." << endl;
+                        m_log(WARNING) << "detected curvature on edge that is "
+                                       << "not located on x-y plane." << endl;
                     }
                     P1.m_z = P2.m_z = 0.0;
 
@@ -359,7 +356,7 @@ void InputNek5000::Process()
 
                     if (2.0 * radius < l)
                     {
-                        cerr << "failure" << endl;
+                        m_log(WARNING) << "Invalid curvature detected" << endl;
                     }
                     else
                     {
@@ -412,14 +409,14 @@ void InputNek5000::Process()
                 case 'S':
                 case 'm':
                 case 'M':
-                    cerr << "Curve type '" << curveType << "' on side " << side
-                         << " of element " << elmt << " is unsupported;"
-                         << "will ignore." << endl;
+                    m_log(WARNING) << "Curve type '" << curveType << "' on "
+                                   << "side " << side << " of element " << elmt
+                                   << " is unsupported; will ignore." << endl;
                     break;
                 default:
-                    cerr << "Unknown curve type '" << curveType << "' on side "
-                         << side << " of element " << elmt << "; will ignore."
-                         << endl;
+                    m_log(WARNING) << "Unknown curve type '" << curveType << "'"
+                                   << " on side " << side << " of element "
+                                   << elmt << "; will ignore." << endl;
                     break;
             }
         }
@@ -430,8 +427,7 @@ void InputNek5000::Process()
     getline(m_mshFile, line);
     if (line.find("BOUNDARY") == string::npos)
     {
-        cerr << "Cannot find boundary conditions." << endl;
-        abort();
+        m_log(FATAL) << "Cannot find boundary conditions." << endl;
     }
 
     int nSurfaces = 0;
@@ -713,13 +709,13 @@ void InputNek5000::Process()
 
     if (lineCnt != nElements * (m_mesh->m_expDim * 2))
     {
-        cerr << "Warning: boundary conditions may not have been correctly read "
-             << "from Nek5000 input file." << endl;
+        m_log(WARNING) << "Boundary conditions may not have been correctly "
+                       << "read from Nek5000 input file." << endl;
     }
 
     if (perIn != perOut)
     {
-        cerr << "Warning: number of periodic faces does not match." << endl;
+        m_log(WARNING) << "Number of periodic faces does not match." << endl;
     }
 
     m_mshFile.reset();

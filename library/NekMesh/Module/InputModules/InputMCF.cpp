@@ -81,11 +81,20 @@ void InputMCF::ParseFile(string nm)
         m_mesh->m_comm = comm;
     }
 
-    ASSERTL0(pSession->DefinesElement("NEKTAR/MESHING"), "no meshing tag");
-    ASSERTL0(pSession->DefinesElement("NEKTAR/MESHING/INFORMATION"),
-             "no information tag");
-    ASSERTL0(pSession->DefinesElement("NEKTAR/MESHING/PARAMETERS"),
-             "no parameters tag");
+    if (!pSession->DefinesElement("NEKTAR/MESHING"))
+    {
+        m_log(FATAL) << "Input file is missing a MESHING tag." << endl;
+    }
+
+    if (!pSession->DefinesElement("NEKTAR/MESHING/INFORMATION"))
+    {
+        m_log(FATAL) << "Input file is missing an INFORMATION tag." << endl;
+    }
+
+    if (!pSession->DefinesElement("NEKTAR/MESHING/PARAMETERS"))
+    {
+        m_log(FATAL) << "Input file is missing a PARAMETERS tag." << endl;
+    }
 
     TiXmlElement *mcf = pSession->GetElement("NEKTAR/MESHING");
 
@@ -198,11 +207,20 @@ void InputMCF::ParseFile(string nm)
     }
 
     auto it = information.find("CADFile");
-    ASSERTL0(it != information.end(), "no cadfile defined");
+
+    if (it == information.end())
+    {
+        m_log(FATAL) << "No 'CADFile' property found in the INFORMATION "
+                     << "section." << endl;
+    }
     m_cadfile = it->second;
 
     it = information.find("MeshType");
-    ASSERTL0(it != information.end(), "no meshtype defined");
+    if (it == information.end())
+    {
+        m_log(FATAL) << "No 'MeshType' property found in the INFORMATION "
+                     << "section." << endl;
+    }
 
     m_makeBL   = it->second == "3DBndLayer";
     m_2D       = it->second == "2D";
@@ -214,35 +232,64 @@ void InputMCF::ParseFile(string nm)
         m_2D     = true;
     }
 
-    if (!m_makeBL && !m_2D && !m_manifold)
+    if (!m_makeBL && !m_2D && !m_manifold && it->second != "3D")
     {
-        ASSERTL0(it->second == "3D", "unsure on MeshType")
+        if (it == information.end())
+        {
+            m_log(FATAL) << "Invalid 'MeshType' property found in the "
+                         << "INFORMATION section: should be one of 2D, 3D, "
+                         << "2DBndLayer, 3DBndLayer or Manifold." << endl;
+        }
     }
 
     it = parameters.find("MinDelta");
-    ASSERTL0(it != parameters.end(), "no mindelta defined");
+    if (it == parameters.end())
+    {
+        m_log(FATAL) << "No 'MinDelta' parameter found in the PARAMETERS "
+                     << "section." << endl;
+    }
     m_minDelta = it->second;
 
     it = parameters.find("MaxDelta");
-    ASSERTL0(it != parameters.end(), "no maxdelta defined");
+    if (it == parameters.end())
+    {
+        m_log(FATAL) << "No 'MaxDelta' parameter found in the PARAMETERS "
+                     << "section." << endl;
+    }
     m_maxDelta = it->second;
 
     it = parameters.find("EPS");
-    ASSERTL0(it != parameters.end(), "no eps defined");
+    if (it == parameters.end())
+    {
+        m_log(FATAL) << "No 'EPS' parameter found in the PARAMETERS "
+                     << "section." << endl;
+    }
     m_eps = it->second;
 
     it = parameters.find("Order");
-    ASSERTL0(it != parameters.end(), "no order defined");
+    if (it == parameters.end())
+    {
+        m_log(FATAL) << "No 'Order' parameter found in the PARAMETERS "
+                     << "section." << endl;
+    }
     m_order = it->second;
 
     if (m_makeBL)
     {
         it = parameters.find("BndLayerSurfaces");
-        ASSERTL0(it != parameters.end(), "no BndLayersurfs defined");
+        if (it == parameters.end())
+        {
+            m_log(FATAL) << "No 'BndLayerSurfaces' parameter found in the "
+                         << "PARAMETERS section." << endl;
+        }
         m_blsurfs = it->second;
 
         it = parameters.find("BndLayerThickness");
-        ASSERTL0(it != parameters.end(), "no BndLayerthick defined");
+        if (it == parameters.end())
+        {
+            m_log(FATAL) << "No 'BndLayerThickness' parameter found in the "
+                         << "PARAMETERS section." << endl;
+        }
         m_blthick = it->second;
 
         it        = parameters.find("BndLayerLayers");
@@ -294,19 +341,39 @@ void InputMCF::ParseFile(string nm)
 
         stringstream ss;
         it = parameters.find("Xmin");
-        ASSERTL0(it != parameters.end(), "no xmin defined");
+        if (it == parameters.end())
+        {
+            m_log(FATAL) << "No 'Xmin' parameter found in the "
+                         << "PARAMETERS section." << endl;
+        }
         ss << it->second << ",";
         it = parameters.find("Ymin");
-        ASSERTL0(it != parameters.end(), "no ymin defined");
+        if (it == parameters.end())
+        {
+            m_log(FATAL) << "No 'Ymin' parameter found in the "
+                         << "PARAMETERS section." << endl;
+        }
         ss << it->second << ",";
         it = parameters.find("Xmax");
-        ASSERTL0(it != parameters.end(), "no xmax defined");
+        if (it == parameters.end())
+        {
+            m_log(FATAL) << "No 'Xmax' parameter found in the "
+                         << "PARAMETERS section." << endl;
+        }
         ss << it->second << ",";
         it = parameters.find("Ymax");
-        ASSERTL0(it != parameters.end(), "no zmax defined");
+        if (it == parameters.end())
+        {
+            m_log(FATAL) << "No 'Ymax' parameter found in the "
+                         << "PARAMETERS section." << endl;
+        }
         ss << it->second << ",";
         it = parameters.find("AOA");
-        ASSERTL0(it != parameters.end(), "no aoa defined");
+        if (it == parameters.end())
+        {
+            m_log(FATAL) << "No 'AOA' parameter found in the "
+                         << "PARAMETERS section." << endl;
+        }
         ss << it->second;
 
         m_nacadomain = ss.str();
@@ -444,10 +511,10 @@ void InputMCF::Process()
         }
         catch (runtime_error &e)
         {
-            cout << "2D linear mesh generator failed with message:" << endl;
-            cout << e.what() << endl;
-            cout << "No mesh file has been created" << endl;
-            abort();
+            m_log(WARNING) << "2D linear mesh generator failed with message:"
+                           << endl;
+            m_log(WARNING) << e.what() << endl;
+            m_log(FATAL)   << "No mesh file has been created." << endl;
         }
     }
     else
@@ -463,12 +530,15 @@ void InputMCF::Process()
         }
         catch (runtime_error &e)
         {
-            cout << "Surface meshing has failed with message:" << endl;
-            cout << e.what() << endl;
-            cout << "Any surfaces which were succsessfully meshed will be "
-                    "dumped as a manifold mesh"
-                    << endl;
+            m_log(WARNING) << "Surface meshing has failed with message:"
+                           << endl;
+            m_log(WARNING) << e.what() << endl;
+            m_log(WARNING) << "Any surfaces which were successfully meshed will"
+                           << " be written as a manifold mesh."
+                           << endl;
+
             m_mesh->m_expDim = 2;
+
             ProcessVertices();
             ProcessEdges();
             ProcessFaces();
@@ -479,7 +549,7 @@ void InputMCF::Process()
 
         if (m_manifold)
         {
-            // dont want to volume mesh
+            // Don't want to volume mesh.
             m_mesh->m_expDim = 2;
         }
         else
@@ -502,18 +572,22 @@ void InputMCF::Process()
             }
             catch (runtime_error &e)
             {
-                cout << "Volume meshing has failed with message:" << endl;
-                cout << e.what() << endl;
-                cout << "The linear surface mesh be dumped as a manifold "
-                        "mesh"
-                        << endl;
+                m_log(WARNING) << "Volume meshing has failed with message:"
+                               << endl;
+                m_log(WARNING) << e.what() << endl;
+                m_log(WARNING) << "The linear surface mesh be written as a "
+                               << "manifold mesh"
+                               << endl;
+
                 m_mesh->m_expDim = 2;
                 m_mesh->m_element[3].clear();
+
                 ProcessVertices();
                 ProcessEdges();
                 ProcessFaces();
                 ProcessElements();
                 ProcessComposites();
+
                 return;
             }
         }
@@ -534,11 +608,12 @@ void InputMCF::Process()
     }
     catch (runtime_error &e)
     {
-        cout << "High-order surface meshing has failed with message:" << endl;
-        cout << e.what() << endl;
-        cout << "The mesh will be written as normal but the incomplete surface "
-                "will remain faceted"
-             << endl;
+        m_log(WARNING) << "High-order surface meshing has failed with message:"
+                       << endl;
+        m_log(WARNING) << e.what() << endl;
+        m_log(WARNING) << "The mesh will be written as normal but the "
+                       << "incomplete surface will remain faceted"
+                       << endl;
         return;
     }
 
@@ -546,11 +621,10 @@ void InputMCF::Process()
     if (m_varopti)
     {
         unsigned int np = boost::thread::physical_concurrency();
-        if (m_mesh->m_verbose)
-        {
-            cout << "Detecting 4 cores, will attempt to run in parrallel"
-                 << endl;
-        }
+
+        m_log(VERBOSE) << "Detecting " << np << " cores, will attempt to run "
+                       << "in parallel" << endl;
+
         module = GetModuleFactory().CreateInstance(
             ModuleKey(eProcessModule, "varopti"), m_mesh);
         module->RegisterConfig("hyperelastic", "");
@@ -564,9 +638,11 @@ void InputMCF::Process()
         }
         catch (runtime_error &e)
         {
-            cout << "Variational optimisation has failed with message:" << endl;
-            cout << e.what() << endl;
-            cout << "The mesh will be written as is, it may be invalid" << endl;
+            m_log(WARNING) << "Variational optimisation has failed with "
+                           << "message:" << endl;
+            m_log(WARNING) << e.what() << endl;
+            m_log(WARNING) << "The mesh will be written as is, it may be "
+                           << "invalid" << endl;
             return;
         }
     }
@@ -589,9 +665,11 @@ void InputMCF::Process()
         }
         catch (runtime_error &e)
         {
-            cout << "Boundary layer splitting has failed with message:" << endl;
-            cout << e.what() << endl;
-            cout << "The mesh will be written as is, it may be invalid" << endl;
+            m_log(WARNING) << "Boundary layer splitting has failed with "
+                           << "message:" << endl;
+            m_log(WARNING) << e.what() << endl;
+            m_log(WARNING) << "The mesh will be written as is, it may be "
+                           << "invalid" << endl;
             return;
         }
     }

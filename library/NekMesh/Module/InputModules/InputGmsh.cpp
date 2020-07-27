@@ -460,7 +460,8 @@ std::vector<int> tetTensorNodeOrdering(const std::vector<int> &nodes, int n)
  *
  * @return The nodes vector in tensor-product ordering.
  */
-std::vector<int> prismTensorNodeOrdering(const std::vector<int> &nodes, int n)
+std::vector<int> prismTensorNodeOrdering(const std::vector<int> &nodes, int n,
+                                         Logger &log)
 {
     std::vector<int> nodeList;
 
@@ -497,8 +498,11 @@ std::vector<int> prismTensorNodeOrdering(const std::vector<int> &nodes, int n)
         nodeList[8] = nodes[6];
     }
 
-    ASSERTL0(n < 4, "Prism Gmsh input and output is incomplete for orders "
-                    "larger than 4");
+    if (n >= 4)
+    {
+        log(FATAL) << "Prism Gmsh input and output is incomplete for orders "
+                   << "larger than 4." << endl;
+    }
 
     return nodeList;
 }
@@ -742,10 +746,8 @@ void InputGmsh::Process()
     int elm_type      = 0;
     int tmp           = 0;
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "InputGmsh: Start reading file..." << endl;
-    }
+    m_log(VERBOSE) << "Reading Gmsh file: '" << m_config["infile"].as<string>()
+                   << "'" << std::endl;
 
     std::vector<std::map<int, GmshEntity>> entityMap(4);
 
@@ -762,9 +764,18 @@ void InputGmsh::Process()
             getline(m_mshFile, line);
             stringstream s(line);
             s >> m_version;
+
+            if (m_version > 4.1)
+            {
+                m_log(FATAL) << "Cannot read .msh file format versions greater "
+                             << "than version 4.1." << endl;
+            }
+
             s >> fileType;
-            ASSERTL0(fileType == 0, "Cannot read binary Gmsh files.")
-            ASSERTL0(m_version <= 4.1, ".msh file format versions greater than 4.1 are not currently supported.")
+            if (fileType != 0)
+            {
+                m_log(FATAL) << "Cannot read binary Gmsh files." << endl;
+            }
         }
         // Process entities (v4+)
         else if (word == "$Entities")
@@ -948,23 +959,26 @@ void InputGmsh::Process()
 
     if (printInfo)
     {
-        cout << "Multiple elements in composite detected; remapped:" << endl;
+        m_log << "Multiple elements of different types in the same physical "
+              << "surface or volume detected." << endl;
+        m_log << "These will be remapped to:" << endl;
+
         for (auto &cIt : compMap)
         {
             if (cIt.second.size() > 1)
             {
                 auto sIt = cIt.second.begin();
-                cout << "- Tag " << cIt.first << " => " << sIt->second << " ("
-                     << LibUtilities::ShapeTypeMap[sIt->first] << ")";
+                m_log << "- Tag " << cIt.first << " => " << sIt->second << " ("
+                      << LibUtilities::ShapeTypeMap[sIt->first] << ")";
                 sIt++;
 
                 for (; sIt != cIt.second.end(); ++sIt)
                 {
-                    cout << ", " << sIt->second << " ("
-                         << LibUtilities::ShapeTypeMap[sIt->first] << ")";
+                    m_log << ", " << sIt->second << " ("
+                          << LibUtilities::ShapeTypeMap[sIt->first] << ")";
                 }
 
-                cout << endl;
+                m_log << endl;
             }
         }
     }
@@ -975,6 +989,8 @@ void InputGmsh::Process()
     ProcessFaces();
     ProcessElements();
     ProcessComposites();
+
+    PrintSummary();
 }
 
 /**
@@ -1084,8 +1100,7 @@ void InputGmsh::ReadNextElement(int tag, int elm_type)
     auto it = elmMap.find(elm_type);
     if (it == elmMap.end())
     {
-        cerr << "Error: element type " << elm_type << " not supported" << endl;
-        abort();
+        m_log(FATAL) << "Element type " << elm_type << " not supported" << endl;
     }
 
     // Read element tags (version 2 only)
@@ -1128,9 +1143,8 @@ void InputGmsh::ReadNextElement(int tag, int elm_type)
     // If it's not created, then create it.
     if (oIt == m_orderingMap.end())
     {
-        oIt =
-            m_orderingMap.insert(make_pair(elm_type, CreateReordering(elm_type)))
-                .first;
+        oIt = m_orderingMap.insert(
+            make_pair(elm_type, CreateReordering(elm_type, m_log))).first;
     }
 
     // Apply reordering map where necessary.
@@ -1161,14 +1175,14 @@ void InputGmsh::ReadNextElement(int tag, int elm_type)
  */
 int InputGmsh::GetNnodes(unsigned int InputGmshEntity)
 {
-    int nNodes;
+    int nNodes = 0;
 
     auto it = elmMap.find(InputGmshEntity);
 
     if (it == elmMap.end())
     {
-        cerr << "Unknown element type " << InputGmshEntity << endl;
-        abort();
+        m_log(FATAL) << "Gmsh file contains an unknown element type "
+                     << InputGmshEntity << endl;
     }
 
     switch (it->second.m_e)
@@ -1199,8 +1213,8 @@ int InputGmsh::GetNnodes(unsigned int InputGmshEntity)
             nNodes = Hexahedron::GetNumNodes(it->second);
             break;
         default:
-            cerr << "Unknown element type!" << endl;
-            abort();
+            m_log(FATAL) << "Gmsh file contains an unknown element type"
+                         << endl;
             break;
     }
 
@@ -1215,14 +1229,15 @@ int InputGmsh::GetNnodes(unsigned int InputGmshEntity)
  * they work with the Nektar++ orderings, since this is what is used in
  * the elements defined in the converter.
  */
-vector<int> InputGmsh::CreateReordering(unsigned int InputGmshEntity)
+vector<int> InputGmsh::CreateReordering(unsigned int InputGmshEntity,
+                                        Logger &log)
 {
     auto it = elmMap.find(InputGmshEntity);
 
     if (it == elmMap.end())
     {
-        cerr << "Unknown element type " << InputGmshEntity << endl;
-        abort();
+        log(FATAL) << "Gmsh file contains an unknown element type "
+                   << InputGmshEntity << endl;
     }
 
     // For specific elements, call the appropriate function to perform
@@ -1239,7 +1254,7 @@ vector<int> InputGmsh::CreateReordering(unsigned int InputGmshEntity)
             return TetReordering(it->second);
             break;
         case LibUtilities::ePrism:
-            return PrismReordering(it->second);
+            return PrismReordering(it->second, log);
             break;
         case LibUtilities::eHexahedron:
             return HexReordering(it->second);
@@ -1520,7 +1535,7 @@ vector<int> InputGmsh::TetReordering(ElmtConfig conf)
  * generating higher than second-order prismatic meshes, so most of the
  * following is untested.
  */
-vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
+vector<int> InputGmsh::PrismReordering(ElmtConfig conf, Logger &log)
 {
     const int order = conf.m_order;
     const int n     = order - 1;
@@ -1730,7 +1745,7 @@ vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
     }
 
     // Reorder interior points
-    tmp = prismTensorNodeOrdering(intPoints, order - 1);
+    tmp = prismTensorNodeOrdering(intPoints, order - 1, log);
     mapping.insert(mapping.end(), tmp.begin(), tmp.end());
 
     return mapping;

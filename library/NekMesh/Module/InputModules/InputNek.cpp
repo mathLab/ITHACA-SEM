@@ -106,10 +106,8 @@ void InputNek::Process()
     m_mesh->m_expDim   = 0;
     m_mesh->m_spaceDim = 0;
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "InputNek: Start reading file..." << endl;
-    }
+    m_log(VERBOSE) << "Reading Nektar .rea file '"
+                   << m_config["infile"].as<string>() << "'" << endl;
 
     // -- Read in parameters.
 
@@ -166,8 +164,7 @@ void InputNek::Process()
 
     if (!foundMesh)
     {
-        cerr << "Couldn't find MESH tag inside file." << endl;
-        abort();
+        m_log(FATAL) << "Couldn't find MESH tag inside file." << endl;
     }
 
     // Now read in number of elements and space dimension.
@@ -333,8 +330,7 @@ void InputNek::Process()
     getline(m_mshFile, line);
     if (line.find("CURVE") == string::npos)
     {
-        cerr << "Cannot find curved side data." << endl;
-        abort();
+        m_log(FATAL) << "Cannot find curved side data." << endl;
     }
 
     // Read number of curves.
@@ -374,8 +370,7 @@ void InputNek::Process()
             }
             else
             {
-                cerr << "Unsupported curve type " << word << endl;
-                abort();
+                m_log(FATAL) << "Unsupported curve type " << word << endl;
             }
         }
 
@@ -388,8 +383,7 @@ void InputNek::Process()
 
         if (line.find("side") == string::npos)
         {
-            cerr << "Unable to read number of curved sides" << endl;
-            abort();
+            m_log(FATAL) << "Unable to read number of curved sides" << endl;
         }
 
         int nCurvedSides;
@@ -436,9 +430,8 @@ void InputNek::Process()
             auto it = curveTags.find(word);
             if (it == curveTags.end())
             {
-                cerr << "Unrecognised curve tag " << word << " in curved lines"
-                     << endl;
-                abort();
+                m_log(FATAL) << "Unrecognised curve tag " << word
+                             << " in curved lines" << endl;
             }
 
             if (it->second.first == eRecon)
@@ -554,9 +547,8 @@ void InputNek::Process()
 
                 if (hoIt == hoData[word].end())
                 {
-                    cerr << "Unable to find high-order surface data "
-                         << "for element id " << elId + 1 << endl;
-                    abort();
+                    m_log(FATAL) << "Unable to find high-order surface data "
+                                 << "for element id " << elId + 1 << endl;
                 }
 
                 // Depending on order of vertices in rea file, surface
@@ -763,8 +755,8 @@ void InputNek::Process()
                 break;
 
             default:
-                cerr << "Unknown boundary condition type " << line[0] << endl;
-                abort();
+                m_log(FATAL) << "Unknown boundary condition type " << line[0]
+                             << endl;
         }
 
         // Populate condition information.
@@ -892,8 +884,7 @@ void InputNek::Process()
             if (it2 == surfaceCompMap.end())
             {
                 // This should never happen!
-                cerr << "Unable to find condition!" << endl;
-                abort();
+                m_log(FATAL) << "Unable to find condition!" << endl;
             }
 
             for (j = 0; j < it2->second.size(); ++j)
@@ -972,8 +963,7 @@ void InputNek::LoadHOSurfaces()
         hsf.open(fileName.c_str());
         if (!hsf.is_open())
         {
-            cerr << "Could not open surface file " << fileName << endl;
-            abort();
+            m_log(FATAL) << "Could not open surface file " << fileName << endl;
         }
 
         // Read in header line; determine element order, number of faces
@@ -982,9 +972,8 @@ void InputNek::LoadHOSurfaces()
         pos = line.find("=");
         if (pos == string::npos)
         {
-            cerr << "hsf header error: cannot read number of "
-                 << "nodal points." << endl;
-            abort();
+            m_log(FATAL) << "hsf header error: cannot read number of "
+                         << "nodal points." << endl;
         }
         line = line.substr(pos + 1);
         stringstream ss(line);
@@ -993,9 +982,8 @@ void InputNek::LoadHOSurfaces()
         pos = line.find("=");
         if (pos == string::npos)
         {
-            cerr << "hsf header error: cannot read number of "
-                 << "faces." << endl;
-            abort();
+            m_log(FATAL) << "hsf header error: cannot read number of "
+                         << "faces." << endl;
         }
         line = line.substr(pos + 1);
         ss.clear();
@@ -1020,9 +1008,8 @@ void InputNek::LoadHOSurfaces()
 
             if (word != "#")
             {
-                cerr << "hsf header error: cannot read in "
-                     << "r/s points" << endl;
-                abort();
+                m_log(FATAL) << "hsf header error: cannot read in "
+                             << "r/s points" << endl;
             }
 
             for (int j = 0; j < Ntot; ++j)
@@ -1095,8 +1082,8 @@ void InputNek::LoadHOSurfaces()
 
             if (tmp != "#")
             {
-                cerr << "Unable to read hsf connectivity information." << endl;
-                abort();
+                m_log(FATAL) << "Unable to read hsf connectivity information."
+                             << endl;
             }
 
             hoData[it.first].insert(
@@ -1142,7 +1129,7 @@ int InputNek::GetNnodes(LibUtilities::ShapeType InputNekEntity)
             nNodes = 8;
             break;
         default:
-            cerr << "unknown Nektar element type" << endl;
+            m_log(FATAL) << "unknown Nektar element type" << endl;
     }
 
     return nNodes;

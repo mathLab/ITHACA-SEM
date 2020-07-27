@@ -70,6 +70,9 @@ void InputNekpp::Process()
     vector<string> filename;
     filename.push_back(m_config["infile"].as<string>());
 
+    m_log(VERBOSE) << "Reading Nektar++ XML file '" << filename[0] << "'"
+                   << endl;
+
     char *prgname = const_cast<char *>("NekMesh");
     LibUtilities::SessionReaderSharedPtr pSession =
         LibUtilities::SessionReader::CreateInstance(1, &prgname, filename);

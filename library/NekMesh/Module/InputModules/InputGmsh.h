@@ -65,14 +65,21 @@ public:
      * Element map; takes a msh id to an %ElmtConfig object.
      */
     static std::map<unsigned int, NekMesh::ElmtConfig> elmMap;
-    static std::vector<int> CreateReordering(unsigned int InputGmshEntity);
+    static std::vector<int> CreateReordering(unsigned int InputGmshEntity,
+                                             Logger &log);
+
+    virtual std::string GetModuleName()
+    {
+        return "InputGmsh";
+    }
 
 private:
     int GetNnodes(unsigned int InputGmshEntity);
     static std::vector<int> TriReordering  (NekMesh::ElmtConfig conf);
     static std::vector<int> QuadReordering (NekMesh::ElmtConfig conf);
     static std::vector<int> HexReordering  (NekMesh::ElmtConfig conf);
-    static std::vector<int> PrismReordering(NekMesh::ElmtConfig conf);
+    static std::vector<int> PrismReordering(NekMesh::ElmtConfig conf,
+                                            Logger &log);
     static std::vector<int> TetReordering  (NekMesh::ElmtConfig conf);
     static std::vector<int> LineReordering (NekMesh::ElmtConfig conf);
 

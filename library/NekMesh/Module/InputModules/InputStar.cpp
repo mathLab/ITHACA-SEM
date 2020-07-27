@@ -79,21 +79,24 @@ void InputStar::Process()
     m_mesh->m_expDim   = 3;
     m_mesh->m_spaceDim = 3;
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "InputCCM: Start reading file..." << endl;
-    }
+    m_log(VERBOSE) << "Reading CCM+ file: '" << m_config["infile"].as<string>()
+                   << "'" << endl;
 
     InitCCM();
 
     SetupElements();
 
-    PrintSummary();
+    if (m_config["writelabelsonly"].beenSet)
+    {
+        return;
+    }
 
     ProcessEdges();
     ProcessFaces();
     ProcessElements();
     ProcessComposites();
+
+    PrintSummary();
 }
 
 void InputStar::SetupElements(void)
@@ -123,13 +126,14 @@ void InputStar::SetupElements(void)
     {
         nComposite = 2;
         // write boundary zones/composites
+        m_log << "Element labels:" << endl;
         for (i = 0; i < BndElementFaces.size(); ++i)
         {
-            cout << " 2D Zone (composite = " << nComposite
-                 << ", label = " << Facelabels[i] << ")" << endl;
+            m_log << " 2D Zone (composite = " << nComposite
+                  << ", label = " << Facelabels[i] << ")" << endl;
             nComposite++;
         }
-        exit(1);
+        return;
     }
 
     // 3D Zone
@@ -139,11 +143,10 @@ void InputStar::SetupElements(void)
 
     // create Prisms/Pyramids first
     int nelements = ElementFaces.size();
-    cout << " Generating 3D Zones: " << endl;
+    m_log(VERBOSE) << "Generating 3D Zones: " << endl;
     int cnt = 0;
     for (i = 0; i < nelements; ++i)
     {
-
         if (ElementFaces[i].size() > 4)
         {
             GenElement3D(
@@ -151,7 +154,7 @@ void InputStar::SetupElements(void)
             ++cnt;
         }
     }
-    cout <<" \t" << cnt << " Prisms" << endl;
+    m_log(VERBOSE) << "  - # of prisms: " << cnt << endl;
 
     nComposite++;
 
@@ -166,7 +169,7 @@ void InputStar::SetupElements(void)
             ++cnt;
         }
     }
-    cout <<"\t" << cnt << " Tets" << endl;
+    m_log(VERBOSE) << "  - # of tetrahedra: " << cnt << endl;
     nComposite++;
 
     // Insert vertices into map.
@@ -178,8 +181,8 @@ void InputStar::SetupElements(void)
     // Add boundary zones/composites
     for (i = 0; i < BndElementFaces.size(); ++i)
     {
-        cout << " Generating 2D Zone (composite = " << nComposite
-             << ", label = " << Facelabels[i] << ")" << endl;
+        m_log(VERBOSE) << "Generating 2D Zone (composite = " << nComposite
+                       << ", label = " << Facelabels[i] << ")" << endl;
 
         for (int j = 0; j < BndElementFaces[i].size(); ++j)
         {
@@ -190,9 +193,8 @@ void InputStar::SetupElements(void)
             }
             else
             {
-                string msg = "Failed to find FaceNodes for Face ";
-                msg += boost::lexical_cast<string>(BndElementFaces[i][j]);
-                ASSERTL0(false, msg);
+                m_log(FATAL) << "Failed to find the nodes for face "
+                             << BndElementFaces[i][j] << endl;
             }
         }
 
@@ -472,7 +474,8 @@ void InputStar::GenElement2D(vector<NodeSharedPtr> &VertNodes,
     }
     else
     {
-        ASSERTL0(false, "Not set up for elements which are not Tets or Prism");
+        m_log(FATAL) << "Not set up for elements which are not tets or prisms"
+                     << endl;
     }
 
     // Create element tags
@@ -525,8 +528,8 @@ void InputStar::GenElement3D(vector<NodeSharedPtr> &VertNodes,
     }
     else
     {
-
-        ASSERTL0(false, "Not set up for elements which are not Tets or Prism");
+        m_log(FATAL) << "Not set up for elements which are not tets or prisms"
+                     << endl;
     }
 
     // Create element tags
@@ -551,7 +554,8 @@ void InputStar::GenElement3D(vector<NodeSharedPtr> &VertNodes,
     }
     else
     {
-        cout << "Warning: Pyramid detected " << endl;
+        m_log(WARNING) << "Pyramid detected: this element type is not yet"
+                       << " supported." << endl;
     }
 }
 
@@ -736,7 +740,8 @@ Array<OneD, int> InputStar::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
             ASSERTL1(triface1 != -1, "Tri face 1 not found");
             ASSERTL1(triface2 != -1, "Tri face 2 not found");
             ASSERTL1(triface3 != -1, "Tri face 3 not found");
-            ASSERTL0(false,"Pyramids still not sorted");
+            m_log(FATAL) << "Meshes containing Pyramids are not supported."
+                         << endl;
             returnval = Array<OneD, int>(5);
         }
 
@@ -772,9 +777,8 @@ Array<OneD, int> InputStar::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
                 }
                 else
                 {
-                    ASSERTL0(
-                        false,
-                        "More than two vertices do not match triangular face");
+                    m_log(FATAL) << "More than two vertices do not match "
+                                 << "triangular face" << endl;
                 }
             }
             else // if found match then set indx0,indx1;
@@ -883,7 +887,8 @@ Array<OneD, int> InputStar::SortFaceNodes(vector<NodeSharedPtr> &Vnodes,
     }
     else
     {
-        ASSERTL0(false, "SortFaceNodes not set up for this number of faces");
+        m_log(FATAL) << "SortFaceNodes not set up for this number of faces"
+                     << endl;
     }
 
     return returnval;
@@ -899,7 +904,11 @@ void InputStar::InitCCM(void)
     // and then assign the return value to 'err'.).
     string fname = m_config["infile"].as<string>();
     m_ccmErr     = CCMIOOpenFile(NULL, fname.c_str(), kCCMIORead, &root);
-    ASSERTL0(m_ccmErr == kCCMIONoErr,"Error opening file");
+
+    if (m_ccmErr != kCCMIONoErr)
+    {
+        m_log(FATAL) << "Error opening file '" << fname << "'" << endl;
+    }
 
     int i = 0;
     CCMIOID state, problem;
@@ -911,15 +920,18 @@ void InputStar::InitCCM(void)
     CCMIOGetState(&m_ccmErr, root, kDefaultState, &problem, &state);
     if (m_ccmErr != kCCMIONoErr)
     {
-        cout << "No state named '" << kDefaultState << "'" << endl;
-        exit(0);
+        m_log(FATAL) << "No state named '" << kDefaultState << "'" << endl;
     }
 
     // Find the first processor (i has previously been
     // initialized to 0) and read the mesh and solution
     // information.
     CCMIONextEntity(&m_ccmErr, state, kCCMIOProcessor, &i, &m_ccmProcessor);
-    ASSERTL0(m_ccmErr == kCCMIONoErr,"Failed to find Next Entity");
+
+    if (m_ccmErr != kCCMIONoErr)
+    {
+        m_log(FATAL) << "CCM error: failed to find next entity" << endl;
+    }
 }
 
 void InputStar::ReadNodes(std::vector<NodeSharedPtr> &Nodes)
@@ -930,9 +942,18 @@ void InputStar::ReadNodes(std::vector<NodeSharedPtr> &Nodes)
 
     CCMIOReadProcessor(
         &m_ccmErr, m_ccmProcessor, &vertices, &m_ccmTopology, NULL, NULL);
-    ASSERTL0(m_ccmErr == kCCMIONoErr,"Error Reading Processor");
+
+    if (m_ccmErr != kCCMIONoErr)
+    {
+        m_log(FATAL) << "CCM error: error reading processor" << endl;
+    }
+
     CCMIOEntitySize(&m_ccmErr, vertices, &nVertices, NULL);
-    ASSERTL0(m_ccmErr == kCCMIONoErr,"Error Reading NextEntitySize in ReadNodes");
+    if (m_ccmErr != kCCMIONoErr)
+    {
+        m_log(FATAL) << "CCM error: error reading NextEntitySize in ReadNodes"
+                     << endl;
+    }
 
     // Read the vertices.  This involves reading both the vertex data and
     // the map, which maps the index into the data array with the ID number.
@@ -960,18 +981,29 @@ void InputStar::ReadNodes(std::vector<NodeSharedPtr> &Nodes)
                        &verts[0],
                        0,
                        nVertices);
-    ASSERTL0(m_ccmErr == kCCMIONoErr,"Error Reading Vertices in ReadNodes");
+
+    if (m_ccmErr != kCCMIONoErr)
+    {
+        m_log(FATAL) << "Error reading vertices from CCM file in ReadNodes"
+                     << endl;
+    }
+
     CCMIOReadMap(&m_ccmErr,
                  mapID,
                  &mapData[0],
                  0,
                  nVertices);
-    ASSERTL0(m_ccmErr == kCCMIONoErr,"Error Reading Map in ReadNodes");
+
+    if (m_ccmErr != kCCMIONoErr)
+    {
+        m_log(FATAL) << "Error reading node map in ReadNodes" << endl;
+    }
 
     for (int i = 0; i < nVertices; ++i)
     {
-        Nodes.push_back(std::make_shared<Node>(
-                            i, verts[3 * i], verts[3 * i + 1], verts[3 * i + 2]));
+        Nodes.push_back(
+            std::make_shared<Node>(
+                i, verts[3 * i], verts[3 * i + 1], verts[3 * i + 2]));
     }
 }
 
@@ -1029,9 +1061,11 @@ void InputStar::ReadInternalFaces(unordered_map<int, vector<int> > &FacesNodes,
         if (cnt < faces.size())
         {
             int nv = faces[cnt];
-            ASSERTL0(nv <= 4,
-                     "Can only handle meshes with "
-                     "up to four nodes per face");
+            if (nv > 4)
+            {
+                m_log(FATAL) << "Can only handle meshes with up to four nodes "
+                             << "per face" << endl;
+            }
 
             for (j = 0; j < nv; ++j)
             {
@@ -1146,9 +1180,12 @@ void InputStar::ReadBoundaryFaces(vector<vector<int> > &BndElementFaces,
             if (cnt < faces.size())
             {
                 int nv = faces[cnt];
-                ASSERTL0(nv <= 4,
-                         "Can only handle meshes with "
-                         "up to four nodes per face");
+
+                if (nv > 4)
+                {
+                    m_log(FATAL) << "Can only handle meshes with up to four "
+                                 << "nodes per face" << endl;
+                }
 
                 for (j = 0; j < nv; ++j)
                 {

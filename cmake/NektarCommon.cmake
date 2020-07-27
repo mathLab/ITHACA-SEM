@@ -282,6 +282,8 @@ MACRO(ADD_NEKPY_LIBRARY name)
     # Python requires a .so extension, even on OS X.
     SET_TARGET_PROPERTIES(_${name} PROPERTIES PREFIX "")
     SET_TARGET_PROPERTIES(_${name} PROPERTIES SUFFIX ".so")
+    SET_TARGET_PROPERTIES(_${name} PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/NekPy/${name})
 
     ADD_DEPENDENCIES(_${name} boost-numpy)
 
@@ -301,7 +303,6 @@ MACRO(ADD_NEKPY_LIBRARY name)
     SET(TMPOUT "${TMPOUT}from ._${name} import *")
 
     FILE(WRITE ${CMAKE_BINARY_DIR}/NekPy/${name}/__init__.py ${TMPOUT})
-    INSTALL(TARGETS _${name} DESTINATION ${CMAKE_BINARY_DIR}/NekPy/${name})
 ENDMACRO()
 
 #

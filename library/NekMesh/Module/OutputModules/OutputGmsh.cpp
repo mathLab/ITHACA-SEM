@@ -289,7 +289,8 @@ void OutputGmsh::Process()
             // If it's not created, then create it.
             if (oIt == orderingMap.end())
             {
-                vector<int> reordering = InputGmsh::CreateReordering(elmtType);
+                vector<int> reordering = InputGmsh::CreateReordering(
+                    elmtType, m_log);
                 vector<int> inv(tags.size());
 
                 ASSERTL1(tags.size() == reordering.size(),

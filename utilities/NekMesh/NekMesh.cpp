@@ -33,7 +33,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <string>
-#include <chrono>
 #include <boost/algorithm/string.hpp>
 #include <LibUtilities/BasicConst/GitRevision.h>
 #include <LibUtilities/BasicUtils/Timer.h>
@@ -59,7 +58,7 @@ int main(int argc, char* argv[])
              "Print options for a module.")
         ("module,m",       po::value<vector<string> >(),
              "Specify modules which are to be used.")
-        ("verbose,v",      "Enable verbose mode.");
+        ("verbose,v",      "Enable verbose output.");
 
     po::options_description hidden("Hidden options");
     hidden.add_options()
@@ -152,6 +151,10 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    // Create a logger.
+    auto logOutput = std::make_shared<StreamOutput>(std::cerr);
+    Logger log(logOutput, vm.count("verbose") ? VERBOSE : INFO);
+
     /*
      * Process list of modules. Each element of the vector of module strings can
      * be in the following form:
@@ -239,6 +242,7 @@ int main(int argc, char* argv[])
 
         // Create module.
         ModuleSharedPtr mod = GetModuleFactory().CreateInstance(module,mesh);
+        mod->SetLogger(log);
         modules.push_back(mod);
 
         // Set options for this module.
@@ -272,13 +276,19 @@ int main(int argc, char* argv[])
     {
         Nektar::LibUtilities::Timer t;
         t.Start();
-        modules[i]->Process();
+        try
+        {
+            modules[i]->Process();
+        }
+        catch (NekMeshError &e)
+        {
+            return 1;
+        }
         t.Stop();
 
-        if (mesh->m_verbose)
-        {
-            std::cout << "Module elapsed time: " << t.TimePerTest(1) << std::endl;
-        }
+        log.SetPrefix(modules[i]->GetModuleName());
+        log(VERBOSE) << "Elapsed time: "
+                     << t.TimePerTest(1) << 's' << std::endl;
     }
 
     return 0;

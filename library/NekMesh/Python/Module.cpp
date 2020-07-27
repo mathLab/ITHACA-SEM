@@ -42,6 +42,49 @@ using namespace Nektar;
 using namespace Nektar::NekMesh;
 
 /**
+ * @brief A basic Python logger object, which writes log messages to sys.stdout.
+ *
+ * This log streamer writes log messages to Python's sys.stdout. Although this
+ * may seem superfluous, in some cases certain Python applications (in
+ * particular, Jupyter notebooks), override sys.stdout to redirect output to
+ * e.g. a browser or other IOStream. This therefore enables C++ log messages to
+ * be redirected accordingly.
+ */
+class PythonStream : public LogOutput
+{
+public:
+    /// Default constructor.
+    PythonStream() : LogOutput()
+    {
+    }
+
+    /**
+     * @brief Write a log message @p msg.
+     *
+     * The logger runs the Python command `sys.stdout.write(msg)`.
+     *
+     * @param msg   The message to be printed.
+     */
+    void Log(const std::string &msg) override
+    {
+        // Create a Python string with the message.
+        py::str pyMsg(msg);
+        // Write to the Python stdout.
+        py::import("sys").attr("stdout").attr("write")(msg);
+    }
+
+private:
+    /// Finalise function. Nothing required in this case.
+    void Finalise() override
+    {
+    }
+};
+
+/// A horrible but necessary static variable to enable/disable verbose output by
+/// default.
+static bool default_verbose = false;
+
+/**
  * @brief Module wrapper to handle virtual function calls in @c Module and its
  * subclasses as defined by the template parameter @tparam MODTYPE.
  */
@@ -164,13 +207,30 @@ ModuleSharedPtr Module_Create(py::tuple args, py::dict kwargs)
     // Process keyword arguments.
     py::list items = kwargs.items();
 
+    // Set default verbosity.
+    bool verbose = default_verbose;
+
     for (int i = 0; i < py::len(items); ++i)
     {
-        std::string arg = py::extract<std::string>(items[i][0]);
-        std::string val = py::extract<std::string>(items[i][1].attr("__str__")());
+        std::string arg = py::extract<std::string>(items[i][0]), val;
+
+        // Enable or disable verbose for this module accordingly.
+        if (arg == "verbose")
+        {
+            verbose = py::extract<bool>(items[i][1]);
+            continue;
+        }
+
+        val = py::extract<std::string>(items[i][1].attr("__str__")());
         mod->RegisterConfig(arg, val);
     }
 
+    // Set a logger for this module.
+    auto pythonLog = std::make_shared<PythonStream>();
+    Logger log = Logger(pythonLog, verbose ? VERBOSE : INFO);
+    mod->SetLogger(log);
+
+    // Set other default arguments.
     mod->SetDefaults();
 
     return mod;
@@ -325,6 +385,14 @@ void Module_Register(ModuleType const  &modType,
     py::import("__main__").attr(modkey.c_str()) = capsule;
 }
 
+/**
+ * @brief Enables or disables verbose output by default.
+ */
+void Module_Verbose(bool verbose)
+{
+    default_verbose = verbose;
+}
+
 template <typename MODTYPE>
 struct ModuleWrapConverter
 {
@@ -434,6 +502,10 @@ void export_Module()
         // Factory functions.
         .def("Register", &Module_Register)
         .staticmethod("Register")
+
+        // Enable verbose output (or not).
+        .def("Verbose", &Module_Verbose)
+        .staticmethod("Verbose")
         ;
 
     ModuleWrapConverter<Module>();

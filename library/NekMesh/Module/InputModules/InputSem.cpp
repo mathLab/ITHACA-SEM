@@ -78,10 +78,8 @@ void InputSem::Process()
     // Open the file stream.
     OpenStream();
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "InputSem: Start reading file..." << endl;
-    }
+    m_log(VERBOSE) << "Reading Semtex session file '"
+                   << m_config["infile"].as<string>() << "'" << endl;
 
     // Read through input file and populate the section map.
     string fileContents, line, word;
@@ -126,37 +124,34 @@ void InputSem::Process()
     // Check that required sections exist in the file.
     if (sectionMap["NODES"] == std::streampos(-1))
     {
-        cerr << "Unable to locate NODES section in session file." << endl;
-        abort();
+        m_log(FATAL) << "Unable to locate NODES section in session file."
+                     << endl;
     }
 
     if (sectionMap["ELEMENTS"] == std::streampos(-1))
     {
-        cerr << "Unable to locate ELEMENTS section in session file." << endl;
-        abort();
+        m_log(FATAL) << "Unable to locate ELEMENTS section in session file."
+                     << endl;
     }
 
     if (sectionMap["SURFACES"] != std::streampos(-1))
     {
         if (sectionMap["BCS"] == std::streampos(-1))
         {
-            cerr << "SURFACES section defined but BCS section not "
-                 << "found." << endl;
-            abort();
+            m_log(FATAL) << "SURFACES section defined but BCS section not "
+                         << "found." << endl;
         }
 
         if (sectionMap["GROUPS"] == std::streampos(-1))
         {
-            cerr << "SURFACES section defined but GROUPS section not "
-                 << "found." << endl;
-            abort();
+            m_log(FATAL) << "SURFACES section defined but GROUPS section not "
+                         << "found." << endl;
         }
 
         if (sectionMap["FIELDS"] == std::streampos(-1))
         {
-            cerr << "SURFACES section defined but FIELDS section not "
-                 << "found." << endl;
-            abort();
+            m_log(FATAL) << "SURFACES section defined but FIELDS section not "
+                         << "found." << endl;
         }
     }
 
@@ -284,10 +279,10 @@ void InputSem::Process()
             homeshFile.open(meshfile.c_str());
             if (!homeshFile.is_open())
             {
-                cerr << "Cannot open or find mesh file: " << meshfile << endl
-                     << "Make sure to run meshpr on your session "
-                     << "file first." << endl;
-                abort();
+                m_log(FATAL) << "Cannot open or find mesh file: '" << meshfile
+                             << "'\n"
+                             << "Make sure to run 'meshpr' on your session "
+                             << "file first." << endl;
             }
 
             // Make sure we have matching header.
@@ -298,8 +293,8 @@ void InputSem::Process()
 
             if (nel != m_mesh->m_element[m_mesh->m_expDim].size())
             {
-                cerr << "Number of elements mismatch in mesh file." << endl;
-                abort();
+                m_log(FATAL) << "Number of elements mismatch in mesh file."
+                             << endl;
             }
 
             // Now read in all mesh data. This is horribly inefficient
@@ -338,8 +333,7 @@ void InputSem::Process()
 
             if (word != "<SPLINE>" && word != "<ARC>")
             {
-                cerr << "Unknown curve tag: " << word << endl;
-                abort();
+                m_log(FATAL) << "Unknown curve tag: " << word << endl;
             }
 
             // See if we have already retrieved high-order data
@@ -376,8 +370,8 @@ void InputSem::Process()
                         stride = -np;
                         break;
                     default:
-                        cerr << "Unknown side for curve id " << id << endl;
-                        abort();
+                        m_log(FATAL) << "Unknown side for curve id " << id
+                                     << endl;
                 }
 
                 for (j = 1; j < np - 1; ++j, ++nodeId)
@@ -527,9 +521,8 @@ void InputSem::Process()
                 }
                 else
                 {
-                    cerr << "Unsupported boundary condition type " << tmp
-                         << endl;
-                    abort();
+                    m_log(FATAL) << "Unsupported boundary condition type: '"
+                                 << tmp << "'" << endl;
                 }
 
                 // Second string should be field.
@@ -540,9 +533,8 @@ void InputSem::Process()
                 ss >> tmp;
                 if (tmp != "=")
                 {
-                    cerr << "Couldn't read boundary condition type " << tag
-                         << endl;
-                    abort();
+                    m_log(FATAL) << "Couldn't read boundary condition type: '"
+                                 << "'" << tag << "'" << endl;
                 }
 
                 // Fourth string should be value. CAUTION: Assumes
@@ -643,8 +635,8 @@ void InputSem::Process()
             }
             else
             {
-                cerr << "Unrecognised or unsupported tag " << word << endl;
-                abort();
+                m_log(FATAL) << "Unrecognised or unsupported tag: '"
+                             << word << "'" << endl;
             }
             ++i;
         }

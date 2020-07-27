@@ -73,10 +73,8 @@ InputVtk::~InputVtk()
  */
 void InputVtk::Process()
 {
-    if (m_mesh->m_verbose)
-    {
-        cout << "InputVtk: Start reading file..." << endl;
-    }
+    m_log(VERBOSE) << "Reading VTK file '"
+                   << m_config["infile"].as<string>() << "'" << endl;
 
     vtkPolyDataReader *vtkMeshReader = vtkPolyDataReader::New();
     vtkMeshReader->SetFileName(m_config["infile"].as<string>().c_str());

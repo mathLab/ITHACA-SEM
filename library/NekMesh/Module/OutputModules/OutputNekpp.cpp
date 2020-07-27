@@ -145,10 +145,8 @@ template <typename T> void TestElmts(
 
 void OutputNekpp::Process()
 {
-    if (m_mesh->m_verbose)
-    {
-        cout << "OutputNekpp: Writing file..." << endl;
-    }
+    m_log(VERBOSE) << "Writing Nektar++ file '"
+                   << m_config["outfile"].as<string>() << "'" << endl;
 
     int order = m_config["order"].as<int>();
 

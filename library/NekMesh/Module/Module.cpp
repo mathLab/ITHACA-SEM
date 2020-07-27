@@ -33,6 +33,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <boost/iostreams/filter/gzip.hpp>
+#include <boost/filesystem.hpp>
 
 #include "Module.h"
 
@@ -78,6 +79,12 @@ void InputModule::OpenStream()
 {
     string fname = m_config["infile"].as<string>();
 
+    // Check to see if filename exists.
+    if (!boost::filesystem::exists(fname))
+    {
+        m_log(FATAL) << "Unable to read file: '" << fname << "'" << std::endl;
+    }
+
     if (fname.size() > 3 && fname.substr(fname.size() - 3, 3) == ".gz")
     {
         m_mshFileStream.open(fname.c_str(), ios_base::in | ios_base::binary);
@@ -92,7 +99,7 @@ void InputModule::OpenStream()
 
     if (!m_mshFile.good())
     {
-        cerr << "Error opening file: " << fname << endl;
+        m_log(FATAL) << "Error opening file: " << fname << endl;
         abort();
     }
 }
@@ -103,6 +110,11 @@ void InputModule::OpenStream()
 void OutputModule::OpenStream()
 {
     string fname = m_config["outfile"].as<string>();
+
+    if (!boost::filesystem::exists(fname))
+    {
+        m_log(FATAL) << "Unable to read file: '" << fname << "'" << std::endl;
+    }
 
     if (fname.size() > 3 && fname.substr(fname.size() - 3, 3) == ".gz")
     {
@@ -118,8 +130,7 @@ void OutputModule::OpenStream()
 
     if (!m_mshFile.good())
     {
-        cerr << "Error opening file: " << fname << endl;
-        abort();
+        m_log(FATAL) << "Error opening file: '" << fname << "'" << endl;
     }
 }
 
@@ -335,9 +346,8 @@ void Module::ProcessFaces(bool ReprocessFaces)
         FaceSet::iterator it = m_mesh->m_faceSet.find(F);
         if (it == m_mesh->m_faceSet.end())
         {
-            cout << "Cannot find corresponding element face for 2D "
-                 << "element " << i << endl;
-            abort();
+            m_log(FATAL) << "Cannot find corresponding element face for 2D "
+                         << "element " << i << endl;
         }
 
         elmt->SetFaceLink(*it);
@@ -443,10 +453,12 @@ void Module::ProcessComposites()
 
             if (elmt[i]->GetTag() != it->second->m_tag)
             {
-                cout << "Different types of elements in same composite!" << endl;
-                cout << " -> Composite uses " << it->second->m_tag << endl;
-                cout << " -> Element uses   " << elmt[i]->GetTag() << endl;
-                cout << "Have you specified physical volumes and surfaces?" << endl;
+                m_log(WARNING)
+                    << "Different types of elements in same composite!" << endl
+                    << " -> Composite uses " << it->second->m_tag << endl
+                    << " -> Element uses   " << elmt[i]->GetTag() << endl
+                    << "Have you specified physical volumes and surfaces?"
+                    << endl;
             }
             it->second->m_items.push_back(elmt[i]);
         }
@@ -918,13 +930,17 @@ void InputModule::PrintSummary()
 {
     // Compute the number of full-dimensional elements and boundary
     // elements.
-    cerr << "Expansion dimension is " << m_mesh->m_expDim << endl;
-    cerr << "Space dimension is " << m_mesh->m_spaceDim << endl;
-    cerr << "Read " << m_mesh->m_node.size() << " nodes" << endl;
-    cerr << "Read " << m_mesh->GetNumElements() << " "
-         << m_mesh->m_expDim << "-D elements" << endl;
-    cerr << "Read " << m_mesh->GetNumBndryElements()
-         << " boundary elements" << endl;
+    m_log(VERBOSE) << "Finished reading mesh." << endl;
+    m_log(VERBOSE) << " - Element dimension        : " << m_mesh->m_expDim
+                   << endl;
+    m_log(VERBOSE) << " - Space dimension          : " << m_mesh->m_spaceDim
+                   << endl;
+    m_log(VERBOSE) << " - No. of nodes             : "
+                   << m_mesh->m_vertexSet.size() << endl;
+    m_log(VERBOSE) << " - No. of " << m_mesh->m_expDim << "D elements       : "
+                   << m_mesh->GetNumElements() << endl;
+    m_log(VERBOSE) << " - No. of boundary elements : "
+                   << m_mesh->GetNumBndryElements() << endl;
 }
 
 }

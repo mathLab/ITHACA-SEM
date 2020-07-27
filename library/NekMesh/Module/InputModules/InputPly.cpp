@@ -63,7 +63,6 @@ InputPly::~InputPly()
  */
 void InputPly::Process()
 {
-
     // Open the file stream.
     OpenStream();
 
@@ -88,10 +87,8 @@ void InputPly::ReadPly(io::filtering_istream &mshFile, NekDouble scale)
     LibUtilities::ShapeType elType = LibUtilities::eTriangle;
     map<string, int> propMap;
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "InputPly: Start reading file..." << endl;
-    }
+    m_log(VERBOSE) << "Reading .ply file '"
+                   << m_config["infile"].as<string>() << "'" << endl;
 
     while (!mshFile.eof())
     {
@@ -104,8 +101,8 @@ void InputPly::ReadPly(io::filtering_istream &mshFile, NekDouble scale)
             s >> word;
             if (word != "ascii")
             {
-                ASSERTL0(false, "InputPly file currently only set up to read "
-                                "ascii formatted ply files");
+                m_log(FATAL) << "Currently only ASCII-formatted .ply files are "
+                             << "supported." << endl;
             }
         }
         else if (word == "element")

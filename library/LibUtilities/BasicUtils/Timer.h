@@ -83,7 +83,7 @@ class Timer
         CounterType m_end;
         static std::unordered_map<std::string, std::pair<Seconds, size_t>>
             m_elapsedRegion;
-
+        static unsigned short m_maxStringWidth;
 
 };
 

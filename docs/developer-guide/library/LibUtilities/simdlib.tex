@@ -1,0 +1,64 @@
+%
+\section{SIMDLib}
+
+This directory contains the tinysimd library, a header only library. The library is a light, zero-overhead wrapper based on template meta-programming that automatically selects a SIMD intrinsics from the most specialized x86-64 instruction set extension available among SSE2(limited support), AVX2 and AVX512(not tested).
+
+To use the library one needs to import the tinysimd.hpp header.
+The type traits routines, needed for templated programming are available in the traits.hpp header.
+It is highly discouraged to perform IO with vector types. If IO is needed for debugging, one needs to import the io.hpp header.
+
+Flags
+
+
+Vector types are largely used with the same sematic as built-in c++ types.
+
+\paragraph{A simple example: } if avx2 is available, then this scalar code
+\begin{lstlisting}[language=C++]
+#include <array>
+array<double,4> a = {-1.0, -1.0, -1.0, -1.0};
+array<double,4> b;
+for (int i = 0; i < 4; ++i){
+    b[i] = abs(a[i]);
+}
+\end{lstlisting}
+
+is equivalent to this vector computation
+
+\begin{lstlisting}[language=C++]
+#include <LibUtilities/SimdLib/tinysimd.hpp>
+using vec_t = tinysimd::simd<double>;
+vec_t a = -1.0;
+vec_t b = abs(a);
+\end{lstlisting}
+
+which the compiler translates to the corresponding intrisics
+
+\begin{lstlisting}[language=C++]
+#include <immintrin.h>
+__m256d a = -1.0;
+__m256d sign_mask = _mm256_set1_pd(1<<63);
+__m256d b = _mm256_andnot_pd(sign_mask, a);
+\end{lstlisting}
+
+\paragraph{Usage: } an example of a more realistic usage can be found in the SIMD version of the Vmath routines
+
+\lstinputlisting[language=C++, firstline=47, lastline=88]{src/library/LibUtilities/BasicUtils/VmathSIMD.hpp}
+
+Note that there are 2 loops, a vectorized loop and a spillover loop (which used when the input array size is not a multiple of the vector width).
+For more complex methods the core of the loop is replaced by a call to a kernel that can accept both a vector type or a scalar type.
+In general the loops are characterized 3 steps: a load to local variables, a call to one or more kernels, a store from the local variable to the output array.
+The load and store operations need to specify the flag "is_not_aligned" if the referenced memory is not aligned to the vector width boundaries. Otherwise a segfault is just waiting to happen!
+As an example of a method with a complex body is in RoeSolverSIMD.cpp.
+
+\paragraph{Usage with matrix free operators: }
+
+The usage of the tineysimd library in the matrix free operators differs from the above due to the re-ordering of interleaving of $n$ elements degree of freedoms (where $n$ is the vector width).
+You can refer to \cite{dave} for more details.
+
+\paragraph{General optimization guidelines:} the key is to limit data transfer from RAM to cache
+\begin{itemize}
+\item use local temporary variables to store intermediate values
+\item do not call vmath functions more than once, make a loop over the points instead
+\item if you do call a vmath function, call the vmath::array version (it might be optimize via vmath::simd)
+
+\end{itemize}

@@ -9,21 +9,34 @@
 namespace tinysimd
 {
 
+namespace abi
+{
+
+template <typename scalarType>
+struct scalar
+{
+    using type = void;
+};
+
+} // namespace abi
+
 // forward declaration of concrete types
 // makes default type available for all arithmetic types
 template<typename T, typename = typename std::enable_if<
     std::is_arithmetic<T>::value>::type>
 struct scalarT;
+struct scalarMask;
 
 namespace abi
 {
 
 // mapping between abstract types and concrete types
-template <typename scalarType>
-struct scalar
-{
-    using type = scalarT<scalarType>;
-};
+template <> struct scalar<double>{ using type = scalarT<double>; };
+template <> struct scalar<std::int64_t>{ using type = scalarT<std::int64_t>; };
+template <> struct scalar<std::uint64_t>{ using type = scalarT<std::uint64_t>; };
+template <> struct scalar<std::int32_t>{ using type = scalarT<std::int32_t>; };
+template <> struct scalar<std::uint32_t>{ using type = scalarT<std::uint32_t>; };
+template <> struct scalar<bool>{ using type = scalarMask; };
 
 } // namespace abi
 
@@ -77,15 +90,16 @@ struct scalarT
 
     template<typename U, typename = typename std::enable_if<
         std::is_integral<U>::value>::type>
-    inline void gather(const scalarType* p, scalarT<U>)
+    inline void gather(const scalarType* p, const scalarT<U>& indices)
     {
-        _data = *p;
+        _data = *p + indices._data;
     }
 
     template<typename U, typename = typename std::enable_if<
         std::is_integral<U>::value>::type>
-    inline void scatter(scalarType* p, const scalarT<U>) const
+    inline void scatter(scalarType* p, const scalarT<U>& indices) const
     {
+        p += indices._data;
         *p = _data;
     }
 
@@ -244,6 +258,33 @@ inline void deinterleave_store(
     {
         out[i] = in[i]._data;
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// mask type
+// mask is a int type that uses boolean promotion
+//
+// VERY LIMITED SUPPORT...just enough to make cubic eos work...
+//
+struct scalarMask : scalarT<std::uint64_t>
+{
+    // bring in ctors
+    using scalarT::scalarT;
+
+    static constexpr scalarType true_v = true;
+    static constexpr scalarType false_v = false;
+};
+
+inline scalarMask operator>(scalarT<double> lhs, scalarT<double> rhs)
+{
+
+    return lhs._data > rhs._data;
+}
+
+inline bool operator&&(scalarMask lhs, bool rhs)
+{
+    return lhs._data && rhs;
 }
 
 } // namespace tinysimd

@@ -27,6 +27,7 @@ struct avx2
 template<typename T> struct avx2Int8;
 template<typename T> struct avx2Long4;
 struct avx2Double4;
+struct avx2Mask;
 
 namespace abi
 {
@@ -35,6 +36,7 @@ namespace abi
 template <> struct avx2<double> { using type = avx2Double4; };
 template <> struct avx2<std::int64_t> { using type = avx2Long4<std::int64_t>; };
 template <> struct avx2<std::uint64_t> { using type = avx2Long4<std::uint64_t>; };
+template <> struct avx2<bool> { using type = avx2Mask; };
 #if defined(__AVX512F__) && defined(NEKTAR_ENABLE_SIMD_AVX512)
 // these types are used for indexes only
 // should be enabled only with avx512 otherwise they get selected by the wrapper
@@ -644,8 +646,41 @@ inline void deinterleave_store(
     }
 #endif
 
-
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+// mask type
+// mask is a int type with special properties (broad boolean vector)
+// broad boolean vectors defined and allowed values are:
+// false=0x0 and true=0xFFFFFFFF
+//
+// VERY LIMITED SUPPORT...just enough to make cubic eos work...
+//
+struct avx2Mask : avx2Long4<std::uint64_t>
+{
+    // bring in ctors
+    using avx2Long4::avx2Long4;
+
+    static constexpr scalarType true_v = -1;
+    static constexpr scalarType false_v = 0;
+};
+
+inline avx2Mask operator>(avx2Double4 lhs, avx2Double4 rhs)
+{
+
+    return reinterpret_cast<__m256i>(_mm256_cmp_pd(rhs._data, lhs._data, 1));
+}
+
+inline bool operator&&(avx2Mask lhs, bool rhs)
+{
+    bool tmp = _mm256_testc_si256(lhs._data, _mm256_set1_epi64x(avx2Mask::true_v));
+
+    return tmp && rhs;
+}
+
+
 
 #endif // defined(__AVX2__)
 

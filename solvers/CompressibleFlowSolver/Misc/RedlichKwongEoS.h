@@ -37,6 +37,8 @@
 
 #include "EquationOfState.h"
 
+#include <LibUtilities/SimdLib/io.hpp>
+
 namespace Nektar
 {
 
@@ -119,7 +121,7 @@ private:
 
     // The temperature can be expressed as an equation in the form
     //      (T^1/2)^3 + A* T^1/2 + B = 0, which we solve iteratively
-    T A = -e * (m_gamma - 1) / m_gasConstant;
+    T A = e * (1.0 - m_gamma) / m_gasConstant;
     T B = -3.0 * m_a / (2.0 * m_b * m_gasConstant) * (m_gamma - 1) * sqrt(m_Tc)
         * logTerm;
 

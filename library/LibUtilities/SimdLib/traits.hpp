@@ -85,5 +85,21 @@ struct is_vector_floating_point<T,
 // template <class T>
 // inline constexpr bool is_vector_floating_point_v = is_vector_floating_point<T>::value;
 
+// Generic template handles cases that are not vector type
+template <class T, class = void>
+struct is_vector_integral : std::false_type {};
+
+// Specialized template handles cases that are vector types
+template <class T>
+struct is_vector_integral<T,
+    typename std::enable_if<
+    is_vector<T>::value>::type
+> : std::integral_constant
+    <bool, std::is_integral<typename T::scalarType>::value> {};
+
+// Helper c++17 style
+// template <class T>
+// inline constexpr bool is_vector_floating_point_v = is_vector_floating_point<T>::value;
+
 
 } // namespace tinysimd

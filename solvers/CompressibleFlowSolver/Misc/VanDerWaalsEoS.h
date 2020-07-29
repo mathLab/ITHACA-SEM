@@ -67,9 +67,9 @@ protected:
     NekDouble m_a;
     NekDouble m_b;
 
-    NekDouble GetTemperature(const NekDouble &rho, const NekDouble &e) final;
+    NekDouble GetTemperature(const NekDouble& rho, const NekDouble& e) final;
 
-    vec_t GetTemperature(const vec_t &rho, const vec_t &e) final;
+    vec_t GetTemperature(const vec_t& rho, const vec_t& e) final;
 
     NekDouble v_GetPressure(const NekDouble &rho, const NekDouble &e) final;
 
@@ -87,6 +87,18 @@ private:
     VanDerWaalsEoS(const LibUtilities::SessionReaderSharedPtr &pSession);
 
     ~VanDerWaalsEoS(void){};
+
+
+    template <class T, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    T GetTemperatureKernel(const T& rho, const T& e)
+    {
+        return (e + m_a * rho) * (m_gamma - 1) / m_gasConstant;
+    }
 };
 }
 

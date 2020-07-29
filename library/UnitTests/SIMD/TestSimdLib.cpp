@@ -30,6 +30,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/SimdLib/tinysimd.hpp>
+#include <LibUtilities/SimdLib/io.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
@@ -361,7 +362,7 @@ namespace SimdLibTests
 
         // create and fill index
         std::array<size_t, vec_t::width> aindex;
-        aindex[0] = 0;
+        aindex[0] = 1;
         if (vec_t::width > 2)
         {
             aindex[1] = 3;
@@ -544,6 +545,107 @@ namespace SimdLibTests
         }
     }
 
+    BOOST_AUTO_TEST_CASE(SimdLib_greater)
+    {
+        double aval = 4.0;
+        vec_t avec(aval);
+        using mask_t = simd<bool>;
+        mask_t amask;
+
+        amask = avec > avec;
+        // check
+        alignas(vec_t::alignment) std::array<std::uint64_t, vec_t::width>
+            ascalararr{{}}; // double brace to deal with gcc 4.8.5 ...
+        amask.store(ascalararr.data());
+        for (size_t i = 0; i < vec_t::width; ++i)
+        {
+            // type conversion make lvalue in rvalue, needed pre-c++17
+            BOOST_CHECK_EQUAL(ascalararr[i], (std::uint64_t)mask_t::false_v);
+        }
+
+        double bval = 3.0;
+        vec_t bvec(bval);
+
+        amask = avec > bvec;
+        // check
+        amask.store(ascalararr.data());
+        for (size_t i = 0; i < vec_t::width; ++i)
+        {
+            // type conversion make lvalue in rvalue, needed pre-c++17
+            BOOST_CHECK_EQUAL(ascalararr[i], (std::uint64_t)mask_t::true_v);
+        }
+
+        double cval = 5.0;
+        vec_t cvec(cval);
+
+        amask = avec > cvec;
+        // check
+        amask.store(ascalararr.data());
+        for (size_t i = 0; i < vec_t::width; ++i)
+        {
+            // type conversion make lvalue in rvalue, needed pre-c++17
+            BOOST_CHECK_EQUAL(ascalararr[i], (std::uint64_t)mask_t::false_v);
+        }
+
+
+        if (vec_t::width == 4)
+        {
+            alignas(vec_t::alignment) std::array<double, 4>
+                ascalararr2{{1.0,2.0,3.0,4.0}}; // double brace to deal with gcc 4.8.5 ...
+            double dval = 2.0;
+            vec_t dvec(dval);
+            vec_t evec;
+            evec.load(ascalararr2.data());
+
+            simd<bool> amask;
+            amask = dvec > evec;
+            // check
+            for (size_t i = 0; i < vec_t::width; ++i)
+            {
+                BOOST_CHECK_EQUAL(static_cast<bool>(amask[i]), dvec[i] > evec[i]);
+            }
+
+        }
+    }
+
+    BOOST_AUTO_TEST_CASE(SimdLib_logic_and)
+    {
+        double aval = 4.0;
+        vec_t avec(aval);
+        using mask_t = simd<bool>;
+        mask_t amask;
+
+        alignas(vec_t::alignment) std::array<std::uint64_t, vec_t::width>
+            ascalararr{{}}; // double brace to deal with gcc 4.8.5 ...
+        for (size_t i = 0; i < vec_t::width; ++i)
+        {
+            ascalararr[i] = mask_t::true_v;
+        }
+        amask.load(ascalararr.data());
+
+        // check
+        BOOST_CHECK_EQUAL(amask && false, false);
+        BOOST_CHECK_EQUAL(amask && true, true);
+
+        for (size_t i = 0; i < vec_t::width; ++i)
+        {
+            ascalararr[i] = mask_t::false_v;
+        }
+        amask.load(ascalararr.data());
+
+        // check
+        BOOST_CHECK_EQUAL(amask && false, false);
+        BOOST_CHECK_EQUAL(amask && true, false);
+
+        if (vec_t::width > 1)
+        {
+            ascalararr[0] = mask_t::true_v;
+            // check
+            BOOST_CHECK_EQUAL(amask && false, false);
+            BOOST_CHECK_EQUAL(amask && true, false);
+        }
+    }
+
     BOOST_AUTO_TEST_CASE(SimdLib_load_interleave_unload)
     {
         constexpr size_t nDof{5};
@@ -593,6 +695,11 @@ namespace SimdLibTests
 
     }
 
+    BOOST_AUTO_TEST_CASE(SimdLib_io)
+    {
+        vec_t avec(3.14);
+        std::cout << avec << std::endl;
+    }
 
 }
 }

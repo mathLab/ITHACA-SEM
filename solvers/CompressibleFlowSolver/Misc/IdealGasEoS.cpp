@@ -66,10 +66,16 @@ vec_t IdealGasEoS::GetTemperature(
     return GetTemperatureKernel(e);
 }
 
-NekDouble IdealGasEoS::v_GetPressure(
+NekDouble IdealGasEoS::GetPressure(
     const NekDouble &rho, const NekDouble &e)
 {
-    return rho*e*(m_gamma-1);
+    return GetPressureKernel(rho, e);
+}
+
+vec_t IdealGasEoS::GetPressure(
+    const vec_t &rho, const vec_t &e)
+{
+    return GetPressureKernel(rho, e);
 }
 
 NekDouble IdealGasEoS::v_GetSoundSpeed(

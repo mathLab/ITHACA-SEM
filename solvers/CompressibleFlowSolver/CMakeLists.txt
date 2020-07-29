@@ -41,9 +41,9 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
         LIBRARY_SOURCES
         Misc/EquationOfState.cpp
         Misc/IdealGasEoS.cpp
-        Misc/PengRobinsonEoS.cpp
-        Misc/RedlichKwongEoS.cpp
-        Misc/VanDerWaalsEoS.cpp
+        # Misc/PengRobinsonEoS.cpp
+        # Misc/RedlichKwongEoS.cpp
+        # Misc/VanDerWaalsEoS.cpp
         Misc/VariableConverter.cpp
         RiemannSolvers/AverageSolver.cpp
         RiemannSolvers/AUSM0Solver.cpp

@@ -542,17 +542,17 @@ namespace Nektar
         }
 
 
-
-        // this loop has not been optimized yet
+        // this loop would need to be brought up into the main loop so that it
+        // can be vectorized as well
         if (ArtifDiffFactor.size())
         {
             n_nonZero = nConvectiveFields;
 
-            if (normal.size())
+            for (size_t p = 0; p < nPts; ++p)
             {
-                for (size_t p = 0; p < nPts; ++p)
+                for (int d = 0; d < nDim; ++d)
                 {
-                    for (int d = 0; d < nDim; ++d)
+                    if (IS_TRACE)
                     {
                         NekDouble tmp = ArtifDiffFactor[p] * normal[d][p];
 
@@ -561,13 +561,7 @@ namespace Nektar
                             outarray[0][j][p] += tmp * qfields[d][j][p];
                         }
                     }
-                }
-            }
-            else
-            {
-                for (size_t p = 0; p < nPts; ++p)
-                {
-                    for (int d = 0; d < nDim; ++d)
+                    else
                     {
                         for (int j = 0; j < nConvectiveFields; ++j)
                         {
@@ -578,6 +572,7 @@ namespace Nektar
             }
         }
 
+        // this is always the same, it should be initialized with the IP class
         nonZeroIndex = Array< OneD, int > {n_nonZero, 0};
         for (int i = 1; i < n_nonZero + 1; ++i)
         {

@@ -49,16 +49,13 @@ EquationOfState::EquationOfState(
 {
     pSession->LoadParameter("Gamma", m_gamma, 1.4);
     pSession->LoadParameter("GasConstant", m_gasConstant, 287.058);
+
+    m_gammaMone = m_gamma - 1.0;
+    m_gammaMoneOgasConst = m_gammaMone / m_gasConstant;
 }
 
 EquationOfState::EquationOfState( const NekDouble &gamma,
     const NekDouble &gasConstant): m_gamma{gamma}, m_gasConstant{gasConstant}{}
-
-
-NekDouble EquationOfState::GetPressure(const NekDouble &rho, const NekDouble &e)
-{
-    return v_GetPressure(rho, e);
-}
 
 NekDouble EquationOfState::GetSoundSpeed(const NekDouble &rho,
                                          const NekDouble &e)

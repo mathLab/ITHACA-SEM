@@ -69,7 +69,9 @@ class IdealGasEoS : public EquationOfState
 
         vec_t GetTemperature(const vec_t& rho, const vec_t& e) final;
 
-        NekDouble v_GetPressure(const NekDouble &rho, const NekDouble &e) final;
+        NekDouble GetPressure(const NekDouble& rho, const NekDouble& e) final;
+
+        vec_t GetPressure(const vec_t& rho, const vec_t& e) final;
 
         NekDouble v_GetSoundSpeed(const NekDouble &rho, const NekDouble &e) final;
 
@@ -89,6 +91,7 @@ class IdealGasEoS : public EquationOfState
         ~IdealGasEoS(void){};
 
 
+    // type agnostic kernels
     template <class T, typename = typename std::enable_if
         <
             std::is_floating_point<T>::value ||
@@ -97,8 +100,22 @@ class IdealGasEoS : public EquationOfState
     >
     inline T GetTemperatureKernel(const T& e)
     {
-        return e * (m_gamma - 1.0) / m_gasConstant;
+        return e * m_gammaMoneOgasConst;
     }
+
+    template <class T, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    inline T GetPressureKernel(const T& rho, const T& e)
+    {
+        return rho * e * m_gammaMone;
+    }
+
+
+
 
 };
 

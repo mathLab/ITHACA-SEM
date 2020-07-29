@@ -441,54 +441,55 @@ timer.AccumulateRegion("DoDiffusion");
         const Array<OneD, Array<OneD, NekDouble> >  &physfield,
         TensorOfArray3D<NekDouble>                  &flux)
     {
-        int i, j;
-        int nq = physfield[0].size();
-        int nVariables = m_fields.size();
+        auto nVariables = physfield.size();
+        auto nPts = physfield[0].size();
 
-        Array<OneD, NekDouble> pressure(nq);
-        Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
+        constexpr unsigned short maxVel = 3;
+        constexpr unsigned short maxFld = 5;
 
-        // Flux vector for the rho equation
-        for (i = 0; i < m_spacedim; ++i)
+        // hardcoding done for performance reasons
+        ASSERTL1(nVariables <= maxFld, "GetFluxVector, hard coded max fields");
+
+        for (size_t p = 0; p < nPts; ++p)
         {
-            velocity[i] = Array<OneD, NekDouble>(nq);
-            Vmath::Vcopy(nq, physfield[i+1], 1, flux[0][i], 1);
-        }
+            // local storage
+            std::array<NekDouble, maxFld> fieldTmp{};
+            std::array<NekDouble, maxVel> velocity{};
 
-        m_varConv->GetVelocityVector(physfield, velocity);
-        m_varConv->GetPressure(physfield, pressure);
-
-        // Flux vector for the velocity fields
-        for (i = 0; i < m_spacedim; ++i)
-        {
-            for (j = 0; j < m_spacedim; ++j)
+            // rearrenge and load data
+            for (size_t f = 0; f < nVariables; ++f)
             {
-                Vmath::Vmul(nq, velocity[j], 1, physfield[i+1], 1,
-                            flux[i+1][j], 1);
+                fieldTmp[f] = physfield[f][p]; // load
             }
 
-            // Add pressure to appropriate field
-            Vmath::Vadd(nq, flux[i+1][i], 1, pressure, 1, flux[i+1][i], 1);
-        }
+            // 1 / rho
+            NekDouble oneOrho = 1.0 / fieldTmp[0];
 
-        // Flux vector for energy.
-        Vmath::Vadd(nq, physfield[m_spacedim+1], 1, pressure, 1,
-                    pressure, 1);
-
-        for (j = 0; j < m_spacedim; ++j)
-        {
-            Vmath::Vmul(nq, velocity[j], 1, pressure, 1,
-                        flux[m_spacedim+1][j], 1);
-        }
-
-        // For the smooth viscosity model
-        if (nVariables == m_spacedim+3)
-        {
-            // Add a zero row for the advective fluxes
-            for (j = 0; j < m_spacedim; ++j)
+            for (size_t d = 0; d < m_spacedim; ++d)
             {
-                Vmath::Zero(nq, flux[m_spacedim+2][j], 1);
+                // Flux vector for the rho equation
+                flux[0][d][p] = fieldTmp[d+1]; // store
+                // compute velocity
+                velocity[d] = fieldTmp[d+1] * oneOrho;
             }
+
+            NekDouble pressure = m_varConv->GetPressure(fieldTmp.data());
+            NekDouble ePlusP = fieldTmp[m_spacedim+1] + pressure;
+            for (size_t f = 0; f < m_spacedim; ++f)
+            {
+                // Flux vector for the velocity fields
+                for (size_t d = 0; d < m_spacedim; ++d)
+                {
+                    flux[f+1][d][p] = velocity[d] * fieldTmp[f+1]; // store
+                }
+
+                // Add pressure to appropriate field
+                flux[f+1][f][p] += pressure;
+
+                // Flux vector for energy
+                flux[m_spacedim+1][f][p] = ePlusP * velocity[f]; // store
+            }
+
         }
     }
 

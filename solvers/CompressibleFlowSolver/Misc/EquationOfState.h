@@ -72,12 +72,14 @@ public:
 
 
     /// Calculate the temperature
-    virtual NekDouble GetTemperature(const NekDouble &rho, const NekDouble &e) = 0;
+    virtual NekDouble GetTemperature(const NekDouble& rho, const NekDouble& e) = 0;
 
-    virtual vec_t GetTemperature(const vec_t &rho, const vec_t &e) = 0;
+    virtual vec_t GetTemperature(const vec_t& rho, const vec_t& e) = 0;
 
     /// Calculate the pressure
-    NekDouble GetPressure(const NekDouble &rho, const NekDouble &e);
+    virtual NekDouble GetPressure(const NekDouble& rho, const NekDouble& e) = 0;
+
+    virtual vec_t GetPressure(const vec_t& rho, const vec_t& e) = 0;
 
     /// Calculate the sound speed
     NekDouble GetSoundSpeed(const NekDouble &rho, const NekDouble &e);
@@ -100,15 +102,14 @@ public:
 protected:
     NekDouble m_gamma;
     NekDouble m_gasConstant;
+    NekDouble m_gammaMone;
+    NekDouble m_gammaMoneOgasConst;
 
     /// Constructor
     EquationOfState(const LibUtilities::SessionReaderSharedPtr &pSession);
 
     /// Programmatic Constructor
     EquationOfState(const NekDouble &gamma, const NekDouble &gasConstant);
-
-    virtual NekDouble v_GetPressure(const NekDouble &rho,
-                                    const NekDouble &e) = 0;
 
     virtual NekDouble v_GetSoundSpeed(const NekDouble &rho, const NekDouble &e);
 

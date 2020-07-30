@@ -1,16 +1,20 @@
 %
 \section{SIMDLib}
 
-This directory contains the tinysimd library, a header only library. The library is a light, zero-overhead wrapper based on template meta-programming that automatically selects a SIMD intrinsics from the most specialized x86-64 instruction set extension available among SSE2(limited support), AVX2 and AVX512(not tested).
+This directory contains the tinysimd library, a header only library.
+The library is a light, zero-overhead wrapper based on template meta-programming that automatically selects a SIMD intrinsics from the most specialized x86-64 instruction set extension available among SSE2 (limited support), AVX2 and AVX512 (not tested).
+The library is designed to be easily extended to other architectures.
 
 To use the library one needs to import the tinysimd.hpp header.
 The type traits routines, needed for templated programming are available in the traits.hpp header.
 It is highly discouraged to perform IO with vector types. If IO is needed for debugging, one needs to import the io.hpp header.
 
-Flags
+To enable the vector types in {\nek} you need to set to \verb+ON+ the desired extension (for instance \verb+NEKTAR_ENABLE_SIMD_AVX2+).
+This will automatically set the appropriate compiler flags. However notice that currently these are set correctly only for gcc and that you might need to delete the cached variable \verb+CMAKE_CXX_FLAGS+ before configuring cmake.
+You can check that the desired vector extension was compiled properly by running the \verb+VecDataUnitTests+ which prints out the extension in use.
 
 
-Vector types are largely used with the same sematic as built-in c++ types.
+Vector types are largely used with the same semantic as built-in c++ types.
 
 \paragraph{A simple example: } if avx2 is available, then this scalar code
 \begin{lstlisting}[language=C++]
@@ -40,25 +44,25 @@ __m256d sign_mask = _mm256_set1_pd(1<<63);
 __m256d b = _mm256_andnot_pd(sign_mask, a);
 \end{lstlisting}
 
-\paragraph{Usage: } an example of a more realistic usage can be found in the SIMD version of the Vmath routines
+\paragraph{A realistic example: } an example of a more realistic usage can be found in the SIMD version of the Vmath routines
 
 \lstinputlisting[language=C++, firstline=47, lastline=88]{src/library/LibUtilities/BasicUtils/VmathSIMD.hpp}
 
 Note that there are 2 loops, a vectorized loop and a spillover loop (which used when the input array size is not a multiple of the vector width).
 For more complex methods the core of the loop is replaced by a call to a kernel that can accept both a vector type or a scalar type.
-In general the loops are characterized 3 steps: a load to local variables, a call to one or more kernels, a store from the local variable to the output array.
-The load and store operations need to specify the flag "is_not_aligned" if the referenced memory is not aligned to the vector width boundaries. Otherwise a segfault is just waiting to happen!
-As an example of a method with a complex body is in RoeSolverSIMD.cpp.
+In general the loops are characterized 3 sections: a load to local variables from the input arrays, a call to one or more kernels, a store from the local variables to the output arrays.
+The load and store operations need to specify the flag \verb+is_not_aligned+ if the referenced memory is not aligned to the vector width boundaries. Otherwise a segmentation fault is just waiting to happen!
+
+As an example of a method with a complex body with calls to multiple kernel refer to RoeSolverSIMD.cpp.
 
 \paragraph{Usage with matrix free operators: }
+the usage of the tineysimd library in the matrix free operators differs from the above due to the interleaving of $n$ elements degree of freedoms (where $n$ is the vector width) in a contiguous chunk of memory.
+You can refer to \cite{moxey2020efficient} for more details.
 
-The usage of the tineysimd library in the matrix free operators differs from the above due to the re-ordering of interleaving of $n$ elements degree of freedoms (where $n$ is the vector width).
-You can refer to \cite{dave} for more details.
-
-\paragraph{General optimization guidelines:} the key is to limit data transfer from RAM to cache
+\paragraph{General optimization guidelines:} a key factor to improve performance on modern architectures is to limit as much as possible data transfer from DRAM to cache
 \begin{itemize}
 \item use local temporary variables to store intermediate values
-\item do not call vmath functions more than once, make a loop over the points instead
-\item if you do call a vmath function, call the vmath::array version (it might be optimize via vmath::simd)
+\item do not call \verb+Vmath+ functions more than once, make a loop over the points instead
+\item if you do call a \verb+Vmath+ function, call the \verb+VmathArray+ version (it might be optimized via \verb+VmathSIMD+ call)
 
 \end{itemize}

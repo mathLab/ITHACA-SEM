@@ -29,7 +29,8 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // Description: Collection of templated functions for vector mathematics using
-// SIMD types
+// SIMD types, some are functions have optimization tricks such as manual loop
+// unrolling.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -152,16 +153,80 @@ namespace SIMD
         }
     }
 
-
-
     /// \brief Multiply vector z = x * y
-    template<class T>
+    template<class T,typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value
+        >::type
+    >
     void Vmul(const size_t n, const T *x,  const T *y, T *z)
     {
         using namespace tinysimd;
         using vec_t = simd<T>;
 
         size_t cnt = n;
+                // Vectorized loop unroll 4x
+        while (cnt >= 4*vec_t::width)
+        {
+            // load
+            vec_t yChunk0, yChunk1, yChunk2, yChunk3;
+            yChunk0.load(y, is_not_aligned);
+            yChunk1.load(y + vec_t::width, is_not_aligned);
+            yChunk2.load(y + 2*vec_t::width, is_not_aligned);
+            yChunk3.load(y + 3*vec_t::width, is_not_aligned);
+
+            vec_t xChunk0, xChunk1, xChunk2, xChunk3;
+            xChunk0.load(x, is_not_aligned);
+            xChunk1.load(x + vec_t::width, is_not_aligned);
+            xChunk2.load(x + 2*vec_t::width, is_not_aligned);
+            xChunk3.load(x + 3*vec_t::width, is_not_aligned);
+
+            // z = x * y
+            vec_t zChunk0 = xChunk0 * yChunk0;
+            vec_t zChunk1 = xChunk1 * yChunk1;
+            vec_t zChunk2 = xChunk2 * yChunk2;
+            vec_t zChunk3 = xChunk3 * yChunk3;
+
+            // store
+            zChunk0.store(z, is_not_aligned);
+            zChunk1.store(z + vec_t::width, is_not_aligned);
+            zChunk2.store(z + 2*vec_t::width, is_not_aligned);
+            zChunk3.store(z + 3*vec_t::width, is_not_aligned);
+
+            // update pointers
+            x += 4*vec_t::width;
+            y += 4*vec_t::width;
+            z += 4*vec_t::width;
+            cnt-= 4*vec_t::width;
+        }
+
+        // Vectorized loop unroll 2x
+        while (cnt >= 2*vec_t::width)
+        {
+            // load
+            vec_t yChunk0, yChunk1;
+            yChunk0.load(y, is_not_aligned);
+            yChunk1.load(y + vec_t::width, is_not_aligned);
+
+            vec_t xChunk0, xChunk1;
+            xChunk0.load(x, is_not_aligned);
+            xChunk1.load(x + vec_t::width, is_not_aligned);
+
+            // z = x * y
+            vec_t zChunk0 = xChunk0 * yChunk0;
+            vec_t zChunk1 = xChunk1 * yChunk1;
+
+            // store
+            zChunk0.store(z, is_not_aligned);
+            zChunk1.store(z + vec_t::width, is_not_aligned);
+
+            // update pointers
+            x += 2*vec_t::width;
+            y += 2*vec_t::width;
+            z += 2*vec_t::width;
+            cnt-= 2*vec_t::width;
+        }
+
         // Vectorized loop
         while (cnt >= vec_t::width)
         {
@@ -199,7 +264,11 @@ namespace SIMD
 
 
     /// \brief  vvtvp (vector times vector plus vector): z = w*x + y
-    template<class T>
+    template<class T,typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value
+        >::type
+    >
     void Vvtvp(const size_t n, const T *w,  const T *x,  const T *y, T *z)
     {
         using namespace tinysimd;
@@ -246,7 +315,11 @@ namespace SIMD
     }
 
     /// \brief  vvtvm (vector times vector plus vector): z = w*x - y
-    template<class T>
+    template<class T,typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value
+        >::type
+    >
     void Vvtvm(const size_t n, const T *w,  const T *x,  const T *y, T *z)
     {
         using namespace tinysimd;
@@ -294,7 +367,11 @@ namespace SIMD
 
     /// \brief  vvtvvtp (vector times vector plus vector times vector):
     // z = v*w + x*y
-    template<class T>
+    template<class T,typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value
+        >::type
+    >
     inline void Vvtvvtp (const size_t n, const T* v, const T* w, const T* x,
         const T* y, T* z)
     {

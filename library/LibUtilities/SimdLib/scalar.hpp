@@ -92,7 +92,7 @@ struct scalarT
         std::is_integral<U>::value>::type>
     inline void gather(const scalarType* p, const scalarT<U>& indices)
     {
-        _data = *p + indices._data;
+        _data = *(p + indices._data);
     }
 
     template<typename U, typename = typename std::enable_if<

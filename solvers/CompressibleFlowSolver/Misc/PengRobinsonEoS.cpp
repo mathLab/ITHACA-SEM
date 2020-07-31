@@ -69,16 +69,16 @@ vec_t PengRobinsonEoS::GetTemperature(
     return GetTemperatureKernel(rho, e);
 }
 
-NekDouble PengRobinsonEoS::v_GetPressure(const NekDouble &rho,
-                                         const NekDouble &e)
+NekDouble PengRobinsonEoS::GetPressure(
+    const NekDouble &rho, const NekDouble &e)
 {
-    NekDouble T = GetTemperature(rho, e);
+    return GetPressureKernel(rho, e);
+}
 
-    NekDouble p =
-        m_gasConstant * T / (1.0 / rho - m_b) -
-        m_a * Alpha(T) / (1.0 / (rho * rho) + 2.0 * m_b / rho - m_b * m_b);
-
-    return p;
+vec_t PengRobinsonEoS::GetPressure(
+    const vec_t &rho, const vec_t &e)
+{
+    return GetPressureKernel(rho, e);
 }
 
 NekDouble PengRobinsonEoS::v_GetEntropy(const NekDouble &rho,
@@ -218,12 +218,6 @@ NekDouble PengRobinsonEoS::v_GetRhoFromPT(const NekDouble &p,
 
     // Now calculate rho = p/(ZRT)
     return p / (Z * m_gasConstant * T);
-}
-
-NekDouble PengRobinsonEoS::Alpha(const NekDouble &T)
-{
-    NekDouble sqrtAlpha = 1.0 + m_fw * (1.0 - sqrt(T / m_Tc));
-    return sqrtAlpha * sqrtAlpha;
 }
 
 }

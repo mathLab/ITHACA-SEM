@@ -67,15 +67,16 @@ vec_t RedlichKwongEoS::GetTemperature(
     return GetTemperatureKernel(rho, e);
 }
 
-NekDouble RedlichKwongEoS::v_GetPressure(const NekDouble &rho,
-                                         const NekDouble &e)
+NekDouble RedlichKwongEoS::GetPressure(
+    const NekDouble& rho, const NekDouble& e)
 {
-    NekDouble T = GetTemperature(rho, e);
+    return GetPressureKernel(rho, e);
+}
 
-    NekDouble p = m_gasConstant * T / (1.0 / rho - m_b) -
-                  m_a * Alpha(T) / (1.0 / (rho * rho) + m_b / rho);
-
-    return p;
+vec_t RedlichKwongEoS::GetPressure(
+    const vec_t& rho, const vec_t& e)
+{
+    return GetPressureKernel(rho, e);
 }
 
 NekDouble RedlichKwongEoS::v_GetEntropy(const NekDouble &rho,
@@ -221,11 +222,6 @@ NekDouble RedlichKwongEoS::v_GetRhoFromPT(const NekDouble &p,
 
     // Now calculate rho = p/(ZRT)
     return p / (Z * m_gasConstant * T);
-}
-
-NekDouble RedlichKwongEoS::Alpha(const NekDouble &T)
-{
-    return 1.0 / sqrt(T / m_Tc);
 }
 
 }

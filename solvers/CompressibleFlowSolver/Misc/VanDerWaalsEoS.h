@@ -71,7 +71,9 @@ protected:
 
     vec_t GetTemperature(const vec_t& rho, const vec_t& e) final;
 
-    NekDouble v_GetPressure(const NekDouble &rho, const NekDouble &e) final;
+    NekDouble GetPressure(const NekDouble& rho, const NekDouble& e) final;
+
+    vec_t GetPressure(const vec_t& rho, const vec_t& e) final;
 
     NekDouble v_GetEntropy(const NekDouble &rho, const NekDouble &e) final;
 
@@ -95,10 +97,23 @@ private:
             tinysimd::is_vector_floating_point<T>::value
         >::type
     >
-    T GetTemperatureKernel(const T& rho, const T& e)
+    inline T GetTemperatureKernel(const T& rho, const T& e)
     {
         return (e + m_a * rho) * (m_gamma - 1) / m_gasConstant;
     }
+
+    template <class T, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    inline T GetPressureKernel(const T& rho, const T& e)
+    {
+        return (e + m_a * rho) * (m_gamma - 1) / (1.0 / rho - m_b) -
+               m_a * rho * rho;
+    }
+
 };
 }
 

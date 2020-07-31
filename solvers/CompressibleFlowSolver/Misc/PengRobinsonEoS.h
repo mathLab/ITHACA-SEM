@@ -77,7 +77,9 @@ protected:
 
     vec_t GetTemperature(const vec_t& rho, const vec_t& e) final;
 
-    NekDouble v_GetPressure(const NekDouble &rho, const NekDouble &e) final;
+    NekDouble GetPressure(const NekDouble& rho, const NekDouble& e) final;
+
+    vec_t GetPressure(const vec_t& rho, const vec_t& e) final;
 
     NekDouble v_GetEntropy(const NekDouble &rho, const NekDouble &e) final;
 
@@ -95,7 +97,17 @@ private:
     ~PengRobinsonEoS(void){};
 
     // Alpha term of Peng-Robinson EoS
-    NekDouble Alpha(const NekDouble &T);
+    template <class T, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    inline T Alpha(const T& temp)
+    {
+        T sqrtAlpha = 1.0 + m_fw * (1.0 - sqrt(temp / m_Tc));
+        return sqrtAlpha * sqrtAlpha;
+    }
 
     // Log term term of Peng-Robinson EoS
     template <class T, typename = typename std::enable_if
@@ -104,7 +116,7 @@ private:
             tinysimd::is_vector_floating_point<T>::value
         >::type
     >
-    T LogTerm(const T& rho)
+    inline T LogTerm(const T& rho)
     {
         return log((1.0 / rho + m_b - m_b * sqrt(2)) /
                    (1.0 / rho + m_b + m_b * sqrt(2)));
@@ -138,6 +150,21 @@ private:
         return sqrtT * sqrtT;
     }
 
+    template <class T, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    inline T GetPressureKernel(const T& rho, const T& e)
+    {
+        T temp = GetTemperatureKernel(rho, e);
+        T oneOrho = 1.0 / rho;
+        T p = m_gasConstant * temp / (oneOrho - m_b) - m_a * Alpha(temp) /
+            (oneOrho * oneOrho + 2.0 * m_b * oneOrho - m_b * m_b);
+
+        return p;
+    }
 
 };
 } // namespace

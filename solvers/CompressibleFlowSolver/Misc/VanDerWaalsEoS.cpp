@@ -70,11 +70,16 @@ vec_t VanDerWaalsEoS::GetTemperature(
     return GetTemperatureKernel(rho, e);
 }
 
-NekDouble VanDerWaalsEoS::v_GetPressure(const NekDouble &rho,
-                                        const NekDouble &e)
+NekDouble VanDerWaalsEoS::GetPressure(
+    const NekDouble& rho, const NekDouble& e)
 {
-    return (e + m_a * rho) * (m_gamma - 1) / (1.0 / rho - m_b) -
-           m_a * rho * rho;
+    return GetPressureKernel(rho, e);
+}
+
+vec_t VanDerWaalsEoS::GetPressure(
+    const vec_t& rho, const vec_t& e)
+{
+    return GetPressureKernel(rho, e);
 }
 
 NekDouble VanDerWaalsEoS::v_GetEntropy(const NekDouble &rho, const NekDouble &e)

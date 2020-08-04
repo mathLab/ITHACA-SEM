@@ -64,6 +64,10 @@ public:
     /// Write mesh to output file.
     virtual void Process();
 
+    virtual std::string GetModuleName()
+    {
+        return "ProcessDetectSurf";
+    }
 private:
     void FindContiguousSurface(NekMesh::ElementSharedPtr start,
                                std::set<int> &doneIds,

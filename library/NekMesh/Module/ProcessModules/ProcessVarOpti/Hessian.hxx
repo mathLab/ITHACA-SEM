@@ -62,8 +62,6 @@ template <> int NodeOpti::IsIndefinite<2>()
     H(0, 1) = H(1, 0);
     H(1, 1) = m_grad[4];
 
-    // cout << H << endl << endl;
-
     int nVel   = 2;
     char jobvl = 'N', jobvr = 'N';
     int worklen = 8 * nVel, info;

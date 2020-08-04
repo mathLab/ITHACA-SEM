@@ -31,11 +31,10 @@
 //  Description: surfacemeshing object methods.
 //
 ////////////////////////////////////////////////////////////////////////////////
+
 #include <algorithm>
 
 #include <NekMesh/SurfaceMeshing/SurfaceMesh.h>
-
-#include <LibUtilities/BasicUtils/Progressbar.hpp>
 
 using namespace std;
 namespace Nektar

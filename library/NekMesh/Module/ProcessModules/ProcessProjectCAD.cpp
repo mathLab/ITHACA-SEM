@@ -38,7 +38,6 @@
 #include <NekMesh/CADSystem/CADCurve.h>
 
 #include <LibUtilities/Foundations/ManagerAccess.h>
-#include <LibUtilities/BasicUtils/Progressbar.hpp>
 
 #include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
@@ -190,7 +189,7 @@ bool ProcessProjectCAD::IsNotValid(vector<ElementSharedPtr> &els)
         }
         else
         {
-            ASSERTL0(false, "not coded");
+            m_log(FATAL) << "Only prisms and tetrahedra supported." << endl;
         }
     }
 
@@ -199,18 +198,15 @@ bool ProcessProjectCAD::IsNotValid(vector<ElementSharedPtr> &els)
 
 void ProcessProjectCAD::Process()
 {
-    if (m_mesh->m_verbose)
-    {
-        cout << "ProcessAssignCAD: Processing... " << endl;
-    }
+    m_log(VERBOSE) << "Projecting CAD back onto linear mesh." << endl;
 
-    cout << "ProcessAssignCAD: Warning: This module is designed for use with "
-            "starccm+ meshes only, it also requires that the star mesh was  "
-            "created in a certain way" << endl;
+    m_log(WARNING) << "ProcessAssignCAD: Warning: This module is designed for "
+                   << "use with Star-CCM+ meshes only; it also requires that "
+                   << "the star mesh was created in a certain way." << endl;
 
     if(!m_config["order"].beenSet)
     {
-        cout << "Mesh order not set will assume 4" << endl;
+        m_log(VERBOSE) << "Mesh order not set: will assume order 4" << endl;
     }
 
     m_mesh->m_nummode = m_config["order"].as<int>() + 1;
@@ -226,13 +222,15 @@ void ProcessProjectCAD::Process()
     vector<boxI> boxes;
     for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
     {
-        LibUtilities::PrintProgressbar(i, m_mesh->m_cad->GetNumSurf(), "building surface bboxes", i-1);
+        m_log(VERBOSE).Progress(i, m_mesh->m_cad->GetNumSurf(),
+                                "building surface bboxes", i-1);
         Array<OneD, NekDouble> bx = m_mesh->m_cad->GetSurf(i)->BoundingBox();
-        boxes.push_back(make_pair(box(point(bx[0], bx[1], bx[2]), point(bx[3], bx[4], bx[5])), i));
+        boxes.push_back(make_pair(box(point(bx[0], bx[1], bx[2]),
+                                      point(bx[3], bx[4], bx[5])), i));
     }
-    cout << endl;
 
-    cout << "building admin data structures" << endl;
+    m_log(VERBOSE).Newline();
+    m_log(VERBOSE) << "Building admin data structures." << endl;
 
     bgi::rtree<boxI, bgi::quadratic<16> > rtree(boxes);
 
@@ -308,7 +306,7 @@ void ProcessProjectCAD::Process()
 
     map<int, vector<int> > finds;
 
-    cout << "searching tree" << endl;
+    m_log(VERBOSE) << "Searching tree." << endl;
 
     NekDouble maxNodeCor = 0;
 
@@ -320,13 +318,16 @@ void ProcessProjectCAD::Process()
     int ct = 0;
     for (auto i = surfNodes.begin(); i != surfNodes.end(); i++, ct++)
     {
-        LibUtilities::PrintProgressbar(ct, surfNodes.size(), "projecting verts", ct-1);
+        m_log(VERBOSE).Progress(ct, surfNodes.size(), "projecting verts", ct-1);
 
         point q((*i)->m_x, (*i)->m_y, (*i)->m_z);
         vector<boxI> result;
         rtree.query(bgi::intersects(q), back_inserter(result));
 
-        ASSERTL0(result.size() > 0, "node thinks its not in any boxes");
+        if (result.size() == 0)
+        {
+            m_log(FATAL) << "Node thinks it is not in any boxes." << endl;
+        }
 
         NekDouble tol = minConEdge[*i] * 0.5;
         tol = min(tol, 5e-4);
@@ -374,7 +375,8 @@ void ProcessProjectCAD::Process()
         if (pos == 0)
         {
             lockedNodes.insert(*i);
-            cout << endl << "WARNING: surface unknown " << distList[0] << " " << tol <<  endl;
+            m_log(WARNING) << "surface " << distList[0] << " unknown "
+                           << "(tolerance: " << tol << ")" << endl;
         }
         else
         {
@@ -411,7 +413,7 @@ void ProcessProjectCAD::Process()
                     (*i)->m_x = tmpX;
                     (*i)->m_y = tmpY;
                     (*i)->m_z = tmpZ;
-                    cout << "reset element projection" << endl;
+                    m_log(VERBOSE) << "reset element projection" << endl;
                     break;
                 }
 
@@ -447,9 +449,7 @@ void ProcessProjectCAD::Process()
         }
     }
 
-    cout << endl;
-
-    cout << "max surface node correction " << maxNodeCor << endl;
+    m_log(VERBOSE) << "  - max surface node correction " << maxNodeCor << endl;
 
     //make edges of surface mesh unique
     ClearElementLinks();

@@ -58,6 +58,10 @@ public:
     /// Write mesh to output file.
     virtual void Process();
 
+    virtual std::string GetModuleName()
+    {
+        return "ProcessPerAlign";
+    }
 private:
 };
 }

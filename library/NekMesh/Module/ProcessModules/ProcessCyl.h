@@ -55,6 +55,10 @@ public:
     ProcessCyl(NekMesh::MeshSharedPtr m);
     virtual ~ProcessCyl();
 
+    virtual std::string GetModuleName()
+    {
+        return "ProcessCyl";
+    }
 protected:
     void v_GenerateEdgeNodes(NekMesh::EdgeSharedPtr edge);
 };

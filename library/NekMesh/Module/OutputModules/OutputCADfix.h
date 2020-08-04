@@ -62,6 +62,10 @@ public:
     /// Write mesh to output file.
     virtual void Process();
 
+    virtual std::string GetModuleName()
+    {
+        return "OutputCADfix";
+    }
 private:
     NekMesh::CADSystemCFISharedPtr m_cad;
     cfi::Model *m_model;

@@ -71,6 +71,11 @@ public:
     /// %ModuleKey for class.
     static NekMesh::ModuleKey className;
 
+    virtual std::string GetModuleName()
+    {
+        return "InputNek";
+    }
+
 private:
     void LoadHOSurfaces();
     int GetNnodes(LibUtilities::ShapeType elType);

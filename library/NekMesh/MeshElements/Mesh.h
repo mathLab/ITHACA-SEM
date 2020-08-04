@@ -147,13 +147,16 @@ public:
     /// Returns the total number of entities in the mesh.
     NEKMESH_EXPORT unsigned int GetNumEntities();
 
-    NEKMESH_EXPORT void MakeOrder(int                      order,
-                                       LibUtilities::PointsType distType);
+    NEKMESH_EXPORT void MakeOrder(int                       order,
+                                  LibUtilities::PointsType  distType,
+                                  Logger                   &log);
 
-    NEKMESH_EXPORT void PrintStats(std::ostream &out);
+    NEKMESH_EXPORT void PrintStats(Logger &out);
 };
+
 /// Shared pointer to a mesh.
 typedef std::shared_ptr<Mesh> MeshSharedPtr;
+
 }
 }
 

@@ -414,21 +414,22 @@ public:
         return 0;
     }
 
-    NEKMESH_EXPORT void Print()
+    template<class T>
+    NEKMESH_EXPORT void Print(T &out)
     {
         int i, j;
         for (i = 0; i < m_vertex.size(); ++i)
         {
-            std::cout << m_vertex[i]->m_x << " " << m_vertex[i]->m_y << " "
-                      << m_vertex[i]->m_z << std::endl;
+            out << m_vertex[i]->m_x << " " << m_vertex[i]->m_y << " "
+                << m_vertex[i]->m_z << std::endl;
         }
         for (i = 0; i < m_edge.size(); ++i)
         {
             for (j = 0; j < m_edge[i]->m_edgeNodes.size(); ++j)
             {
                 NodeSharedPtr n = m_edge[i]->m_edgeNodes[j];
-                std::cout << n->m_x << " " << n->m_y << " " << n->m_z
-                          << std::endl;
+                out << n->m_x << " " << n->m_y << " " << n->m_z
+                    << std::endl;
             }
         }
         for (i = 0; i < m_face.size(); ++i)
@@ -436,8 +437,8 @@ public:
             for (j = 0; j < m_face[i]->m_faceNodes.size(); ++j)
             {
                 NodeSharedPtr n = m_face[i]->m_faceNodes[j];
-                std::cout << n->m_x << " " << n->m_y << " " << n->m_z
-                          << std::endl;
+                out << n->m_x << " " << n->m_y << " " << n->m_z
+                    << std::endl;
             }
         }
     }

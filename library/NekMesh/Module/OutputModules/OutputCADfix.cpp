@@ -68,12 +68,15 @@ bool compareT(NodeSharedPtr n1, NodeSharedPtr n2)
 
 void OutputCADfix::Process()
 {
-    m_cad = std::dynamic_pointer_cast<CADSystemCFI>(m_mesh->m_cad);
-    ASSERTL0(m_cad, "CFI system must be kept in memory")
+    m_log(VERBOSE) << "Writing CADfix file '"
+                   << m_config["outfile"].as<string>() << "'" << endl;
 
-    if (m_mesh->m_verbose)
+    m_cad = std::dynamic_pointer_cast<CADSystemCFI>(m_mesh->m_cad);
+
+    if (!m_cad)
     {
-        cout << "OutputCADfix: Writing file..." << endl;
+        m_log(FATAL) << "CFI output used for mesh that has no CFI CAD attached."
+                     << endl;
     }
 
     m_mesh->m_expDim   = 3;
@@ -84,12 +87,9 @@ void OutputCADfix::Process()
 
     int order = m_config["order"].as<int>();
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "Making mesh of order " << order << endl;
-    }
+    m_log(VERBOSE) << "Making mesh of order " << order << endl;
 
-    m_mesh->MakeOrder(order, LibUtilities::ePolyEvenlySpaced);
+    m_mesh->MakeOrder(order, LibUtilities::ePolyEvenlySpaced, m_log);
 
     // Delete old nodes
     vector<cfi::NodeDefinition> *oldNodes = m_model->getFenodes();
@@ -145,7 +145,7 @@ void OutputCADfix::Process()
             // Default: volume parent
             CADElementCFISharedPtr cadParent = std::dynamic_pointer_cast<
                 CADElementCFI>(el->m_parentCAD);
-            ASSERTL0(cadParent, "Expected a CFI parent.");
+            ASSERTL1(cadParent, "Expected a CFI parent.");
             cfi::MeshableEntity *parent = cadParent->GetCfiPointer();
 
             // Point parent
@@ -289,7 +289,7 @@ void OutputCADfix::Process()
         }
         else
         {
-            WARNINGL0(false, "Element type not supported");
+            m_log(WARNING) << "Element type not supported" << endl;
             continue;
         }
 
@@ -323,7 +323,7 @@ void OutputCADfix::Process()
 
         CADElementCFISharedPtr cadParent = std::dynamic_pointer_cast<
             CADElementCFI>(el->m_parentCAD);
-        ASSERTL0(cadParent, "Expected a CFI parent.");
+        ASSERTL1(cadParent, "Expected a CFI parent.");
         cadParent->GetCfiPointer()->createElement(
             0, cfi::EntitySubtype(type), cfiNodes);
     }

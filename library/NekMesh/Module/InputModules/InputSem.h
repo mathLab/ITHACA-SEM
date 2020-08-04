@@ -60,6 +60,11 @@ public:
     /// %ModuleKey for class.
     static NekMesh::ModuleKey className;
 
+    virtual std::string GetModuleName()
+    {
+        return "InputSem";
+    }
+
 private:
     std::stringstream m_fileStream;
     void insertEdge(int elmt, int side, int tagId);

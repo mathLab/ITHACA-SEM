@@ -60,6 +60,10 @@ public:
     /// Write mesh to output file.
     virtual void Process();
 
+    virtual std::string GetModuleName()
+    {
+        return "ProcessSpherigon";
+    }
 protected:
 
     void  GenerateNormals(std::vector<NekMesh::ElementSharedPtr> &el,

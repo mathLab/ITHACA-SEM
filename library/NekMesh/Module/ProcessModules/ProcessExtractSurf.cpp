@@ -70,16 +70,16 @@ void ProcessExtractSurf::Process()
 
     // Obtain vector of surface IDs from string.
     vector<unsigned int> surfs;
-    ASSERTL0(ParseUtils::GenerateSeqVector(surf, surfs),
-             "Failed to interp surf string. Have you specified this string?");
+    if (!ParseUtils::GenerateSeqVector(surf, surfs))
+    {
+        m_log(FATAL) << "Failed to interp surf string. Have you specified this "
+                     << "string?" << endl;
+    }
     sort(surfs.begin(), surfs.end());
 
     // If we're running in verbose mode print out a list of surfaces.
-    if (m_mesh->m_verbose)
-    {
-        cout << "ProcessExtractSurf: extracting surface"
-             << (surfs.size() > 1 ? "s" : "") << " " << surf << endl;
-    }
+    m_log(VERBOSE) << "Extracting surface" << (surfs.size() > 1 ? "s" : "")
+                   << " " << surf << endl;
 
     // Make a copy of all existing elements of one dimension lower.
     vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim - 1];
@@ -292,27 +292,27 @@ void ProcessExtractSurf::Process()
         }
 
         // Print out mapping information if we remapped composite IDs.
-        if (m_mesh->m_verbose && newComps.size() > 1)
+        if (newComps.size() > 1)
         {
-            cout << "- Mapping composite " << it.first << " ->";
+            m_log(VERBOSE) << "  - Mapping composite " << it.first << " ->";
         }
 
         // Insert new composites.
         i = 0;
         for (auto &it2 : newComps)
         {
-            if (m_mesh->m_verbose && newComps.size() > 1)
+            if (newComps.size() > 1)
             {
-                cout << (i > 0 ? ", " : " ") << it2.second->m_id << "("
-                     << it2.second->m_tag << ")";
+                m_log(VERBOSE) << (i > 0 ? ", " : " ") << it2.second->m_id
+                               << "(" << it2.second->m_tag << ")";
             }
             m_mesh->m_composite[it2.second->m_id] = it2.second;
             ++i;
         }
 
-        if (m_mesh->m_verbose && newComps.size() > 1)
+        if (newComps.size() > 1)
         {
-            cout << endl;
+            m_log(VERBOSE) << endl;
         }
     }
 
@@ -340,7 +340,10 @@ void ProcessExtractSurf::Process()
             // Work out whether this lies on our surface of interest.
             vector<int> inter, tags = el[i]->GetTagList();
 
-            ASSERTL0(tags.size() == 1, "Not sure what mutliple tags implies");
+            if (tags.size() != 1)
+            {
+                m_log(FATAL) << "Multiple tags found!" << endl;
+            }
 
             sort(tags.begin(), tags.end());
             set_intersection(surfs.begin(),

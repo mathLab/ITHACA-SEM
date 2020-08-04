@@ -114,10 +114,7 @@ ProcessVarOpti::~ProcessVarOpti()
 
 void ProcessVarOpti::Process()
 {
-    if (m_mesh->m_verbose)
-    {
-        cout << "ProcessVarOpti: Optimising... " << endl;
-    }
+    m_log(VERBOSE) << "Optimising mesh quality." << endl;
 
     if (m_config["linearelastic"].beenSet)
     {
@@ -137,7 +134,8 @@ void ProcessVarOpti::Process()
     }
     else
     {
-        ASSERTL0(false, "not opti type set");
+        m_log(FATAL) << "You should specify a type of optimisation, e.g. "
+                     << "'hyperelastic'." << endl;
     }
 
     const int maxIter      = m_config["maxiter"].as<int>();
@@ -178,22 +176,20 @@ void ProcessVarOpti::Process()
     intOrder = m_mesh->m_nummode + intOrder <= 11 ?
         intOrder : 11 - m_mesh->m_nummode;
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "Identified mesh order as: " << m_mesh->m_nummode - 1 << endl;
-    }
+    m_log(VERBOSE) << "  - Identified mesh order as: " << m_mesh->m_nummode - 1
+                   << endl;
 
     if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
     {
-        ASSERTL0(false, "cannot deal with manifolds");
+        m_log(FATAL) << "Cannot presently optimise manifold meshes (2D embedded"
+                     << " in 3D)." << endl;
     }
 
     m_res      = std::shared_ptr<Residual>(new Residual);
     m_res->val = 1.0;
-
-    
     m_mesh->MakeOrder(m_mesh->m_nummode - 1,
-                      LibUtilities::eGaussLobattoLegendre);
+                      LibUtilities::eGaussLobattoLegendre,
+                      m_log);
 
     if (m_config["analytics"].beenSet)
     {
@@ -221,10 +217,9 @@ void ProcessVarOpti::Process()
         elLock = GetLockedElements(m_config["region"].as<NekDouble>());
     }
 
-    
     vector<vector<NodeSharedPtr> > freenodes = GetColouredNodes(elLock);
     vector<vector<NodeOptiSharedPtr> > optiNodes;
-    
+
     // turn the free nodes into optimisable objects with all required data
     set<int> check;
     for (int i = 0; i < freenodes.size(); i++)
@@ -285,20 +280,20 @@ void ProcessVarOpti::Process()
         histFile.close();
     }
 
-    if(m_mesh->m_verbose)
-    {
-        cout << scientific << endl;
-        cout << "N elements:\t\t" << m_mesh->m_element[m_mesh->m_expDim].size() - elLock.size() << endl
-             << "N elements invalid:\t" << m_res->startInv << endl
-             << "Worst jacobian:\t\t" << m_res->worstJac << endl
-             << "N free nodes:\t\t" << m_res->n << endl
-             << "N Dof:\t\t\t" << m_res->nDoF << endl
-             << "N color sets:\t\t" << nset << endl
-             << "Avg set colors:\t\t" << p/nset << endl
-             << "Min set:\t\t" << mn << endl
-             << "Max set:\t\t" << mx << endl
-             << "Residual tolerance:\t" << restol << endl;
-    }
+    m_log(VERBOSE) << "Mesh statistics prior to optimisation:" << endl;
+    m_log(VERBOSE) << "  - # elements         : "
+                   << m_mesh->m_element[m_mesh->m_expDim].size() - elLock.size()
+                   << endl;
+    m_log(VERBOSE) << "  - # invalid elements : " << m_res->startInv << endl;
+    m_log(VERBOSE) << "  - Worst Jacobian     : " << scientific << m_res->worstJac
+                   << endl;
+    m_log(VERBOSE) << "  - # free nodes       : " << m_res->n << endl;
+    m_log(VERBOSE) << "  - # DoF              : " << m_res->nDoF << endl;
+    m_log(VERBOSE) << "  - # color sets       : " << nset << endl;
+    m_log(VERBOSE) << "  - Avg set colors     : " << scientific << p/nset << endl;
+    m_log(VERBOSE) << "  - Min set            : " << mn << endl;
+    m_log(VERBOSE) << "  - Max set            : " << mx << endl;
+    m_log(VERBOSE) << "  - Residual tolerance : " << scientific << restol << endl;
 
     int nThreads = m_config["numthreads"].as<int>();
 
@@ -306,8 +301,8 @@ void ProcessVarOpti::Process()
     {
         if (boost::equals(m_mesh->m_cad->GetEngine(), "cfi"))
         {
-            WARNINGL0(false,
-                      "CFI is not thread-safe; forcing to 'numthreads=1'.");
+            m_log(WARNING) << "CFI is not thread-safe; forcing to "
+                           << "'numthreads=1'." << endl;
             nThreads = 1;
         }
     }
@@ -335,6 +330,8 @@ void ProcessVarOpti::Process()
             optiNodes[i][j]->CalcMinJac();
         }
     }
+
+    m_log(VERBOSE) << "Beginning iterations..." << endl;
 
     while (m_res->val > restol && ctr < maxIter)
     {
@@ -382,25 +379,22 @@ void ProcessVarOpti::Process()
                     << m_res->func << endl;
         }
 
-        if(m_mesh->m_verbose)
-        {
-            cout << ctr
-                 << "\tResidual: " << m_res->val
-                 << "\tMin Jac: " << m_res->worstJac
-                 << "\tInvalid: " << m_res->startInv
-                 << "\tReset nodes: " << m_res->nReset[0] << "/" << m_res->nReset[1]
-                 << "/" << m_res->nReset[2] << "\tFunctional: " << m_res->func
-                 << endl;
-        }
+        m_log(VERBOSE) << "  - Iteration: " << ctr
+                       << "\tResidual: " << m_res->val
+                       << "\tMin Jac: " << m_res->worstJac
+                       << "\tInvalid: " << m_res->startInv
+                       << "\tReset nodes: " << m_res->nReset[0] << "/"
+                       << m_res->nReset[1] << "/" << m_res->nReset[2]
+                       << "\tFunctional: " << m_res->func << endl;
 
         if(ctr >= maxIter)
         {
             break;
         }
 
-        if (m_mesh->m_verbose && update)
+        if (update)
         {
-            cout << "Mapping updated!" << endl;
+            m_log(VERBOSE) << "    => Mapping updated!" << endl;
         }
     }
 
@@ -425,12 +419,10 @@ void ProcessVarOpti::Process()
 
     //RemoveLinearCurvature();
 
-    if(m_mesh->m_verbose)
-    {
-        cout << "Time to compute: " << t.TimePerTest(1) << endl;
-        cout << "Invalid at end: " << m_res->startInv << endl;
-        cout << "Worst at end: " << m_res->worstJac << endl;
-    }
+    m_log(VERBOSE) << "Optimisation complete!" << endl;
+    m_log(VERBOSE) << "  - Time to compute: " << t.TimePerTest(1) << endl;
+    m_log(VERBOSE) << "  - Invalid at end : " << m_res->startInv << endl;
+    m_log(VERBOSE) << "  - Worst at end   : " << m_res->worstJac << endl;
 }
 
 class NodalUtilTriMonomial : public LibUtilities::NodalUtilTriangle
@@ -498,10 +490,9 @@ void ProcessVarOpti::Analytics()
     const NekDouble length  = 2.0;
     const NekDouble dx      = length / (nPoints - 1);
 
-    cout << "# overint = " << overInt << endl;
-    cout << "# Columns: x, y, over-integration orders (0 -> " << overInt - 1
-         << "), "
-         << " min(scaledJac)" << endl;
+    m_log(VERBOSE) << "# overint = " << overInt << endl;
+    m_log(VERBOSE) << "# Columns: x, y, over-integration orders (0 -> "
+                   << overInt - 1 << "), " << " min(scaledJac)" << endl;
 
     // Loop over square defined by (originX, originY), length
     for (int k = 0; k < nPoints; ++k)
@@ -510,7 +501,7 @@ void ProcessVarOpti::Analytics()
         for (int j = 0; j < nPoints; ++j)
         {
             node->m_x = originX + j * dx;
-            cout << node->m_x << " " << node->m_y << " ";
+            m_log(VERBOSE) << node->m_x << " " << node->m_y << " ";
 
             NekDouble minJacNew;
 
@@ -544,14 +535,10 @@ void ProcessVarOpti::Analytics()
 
                 // Evaluate functional.
                 nodeOpti->CalcMinJac();
-                cout << nodeOpti->GetFunctional<2>(minJacNew) << " ";
-                // NekDouble eigen;
-                // nodeOpti->GetFunctional<2>(minJacNew);
-                // nodeOpti->MinEigen<2>(eigen);
-                // cout << eigen << " ";
+                m_log(VERBOSE) << nodeOpti->GetFunctional<2>(minJacNew) << " ";
             }
 
-            cout << minJacNew << endl;
+            m_log(VERBOSE) << minJacNew << endl;
         }
     }
 }

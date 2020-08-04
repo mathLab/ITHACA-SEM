@@ -55,6 +55,10 @@ public:
         v_GenerateEdgeNodes( edge);
     }
 
+    virtual std::string GetModuleName()
+    {
+        return "ProcessCurvedEdges";
+    }
 protected:
     virtual void v_GenerateEdgeNodes(NekMesh::EdgeSharedPtr edge) = 0;
 };

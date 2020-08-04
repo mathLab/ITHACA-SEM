@@ -32,7 +32,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <NekMesh/MeshElements/Mesh.h>
 
@@ -98,7 +97,7 @@ unsigned int Mesh::GetNumEntities()
  * - Finally, any boundary elements are updated so that they have the same
  *   interior degrees of freedom as their corresponding edge or face links.
  */
-void Mesh::MakeOrder(int order, LibUtilities::PointsType distType)
+void Mesh::MakeOrder(int order, LibUtilities::PointsType distType, Logger &log)
 {
     // Going to make a copy of the curavture information, since this is cheaper
     // than using Nektar's Geometry objects. Currently, the geometry objects
@@ -152,16 +151,15 @@ void Mesh::MakeOrder(int order, LibUtilities::PointsType distType)
     int tmpId       = 0;
     for (int i = 0; i < nElmt; ++i)
     {
-        if (m_verbose)
-        {
-            LibUtilities::PrintProgressbar(i, nElmt, "MakeOrder: Elements: ");
-        }
+        log(VERBOSE).Progress(i, nElmt, "MakeOrder: Elements");
         ElementSharedPtr el                    = m_element[m_expDim][i];
         SpatialDomains::GeometrySharedPtr geom = el->GetGeom(m_spaceDim);
         geom->FillGeom();
         el->MakeOrder(order, geom, pTypes[el->GetConf().m_e], m_spaceDim,
                       tmpId);
     }
+
+    log(VERBOSE).Newline();
 
     // Now make copies of each of the edges.
     for (eit = m_edgeSet.begin(); eit != m_edgeSet.end(); eit++)
@@ -196,11 +194,8 @@ void Mesh::MakeOrder(int order, LibUtilities::PointsType distType)
     int ct = 0;
     for (eit = m_edgeSet.begin(); eit != m_edgeSet.end(); eit++, ct++)
     {
-        if (m_verbose)
-        {
-            LibUtilities::PrintProgressbar(ct, m_edgeSet.size(),
-                                           "MakeOrder: Edges: ");
-        }
+        log(VERBOSE).Progress(ct, m_edgeSet.size(), "MakeOrder: Edges");
+
         int edgeId = (*eit)->m_id;
 
         if (processedEdges.find(edgeId) != processedEdges.end())
@@ -217,16 +212,18 @@ void Mesh::MakeOrder(int order, LibUtilities::PointsType distType)
         processedEdges.insert(edgeId);
     }
 
+    if (m_edgeSet.size() > 0)
+    {
+        log(VERBOSE).Newline();
+    }
+
     // Call MakeOrder with our generated geometries on each face to fill in face
     // interior nodes.
     ct = 0;
     for (fit = m_faceSet.begin(); fit != m_faceSet.end(); fit++, ct++)
     {
-        if (m_verbose)
-        {
-            LibUtilities::PrintProgressbar(ct, m_faceSet.size(),
-                                           "MakeOrder: Faces: ");
-        }
+        log(VERBOSE).Progress(ct, m_faceSet.size(), "MakeOrder: Faces");
+
         int faceId = (*fit)->m_id;
 
         if (processedFaces.find(faceId) != processedFaces.end())
@@ -243,6 +240,11 @@ void Mesh::MakeOrder(int order, LibUtilities::PointsType distType)
                                            : LibUtilities::eQuadrilateral;
         (*fit)->MakeOrder(order, geom, pTypes[type], m_spaceDim, id);
         processedFaces.insert(faceId);
+    }
+
+    if (m_faceSet.size() > 0)
+    {
+        log(VERBOSE).Newline();
     }
 
     // Copy curvature into boundary conditions
@@ -286,44 +288,38 @@ void Mesh::MakeOrder(int order, LibUtilities::PointsType distType)
             tmp[j]->m_id = id++;
         }
     }
-
-    if (m_verbose)
-    {
-        cout << endl;
-    }
 }
 
 /**
  * @brief Print out basic statistics of this mesh.
  */
-void Mesh::PrintStats(std::ostream &out)
+void Mesh::PrintStats(Logger &log)
 {
-    out << "Mesh statistics" << std::endl
+    log << "Mesh statistics" << std::endl
         << "---------------" << std::endl
         << std::endl;
 
-    out << "Mesh dimension       : " << m_spaceDim << std::endl
+    log << "Mesh dimension       : " << m_spaceDim << std::endl
         << "Element dimension    : " << m_expDim << std::endl
         << "Has CAD attached     : " << (m_cad ? "yes" : "no") << std::endl
         << "Node count           : " << m_vertexSet.size() << std::endl;
 
     if (m_edgeSet.size() > 0)
     {
-        out << "Edge count           : " << m_edgeSet.size() << std::endl;
+        log << "Edge count           : " << m_edgeSet.size() << std::endl;
     }
 
     if (m_faceSet.size() > 0)
     {
-        out << "Face count           : " << m_faceSet.size() << std::endl;
+        log << "Face count           : " << m_faceSet.size() << std::endl;
     }
 
-    out << "Elements             : " << m_element[m_expDim].size() << std::endl
+    log << "Elements             : " << m_element[m_expDim].size() << std::endl
         << "Bnd elements         : " << m_element[m_expDim - 1].size()
         << std::endl;
 
     // Print out number of composites
-
-    out << "Number of composites : " << m_composite.size() << std::endl;
+    log << "Number of composites : " << m_composite.size() << std::endl;
 
     // Calculate domain extent
     auto extent = m_element[m_expDim][0]->GetBoundingBox();
@@ -338,7 +334,7 @@ void Mesh::PrintStats(std::ostream &out)
         extent.second.m_z = std::max(extent.second.m_z, el.second.m_z);
     }
 
-    out << "Lower mesh extent    : " << extent.first.m_x << " "
+    log << "Lower mesh extent    : " << extent.first.m_x << " "
         << extent.first.m_y << " " << extent.first.m_z << std::endl
         << "Upper mesh extent    : " << extent.second.m_x << " "
         << extent.second.m_y << " " << extent.second.m_z << std::endl;
@@ -367,7 +363,7 @@ void Mesh::PrintStats(std::ostream &out)
         }
     }
 
-    out << std::endl << "Element counts (regular/deformed/total):" << std::endl;
+    log << std::endl << "Element counts (regular/deformed/total):" << std::endl;
     for (int i = 1; i < LibUtilities::SIZE_ShapeType; ++i)
     {
         auto shapeType = (LibUtilities::ShapeType)i;
@@ -378,7 +374,7 @@ void Mesh::PrintStats(std::ostream &out)
             continue;
         }
 
-        out << "  " << std::setw(14)
+        log << "  " << std::setw(14)
             << LibUtilities::ShapeTypeMap[(LibUtilities::ShapeType)i] << ": "
             << setw(12) << counts.first << "  " << setw(12) << counts.second
             << "  " << setw(12) << counts.first + counts.second << std::endl;

@@ -63,10 +63,7 @@ ProcessOptiExtract::~ProcessOptiExtract()
 
 void ProcessOptiExtract::Process()
 {
-    if (m_mesh->m_verbose)
-    {
-        cout << "ProcessOptiExtract: ... " << endl;
-    }
+    m_log(VERBOSE) << "Extracting suboptimal element blobs." << endl;
 
     string ins = m_config["insert"].as<string>();
 
@@ -168,10 +165,7 @@ void ProcessOptiExtract::Process()
 
         el = m_mesh->m_element[m_mesh->m_expDim];
 
-        if (m_mesh->m_verbose)
-        {
-            cout << el.size() << " elements in blobs" << endl;
-        }
+        m_log(VERBOSE) << "  - " << el.size() << " elements in blobs" << endl;
 
         m_mesh->m_faceSet.clear();
 
@@ -301,7 +295,6 @@ void ProcessOptiExtract::Process()
     else
     {
         // insert other mesh
-        cout << ins << endl;
         MeshSharedPtr inp_mesh = std::shared_ptr<Mesh>(new Mesh());
         ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
             ModuleKey(eInputModule, "xml"), inp_mesh);

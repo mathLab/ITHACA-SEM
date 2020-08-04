@@ -62,6 +62,11 @@ public:
 
     void ReadZone(int &nComposite);
 
+    virtual std::string GetModuleName()
+    {
+        return "InputStar";
+    }
+
 protected:
     void GenElement3D(std::vector<NekMesh::NodeSharedPtr> &Nodes,
                       int i,

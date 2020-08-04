@@ -65,6 +65,11 @@ public:
     /// %ModuleKey for class.
     static NekMesh::ModuleKey className;
 
+    virtual std::string GetModuleName()
+    {
+        return "InputNek5000";
+    }
+
 private:
     void LoadHOSurfaces();
 };

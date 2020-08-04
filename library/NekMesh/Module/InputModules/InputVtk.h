@@ -58,6 +58,11 @@ public:
 
     /// Populate and validate required data structures.
     virtual void Process();
+
+    virtual std::string GetModuleName()
+    {
+        return "InputVtk";
+    }
 };
 }
 }

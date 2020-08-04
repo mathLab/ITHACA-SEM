@@ -59,6 +59,11 @@ public:
     /// Populate and validate required data structures.
     virtual void Process();
 
+    virtual std::string GetModuleName()
+    {
+        return "InputPly";
+    }
+
     void ReadPly(io::filtering_istream &mshFile, NekDouble scale = 1.0);
 
 private:

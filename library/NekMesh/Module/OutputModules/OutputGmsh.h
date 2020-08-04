@@ -67,6 +67,11 @@ public:
 
     /// Write mesh to output file.
     virtual void Process();
+    
+    virtual std::string GetModuleName()
+    {
+        return "OutputGmsh";
+    }
 
 private:
     std::unordered_map<NekMesh::ElmtConfig, unsigned int, ElmtConfigHash> elmMap;

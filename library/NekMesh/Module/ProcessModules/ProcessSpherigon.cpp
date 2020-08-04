@@ -39,7 +39,6 @@
 
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/BasicUtils/Progressbar.hpp>
 
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/QuadExp.h>
@@ -249,11 +248,8 @@ void ProcessSpherigon::FindNormalFromPlyFile(MeshSharedPtr &plymesh,
     //Find neipghbours
     for (auto &vIt : surfverts)
     {
-        if(m_mesh->m_verbose)
-        {
-            prog = LibUtilities::PrintProgressbar(cnt,surfverts.size(),
-                                                  "Nearest ply verts",prog);
-        }
+        m_log(VERBOSE).Progress(cnt, surfverts.size(), "Nearest ply verts",
+                                prog);
 
         Point queryPt(vIt.second->m_x, vIt.second->m_y, vIt.second->m_z);
         vector<PointI> result;
@@ -269,6 +265,8 @@ void ProcessSpherigon::FindNormalFromPlyFile(MeshSharedPtr &plymesh,
             plymesh->m_vertexNormals[cntmin];
         ++cnt;
     }
+
+    m_log(VERBOSE).Newline();
 }
 
 /**
@@ -292,11 +290,13 @@ void ProcessSpherigon::GenerateNormals(std::vector<ElementSharedPtr> &el,
         ElementSharedPtr e = el[i];
 
         // Ensure that element is a line, triangle or quad.
-        ASSERTL0(e->GetConf().m_e == LibUtilities::eSegment ||
-                     e->GetConf().m_e == LibUtilities::eTriangle ||
-                     e->GetConf().m_e == LibUtilities::eQuadrilateral,
-                 "Spherigon expansions must be lines, triangles or "
-                 "quadrilaterals.");
+        if (e->GetConf().m_e != LibUtilities::eSegment &&
+            e->GetConf().m_e != LibUtilities::eTriangle &&
+            e->GetConf().m_e != LibUtilities::eQuadrilateral)
+        {
+            m_log(FATAL) << "Spherigon expansions must be lines, triangles or "
+                         << "quadrilaterals." << endl;
+        }
 
         // Calculate normal for this element.
         int nV = e->GetVertexCount();
@@ -357,18 +357,18 @@ void ProcessSpherigon::GenerateNormals(std::vector<ElementSharedPtr> &el,
  */
 void ProcessSpherigon::Process()
 {
-    ASSERTL0(m_mesh->m_spaceDim == 3 || m_mesh->m_spaceDim == 2,
-             "Spherigon implementation only valid in 2D/3D.");
+    m_log(VERBOSE) << "Smoothing mesh with spherigons." << endl;
+
+    if (m_mesh->m_spaceDim != 3 && m_mesh->m_spaceDim != 2)
+    {
+        m_log(FATAL) << "Spherigon implementation only valid in 2D/3D."
+                     << endl;
+    }
 
     std::unordered_set<int> visitedEdges;
 
     // First construct vector of elements to process.
     vector<ElementSharedPtr> el;
-
-    if (m_mesh->m_verbose)
-    {
-        cout << "ProcessSpherigon: Smoothing mesh..." << endl;
-    }
 
     if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
     {
@@ -510,7 +510,7 @@ void ProcessSpherigon::Process()
     }
     else
     {
-        ASSERTL0(false, "Spherigon expansions must be 2/3 dimensional");
+        m_log(FATAL) << "Spherigon expansions must be 2/3 dimensional." << endl;
     }
 
     // See if vertex normals have been generated. If they have not,
@@ -523,19 +523,19 @@ void ProcessSpherigon::Process()
     {
         NekDouble scale = m_config["scalefile"].as<NekDouble>();
 
-        if (m_mesh->m_verbose)
-        {
-            cout << "Inputing normal file: " << normalfile
-                 << " with scaling of " << scale << endl;
-        }
+        m_log(VERBOSE) << " - Using normal file: '" << normalfile
+                       << "' with scaling of " << scale << endl;
 
         ifstream inplyTmp;
         io::filtering_istream inply;
         InputPlySharedPtr plyfile;
 
         inplyTmp.open(normalfile.c_str());
-        ASSERTL0(inplyTmp,
-                 string("Could not open input ply file: ") + normalfile);
+        if (!inplyTmp)
+        {
+            m_log(FATAL) << "Could not open input ply file: '" << normalfile
+                         << "'." << endl;
+        }
 
         inply.push(inplyTmp);
 
@@ -545,10 +545,7 @@ void ProcessSpherigon::Process()
         plyfile->ProcessVertices();
 
         MeshSharedPtr plymesh = plyfile->GetMesh();
-        if (m_mesh->m_verbose)
-        {
-            cout << "\t Generating ply normals" << endl;
-        }
+        m_log(VERBOSE) << " - Generating ply normals." << endl;
         GenerateNormals(plymesh->m_element[plymesh->m_expDim], plymesh);
 
         // finally find nearest vertex and set normal to mesh surface file
@@ -570,11 +567,7 @@ void ProcessSpherigon::Process()
             }
         }
 
-
-        if (m_mesh->m_verbose)
-        {
-            cout << "\t Processing surface normals " << endl;
-        }
+        m_log(VERBOSE) << " - Processing surface normals." << endl;
 
         // loop over all element in ply mesh and determine
         // and set normal to nearest point in ply mesh
@@ -593,22 +586,23 @@ void ProcessSpherigon::Process()
     if (normalnoise.compare("NotSpecified") != 0)
     {
         vector<NekDouble> values;
-        ASSERTL0(ParseUtils::GenerateVector(normalnoise, values),
-                 "Failed to interpret normal noise string");
+        if (!ParseUtils::GenerateVector(normalnoise, values))
+        {
+            m_log(FATAL) << "Failed to interpret normal noise string"
+                         << endl;
+        }
 
         int nvalues   = values.size() / 2;
         NekDouble amp = values[0];
 
-        if (m_mesh->m_verbose)
+        m_log(VERBOSE) << " - Adding noise to normals of amplitude: " << amp
+                       << " in range: ";
+        for (int i = 0; i < nvalues; ++i)
         {
-            cout << "\t adding noise to normals of amplitude " << amp
-                 << " in range: ";
-            for (int i = 0; i < nvalues; ++i)
-            {
-                cout << values[2 * i + 1] << "," << values[2 * i + 2] << " ";
-            }
-            cout << endl;
+            m_log(VERBOSE) << values[2 * i + 1] << "," << values[2 * i + 2]
+                           << " ";
         }
+        m_log(VERBOSE) << endl;
 
         map<int, NodeSharedPtr>::iterator vIt;
         map<int, NodeSharedPtr> surfverts;
@@ -698,7 +692,11 @@ void ProcessSpherigon::Process()
     Array<OneD, NekDouble> yc(nq * nq);
     Array<OneD, NekDouble> zc(nq * nq);
 
-    ASSERTL0(nq > 2, "Number of points must be greater than 2.");
+    if (nq <= 2)
+    {
+        m_log(FATAL) << "Number of points in resulting high-order element must "
+                     << "be greater than 2." << endl;
+    }
 
     LibUtilities::BasisKey B0(
         LibUtilities::eOrtho_A,
@@ -797,7 +795,8 @@ void ProcessSpherigon::Process()
         }
         else
         {
-            ASSERTL0(false, "Unknown expansion type.");
+            m_log(FATAL) << "Found unknown expansion type: check your surface"
+                         << "ID is correct." << endl;
         }
 
         // Zero z-coordinate in 2D.
@@ -905,9 +904,9 @@ void ProcessSpherigon::Process()
             if ((boost::math::isnan)(P.m_x) || (boost::math::isnan)(P.m_y) ||
                 (boost::math::isnan)(P.m_z))
             {
-                ASSERTL0(false,
-                         "spherigon point is a nan. Check to see if "
-                         "ply file is correct if using input normal file");
+                m_log(FATAL) << "Found a spherigon point with a NaN value. "
+                             << "Check to see if ply file is correct if using "
+                             << "input normal file" << endl;
             }
             else
             {

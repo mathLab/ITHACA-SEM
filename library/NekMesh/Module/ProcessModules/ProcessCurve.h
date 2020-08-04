@@ -57,6 +57,10 @@ public:
     ProcessCurve(NekMesh::MeshSharedPtr m);
     virtual ~ProcessCurve();
 
+    virtual std::string GetModuleName()
+    {
+        return "ProcessCurve";
+    }
 protected:
     void v_GenerateEdgeNodes(NekMesh::EdgeSharedPtr edge);
 

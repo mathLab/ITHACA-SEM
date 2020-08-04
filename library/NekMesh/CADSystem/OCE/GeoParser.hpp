@@ -37,6 +37,7 @@
 #include <boost/spirit/include/phoenix.hpp>
 
 #include <LibUtilities/Interpreter/Interpreter.h>
+#include <NekMesh/Module/Log.hpp>
 
 namespace Nektar
 {
@@ -92,11 +93,11 @@ void SetParam(LibUtilities::Interpreter &interp,
  *
  * @param geomname  The interpreted geomtery name.
  */
-void PrintWarning(std::vector<char> &geomname)
+void PrintWarning(Logger &log, std::vector<char> &geomname)
 {
     std::string geom(geomname.begin(), geomname.end());
-    std::cout << "Warning: ignoring unknown geometry entity"
-              << geom << std::endl;
+    log(WARNING) << "Ignoring unknown geometry entity '"
+                 << geom << "'" << std::endl;
 }
 
 /**
@@ -205,7 +206,9 @@ struct GeoParser : qi::grammar<Iterator, GeoAst::GeoFile(), Skipper>
 {
     using Interp = LibUtilities::Interpreter;
 
-    GeoParser(Interp &interp) : GeoParser::base_type(geoFile), m_interp(interp)
+    GeoParser(Interp &interp, Logger &log) : GeoParser::base_type(geoFile),
+                                             m_interp(interp),
+                                             m_log(log)
     {
         using GeoAst::GeoFile;
         using GeoAst::Geom;
@@ -260,7 +263,8 @@ struct GeoParser : qi::grammar<Iterator, GeoAst::GeoFile(), Skipper>
              ("Volume" >> geom[push_back(bind(&GeoFile::volumes, _val), _1)]) |
 
              // Unknown geometry type
-             ((*qi::alpha >> geom)[phx::bind(&GeoAst::PrintWarning, _1)]) |
+             ((*qi::alpha >> geom)[
+                 phx::bind(&GeoAst::PrintWarning, phx::ref(log), _1)]) |
 
              // Variables
              (*(qi::alnum | qi::char_('_') | qi::char_('.')) >> '=' >>
@@ -278,8 +282,11 @@ struct GeoParser : qi::grammar<Iterator, GeoAst::GeoFile(), Skipper>
     rule<GeoAst::GeoFile> geoFile;
     /// Rule for expressions
     rule<double> expr;
-    /// Reference to an interpreter that is used to .
+    /// Reference to an interpreter that is used to evaluate mathematical
+    /// expressions.
     Interp &m_interp;
+    /// Logger for warnings.
+    Logger &m_log;
 };
 }
 }

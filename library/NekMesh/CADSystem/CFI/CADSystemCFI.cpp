@@ -54,38 +54,36 @@ bool CADSystemCFI::LoadCAD()
     // it is possible to get CFI to lock on to a open gui session
     // not sure it ever will with this code
     m_cfiHandle.startServer();
-    if (m_verbose)
-    {
-        cout << "cfi loaded in mode: ";
-        if (m_cfiHandle.info.mode == cfi::MODE_STANDALONE)
-        {
-            cout << "standalone" << endl;
-        }
-        else if (m_cfiHandle.info.mode == cfi::MODE_CLIENT)
-        {
-            cout << "client" << endl;
-        }
-        else if (m_cfiHandle.info.mode == cfi::MODE_SERVER)
-        {
-            cout << "server" << endl;
-        }
-        else if (m_cfiHandle.info.mode == cfi::MODE_BOTH)
-        {
-            cout << "both" << endl;
-        }
-        else if (m_cfiHandle.info.mode == cfi::MODE_PLUGIN)
-        {
-            cout << "plugin" << endl;
-        }
-        else
-        {
-            cout << "unknown" << endl;
-        }
 
-        cout << "\tVersion " << m_cfiHandle.info.version << endl
-             << "\tfixno " << m_cfiHandle.info.fixno << endl
-             << "\tubid " << m_cfiHandle.info.ubid << endl;
+    m_log(VERBOSE) << "  - CFI engine loaded in mode: ";
+    if (m_cfiHandle.info.mode == cfi::MODE_STANDALONE)
+    {
+        m_log(VERBOSE) << "standalone" << endl;
     }
+    else if (m_cfiHandle.info.mode == cfi::MODE_CLIENT)
+    {
+        m_log(VERBOSE) << "client" << endl;
+    }
+    else if (m_cfiHandle.info.mode == cfi::MODE_SERVER)
+    {
+        m_log(VERBOSE) << "server" << endl;
+    }
+    else if (m_cfiHandle.info.mode == cfi::MODE_BOTH)
+    {
+        m_log(VERBOSE) << "both" << endl;
+    }
+    else if (m_cfiHandle.info.mode == cfi::MODE_PLUGIN)
+    {
+        m_log(VERBOSE) << "plugin" << endl;
+    }
+    else
+    {
+        m_log(VERBOSE) << "unknown" << endl;
+    }
+
+    m_log(VERBOSE) << "  - CFI Version: " << m_cfiHandle.info.version << endl;
+    m_log(VERBOSE) << "  - Fix no     : " << m_cfiHandle.info.fixno << endl;
+    m_log(VERBOSE) << "  - ubid       : " << m_cfiHandle.info.ubid << endl;
 
     if (m_config.count("UseCFIMesh"))
     {
@@ -98,19 +96,12 @@ bool CADSystemCFI::LoadCAD()
     {
         if (m_useCFIMesh)
         {
-            if (m_verbose)
-            {
-                cout << "\tWill extract mesh and have multibodies" << endl;
-            }
+            m_log(VERBOSE) << "Will extract mesh and have multibodies" << endl;
         }
         else
         {
-            if (m_verbose)
-            {
-                cout << "\tHas multibodies and instructions to mesh, this is "
-                        "not possible" << endl;
-            }
-            abort();
+            m_log(FATAL) << "Has multibodies and instructions to mesh, this is "
+                         << "not possible" << endl;
         }
     }
 
@@ -132,7 +123,8 @@ bool CADSystemCFI::LoadCAD()
     {
         if (m_verbose)
         {
-            cout << "\tModel is in inches, scaling accordingly" << endl;
+            m_log(VERBOSE) << "  - Model is in inches, scaling accordingly"
+                           << endl;
         }
         m_scal = 0.0254;
     }
@@ -141,7 +133,7 @@ bool CADSystemCFI::LoadCAD()
     {
         if (m_verbose)
         {
-            cout << "\tModel is in mm, scaling accordingly" << endl;
+            m_log(VERBOSE) << "  - Model is in mm, scaling accordingly" << endl;
         }
         m_scal = 1e-3;
     }

@@ -62,6 +62,11 @@ public:
     /// %ModuleKey for class.
     static NekMesh::ModuleKey className;
 
+    virtual std::string GetModuleName()
+    {
+        return "InputCADfix";
+    }
+
 private:
 
     NekMesh::CADSystemCFISharedPtr m_cad;

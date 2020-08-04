@@ -324,13 +324,12 @@ NekDouble CurveMesh::EvaluatePS(NekDouble s)
         }
     }
 
+    /*
     if (a == b)
     {
-        cout << endl;
-        cout << a << " " << b << endl;
-        cout << s << endl;
         exit(-1);
     }
+    */
 
     NekDouble s1 = m_ps[a][1];
     NekDouble s2 = m_ps[b][1];

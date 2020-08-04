@@ -209,10 +209,17 @@ public:
         return *this;
     }
 
-    void Progress(const int position, const int goal, const std::string message)
+    void Progress(const int position, const int goal, const std::string message,
+                  int lastprogress = -1)
     {
         float progress = position / float(goal);
         int  numeq = static_cast<int>(ceil(progress *49));
+
+        // Avoid lots of output.
+        if (lastprogress == numeq)
+        {
+            return;
+        }
 
         // carriage return
         std::stringstream ss;
@@ -293,7 +300,7 @@ private:
 
         if (m_prefix != "")
         {
-            ss << msgcolour << bold << std::setw(16) << std::left
+            ss << msgcolour << bold << std::setw(20) << std::left
                << ("[" + m_prefix + "]") << reset;
         }
 

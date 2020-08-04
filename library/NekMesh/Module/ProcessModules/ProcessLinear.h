@@ -60,6 +60,11 @@ public:
 
     /// Write mesh to output file.
     virtual void Process();
+
+    virtual std::string GetModuleName()
+    {
+        return "ProcessLinear";
+    }
 private:
     bool Invalid(NekMesh::ElementSharedPtr el, NekDouble thr);
 };

@@ -58,6 +58,11 @@ public:
     virtual ~ProcessExtrude();
 
     virtual void Process();
+
+    virtual std::string GetModuleName()
+    {
+        return "ProcessExtrude";
+    }
 };
 }
 }

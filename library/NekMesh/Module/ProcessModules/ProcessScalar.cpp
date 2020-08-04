@@ -75,11 +75,8 @@ void ProcessScalar::Process()
     sort(surfs.begin(), surfs.end());
 
     // If we're running in verbose mode print out a list of surfaces.
-    if (m_mesh->m_verbose)
-    {
-        cout << "ProcessScalar: extracting surface"
-             << (surfs.size() > 1 ? "s" : "") << " " << surf << endl;
-    }
+    m_log(VERBOSE) << "Extracting surface" << (surfs.size() > 1 ? "s" : "")
+                   << " " << surf << endl;
 
     const int nq = m_config["nq"].as<int>();
     string expr  = m_config["scalar"].as<string>();

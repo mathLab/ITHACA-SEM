@@ -57,13 +57,13 @@ OutputSTL::~OutputSTL()
 
 void OutputSTL::Process()
 {
-    if (m_mesh->m_verbose)
-    {
-        cout << "Outputstl: Writing file..." << endl;
-    }
+    m_log(VERBOSE) << "Writing STL file '" << m_config["outfile"].as<string>()
+                   << "'." << endl;
 
-    ASSERTL0(m_mesh->m_expDim == 2 || m_mesh->m_expDim == 3,
-             "Only 2D or 3D meshes are supported.");
+    if (m_mesh->m_expDim != 2 && m_mesh->m_expDim != 3)
+    {
+        m_log(FATAL) << "Only 2D or 3D meshes are supported." << endl;
+    }
 
     OpenStream();
 

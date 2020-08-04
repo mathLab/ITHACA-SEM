@@ -34,7 +34,6 @@
 
 #include "ProcessVarOpti.h"
 
-#include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
 
@@ -405,10 +404,11 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
     }
 
     retPart = CreateColoursets(remainEdgeVertexSort);
-    if(m_mesh->m_verbose)
-    {
-        cout << "Number of Edge/Vertex Coloursets: " << retPart.size() << endl;
-    }
+
+    m_log(VERBOSE).Newline();
+    m_log(VERBOSE) << "  - Number of Edge/Vertex Coloursets: " << retPart.size()
+                   << endl;
+
     for (int i = 0; i < retPart.size(); i++)
     {
         ret.push_back(retPart[i]);
@@ -416,10 +416,9 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
 
     // face nodes
     retPart = CreateColoursets(remainFace);
-    if(m_mesh->m_verbose)
-    {
-        cout << "Number of Face Coloursets: " << retPart.size() << endl;
-    }
+    m_log(VERBOSE) << "  - Number of Face Coloursets: " << retPart.size()
+                   << endl;
+
     for (int i = 0; i < retPart.size(); i++)
     {
         ret.push_back(retPart[i]);
@@ -427,19 +426,12 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::GetColouredNodes(
 
     // volume nodes
     retPart = CreateColoursets(remainVolume);
-    if(m_mesh->m_verbose)
-    {
-        cout << "Number of Volume Coloursets: " << retPart.size() << endl;
-    }
+    m_log(VERBOSE) << "  - Number of Volume Coloursets: " << retPart.size()
+                   << endl;
+
     for (int i = 0; i < retPart.size(); i++)
     {
         ret.push_back(retPart[i]);
-    }
-
-
-    if(m_mesh->m_verbose)
-    {
-        cout << endl;
     }
 
     return ret;
@@ -510,13 +502,10 @@ vector<vector<NodeSharedPtr> > ProcessVarOpti::CreateColoursets(
         retPart.push_back(layer);
 
         // print out progress
-        if(m_mesh->m_verbose)
-        {
-            LibUtilities::PrintProgressbar(
-                m_res->n - remain.size(), m_res->n, "Node Coloring");
-        }
-
+        m_log(VERBOSE).Progress(
+            m_res->n - remain.size(), m_res->n, "Node Coloring");
     }
+
     return retPart;
 }
 

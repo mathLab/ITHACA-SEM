@@ -37,8 +37,6 @@
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/index/rtree.hpp>
 
-#include <LibUtilities/BasicUtils/Progressbar.hpp>
-
 #include <NekMesh/CADSystem/CADSurf.h>
 #include <NekMesh/VolumeMeshing/BLMeshing/BLMesh.h>
 

@@ -72,6 +72,10 @@ public:
     /// Write mesh to output file.
     virtual void Process();
 
+    virtual std::string GetModuleName()
+    {
+        return "ProcessProjectCAD";
+    }
 private:
 
     bool findAndProject(bgi::rtree<boxI, bgi::quadratic<16> > &rtree,

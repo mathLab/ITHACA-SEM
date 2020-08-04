@@ -230,7 +230,10 @@ void InputCADfix::Process()
         }
     }
 
-    WARNINGL0(nodes.size() == cfiIdToTypes.size(), "not all nodes marked");
+    if (nodes.size() != cfiIdToTypes.size())
+    {
+        m_log(WARNING) << "Not all nodes marked" << endl;
+    }
 
     int id = 0;
 
@@ -245,7 +248,10 @@ void InputCADfix::Process()
         }
     }
 
-    WARNINGL0(id == nodes.size(), "not all nodes numbered");
+    if (id != nodes.size())
+    {
+        m_log(WARNING) << "not all nodes numbered" << endl;
+    }
 
     int prefix = m_mesh->m_cad->GetNumSurf() > 100 ? 1000 : 100;
 

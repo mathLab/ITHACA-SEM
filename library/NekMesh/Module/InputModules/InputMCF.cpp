@@ -730,6 +730,8 @@ void InputMCF::Process()
             module->Process();
         }
     }
+
+    m_log(VERBOSE) << "Input mesh generation complete." << endl;
 }
 }
 }

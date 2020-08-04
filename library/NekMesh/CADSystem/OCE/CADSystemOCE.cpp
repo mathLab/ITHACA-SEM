@@ -696,7 +696,7 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     // Construct a parser for the geo file. Ensure that we use the correct
     // skipper so that comments are ignored.
     LibUtilities::Interpreter interp;
-    GeoParser<std::string::const_iterator> geoParser(interp);
+    GeoParser<std::string::const_iterator> geoParser(interp, m_log);
     CommentSkipper<std::string::const_iterator> skip;
     GeoAst::GeoFile geoFile;
 
@@ -710,8 +710,10 @@ TopoDS_Shape CADSystemOCE::BuildGeo(string geo)
     {
         std::string::const_iterator some = iter+30;
         std::string context(iter, (some>end)?end:some);
-        std::cout << "Parsing of geo file failed\n";
-        std::cout << "stopped at: \": " << context << "...\"\n";
+
+        m_log(FATAL) << "Parsing of geo file failed, "
+                     << "stopped at: \": " << context << "...\""
+                     << endl;
     }
 
     // Build points.

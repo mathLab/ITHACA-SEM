@@ -59,12 +59,9 @@ ProcessLinkCheck::~ProcessLinkCheck()
 
 void ProcessLinkCheck::Process()
 {
-    if (m_mesh->m_verbose)
-    {
-        cout << "ProcessLinkCheck: Checking links... " << endl;
-    }
+    m_log(VERBOSE) << "Checking boundary-element links." << endl;
 
-    //need to reset all links first to make sure there are no bugs!
+    // need to reset all links first to make sure there are no bugs!
     ClearElementLinks();
     ProcessVertices();
     ProcessEdges();
@@ -95,14 +92,12 @@ void ProcessLinkCheck::Process()
         }
     }
 
-
-
     if (count - m_mesh->m_element[m_mesh->m_expDim-1].size() != 0)
     {
-        cout << "Link Check Error: mesh contains incorrectly connected"
-             << " entities and is not valid: "
-             << count - m_mesh->m_element[m_mesh->m_expDim-1].size()
-             << endl;
+        m_log(FATAL) << "Link Check Error: mesh contains incorrectly connected"
+                     << " entities and is not valid: "
+                     << count - m_mesh->m_element[m_mesh->m_expDim-1].size()
+                     << endl;
     }
 }
 

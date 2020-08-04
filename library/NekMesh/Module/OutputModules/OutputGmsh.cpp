@@ -80,10 +80,8 @@ OutputGmsh::~OutputGmsh()
  */
 void OutputGmsh::Process()
 {
-    if (m_mesh->m_verbose)
-    {
-        cout << "OutputGmsh: Writing file..." << endl;
-    }
+    m_log(VERBOSE) << "Writing Gmsh file '"
+                   << m_config["outfile"].as<string>() << "'." << endl;
 
     std::unordered_map<int, vector<int> > orderingMap;
 
@@ -102,10 +100,7 @@ void OutputGmsh::Process()
 
     if (order != -1)
     {
-        if (m_mesh->m_verbose)
-        {
-            cout << "Making mesh of order " << order << endl;
-        }
+        m_log(VERBOSE) << "Making mesh of order " << order << endl;
     }
     else
     {
@@ -122,12 +117,9 @@ void OutputGmsh::Process()
     }
 
     // Convert this mesh into a high-order mesh of uniform order.
-    if (m_mesh->m_verbose)
-    {
-        cout << "Mesh order of " << order << " detected" << endl;
-    }
+    m_log(VERBOSE) << "Mesh order of " << order << " detected" << endl;
 
-    m_mesh->MakeOrder(order, LibUtilities::ePolyEvenlySpaced);
+    m_mesh->MakeOrder(order, LibUtilities::ePolyEvenlySpaced, m_log);
 
     // Add edge- and face-interior nodes to vertex set.
     for (auto &eIt : m_mesh->m_edgeSet)

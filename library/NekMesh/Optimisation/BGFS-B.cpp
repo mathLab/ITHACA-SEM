@@ -179,14 +179,6 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
         r += J(i, 0) * dk[i];
     }
 
-    /*cout << endl << J << endl << endl;
-
-    for(int i = 0; i < dk.size(); i++)
-    {
-        cout << dk[i] << endl;
-    }
-    cout << endl;*/
-
     // this section needs a case evaluation for edges on faces
     NekDouble lam = 2.0;
     int iterct    = 0;
@@ -197,7 +189,6 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
     {
         if (iterct > 100)
         {
-            // cout << "failed line search" << endl;
             return false;
         }
         iterct++;

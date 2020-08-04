@@ -59,13 +59,18 @@ ProcessExtrude::~ProcessExtrude()
 
 void ProcessExtrude::Process()
 {
+    m_log(VERBOSE) << "Extruding grid." << endl;
+
+    if (m_mesh->m_spaceDim != 2)
+    {
+        m_log(FATAL) << "Extrude should only be called for a two dimensional "
+                     << "mesh" << endl;
+    }
+
     int nLayers      = m_config["layers"].as<int>();
     NekDouble length = m_config["length"].as<NekDouble>();
 
     NekDouble dz = length / nLayers;
-
-    ASSERTL0(m_mesh->m_spaceDim == 2,
-             "Extrude should only be called for a two dimensional mesh");
 
     // Increment space and expansion dimensions.
     m_mesh->m_spaceDim++;
@@ -76,26 +81,25 @@ void ProcessExtrude::Process()
 
     // Grab a copy of existing composites.
     CompositeMap oldComp = m_mesh->m_composite;
-    if (m_mesh->m_verbose)
+    m_log(VERBOSE) << "Boundary composites" << endl;
+    for (auto &it : oldComp)
     {
-        cout << "Boundary composites" << endl;
-        for (auto &it : oldComp)
+        if (it.second->m_tag != "E")
         {
-            if (it.second->m_tag != "E")
-            {
-                continue;
-            }
-            cout << it.first << "\t" << it.second->m_tag;
-            for (int i = 0; i < it.second->m_items.size(); ++i)
-            {
-                cout << "\t" << it.second->m_items[i]->GetId()
-                     << " (" << it.second->m_items[i]->GetVertex(0)
-                     << ", " << it.second->m_items[i]->GetVertex(1) << ")";
-                vector<NodeSharedPtr> vv = it.second->m_items[i]->GetVertexList();
-                cout << "\t(" << vv[0]->GetID()<< ", " << vv[1]->GetID() <<")";
-            }
-            cout << endl;
+            continue;
         }
+        m_log(VERBOSE) << it.first << "\t" << it.second->m_tag;
+        for (int i = 0; i < it.second->m_items.size(); ++i)
+        {
+            m_log(VERBOSE) << "\t" << it.second->m_items[i]->GetId()
+                           << " (" << it.second->m_items[i]->GetVertex(0)
+                           << ", " << it.second->m_items[i]->GetVertex(1)
+                           << ")";
+            vector<NodeSharedPtr> vv = it.second->m_items[i]->GetVertexList();
+            m_log(VERBOSE) << "\t(" << vv[0]->GetID()<< ", " << vv[1]->GetID()
+                           <<")";
+        }
+        m_log(VERBOSE) << endl;
     }
 
     // Reset mesh.
@@ -206,7 +210,7 @@ void ProcessExtrude::Process()
                              id2node[edge->m_n2->m_id + j * nodes.size()]));
 
                 auto f = m_mesh->m_edgeSet.find(e);
-                ASSERTL0(f != m_mesh->m_edgeSet.end(), "could not find edge");
+                ASSERTL1(f != m_mesh->m_edgeSet.end(), "could not find edge");
 
                 // Copy edge type
                 (*f)->m_curveType = edge->m_curveType;
@@ -304,10 +308,8 @@ void ProcessExtrude::Process()
 
     // Add all boundary faces to the composite
     auto allFaceC =  m_mesh->m_composite.find(maxCompId);
-    if (m_mesh->m_verbose)
-    {
-        cout << "Faces boundary list" << endl;
-    }
+    m_log(VERBOSE) << "Faces boundary list" << endl;
+
     for (auto &it : m_mesh->m_faceSet)
     {
         // Add to composite if boundary face
@@ -382,12 +384,9 @@ void ProcessExtrude::Process()
                 // corresponding composite
                 if(inCommon == 4)
                 {
-                    if (m_mesh->m_verbose)
-                    {
-                        cout << "Face " << itQ->GetId() << "\t"
-                            << "Composite " << itOc.second->m_id << "\t"
-                            << endl;
-                    }
+                    m_log(VERBOSE) << "Face " << itQ->GetId() << "\t"
+                                   << "Composite " << itOc.second->m_id
+                                   << "\t" << endl;
                     auto newC =  m_mesh->m_composite.find(itOc.second->m_id);
                     // Quad
                     ElmtConfig conf(LibUtilities::eQuadrilateral, 1, false,

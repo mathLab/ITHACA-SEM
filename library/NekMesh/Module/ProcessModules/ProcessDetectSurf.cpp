@@ -74,7 +74,8 @@ void ProcessDetectSurf::Process()
 {
     if (m_mesh->m_expDim > 2)
     {
-        cerr << "Surface detection only implemented for 2D meshes" << endl;
+        m_log(WARNING) << "Surface detection only implemented for 2D meshes;"
+                       << "ignoring this module." << endl;
         return;
     }
 
@@ -92,11 +93,11 @@ void ProcessDetectSurf::Process()
     // If we're running in verbose mode print out a list of surfaces.
     if (m_mesh->m_verbose)
     {
-        cout << "ProcessDetectSurf: detecting surfaces";
+        m_log(VERBOSE) << "ProcessDetectSurf: detecting surfaces";
         if (surfs.size() > 0)
         {
-            cout << " for surface" << (surfs.size() == 1 ? "" : "s") << " "
-                 << surf << endl;
+            m_log(VERBOSE) << " for surface" << (surfs.size() == 1 ? "" : "s")
+                           << " " << surf << endl;
         }
     }
 

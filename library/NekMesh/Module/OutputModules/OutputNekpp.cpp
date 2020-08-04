@@ -93,7 +93,8 @@ template <typename T> void TestElmts(
     const std::map<int, std::shared_ptr<T> >  &geomMap,
     SpatialDomains::MeshGraphSharedPtr        &graph,
     LibUtilities::Interpreter                 &strEval,
-    int                                        exprId)
+    int                                        exprId,
+    Logger                                    &log)
 {
     boost::ignore_unused(graph);
 
@@ -124,7 +125,12 @@ template <typename T> void TestElmts(
             {
                 NekDouble output = strEval.Evaluate(
                     exprId, coords[0][i], coords[1][i], coords[2][i], 0.0);
-                ASSERTL0(output == 1.0, "Output mesh failed coordinate test");
+
+                if (output != 1.0)
+                {
+                    log(FATAL) << "Output mesh failed coordinate test"
+                               << endl;
+                }
             }
 
             // Also evaluate at mid-point to test for deformed vs. regular
@@ -137,8 +143,12 @@ template <typename T> void TestElmts(
 
             NekDouble output = strEval.Evaluate(
                 exprId, evalPt[0], evalPt[1], evalPt[2], 0.0);
-            ASSERTL0(output == 1.0,
-                     "Output mesh failed coordinate midpoint test");
+
+            if (output != 1.0)
+            {
+                log(FATAL) << "Output mesh failed coordinate midpoint test"
+                           << endl;
+            }
         }
     }
 }
@@ -152,7 +162,7 @@ void OutputNekpp::Process()
 
     if (order != -1)
     {
-        m_mesh->MakeOrder(order, LibUtilities::ePolyEvenlySpaced);
+        m_mesh->MakeOrder(order, LibUtilities::ePolyEvenlySpaced, m_log);
     }
 
     // Useful when doing r-adaptation
@@ -171,9 +181,11 @@ void OutputNekpp::Process()
         }
         catch (runtime_error &e)
         {
-            cout << "Variational optimisation has failed with message:" << endl;
-            cout << e.what() << endl;
-            cout << "The mesh will be written as is, it may be invalid" << endl;
+            m_log(WARNING) << "Variational optimisation has failed with "
+                           << "message:" << endl;
+            m_log(WARNING) << e.what() << endl;
+            m_log(WARNING) << "The mesh will be written as is, it may be "
+                           << "invalid" << endl;
             return;
         }
     }
@@ -183,7 +195,7 @@ void OutputNekpp::Process()
 
     if (m_config["stats"].beenSet)
     {
-        m_mesh->PrintStats(std::cout);
+        m_mesh->PrintStats(m_log);
     }
 
     // Default to compressed XML output.
@@ -254,13 +266,13 @@ void OutputNekpp::Process()
         SpatialDomains::MeshGraphSharedPtr graph =
             SpatialDomains::MeshGraph::Read(vSession);
 
-        TestElmts(graph->GetAllSegGeoms(),   graph, m_strEval, exprId);
-        TestElmts(graph->GetAllTriGeoms(),   graph, m_strEval, exprId);
-        TestElmts(graph->GetAllQuadGeoms(),  graph, m_strEval, exprId);
-        TestElmts(graph->GetAllTetGeoms(),   graph, m_strEval, exprId);
-        TestElmts(graph->GetAllPrismGeoms(), graph, m_strEval, exprId);
-        TestElmts(graph->GetAllPyrGeoms(),   graph, m_strEval, exprId);
-        TestElmts(graph->GetAllHexGeoms(),   graph, m_strEval, exprId);
+        TestElmts(graph->GetAllSegGeoms(),   graph, m_strEval, exprId, m_log);
+        TestElmts(graph->GetAllTriGeoms(),   graph, m_strEval, exprId, m_log);
+        TestElmts(graph->GetAllQuadGeoms(),  graph, m_strEval, exprId, m_log);
+        TestElmts(graph->GetAllTetGeoms(),   graph, m_strEval, exprId, m_log);
+        TestElmts(graph->GetAllPrismGeoms(), graph, m_strEval, exprId, m_log);
+        TestElmts(graph->GetAllPyrGeoms(),   graph, m_strEval, exprId, m_log);
+        TestElmts(graph->GetAllHexGeoms(),   graph, m_strEval, exprId, m_log);
     }
 }
 
@@ -460,7 +472,7 @@ void OutputNekpp::TransferElements(MeshGraphSharedPtr graph)
             }
             break;
             default:
-                ASSERTL0(false, "Unknown element type");
+                ASSERTL1(false, "Unknown element type");
         }
     }
 }
@@ -692,7 +704,7 @@ void OutputNekpp::TransferComposites(MeshGraphSharedPtr graph)
                 }
                 break;
                 default:
-                    ASSERTL0(false, "Unknown element type");
+                    ASSERTL1(false, "Unknown element type");
             }
 
             comps[indx] = curVector;

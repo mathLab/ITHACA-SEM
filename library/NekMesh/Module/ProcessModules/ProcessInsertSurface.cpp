@@ -73,18 +73,11 @@ void ProcessInsertSurface::Process()
     typedef bg::model::point<NekDouble, 3, bg::cs::cartesian> Point;
     typedef pair<Point, unsigned int> PointI;
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "ProcessInsertSurface: Inserting mesh... " << endl;
-    }
-
     string file = m_config["mesh"].as<string>();
     bool nonconform = m_config["nonconforming"].beenSet;
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "inserting surface from " << file << endl;
-    }
+    m_log(VERBOSE) << "Inserting surface from file '" << file << "'." << endl;
+
     MeshSharedPtr inMsh = std::shared_ptr<Mesh>(new Mesh());
     inMsh->m_verbose = m_mesh->m_verbose;
     ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
@@ -132,10 +125,10 @@ void ProcessInsertSurface::Process()
         }
     }
 
-    if(!nonconform)
+    if (!nonconform && surfaceNodes.size() != inMshnodeList.size())
     {
-        ASSERTL0(surfaceNodes.size() == inMshnodeList.size(),
-                 "surface mesh node count mismatch, will not work");
+        m_log(FATAL) << "Surface mesh node count mismatch, inserting surface "
+                     << "will not work" << endl;
     }
 
     EdgeSet surfEdges;
@@ -158,14 +151,18 @@ void ProcessInsertSurface::Process()
         NekDouble dist1 = bg::distance(result[0].first, queryPt1);
         if(nonconform)
         {
-            if(dist1 > tol)
+            if (dist1 > tol)
             {
                 continue;
             }
         }
         else
         {
-            ASSERTL0(dist1 < tol, "cannot locate point accurately enough");
+            if (dist1 > tol)
+            {
+                m_log(FATAL) << "Cannot locate point accurately enough."
+                             << endl;
+            }
         }
 
         NodeSharedPtr inN1 = inMshnodeList[result[0].second];
@@ -184,7 +181,11 @@ void ProcessInsertSurface::Process()
         }
         else
         {
-            ASSERTL0(dist2 < tol, "cannot locate point accurately enough");
+            if (dist2 > tol)
+            {
+                m_log(FATAL) << "Cannot locate point accurately enough."
+                             << endl;
+            }
         }
         NodeSharedPtr inN2 = inMshnodeList[result[0].second];
 
@@ -192,7 +193,10 @@ void ProcessInsertSurface::Process()
 
         auto f = inMsh->m_edgeSet.find(tst);
 
-        ASSERTL0(f != inMsh->m_edgeSet.end(),"could not find edge in input");
+        if (f == inMsh->m_edgeSet.end())
+        {
+            m_log(FATAL) << "Could not find edge in input" << endl;
+        }
 
         it->m_edgeNodes = (*f)->m_edgeNodes;
         it->m_curveType = (*f)->m_curveType;

@@ -59,6 +59,11 @@ public:
     }
     /// %ModuleKey for class.
     static NekMesh::ModuleKey className;
+
+    virtual std::string GetModuleName()
+    {
+        return "InputNekpp";
+    }
 };
 }
 }

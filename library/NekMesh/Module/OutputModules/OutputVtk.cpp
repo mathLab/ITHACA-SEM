@@ -63,10 +63,8 @@ OutputVtk::~OutputVtk()
 
 void OutputVtk::Process()
 {
-    if (m_mesh->m_verbose)
-    {
-        cout << "OutputVtk: Writing file..." << endl;
-    }
+    m_log(VERBOSE) << "Writing VTK file '"
+                   << m_config["outfile"].as<string>() << "'." << endl;
 
     vtkPolyData *vtkMesh   = vtkPolyData::New();
     vtkPoints *vtkPoints   = vtkPoints::New();

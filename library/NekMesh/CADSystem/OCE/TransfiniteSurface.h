@@ -41,6 +41,8 @@
 #include <boost/core/ignore_unused.hpp>
 #include <vector>
 
+#include <NekMesh/Module/Log.hpp>
+
 #if OCC_VERSION_HEX < 0x070000
   #define DEFINE_STANDARD_RTTIEXT(C1,C2) DEFINE_STANDARD_RTTI(C1)
   #define DEFINE_STANDARD_RTTI_INLINE(C1,C2) DEFINE_STANDARD_RTTI(C1)
@@ -50,6 +52,8 @@ class Geom_TransfiniteCurve;
 DEFINE_STANDARD_HANDLE(Geom_TransfiniteCurve, Geom_BoundedCurve)
 class Geom_TransfiniteSurface;
 DEFINE_STANDARD_HANDLE(Geom_TransfiniteSurface, Geom_BoundedSurface)
+
+using Nektar::NekMesh::NekMeshError;
 
 /**
  * @brief A class to describe an isoline of a transfinite surface.
@@ -149,7 +153,7 @@ public:
      */
     virtual void Reverse() override
     {
-        abort();
+        throw new NekMeshError("Unsupported function.");;
     }
 
     /**
@@ -160,7 +164,7 @@ public:
         const Standard_Real U) const override
     {
         boost::ignore_unused(U);
-        abort();
+        throw new NekMeshError("Unsupported function.");
         return 0.0;
     }
 
@@ -172,7 +176,7 @@ public:
         const Standard_Real U, const gp_Trsf& T) const override
     {
         boost::ignore_unused(U, T);
-        abort();
+        throw new NekMeshError("Unsupported function.");
         return 0.0;
     }
 
@@ -184,7 +188,7 @@ public:
         const gp_Trsf& T) const override
     {
         boost::ignore_unused(T);
-        abort();
+        throw new NekMeshError("Unsupported function.");
         return 0.0;
     }
 
@@ -230,7 +234,7 @@ public:
      */
     virtual Standard_Real Period() const override
     {
-        abort();
+        throw new NekMeshError("Unsupported function.");
         return 0.0;
     }
 
@@ -421,7 +425,7 @@ public:
                      gp_Vec& V3) const override
     {
         boost::ignore_unused(U, P, V1, V2, V3);
-        abort();
+        throw new NekMeshError("Unsupported function.");
     }
 
     /**
@@ -435,7 +439,7 @@ public:
         const Standard_Real U, const Standard_Integer N) const override
     {
         boost::ignore_unused(U, N);
-        abort();
+        throw new NekMeshError("Unsupported function.");
         return gp_Vec();
     }
 
@@ -455,7 +459,7 @@ public:
      */
     virtual void Transform (const gp_Trsf& T) override
     {
-        abort();
+        throw new NekMeshError("Unsupported function.");
 
         // Transform our constituent parts.
         for (int i = 0; i < m_edges.size(); ++i)
@@ -551,14 +555,14 @@ public:
      */
     virtual void UReverse() override
     {
-        abort();
+        throw new NekMeshError("Unsupported function.");
     }
 
     virtual Standard_Real UReversedParameter(
         const Standard_Real U) const override
     {
         boost::ignore_unused(U);
-        abort();
+        throw new NekMeshError("Unsupported function.");
         return 0.0;
     }
 
@@ -567,14 +571,14 @@ public:
      */
     virtual void VReverse() override
     {
-        abort();
+        throw new NekMeshError("Unsupported function.");
     }
 
     virtual Standard_Real VReversedParameter(
         const Standard_Real V) const override
     {
         boost::ignore_unused(V);
-        abort();
+        throw new NekMeshError("Unsupported function.");
         return 0.0;
     }
 
@@ -584,7 +588,7 @@ public:
      */
     virtual void Transform(const gp_Trsf& T) override
     {
-        abort();
+        throw new NekMeshError("Unsupported function.");
 
         // Transform our constituent parts.
         for (int i = 0; i < m_edges.size(); ++i)
@@ -609,14 +613,14 @@ public:
         Standard_Real& U, Standard_Real& V, const gp_Trsf& T) const override
     {
         boost::ignore_unused(U, V, T);
-        abort();
+        throw new NekMeshError("Unsupported function.");
     }
 
     virtual gp_GTrsf2d ParametricTransformation (
         const gp_Trsf& T) const override
     {
         boost::ignore_unused(T);
-        abort();
+        throw new NekMeshError("Unsupported function.");
         return gp_GTrsf2d();
     }
 
@@ -665,7 +669,7 @@ public:
      */
     virtual Standard_Real UPeriod() const override
     {
-        abort();
+        throw new NekMeshError("Unsupported function.");
         return 0.0;
     }
 
@@ -684,7 +688,7 @@ public:
      */
     virtual Standard_Real VPeriod() const override
     {
-        abort();
+        throw new NekMeshError("Unsupported function.");
         return 0.0;
     }
 
@@ -1028,7 +1032,7 @@ public:
                        const Standard_Integer Nv) const override
     {
         boost::ignore_unused(U, V, Nu, Nv);
-        abort();
+        throw new NekMeshError("Unsupported function.");
         return gp_Vec();
     }
 };

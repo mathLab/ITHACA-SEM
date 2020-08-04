@@ -67,15 +67,13 @@ ProcessExtractTetPrismInterface::~ProcessExtractTetPrismInterface()
 
 void ProcessExtractTetPrismInterface::Process()
 {
-    if (m_mesh->m_verbose)
-    {
-        cout << "ProcessExtractTetPrismInterface: Extracting tet-prism "
-             << "interface... " << endl;
-    }
+    m_log(VERBOSE) << "Extracting tet-prism interface." << endl;
 
-    ASSERTL0(m_mesh->m_expDim == 3,
-             "The prism-tet interface module"
-             " only works for three-dimensional meshes.");
+    if (m_mesh->m_expDim != 3)
+    {
+        m_log(FATAL) << "The prism-tet interface module only works for "
+                     << "three-dimensional meshes." << endl;
+    }
 
     // Copy 3D elements and 2D boundary elements and clear existing.
     vector<ElementSharedPtr> el    = m_mesh->m_element[m_mesh->m_expDim];
@@ -94,8 +92,10 @@ void ProcessExtractTetPrismInterface::Process()
         }
     }
 
-    ASSERTL0(m_mesh->m_element[m_mesh->m_expDim].size() > 0,
-             "Mesh does not contain any prismatic elements!");
+    if (m_mesh->m_element[m_mesh->m_expDim].size() == 0)
+    {
+        m_log(FATAL) << "Mesh does not contain any prismatic elements!" << endl;
+    }
 
     // Extract boundary region already associated with prisms
     // (i.e. outer wall of the computational domain)

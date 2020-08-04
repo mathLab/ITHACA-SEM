@@ -67,18 +67,18 @@ ProcessLinear::~ProcessLinear()
 
 void ProcessLinear::Process()
 {
-    if (m_mesh->m_verbose)
-    {
-        cout << "ProcessLinear: Linearising mesh... " << endl;
-    }
+    m_log(VERBOSE) << "Linearising mesh." << endl;
 
     bool all     = m_config["all"].as<bool>();
     bool invalid = m_config["invalid"].beenSet;
     NekDouble thr = m_config["invalid"].as<NekDouble>();
 
-    ASSERTL0(all || invalid,
-             "Must specify an option: all (to remove all curvature) or invalid "
-             "(to remove curvature that makes elements invalid)");
+    if (!all & !invalid)
+    {
+        m_log(FATAL) << "Must specify an option: 'all' (to remove all "
+                     << "curvature) or invalid (to remove curvature that makes "
+                     << "elements invalid)." << endl;
+    }
 
     if (all)
     {
@@ -98,10 +98,7 @@ void ProcessLinear::Process()
             m_mesh->m_element[m_mesh->m_expDim][i]->SetVolumeNodes(empty);
         }
 
-        if (m_mesh->m_verbose)
-        {
-            cerr << "Removed all element curvature" << endl;
-        }
+        m_log(VERBOSE) << "Removed all element curvature." << endl;
     }
     else if (invalid)
     {
@@ -207,12 +204,9 @@ void ProcessLinear::Process()
             neigh.clear();
         }
 
-        if (m_mesh->m_verbose)
-        {
-            cerr << "Removed curvature from " << clearedElmts.size()
-                 << " elements (" << clearedEdges.size() << " edges, "
-                 << clearedFaces.size() << " faces)" << endl;
-        }
+        m_log(VERBOSE) << "Removed curvature from " << clearedElmts.size()
+                       << " elements (" << clearedEdges.size() << " edges, "
+                       << clearedFaces.size() << " faces)" << endl;
 
         if(m_config["extract"].beenSet)
         {
@@ -225,6 +219,7 @@ void ProcessLinear::Process()
 
             ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
                 ModuleKey(eOutputModule, "xml"), dmp);
+            mod->SetLogger(m_log);
             mod->RegisterConfig("outfile", m_config["extract"].as<string>().c_str());
             mod->ProcessVertices();
             mod->ProcessEdges();
@@ -304,8 +299,6 @@ bool ProcessLinear::Invalid(ElementSharedPtr el, NekDouble thr)
 
     NekDouble scaledJac = Vmath::Vmin(j.size(),j,1) /
                           Vmath::Vmax(j.size(),j,1);
-
-    //cout << scaledJac << endl;
 
     if(scaledJac < thr)
     {

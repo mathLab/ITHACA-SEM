@@ -52,11 +52,12 @@ public:
      *@brief default constructor
      */
     BLMesh(MeshSharedPtr m, std::vector<unsigned int> bls, NekDouble b, int l,
-           NekDouble p, int id)
-        : m_mesh(m), m_blsurfs(bls), m_bl(b), m_prog(p), m_layer(l), m_id(id)
+           NekDouble p, int id, Logger log)
+        : m_mesh(m), m_blsurfs(bls), m_bl(b), m_prog(p), m_layer(l), m_id(id),
+          m_log(log)
     {
-        
-    };
+        m_log.SetPrefix("BLMesh");
+    }
 
     /**
      * @brief Execute boundary layer meshing
@@ -133,6 +134,8 @@ private:
     std::map<ElementSharedPtr, ElementSharedPtr> m_priToTri;
     std::vector<ElementSharedPtr> m_psuedoSurface;
     NekMatrix<NekDouble> m_deriv[3];
+    /// Logger
+    Logger m_log;
 };
 
 typedef std::shared_ptr<BLMesh> BLMeshSharedPtr;

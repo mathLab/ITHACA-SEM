@@ -61,6 +61,11 @@ public:
     ProcessBL(NekMesh::MeshSharedPtr m);
     virtual ~ProcessBL();
 
+    virtual std::string GetModuleName()
+    {
+        return "ProcessBL";
+    }
+
     // Create the boundary layer in 2D
     void BoundaryLayer2D();
     // Create the boundary layer in 3D

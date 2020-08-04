@@ -62,7 +62,7 @@ void SurfaceMesh::Process()
     m_mesh->m_expDim--; //just to make it easier to surface mesh for now
 
     m_log(VERBOSE) << "Surface meshing" << endl;
-    m_log(VERBOSE) << "    Curve meshing:" << endl;
+    m_log(VERBOSE) << "  Curve meshing:" << endl;
 
     m_mesh->m_numNodes = m_mesh->m_cad->GetNumVerts();
 
@@ -77,14 +77,13 @@ void SurfaceMesh::Process()
         m_curvemeshes[i]->Mesh();
     }
 
-    m_log(VERBOSE).Newline();
-    m_log(VERBOSE) << "    Face meshing:" << endl;
+    m_log(VERBOSE) << "  Face meshing:" << endl;
 
     bool validError = false;
     for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
     {
         m_log(VERBOSE).Progress(i, m_mesh->m_cad->GetNumSurf(),
-                                "Validating curve meshes");
+                                "    - Validating curve meshes");
 
         FaceMeshSharedPtr face =
             MemoryManager<FaceMesh>::AllocateSharedPtr(
@@ -140,7 +139,7 @@ void SurfaceMesh::Report()
     int ts = m_mesh->m_element[2].size();
     int ep = ns - es + ts;
 
-    m_log(VERBOSE) << "Surface mesh statistics:" << endl;
+    m_log(VERBOSE) << "Surface meshing complete. Statistics:" << endl;
     m_log(VERBOSE) << "  - Nodes         : " << ns << endl;
     m_log(VERBOSE) << "  - Edges         : " << es << endl;
     m_log(VERBOSE) << "  - Triangles     : " << ts << endl;

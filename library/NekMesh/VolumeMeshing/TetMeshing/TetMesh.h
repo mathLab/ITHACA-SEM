@@ -58,11 +58,12 @@ public:
     /**
      * @brief default constructor
      */
-    TetMesh(MeshSharedPtr m, int id,
+    TetMesh(MeshSharedPtr m, int id, Logger m_log,
             std::vector<ElementSharedPtr> e = std::vector<ElementSharedPtr>())
                 : m_mesh(m), m_surface(e), m_id(id)
     {
-    };
+        m_log.SetPrefix("TetMesh");
+    }
 
     /**
      *@brief execute tet meshing
@@ -78,7 +79,9 @@ private:
     int m_id;
     /// conncetivity of the tets from the interface
     std::vector<Array<OneD, int> > m_tetconnect;
-
+    /// Logger
+    Logger m_log;
+    /// Interface object/wrapper to tetgen.
     TetGenInterfaceSharedPtr tetgen;
 
 };

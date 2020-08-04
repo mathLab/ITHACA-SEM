@@ -341,9 +341,6 @@ void Octant::Subdivide(OctantSharedPtr p, int &numoct)
     }
     else if (m_neigbours[eUp].size() != 0)
     {
-        cout << "!!!!!"
-             << "NOT GOOD"
-             << "!!!!! " << m_neigbours[eUp].size() << endl;
     }
 
     if (m_neigbours[eDown].size() == 1)
@@ -370,9 +367,6 @@ void Octant::Subdivide(OctantSharedPtr p, int &numoct)
     }
     else if (m_neigbours[eDown].size() != 0)
     {
-        cout << "!!!!!"
-             << "NOT GOOD"
-             << "!!!!! " << m_neigbours[eDown].size() << endl;
     }
 
     if (m_neigbours[eForward].size() == 1)
@@ -399,9 +393,6 @@ void Octant::Subdivide(OctantSharedPtr p, int &numoct)
     }
     else if (m_neigbours[eForward].size() != 0)
     {
-        cout << "!!!!!"
-             << "NOT GOOD"
-             << "!!!!! " << m_neigbours[eForward].size() << endl;
     }
 
     if (m_neigbours[eBack].size() == 1)
@@ -428,9 +419,6 @@ void Octant::Subdivide(OctantSharedPtr p, int &numoct)
     }
     else if (m_neigbours[eBack].size() != 0)
     {
-        cout << "!!!!!"
-             << "NOT GOOD"
-             << "!!!!! " << m_neigbours[eBack].size() << endl;
     }
 
     if (m_neigbours[eLeft].size() == 1)
@@ -457,10 +445,6 @@ void Octant::Subdivide(OctantSharedPtr p, int &numoct)
     }
     else if (m_neigbours[eLeft].size() != 0)
     {
-        cout << "!!!!!"
-             << "NOT GOOD"
-             << "!!!!! " << m_neigbours[eLeft].size() << endl;
-        cout << m_neigbours[eLeft].size() << endl;
     }
 
     if (m_neigbours[eRight].size() == 1)
@@ -487,9 +471,6 @@ void Octant::Subdivide(OctantSharedPtr p, int &numoct)
     }
     else if (m_neigbours[eRight].size() != 0)
     {
-        cout << "!!!!!"
-             << "NOT GOOD"
-             << "!!!!! " << m_neigbours[eRight].size() << endl;
     }
 }
 

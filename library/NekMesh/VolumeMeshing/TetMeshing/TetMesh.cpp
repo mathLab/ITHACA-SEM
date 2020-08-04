@@ -43,11 +43,6 @@ namespace NekMesh
 
 void TetMesh::Mesh()
 {
-    if (m_mesh->m_verbose)
-    {
-        cout << endl << endl << "Tetrahedral mesh generation" << endl;
-    }
-
     vector<Array<OneD, NekDouble>> voidPts = m_mesh->m_cad->GetVoidPoints();
     tetgen = MemoryManager<TetGenInterface>::AllocateSharedPtr(voidPts);
 
@@ -91,10 +86,7 @@ void TetMesh::Mesh()
         surfacetris.push_back(tri);
     }
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "\tInital Node Count: " << IdToNode.size() << endl;
-    }
+    m_log(VERBOSE) << "  Initial node count: " << IdToNode.size() << endl;
 
     tetgen->InitialMesh(IdToNode, surfacetris);
 
@@ -143,10 +135,8 @@ void TetMesh::Mesh()
         m_mesh->m_element[3].push_back(E);
     }
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "\tTets :" << m_tetconnect.size() << endl;
-    }
+    m_log(VERBOSE) << "  Volume meshing complete: " << m_tetconnect.size()
+                   << " tetrahedra generated." << endl;
 }
 }
 }

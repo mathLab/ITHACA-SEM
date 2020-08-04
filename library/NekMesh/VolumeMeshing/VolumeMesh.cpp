@@ -67,7 +67,7 @@ VolumeMesh::~VolumeMesh()
 
 void VolumeMesh::Process()
 {
-    m_log(VERBOSE) << "  Volume meshing:" << endl;
+    m_log(VERBOSE) << "Volume meshing:" << endl;
 
     bool makeBL;
     vector<unsigned int> blSurfs;
@@ -92,10 +92,11 @@ void VolumeMesh::Process()
     TetMeshSharedPtr tet;
     if (makeBL)
     {
+        m_log(VERBOSE) << "  Performing boundary layer generation." << endl;
         BLMeshSharedPtr blmesh = MemoryManager<BLMesh>::AllocateSharedPtr(
             m_mesh, blSurfs, m_config["blthick"].as<NekDouble>(),
             m_config["bllayers"].as<int>(), m_config["blprog"].as<NekDouble>(),
-            prefix + 1);
+            prefix + 1, m_log);
 
         blmesh->Mesh();
 
@@ -118,7 +119,7 @@ void VolumeMesh::Process()
                 vector<EdgeSharedPtr> es = els[i]->GetEdgeList();
                 for (int j = 0; j < es.size(); j++)
                 {
-		    vector<pair<weak_ptr<Element>, int> > lk = es[j]->m_elLink;
+                    vector<pair<weak_ptr<Element>, int> > lk = es[j]->m_elLink;
                     es[j]->m_elLink.clear();
                     for (int k = 0; k < lk.size(); k++)
                     {
@@ -295,11 +296,16 @@ void VolumeMesh::Process()
             }
         }
 
-        tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh, prefix, tetsurface);
+        m_log(VERBOSE) << "    - Boundary layer generation complete." << endl;
+        m_log(VERBOSE) << "  Tetrahedral mesh generation:" << endl;
+
+        tet = MemoryManager<TetMesh>::AllocateSharedPtr(
+            m_mesh, prefix, m_log, tetsurface);
     }
     else
     {
-        tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh, prefix);
+        m_log(VERBOSE) << "  Tetrahedral mesh generation:" << endl;
+        tet = MemoryManager<TetMesh>::AllocateSharedPtr(m_mesh, prefix, m_log);
     }
 
     tet->Mesh();

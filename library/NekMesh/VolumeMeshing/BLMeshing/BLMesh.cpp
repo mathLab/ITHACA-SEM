@@ -135,8 +135,8 @@ void BLMesh::Mesh()
         {
             if (bit->second->bl > infos[i]->bl + 1)
             {
-                cout << "non smooth error " << bit->second->bl << " "
-                     << infos[i]->bl << endl;
+                m_log(TRACE) << "non smooth error " << bit->second->bl << " "
+                             << infos[i]->bl << endl;
             }
         }
     }
@@ -146,13 +146,9 @@ void BLMesh::Mesh()
         ElementSharedPtr el = m_mesh->m_element[3][i];
         if (!IsPrismValid(el))
         {
-            cout << "validity error " << el->GetId() << endl;
+            m_log(TRACE) << "validity error " << el->GetId() << endl;
         }
     }
-
-    /*m_mesh->m_element[2] = m_psuedoSurface;
-    m_mesh->m_element[3].clear();
-    m_mesh->m_expDim = 2;*/
 }
 
 map<NodeSharedPtr, NodeSharedPtr> BLMesh::GetSymNodes()
@@ -295,18 +291,8 @@ void BLMesh::GrowLayers()
                         if (prox < delta * 2.5)
                         {
                             hit = true;
-                            // cout << "hit" << endl;
                             bit->second->stopped = true;
-                            /*file << bit->first->m_x << " " << bit->first->m_y
-                            << " " << bit->first->m_z << " " << l << endl;
-                            file << bit->second->pNode->m_x << " " <<
-                            bit->second->pNode->m_y << " " <<
-                            bit->second->pNode->m_z << " " << l << endl;
-                            m_mesh->m_element[2].clear();
-                            m_mesh->m_expDim--;
-                            m_mesh->m_element[2].push_back(psElements[*iit][results[i].second]);*/
                             break;
-                            // return;
                         }
                     }
                 }
@@ -524,7 +510,7 @@ bool BLMesh::TestIntersectionEl(ElementSharedPtr e1, ElementSharedPtr e2)
     }
     else
     {
-        cout << "base not set" << endl;
+        m_log(TRACE) << "base not set" << endl;
     }
 
     if (!sign(dv1[0], dv1[1]) && sign(dv1[1], dv1[2]))
@@ -541,7 +527,7 @@ bool BLMesh::TestIntersectionEl(ElementSharedPtr e1, ElementSharedPtr e2)
     }
     else
     {
-        cout << "base not set" << endl;
+        m_log(TRACE) << "base not set" << endl;
     }
 
     Array<OneD, NekDouble> p1(3), p2(3);
@@ -739,12 +725,6 @@ bool BLMesh::IsPrismValid(ElementSharedPtr el)
         mx = max(mx, jacDet);
     }
 
-    /*SpatialDomains::GeometrySharedPtr geom = el->GetGeom(3);
-    SpatialDomains::GeomFactorsSharedPtr gfac = geom->GetGeomFactors();
-
-    cout << mn << " " << mx << " " << (mn > 0) << " " << gfac->IsValid() <<
-    endl;*/
-
     return mn > 0;
 }
 
@@ -933,7 +913,7 @@ Array<OneD, NekDouble> BLMesh::GetNormal(vector<ElementSharedPtr> tris)
 
         if (ct > 100000)
         {
-            cout << "run out of iterations" << endl;
+            m_log(TRACE) << "run out of iterations" << endl;
             Np = Ninital;
             break;
         }
@@ -952,10 +932,7 @@ void BLMesh::Setup()
         m_layerT[i] = m_layerT[i - 1] + a * pow(m_prog, i) * m_bl;
     }
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "First layer height " << m_layerT[0] << endl;
-    }
+    m_log(VERBOSE) << "    - First layer height " << m_layerT[0] << endl;
 
     // this sets up all the boundary layer normals data holder
     set<int> symSurfs;

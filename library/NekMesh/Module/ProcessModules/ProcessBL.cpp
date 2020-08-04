@@ -137,10 +137,8 @@ ProcessBL::~ProcessBL()
 
 void ProcessBL::Process()
 {
-    if (m_mesh->m_verbose)
-    {
-        cout << "ProcessBL: Refining boundary layer..." << endl;
-    }
+    m_log(VERBOSE) << "Refining boundary layer." << endl;
+
     int dim = m_mesh->m_expDim;
     switch (dim)
     {
@@ -153,7 +151,7 @@ void ProcessBL::Process()
             break;
 
         default:
-            ASSERTL0(0, "Dimension not supported")
+            m_log(FATAL) << "Only 2D and 3D meshes supported." << endl;
             break;
     }
 
@@ -865,7 +863,7 @@ void ProcessBL::BoundaryLayer3D()
     string surf = m_config["surf"].as<string>();
     if (surf.size() == 0)
     {
-        cout << "no surfaces to split" << endl;
+        m_log(WARNING) << "No surfaces detected to split, continuing." << endl;
         return;
     }
     vector<unsigned int> surfs;
@@ -904,15 +902,15 @@ void ProcessBL::BoundaryLayer3D()
                         splitMap[LibUtilities::eHexahedron].find(j);
                     if (f == splitMap[LibUtilities::eHexahedron].end())
                     {
-                        cout << "WARNING: hex split on face " << j
-                             << " unsupported"  << endl;
+                        m_log(WARNING) << "Splitting hex on face " << j
+                                       << " unsupported"  << endl;
                         continue;
                     }
 
                     if (splitEls.count(el->GetId()) > 0)
                     {
-                        cerr << "WARNING: hex already found; "
-                             << "ignoring" << endl;
+                        m_log(WARNING) << "Hex already found; "
+                                       << "ignoring" << endl;
                     }
 
                     splitEls[el->GetId()] = j;
@@ -923,24 +921,24 @@ void ProcessBL::BoundaryLayer3D()
                         splitMap[LibUtilities::ePrism].find(j);
                     if (f == splitMap[LibUtilities::ePrism].end())
                     {
-                        cout << "WARNING: Prism split on face " << j
-                             << " unsupported" << endl;
+                        m_log(WARNING) << "Splitting prism on face " << j
+                                       << " unsupported"  << endl;
                         continue;
                     }
 
                     if (splitEls.count(el->GetId()) > 0)
                     {
-                        cerr << "WARNING: prism already found; "
-                             << "ignoring" << endl;
+                        m_log(WARNING) << "Prism already found; "
+                                       << "ignoring" << endl;
                     }
 
                     splitEls[el->GetId()] = j;
                 }
                 else if (validElTypes.count(el->GetConf().m_e) == 0)
                 {
-                    cerr << "WARNING: Unsupported element type "
-                         << "found in surface " << j << "; "
-                         << "ignoring" << endl;
+                    m_log(WARNING) << "Unsupported element type "
+                                   << "found in surface " << j << "; "
+                                   << "ignoring" << endl;
                     continue;
                 }
             }
@@ -949,7 +947,7 @@ void ProcessBL::BoundaryLayer3D()
 
     if (splitEls.size() == 0)
     {
-        cerr << "WARNING: No elements detected to split." << endl;
+        m_log(WARNING) << "No elements detected to split; continuing." << endl;
         return;
     }
 
@@ -1478,8 +1476,8 @@ void ProcessBL::BoundaryLayer3D()
 
                         if(xp[m] < -1.0 || xp[m] > 1.0)
                         {
-                            cout << "WARNING: lies outside parameter range: "
-                                 << xp[m] << endl;
+                            m_log(WARNING) << "lies outside parameter range: "
+                                           << xp[m] << endl;
                         }
                     }
 

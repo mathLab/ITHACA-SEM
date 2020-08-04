@@ -38,7 +38,6 @@
 #include <NekMesh/Module/Module.h>
 
 #include <LibUtilities/BasicUtils/ParseUtils.h>
-#include <LibUtilities/BasicUtils/Progressbar.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -55,10 +54,7 @@ void Octree::Process()
     // build curvature samples
     CompileSourcePointList();
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "\tCurvature samples: " << m_SPList.size() << endl;
-    }
+    m_log(VERBOSE) << "  - Curvature samples: " << m_SPList.size() << endl;
 
     // make master octant based on the bounding box of the domain
     m_dim = max((boundingBox[1] - boundingBox[0]) / 2.0,
@@ -80,10 +76,8 @@ void Octree::Process()
     m_octants.clear();
     m_masteroct->CompileLeaves(m_octants);
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "\tOctants: " << m_octants.size() << endl;
-    }
+    m_log(VERBOSE) << "Octree construction complete:" << endl;
+    m_log(VERBOSE) << "  - Octants: " << m_octants.size() << endl;
 
     SmoothSurfaceOctants();
 
@@ -91,11 +85,8 @@ void Octree::Process()
 
     SmoothAllOctants();
 
-    if (m_mesh->m_verbose)
-    {
-        int elem = CountElemt();
-        cout << "\tPredicted mesh: " << elem << endl;
-    }
+    m_log(VERBOSE) << "  - Predicted mesh size: " << CountElemt()
+                   << " elements." << endl;
 }
 
 NekDouble Octree::Query(Array<OneD, NekDouble> loc)
@@ -273,20 +264,11 @@ void Octree::SubDivide()
     m_numoct = 1;
     m_masteroct->Subdivide(m_masteroct, m_numoct);
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "\tSubdivide iteration: ";
-    }
-
     do
     {
-        if (m_mesh->m_verbose)
-        {
-            cout << "\r                                                       ";
-            cout << "\r";
-            cout << "\tSubdivide iteration: " << ct;
-            cout.flush();
-        }
+        m_log(VERBOSE).Overwrite();
+        m_log(VERBOSE) << "  - Subdivide iteration: " << ct << flush;
+
         ct++;
         repeat = false;
         m_octants.clear();
@@ -371,10 +353,7 @@ void Octree::SubDivide()
         }
     } while (repeat);
 
-    if (m_mesh->m_verbose)
-    {
-        cout << endl;
-    }
+    m_log(VERBOSE).Newline();
 }
 
 bool Octree::VerifyNeigbours()
@@ -419,9 +398,10 @@ bool Octree::VerifyNeigbours()
                 if (fabs(m_octants[i]->FX(it->first) - expectedfx) > 1E-6)
                 {
                     valid = false;
-                    cout << "wall neigbour error" << endl;
-                    cout << expectedfx << " " << m_octants[i]->FX(it->first)
-                         << " " << it->first << endl;
+                    m_log(WARNING) << "wall neigbour error" << endl;
+                    m_log(WARNING) << expectedfx << " "
+                                   << m_octants[i]->FX(it->first)
+                                   << " " << it->first << endl;
                 }
             }
             else if (it->second.size() == 1)
@@ -430,9 +410,9 @@ bool Octree::VerifyNeigbours()
                       it->second[0]->DX() == 2.0 * m_octants[i]->DX()))
                 {
                     valid = false;
-                    cout << " 1 neigbour error" << endl;
-                    cout << m_octants[i]->DX() << " " << it->second[0]->DX()
-                         << endl;
+                    m_log(WARNING) << " 1 neigbour error" << endl;
+                    m_log(WARNING) << m_octants[i]->DX() << " "
+                                   << it->second[0]->DX() << endl;
                 }
             }
             else if (it->second.size() == 4)
@@ -440,16 +420,16 @@ bool Octree::VerifyNeigbours()
                 if (!(m_octants[i]->DX() / 2.0 == it->second[0]->DX()))
                 {
                     valid = false;
-                    cout << "4 neibour error" << endl;
-                    cout << m_octants[i]->DX() << " " << it->second[0]->DX()
-                         << endl;
+                    m_log(WARNING) << "4 neighbour error" << endl;
+                    m_log(WARNING) << m_octants[i]->DX() << " "
+                                   << it->second[0]->DX() << endl;
                 }
             }
         }
         if (!valid)
         {
             error = true;
-            cout << "invalid neigbour config" << endl;
+            m_log(WARNING) << "invalid neigbour config" << endl;
         }
     }
     return !error;
@@ -841,11 +821,7 @@ void Octree::CompileSourcePointList()
         totalEnt += m_mesh->m_cad->GetNumCurve();
         for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
         {
-            if (m_mesh->m_verbose)
-            {
-                LibUtilities::PrintProgressbar(i, totalEnt,
-                                               "\tCompiling source points");
-            }
+            m_log(VERBOSE).Progress(i, totalEnt, "  - Compiling source points");
 
             CADCurveSharedPtr curve = m_mesh->m_cad->GetCurve(i);
             Array<OneD, NekDouble> bds = curve->GetBounds();
@@ -899,11 +875,7 @@ void Octree::CompileSourcePointList()
         totalEnt = m_mesh->m_cad->GetNumSurf();
         for (int i = 1; i <= totalEnt; i++)
         {
-            if (m_mesh->m_verbose)
-            {
-                LibUtilities::PrintProgressbar(i, totalEnt,
-                                               "\tCompiling source points");
-            }
+            m_log(VERBOSE).Progress(i, totalEnt, "  - Compiling source points");
 
             CADSurfSharedPtr surf = m_mesh->m_cad->GetSurf(i);
             Array<OneD, NekDouble> bounds = surf->GetBounds();
@@ -1030,17 +1002,13 @@ void Octree::CompileSourcePointList()
             }
         }
     }
-    if (m_mesh->m_verbose)
-    {
-        cout << endl;
-    }
+
+    m_log(VERBOSE).Newline();
 
     if (m_refinement.size() > 0)
     {
-        if (m_mesh->m_verbose)
-        {
-            cout << "\t\tModifying based on refinement lines" << endl;
-        }
+        m_log(VERBOSE) << "        Modifying based on refinement lines" << endl;
+
         // now deal with the user defined spacing
         vector<string> lines;
 

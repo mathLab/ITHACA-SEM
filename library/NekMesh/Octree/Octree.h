@@ -38,6 +38,7 @@
 #include "SourcePoint.hpp"
 #include "Octant.h"
 #include <NekMesh/MeshElements/Mesh.h>
+#include <NekMesh/Module/Log.hpp>
 
 #include <string>
 
@@ -107,8 +108,9 @@ class Octree
 {
 public:
 
-    Octree(MeshSharedPtr m) : m_mesh(m)
+    Octree(MeshSharedPtr m, Logger log) : m_mesh(m), m_log(log)
     {
+        m_log.SetPrefix("Octree");
     }
 
     /**
@@ -233,6 +235,8 @@ private:
     int m_numoct;
     /// Mesh object
     MeshSharedPtr m_mesh;
+    /// Logger
+    Logger m_log;
 
     std::string m_refinement;
     std::vector<linesource> m_lsources;

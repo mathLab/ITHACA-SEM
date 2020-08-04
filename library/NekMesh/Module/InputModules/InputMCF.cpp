@@ -418,6 +418,9 @@ void InputMCF::ParseFile(string nm)
 
 void InputMCF::Process()
 {
+    m_log(VERBOSE) << "Reading mesh configuration file '"
+                   << m_config["infile"].as<string>() << "'" << endl;
+
     ParseFile(m_config["infile"].as<string>());
 
     m_mesh->m_expDim   = 3;
@@ -429,6 +432,7 @@ void InputMCF::Process()
     ////**** CAD ****////
     module = GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "loadcad"), m_mesh);
+    module->SetLogger(m_log);
     module->RegisterConfig("filename", m_cadfile);
     module->RegisterConfig("voidpoints", m_voidPts);
     if (m_mesh->m_verbose)
@@ -450,6 +454,7 @@ void InputMCF::Process()
     ////**** OCTREE ****////
     module = GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "loadoctree"), m_mesh);
+    module->SetLogger(m_log);
     module->RegisterConfig("mindel", m_minDelta);
     module->RegisterConfig("maxdel", m_maxDelta);
     module->RegisterConfig("eps", m_eps);
@@ -473,6 +478,9 @@ void InputMCF::Process()
         m_mesh->m_spaceDim = 2;
         module             = GetModuleFactory().CreateInstance(
             ModuleKey(eProcessModule, "2dgenerator"), m_mesh);
+
+        module->SetLogger(m_log);
+
         if (m_makeBL)
         {
             module->RegisterConfig("blcurves", m_blsurfs);
@@ -525,6 +533,7 @@ void InputMCF::Process()
 
         try
         {
+            module->SetLogger(m_log);
             module->SetDefaults();
             module->Process();
         }
@@ -557,6 +566,9 @@ void InputMCF::Process()
             ////**** VolumeMesh ****////
             module = GetModuleFactory().CreateInstance(
                 ModuleKey(eProcessModule, "volumemesh"), m_mesh);
+
+            module->SetLogger(m_log);
+
             if (m_makeBL)
             {
                 module->RegisterConfig("blsurfs", m_blsurfs);
@@ -596,6 +608,9 @@ void InputMCF::Process()
     ////**** HOSurface ****////
     module = GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "hosurface"), m_mesh);
+
+    module->SetLogger(m_log);
+
     if (m_surfopti)
     {
         module->RegisterConfig("opti", "");
@@ -627,6 +642,8 @@ void InputMCF::Process()
 
         module = GetModuleFactory().CreateInstance(
             ModuleKey(eProcessModule, "varopti"), m_mesh);
+
+        module->SetLogger(m_log);
         module->RegisterConfig("hyperelastic", "");
         module->RegisterConfig("maxiter", "10");
         module->RegisterConfig("numthreads", boost::lexical_cast<string>(np));
@@ -652,6 +669,8 @@ void InputMCF::Process()
     {
         module = GetModuleFactory().CreateInstance(
             ModuleKey(eProcessModule, "bl"), m_mesh);
+
+        module->SetLogger(m_log);
         module->RegisterConfig("layers", m_bllayers);
         module->RegisterConfig("surf", m_blsurfs);
         module->RegisterConfig("nq",
@@ -703,6 +722,7 @@ void InputMCF::Process()
 
             vector<string> tmp(2);
             boost::split(tmp, il, boost::is_any_of(","));
+            module->SetLogger(m_log);
             module->RegisterConfig("surf1", tmp[0]);
             module->RegisterConfig("surf2", tmp[1]);
 

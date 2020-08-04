@@ -39,7 +39,6 @@
 #include <NekMesh/Octree/Octree.h>
 
 #include <LibUtilities/BasicUtils/ParseUtils.h>
-#include <LibUtilities/BasicUtils/Progressbar.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -82,13 +81,15 @@ void Generator2D::Process()
 {
     // Check that cad is 2D
     Array<OneD, NekDouble> bndBox = m_mesh->m_cad->GetBoundingBox();
-    ASSERTL0(fabs(bndBox[5] - bndBox[4]) < 1.0e-7, "CAD isn't 2D");
 
-    if (m_mesh->m_verbose)
+    if (fabs(bndBox[5] - bndBox[4]) > 1.0e-7)
     {
-        cout << endl << "2D meshing" << endl;
-        cout << endl << "\tCurve meshing:" << endl << endl;
+        m_log(FATAL) << "Specified CAD file is not a 2D geometry." << endl;
     }
+
+    m_log(VERBOSE) << "Beginning 2D mesh generation:" << endl;
+    m_log(VERBOSE) << "  Curve meshing:" << endl;
+
     m_mesh->m_numNodes = m_mesh->m_cad->GetNumVerts();
     m_thickness_ID =
         m_thickness.DefineFunction("x y z", m_config["blthick"].as<string>());
@@ -104,17 +105,15 @@ void Generator2D::Process()
     // linear mesh all curves
     for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
     {
-        if (m_mesh->m_verbose)
-        {
-            LibUtilities::PrintProgressbar(i, m_mesh->m_cad->GetNumCurve(),
-                                           "Curve progress");
-        }
+        m_log(VERBOSE).Progress(i, m_mesh->m_cad->GetNumCurve(),
+                                "Curve progress");
+
         vector<unsigned int>::iterator f =
             find(m_blCurves.begin(), m_blCurves.end(), i);
         if (f == m_blCurves.end())
         {
             m_curvemeshes[i] =
-                MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh);
+                MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh, m_log);
 
             // Fheck if this curve is at an end of the BL
             // If so, define an offset for the second node, corresponding to the
@@ -147,7 +146,7 @@ void Generator2D::Process()
         else
         {
             m_curvemeshes[i] = MemoryManager<CurveMesh>::AllocateSharedPtr(
-                i, m_mesh, m_config["blthick"].as<string>());
+                i, m_mesh, m_log, m_config["blthick"].as<string>());
         }
         m_curvemeshes[i]->Mesh();
     }
@@ -192,25 +191,21 @@ void Generator2D::Process()
             // both
             m_curvemeshes[ic.first] =
                 MemoryManager<CurveMesh>::AllocateSharedPtr(ic.first, m_mesh,
-                                                            nodes);
+                                                            nodes, m_log);
         }
+
+        m_log(VERBOSE) << "    Boundary layer meshing complete." << endl;
     }
 
-    if (m_mesh->m_verbose)
-    {
-        cout << endl << "\tFace meshing:" << endl << endl;
-    }
+    m_log(VERBOSE) << "  Face meshing:" << endl;
+
     // linear mesh all surfaces
     for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
     {
-        if (m_mesh->m_verbose)
-        {
-            LibUtilities::PrintProgressbar(i, m_mesh->m_cad->GetNumSurf(),
-                                           "Face progress");
-        }
-
+        m_log(VERBOSE).Progress(i, m_mesh->m_cad->GetNumSurf(),
+                                "Face progress");
         m_facemeshes[i] = MemoryManager<FaceMesh>::AllocateSharedPtr(
-            i, m_mesh, m_curvemeshes, 99 + i);
+            i, m_mesh, m_curvemeshes, 99 + i, m_log);
         m_facemeshes[i]->Mesh();
     }
 
@@ -304,10 +299,7 @@ void Generator2D::FindBLEnds()
 
 void Generator2D::MakeBLPrep()
 {
-    if (m_mesh->m_verbose)
-    {
-        cout << endl << "\tBoundary layer meshing:" << endl << endl;
-    }
+    m_log(VERBOSE) << "  Boundary layer meshing:" << endl;
 
     // identify the nodes and edges which will become the boundary layer.
 
@@ -376,15 +368,20 @@ void Generator2D::MakeBL(int faceid)
 
     if (divider < 2.0)
     {
-        WARNINGL0(false, "BndLayerAdjustment too low, corrected to 2.0");
+        m_log(WARNING) << "    BndLayerAdjustment too low, corrected to 2.0"
+                       << endl;
         divider = 2.0;
     }
 
     map<NodeSharedPtr, NodeSharedPtr> nodeNormals;
     for (auto &it : m_nodesToEdge)
     {
-        ASSERTL0(it.second.size() == 1 || it.second.size() == 2,
-                 "weirdness, most likely bl_surfs are incorrect");
+        if (it.second.size() != 1 && it.second.size() != 2)
+        {
+            m_log(FATAL) << "    Error with identifying nodes with edges: check"
+                         << " that your boundary layer surfaces are correctly "
+                         << "defined." << endl;
+        }
 
         // If node at the end of the BL open loop, the "normal node" isn't
         // constructed by computing a normal but found on the adjacent curve
@@ -518,18 +515,16 @@ void Generator2D::MakeBL(int faceid)
             }
         } while (unitNormals.size() && count++ < 50);
 
-        if (m_mesh->m_verbose)
+        if (count < 50)
         {
-            if (count < 50)
-            {
-                cout << "\t\tNormals smoothed in " << count << " iterations."
-                     << endl;
-            }
-            else
-            {
-                cout << "\t\tNormals smoothed. Algorithm didn't converge after "
-                     << count << " iterations." << endl;
-            }
+            m_log(VERBOSE) << "    Normals smoothed in " << count
+                           << " iterations." << endl;
+        }
+        else
+        {
+            m_log(WARNING) << "    Normals smoothed. Algorithm didn't "
+                           << "converge after " << count << " iterations."
+                           << endl;
         }
     }
 
@@ -538,9 +533,9 @@ void Generator2D::MakeBL(int faceid)
     {
         if (spaceoutthr < 0.0 || spaceoutthr > 1.0)
         {
-            WARNINGL0(false, "The boundary layer space out threshold should be "
-                             "between 0 and 1. It will now be adjusted to "
-                             "0.5.");
+            m_log(WARNING) << "  The boundary layer space out threshold should "
+                           << "be between 0 and 1. It will now be adjusted to "
+                           << "0.5." << endl;
             spaceoutthr = 0.5;
         }
 
@@ -788,18 +783,16 @@ void Generator2D::MakeBL(int faceid)
             }
         } while (nodesToMove.size() && count++ < 50);
 
-        if (m_mesh->m_verbose)
+        if (count < 50)
         {
-            if (count < 50)
-            {
-                cout << "\t\tBL spaced out in " << count << " iterations."
-                     << endl;
-            }
-            else
-            {
-                cout << "\t\tBL spaced out. Algorithm didn't converge after "
-                     << count << " iterations." << endl;
-            }
+            m_log(VERBOSE) << "    BL spaced out in " << count
+                           << " iterations." << endl;
+        }
+        else
+        {
+            m_log(WARNING) << "    BL spaced out. Algorithm didn't "
+                           << "converge after " << count << " iterations."
+                           << endl;
         }
     }
 
@@ -813,8 +806,10 @@ void Generator2D::MakeBL(int faceid)
         {
             newNs.push_back(nodeNormals[in]);
         }
-        m_curvemeshes[it] =
-            MemoryManager<CurveMesh>::AllocateSharedPtr(it, m_mesh, newNs);
+
+        m_curvemeshes[it] = MemoryManager<CurveMesh>::AllocateSharedPtr(
+            it, m_mesh, newNs, m_log);
+
         if (edgeo == CADOrientation::eBackwards)
         {
             reverse(ns.begin(), ns.end());
@@ -865,14 +860,24 @@ void Generator2D::PeriodicPrep()
         vector<string> tmp;
         boost::split(tmp, il, boost::is_any_of(","));
 
-        ASSERTL0(tmp.size() == 2, "periodic pairs ill-defined");
+        if (tmp.size() != 2)
+        {
+            m_log(FATAL) << "Unable to define periodic pairs: should be defined"
+                         << " as 'a,b' where a and b are curve IDs." << endl;
+        }
 
         vector<unsigned> data(2);
         data[0] = boost::lexical_cast<unsigned>(tmp[0]);
         data[1] = boost::lexical_cast<unsigned>(tmp[1]);
 
-        ASSERTL0(!periodic.count(data[0]), "curve already periodic");
-        ASSERTL0(!periodic.count(data[1]), "curve already periodic");
+        for (int i = 0; i < 1; ++i)
+        {
+            if (periodic.count(data[i]))
+            {
+                m_log(FATAL) << "Curve '" << data[i] << "' is already defined "
+                             << "as periodic." << endl;
+            }
+        }
 
         m_periodicPairs[data[0]] = data[1];
         periodic.insert(data[0]);
@@ -889,31 +894,29 @@ void Generator2D::MakePeriodic()
         m_curvemeshes[ip.second]->PeriodicOverwrite(m_curvemeshes[ip.first]);
     }
 
-    if (m_mesh->m_verbose)
+    m_log(VERBOSE) << "  Periodic boundary conditions:" << endl;
+
+    for (auto &it : m_periodicPairs)
     {
-        cout << "\t\tPeriodic boundary conditions" << endl;
-        for (auto &it : m_periodicPairs)
-        {
-            cout << "\t\t\tCurves " << it.first << " => " << it.second << endl;
-        }
-        cout << endl;
+        m_log(VERBOSE) << "    - Curves " << it.first << " => "
+                       << it.second << endl;
     }
+
+    m_log(VERBOSE) << endl;
 }
 
 void Generator2D::Report()
 {
-    if (m_mesh->m_verbose)
-    {
-        int ns = m_mesh->m_vertexSet.size();
-        int es = m_mesh->m_edgeSet.size();
-        int ts = m_mesh->m_element[2].size();
-        int ep = ns - es + ts;
-        cout << endl << "\tSurface mesh statistics" << endl;
-        cout << "\t\tNodes: " << ns << endl;
-        cout << "\t\tEdges: " << es << endl;
-        cout << "\t\tTriangles " << ts << endl;
-        cout << "\t\tEuler-Poincaré characteristic: " << ep << endl;
-    }
+    int ns = m_mesh->m_vertexSet.size();
+    int es = m_mesh->m_edgeSet.size();
+    int ts = m_mesh->m_element[2].size();
+    int ep = ns - es + ts;
+
+    m_log(VERBOSE) << "Surface meshing complete. Statistics:" << endl;
+    m_log(VERBOSE) << "  - Nodes         : " << ns << endl;
+    m_log(VERBOSE) << "  - Edges         : " << es << endl;
+    m_log(VERBOSE) << "  - Triangles     : " << ts << endl;
+    m_log(VERBOSE) << "  - Euler-Poincaré: " << ep << endl;
 }
 }
 }

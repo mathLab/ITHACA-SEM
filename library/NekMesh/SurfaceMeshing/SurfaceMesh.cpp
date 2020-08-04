@@ -61,61 +61,55 @@ void SurfaceMesh::Process()
 {
     m_mesh->m_expDim--; //just to make it easier to surface mesh for now
 
-    if (m_mesh->m_verbose)
-        cout << endl << "Surface meshing" << endl;
-
-    if (m_mesh->m_verbose)
-        cout << endl << "\tCurve meshing:" << endl << endl;
+    m_log(VERBOSE) << "Surface meshing" << endl;
+    m_log(VERBOSE) << "    Curve meshing:" << endl;
 
     m_mesh->m_numNodes = m_mesh->m_cad->GetNumVerts();
 
     // linear mesh all curves
     for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
     {
-        if (m_mesh->m_verbose)
-        {
-            LibUtilities::PrintProgressbar(
-                i, m_mesh->m_cad->GetNumCurve(), "Curve progress");
-        }
+        m_log(VERBOSE).Progress(i, m_mesh->m_cad->GetNumCurve(),
+                                "Curve progress");
 
-        m_curvemeshes[i] = MemoryManager<CurveMesh>::AllocateSharedPtr(i, m_mesh);
-
+        m_curvemeshes[i] = MemoryManager<CurveMesh>::AllocateSharedPtr(
+            i, m_mesh, m_log);
         m_curvemeshes[i]->Mesh();
     }
 
-    if (m_mesh->m_verbose)
-        cout << endl << "\tFace meshing:" << endl << endl;
+    m_log(VERBOSE).Newline();
+    m_log(VERBOSE) << "    Face meshing:" << endl;
 
     bool validError = false;
     for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
     {
-        if (m_mesh->m_verbose)
-        {
-            LibUtilities::PrintProgressbar(
-                i, m_mesh->m_cad->GetNumSurf(), "Validating curve meshes");
-        }
+        m_log(VERBOSE).Progress(i, m_mesh->m_cad->GetNumSurf(),
+                                "Validating curve meshes");
+
         FaceMeshSharedPtr face =
-            MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
-                m_curvemeshes, i);
+            MemoryManager<FaceMesh>::AllocateSharedPtr(
+                i, m_mesh, m_curvemeshes, i, m_log);
 
         validError = validError ? true : face->ValidateCurves();
 
         face->ValidateLoops();
     }
 
-    ASSERTL0(!validError,"valdity error in curve meshes");
+    m_log(VERBOSE).Newline();
+
+    if (validError)
+    {
+        m_log(FATAL) << "Unable to complete face meshing." << endl;
+    }
 
     // linear mesh all surfaces
     for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
     {
-        if (m_mesh->m_verbose)
-        {
-            LibUtilities::PrintProgressbar(
-                i, m_mesh->m_cad->GetNumSurf(), "Face progress");
-        }
+        m_log(VERBOSE).Progress(i, m_mesh->m_cad->GetNumSurf(),
+                                "Face progress");
         m_facemeshes[i] =
-            MemoryManager<FaceMesh>::AllocateSharedPtr(i,m_mesh,
-                m_curvemeshes, i);
+            MemoryManager<FaceMesh>::AllocateSharedPtr(
+                i, m_mesh, m_curvemeshes, i, m_log);
 
         m_facemeshes[i]->Mesh();
     }
@@ -141,18 +135,16 @@ void SurfaceMesh::Process()
 }
 void SurfaceMesh::Report()
 {
-    if (m_mesh->m_verbose)
-    {
-        int ns = m_mesh->m_vertexSet.size();
-        int es = m_mesh->m_edgeSet.size();
-        int ts = m_mesh->m_element[2].size();
-        int ep = ns - es + ts;
-        cout << endl << "\tSurface mesh statistics" << endl;
-        cout << "\t\tNodes: " << ns << endl;
-        cout << "\t\tEdges: " << es << endl;
-        cout << "\t\tTriangles " << ts << endl;
-        cout << "\t\tEuler-Poincaré characteristic: " << ep << endl;
-    }
+    int ns = m_mesh->m_vertexSet.size();
+    int es = m_mesh->m_edgeSet.size();
+    int ts = m_mesh->m_element[2].size();
+    int ep = ns - es + ts;
+
+    m_log(VERBOSE) << "Surface mesh statistics:" << endl;
+    m_log(VERBOSE) << "  - Nodes         : " << ns << endl;
+    m_log(VERBOSE) << "  - Edges         : " << es << endl;
+    m_log(VERBOSE) << "  - Triangles     : " << ts << endl;
+    m_log(VERBOSE) << "  - Euler-Poincaré: " << ep << endl;
 }
 
 }

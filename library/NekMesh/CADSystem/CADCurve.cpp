@@ -50,8 +50,13 @@ Array<OneD, NekDouble> CADCurve::NormalWRT(NekDouble t, int surf)
 
     Array<OneD, NekDouble> p = P(t);
     pair<weak_ptr<CADSurf>, CADOrientation::Orientation> surface;
-    ASSERTL0(m_adjSurfs.size() == 1,
-             "This will only work in 2D for one surface at the moment");
+
+    if (m_adjSurfs.size() != 1)
+    {
+        m_log(FATAL) << "This will only work in 2D for one surface at the "
+                     << "moment" << endl;
+    }
+
     surface = m_adjSurfs[0];
 
     Array<OneD, NekDouble> uv = surface.first.lock()->locuv(p);
@@ -94,7 +99,7 @@ CADOrientation::Orientation CADCurve::GetOrienationWRT(int surf)
         }
     }
 
-    ASSERTL0(false, "surf not in adjecency list");
+    m_log(FATAL) << "Unable to find surface in adjacency list." << endl;
     return CADOrientation::eUnknown;
 }
 }

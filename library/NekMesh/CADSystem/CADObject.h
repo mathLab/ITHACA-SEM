@@ -37,6 +37,7 @@
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <NekMesh/NekMeshDeclspec.h>
+#include <NekMesh/Module/Log.hpp>
 
 namespace Nektar
 {
@@ -121,6 +122,27 @@ public:
         return m_name;
     }
 
+    /**
+     * @brief Set the logger for this CAD object.
+     */
+    void SetLogger(Logger &log)
+    {
+        m_log = log;
+
+        if (m_type == CADType::eVert)
+        {
+            m_log.SetPrefix("CADVert");
+        }
+        else if (m_type == CADType::eCurve)
+        {
+            m_log.SetPrefix("CADCurve");
+        }
+        else if (m_type == CADType::eSurf)
+        {
+            m_log.SetPrefix("CADSurf");
+        }
+    }
+
 protected:
     /// ID of the vert.
     int m_id;
@@ -130,6 +152,8 @@ protected:
     CADOrientation::Orientation m_orientation;
     /// string name of the cad
     std::string m_name;
+    /// Logger
+    Logger m_log;
 };
 
 typedef std::shared_ptr<CADObject> CADObjectSharedPtr;

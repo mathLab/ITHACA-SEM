@@ -69,7 +69,6 @@ public:
         return m_shape;
     }
 
-
 private:
     /// Function to add curve to CADSystem::m_verts.
     void AddVert(int i, TopoDS_Shape in);

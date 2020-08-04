@@ -41,7 +41,6 @@
 #include <NekMesh/SurfaceMeshing/HOSurfaceMesh.h>
 #include <NekMesh/SurfaceMeshing/OptimiseFunctions.h>
 
-#include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LocalRegions/MatrixKey.h>
 
@@ -67,8 +66,7 @@ HOSurfaceMesh::~HOSurfaceMesh()
 
 void HOSurfaceMesh::Process()
 {
-    if (m_mesh->m_verbose)
-        cout << endl << "\tHigh-Order Surface meshing" << endl;
+    m_log(VERBOSE) << "High-order surface meshing:" << endl;
 
     LibUtilities::PointsKey ekey(m_mesh->m_nummode,
                                  LibUtilities::eGaussLobattoLegendre);
@@ -110,11 +108,8 @@ void HOSurfaceMesh::Process()
 
     for (int i = 0; i < m_mesh->m_element[2].size(); i++)
     {
-        if (m_mesh->m_verbose)
-        {
-            LibUtilities::PrintProgressbar(i, m_mesh->m_element[2].size(),
-                                           "\t\tSurface elements");
-        }
+        m_log(VERBOSE).Progress(i, m_mesh->m_element[2].size(),
+                                "    Surface elements");
 
         if (!m_mesh->m_element[2][i]->m_parentCAD)
         {
@@ -168,8 +163,11 @@ void HOSurfaceMesh::Process()
             // need to link them together and copy the cad information to be
             // able to identify how to make it high-order
             EdgeSet::iterator it = surfaceEdges.find(e);
-            ASSERTL0(it != surfaceEdges.end(),
-                     "could not find edge in surface");
+            if (it == surfaceEdges.end())
+            {
+                m_log(FATAL) << "High-order meshing failed. Could not locate "
+                             << "edge '" << e->m_id << "' in surface." << endl;
+            }
 
             if ((*it)->m_parentCAD)
             {
@@ -245,7 +243,8 @@ void HOSurfaceMesh::Process()
                         }
                         if (itct > 1000)
                         {
-                            cout << "failed to optimise on curve" << endl;
+                            m_log(TRACE) << "Failed to optimise on curve "
+                                         << c->GetId() << endl;
                             for (int k = 0; k < nq; k++)
                             {
                                 ti[k] = tb * (1.0 - gll[k]) / 2.0 +
@@ -257,11 +256,9 @@ void HOSurfaceMesh::Process()
 
                         if (!BGFSUpdate(opti, J, B, H))
                         {
-                            if (m_mesh->m_verbose)
-                            {
-                                cout << "BFGS reported no update, curve on "
-                                     << c->GetId() << endl;
-                            }
+                            m_log(VERBOSE).Newline();
+                            m_log(VERBOSE) << "  - BFGS reported no update, "
+                                           << "curve on " << c->GetId() << endl;
                             break;
                         }
                     }
@@ -376,8 +373,9 @@ void HOSurfaceMesh::Process()
 
                         if (itct > 1000)
                         {
-                            cout << "failed to optimise on edge " << Norm
-                                 << endl;
+                            m_log(VERBOSE).Newline();
+                            m_log(WARNING) << "  Failed to optimise on edge "
+                                           << Norm << endl;
                             for (int k = 0; k < nq; k++)
                             {
                                 Array<OneD, NekDouble> uv(2);
@@ -393,12 +391,10 @@ void HOSurfaceMesh::Process()
 
                         if (!BGFSUpdate(opti, J, B, H))
                         {
-                            if (m_mesh->m_verbose)
-                            {
-                                cout << "BFGS reported no update, edge on "
-                                     << surf << endl;
-                            }
-                            // exit(-1);
+                            m_log(VERBOSE).Newline();
+                            m_log(VERBOSE)
+                                << "BFGS reported no update, edge on "
+                                << surf << endl;
                             break;
                         }
                     }
@@ -523,8 +519,7 @@ void HOSurfaceMesh::Process()
         }
     }
 
-    if (m_mesh->m_verbose)
-        cout << endl;
+    m_log(VERBOSE).Newline();
 }
 }
 }

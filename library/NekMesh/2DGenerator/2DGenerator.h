@@ -63,7 +63,7 @@ public:
 
     virtual ~Generator2D();
 
-    virtual void Process();
+    virtual void Process() override;
 
 private:
     void FindBLEnds();
@@ -77,6 +77,12 @@ private:
     void MakeBL(int faceid);
 
     void Report();
+
+    std::string GetModuleName() override
+    {
+        return "2DGenerator";
+    }
+
     /// map of individual surface meshes from parametric surfaces
     std::map<int, FaceMeshSharedPtr> m_facemeshes;
     /// map of individual curve meshes of the curves in the domain

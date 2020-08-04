@@ -42,6 +42,8 @@
 
 #include <NekMesh/NekMeshDeclspec.h>
 
+#include <NekMesh/Module/Log.hpp>
+
 #include <NekMesh/CADSystem/CADVert.h>
 #include <NekMesh/CADSystem/CADCurve.h>
 #include <NekMesh/CADSystem/CADSurf.h>
@@ -253,6 +255,12 @@ public:
         return m_engine;
     }
 
+    void SetLogger(Logger &log)
+    {
+        m_log = log;
+        m_log.SetPrefix("CADSystem");
+    }
+
 protected:
     /// Name of CAD file
     std::string m_name;
@@ -273,18 +281,23 @@ protected:
     std::map<std::string, std::string> m_config;
     /// Points contained within volume voids for tetrahedralisation
     std::vector<Array<OneD, NekDouble>> m_voidPoints;
+    /// Logger object.
+    Logger m_log;
 
     /**
      * @brief Reports basic properties to screen.
      */
     void Report()
     {
-        std::cout << std::endl << "CAD report:" << std::endl;
-        std::cout << "\tCAD has: " << m_verts.size() << " verts." << std::endl;
-        std::cout << "\tCAD has: " << m_curves.size() << " curves."
-                  << std::endl;
-        std::cout << "\tCAD has: " << m_surfs.size() << " surfaces."
-                  << std::endl;
+        m_log(VERBOSE) << "Using CAD engine: '" << m_engine << "'"
+                       << std::endl;
+        m_log(VERBOSE) << "CAD report:" << std::endl;
+        m_log(VERBOSE) << "  - CAD has: " << m_verts.size() << " verts."
+                       << std::endl;
+        m_log(VERBOSE) << "  - CAD has: " << m_curves.size() << " curves."
+                       << std::endl;
+        m_log(VERBOSE) << "  - CAD has: " << m_surfs.size() << " surfaces."
+                       << std::endl;
     }
 };
 

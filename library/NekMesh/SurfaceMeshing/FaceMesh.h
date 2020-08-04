@@ -59,12 +59,13 @@ public:
     FaceMesh(const int                                id,
              MeshSharedPtr                            m,
              const std::map<int, CurveMeshSharedPtr> &cmeshes,
-             const int                                comp)
-        : m_mesh(m), m_curvemeshes(cmeshes), m_id(id), m_compId(comp)
-
+             const int                                comp,
+             Logger                                   l)
+        : m_mesh(m), m_curvemeshes(cmeshes), m_id(id), m_compId(comp), m_log(l)
     {
         m_cadsurf = m_mesh->m_cad->GetSurf(m_id);
         m_edgeloops = m_cadsurf->GetEdges();
+        m_log.SetPrefix("FaceMesh");
     };
 
     /**
@@ -160,6 +161,8 @@ private:
     NodeSet m_inBoundary;
     /// identity to put into element tags
     int m_compId;
+    /// Logger
+    Logger m_log;
 };
 
 typedef std::shared_ptr<FaceMesh> FaceMeshSharedPtr;

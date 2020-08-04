@@ -62,17 +62,19 @@ public:
     /**
      * @brief default constructor
      */
-    CurveMesh(int id, MeshSharedPtr m, std::string expr = "0.0")
-        : m_id(id), m_mesh(m)
+    CurveMesh(int id, MeshSharedPtr m, Logger log, std::string expr = "0.0")
+        : m_id(id), m_mesh(m), m_log(log)
     {
         m_blID = m_bl.DefineFunction("x y z", expr);
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
+        m_log.SetPrefix("CurveMesh");
     }
 
-    CurveMesh(int id, MeshSharedPtr m, std::vector<NodeSharedPtr> ns)
-        : m_id(id), m_mesh(m), m_meshpoints(ns)
+    CurveMesh(int id, MeshSharedPtr m, std::vector<NodeSharedPtr> ns, Logger l)
+        : m_id(id), m_mesh(m), m_meshpoints(ns), m_log(l)
     {
         m_cadcurve = m_mesh->m_cad->GetCurve(m_id);
+        m_log.SetPrefix("CurveMesh");
     }
 
     /**
@@ -196,6 +198,8 @@ private:
     int m_blID;
     /// offset of second point at each end
     std::map<unsigned, NekDouble> m_endoffset;
+    /// Logger
+    Logger m_log;
 };
 
 }

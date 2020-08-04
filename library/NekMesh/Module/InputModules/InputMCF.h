@@ -42,22 +42,27 @@ namespace Nektar
 namespace NekMesh
 {
 
-class InputMCF : public NekMesh::InputModule
+class InputMCF : public InputModule
 {
 public:
-    InputMCF(NekMesh::MeshSharedPtr m);
+    InputMCF(MeshSharedPtr m);
     virtual ~InputMCF();
     virtual void Process();
 
     /// Creates an instance of this class
-    static NekMesh::ModuleSharedPtr create(NekMesh::MeshSharedPtr m)
+    static ModuleSharedPtr create(MeshSharedPtr m)
     {
         return MemoryManager<InputMCF>::AllocateSharedPtr(m);
     }
     /// %ModuleKey for class.
-    static NekMesh::ModuleKey className;
+    static ModuleKey className;
 
     void ParseFile(std::string nm);
+
+    virtual std::string GetModuleName()
+    {
+        return "InputMCF";
+    }
 
 private:
     std::string m_minDelta, m_maxDelta, m_eps, m_cadfile, m_order, m_blsurfs,

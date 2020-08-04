@@ -192,7 +192,7 @@ void CurveMesh::Mesh(bool forceThree)
         n2->SetCADCurve(m_cadcurve, t);
         for (int j = 0; j < s.size(); j++)
         {
-	    Array<OneD, NekDouble> uv = s[j].first.lock()->locuv(loc);
+            Array<OneD, NekDouble> uv = s[j].first.lock()->locuv(loc);
             n2->SetCADSurf(s[j].first.lock(), uv);
         }
         m_meshpoints.push_back(n2);
@@ -229,17 +229,12 @@ void CurveMesh::Mesh(bool forceThree)
         m_meshedges.push_back(e);
     }
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "\r                                                            "
-                "    "
-                "                             ";
-        cout << scientific << "\r\t\tCurve " << m_id << endl
-             << "\t\t\tLength: " << m_curvelength << endl
-             << "\t\t\tNodes: " << m_meshpoints.size() << endl
-             << "\t\t\tSample points: " << m_numSamplePoints << endl
-             << endl;
-    }
+    // Nuke progress bar
+    m_log(VERBOSE).Overwrite();
+    m_log(VERBOSE) << "    - Curve " << m_id << endl;
+    m_log(VERBOSE) << "        Length       : " << scientific << m_curvelength << endl;
+    m_log(VERBOSE) << "        Nodes        : " << m_meshpoints.size() << endl;
+    m_log(VERBOSE) << "        Sample points: " << m_numSamplePoints << endl;
 }
 
 void CurveMesh::GetPhiFunction()

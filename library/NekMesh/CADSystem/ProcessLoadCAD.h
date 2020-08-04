@@ -56,6 +56,11 @@ public:
     virtual ~ProcessLoadCAD();
 
     virtual void Process();
+
+    virtual std::string GetModuleName()
+    {
+        return "LoadCAD";
+    }
 };
 }
 }

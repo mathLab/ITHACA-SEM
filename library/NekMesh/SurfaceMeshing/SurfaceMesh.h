@@ -63,6 +63,11 @@ public:
 
     virtual void Process();
 
+    std::string GetModuleName()
+    {
+        return "SurfaceMesh";
+    }
+
 private:
     void Report();
     /// map of individual surface meshes from parametric surfaces

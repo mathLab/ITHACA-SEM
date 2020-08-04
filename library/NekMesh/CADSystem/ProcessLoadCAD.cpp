@@ -74,10 +74,7 @@ void ProcessLoadCAD::Process()
 {
     string name = m_config["filename"].as<string>();
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "Loading CAD for " << name << endl;
-    }
+    m_log(VERBOSE) << "Loading CAD for: '" << name << "'" << endl;
 
     string ext = boost::filesystem::extension(name);
 
@@ -94,6 +91,8 @@ void ProcessLoadCAD::Process()
     {
         m_mesh->m_cad = GetEngineFactory().CreateInstance("oce", name);
     }
+
+    m_mesh->m_cad->SetLogger(m_log);
 
     if(m_config["2D"].beenSet)
     {

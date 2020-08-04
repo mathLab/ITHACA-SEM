@@ -67,8 +67,7 @@ VolumeMesh::~VolumeMesh()
 
 void VolumeMesh::Process()
 {
-    if (m_mesh->m_verbose)
-        cout << endl << "Volume meshing" << endl;
+    m_log(VERBOSE) << "  Volume meshing:" << endl;
 
     bool makeBL;
     vector<unsigned int> blSurfs;
@@ -266,11 +265,11 @@ void VolumeMesh::Process()
             for (cit = curveNodeMap.begin(); cit != curveNodeMap.end(); cit++)
             {
                 cm[cit->first] = MemoryManager<CurveMesh>::AllocateSharedPtr(
-                    cit->first, m_mesh, cit->second);
+                    cit->first, m_mesh, cit->second, m_log);
             }
 
             FaceMeshSharedPtr f = MemoryManager<FaceMesh>::AllocateSharedPtr(
-                symsurfs[i], m_mesh, cm, symsurfs[i]);
+                symsurfs[i], m_mesh, cm, symsurfs[i], m_log);
             f->Mesh();
         }
 
@@ -311,11 +310,7 @@ void VolumeMesh::Process()
     ProcessFaces();
     ProcessElements();
     ProcessComposites();
-
-    if (m_mesh->m_verbose)
-    {
-        cout << endl;
-    }
 }
+
 }
 }

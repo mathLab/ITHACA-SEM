@@ -32,11 +32,15 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifndef NEKMESH_MODULE_LOG_HPP
+#define NEKMESH_MODULE_LOG_HPP
+
 #include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <string>
 #include <memory>
+#include <cmath>
 
 namespace Nektar
 {
@@ -110,7 +114,7 @@ public:
 
     void Log(const std::string &msg) override
     {
-        m_os << msg;
+        m_os << msg << std::flush;
     }
 
 private:
@@ -160,42 +164,13 @@ public:
 
     Logger &operator<<(ManipFn manip)
     {
-        const std::string bold("\x1B[1m");
-        const std::string red("\033[0;31m");
-        const std::string green("\033[1;32m");
-        const std::string yellow("\033[1;33m");
-        const std::string cyan("\033[0;36m");
-        const std::string magenta("\033[0;35m");
-        const std::string reset("\033[0m");
-
-        std::string msgcolour = "";
-        std::string msgprefix = "";
-
-        switch(m_curLevel)
-        {
-            case FATAL:
-                msgcolour = red;
-                msgprefix = "ERROR: ";
-                break;
-            case WARNING:
-                msgcolour = yellow;
-                msgprefix = "WARNING: ";
-                break;
-            default:
-                break;
-        }
-
         manip(m_buffer);
 
         if (m_curLevel <= m_level)
         {
             std::stringstream tmp;
-            if (m_prefix != "")
-            {
-                tmp << msgcolour << bold << std::setw(16) << std::left
-                    << ("[" + m_prefix + "]") << reset;
-            }
-            tmp << msgcolour <<  msgprefix << m_buffer.str() << reset;
+            const std::string reset("\033[0m");
+            tmp << GetPrefixString() << m_buffer.str() << reset;
             m_logOutput->Log(tmp.str());
         }
 
@@ -234,6 +209,40 @@ public:
         return *this;
     }
 
+    void Progress(const int position, const int goal, const std::string message)
+    {
+        float progress = position / float(goal);
+        int  numeq = static_cast<int>(ceil(progress *49));
+
+        // carriage return
+        std::stringstream ss;
+        ss << "\r" << GetPrefixString()
+           << message << ": "
+           << std::setw(3) << ceil(100 * progress) << "% [";
+
+        for (int j = 0; j < numeq; j++)
+        {
+            ss << "=";
+        }
+        for (int j = numeq; j < 49; j++)
+        {
+            ss << " ";
+        }
+        ss << "]";
+
+        m_logOutput->Log(ss.str());
+    }
+
+    void Newline()
+    {
+        m_logOutput->Log("\n");
+    }
+
+    void Overwrite()
+    {
+        m_logOutput->Log("\r\e[0K");
+    }
+
     void SetPrefix(const std::string &prefix)
     {
         m_prefix = prefix;
@@ -252,7 +261,49 @@ private:
     LogLevel m_curLevel = INFO;
     /// A prefix that will be enclosed with `[` and `]` in the output message.
     std::string m_prefix = "";
+
+    std::string GetPrefixString()
+    {
+        std::stringstream ss;
+
+        const std::string bold("\x1B[1m");
+        const std::string red("\033[0;31m");
+        const std::string green("\033[1;32m");
+        const std::string yellow("\033[1;33m");
+        const std::string cyan("\033[0;36m");
+        const std::string magenta("\033[0;35m");
+        const std::string reset("\033[0m");
+
+        std::string msgcolour = "";
+        std::string msgprefix = "";
+
+        switch(m_curLevel)
+        {
+            case FATAL:
+                msgcolour = red;
+                msgprefix = "ERROR: ";
+                break;
+            case WARNING:
+                msgcolour = yellow;
+                msgprefix = "WARNING: ";
+                break;
+            default:
+                break;
+        }
+
+        if (m_prefix != "")
+        {
+            ss << msgcolour << bold << std::setw(16) << std::left
+               << ("[" + m_prefix + "]") << reset;
+        }
+
+        ss << msgcolour <<  msgprefix;
+
+        return ss.str();
+    }
 };
 
 }
 }
+
+#endif

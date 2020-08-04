@@ -110,10 +110,12 @@ bool FaceMesh::ValidateCurves()
                         uv[0] = P1[0] + t * (P2[0] - P1[0]);
                         uv[1] = P1[1] + t * (P2[1] - P1[1]);
                         Array<OneD, NekDouble> loc = m_cadsurf->P(uv);
-                        cout << endl
-                             << "Curve mesh error at " << loc[0] << " "
-                             << loc[1] << " " << loc[2] << " on face " << m_id
-                             << endl;
+
+                        m_log(VERBOSE).Newline();
+                        m_log(WARNING)
+                            << "Curve mesh error at " << loc[0] << " "
+                            << loc[1] << " " << loc[2] << " on face " << m_id
+                            << endl;
                         error = true;
                     }
                 }
@@ -225,19 +227,13 @@ void FaceMesh::Mesh()
         m_mesh->m_element[2].push_back(m_localElements[i]);
     }
 
-    if (m_mesh->m_verbose)
-    {
-        cout << "\r                               "
-                "                                 "
-                "                             ";
-        cout << scientific << "\r\t\tFace " << m_id << endl
-             << "\t\t\tNodes: " << m_localNodes.size() << endl
-             << "\t\t\tEdges: " << m_localEdges.size() << endl
-             << "\t\t\tTriangles: " << m_localElements.size() << endl
-             << "\t\t\tLoops: " << m_edgeloops.size() << endl
-             << "\t\t\tSTR: " << m_str << endl
-             << endl;
-    }
+    m_log(VERBOSE).Overwrite();
+    m_log(VERBOSE) << "    - Face " << m_id << endl;
+    m_log(VERBOSE) << "        Nodes    : " << m_localNodes.size() << endl;
+    m_log(VERBOSE) << "        Edges    : " << m_localEdges.size() << endl;
+    m_log(VERBOSE) << "        Triangles: " << m_localElements.size() << endl;
+    m_log(VERBOSE) << "        Loops    : " << m_edgeloops.size() << endl;
+    m_log(VERBOSE) << "        STR      : " << scientific << m_str << endl;
 }
 
 void FaceMesh::OptimiseLocalMesh()
@@ -632,16 +628,6 @@ void FaceMesh::DiagonalSwap()
             }
 
             // determine signed area of alternate config
-            // //cout<< A->GetNumCADSurf() << " " << B->GetNumCADSurf() << " "
-            // //    << C->GetNumCADSurf() << " " << D->GetNumCADSurf() << endl;
-            // ofstream file;
-            // file.open("pts.3D");
-            // file << "x y z value" << endl;
-            // file << A->m_x << " " << A->m_y << " " << A->m_z << endl;
-            // file << B->m_x << " " << B->m_y << " " << B->m_z << endl;
-            // file << C->m_x << " " << C->m_y << " " << C->m_z << endl;
-            // file << D->m_x << " " << D->m_y << " " << D->m_z << endl;
-            // file.close();
             Array<OneD, NekDouble> ai, bi, ci, di;
             ai = A->GetCADSurfInfo(m_id);
             bi = B->GetCADSurfInfo(m_id);

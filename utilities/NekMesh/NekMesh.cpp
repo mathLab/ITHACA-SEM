@@ -287,7 +287,7 @@ int main(int argc, char* argv[])
         t.Stop();
 
         log.SetPrefix(modules[i]->GetModuleName());
-        log(VERBOSE) << "Elapsed time: "
+        log(VERBOSE) << "  - Elapsed time: "
                      << t.TimePerTest(1) << 's' << std::endl;
     }
 

@@ -56,6 +56,11 @@ public:
     virtual ~HOSurfaceMesh();
 
     virtual void Process();
+
+    virtual std::string GetModuleName()
+    {
+        return "HOSurfMesh";
+    }
 };
 }
 }

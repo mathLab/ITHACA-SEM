@@ -72,17 +72,14 @@ void ProcessLoadOctree::Process()
     maxDelta = m_config["maxdel"].as<NekDouble>();
     eps = m_config["eps"].as<NekDouble>();
 
-    if (m_mesh->m_verbose)
-    {
-        cout << endl << "Loading Octree with parameters:" << endl;
-        cout << "\tmin delta: " << minDelta << endl
-             << "\tmax delta: " << maxDelta << endl
-             << "\tesp: " << eps << endl << endl;
-    }
+    m_log(VERBOSE) << "Loading Octree with parameters:" << endl;
+    m_log(VERBOSE) << "  - min delta: " << minDelta << endl;
+    m_log(VERBOSE) << "  - max delta: " << maxDelta << endl;
+    m_log(VERBOSE) << "  - eps      : " << eps << endl;
 
     ASSERTL0(minDelta > 0 && maxDelta > 0 && eps > 0, "invalid parameters");
 
-    m_mesh->m_octree = MemoryManager<Octree>::AllocateSharedPtr(m_mesh);
+    m_mesh->m_octree = MemoryManager<Octree>::AllocateSharedPtr(m_mesh, m_log);
 
     m_mesh->m_octree->SetParameters(minDelta, maxDelta, eps);
 

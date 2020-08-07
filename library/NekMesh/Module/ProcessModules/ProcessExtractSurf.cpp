@@ -326,8 +326,8 @@ void ProcessExtractSurf::Process()
     {
         if (m_mesh->m_expDim != 2)
         {
-            cerr << "Surface boundary detection only implemented for 2D meshes"
-                 << endl;
+            m_log(WARNING) << "Surface boundary detection only implemented "
+                           << "for 2D meshes" << endl;
             return;
         }
 

@@ -9,7 +9,7 @@
     </files>
     <metrics>
         <metric type="regex" id="1">
-            <regex>^Total negative Jacobians\s*:\s*(\d+)</regex>
+            <regex>.*Total negative Jacobians\s*:\s*(\d+)</regex>
             <matches>
                 <match>
                     <field id="0">0</field>

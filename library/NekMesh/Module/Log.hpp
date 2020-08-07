@@ -42,6 +42,16 @@
 #include <memory>
 #include <cmath>
 
+#ifdef _WIN32
+#include <io.h>
+#define ISSTDOUTTTY _isatty(_fileno(stdout))
+#define ISSTDERRTTY _isatty(_fileno(stderr))
+#else
+#include <unistd.h>
+#define ISSTDOUTTTY isatty(fileno(stdout))
+#define ISSTDERRTTY isatty(fileno(stderr))
+#endif
+
 namespace Nektar
 {
 namespace NekMesh
@@ -93,7 +103,14 @@ public:
      */
     virtual void Log(const std::string &msg) = 0;
 
+    bool IsTty() const
+    {
+        return m_isTty;
+    }
+
 protected:
+    bool m_isTty = true;
+
     /**
      * @brief Finalise the log.
      *
@@ -108,6 +125,12 @@ class StreamOutput : public LogOutput
 public:
     StreamOutput(std::ostream &os) : LogOutput(), m_os(os)
     {
+        // Bit of a hack to figure out if we are a tty.
+        if ((&os == &std::cout && !ISSTDOUTTTY) ||
+            (&os == &std::cerr && !ISSTDERRTTY))
+        {
+            m_isTty = false;
+        }
     }
 
     virtual ~StreamOutput() = default;
@@ -124,6 +147,17 @@ private:
     {
     }
 };
+
+namespace ansi
+{
+const std::string bold = "\x1B[1m";
+const std::string red = "\033[0;31m";
+const std::string green = "\033[1;32m";
+const std::string yellow = "\033[1;33m";
+const std::string cyan = "\033[0;36m";
+const std::string magenta = "\033[0;35m";
+const std::string reset = "\033[0m";
+}
 
 class Logger
 {
@@ -168,10 +202,15 @@ public:
 
         if (m_curLevel <= m_level)
         {
-            std::stringstream tmp;
-            const std::string reset("\033[0m");
-            tmp << GetPrefixString() << m_buffer.str() << reset;
-            m_logOutput->Log(tmp.str());
+            std::stringstream ss;
+            ss << GetPrefixString() << m_buffer.str();
+
+            if (m_logOutput->IsTty())
+            {
+                ss << ansi::reset;
+            }
+
+            m_logOutput->Log(ss.str());
         }
 
         // For fatal exceptions, store temporary message.
@@ -212,30 +251,41 @@ public:
     void Progress(const int position, const int goal, const std::string message,
                   int lastprogress = -1)
     {
-        float progress = position / float(goal);
-        int  numeq = static_cast<int>(ceil(progress *49));
-
-        // Avoid lots of output.
-        if (lastprogress == numeq)
-        {
-            return;
-        }
-
-        // carriage return
         std::stringstream ss;
-        ss << "\r" << GetPrefixString()
-           << message << ": "
-           << std::setw(3) << ceil(100 * progress) << "% [";
+        if (m_logOutput->IsTty())
+        {
+            float progress = position / float(goal);
+            int  numeq = static_cast<int>(ceil(progress *49));
 
-        for (int j = 0; j < numeq; j++)
-        {
-            ss << "=";
+            // Avoid lots of output.
+            if (lastprogress == numeq)
+            {
+                return;
+            }
+
+            // carriage return
+            ss << "\r" << GetPrefixString()
+               << message << ": "
+               << std::setw(3) << ceil(100 * progress) << "% [";
+
+            for (int j = 0; j < numeq; j++)
+            {
+                ss << "=";
+            }
+            for (int j = numeq; j < 49; j++)
+            {
+                ss << " ";
+            }
+            ss << "]";
         }
-        for (int j = numeq; j < 49; j++)
+        else
         {
-            ss << " ";
+            // print only every 2 percent
+            if (int(ceil(double(100 * position / goal))) % 2 ==  0)
+            {
+                ss << ".";
+            }
         }
-        ss << "]";
 
         m_logOutput->Log(ss.str());
     }
@@ -273,25 +323,17 @@ private:
     {
         std::stringstream ss;
 
-        const std::string bold("\x1B[1m");
-        const std::string red("\033[0;31m");
-        const std::string green("\033[1;32m");
-        const std::string yellow("\033[1;33m");
-        const std::string cyan("\033[0;36m");
-        const std::string magenta("\033[0;35m");
-        const std::string reset("\033[0m");
-
         std::string msgcolour = "";
         std::string msgprefix = "";
 
         switch(m_curLevel)
         {
             case FATAL:
-                msgcolour = red;
+                msgcolour = ansi::red;
                 msgprefix = "ERROR: ";
                 break;
             case WARNING:
-                msgcolour = yellow;
+                msgcolour = ansi::yellow;
                 msgprefix = "WARNING: ";
                 break;
             default:
@@ -300,11 +342,25 @@ private:
 
         if (m_prefix != "")
         {
-            ss << msgcolour << bold << std::setw(20) << std::left
-               << ("[" + m_prefix + "]") << reset;
+            if (m_logOutput->IsTty())
+            {
+                ss << msgcolour << ansi::bold;
+            }
+
+            ss << std::setw(20) << std::left << ("[" + m_prefix + "]");
+
+            if (m_logOutput->IsTty())
+            {
+                ss << ansi::reset;
+            }
         }
 
-        ss << msgcolour <<  msgprefix;
+        if (m_logOutput->IsTty())
+        {
+            ss << msgcolour;
+        }
+
+        ss << msgprefix;
 
         return ss.str();
     }

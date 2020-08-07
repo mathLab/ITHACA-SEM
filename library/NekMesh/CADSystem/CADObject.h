@@ -102,7 +102,7 @@ public:
      */
     virtual CADOrientation::Orientation Orientation()
     {
-        ASSERTL0(false,"must be implemented at the cad object level");
+        ASSERTL0(false, "must be implemented at the CAD object level");
         return CADOrientation::eUnknown;
     }
 

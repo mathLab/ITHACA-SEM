@@ -68,13 +68,21 @@ CADSurfFactory &GetCADSurfFactory()
 Array<OneD, NekDouble> CADSystem::GetPeriodicTranslationVector(int first,
                                                                int second)
 {
-    ASSERTL0(GetNumSurf() == 1, "wont work for multi surfaces yet");
+    if (GetNumSurf() != 1)
+    {
+        m_log(FATAL) << "Periodic translation does not yet work for multiple "
+                     << "surfaces." << endl;
+    }
 
     CADCurveSharedPtr c1 = GetCurve(first);
     CADCurveSharedPtr c2 = GetCurve(second);
 
     NekDouble tst = c1->GetTotLength() - c2->GetTotLength();
-    ASSERTL0(fabs(tst) < 1e-6, "periodic curves not same length");
+
+    if (fabs(tst) > 1e-6)
+    {
+        m_log(FATAL) << "Periodic curves are not of the same length" << endl;
+    }
 
     vector<CADVertSharedPtr> v1 = c1->GetVertex();
     Array<OneD, NekDouble> p1 = v1[0]->GetLoc();

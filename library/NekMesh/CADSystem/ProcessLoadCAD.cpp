@@ -122,8 +122,11 @@ void ProcessLoadCAD::Process()
             std::vector<std::string> coords;
             boost::split(coords, tosplit, boost::is_any_of(" "));
 
-            ASSERTL0(coords.size() == 3,
-                     "Void points should contain exactly three coordinates.");
+            if (coords.size() != 3)
+            {
+                m_log(FATAL) << "Void points should contain exactly three "
+                             << "coordinates." << endl;
+            }
 
             Array<OneD, NekDouble> tmp(3);
             tmp[0] = std::stod(coords[0]);

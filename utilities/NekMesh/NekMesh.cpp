@@ -88,6 +88,10 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    // Create a logger.
+    auto logOutput = std::make_shared<StreamOutput>(std::cout);
+    Logger log(logOutput, vm.count("verbose") ? VERBOSE : INFO);
+
     // Print available modules.
     if (vm.count("modules-list"))
     {
@@ -132,6 +136,7 @@ int main(int argc, char* argv[])
         ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
             ModuleKey(t, tmp1[1]), m);
         cerr << "Options for module " << tmp1[1] << ":" << endl;
+        mod->SetLogger(log);
         mod->PrintConfig();
         return 1;
     }
@@ -150,10 +155,6 @@ int main(int argc, char* argv[])
         cerr << "ERROR: You must specify an input and output file." << endl;
         return 1;
     }
-
-    // Create a logger.
-    auto logOutput = std::make_shared<StreamOutput>(std::cerr);
-    Logger log(logOutput, vm.count("verbose") ? VERBOSE : INFO);
 
     /*
      * Process list of modules. Each element of the vector of module strings can

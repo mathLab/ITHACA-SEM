@@ -441,8 +441,8 @@ void ProcessSpherigon::Process()
 
         if (m_mesh->m_spherigonSurfs.size() == 0)
         {
-            cerr << "WARNING: Spherigon surfaces have not been defined "
-                 << "-- ignoring smoothing." << endl;
+            m_log(WARNING) << "Spherigon surfaces have not been defined "
+                           << "-- ignoring smoothing." << endl;
             return;
         }
 

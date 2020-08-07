@@ -103,15 +103,15 @@ void ProcessPerAlign::Process()
 
     if (surf1 == -1)
     {
-        cerr << "WARNING: surf1 must be set to a positive integer. "
-             << "Skipping periodic alignment." << endl;
+        m_log(WARNING) << "surf1 must be set to a positive integer. "
+                       << "Skipping periodic alignment." << endl;
         return;
     }
 
     if (surf2 == -1)
     {
-        cerr << "WARNING: surf2 must be set to a positive integer. "
-             << "Skipping periodic alignment." << endl;
+        m_log(WARNING) << "surf2 must be set to a positive integer. "
+                       << "Skipping periodic alignment." << endl;
         return;
     }
 
@@ -161,8 +161,8 @@ void ProcessPerAlign::Process()
         {
             if (dir != "x" && dir != "y" && dir != "z")
             {
-                cerr << "WARNING: dir must be set to either x, y or z. "
-                    << "Skipping periodic alignment." << endl;
+                m_log(WARNING) << "dir must be set to either x, y or z. "
+                               << "Skipping periodic alignment." << endl;
                 return;
             }
 
@@ -187,15 +187,15 @@ void ProcessPerAlign::Process()
 
     if (it1 == m_mesh->m_composite.end())
     {
-        cerr << "WARNING: Couldn't find surface " << surf1
-             << ". Skipping periodic alignment." << endl;
+        m_log(WARNING) << "Couldn't find surface " << surf1
+                       << ". Skipping periodic alignment." << endl;
         return;
     }
 
     if (it2 == m_mesh->m_composite.end())
     {
-        cerr << "WARNING: Couldn't find surface " << surf2 << ", "
-             << "skipping periodic alignment." << endl;
+        m_log(WARNING) << "Couldn't find surface " << surf2 << ", "
+                       << "skipping periodic alignment." << endl;
         return;
     }
 
@@ -204,9 +204,9 @@ void ProcessPerAlign::Process()
 
     if (c1->m_items.size() != c2->m_items.size())
     {
-        cerr << "WARNING: Surfaces " << surf1 << " and " << surf2
-             << " have different numbers of elements. Skipping periodic"
-             << " alignment." << endl;
+        m_log(WARNING) << "Surfaces " << surf1 << " and " << surf2
+                       << " have different numbers of elements. Skipping"
+                       << " periodic alignment." << endl;
         return;
     }
 
@@ -386,9 +386,9 @@ void ProcessPerAlign::Process()
 
         if (!found)
         {
-            cerr << "WARNING: Could not find matching edge for surface "
-                 << "element " << c1->m_items[i]->GetId() << ". "
-                 << "Skipping periodic alignment." << endl;
+            m_log(WARNING) << "Could not find matching edge for surface "
+                           << "element " << c1->m_items[i]->GetId() << ". "
+                           << "Skipping periodic alignment." << endl;
             return;
         }
     }

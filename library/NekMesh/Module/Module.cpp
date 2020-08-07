@@ -254,9 +254,9 @@ void Module::ProcessEdges(bool ReprocessEdges)
         EdgeSet::iterator it = m_mesh->m_edgeSet.find(E);
         if (it == m_mesh->m_edgeSet.end())
         {
-            cerr << "Cannot find corresponding element edge for "
-                 << "1D element " << i << endl;
-            abort();
+            m_log(FATAL) << "Cannot find the 2D element that is connected to "
+                         << "the 1D element " << i << ": check boundary is "
+                         << "consistent with the domain.";
         }
         elmt->SetEdgeLink(*it);
 
@@ -731,10 +731,9 @@ void Module::ReorderPrisms(PerMap &perFaces)
 
     if (warnCurvature)
     {
-        cerr << "[ReorderPrisms] WARNING: Face curvature detected in "
-             << "some prisms; this will be ignored in further module "
-             << "evaluations."
-             << endl;
+        m_log(WARNING) << "[ReorderPrisms] WARNING: Face curvature detected in "
+                       << "some prisms; this will be ignored in further module "
+                       << "evaluations." << endl;
     }
 
     // Loop over periodic faces, enumerate vertices.
@@ -863,8 +862,9 @@ void Module::RegisterConfig(string key, string val)
     map<string, ConfigOption>::iterator it = m_config.find(key);
     if (it == m_config.end())
     {
-        cerr << "WARNING: Unrecognised config option " << key
-             << ", proceeding anyway." << endl;
+        m_log(WARNING) << "WARNING: Unrecognised config option " << key
+                       << ", proceeding anyway." << endl;
+        return;
     }
 
     it->second.beenSet = true;
@@ -895,14 +895,14 @@ void Module::PrintConfig()
 
     if (m_config.size() == 0)
     {
-        cerr << "No configuration options for this module." << endl;
+        m_log << "No configuration options for this module." << endl;
         return;
     }
 
     for (it = m_config.begin(); it != m_config.end(); ++it)
     {
-        cerr << setw(10) << it->first << ": " << it->second.desc
-             << endl;
+        m_log << setw(10) << it->first << ": " << it->second.desc
+              << endl;
     }
 }
 

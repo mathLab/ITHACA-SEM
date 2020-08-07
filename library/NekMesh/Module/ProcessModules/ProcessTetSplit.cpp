@@ -220,8 +220,8 @@ void ProcessTetSplit::Process()
         }
         else
         {
-            cerr << "Connectivity issue with prism->tet splitting." << endl;
-            abort();
+            m_log(FATAL) << "Connectivity issue with prism->tet splitting."
+                         << endl;
         }
 
         // Create local prismatic region so that co-ordinates of the
@@ -310,9 +310,8 @@ void ProcessTetSplit::Process()
                     it = edgeMap.find(pair<int, int>(n2, n1));
                     if (it == edgeMap.end())
                     {
-                        cerr << "Couldn't find prism edges " << n1 << " " << n2
-                             << endl;
-                        abort();
+                        m_log(FATAL) << "Couldn't find prism edges " << n1
+                                     << " " << n2 << endl;
                     }
                     // Extract vertices -- reverse order.
                     for (int l = ne - 1; l >= 0; --l)

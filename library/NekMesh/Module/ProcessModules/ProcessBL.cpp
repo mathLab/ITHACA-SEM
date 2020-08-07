@@ -237,16 +237,16 @@ void ProcessBL::BoundaryLayer2D()
                 {
                     if (el->GetConf().m_e != LibUtilities::eQuadrilateral)
                     {
-                        cerr << "WARNING: Found non-quad element "
-                             << "to split in surface " << surf
-                             << "; ignoring" << endl;
+                        m_log(WARNING) << "Found non-quad element to split in "
+                                       << "surface " << surf << "; ignoring"
+                                       << endl;
                         continue;
                     }
 
                     if (splitEls.count(el->GetId()) > 0)
                     {
-                        cerr << "WARNING: quad already found; "
-                             << "ignoring" << endl;
+                        m_log(WARNING) << "quad already found; ignoring"
+                                       << endl;
                         continue;
                     }
 
@@ -262,7 +262,7 @@ void ProcessBL::BoundaryLayer2D()
 
     if (splitEls.size() == 0)
     {
-        cerr << "WARNING: No elements detected to split." << endl;
+        m_log(WARNING) << "No elements detected to split." << endl;
         return;
     }
 

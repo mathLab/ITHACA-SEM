@@ -1019,9 +1019,10 @@ void BLMesh::Setup()
 
         if (Visability(bit->second->els, bit->second->N) < 0.0)
         {
-            cerr << "failed " << bit->first->m_x << " " << bit->first->m_y
-                 << " " << bit->first->m_z << " "
-                 << Visability(bit->second->els, bit->second->N) << endl;
+            m_log(WARNING) << "failed " << bit->first->m_x << " "
+                           << bit->first->m_y << " " << bit->first->m_z << " "
+                           << Visability(bit->second->els, bit->second->N)
+                           << endl;
             failed++;
         }
 

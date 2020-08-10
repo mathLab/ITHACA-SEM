@@ -12,8 +12,8 @@ IF (NEKTAR_BUILD_PYTHON)
 
     # Set the Python3 status flag as the opposite of the Python3 flag by
     # default on first run to ensure Python is searched for.
-    IF (NOT DEFINED NEKTAR_PYTHON3_STATUS)
-        SET(NEKTAR_PYTHON3_STATUS NOT ${NEKTAR_USE_PYTHON3} CACHE INTERNAL "")
+    IF (NOT NEKTAR_PYTHON3_STATUS)
+        SET(NEKTAR_PYTHON3_STATUS NOT ${NEKTAR_USE_PYTHON3} CACHE INTERNAL "" )
     ENDIF()
 
     IF (NOT NEKTAR_PYTHON3_STATUS STREQUAL NEKTAR_USE_PYTHON3)

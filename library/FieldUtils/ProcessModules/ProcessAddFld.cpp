@@ -90,8 +90,8 @@ void ProcessAddFld::Process(po::variables_map &vm)
 
     if (m_f->m_graph)
     {
-        const SpatialDomains::ExpansionMap &expansions =
-            m_f->m_graph->GetExpansions();
+        const SpatialDomains::ExpansionInfoMap &expansions =
+            m_f->m_graph->GetExpansionInfo();
 
         // if Range has been speficied it is possible to have a
         // partition which is empty so check this and return if

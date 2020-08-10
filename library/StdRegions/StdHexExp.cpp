@@ -49,7 +49,6 @@ namespace Nektar
         {
         }
 
-
         StdHexExp::StdHexExp(const LibUtilities::BasisKey &Ba,
                         const LibUtilities::BasisKey &Bb,
                         const LibUtilities::BasisKey &Bc):
@@ -60,13 +59,11 @@ namespace Nektar
         {
         }
 
-
         StdHexExp::StdHexExp(const StdHexExp &T):
             StdExpansion(T),
             StdExpansion3D(T)
         {
         }
-
 
         StdHexExp::~StdHexExp()
         {
@@ -83,7 +80,6 @@ namespace Nektar
                  m_base[1]->GetBasisType() == LibUtilities::eGLL_Lagrange);
         }
 
-
         ///////////////////////////////
         /// Differentiation Methods
         ///////////////////////////////
@@ -98,7 +94,6 @@ namespace Nektar
         {
             StdExpansion3D::PhysTensorDeriv(inarray, out_d0, out_d1, out_d2);
         }
-
 
         /**
          * @param   dir         Direction in which to compute derivative.
@@ -146,7 +141,6 @@ namespace Nektar
         {
             StdHexExp::v_PhysDeriv(inarray, out_d0, out_d1, out_d2);
         }
-
 
         void StdHexExp::v_StdPhysDeriv(const int dir,
                                const Array<OneD, const NekDouble>& inarray,
@@ -218,7 +212,6 @@ namespace Nektar
                                     inarray,outarray,wsp,true,true,true);
         }
 
-
         /**
          * @param   base0       x-dirn basis matrix
          * @param   base1       y-dirn basis matrix
@@ -285,7 +278,6 @@ namespace Nektar
                             0.0, &outarray[0],  nquad0*nquad1);
             }
         }
-
 
         /**
          * Solves the system
@@ -376,8 +368,9 @@ namespace Nektar
         /**
          * Implementation of the local matrix inner product operation.
          */
-        void StdHexExp::v_IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray,
-                                               Array<OneD, NekDouble> &outarray)
+        void StdHexExp::v_IProductWRTBase_MatOp
+                               (const Array<OneD, const NekDouble>& inarray,
+                                Array<OneD, NekDouble> &outarray)
         {
             int nq = GetTotPoints();
             StdMatrixKey      iprodmatkey(eIProductWRTBase,DetShapeType(),*this);
@@ -428,15 +421,16 @@ namespace Nektar
          * Implementation of the sum-factorisation inner product operation.
          * @todo    Implement cases where only some directions are collocated.
          */
-        void StdHexExp::v_IProductWRTBase_SumFacKernel(const Array<OneD, const NekDouble>& base0,
-                                                     const Array<OneD, const NekDouble>& base1,
-                                                     const Array<OneD, const NekDouble>& base2,
-                                                     const Array<OneD, const NekDouble>& inarray,
-                                                     Array<OneD, NekDouble> &outarray,
-                                                     Array<OneD, NekDouble> &wsp,
-                                                     bool doCheckCollDir0,
-                                                     bool doCheckCollDir1,
-                                                     bool doCheckCollDir2)
+        void StdHexExp::v_IProductWRTBase_SumFacKernel
+                              (const Array<OneD, const NekDouble>& base0,
+                               const Array<OneD, const NekDouble>& base1,
+                               const Array<OneD, const NekDouble>& base2,
+                               const Array<OneD, const NekDouble>& inarray,
+                               Array<OneD, NekDouble> &outarray,
+                               Array<OneD, NekDouble> &wsp,
+                               bool doCheckCollDir0,
+                               bool doCheckCollDir1,
+                               bool doCheckCollDir2)
         {
             int  nquad0  = m_base[0]->GetNumPoints();
             int  nquad1  = m_base[1]->GetNumPoints();
@@ -523,9 +517,10 @@ namespace Nektar
         }
 
 
-        void StdHexExp::v_IProductWRTDerivBase_MatOp(const int dir,
-                                                    const Array<OneD, const NekDouble>& inarray,
-                                                    Array<OneD, NekDouble> &outarray)
+        void StdHexExp::v_IProductWRTDerivBase_MatOp
+                               (const int dir,
+                                const Array<OneD, const NekDouble>& inarray,
+                                Array<OneD, NekDouble> &outarray)
         {
             ASSERTL0((dir==0)||(dir==1)||(dir==2),"input dir is out of range");
 
@@ -553,9 +548,10 @@ namespace Nektar
         }
 
 
-        void StdHexExp::v_IProductWRTDerivBase_SumFac(const int dir,
-                                                     const Array<OneD, const NekDouble>& inarray,
-                                                     Array<OneD, NekDouble> &outarray)
+        void StdHexExp::v_IProductWRTDerivBase_SumFac
+                              (const int dir,
+                               const Array<OneD, const NekDouble>& inarray,
+                               Array<OneD, NekDouble> &outarray)
         {
             ASSERTL0((dir==0)||(dir==1)||(dir==2),"input dir is out of range");
 
@@ -604,8 +600,9 @@ namespace Nektar
             }
         }
 
-        void StdHexExp::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,
-                                      Array<OneD, NekDouble>& eta)
+        void StdHexExp::v_LocCoordToLocCollapsed
+                          (const Array<OneD, const NekDouble>& xi,
+                           Array<OneD, NekDouble>& eta)
         {
             eta[0] = xi[0];
             eta[1] = xi[1];
@@ -695,19 +692,16 @@ namespace Nektar
             return 8;
         }
 
-
         int StdHexExp::v_GetNedges() const
         {
             return 12;
         }
 
-
-        int StdHexExp::v_GetNfaces() const
+        int StdHexExp::v_GetNtraces() const
         {
             return 6;
         }
-
-
+        
         LibUtilities::ShapeType StdHexExp::v_DetShapeType() const
         {
             return LibUtilities::eHexahedron;
@@ -755,31 +749,7 @@ namespace Nektar
                         + nmodes1*nmodes2 );
         }
 
-        int StdHexExp::v_GetEdgeNcoeffs(const int i) const
-        {
-            ASSERTL2((i >= 0)&&(i <= 11),"edge id is out of range");
-
-            if((i == 0)||(i == 2)||(i == 8)||(i == 10))
-            {
-                return  GetBasisNumModes(0);
-            }
-            else if((i == 1)||(i == 3)||(i == 9)||(i == 11))
-            {
-                return  GetBasisNumModes(1);
-            }
-            else
-            {
-                return GetBasisNumModes(2);
-            }
-        }
-
-        int StdHexExp::v_GetTotalEdgeIntNcoeffs() const
-        {
-            return 4*(GetBasisNumModes(0)+GetBasisNumModes(1)+GetBasisNumModes(2));
-        }
-
-
-        int StdHexExp::v_GetFaceNcoeffs(const int i) const
+        int StdHexExp::v_GetTraceNcoeffs(const int i) const
         {
             ASSERTL2((i >= 0) && (i <= 5), "face id is out of range");
             if((i == 0) || (i == 5))
@@ -796,8 +766,7 @@ namespace Nektar
             }
         }
 
-
-        int StdHexExp::v_GetFaceIntNcoeffs(const int i) const
+        int StdHexExp::v_GetTraceIntNcoeffs(const int i) const
         {
             ASSERTL2((i >= 0) && (i <= 5), "face id is out of range");
             if((i == 0) || (i == 5))
@@ -815,14 +784,14 @@ namespace Nektar
 
         }
 
-        int StdHexExp::v_GetTotalFaceIntNcoeffs() const
+        int StdHexExp::v_GetTotalTraceIntNcoeffs() const
         {
             return 2*((GetBasisNumModes(0)-2)*(GetBasisNumModes(1)-2)+
                       (GetBasisNumModes(0)-2)*(GetBasisNumModes(2)-2)+
                 (GetBasisNumModes(1)-2)*(GetBasisNumModes(2)-2));
         }
 
-        int StdHexExp::v_GetFaceNumPoints(const int i) const
+        int StdHexExp::v_GetTraceNumPoints(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 5, "face id is out of range");
 
@@ -843,7 +812,7 @@ namespace Nektar
             }
         }
 
-        LibUtilities::PointsKey StdHexExp::v_GetFacePointsKey(
+        LibUtilities::PointsKey StdHexExp::v_GetTracePointsKey(
             const int i, const int j) const
         {
             ASSERTL2(i >= 0 && i <= 5, "face id is out of range");
@@ -871,8 +840,7 @@ namespace Nektar
             return nmodes;
         }
 
-
-        const LibUtilities::BasisKey StdHexExp::v_DetFaceBasisKey(
+        const LibUtilities::BasisKey StdHexExp::v_GetTraceBasisKey(
             const int i, const int k) const
         {
             ASSERTL2(i >= 0 && i <= 5, "face id is out of range");
@@ -901,24 +869,6 @@ namespace Nektar
                                             m_base[dir]->GetNumModes());
         }
 
-        LibUtilities::BasisType StdHexExp::v_GetEdgeBasisType(const int i) const
-        {
-            ASSERTL2((i >= 0)&&(i <= 11),"edge id is out of range");
-
-            if((i == 0)||(i == 2)||(i==8)||(i==10))
-            {
-                return  GetBasisType(0);
-            }
-            else if((i == 1)||(i == 3)||(i == 9)||(i == 11))
-            {
-                return  GetBasisType(1);
-            }
-            else
-            {
-                return GetBasisType(2);
-            }
-        }
-
         void StdHexExp::v_GetCoords( Array<OneD, NekDouble> & xi_x,
                                 Array<OneD, NekDouble> & xi_y,
                                 Array<OneD, NekDouble> & xi_z)
@@ -945,11 +895,11 @@ namespace Nektar
             }
         }
 
-        void StdHexExp::v_GetFaceNumModes(
-                    const int                  fid,
-                    const Orientation          faceOrient,
+        void StdHexExp::v_GetTraceNumModes(
+                    const int    fid,
                     int &numModes0,
-                    int &numModes1)
+                    int &numModes1,
+                    Orientation  faceOrient)
         {
             int nummodes [3] = {m_base[0]->GetNumModes(),
                                 m_base[1]->GetNumModes(),
@@ -989,361 +939,6 @@ namespace Nektar
                 std::swap(numModes0, numModes1);
             }
         }
-
-        /**
-         * Only for basis type Modified_A or GLL_LAGRANGE in all directions.
-         */
-        void StdHexExp::v_GetFaceToElementMap(
-            const int                  fid,
-            const Orientation          faceOrient,
-            Array<OneD, unsigned int> &maparray,
-            Array<OneD,          int> &signarray,
-            int                        P,
-            int                        Q)
-        {
-            int nummodesA=0, nummodesB=0;
-
-            ASSERTL1(GetEdgeBasisType(0) == GetEdgeBasisType(1) &&
-                     GetEdgeBasisType(0) == GetEdgeBasisType(2),
-                     "Method only implemented if BasisType is indentical in "
-                     "all directions");
-            ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A ||
-                     GetEdgeBasisType(0) == LibUtilities::eGLL_Lagrange,
-                     "Method only implemented for Modified_A or GLL_Lagrange BasisType");
-
-            const int nummodes0 = m_base[0]->GetNumModes();
-            const int nummodes1 = m_base[1]->GetNumModes();
-            const int nummodes2 = m_base[2]->GetNumModes();
-
-            switch(fid)
-            {
-            case 0:
-            case 5:
-                nummodesA = nummodes0;
-                nummodesB = nummodes1;
-                break;
-            case 1:
-            case 3:
-                nummodesA = nummodes0;
-                nummodesB = nummodes2;
-                break;
-            case 2:
-            case 4:
-                nummodesA = nummodes1;
-                nummodesB = nummodes2;
-                break;
-            default:
-                ASSERTL0(false,"fid must be between 0 and 5");
-            }
-
-            bool CheckForZeroedModes = false;
-
-            if (P == -1)
-            {
-                P = nummodesA;
-                Q = nummodesB;
-            }
-
-            if((P != nummodesA)||(Q != nummodesB))
-            {
-                CheckForZeroedModes = true;
-            }
-
-            bool modified = (GetEdgeBasisType(0) == LibUtilities::eModified_A);
-            int nFaceCoeffs = P*Q;
-
-            if(maparray.size() != nFaceCoeffs)
-            {
-                maparray = Array<OneD, unsigned int>(nFaceCoeffs);
-            }
-
-            if(signarray.size() != nFaceCoeffs)
-            {
-                signarray = Array<OneD, int>(nFaceCoeffs,1);
-            }
-            else
-            {
-                fill( signarray.get() , signarray.get()+nFaceCoeffs, 1 );
-            }
-
-            Array<OneD, int> arrayindx(nFaceCoeffs);
-
-            for(int i = 0; i < Q; i++)
-            {
-                for(int j = 0; j < P; j++)
-                {
-                    if( faceOrient < eDir1FwdDir2_Dir2FwdDir1 )
-                    {
-                        arrayindx[i*P+j] = i*P+j;
-                    }
-                    else
-                    {
-                        arrayindx[i*P+j] = j*Q+i;
-                    }
-                }
-            }
-
-            int offset = 0;
-            int jump1 = 1;
-            int jump2 = 1;
-
-            switch(fid)
-            {
-                case 5:
-                {
-                    if (modified)
-                    {
-                        offset = nummodes0*nummodes1;
-                    }
-                    else
-                    {
-                        offset = (nummodes2-1)*nummodes0*nummodes1;
-                        jump1 = nummodes0;
-                    }
-                }
-                /* Falls through. */
-                case 0:
-                {
-                    jump1 = nummodes0;
-                    break;
-                }
-                case 3:
-                {
-                    if (modified)
-                    {
-                        offset = nummodes0;
-                    }
-                    else
-                    {
-                        offset = nummodes0*(nummodes1-1);
-                        jump1 = nummodes0*nummodes1;
-                    }
-                }
-                /* Falls through. */
-                case 1:
-                {
-                    jump1 = nummodes0*nummodes1;
-                    break;
-                }
-                case 2:
-                {
-                    if (modified)
-                    {
-                        offset = 1;
-                    }
-                    else
-                    {
-                        offset = nummodes0-1;
-                        jump1 = nummodes0*nummodes1;
-                        jump2 = nummodes0;
-
-                    }
-                }
-                /* Falls through. */
-                case 4:
-                {
-                    jump1 = nummodes0*nummodes1;
-                    jump2 = nummodes0;
-                    break;
-                }
-                default:
-                    ASSERTL0(false,"fid must be between 0 and 5");
-            }
-
-            for(int i = 0; i < Q; i++)
-            {
-                for(int j = 0; j < P; j++)
-                {
-                    maparray[ arrayindx[i*P+j] ]
-                    = i*jump1 + j*jump2 + offset;
-                }
-            }
-
-
-            if(CheckForZeroedModes)
-            {
-                if(modified)
-                {
-                    // zero signmap and set maparray to zero if elemental
-                    // modes are not as large as face modesl
-                    for(int i = 0; i < nummodesB; i++)
-                    {
-                        for(int j = nummodesA; j < P; j++)
-                        {
-                            signarray[arrayindx[i*P+j]] = 0.0;
-                            maparray[arrayindx[i*P+j]]  = maparray[0];
-                        }
-                    }
-
-                    for(int i = nummodesB; i < Q; i++)
-                    {
-                        for(int j = 0; j < P; j++)
-                        {
-                            signarray[arrayindx[i*P+j]] = 0.0;
-                            maparray[arrayindx[i*P+j]]  = maparray[0];
-                        }
-                    }
-                }
-                else
-                {
-                    ASSERTL0(false,"Different trace space face dimention and element face dimention not possible for GLL-Lagrange bases");
-                }
-            }
-
-            if( (faceOrient==eDir1FwdDir1_Dir2BwdDir2) ||
-                (faceOrient==eDir1BwdDir1_Dir2BwdDir2) ||
-                (faceOrient==eDir1BwdDir2_Dir2FwdDir1) ||
-                (faceOrient==eDir1BwdDir2_Dir2BwdDir1) )
-            {
-                if(faceOrient<eDir1FwdDir2_Dir2FwdDir1)
-                {
-                    if (modified)
-                    {
-                        for(int i = 3; i < Q; i+=2)
-                        {
-                            for(int j = 0; j < P; j++)
-                            {
-                                signarray[ arrayindx[i*P+j] ] *= -1;
-                            }
-                        }
-
-                        for(int i = 0; i < P; i++)
-                        {
-                            swap( maparray[i] , maparray[i+P] );
-                            swap( signarray[i] , signarray[i+P] );
-                        }
-
-                    }
-                    else
-                    {
-                        for(int i = 0; i < P; i++)
-                        {
-                            for(int j = 0; j < Q/2; j++)
-                            {
-                                swap( maparray[i + j*P],
-                                     maparray[i+P*Q
-                                              -P -j*P] );
-                                swap( signarray[i + j*P],
-                                     signarray[i+P*Q
-                                              -P -j*P]);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    if (modified)
-                    {
-                        for(int i = 0; i < Q; i++)
-                        {
-                            for(int j = 3; j < P; j+=2)
-                            {
-                                signarray[ arrayindx[i*P+j] ] *= -1;
-                            }
-                        }
-
-                        for(int i = 0; i < Q; i++)
-                        {
-                            swap( maparray[i] , maparray[i+Q] );
-                            swap( signarray[i] , signarray[i+Q] );
-                        }
-
-                    }
-                    else
-                    {
-                        for(int i = 0; i < P; i++)
-                        {
-                            for(int j = 0; j < Q/2; j++)
-                            {
-                                swap( maparray[i*Q + j],
-                                     maparray[i*Q + Q -1 -j]);
-                                swap( signarray[i*Q + j],
-                                     signarray[i*Q + Q -1 -j]);
-                            }
-                        }
-                    }
-                }
-            }
-
-            if( (faceOrient==eDir1BwdDir1_Dir2FwdDir2) ||
-                (faceOrient==eDir1BwdDir1_Dir2BwdDir2) ||
-                (faceOrient==eDir1FwdDir2_Dir2BwdDir1) ||
-                (faceOrient==eDir1BwdDir2_Dir2BwdDir1) )
-            {
-                if(faceOrient<eDir1FwdDir2_Dir2FwdDir1)
-                {
-                    if (modified)
-                    {
-                        for(int i = 0; i < Q; i++)
-                        {
-                            for(int j = 3; j < P; j+=2)
-                            {
-                                signarray[ arrayindx[i*P+j] ] *= -1;
-                            }
-                        }
-
-                        for(int i = 0; i < Q; i++)
-                        {
-                            swap( maparray[i*P],
-                                 maparray[i*P+1]);
-                            swap( signarray[i*P],
-                                 signarray[i*P+1]);
-                        }
-                    }
-                    else
-                    {
-                        for(int i = 0; i < Q; i++)
-                        {
-                            for(int j = 0; j < P/2; j++)
-                            {
-                                swap( maparray[i*P + j],
-                                     maparray[i*P + P -1 -j]);
-                                swap( signarray[i*P + j],
-                                     signarray[i*P + P -1 -j]);
-                            }
-                        }
-                    }
-
-
-
-                }
-                else
-                {
-                    if (modified)
-                    {
-                        for(int i = 3; i < Q; i+=2)
-                        {
-                            for(int j = 0; j < P; j++)
-                            {
-                                signarray[ arrayindx[i*P+j] ] *= -1;
-                            }
-                        }
-
-                        for(int i = 0; i < P; i++)
-                        {
-                            swap( maparray[i*Q],
-                                 maparray[i*Q+1]);
-                            swap( signarray[i*Q],
-                                 signarray[i*Q+1]);
-                        }
-                    }
-                    else
-                    {
-                        for(int i = 0; i < Q; i++)
-                        {
-                            for(int j = 0; j < P/2; j++)
-                            {
-                                swap( maparray[i + j*Q] ,
-                                     maparray[i+P*Q - Q -j*Q] );
-                                swap( signarray[i + j*Q] ,
-                                     signarray[i+P*Q - Q -j*Q] );
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
 
 
         /**
@@ -1482,15 +1077,530 @@ namespace Nektar
 
 
         /**
+         * @param   outarray    Storage area for computed map.
+         */
+        void StdHexExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_A ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+
+            int i;
+            int nummodes [3] = {m_base[0]->GetNumModes(),
+                                m_base[1]->GetNumModes(),
+                                m_base[2]->GetNumModes()};
+
+            int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
+
+            if(outarray.size() != nIntCoeffs)
+            {
+                outarray = Array<OneD, unsigned int>(nIntCoeffs);
+            }
+
+            const LibUtilities::BasisType Btype [3] = {GetBasisType(0),
+                                                       GetBasisType(1),
+                                                       GetBasisType(2)};
+
+            int p,q,r;
+            int cnt = 0;
+
+            int IntIdx [3][2];
+
+            for(i = 0; i < 3; i++)
+            {
+                if( Btype[i] == LibUtilities::eModified_A)
+                {
+                    IntIdx[i][0]  = 2;
+                    IntIdx[i][1]  = nummodes[i];
+                }
+                else
+                {
+                    IntIdx[i][0]  = 1;
+                    IntIdx[i][1]  = nummodes[i]-1;
+                }
+            }
+
+            for(r = IntIdx[2][0]; r < IntIdx[2][1]; r++)
+            {
+                for( q = IntIdx[1][0]; q < IntIdx[1][1]; q++)
+                {
+                    for( p = IntIdx[0][0]; p < IntIdx[0][1]; p++)
+                    {
+                        outarray[cnt++] = r*nummodes[0]*nummodes[1] +
+                            q*nummodes[0] + p;
+                    }
+                }
+            }
+        }
+
+
+        /**
+         * @param   outarray    Storage for computed map.
+         */
+        void StdHexExp::v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_A ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+
+            int i;
+            int nummodes [3] = {m_base[0]->GetNumModes(),
+                                m_base[1]->GetNumModes(),
+                                m_base[2]->GetNumModes()};
+
+            int nBndCoeffs = NumBndryCoeffs();
+
+            if(outarray.size()!=nBndCoeffs)
+            {
+                outarray = Array<OneD, unsigned int>(nBndCoeffs);
+            }
+
+            const LibUtilities::BasisType Btype [3] = {GetBasisType(0),
+                                                       GetBasisType(1),
+                                                       GetBasisType(2)};
+
+            int p,q,r;
+            int cnt = 0;
+
+            int BndIdx [3][2];
+            int IntIdx [3][2];
+
+            for(i = 0; i < 3; i++)
+            {
+                BndIdx[i][0] = 0;
+
+                if( Btype[i] == LibUtilities::eModified_A)
+                {
+                    BndIdx[i][1] = 1;
+                    IntIdx[i][0]  = 2;
+                    IntIdx[i][1]  = nummodes[i];
+                }
+                else
+                {
+                    BndIdx[i][1] = nummodes[i]-1;
+                    IntIdx[i][0]  = 1;
+                    IntIdx[i][1]  = nummodes[i]-1;
+                }
+            }
+
+
+            for(i = 0; i < 2; i++)
+            {
+                r = BndIdx[2][i];
+                for( q = 0; q < nummodes[1]; q++)
+                {
+                    for( p = 0; p < nummodes[0]; p++)
+                    {
+                        outarray[cnt++] = r*nummodes[0]*nummodes[1]+q*nummodes[0] + p;
+                    }
+                }
+            }
+
+            for(r = IntIdx[2][0]; r < IntIdx[2][1]; r++)
+            {
+                for( i = 0; i < 2; i++)
+                {
+                    q = BndIdx[1][i];
+                    for( p = 0; p < nummodes[0]; p++)
+                    {
+                        outarray[cnt++] = r*nummodes[0]*nummodes[1] +
+                            q*nummodes[0] + p;
+                    }
+                }
+
+                for( q = IntIdx[1][0]; q < IntIdx[1][1]; q++)
+                {
+                    for( i = 0; i < 2; i++)
+                    {
+                        p = BndIdx[0][i];
+                        outarray[cnt++] = r*nummodes[0]*nummodes[1] +
+                            q*nummodes[0] + p;
+                    }
+                }
+            }
+
+            sort(outarray.get(), outarray.get() + nBndCoeffs);
+        }
+
+        /**
+         * Only for basis type Modified_A or GLL_LAGRANGE in all directions.
+         */
+        void StdHexExp::v_GetTraceToElementMap(
+            const int                  fid,
+            Array<OneD, unsigned int> &maparray,
+            Array<OneD,          int> &signarray,
+            Orientation                faceOrient,
+            int                        P,
+            int                        Q)
+        {
+            int i,j;
+            int nummodesA=0, nummodesB=0;
+
+            ASSERTL1(GetBasisType(0) == GetBasisType(1) &&
+                     GetBasisType(0) == GetBasisType(2),
+                     "Method only implemented if BasisType is indentical in "
+                     "all directions");
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "Method only implemented for Modified_A or "
+                     "GLL_Lagrange BasisType");
+
+            const int nummodes0 = m_base[0]->GetNumModes();
+            const int nummodes1 = m_base[1]->GetNumModes();
+            const int nummodes2 = m_base[2]->GetNumModes();
+
+            switch(fid)
+            {
+            case 0:
+            case 5:
+                nummodesA = nummodes0;
+                nummodesB = nummodes1;
+                break;
+            case 1:
+            case 3:
+                nummodesA = nummodes0;
+                nummodesB = nummodes2;
+                break;
+            case 2:
+            case 4:
+                nummodesA = nummodes1;
+                nummodesB = nummodes2;
+                break;
+            default:
+                ASSERTL0(false,"fid must be between 0 and 5");
+            }
+
+            bool CheckForZeroedModes = false;
+
+            if (P == -1)
+            {
+                P = nummodesA;
+                Q = nummodesB;
+            }
+
+            if((P != nummodesA)||(Q != nummodesB))
+            {
+                CheckForZeroedModes = true;
+            }
+
+            bool modified = (GetBasisType(0) == LibUtilities::eModified_A);
+            int nFaceCoeffs = P*Q;
+
+            if(maparray.size() != nFaceCoeffs)
+            {
+                maparray = Array<OneD, unsigned int>(nFaceCoeffs);
+            }
+
+            if(signarray.size() != nFaceCoeffs)
+            {
+                signarray = Array<OneD, int>(nFaceCoeffs,1);
+            }
+            else
+            {
+                fill( signarray.get() , signarray.get()+nFaceCoeffs, 1 );
+            }
+
+            Array<OneD, int> arrayindx(nFaceCoeffs);
+
+            for(i = 0; i < Q; i++)
+            {
+                for(j = 0; j < P; j++)
+                {
+                    if( faceOrient < eDir1FwdDir2_Dir2FwdDir1 )
+                    {
+                        arrayindx[i*P+j] = i*P+j;
+                    }
+                    else
+                    {
+                        arrayindx[i*P+j] = j*Q+i;
+                    }
+                }
+            }
+
+            int offset = 0;
+            int jump1 = 1;
+            int jump2 = 1;
+
+            switch(fid)
+            {
+                case 5:
+                {
+                    if (modified)
+                    {
+                        offset = nummodes0*nummodes1;
+                    }
+                    else
+                    {
+                        offset = (nummodes2-1)*nummodes0*nummodes1;
+                        jump1 = nummodes0;
+                    }
+                }
+                /* Falls through. */
+                case 0:
+                {
+                    jump1 = nummodes0;
+                    break;
+                }
+                case 3:
+                {
+                    if (modified)
+                    {
+                        offset = nummodes0;
+                    }
+                    else
+                    {
+                        offset = nummodes0*(nummodes1-1);
+                        jump1 = nummodes0*nummodes1;
+                    }
+                }
+                /* Falls through. */
+                case 1:
+                {
+                    jump1 = nummodes0*nummodes1;
+                    break;
+                }
+                case 2:
+                {
+                    if (modified)
+                    {
+                        offset = 1;
+                    }
+                    else
+                    {
+                        offset = nummodes0-1;
+                        jump1 = nummodes0*nummodes1;
+                        jump2 = nummodes0;
+
+                    }
+                }
+                /* Falls through. */
+                case 4:
+                {
+                    jump1 = nummodes0*nummodes1;
+                    jump2 = nummodes0;
+                    break;
+                }
+                default:
+                    ASSERTL0(false,"fid must be between 0 and 5");
+            }
+
+            for(i = 0; i < Q; i++)
+            {
+                for(j = 0; j < P; j++)
+                {
+                    maparray[ arrayindx[i*P+j] ]
+                    = i*jump1 + j*jump2 + offset;
+                }
+            }
+
+
+            if(CheckForZeroedModes)
+            {
+                if(modified)
+                {
+                    // zero signmap and set maparray to zero if elemental
+                    // modes are not as large as face modesl
+                    for(int i = 0; i < nummodesB; i++)
+                    {
+                        for(int j = nummodesA; j < P; j++)
+                        {
+                            signarray[arrayindx[i*P+j]] = 0.0;
+                            maparray[arrayindx[i*P+j]]  = maparray[0];
+                        }
+                    }
+
+                    for(int i = nummodesB; i < Q; i++)
+                    {
+                        for(int j = 0; j < P; j++)
+                        {
+                            signarray[arrayindx[i*P+j]] = 0.0;
+                            maparray[arrayindx[i*P+j]]  = maparray[0];
+                        }
+                    }
+                }
+                else
+                {
+                    ASSERTL0(false,"Different trace space face dimention and element face dimention not possible for GLL-Lagrange bases");
+                }
+            }
+
+            if( (faceOrient==eDir1FwdDir1_Dir2BwdDir2) ||
+                (faceOrient==eDir1BwdDir1_Dir2BwdDir2) ||
+                (faceOrient==eDir1BwdDir2_Dir2FwdDir1) ||
+                (faceOrient==eDir1BwdDir2_Dir2BwdDir1) )
+            {
+                if(faceOrient<eDir1FwdDir2_Dir2FwdDir1)
+                {
+                    if (modified)
+                    {
+                        for(int i = 3; i < Q; i+=2)
+                        {
+                            for(int j = 0; j < P; j++)
+                            {
+                                signarray[ arrayindx[i*P+j] ] *= -1;
+                            }
+                        }
+
+                        for(int i = 0; i < P; i++)
+                        {
+                            swap( maparray[i] , maparray[i+P] );
+                            swap( signarray[i] , signarray[i+P] );
+                        }
+
+                    }
+                    else
+                    {
+                        for(int i = 0; i < P; i++)
+                        {
+                            for(int j = 0; j < Q/2; j++)
+                            {
+                                swap( maparray[i + j*P],
+                                     maparray[i+P*Q
+                                              -P -j*P] );
+                                swap( signarray[i + j*P],
+                                     signarray[i+P*Q
+                                              -P -j*P]);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (modified)
+                    {
+                        for(int i = 0; i < Q; i++)
+                        {
+                            for(int j = 3; j < P; j+=2)
+                            {
+                                signarray[ arrayindx[i*P+j] ] *= -1;
+                            }
+                        }
+
+                        for(int i = 0; i < Q; i++)
+                        {
+                            swap( maparray[i] , maparray[i+Q] );
+                            swap( signarray[i] , signarray[i+Q] );
+                        }
+
+                    }
+                    else
+                    {
+                        for(int i = 0; i < P; i++)
+                        {
+                            for(int j = 0; j < Q/2; j++)
+                            {
+                                swap( maparray[i*Q + j],
+                                     maparray[i*Q + Q -1 -j]);
+                                swap( signarray[i*Q + j],
+                                     signarray[i*Q + Q -1 -j]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if( (faceOrient==eDir1BwdDir1_Dir2FwdDir2) ||
+                (faceOrient==eDir1BwdDir1_Dir2BwdDir2) ||
+                (faceOrient==eDir1FwdDir2_Dir2BwdDir1) ||
+                (faceOrient==eDir1BwdDir2_Dir2BwdDir1) )
+            {
+                if(faceOrient<eDir1FwdDir2_Dir2FwdDir1)
+                {
+                    if (modified)
+                    {
+                        for(i = 0; i < Q; i++)
+                        {
+                            for(j = 3; j < P; j+=2)
+                            {
+                                signarray[ arrayindx[i*P+j] ] *= -1;
+                            }
+                        }
+
+                        for(i = 0; i < Q; i++)
+                        {
+                            swap( maparray[i*P],
+                                 maparray[i*P+1]);
+                            swap( signarray[i*P],
+                                 signarray[i*P+1]);
+                        }
+                    }
+                    else
+                    {
+                        for(i = 0; i < Q; i++)
+                        {
+                            for(j = 0; j < P/2; j++)
+                            {
+                                swap( maparray[i*P + j],
+                                     maparray[i*P + P -1 -j]);
+                                swap( signarray[i*P + j],
+                                     signarray[i*P + P -1 -j]);
+                            }
+                        }
+                    }
+
+
+
+                }
+                else
+                {
+                    if (modified)
+                    {
+                        for(i = 3; i < Q; i+=2)
+                        {
+                            for(j = 0; j < P; j++)
+                            {
+                                signarray[ arrayindx[i*P+j] ] *= -1;
+                            }
+                        }
+
+                        for(i = 0; i < P; i++)
+                        {
+                            swap( maparray[i*Q],
+                                 maparray[i*Q+1]);
+                            swap( signarray[i*Q],
+                                 signarray[i*Q+1]);
+                        }
+                    }
+                    else
+                    {
+                        for(i = 0; i < Q; i++)
+                        {
+                            for(j = 0; j < P/2; j++)
+                            {
+                                swap( maparray[i + j*Q] ,
+                                     maparray[i+P*Q - Q -j*Q] );
+                                swap( signarray[i + j*Q] ,
+                                     signarray[i+P*Q - Q -j*Q] );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
          * @param   eid         The edge to compute the numbering for.
          * @param   edgeOrient  Orientation of the edge.
          * @param   maparray    Storage for computed mapping array.
          * @param   signarray   ?
          */
-        void StdHexExp::v_GetEdgeInteriorMap(const int eid,
-                                const Orientation edgeOrient,
+        void StdHexExp::v_GetEdgeInteriorToElementMap
+                               (const int eid,
                                 Array<OneD, unsigned int> &maparray,
-                                Array<OneD, int> &signarray)
+                                Array<OneD, int> &signarray,
+                                const Orientation edgeOrient)
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
                      GetBasisType(0) == LibUtilities::eGLL_Lagrange,
@@ -1770,7 +1880,7 @@ namespace Nektar
                 reverse( maparray.get() , maparray.get()+nEdgeIntCoeffs );
             }
 
-            if( signChange )
+            if(signChange)
             {
                 for(int p = 1; p < nEdgeIntCoeffs; p+=2)
                 {
@@ -1784,10 +1894,10 @@ namespace Nektar
          * Generate mapping describing which elemental modes lie on the
          * interior of a given face. Accounts for face orientation.
          */
-        void StdHexExp::v_GetFaceInteriorMap(const int fid,
-                                const Orientation faceOrient,
-                                Array<OneD, unsigned int> &maparray,
-                                Array<OneD, int>& signarray)
+        void StdHexExp::v_GetTraceInteriorToElementMap(const int fid,
+                                              Array<OneD, unsigned int> &maparray,
+                                              Array<OneD, int>& signarray,
+                                              const Orientation faceOrient)
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
                      GetBasisType(0) == LibUtilities::eGLL_Lagrange,
@@ -1802,7 +1912,7 @@ namespace Nektar
             ASSERTL1((fid>=0)&&(fid<6),
                      "local face id must be between 0 and 5");
 
-            int nFaceIntCoeffs = GetFaceIntNcoeffs(fid);
+            int nFaceIntCoeffs = v_GetTraceIntNcoeffs(fid);
 
             if(maparray.size()!=nFaceIntCoeffs)
             {
@@ -2118,158 +2228,22 @@ namespace Nektar
             }
         }
 
-
-        /**
-         * @param   outarray    Storage area for computed map.
-         */
-        void StdHexExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
+        int StdHexExp::v_GetEdgeNcoeffs(const int i) const
         {
-            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
-                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
-                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_A ||
-                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
+            ASSERTL2((i >= 0)&&(i <= 11),"edge id is out of range");
 
-            int nummodes [3] = {m_base[0]->GetNumModes(),
-                                m_base[1]->GetNumModes(),
-                                m_base[2]->GetNumModes()};
-
-            int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
-
-            if(outarray.size() != nIntCoeffs)
+            if((i == 0)||(i == 2)||(i == 8)||(i == 10))
             {
-                outarray = Array<OneD, unsigned int>(nIntCoeffs);
+                return  GetBasisNumModes(0);
             }
-
-            const LibUtilities::BasisType Btype [3] = {GetBasisType(0),
-                                                       GetBasisType(1),
-                                                       GetBasisType(2)};
-            int cnt = 0;
-
-            int IntIdx [3][2];
-
-            for(int i = 0; i < 3; i++)
+            else if((i == 1)||(i == 3)||(i == 9)||(i == 11))
             {
-                if( Btype[i] == LibUtilities::eModified_A)
-                {
-                    IntIdx[i][0]  = 2;
-                    IntIdx[i][1]  = nummodes[i];
-                }
-                else
-                {
-                    IntIdx[i][0]  = 1;
-                    IntIdx[i][1]  = nummodes[i]-1;
-                }
+                return  GetBasisNumModes(1);
             }
-
-            for(int r = IntIdx[2][0]; r < IntIdx[2][1]; r++)
+            else
             {
-                for(int q = IntIdx[1][0]; q < IntIdx[1][1]; q++)
-                {
-                    for(int p = IntIdx[0][0]; p < IntIdx[0][1]; p++)
-                    {
-                        outarray[cnt++] = r*nummodes[0]*nummodes[1] +
-                            q*nummodes[0] + p;
-                    }
-                }
+                return GetBasisNumModes(2);
             }
-        }
-
-
-        /**
-         * @param   outarray    Storage for computed map.
-         */
-        void StdHexExp::v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
-        {
-            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
-                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
-                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_A ||
-                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
-                     "BasisType is not a boundary interior form");
-
-            int nummodes [3] = {m_base[0]->GetNumModes(),
-                                m_base[1]->GetNumModes(),
-                                m_base[2]->GetNumModes()};
-
-            int nBndCoeffs = NumBndryCoeffs();
-
-            if(outarray.size()!=nBndCoeffs)
-            {
-                outarray = Array<OneD, unsigned int>(nBndCoeffs);
-            }
-
-            const LibUtilities::BasisType Btype [3] = {GetBasisType(0),
-                                                       GetBasisType(1),
-                                                       GetBasisType(2)};
-
-            int cnt = 0;
-
-            int BndIdx [3][2];
-            int IntIdx [3][2];
-
-            for(int i = 0; i < 3; i++)
-            {
-                BndIdx[i][0] = 0;
-
-                if( Btype[i] == LibUtilities::eModified_A)
-                {
-                    BndIdx[i][1] = 1;
-                    IntIdx[i][0]  = 2;
-                    IntIdx[i][1]  = nummodes[i];
-                }
-                else
-                {
-                    BndIdx[i][1] = nummodes[i]-1;
-                    IntIdx[i][0]  = 1;
-                    IntIdx[i][1]  = nummodes[i]-1;
-                }
-            }
-
-
-            for(int i = 0; i < 2; i++)
-            {
-                int r = BndIdx[2][i];
-                for(int q = 0; q < nummodes[1]; q++)
-                {
-                    for(int p = 0; p < nummodes[0]; p++)
-                    {
-                        outarray[cnt++] = r*nummodes[0]*nummodes[1]+q*nummodes[0] + p;
-                    }
-                }
-            }
-
-            for(int r = IntIdx[2][0]; r < IntIdx[2][1]; r++)
-            {
-                for( int i = 0; i < 2; i++)
-                {
-                    int q = BndIdx[1][i];
-                    for( int p = 0; p < nummodes[0]; p++)
-                    {
-                        outarray[cnt++] = r*nummodes[0]*nummodes[1] +
-                            q*nummodes[0] + p;
-                    }
-                }
-
-                for( int q = IntIdx[1][0]; q < IntIdx[1][1]; q++)
-                {
-                    for( int i = 0; i < 2; i++)
-                    {
-                        int p = BndIdx[0][i];
-                        outarray[cnt++] = r*nummodes[0]*nummodes[1] +
-                            q*nummodes[0] + p;
-                    }
-                }
-            }
-
-            sort(outarray.get(), outarray.get() + nBndCoeffs);
         }
 
         DNekMatSharedPtr StdHexExp::v_GenMatrix(const StdMatrixKey &mkey)

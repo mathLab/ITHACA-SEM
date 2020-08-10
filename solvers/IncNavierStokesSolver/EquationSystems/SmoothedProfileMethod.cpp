@@ -35,9 +35,7 @@
 
 #include <IncNavierStokesSolver/EquationSystems/SmoothedProfileMethod.h>
 #include <IncNavierStokesSolver/Filters/FilterAeroForcesSPM.h>
-#include <MultiRegions/ContField1D.h>
-#include <MultiRegions/ContField2D.h>
-#include <MultiRegions/ContField3D.h>
+#include <MultiRegions/ContField.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
 
@@ -93,22 +91,22 @@ namespace Nektar
             case 1:
                 if (m_projectionType == eGalerkin)
                 {
-                    SetUpExpansions<ContField1D>(nvel);
+                    SetUpExpansions<ContField>(nvel);
                 }
                 else if (m_projectionType == eDiscontinuous)
                 {
-                    SetUpExpansions<DisContField1D>(nvel);
+                    SetUpExpansions<DisContField>(nvel);
                 }
                 break;
 
             case 2:
                 if (m_projectionType == eGalerkin)
                 {
-                    SetUpExpansions<ContField2D>(nvel);
+                    SetUpExpansions<ContField>(nvel);
                 }
                 else if (m_projectionType == eDiscontinuous)
                 {
-                    SetUpExpansions<DisContField2D>(nvel);
+                    SetUpExpansions<DisContField>(nvel);
                 }
                 break;
 
@@ -117,7 +115,7 @@ namespace Nektar
                 {
                     if (m_HomogeneousType == EquationSystem::eNotHomogeneous)
                     {
-                        SetUpExpansions<ContField3D>(nvel);
+                        SetUpExpansions<ContField>(nvel);
                     }
                     else if (m_HomogeneousType ==
                              EquationSystem::eHomogeneous1D)
@@ -136,7 +134,7 @@ namespace Nektar
                 {
                     if (m_HomogeneousType == EquationSystem::eNotHomogeneous)
                     {
-                        SetUpExpansions<DisContField3D>(nvel);
+                        SetUpExpansions<DisContField>(nvel);
                     }
                     else if (m_HomogeneousType ==
                              EquationSystem::eHomogeneous1D)

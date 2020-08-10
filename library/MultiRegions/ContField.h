@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ContField2D.h
+// File ContField.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -38,7 +38,7 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <SpatialDomains/Conditions.h>
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/DisContField2D.h>
+#include <MultiRegions/DisContField.h>
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
@@ -52,15 +52,15 @@ namespace Nektar
         /// This class is the abstraction of a global continuous two-
         /// dimensional spectral/hp element expansion which approximates the
         /// solution of a set of partial differential equations.
-        class ContField2D: public DisContField2D
+        class ContField: public DisContField
         {
         public:
             /// The default constructor.
-            MULTI_REGIONS_EXPORT ContField2D();
+            MULTI_REGIONS_EXPORT ContField();
 
             /// This constructor sets up global continuous field based on an
             /// input mesh and boundary conditions.
-            MULTI_REGIONS_EXPORT ContField2D(
+            MULTI_REGIONS_EXPORT ContField(
                         const LibUtilities::SessionReaderSharedPtr &pSession,
                         const SpatialDomains::MeshGraphSharedPtr &graph2D,
                         const std::string &variable  = "DefaultVar",
@@ -72,17 +72,23 @@ namespace Nektar
             /// Construct a global continuous field with solution type based on
             /// another field but using a separate input mesh and boundary
             /// conditions.
-            MULTI_REGIONS_EXPORT ContField2D(const ContField2D &In,
+            MULTI_REGIONS_EXPORT ContField(const ContField &In,
                         const SpatialDomains::MeshGraphSharedPtr &graph2D,
                         const std::string &variable,
                         const bool DeclareCoeffPhysArrays = true,
                         const bool CheckIfSingularSystem = false);
 
             /// The copy constructor.
-            MULTI_REGIONS_EXPORT ContField2D(const ContField2D &In, bool DeclareCoeffPhysArrays = true);
+            MULTI_REGIONS_EXPORT ContField
+                (const ContField &In, bool DeclareCoeffPhysArrays = true);
+
+            /// Copy constructor.
+            MULTI_REGIONS_EXPORT ContField
+                (const LibUtilities::SessionReaderSharedPtr &pSession,
+                 const ExpList & In);
 
             /// The default destructor.
-            MULTI_REGIONS_EXPORT virtual ~ContField2D();
+            MULTI_REGIONS_EXPORT virtual ~ContField();
 
             /// Assembles the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
@@ -96,8 +102,7 @@ namespace Nektar
 
             /// Returns the map from local to global level.
             inline const AssemblyMapCGSharedPtr& GetLocalToGlobalMap()
-                                                                        const;
-
+                const;
 
             /// Calculates the inner product of a function
             /// \f$f(\boldsymbol{x})\f$ with respect to all <em>global</em>
@@ -127,14 +132,13 @@ namespace Nektar
             /// Solves the two-dimensional Laplace equation, subject to the
             /// boundary conditions specified.
             MULTI_REGIONS_EXPORT void LaplaceSolve(
-                                const Array<OneD, const NekDouble> &inarray,
-                                Array<OneD, NekDouble> &outarray,
-                                const Array<OneD, const NekDouble> &dirForcing
-                                   = NullNekDouble1DArray,
-                                const Array<OneD,  Array<OneD,NekDouble> >&
-                                variablecoeffs = NullNekDoubleArrayofArray,
-                                NekDouble time = 0.0);
-
+                               const Array<OneD, const NekDouble> &inarray,
+                               Array<OneD,       NekDouble> &outarray,
+                               const Array<OneD, const NekDouble> &dirForcing
+                               = NullNekDouble1DArray,
+                               const Array<OneD,       Array<OneD,NekDouble> >&
+                               variablecoeffs = NullNekDoubleArrayofArray,
+                               NekDouble time = 0.0);
 
             /// Compute the eigenvalues of the linear advection operator.
             MULTI_REGIONS_EXPORT void LinearAdvectionEigs(const NekDouble ax,
@@ -142,7 +146,7 @@ namespace Nektar
                                      Array<OneD, NekDouble> &Real,
                                      Array<OneD, NekDouble> &Imag,
                                      Array<OneD, NekDouble> &Evecs
-                                                        = NullNekDouble1DArray);
+                                                          = NullNekDouble1DArray);
 
             /// Returns the boundary conditions expansion.
             inline const Array<OneD,const MultiRegions::ExpListSharedPtr>&
@@ -150,13 +154,13 @@ namespace Nektar
 
             /// Returns the boundary conditions.
             inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>&
-                                                        GetBndConditions();
+                GetBndConditions();
 
             inline int GetGlobalMatrixNnz(const GlobalMatrixKey &gkey);
 
         protected:
 
-        private:
+            //private:
             /// (A shared pointer to) the object which contains all the
             /// required information for the transformation from local to
             /// global degrees of freedom.
@@ -165,7 +169,7 @@ namespace Nektar
             /// (A shared pointer to) a list which collects all the global
             /// matrices being assembled, such that they should be constructed
             /// only once.
-            GlobalMatrixMapShPtr            m_globalMat;
+            GlobalMatrixMapShPtr   m_globalMat;
 
             /// A manager which collects all the global
             /// linear systems being assembled, such that they should be
@@ -180,19 +184,25 @@ namespace Nektar
                                                         = NullNekDouble1DArray);
 
             /// Returns the global matrix specified by \a mkey.
-            MULTI_REGIONS_EXPORT GlobalMatrixSharedPtr GetGlobalMatrix(const GlobalMatrixKey &mkey);
+            MULTI_REGIONS_EXPORT GlobalMatrixSharedPtr
+                GetGlobalMatrix(const GlobalMatrixKey &mkey);
 
             /// Returns the linear system specified by the key \a mkey.
-            MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
+            MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr
+                GetGlobalLinSys(const GlobalLinSysKey &mkey);
 
-            MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GenGlobalLinSys(const GlobalLinSysKey &mkey);
+            MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr
+                GenGlobalLinSys(const GlobalLinSysKey &mkey);
 
             /// Impose the Dirichlet Boundary Conditions on outarray 
-            MULTI_REGIONS_EXPORT virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
+            MULTI_REGIONS_EXPORT virtual void
+                v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
 
-            MULTI_REGIONS_EXPORT virtual void v_FillBndCondFromField();
+            MULTI_REGIONS_EXPORT virtual void
+                v_FillBndCondFromField();
 
-            MULTI_REGIONS_EXPORT virtual void v_FillBndCondFromField(const int nreg);
+            MULTI_REGIONS_EXPORT virtual void
+                v_FillBndCondFromField(const int nreg);
 
             /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
@@ -253,30 +263,33 @@ namespace Nektar
 
             // Solve the linear advection problem assuming that m_coeffs
             // vector contains an intial estimate for solution
-            MULTI_REGIONS_EXPORT virtual void v_LinearAdvectionDiffusionReactionSolve(const Array<OneD, Array<OneD, NekDouble> > &velocity,
-                                              const Array<OneD, const NekDouble> &inarray,
-                                              Array<OneD, NekDouble> &outarray,
-                                              const NekDouble lambda,
-                                              const Array<OneD, const NekDouble>&
-                                              dirForcing = NullNekDouble1DArray);
+            MULTI_REGIONS_EXPORT virtual void
+                v_LinearAdvectionDiffusionReactionSolve
+                     (const Array<OneD, Array<OneD, NekDouble> > &velocity,
+                      const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD, NekDouble> &outarray,
+                      const NekDouble lambda,
+                      const Array<OneD, const NekDouble>&
+                      dirForcing = NullNekDouble1DArray);
 
             // Solve the linear advection problem assuming that m_coeff
             // vector contains an intial estimate for solution
-            MULTI_REGIONS_EXPORT void v_LinearAdvectionReactionSolve(const Array<OneD, Array<OneD, NekDouble> > &velocity,
-                                              const Array<OneD, const NekDouble> &inarray,
-                                              Array<OneD, NekDouble> &outarray,
-                                              const NekDouble lambda,
-                                              const Array<OneD, const NekDouble>&
-                                              dirForcing = NullNekDouble1DArray);
+            MULTI_REGIONS_EXPORT void
+                v_LinearAdvectionReactionSolve
+                        (const Array<OneD, Array<OneD, NekDouble> > &velocity,
+                         const Array<OneD, const NekDouble> &inarray,
+                         Array<OneD, NekDouble> &outarray,
+                         const NekDouble lambda,
+                         const Array<OneD, const NekDouble>&
+                         dirForcing = NullNekDouble1DArray);
 
             /// Template method virtual forwarder for GetBndConditions().
             MULTI_REGIONS_EXPORT virtual const Array<OneD,const SpatialDomains
                                 ::BoundaryConditionShPtr>& v_GetBndConditions();
             MULTI_REGIONS_EXPORT virtual void v_ClearGlobalLinSysManager(void);
-
         };
 
-        typedef std::shared_ptr<ContField2D>      ContField2DSharedPtr;
+        typedef std::shared_ptr<ContField>      ContFieldSharedPtr;
 
         /**
          * This operation is evaluated as:
@@ -303,7 +316,7 @@ namespace Nektar
          *          resulting global coefficients \f$\boldsymbol{\hat{u}}_g\f$
          *          will be stored in #m_coeffs.
          */
-        inline void ContField2D::Assemble()
+        inline void ContField::Assemble()
         {
             m_locToGloMap->Assemble(m_coeffs,m_coeffs);
         }
@@ -335,7 +348,7 @@ namespace Nektar
          *                      \f$\boldsymbol{x}_g\f$ will be stored in this
          *                      array of size \f$N_\mathrm{dof}\f$.
          */
-        inline void ContField2D::Assemble(
+        inline void ContField::Assemble(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,NekDouble> &outarray) const
         {
@@ -344,7 +357,7 @@ namespace Nektar
 
 
         inline const AssemblyMapCGSharedPtr&
-            ContField2D::GetLocalToGlobalMap() const
+            ContField::GetLocalToGlobalMap() const
         {
             return  m_locToGloMap;
         }
@@ -365,7 +378,7 @@ namespace Nektar
          *                      of \f$f(\boldsymbol{x})\f$ at the quadrature
          *                      points in its array #m_phys.
          */
-        inline void ContField2D::IProductWRTBase(
+        inline void ContField::IProductWRTBase(
                                 const Array<OneD, const NekDouble> &inarray,
                                 Array<OneD, NekDouble> &outarray)
 
@@ -387,7 +400,7 @@ namespace Nektar
          * @param   In          An ExpList, containing the local coefficients
          *                      \f$\hat{u}_n^e\f$ in its array #m_coeffs.
          */
-        inline void ContField2D::BwdTrans(
+        inline void ContField::BwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
                                 Array<OneD,       NekDouble> &outarray)
         {
@@ -395,18 +408,18 @@ namespace Nektar
         }
 
         inline const Array<OneD,const MultiRegions::ExpListSharedPtr>&
-                                            ContField2D::GetBndCondExpansions()
+                                            ContField::GetBndCondExpansions()
         {
             return m_bndCondExpansions;
         }
 
         inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>&
-                                                ContField2D::GetBndConditions()
+                                                ContField::GetBndConditions()
         {
             return m_bndConditions;
         }
 
-        inline int ContField2D::GetGlobalMatrixNnz(const GlobalMatrixKey &gkey)
+        inline int ContField::GetGlobalMatrixNnz(const GlobalMatrixKey &gkey)
         {
             ASSERTL1(gkey.LocToGloMapIsDefined(),
                      "To use method must have a AssemblyMap "

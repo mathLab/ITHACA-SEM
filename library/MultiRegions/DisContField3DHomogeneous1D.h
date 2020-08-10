@@ -39,7 +39,7 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
-#include <MultiRegions/ExpList2D.h>
+#include <MultiRegions/ExpList.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SpatialDomains/Conditions.h>
 #include <MultiRegions/GlobalLinSys.h>

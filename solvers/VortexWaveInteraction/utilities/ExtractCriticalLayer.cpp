@@ -36,7 +36,6 @@
 #include <cstdlib>
 
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/ExpList2D.h>
 
 using namespace std;
 using namespace Nektar;
@@ -69,7 +68,7 @@ int main(int argc, char *argv[])
     // Define Streak Expansion   
     MultiRegions::ExpListSharedPtr streak;   
 
-    streak = MemoryManager<MultiRegions::ExpList2D>
+    streak = MemoryManager<MultiRegions::ExpList>
         ::AllocateSharedPtr(vSession,graphShPt);
     //---------------------------------------------------------------
 

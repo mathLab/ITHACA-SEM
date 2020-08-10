@@ -108,9 +108,38 @@ void ArtificialDiffusion::v_DoArtificialDiffusion(
     }
 }
 
-/**
- *
- */
+void ArtificialDiffusion::DoArtificialDiffusion_coeff(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+            Array<OneD,       Array<OneD, NekDouble> > &outarray)
+{
+    v_DoArtificialDiffusion_coeff(inarray, outarray);
+}
+
+void ArtificialDiffusion::v_DoArtificialDiffusion_coeff(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+            Array<OneD,       Array<OneD, NekDouble> > &outarray)
+{
+    size_t nvariables = inarray.size();
+    size_t ncoeffs    = m_fields[0]->GetNcoeffs();
+
+    Array<OneD, Array<OneD, NekDouble> > outarrayDiff {nvariables};
+
+    for (int i = 0; i < nvariables; ++i)
+    {
+        outarrayDiff[i] = Array<OneD, NekDouble>{ncoeffs, 0.0};
+    }
+
+    m_diffusion->DiffuseCoeffs(nvariables, m_fields, inarray, outarrayDiff);
+
+    for (int i = 0; i < nvariables; ++i)
+    {
+        Vmath::Vadd(ncoeffs,
+                    outarray[i], 1,
+                    outarrayDiff[i], 1,
+                    outarray[i], 1);
+    }
+}
+
 void ArtificialDiffusion::GetArtificialViscosity(
             const Array<OneD, Array<OneD, NekDouble> > &physfield,
                   Array<OneD, NekDouble  >             &mu)

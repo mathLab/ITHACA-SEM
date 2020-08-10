@@ -19,8 +19,7 @@
 //! Loading Nektar++ libraries
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/ExpList2D.h>
-#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField.h>
 #include <SpatialDomains/MeshGraph.h>
 
 //! STL namespace
@@ -117,8 +116,8 @@ int main(int argc, char *argv[])
     graphShPt = SpatialDomains::MeshGraph::Read(vSession);
 
     //!  Feed our spatial discretisation object
-    MultiRegions::ContField2DSharedPtr Domain;
-    Domain = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(vSession,graphShPt,vSession->GetVariable(0));
+    MultiRegions::ContFieldSharedPtr Domain;
+    Domain = MemoryManager<MultiRegions::ContField>::AllocateSharedPtr(vSession,graphShPt,vSession->GetVariable(0));
 
     //! Get the total number of elements
     int nElements;
@@ -322,20 +321,20 @@ int main(int argc, char *argv[])
                 v_QuadraturePts[i], eta_QuadraturePts[i], f_QuadraturePts[i], df_QuadraturePts[i]);
     }
     fclose(yQ);
-    //! --------------------------------------------------------------------------------------------
+    //! -----------------------------------------------------------------------------------
 
 
 
-    //! Definition of the 2D expansion using the mesh data specified on the session file -----------
-    MultiRegions::ExpList2DSharedPtr Exp2D_uk;
-    Exp2D_uk = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vSession,graphShPt);
+    //! Definition of the 2D expansion using the mesh data specified on the session file --
+    MultiRegions::ExpListSharedPtr Exp2D_uk;
+    Exp2D_uk = MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr(vSession,graphShPt);
 
-    MultiRegions::ExpList2DSharedPtr Exp2D_vk;
-    Exp2D_vk = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vSession,graphShPt);
+    MultiRegions::ExpListSharedPtr Exp2D_vk;
+    Exp2D_vk = MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr(vSession,graphShPt);
 
-    MultiRegions::ExpList2DSharedPtr Exp2D_pk;
-    Exp2D_pk = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vSession,graphShPt);
-    //! --------------------------------------------------------------------------------------------
+    MultiRegions::ExpListSharedPtr Exp2D_pk;
+    Exp2D_pk = MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr(vSession,graphShPt);
+    //! -----------------------------------------------------------------------------------
 
 
 

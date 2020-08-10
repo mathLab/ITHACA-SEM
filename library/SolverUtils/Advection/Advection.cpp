@@ -86,6 +86,64 @@ void Advection::Advect(
 }
 
 
+void Advection::v_AdvectVolumeFlux(
+    const int nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+    const Array<OneD, Array<OneD, NekDouble>>         &pAdvVel,
+    const Array<OneD, Array<OneD, NekDouble>>         &pInarray,
+    TensorOfArray3D<NekDouble>                        &pVolumeFlux,
+    const NekDouble                                   &pTime)
+{
+    boost::ignore_unused(nConvectiveFields, pFields, pAdvVel, pInarray,
+                        pVolumeFlux, pTime);
+    ASSERTL0(false, "Not defined for AdvectVolumeFlux.");
+}
+
+/**
+ * @brief calculate the advection flux in the cell the trace  integration
+ */
+void Advection::v_AdvectTraceFlux(
+    const int nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+    const Array<OneD, Array<OneD, NekDouble>>         &pAdvVel,
+    const Array<OneD, Array<OneD, NekDouble>>         &pInarray,
+    Array<OneD, Array<OneD, NekDouble>>               &pTraceFlux,
+    const NekDouble                                   &pTime,
+    const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
+    const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
+{
+    boost::ignore_unused(nConvectiveFields, pFields, pAdvVel, pInarray,
+                        pTraceFlux, pTime, pFwd, pBwd);
+    ASSERTL0(false, "Not defined for AdvectTraceFlux.");
+}
+
+/**
+ * @brief Similar with Advection::Advect(): calculate the advection flux
+ * The difference is in the outarray:
+ *  it is the coefficients of basis for AdvectCoeffs()
+ *  it is the physics on quadrature points for Advect()
+ *
+ * @param   nConvectiveFields   Number of velocity components.
+ * @param   pFields             Expansion lists for scalar fields.
+ * @param   pAdvVel             Advection velocity.
+ * @param   pInarray            Scalar data to advect.
+ * @param   pOutarray           Advected scalar data.
+ * @param   pTime               Simulation time.
+ */
+void Advection::AdvectCoeffs(
+    const int                                          nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+    const Array<OneD, Array<OneD, NekDouble> >        &pAdvVel,
+    const Array<OneD, Array<OneD, NekDouble> >        &pInarray,
+    Array<OneD, Array<OneD, NekDouble> >              &pOutarray,
+    const NekDouble                                   &pTime,
+    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+    const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+{
+    v_AdvectCoeffs(nConvectiveFields, pFields, pAdvVel, pInarray,
+                   pOutarray, pTime, pFwd, pBwd);
+}
+
 /**
  * This function should be overridden in derived classes to initialise the
  * specific advection data members. However, this base class function should
@@ -132,5 +190,19 @@ void Advection::v_SetBaseFlow(
             "A baseflow is not appropriate for this advection type.");
 }
 
+void Advection::v_AdvectCoeffs(
+    const int nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+    const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+    Array<OneD, Array<OneD, NekDouble> >              &outarray,
+    const NekDouble                                   &time,
+    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+    const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+{
+    boost::ignore_unused(nConvectiveFields, fields, advVel, inarray, outarray,
+                        time, pFwd, pBwd);
+    ASSERTL0(false, "v_AdvectCoeffs not defined");
+}
 }
 }

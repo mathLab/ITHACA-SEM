@@ -12,8 +12,8 @@ IF (NEKTAR_BUILD_PYTHON)
 
     # Set the Python3 status flag as the opposite of the Python3 flag by
     # default on first run to ensure Python is searched for.
-    IF (NOT DEFINED NEKTAR_PYTHON3_STATUS)
-        SET(NEKTAR_PYTHON3_STATUS NOT ${NEKTAR_USE_PYTHON3} CACHE INTERNAL "")
+    IF (NOT NEKTAR_PYTHON3_STATUS)
+        SET(NEKTAR_PYTHON3_STATUS NOT ${NEKTAR_USE_PYTHON3} CACHE INTERNAL "" )
     ENDIF()
 
     IF (NOT NEKTAR_PYTHON3_STATUS STREQUAL NEKTAR_USE_PYTHON3)
@@ -115,6 +115,26 @@ IF (NEKTAR_BUILD_PYTHON)
                 -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DLIBRARY_TYPE=STATIC
                 ${TPSRC}/boost-numpy
             )
+
+        # This resolves issues with warnings on the OS X CI builds. These
+        # trigger warnings in the CI pipeline console. This fix updates
+        # boost-numpy to use a small number of more recent API macros rather
+        # than the ones from the deprectated API.
+        IF (APPLE)
+            UNSET(PATCH CACHE)
+            FIND_PROGRAM(PATCH patch)
+            IF(NOT PATCH)
+              MESSAGE(FATAL_ERROR
+                "'patch' tool for modifying files not found. Cannot build boost-numpy.")
+            ENDIF()
+            MARK_AS_ADVANCED(PATCH)
+            EXTERNALPROJECT_ADD_STEP(boost-numpy patch-deprecated-numpy-api
+                WORKING_DIRECTORY ${TPSRC}/boost-numpy
+                COMMAND ${PATCH} -p 0 < ${CMAKE_SOURCE_DIR}/cmake/thirdparty-patches/numpy-deprecated-api-warnings.patch
+                DEPENDERS configure
+                DEPENDEES patch)
+        ENDIF (APPLE)
+
         IF (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
             SET(BOOST_NUMPY_LIB ${TPDIST}/lib64/${CMAKE_STATIC_LIBRARY_PREFIX}boost_numpy${CMAKE_STATIC_LIBRARY_SUFFIX})
         ELSE()

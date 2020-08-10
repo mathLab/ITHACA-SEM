@@ -85,7 +85,7 @@ void DriverSteadyState::v_Execute(ostream &out)
 
 {
     // With a loop over "DoSolve", this Driver implements the
-    // "encaplulated" Selective Frequency Damping method
+    // "encapsulated" Selective Frequency Damping method(SFD)
     // to find the steady state of a flow above the critical Reynolds
     // number.
     m_equ[m_nequ - 1]->PrintSummary(out);

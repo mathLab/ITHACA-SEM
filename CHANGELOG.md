@@ -8,23 +8,41 @@ v5.1.0
 - Corrected the use of commincatorin AssemblyMapDG and AssemblyCommDG which was not using GetRowComm() (!1144)
 	
 **FieldConvert**
+- Restructure library to use local coefficient storage down to the GlobalLinSys
+  level. Removed GlobalCoeffs functionality (!963)
+- Add interior penalty method to DG framework (!1101)
+- Add an error filter for the time-evolution of the L2 and Linf errors (!1147)
 - Refactored time integration code using factory pattern (!1034)
 - Fix to preprocessor logic for boost with Visual Studio >= 2015 (!1115)
 - Fix type consistency and real comparison in SharedArray.hpp, replaced
-  num_elements with size() (!1127)
+  num_elements with size() (!1127, !1137, !1141)
 - Use base MPI functions instead of the GS library in the trace exchange
   for parallel DG simulations (!1112)
-  num_elements with size() (!1127, !1137, !1141)
+
+**FieldConvert**:
+- Add phifile module to compute shape functions for the SPM solver (!1065)
 
 **CardiacEPSolver**
 - Added additional parameter sets to Fenton-Karma model (!1119)
 
+**IncNavierStokesSolver**
+- Add Smoothed Profile Method (SPM) for the formulation of immersed boundaries
+  (!1065)
+- Add new filter AeroForcesSPM to compute aerodynamic forces in immersed
+  boundaries (!1065)
+
+**Documentation**:
+- Updated Windows source build instructions in user guide (!1152)
+
 **NekMesh**
 - Improved boundary layer splitting and output to CADfix (!938)
+- Improve .geo reader and support 3D geometries with voids (!1031)
 - Added r-adaptation code (!1109)
 
 **BuildSystem**
 - Toggle build type (!1135)
+- Updated minimum required CMake version to 3.5.1 (!1152)
+- Updated third party Boost version 1.71 (!1152)
 
 v5.0.1
 ------
@@ -32,6 +50,10 @@ v5.0.1
 - Fix incorrect coordinate dimension used in history point filter (!1118)
 - Fix compile errors with GCC 9.x (!1108)
 - Correct the Energy/Enstropy integral for the 3DH1 flow (!1132)
+- Added IsRealEqual method to compare real numbers with relative tolerance.
+  Started using it in SharedArray and in NekMesh to fix peralign-extrude tool
+  chain (!1134)
+- Fix Collection unit tests (!1160)
 
 **IncNavierStokesSolver**
 - Change the baseflow time in the Adjoint advection (!1133)

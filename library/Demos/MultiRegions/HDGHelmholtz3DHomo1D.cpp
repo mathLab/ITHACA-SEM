@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
     factors[StdRegions::eFactorLambda]  = vSession->GetParameter("Lambda");
     factors[StdRegions::eFactorTau] = 1.0;
 
-    const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
+    const SpatialDomains::ExpansionInfoMap &expansions = graph2D->GetExpansionInfo();
     LibUtilities::BasisKey bkey0 
                             = expansions.begin()->second->m_basisKeyVector[0];
     cout << "Solving 3D Helmholtz (Homogeneous in z-direction):"  << endl;

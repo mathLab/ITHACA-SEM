@@ -39,7 +39,7 @@
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdTriExp.h>
 #include <LocalRegions/MatrixKey.h>
-#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 #include <GlobalMapping/Deform.h>
 

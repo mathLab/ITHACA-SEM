@@ -38,7 +38,7 @@
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LocalRegions/MatrixKey.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
-#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField.h>
 
 using namespace std;
 
@@ -72,7 +72,8 @@ namespace Nektar
         int  expdim = m_graph->GetMeshDimension();
 
         // Get Expansion list for orthogonal expansion at p-2
-        const SpatialDomains::ExpansionMap &pressure_exp = GenPressureExp(m_graph->GetExpansions("u"));
+        const SpatialDomains::ExpansionInfoMap
+            &pressure_exp = GenPressureExp(m_graph->GetExpansionInfo("u"));
 
         m_nConvectiveFields = m_fields.size();
         if(boost::iequals(m_boundaryConditions->GetVariable(m_nConvectiveFields-1), "p"))
@@ -97,8 +98,8 @@ namespace Nektar
             }
             else
             {
-                //m_pressure2 = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(m_session, pressure_exp);
-                m_pressure = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(m_session, pressure_exp);
+                m_pressure = MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr
+                    (m_session, pressure_exp);
                 nz = 1;
             }
 
@@ -1760,15 +1761,14 @@ namespace Nektar
             Vmath::Vadd(outarray[i].size(), outarray[i], 1, Forc[i], 1, outarray[i], 1);
         }
     }
-
-
-
-    const SpatialDomains::ExpansionMap &CoupledLinearNS::GenPressureExp(const SpatialDomains::ExpansionMap &VelExp)
+    
+    const SpatialDomains::ExpansionInfoMap
+    &CoupledLinearNS::GenPressureExp(const SpatialDomains::ExpansionInfoMap &VelExp)
     {
         int i;
-        SpatialDomains::ExpansionMapShPtr returnval;
-
-        returnval = MemoryManager<SpatialDomains::ExpansionMap>::AllocateSharedPtr();
+        SpatialDomains::ExpansionInfoMapShPtr returnval;
+        returnval = MemoryManager<SpatialDomains::ExpansionInfoMap>::
+            AllocateSharedPtr();
 
         int nummodes;
 
@@ -1785,16 +1785,17 @@ namespace Nektar
                 LibUtilities::BasisKey newB(B.GetBasisType(),nummodes-2,B.GetPointsKey());
                 BasisVec.push_back(newB);
             }
-
-            // Put new expansion into list.
-            SpatialDomains::ExpansionShPtr expansionElementShPtr =
-                MemoryManager<SpatialDomains::Expansion>::AllocateSharedPtr(expMapIter.second->m_geomShPtr, BasisVec);
+            
+            // Put new expansion into list. 
+            SpatialDomains::ExpansionInfoShPtr expansionElementShPtr =
+                MemoryManager<SpatialDomains::ExpansionInfo>::
+                AllocateSharedPtr(expMapIter.second->m_geomShPtr, BasisVec);
             (*returnval)[expMapIter.first] = expansionElementShPtr;
         }
-
-        // Save expansion into graph.
-        m_graph->SetExpansions("p",returnval);
-
+        
+        // Save expansion into graph. 
+        m_graph->SetExpansionInfo("p",returnval);
+        
         return *returnval;
     }
 
@@ -1954,8 +1955,8 @@ namespace Nektar
         
         for(k = 0; k < nvel; ++k)
         {
-            MultiRegions::ContField2DSharedPtr cfield =
-                std::dynamic_pointer_cast<MultiRegions::ContField2D>(fields[k]);
+            MultiRegions::ContFieldSharedPtr cfield =
+                std::dynamic_pointer_cast<MultiRegions::ContField>(fields[k]);
 
             Array<OneD, NekDouble> sign = cfield->GetLocalToGlobalMap()->
                 GetBndCondCoeffsToLocalCoeffsSign();

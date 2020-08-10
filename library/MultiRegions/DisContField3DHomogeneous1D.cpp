@@ -37,7 +37,8 @@
 
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/DisContField3DHomogeneous1D.h>
-#include <MultiRegions/DisContField2D.h>
+#include <MultiRegions/DisContField.h>
+#include <LocalRegions/Expansion1D.h>
 
 
 namespace Nektar
@@ -48,6 +49,7 @@ namespace Nektar
         DisContField3DHomogeneous1D::DisContField3DHomogeneous1D(void)
         : ExpList3DHomogeneous1D(),
           m_bndCondExpansions(),
+          m_bndCondBndWeight(),
           m_bndConditions()
         {
         }
@@ -60,6 +62,7 @@ namespace Nektar
             const bool                                  dealiasing):
             ExpList3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing),
               m_bndCondExpansions(),
+              m_bndCondBndWeight(),
               m_bndConditions()
         {
         }
@@ -69,17 +72,18 @@ namespace Nektar
             const bool                         DeclarePlanesSetCoeffPhys)
             : ExpList3DHomogeneous1D (In,false),
               m_bndCondExpansions    (In.m_bndCondExpansions),
+              m_bndCondBndWeight     (In.m_bndCondBndWeight),
               m_bndConditions        (In.m_bndConditions)
         {
             if (DeclarePlanesSetCoeffPhys)
             {
-                DisContField2DSharedPtr zero_plane =
-                    std::dynamic_pointer_cast<DisContField2D> (In.m_planes[0]);
+                DisContFieldSharedPtr zero_plane =
+                    std::dynamic_pointer_cast<DisContField> (In.m_planes[0]);
 
                 for(int n = 0; n < m_planes.size(); ++n)
                 {
                     m_planes[n] =
-                        MemoryManager<DisContField2D>::
+                        MemoryManager<DisContField>::
                           AllocateSharedPtr(*zero_plane, false);
                 }
 
@@ -99,14 +103,15 @@ namespace Nektar
             ExpList3DHomogeneous1D(pSession, HomoBasis, lhom, useFFT,
                                    dealiasing),
               m_bndCondExpansions(),
+              m_bndCondBndWeight(),
               m_bndConditions()
         {
             int i, n, nel;
-            DisContField2DSharedPtr plane_zero;
+            DisContFieldSharedPtr plane_zero;
             SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
 
             // note that nzplanes can be larger than nzmodes
-            m_planes[0] = plane_zero = MemoryManager<DisContField2D>::
+            m_planes[0] = plane_zero = MemoryManager<DisContField>::
                 AllocateSharedPtr(pSession, graph2D, variable, true, false,
                                   ImpType);
 
@@ -122,7 +127,7 @@ namespace Nektar
 
             for (n = 1; n < m_planes.size(); ++n)
             {
-                m_planes[n] = MemoryManager<DisContField2D>::
+                m_planes[n] = MemoryManager<DisContField>::
                     AllocateSharedPtr(*plane_zero, graph2D,
                                       variable, true, false);
                 for(i = 0; i < nel; ++i)
@@ -181,6 +186,8 @@ namespace Nektar
             m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(
                 bregions.size());
             m_bndConditions = m_planes[0]->UpdateBndConditions();
+
+            m_bndCondBndWeight = Array<OneD, NekDouble> {bregions.size(),0.0};
 
             int nplanes = m_planes.size();
             Array<OneD, MultiRegions::ExpListSharedPtr>
@@ -548,7 +555,7 @@ namespace Nektar
                                         i + k * exp_size_per_plane )
                                 );
 
-                            elmt->GetEdgePhysVals(boundaryID, temp_BC_exp,
+                            elmt->GetTracePhysVals(boundaryID, temp_BC_exp,
                                                   tmp_Tot = TotField + offset,
                                                   tmp_BC = BndVals + pos);
                             pos        += exp_dim;
@@ -690,7 +697,7 @@ namespace Nektar
 
                 elmt   = GetExp(ElmtID[cnt+n]);
                 const Array<OneD, const Array<OneD, NekDouble> > normalsElmt
-                            = elmt->GetSurfaceNormal(EdgeID[cnt+n]);
+                            = elmt->GetTraceNormal(EdgeID[cnt+n]);
                 // Copy to result
                 for (int j = 0; j < expdim; ++j)
                 {

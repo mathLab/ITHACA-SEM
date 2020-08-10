@@ -223,9 +223,24 @@ public:
     }
 
     /**
+     * @brief Gets void points for tetrahedral meshing.
+     */
+    std::vector<Array<OneD, NekDouble>> GetVoidPoints()
+    {
+        return m_voidPoints;
+    }
+
+    /**
+     * @brief Sets void points for tetrahedral meshing.
+     */
+    void SetVoidPoints(const std::vector<Array<OneD, NekDouble>> &voidPts)
+    {
+        m_voidPoints = voidPts;
+    }
+
+    /**
      * @brief Return the vector of translation from one curve to another to
-     * allow
-     *        for periodic mesh generation in 2D.
+     * allow for periodic mesh generation in 2D.
      */
     NEKMESHUTILS_EXPORT Array<OneD, NekDouble> GetPeriodicTranslationVector(
         int first, int second);
@@ -256,6 +271,8 @@ protected:
     /// Configuration options which might be used per-engine, serialised in
     /// strings.
     std::map<std::string, std::string> m_config;
+    /// Points contained within volume voids for tetrahedralisation
+    std::vector<Array<OneD, NekDouble>> m_voidPoints;
 
     /**
      * @brief Reports basic properties to screen.

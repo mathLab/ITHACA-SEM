@@ -40,7 +40,7 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/SegExp.h>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 
@@ -223,7 +223,7 @@ namespace Nektar
 
                 // Process edges. This logic is mostly the same as the previous
                 // block.
-                for (i = 0; i < exp->GetNedges(); ++i)
+                for (i = 0; i < exp->GetGeom()->GetNumEdges(); ++i)
                 {
                     meshEdgeId = exp->GetGeom()->GetEid(i);
 
@@ -247,8 +247,19 @@ namespace Nektar
                     // Grab edge interior map, and the edge inverse boundary
                     // map, so that we can extract this edge from the Schur
                     // complement matrix.
-                    exp->GetEdgeInteriorMap(i, edgeOrient, bmap, sign);
-                    bmap2 = exp->GetEdgeInverseBoundaryMap(i);
+                    if(exp->GetGeom()->GetNumFaces()) // 3D Element calls
+                    {
+                        exp->as<LocalRegions::Expansion3D>()->
+                            GetEdgeInteriorToElementMap(i, bmap, sign, edgeOrient);
+                        bmap2 = exp->as<LocalRegions::Expansion3D>()->
+                            GetEdgeInverseBoundaryMap(i);
+                    }
+                    else
+                    {
+                        exp->GetTraceInteriorToElementMap(i, bmap, sign, edgeOrient);
+                        bmap2 = exp->as<LocalRegions::Expansion2D>()->
+                            GetTraceInverseBoundaryMap(i);
+                    }
 
                     // Allocate temporary storage for the extracted edge matrix.
                     const int nEdgeCoeffs = bmap.size();
@@ -313,7 +324,7 @@ namespace Nektar
 
                 // Process faces. This logic is mostly the same as the previous
                 // block.
-                for (i = 0; i < exp->GetNfaces(); ++i)
+                for (i = 0; i < exp->GetGeom()->GetNumFaces(); ++i)
                 {
                     meshFaceId = exp->GetGeom()->GetFid(i);
 
@@ -332,8 +343,9 @@ namespace Nektar
                             faceOrient, pIt->second[0].orient);
                     }
 
-                    exp->GetFaceInteriorMap(i, faceOrient, bmap, sign);
-                    bmap2 = exp->GetFaceInverseBoundaryMap(i);
+                    exp->GetTraceInteriorToElementMap(i, bmap, sign, faceOrient);
+                    bmap2 = exp->as<LocalRegions::Expansion3D>()
+                        ->GetTraceInverseBoundaryMap(i);
 
                     // Allocate temporary storage for the extracted face matrix.
                     const int nFaceCoeffs = bmap.size();
@@ -605,8 +617,7 @@ namespace Nektar
                 loc_mat = (m_linsys.lock())->GetStaticCondBlock(n);
                 bnd_mat = loc_mat->GetBlock(0,0);
 
-                int nFacets = locExpansion->GetNumBases() == 2 ?
-                    locExpansion->GetNedges() : locExpansion->GetNfaces();
+                int nFacets = locExpansion->GetNtraces();
 
                 for (cnt2 = i = 0; i < nFacets; ++i)
                 {

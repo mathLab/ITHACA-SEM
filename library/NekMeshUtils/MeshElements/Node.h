@@ -99,7 +99,9 @@ public:
     /// Define node equality based on coordinate.
     NEKMESHUTILS_EXPORT bool operator==(const Node &pSrc)
     {
-        return m_x == pSrc.m_x && m_y == pSrc.m_y && m_z == pSrc.m_z;
+        return LibUtilities::IsRealEqual(m_x, pSrc.m_x) &&
+               LibUtilities::IsRealEqual(m_y, pSrc.m_y) &&
+               LibUtilities::IsRealEqual(m_z, pSrc.m_z);
     }
 
     NEKMESHUTILS_EXPORT Node operator+(const Node &pSrc) const
@@ -430,6 +432,10 @@ NEKMESHUTILS_EXPORT bool operator!=(NodeSharedPtr const &p1,
                                     NodeSharedPtr const &p2);
 NEKMESHUTILS_EXPORT std::ostream &operator<<(std::ostream &os,
                                              const NodeSharedPtr &n);
+
+/// Define node equality based on coordinate with optional custom tolerance factor.
+NEKMESHUTILS_EXPORT bool IsNodeEqual(const Node &n1, const Node &n2,
+    const unsigned int fact = NekConstants::kNekFloatCompFact);
 
 /**
  * @brief Defines a hash function for nodes.

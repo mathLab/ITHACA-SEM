@@ -4,7 +4,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <MultiRegions/ExpList2D.h>
+#include <MultiRegions/ExpList.h>
 #include <SpatialDomains/MeshGraph.h>
 
 using namespace std;
@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-    MultiRegions::ExpList2DSharedPtr Exp,Fce;
+    MultiRegions::ExpListSharedPtr Exp,Fce;
     int     i, j, nq,  coordim;
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2;
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Print summary of solution details
-    const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
+    const SpatialDomains::ExpansionInfoMap &expansions = graph2D->GetExpansionInfos();
     LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
     LibUtilities::BasisKey bkey1 = expansions.begin()->second->m_basisKeyVector[1];
     int nmodes = bkey0.GetNumModes();
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
    
     //----------------------------------------------
     // Define Expansion 
-    Exp = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vSession,graph2D);
+    Exp = MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr(vSession,graph2D);
     //----------------------------------------------  
     
     //----------------------------------------------
@@ -93,8 +93,8 @@ int main(int argc, char *argv[])
     }
     
     //---------------------------------------------
-    // Set up ExpList1D containing the solution 
-    Fce = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(*Exp);
+    // Set up ExpList containing the solution 
+    Fce = MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr(*Exp);
     Fce->SetPhys(fce);
     //---------------------------------------------
 

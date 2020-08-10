@@ -846,7 +846,7 @@ namespace Nektar
                    fo == StdRegions::eDir1FwdDir2_Dir2BwdDir1;
         }
 
-        void HexExp::v_GetFacePhysMap(const int               face,
+        void HexExp::v_GetTracePhysMap(const int               face,
                                       Array<OneD, int>        &outarray)
         {
             int nquad0 = m_base[0]->GetNumPoints();
@@ -962,7 +962,7 @@ namespace Nektar
 
         }
 
-        void HexExp::v_ComputeFaceNormal(const int face)
+        void HexExp::v_ComputeTraceNormal(const int face)
         {
             int i;
             const SpatialDomains::GeomFactorsSharedPtr & geomFactors =
@@ -983,8 +983,8 @@ namespace Nektar
             const Array<TwoD, const NekDouble> & df   = geomFactors->GetDerivFactors(ptsKeys);
             const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac(ptsKeys);
 
-            LibUtilities::BasisKey tobasis0 = DetFaceBasisKey(face,0);
-            LibUtilities::BasisKey tobasis1 = DetFaceBasisKey(face,1);
+            LibUtilities::BasisKey tobasis0 = GetTraceBasisKey(face,0);
+            LibUtilities::BasisKey tobasis1 = GetTraceBasisKey(face,1);
 
             // Number of quadrature points in face expansion.
             int nq_face = tobasis0.GetNumPoints()*tobasis1.GetNumPoints();
@@ -997,6 +997,12 @@ namespace Nektar
             {
                 normal[i] = Array<OneD, NekDouble>(nq_face);
             }
+
+            size_t nqb = nq_face;
+            size_t nbnd= face;
+            m_elmtBndNormDirElmtLen[nbnd] = Array<OneD, NekDouble> {nqb, 0.0};
+            Array<OneD, NekDouble> &length = m_elmtBndNormDirElmtLen[nbnd];
+
             // Regular geometry case
             if((type == SpatialDomains::eRegular)||(type == SpatialDomains::eMovingRegular))
             {
@@ -1051,9 +1057,11 @@ namespace Nektar
                     fac += normal[i][0]*normal[i][0];
                 }
                 fac = 1.0/sqrt(fac);
+
+                Vmath::Fill(nqb, fac, length, 1);
                 for (i = 0; i < vCoordDim; ++i)
                 {
-                    Vmath::Fill(nq_face,fac*normal[i][0],normal[i],1);
+                    Vmath::Fill(nq_face, fac*normal[i][0], normal[i], 1);
                 }
 
             }
@@ -1210,6 +1218,8 @@ namespace Nektar
 
                 Vmath::Vsqrt(nq_face,work,1,work,1);
                 Vmath::Sdiv(nq_face,1.0,work,1,work,1);
+
+                Vmath::Vcopy(nqb, work, 1, length, 1);
 
                 for(i = 0; i < GetCoordim(); ++i)
                 {

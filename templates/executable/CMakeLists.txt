@@ -4,8 +4,7 @@
 # projects are marked below.
 ######################################################
 
-# Require at least CMake 3.1 for CMAKE_CXX_STANDARD.
-CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.5.1)
 
 # TODO - Put the name of your project here.
 PROJECT(ExampleSolver)

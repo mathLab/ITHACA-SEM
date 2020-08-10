@@ -15,6 +15,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
         ./EquationSystems/IncNavierStokes.cpp
         ./EquationSystems/VelocityCorrectionScheme.cpp
         ./EquationSystems/VelocityCorrectionSchemeWeakPressure.cpp
+        ./EquationSystems/SmoothedProfileMethod.cpp
         ./EquationSystems/VCSMapping.cpp
         ./EquationSystems/Extrapolate.cpp
         ./EquationSystems/StandardExtrapolate.cpp
@@ -30,6 +31,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
         ./AdvectionTerms/NoAdvection.cpp
         ./Filters/FilterReynoldsStresses.cpp
         ./Filters/FilterMovingBody.cpp
+        ./Filters/FilterAeroForcesSPM.cpp
         ./Forcing/ForcingMovingBody.cpp
         ./Forcing/ForcingStabilityCoupledLNS.cpp
         )
@@ -122,6 +124,9 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(ChanFlow_m8_Flowrate)
     ADD_NEKTAR_TEST(ChanFlow_3DH1D_FlowrateExplicit_MVM)
     ADD_NEKTAR_TEST(PhaseSampling)
+    ADD_NEKTAR_TEST(CylFlow2D_SPM)
+    ADD_NEKTAR_TEST(CylFlow2DMov_SPM)
+    ADD_NEKTAR_TEST(CylFlow3DH1D_SPM)
 
     IF (NEKTAR_USE_SCOTCH)
         # This tests exhibits sensitivity to the choice of DirectStaticCond

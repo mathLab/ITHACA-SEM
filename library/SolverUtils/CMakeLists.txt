@@ -14,6 +14,7 @@ SET(SOLVER_UTILS_SOURCES
   Diffusion/DiffusionLDG.cpp
   Diffusion/DiffusionLFR.cpp
   Diffusion/DiffusionLFRNS.cpp
+  Diffusion/DiffusionIP.cpp
   Driver.cpp
   DriverAdaptive.cpp
   DriverArnoldi.cpp
@@ -27,6 +28,7 @@ SET(SOLVER_UTILS_SOURCES
   Filters/FilterCheckpoint.cpp
   Filters/FilterEnergy1D.cpp
   Filters/FilterEnergy.cpp
+  Filters/FilterError.cpp
   Filters/FilterHistoryPoints.cpp
   Filters/FilterModalEnergy.cpp
   Filters/FilterMovingAverage.cpp
@@ -62,6 +64,7 @@ SET(SOLVER_UTILS_HEADERS
   Diffusion/DiffusionLDG.h
   Diffusion/DiffusionLFR.h
   Diffusion/DiffusionLFRNS.h
+  Diffusion/DiffusionIP.h
   Driver.h
   DriverAdaptive.h
   DriverArnoldi.h
@@ -75,6 +78,7 @@ SET(SOLVER_UTILS_HEADERS
   Filters/FilterCheckpoint.h
   Filters/FilterEnergy1D.h
   Filters/FilterEnergy.h
+  Filters/FilterError.h
   Filters/FilterHistoryPoints.h
   Filters/FilterModalEnergy.h
   Filters/FilterMovingAverage.h

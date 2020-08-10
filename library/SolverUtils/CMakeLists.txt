@@ -3,7 +3,6 @@ SET(SOLVER_UTILS_SOURCES
   Core/CouplingFile.cpp
   Core/Misc.cpp
   Core/SessionFunction.cpp
-  Core/TimeIntegrationUtils.cpp
   AdvectionSystem.cpp
   Advection/Advection.cpp
   Advection/Advection3DHomogeneous1D.cpp
@@ -54,7 +53,6 @@ SET(SOLVER_UTILS_HEADERS
   Core/CouplingFile.h
   Core/Misc.h
   Core/SessionFunction.h
-  Core/TimeIntegrationUtils.h
   AdvectionSystem.h
   Advection/Advection.h
   Advection/AdvectionFR.h

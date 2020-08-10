@@ -92,7 +92,9 @@ REGISTER(ForwardEuler);
 REGISTER(EulerExponential);
 
 // TimeIntegrationSchemesFIT.h
-REGISTER(FractionalIn);
+std::string FractionalInTimeIntegrationScheme::className =
+    GetTimeIntegrationSchemeFactory().RegisterCreatorFunction(
+        "FractionalInTime", FractionalInTimeIntegrationScheme::create);
 
 // CNABTimeIntegrationScheme.h
 REGISTER(CNAB);

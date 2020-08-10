@@ -43,7 +43,6 @@ using namespace std;
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
-#include <SolverUtils/Core/TimeIntegrationUtils.h>
 #include <SolverUtils/UnsteadySystem.h>
 
 namespace Nektar
@@ -101,48 +100,25 @@ namespace Nektar
                                           m_steadyStateSteps, 1);
 
             // For steady problems, we do not initialise the time integration
-            if (m_session->DefinesSolverInfo("TimeIntegrationMethod"))
+            if (m_session->DefinesSolverInfo("TimeIntegrationMethod") ||
+                m_session->DefinesTimeIntScheme())
             {
-                // Scheme name - required
-                std::string scheme_name =
-                    m_session->GetSolverInfo( "TimeIntegrationMethod" );
-
-                // Scheme variant - optional
-                std::string scheme_variant;
-                if( m_session->DefinesSolverInfo( "TimeIntegrationVariant" ) ) {
-                    scheme_variant =
-                        m_session->GetSolverInfo( "TimeIntegrationVariant" );
-                }
-
-                // Scheme order - optional
-                int scheme_order = 0;
-                if( m_session->DefinesSolverInfo( "TimeIntegrationOrder" ) ) {
-                    std::string order_str =
-                        m_session->GetSolverInfo( "TimeIntegrationOrder" );
-
-                    scheme_order = std::atoi(order_str.c_str());
-                }
-
-                // Scheme free parameters - optional
-                std::string free_params_str;
-                std::vector<NekDouble> scheme_free_parameters;
-
-                if( m_session->DefinesSolverInfo( "TimeIntegrationFreeParameters" ) )
+                LibUtilities::TimeIntScheme timeInt;
+                if (m_session->DefinesTimeIntScheme())
                 {
-                    free_params_str =
-                        m_session->GetSolverInfo( "TimeIntegrationFreeParameters" );
+                    timeInt = m_session->GetTimeIntScheme();
                 }
-
-                ParseTimeIntegrationParameters( scheme_name,
-                                                scheme_variant,
-                                                free_params_str,
-                                                scheme_free_parameters );
+                else
+                {
+                    timeInt.method = m_session->GetSolverInfo(
+                        "TimeIntegrationMethod");
+                }
 
                 m_intScheme = LibUtilities::GetTimeIntegrationSchemeFactory()
-                    .CreateInstance( scheme_name,
-                                     scheme_variant,
-                                     scheme_order,
-                                     scheme_free_parameters );
+                    .CreateInstance(timeInt.method,
+                                    timeInt.variant,
+                                    timeInt.order,
+                                    timeInt.freeParams);
 
                 // Load generic input parameters
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);

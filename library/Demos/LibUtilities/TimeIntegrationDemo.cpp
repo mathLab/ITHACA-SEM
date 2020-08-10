@@ -93,20 +93,17 @@
 #include <boost/core/ignore_unused.hpp>
 #include <boost/program_options.hpp>
 
-#include <StdRegions/StdNodalTriExp.h>
-
-#include <SolverUtils/Core/TimeIntegrationUtils.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/TimeIntegration/EulerExponentialTimeIntegrationSchemes.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 
 #include <time.h>       /* time */
 
 using namespace Nektar;
 using namespace Nektar::LibUtilities;
-using namespace Nektar::SolverUtils;
 
 namespace po = boost::program_options;
 
@@ -468,7 +465,8 @@ int main(int argc, char *argv[])
       ("dof,d", po::value<int>(), "Number of degrees of freedom (points or values).")
       ("timesteps,t", po::value<int>(), "Number of timesteps.")
       ("order,o", po::value<int>(), "Order of the scheme.")
-      ("parameter,p", po::value<std::string>(), "Free parameters for the scheme.")
+      ("parameter,p", po::value<std::vector<NekDouble>>()->multitoken(),
+       "Free parameters for the scheme.")
       ("variant,v", po::value<std::string>(),
        "Method variant."
         "- Forward:  1st order Forward  Euler\n"
@@ -553,15 +551,15 @@ int main(int argc, char *argv[])
       vm.count("variant")   ? vm["variant"].as<std::string>() : "" ;
     int nOrder             =
       vm.count("order")     ? vm["order"].as<int>() : 0;
-    std::string sParameter =
-      vm.count("parameter") ? vm["parameter"].as<std::string>() : "" ;
 
     // Check the varaibles and parse the free parameters which are in
     // a string.
     std::vector<NekDouble> freeParams;
+    if (vm.count("parameter"))
+    {
+        freeParams = vm["parameter"].as<std::vector<NekDouble>>();
+    }
 
-    ParseTimeIntegrationParameters( sMethod, sVariant, sParameter, freeParams );
-    
     // Optional parameters
     bool L2      = vm.count("L2");
     bool printS  = vm.count("solution");
@@ -584,7 +582,7 @@ int main(int argc, char *argv[])
 
         // Needs an order and parameters
         ( sMethod == "IMEX" && sVariant == "DIRK" &&
-          (nOrder == 0 || sParameter.empty()) ) ||
+          (nOrder == 0 || freeParams.size() == 0) ) ||
 
         // Needs a variant
         ( sMethod == "Euler" && sVariant == "" ) ||
@@ -602,7 +600,7 @@ int main(int argc, char *argv[])
           std::cout << "method and order.";
 
       else if( sMethod == "IMEX" && sVariant == "DIRK" &&
-          (nOrder == 0 || sParameter.empty()) )
+          (nOrder == 0 || freeParams.size() == 0) )
           std::cout << "method, order, and free parameters in quotes.";
 
       else if( sMethod == "Euler")

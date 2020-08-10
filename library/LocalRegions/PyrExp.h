@@ -148,11 +148,11 @@ namespace Nektar
             //---------------------------------------
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
 
-            LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysMap(
+            LOCAL_REGIONS_EXPORT virtual void v_GetTracePhysMap(
                 const int               face,
                 Array<OneD, int>        &outarray);
 
-            LOCAL_REGIONS_EXPORT void v_ComputeFaceNormal(const int face);
+            LOCAL_REGIONS_EXPORT void v_ComputeTraceNormal(const int face);
 
 
             LOCAL_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(

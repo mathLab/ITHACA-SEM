@@ -4,7 +4,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <MultiRegions/DisContField3D.h>
+#include <MultiRegions/DisContField.h>
 #include <SpatialDomains/MeshGraph.h>
 
 //#define TIMING
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 
     LibUtilities::CommSharedPtr vComm = vSession->GetComm();
 
-    MultiRegions::DisContField3DSharedPtr Exp, Fce;
+    MultiRegions::DisContFieldSharedPtr Exp, Fce;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     // Print summary of solution details
     factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
     factors[StdRegions::eFactorTau] = 1.0;
-    const SpatialDomains::ExpansionMap &expansions = graph3D->GetExpansions();
+    const SpatialDomains::ExpansionInfoMap &expansions = graph3D->GetExpansionInfo();
     LibUtilities::BasisKey bkey0
                             = expansions.begin()->second->m_basisKeyVector[0];
 
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
    
     //----------------------------------------------
     // Define Expansion 
-    Exp = MemoryManager<MultiRegions::DisContField3D>::
+    Exp = MemoryManager<MultiRegions::DisContField>::
         AllocateSharedPtr(vSession,graph3D,vSession->GetVariable(0));
     //----------------------------------------------
     Timing("Read files and define exp ..");
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Setup expansion containing the  forcing function
-    Fce = MemoryManager<MultiRegions::DisContField3D>::AllocateSharedPtr(*Exp);
+    Fce = MemoryManager<MultiRegions::DisContField>::AllocateSharedPtr(*Exp);
     Fce->SetPhys(fce);
     //----------------------------------------------
     Timing("Define forcing ..");

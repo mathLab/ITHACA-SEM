@@ -1,0 +1,14 @@
+ccache
+cmake
+g++
+libboost-filesystem-dev
+libboost-iostreams-dev
+libboost-program-options-dev
+libboost-regex-dev
+libboost-system-dev
+libboost-thread-dev
+liblapack-dev
+libscotch-dev
+libtinyxml-dev
+patch
+zlib1g-dev

@@ -144,8 +144,8 @@ void ProcessInterpField::Process(po::variables_map &vm)
         SpatialDomains::MeshGraph::Read(fromField->m_session, rng);
 
     // Read in local from field partitions
-    const SpatialDomains::ExpansionMap &expansions =
-        fromField->m_graph->GetExpansions();
+    const SpatialDomains::ExpansionInfoMap &expansions =
+        fromField->m_graph->GetExpansionInfo();
 
     // check for case where no elements are specified on this
     // parallel partition
@@ -171,7 +171,7 @@ void ProcessInterpField::Process(po::variables_map &vm)
 
     //----------------------------------------------
     // Set up Expansion information to use mode order from field
-    fromField->m_graph->SetExpansions(fromField->m_fielddef);
+    fromField->m_graph->SetExpansionInfo(fromField->m_fielddef);
 
     int nfields = fromField->m_fielddef[0]->m_fields.size();
 

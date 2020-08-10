@@ -74,7 +74,7 @@ namespace Nektar
         /// Equation of system for computing temperature
         EquationOfStateSharedPtr             m_eos;
 
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_viscTensor;
+        TensorOfArray3D<NekDouble> m_viscTensor;
 
         Array<OneD, Array<OneD, NekDouble> > m_homoDerivs;
 
@@ -92,14 +92,43 @@ namespace Nektar
                   Array<OneD, Array<OneD, NekDouble> >        &outarray,
             const Array<OneD, Array<OneD, NekDouble> > &pFwd,
             const Array<OneD, Array<OneD, NekDouble> > &pBwd);
+        virtual void v_DiffuseCoeffs(
+            const std::size_t                                 nConvective,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                  Array<OneD, Array<OneD, NekDouble> >        &outarray,
+            const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >        &pBwd);
+
+        virtual void v_DiffuseCalculateDerivative(
+            const Array<OneD, MultiRegions::ExpListSharedPtr>&fields,
+            const Array<OneD, Array<OneD, NekDouble> >       &inarray,
+            TensorOfArray3D<NekDouble>                       &qfields,
+            const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
+
+        virtual void v_DiffuseVolumeFlux(
+            const Array<OneD, MultiRegions::ExpListSharedPtr>&fields,
+            const Array<OneD, Array<OneD, NekDouble>>        &inarray,
+            TensorOfArray3D<NekDouble>                       &qfields,
+            TensorOfArray3D<NekDouble>                       &VolumeFlux,
+            Array< OneD, int >                               &nonZeroIndex);
+        virtual void v_DiffuseTraceFlux(
+            const Array<OneD, MultiRegions::ExpListSharedPtr>&fields,
+            const Array<OneD, Array<OneD, NekDouble>>        &inarray,
+            TensorOfArray3D<NekDouble>                       &qfields,
+            TensorOfArray3D<NekDouble>                       &VolumeFlux,
+            Array<OneD, Array<OneD, NekDouble> >             &TraceFlux,
+            const Array<OneD, Array<OneD, NekDouble>>        &pFwd,
+            const Array<OneD, Array<OneD, NekDouble>>        &pBwd,
+            Array< OneD, int >                               &nonZeroIndex);
 
         void NumericalFluxO1(
-            const Array<OneD, MultiRegions::ExpListSharedPtr>      &fields,
-            const Array<OneD, Array<OneD, NekDouble> >             &inarray,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                                        &numericalFluxO1,
-            const Array<OneD, Array<OneD, NekDouble> > &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> > &pBwd);
+            const Array<OneD, MultiRegions::ExpListSharedPtr>  &fields,
+            const Array<OneD, Array<OneD, NekDouble> >         &inarray,
+            TensorOfArray3D<NekDouble>                         &numericalFluxO1,
+            const Array<OneD, Array<OneD, NekDouble> >         &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >         &pBwd);
 
         void ApplyBCsO1(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -110,10 +139,10 @@ namespace Nektar
 
         void NumericalFluxO2(
             const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
-                  Array<OneD, Array<OneD, NekDouble> >              &qflux,
-            const Array<OneD, Array<OneD, NekDouble> > &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> > &pBwd);
+            TensorOfArray3D<NekDouble>                              &qfield,
+            Array<OneD, Array<OneD, NekDouble> >                    &qflux,
+            const Array<OneD, Array<OneD, NekDouble> >              &pFwd,
+            const Array<OneD, Array<OneD, NekDouble> >              &pBwd);
 
         void ApplyBCsO2(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -130,7 +159,7 @@ namespace Nektar
             m_homoDerivs = deriv;
         }
 
-        virtual Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &v_GetFluxTensor()
+        virtual TensorOfArray3D<NekDouble> &v_GetFluxTensor()
         {
             return m_viscTensor;
         }

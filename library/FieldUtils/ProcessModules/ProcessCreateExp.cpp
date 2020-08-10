@@ -87,7 +87,7 @@ void ProcessCreateExp::Process(po::variables_map &vm)
             m_f->m_numHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
 
             // Set up Expansion information to use mode order from field
-            m_f->m_graph->SetExpansions(m_f->m_fielddef);
+            m_f->m_graph->SetExpansionInfo(m_f->m_fielddef);
         }
         else
         {
@@ -141,7 +141,7 @@ void ProcessCreateExp::Process(po::variables_map &vm)
         if (vm.count("output-points"))
         {
             int nPointsNew = vm["output-points"].as<int>();
-            m_f->m_graph->SetExpansionsToPointOrder(nPointsNew);
+            m_f->m_graph->SetExpansionInfoToPointOrder(nPointsNew);
         }
 
         if (m_f->m_verbose)

@@ -1,6 +1,6 @@
 from NekPy.LibUtilities import SessionReader
 from NekPy.SpatialDomains import MeshGraph
-from NekPy.MultiRegions import ExpList2D
+from NekPy.MultiRegions import ExpList
 import ctypes
 import gc
 import sys
@@ -17,7 +17,7 @@ def main():
 
     session = SessionReader.CreateInstance(session_name)
     graph = MeshGraph.Read(session)
-    exp = ExpList2D(session, graph)
+    exp = ExpList(session, graph)
 
     print("Loaded session: %s" % session.GetSessionName())
     print("Loaded MeshGraph of dimension: %d\n" % graph.GetMeshDimension())

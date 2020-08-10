@@ -61,10 +61,10 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT Expansion3D(SpatialDomains::Geometry3DSharedPtr pGeom): Expansion(pGeom), StdExpansion3D(), m_requireNeg() {}
             LOCAL_REGIONS_EXPORT virtual ~Expansion3D() {}
             
-            LOCAL_REGIONS_EXPORT void SetFaceExp(const int face, Expansion2DSharedPtr &f);                
-            LOCAL_REGIONS_EXPORT Expansion2DSharedPtr GetFaceExp(const int face);            
-            LOCAL_REGIONS_EXPORT void SetTraceToGeomOrientation(Array<OneD, NekDouble> &inout);
-            LOCAL_REGIONS_EXPORT void SetFaceToGeomOrientation(const int face, Array<OneD, NekDouble> &inout);
+            LOCAL_REGIONS_EXPORT void SetTraceToGeomOrientation
+                   (Array<OneD, NekDouble> &inout);
+            LOCAL_REGIONS_EXPORT void SetFaceToGeomOrientation
+                   (const int face, Array<OneD, NekDouble> &inout);
             inline void AddHDGHelmholtzFaceTerms(
                 const NekDouble                    tau,
                 const int                          edge,
@@ -95,16 +95,33 @@ namespace Nektar
 
             inline SpatialDomains::Geometry3DSharedPtr GetGeom3D() const;
 
-            LOCAL_REGIONS_EXPORT void ReOrientFacePhysMap(const int nvert,
-                                                          const StdRegions::Orientation orient,
-                                                          const int nq0,
-                                                          const int nq1,
-                                                          Array<OneD, int> &idmap);
+            LOCAL_REGIONS_EXPORT void v_ReOrientTracePhysMap(
+                   const StdRegions::Orientation orient,
+                   Array<OneD, int> &idmap,
+                   const int nq0,
+                   const int nq1);
+            
             void v_NormVectorIProductWRTBase(
-                const Array<OneD, const Array<OneD, NekDouble> > &Fvec,
-                      Array<OneD,       NekDouble>               &outarray);
+                    const Array<OneD, const Array<OneD, NekDouble> > &Fvec,
+                    Array<OneD,       NekDouble>               &outarray);
 
+            LOCAL_REGIONS_EXPORT Array<OneD, unsigned int>
+                   GetEdgeInverseBoundaryMap(int eid);
+
+            LOCAL_REGIONS_EXPORT Array<OneD, unsigned int>
+                   GetTraceInverseBoundaryMap(int fid,
+                                     StdRegions::Orientation
+                                     faceOrient = StdRegions::eNoOrientation,
+                                     int P1=-1, int P2=-1);
+            
+            LOCAL_REGIONS_EXPORT void GetInverseBoundaryMaps(
+                    Array<OneD, unsigned int> &vmap,
+                    Array<OneD, Array<OneD, unsigned int> > &emap,
+                    Array<OneD, Array<OneD, unsigned int> > &fmap );
+            
         protected:
+            std::map<int, NormalVector> m_faceNormals;
+
             virtual void v_DGDeriv(
                 const int                            dir,
                 const Array<OneD, const NekDouble>  &incoeffs,
@@ -118,11 +135,13 @@ namespace Nektar
                 const ExpansionSharedPtr            &FaceExp,
                 const Array<OneD, const NekDouble>  &Fn,
                       Array<OneD,       NekDouble>  &outarray);
+
             virtual void v_AddRobinMassMatrix(
                 const int                           face, 
                 const Array<OneD, const NekDouble> &primCoeffs, 
                 DNekMatSharedPtr                   &inoutmat);
-            virtual StdRegions::Orientation v_GetForient(int face);
+
+            virtual StdRegions::Orientation v_GetTraceOrient(int face);
 
             virtual void v_GetTracePhysVals(
                 const int                                face,
@@ -131,12 +150,6 @@ namespace Nektar
                       Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient);
 
-            virtual void v_GetFacePhysVals(
-                const int                                face,
-                const StdRegions::StdExpansionSharedPtr &FaceExp,
-                const Array<OneD, const NekDouble>      &inarray,
-                      Array<OneD,       NekDouble>      &outarray,
-                StdRegions::Orientation                  orient);
 
             void GetPhysFaceVarCoeffsFromElement(
                 const int face,
@@ -155,17 +168,6 @@ namespace Nektar
             // Low Energy Basis functions
             //-----------------------------
 
-            LOCAL_REGIONS_EXPORT virtual Array<OneD, unsigned int> 
-                v_GetEdgeInverseBoundaryMap(int eid);
-
-            LOCAL_REGIONS_EXPORT virtual Array<OneD, unsigned int>
-                v_GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient = StdRegions::eNoOrientation, int P1=-1, int P2=-1);
-            
-            LOCAL_REGIONS_EXPORT void v_GetInverseBoundaryMaps(
-                    Array<OneD, unsigned int> &vmap,
-                    Array<OneD, Array<OneD, unsigned int> > &emap,
-                    Array<OneD, Array<OneD, unsigned int> > &fmap );
-            
             LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildTransformationMatrix(
                 const DNekScalMatSharedPtr &r_bnd, 
                 const StdRegions::MatrixType matrixType);
@@ -176,20 +178,13 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildVertexMatrix(
                 const DNekScalMatSharedPtr &r_bnd); 
 
-            LOCAL_REGIONS_EXPORT void ReOrientTriFacePhysMap(const StdRegions::Orientation orient,
-                                                             const int nq0,
-                                                             const int nq1,
-                                                             Array<OneD, int> &idmap);
+            LOCAL_REGIONS_EXPORT const virtual NormalVector &v_GetTraceNormal
+                (const int face) const;
 
-            LOCAL_REGIONS_EXPORT void ReOrientQuadFacePhysMap(const StdRegions::Orientation orient,
-                                                              const int nq0,
-                                                              const int nq1,
-                                                              Array<OneD, int> &idmap);
         private:
             // Do not add members here since it may lead to conflicts.
             // Only use this class for member functions
             
-            std::vector<Expansion2DWeakPtr> m_faceExp;
             std::vector<bool> m_requireNeg;
         };
         

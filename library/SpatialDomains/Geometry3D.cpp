@@ -66,15 +66,6 @@ Geometry3D::~Geometry3D()
 // Helper functions
 //---------------------------------------
 
-/**
- * @brief Returns the element coordinate direction corresponding to a given face
- * coordinate direction
- */
-int Geometry3D::GetDir(const int faceidx, const int facedir) const
-{
-    return v_GetDir(faceidx, facedir);
-}
-
 //---------------------------------------
 // 3D Geometry Methods
 //---------------------------------------
@@ -252,23 +243,23 @@ void Geometry3D::v_FillGeom()
 
         if (m_forient[i] < 9)
         {
-            m_xmap->GetFaceToElementMap(
+            m_xmap->GetTraceToElementMap(
                 i,
-                m_forient[i],
                 mapArray,
                 signArray,
-                m_faces[i]->GetXmap()->GetEdgeNcoeffs(0),
-                m_faces[i]->GetXmap()->GetEdgeNcoeffs(1));
+                m_forient[i],
+                m_faces[i]->GetXmap()->GetTraceNcoeffs(0),
+                m_faces[i]->GetXmap()->GetTraceNcoeffs(1));
         }
         else
         {
-            m_xmap->GetFaceToElementMap(
+            m_xmap->GetTraceToElementMap(
                 i,
-                m_forient[i],
                 mapArray,
                 signArray,
-                m_faces[i]->GetXmap()->GetEdgeNcoeffs(1),
-                m_faces[i]->GetXmap()->GetEdgeNcoeffs(0));
+                m_forient[i],
+                m_faces[i]->GetXmap()->GetTraceNcoeffs(1),
+                m_faces[i]->GetXmap()->GetTraceNcoeffs(0));
         }
 
         for (j = 0; j < m_coordim; j++)

@@ -40,6 +40,7 @@
 #include <StdRegions/StdNodalTriExp.h>
 #include <StdRegions/StdSegExp.h>
 #include <StdRegions/StdQuadExp.h>
+#include <LocalRegions/Expansion3D.h>
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ExpList.h>
 
@@ -99,7 +100,7 @@ namespace GlobalMapping {
                     std::dynamic_pointer_cast<SpatialDomains::Geometry2D>(
                         exp->GetGeom());
 
-                for (j = 0; j < exp->GetNedges(); ++j)
+                for (j = 0; j < exp->GetGeom()->GetNumEdges(); ++j)
                 {
                     SpatialDomains::Geometry1DSharedPtr edge = geom->GetEdge(j);
 
@@ -111,7 +112,7 @@ namespace GlobalMapping {
                     }
 
                     // Extract edge displacement.
-                    int nEdgePts = exp->GetEdgeNumPoints(j);
+                    int nEdgePts = exp->GetTraceNumPoints(j);
                     Array<OneD, Array<OneD, NekDouble> > edgePhys (dim);
                     Array<OneD, Array<OneD, NekDouble> > edgeCoord(dim);
 
@@ -126,8 +127,8 @@ namespace GlobalMapping {
                     {
                         edgePhys [k] = Array<OneD, NekDouble>(nEdgePts);
                         edgeCoord[k] = Array<OneD, NekDouble>(nEdgePts);
-                        exp->GetEdgePhysVals(j, seg, phys [k], edgePhys [k]);
-                        exp->GetEdgePhysVals(j, seg, coord[k], edgeCoord[k]);
+                        exp->GetTracePhysVals(j, seg, phys [k], edgePhys [k]);
+                        exp->GetTracePhysVals(j, seg, coord[k], edgeCoord[k]);
                     }
 
                     // Update verts
@@ -180,10 +181,13 @@ namespace GlobalMapping {
                     std::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
                         exp->GetGeom());
 
-                for (j = 0; j < exp->GetNfaces(); ++j)
+                for (j = 0; j < exp->GetNtraces(); ++j)
                 {
                     SpatialDomains::Geometry2DSharedPtr face = geom->GetFace(j);
 
+                    LocalRegions::Expansion3DSharedPtr exp3d =
+                        exp->as<LocalRegions::Expansion3D>();
+                    
                     // This edge has already been processed.
                     if (updatedFaces.find(face->GetGlobalID()) !=
                             updatedFaces.end())
@@ -192,8 +196,8 @@ namespace GlobalMapping {
                     }
 
                     // Extract face displacement.
-                    LibUtilities::BasisKey B0 = exp->DetFaceBasisKey(j,0);
-                    LibUtilities::BasisKey B1 = exp->DetFaceBasisKey(j,1);
+                    LibUtilities::BasisKey B0 = exp->GetTraceBasisKey(j,0);
+                    LibUtilities::BasisKey B1 = exp->GetTraceBasisKey(j,1);
                     int nq0 = B0.GetNumPoints();
                     int nq1 = B1.GetNumPoints();
 
@@ -207,7 +211,7 @@ namespace GlobalMapping {
                     Array<OneD, Array<OneD, NekDouble> > newPos(dim);
 
                     StdRegions::StdExpansion2DSharedPtr faceexp;
-                    StdRegions::Orientation orient = exp->GetForient(j);
+                    StdRegions::Orientation orient = exp->GetTraceOrient(j);
 
                     if (face->GetShapeType() == LibUtilities::eTriangle)
                     {
@@ -224,9 +228,9 @@ namespace GlobalMapping {
                     {
                         Array<OneD, NekDouble> tmp(nq0*nq1);
                         newPos[k] = Array<OneD, NekDouble>(nq0*nq1);
-                        exp->GetFacePhysVals(
+                        exp3d->GetTracePhysVals(
                             j, faceexp, phys [k], tmp,       orient);
-                        exp->GetFacePhysVals(
+                        exp3d->GetTracePhysVals(
                             j, faceexp, coord[k], newPos[k], orient);
                         Vmath::Vadd(
                             nq0*nq1, tmp, 1, newPos[k], 1, newPos[k], 1);

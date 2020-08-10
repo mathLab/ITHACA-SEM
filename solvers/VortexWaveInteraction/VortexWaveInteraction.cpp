@@ -34,7 +34,7 @@
 
 #include <VortexWaveInteraction/VortexWaveInteraction.h>
 #include <MultiRegions/GlobalLinSysKey.h>
-#include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/ExpList.h>
 #include <SolverUtils/Driver.h>
 #include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
 
@@ -2007,10 +2007,10 @@ cout<<"cr="<<cr_str<<endl;
           Array<OneD, MultiRegions::ExpListSharedPtr> Iexp
                                            =m_rollField[0]->GetBndCondExpansions();
           //cast to 1D explist (otherwise appenddata doesn't work)
-          MultiRegions::ExpList1DSharedPtr Ilayer;
-          Ilayer = MemoryManager<MultiRegions::ExpList1D>::
-                          AllocateSharedPtr(
-                          *std::static_pointer_cast<MultiRegions::ExpList1D>(Iexp[reg]));
+          MultiRegions::ExpListSharedPtr Ilayer;  
+          Ilayer = MemoryManager<MultiRegions::ExpList>::
+                        AllocateSharedPtr(  
+                        *std::static_pointer_cast<MultiRegions::ExpList>(Iexp[reg]));
           int nq = Ilayer->GetTotPoints();
           if( cnt==0)
           {

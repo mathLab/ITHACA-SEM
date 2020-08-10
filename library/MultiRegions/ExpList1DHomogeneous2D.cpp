@@ -45,7 +45,7 @@ namespace Nektar
     {
         // Forward declaration for typedefs
         ExpList1DHomogeneous2D::ExpList1DHomogeneous2D():
-            ExpListHomogeneous2D()
+            ExpListHomogeneous2D(eNoType)
         {
         }
 
@@ -58,7 +58,7 @@ namespace Nektar
                                                        const bool useFFT,
                                                        const bool dealiasing,
                                                        const Array<OneD, ExpListSharedPtr> &points):
-            ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
+            ExpListHomogeneous2D(eNoType, pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
             int n;
 
@@ -108,8 +108,8 @@ namespace Nektar
             m_ncoeffs = ncoeffs_per_line*nyzlines;
             m_npoints = npoints_per_line*nyzlines;
 
-            m_coeffs = Array<OneD, NekDouble> (m_ncoeffs);
-            m_phys   = Array<OneD, NekDouble> (m_npoints);
+            m_coeffs = Array<OneD, NekDouble> {size_t(m_ncoeffs), 0.0};
+            m_phys   = Array<OneD, NekDouble> {size_t(m_npoints), 0.0};
 
             int nel = m_lines[0]->GetExpSize();
             m_coeff_offset   = Array<OneD,int>(nel*nyzlines);

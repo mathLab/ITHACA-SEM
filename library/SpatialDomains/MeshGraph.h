@@ -136,23 +136,33 @@ struct Composite
 typedef std::shared_ptr<Composite> CompositeSharedPtr;
 typedef std::map<int, CompositeSharedPtr> CompositeMap;
 
-struct Expansion
+struct ExpansionInfo;
+
+typedef std::shared_ptr<ExpansionInfo> ExpansionInfoShPtr;
+typedef std::map<int, ExpansionInfoShPtr> ExpansionInfoMap;
+
+typedef std::shared_ptr<ExpansionInfoMap> ExpansionInfoMapShPtr;
+typedef std::map<std::string, ExpansionInfoMapShPtr> ExpansionInfoMapShPtrMap;
+
+
+struct ExpansionInfo
 {
-    Expansion(GeometrySharedPtr geomShPtr,
+    ExpansionInfo(GeometrySharedPtr geomShPtr,
               const LibUtilities::BasisKeyVector basiskeyvec)
         : m_geomShPtr(geomShPtr), m_basisKeyVector(basiskeyvec)
     {
     }
 
+    ExpansionInfo(ExpansionInfoShPtr ExpInfo)
+        : m_geomShPtr(ExpInfo->m_geomShPtr),
+        m_basisKeyVector(ExpInfo->m_basisKeyVector)
+    {
+    }
+    
     GeometrySharedPtr m_geomShPtr;
     LibUtilities::BasisKeyVector m_basisKeyVector;
 };
 
-typedef std::shared_ptr<Expansion> ExpansionShPtr;
-typedef std::map<int, ExpansionShPtr> ExpansionMap;
-
-typedef std::shared_ptr<ExpansionMap> ExpansionMapShPtr;
-typedef std::map<std::string, ExpansionMapShPtr> ExpansionMapShPtrMap;
 
 typedef std::map<std::string, std::string> GeomInfoMap;
 typedef std::shared_ptr<std::vector<std::pair<GeometrySharedPtr, int>>>
@@ -196,9 +206,7 @@ public:
         PointGeomSharedPtr p);
 
     ////////////////////
-    ////////////////////
-
-    SPATIAL_DOMAINS_EXPORT void ReadExpansions();
+    SPATIAL_DOMAINS_EXPORT void ReadExpansionInfo();
 
     /* ---- Helper functions ---- */
     /// Dimension of the mesh (can be a 1D curve in 3D space).
@@ -265,36 +273,36 @@ public:
         return m_domain[domain];
     }
 
-    SPATIAL_DOMAINS_EXPORT const ExpansionMap &GetExpansions(
+    SPATIAL_DOMAINS_EXPORT const ExpansionInfoMap &GetExpansionInfo(
         const std::string variable = "DefaultVar");
 
-    SPATIAL_DOMAINS_EXPORT ExpansionShPtr GetExpansion(
+    SPATIAL_DOMAINS_EXPORT ExpansionInfoShPtr GetExpansionInfo(
         GeometrySharedPtr geom, const std::string variable = "DefaultVar");
 
     /// Sets expansions given field definitions
-    SPATIAL_DOMAINS_EXPORT void SetExpansions(
+    SPATIAL_DOMAINS_EXPORT void SetExpansionInfo(
         std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef);
 
     /// Sets expansions given field definition, quadrature points.
-    SPATIAL_DOMAINS_EXPORT void SetExpansions(
+    SPATIAL_DOMAINS_EXPORT void SetExpansionInfo(
         std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
         std::vector<std::vector<LibUtilities::PointsType>> &pointstype);
 
     /// Sets expansions to have equispaced points
-    SPATIAL_DOMAINS_EXPORT void SetExpansionsToEvenlySpacedPoints(
+    SPATIAL_DOMAINS_EXPORT void SetExpansionInfoToEvenlySpacedPoints(
         int npoints = 0);
 
     /// Reset expansion to have specified polynomial order \a nmodes
-    SPATIAL_DOMAINS_EXPORT void SetExpansionsToPolyOrder(int nmodes);
+    SPATIAL_DOMAINS_EXPORT void SetExpansionInfoToNumModes(int nmodes);
 
     /// Reset expansion to have specified point order \a
     /// npts
-    SPATIAL_DOMAINS_EXPORT void SetExpansionsToPointOrder(int npts);
+    SPATIAL_DOMAINS_EXPORT void SetExpansionInfoToPointOrder(int npts);
     /// This function sets the expansion #exp in map with
     /// entry #variable
 
-    inline void SetExpansions(const std::string variable,
-                              ExpansionMapShPtr &exp);
+    inline void SetExpansionInfo(const std::string variable,
+                              ExpansionInfoMapShPtr &exp);
 
     inline void SetSession(LibUtilities::SessionReaderSharedPtr pSession);
 
@@ -303,7 +311,13 @@ public:
                                             LibUtilities::BasisKeyVector &keys,
                                             std::string var = "DefaultVar");
 
-    inline bool SameExpansions(const std::string var1, const std::string var2);
+    SPATIAL_DOMAINS_EXPORT void ResetExpansionInfoToBasisKey(
+                                      ExpansionInfoMapShPtr &expansionMap,
+                                      LibUtilities::ShapeType shape,
+                                      LibUtilities::BasisKeyVector &keys);
+    
+    inline bool SameExpansionInfo(const std::string var1,
+                                  const std::string var2);
 
     inline bool CheckForGeomInfo(std::string parameter);
 
@@ -429,7 +443,7 @@ public:
 protected:
 
     void PopulateFaceToElMap(Geometry3DSharedPtr element, int kNfaces);
-    ExpansionMapShPtr SetUpExpansionMap();
+    ExpansionInfoMapShPtr SetUpExpansionInfoMap();
     std::string GetCompositeString(CompositeSharedPtr comp);
 
     LibUtilities::SessionReaderSharedPtr m_session;
@@ -457,7 +471,7 @@ protected:
     std::vector<CompositeMap> m_domain;
     DomainRangeShPtr m_domainRange;
 
-    ExpansionMapShPtrMap m_expansionMapShPtrMap;
+    ExpansionInfoMapShPtrMap m_expansionMapShPtrMap;
 
     GeomInfoMap m_geomInfo;
 
@@ -479,13 +493,13 @@ SPATIAL_DOMAINS_EXPORT MeshGraphFactory &GetMeshGraphFactory();
 /**
  *
  */
-void MeshGraph::SetExpansions(const std::string variable,
-                              ExpansionMapShPtr &exp)
+void MeshGraph::SetExpansionInfo(const std::string variable,
+                              ExpansionInfoMapShPtr &exp)
 {
     if (m_expansionMapShPtrMap.count(variable) != 0)
     {
         ASSERTL0(false,
-                 (std::string("Expansion field is already set for variable ") +
+                 (std::string("ExpansionInfo field is already set for variable ") +
                   variable)
                      .c_str());
     }
@@ -498,19 +512,11 @@ void MeshGraph::SetExpansions(const std::string variable,
 /**
  *
  */
-void MeshGraph::SetSession(LibUtilities::SessionReaderSharedPtr pSession)
+inline bool MeshGraph::SameExpansionInfo(const std::string var1,
+                                          const std::string var2)
 {
-    m_session = pSession;
-}
-
-/**
- *
- */
-inline bool MeshGraph::SameExpansions(const std::string var1,
-                                      const std::string var2)
-{
-    ExpansionMapShPtr expVec1 = m_expansionMapShPtrMap.find(var1)->second;
-    ExpansionMapShPtr expVec2 = m_expansionMapShPtrMap.find(var2)->second;
+    ExpansionInfoMapShPtr expVec1 = m_expansionMapShPtrMap.find(var1)->second;
+    ExpansionInfoMapShPtr expVec2 = m_expansionMapShPtrMap.find(var2)->second;
 
     if (expVec1.get() == expVec2.get())
     {

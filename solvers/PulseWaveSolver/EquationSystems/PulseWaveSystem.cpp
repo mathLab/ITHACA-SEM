@@ -34,11 +34,10 @@
 
 #include <iostream>
 
-#include <MultiRegions/ContField1D.h>
+#include <MultiRegions/ContField.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <PulseWaveSolver/EquationSystems/PulseWaveSystem.h>
 #include <LibUtilities/BasicUtils/Timer.h>
-
 using namespace std;
 
 namespace Nektar
@@ -124,7 +123,7 @@ namespace Nektar
         {
             for(int j = 0; j < m_nVariables; ++j)
             {
-                m_vessels[cnt++] = MemoryManager<MultiRegions::DisContField1D>
+                m_vessels[cnt++] = MemoryManager<MultiRegions::DisContField>
                     ::AllocateSharedPtr(m_session, m_graph, domain[i],
                                         Allbcs,
                                         m_session->GetVariable(j),
@@ -269,9 +268,11 @@ namespace Nektar
                 if(m_vessels[vesselID]->GetBndConditions()[i]->GetBoundaryConditionType() == SpatialDomains::eNotDefined)
                 {
                     // Get Vid of interface
-                    int vid  = m_vessels[vesselID]->UpdateBndCondExpansion(i)->GetExp(0)->GetGeom()->GetVid(0);
+                    int vid  = m_vessels[vesselID]->UpdateBndCondExpansion(i)->
+                        GetExp(0)->GetGeom()->GetVid(0);
                     cout<<"Shared vertex id: "<<vid<<endl;
-                    MultiRegions::ExpListSharedPtr trace = m_vessels[vesselID]->GetTrace();
+                    MultiRegions::ExpListSharedPtr trace = m_vessels[vesselID]->
+                        GetTrace();
                     InterfacePointShPtr Ipt;
 
                     bool finish = false;
@@ -531,21 +532,24 @@ namespace Nektar
                                                      NekDouble &beta, NekDouble &A_0)
     {
         int omega, traceId, eid, vert, phys_offset, vesselID;
-
-
+        LocalRegions::ExpansionSharedPtr dumExp; 
+        Array<OneD, NekDouble> Tmp(1);
+        
         // Parent vessel
         omega    = I->m_domain;
         traceId  = I->m_traceId;
         eid      = I->m_elmt;
         vert     = I->m_elmtVert;
         vesselID = omega*m_nVariables;
-
+            
         phys_offset = m_vessels[vesselID]->GetPhys_Offset(eid);
 
-        m_vessels[vesselID]->GetExp(eid)->
-            GetVertexPhysVals(vert, fields[0]+m_fieldPhysOffset[omega]+phys_offset, A);
-        m_vessels[vesselID]->GetExp(eid)->
-            GetVertexPhysVals(vert, fields[1]+m_fieldPhysOffset[omega]+phys_offset, u);
+        m_vessels[vesselID]->GetExp(eid)->GetTracePhysVals(vert,dumExp,
+                             fields[0]+m_fieldPhysOffset[omega]+phys_offset, Tmp);
+        A = Tmp[0];
+        m_vessels[vesselID]->GetExp(eid)->GetTracePhysVals(vert,dumExp,
+                             fields[1]+m_fieldPhysOffset[omega]+phys_offset, Tmp);
+        u = Tmp[0];
 
         beta = m_beta_trace[omega][traceId];
         A_0  = m_A_0_trace [omega][traceId];

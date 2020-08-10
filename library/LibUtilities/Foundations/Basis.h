@@ -190,7 +190,7 @@ namespace Nektar
                                             const BasisKey &rhs) const;
 
         protected:
-            int        m_nummodes;   ///< Expansion order.
+            unsigned int        m_nummodes;   ///< Expansion order.
             BasisType  m_basistype;  ///< Expansion type.
             PointsKey  m_pointsKey;  ///< Points specification.
 
@@ -275,6 +275,11 @@ namespace Nektar
                               Array<OneD, const NekDouble> &w) const
             {
                 m_points->GetZW(z,w);
+            }
+
+            inline const Array<OneD, const NekDouble>& GetBaryWeights() const
+            {
+                return m_points->GetBaryWeights();
             }
 
             inline const std::shared_ptr<NekMatrix<NekDouble> > & GetD(

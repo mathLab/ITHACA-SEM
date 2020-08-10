@@ -203,12 +203,12 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
                 {
                     case 2:
                     {
-                        elmt->GetEdgePhysVals(facetNum, bndElmt, x[k], face1);
-                        elmt->GetEdgePhysVals(oppositeNum, bndElmt, x[k],
+                        elmt->GetTracePhysVals(facetNum, bndElmt, x[k], face1);
+                        elmt->GetTracePhysVals(oppositeNum, bndElmt, x[k],
                                               face2);
                         // Consider edge orientation
-                        if (elmt->GetEorient(facetNum) ==
-                            elmt->GetEorient(oppositeNum))
+                        if (elmt->GetTraceOrient(facetNum) ==
+                            elmt->GetTraceOrient(oppositeNum))
                         {
                             Vmath::Reverse(nqBnd, face2, 1, face2, 1);
                         }
@@ -218,10 +218,10 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
                     {
                         // Use orientation from the surface for both faces
                         StdRegions::Orientation orientation =
-                            elmt->GetForient(facetNum);
-                        elmt->GetFacePhysVals(facetNum, bndElmt, x[k], face1,
+                            elmt->GetTraceOrient(facetNum);
+                        elmt->GetTracePhysVals(facetNum, bndElmt, x[k], face1,
                                               orientation);
-                        elmt->GetFacePhysVals(oppositeNum, bndElmt, x[k], face2,
+                        elmt->GetTracePhysVals(oppositeNum, bndElmt, x[k], face2,
                                               orientation);
                     }
                     break;

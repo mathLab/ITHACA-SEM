@@ -76,7 +76,6 @@ public:
     }
 
     SPATIAL_DOMAINS_EXPORT static const int kNverts = 2;
-    SPATIAL_DOMAINS_EXPORT static const int kNedges = 1;
 
 protected:
     SpatialDomains::PointGeomSharedPtr m_verts[kNverts];
@@ -95,7 +94,6 @@ protected:
     virtual NekDouble v_GetCoord(
         const int i, const Array<OneD, const NekDouble> &Lcoord);
     virtual int v_GetNumVerts() const;
-    virtual int v_GetNumEdges() const;
     virtual bool v_ContainsPoint(
         const Array<OneD, const NekDouble> &gloCoord,
         Array<OneD, NekDouble> &locCoord,

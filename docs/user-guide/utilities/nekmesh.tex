@@ -442,18 +442,28 @@ corresponding edge or face is the same size and shape but translated along the
 appropriate axis.
 
 
-When using periodic boundary conditions that are rotationally aligned the following rotational options should be applied:
+When using periodic boundary conditions that are rotationally aligned the
+following rotational options should be applied:
 %
 \begin{lstlisting}[style=BashInputStyle]
-NekMesh -m peralign:surf1=11:surf2=12:dir=x:rot=PI/6:tol=1e-6 \
+NekMesh -m peralign:surf1=11:surf2=12:dir=x:rot=PI/6 \
               Mesh.xml Mesh_aligned.xml
 \end{lstlisting}
 %
 where \inltt{rot} specifies the rotation angle in radians from
 surf1 to surf2 about the axis specified by \inltt{dir} (i.e. the ``x'' axis in
-this example). An optional tolerance \inltt{tol} can also be specified which is
-the tolerance within which the rotation is assumed to be exact. The
-default tolerance is 1e-8.
+this example).
+
+The rotation/translation is assumed to be exact within a relative tolerance.
+An optional factor, which is used to scale the tolerance, \inltt{tolfact}
+can also be specified. The default tolerance factor is 4, and it needs to be
+$tolfact \ge 1$. For example:
+%
+\begin{lstlisting}[style=BashInputStyle]
+NekMesh -m peralign:surf1=11:surf2=12:dir=x:rot=PI/6:tolfact=100 \
+              Mesh.xml Mesh_aligned.xml
+\end{lstlisting}
+%
 
 In 3D, where prismatic or tetrahedral elements are connected to one or both of
 the surfaces, additional logic is needed to guarantee connectivity in the XML
@@ -981,23 +991,47 @@ A list of the CAD surfaces which will have a prism generated on is described by
 %
 The mesh generator has been created with a range of error messages to aid in
 debugging. If you encounter an error and the mesh generator fails, run \nm with
-the verbose \inltt{-v} flag and send the stdout with the .mcf and .step files
-to \inltt{m.turner14@imperial.ac.uk}. Without the feedback this functionality
-cannot improve.
+the verbose \inltt{-v} flag and send the stdout with the .mcf and .step files to
+\inltt{d.moxey@exeter.ac.uk}. Without the feedback this functionality cannot
+improve.
+
+\subsubsection{Handling 3D geometries with voids}
+
+Although NekMesh supports the definition of 3D geometries that contain voids --
+for example, a sphere contained within a cube -- at present it does require the
+definition of a point per-void that lies strictly on the interior of the
+void. This is so that tetrahedra on the interior of the void can be removed
+before the mesh is generated.
+%
+For example, if one defines a geometry where two spheres of radius 1, centred at
+$(0,0,0)$ and $(2,0,0)$, were contained within a larger domain, the void points
+can be specified through the \inltt{VOIDPOINTS} tag in the MCF as follows:
+
+\begin{lstlisting}[style=XmlStyle]
+    <NEKTAR>
+        <MESHING>
+            <!-- other parameters here... -->
+            <VOIDPOINTS>
+                <V> 0 0 0 </V>
+                <V> 2 0 0 </V>
+            </VOIDPOINTS>
+       </MESHING>
+    </NEKTAR>
+\end{lstlisting}
 
 \subsubsection{GEO format}
 
 Recent developments have been made to facilitate the generation of meshes from
-simple 2D geometries. The GEO file format, used by Gmsh, is a popular option
-that allows the user to script geometrical and meshing operations without the
-need of a GUI. A simplified reader has been implemented in NekMesh for 2D geometries.
-Although very basic this reader may be extended in the future to cover a wider
-range of geometrical features.
+simple 2D and 3D geometries. The GEO file format, used by Gmsh, is a popular
+option that allows the user to script geometrical and meshing operations without
+the need of a GUI. A simplified reader has been implemented in NekMesh for 2D
+and 3D geometries.  Although very basic this reader may be extended in the
+future to cover a wider range of geometrical features.
 
 For a full description of the GEO format the user should refer to Gmsh's
 documentation. The following commands are currently supported:
 \begin{itemize}
-  \item \inltt{//} (i.e. comments)
+  \item \inltt{//} and \inltt{/* */} (i.e. comments)
   \item \inltt{Point}
   \item \inltt{Line}
   \item \inltt{Spline} (through points)
@@ -1013,13 +1047,17 @@ documentation. The following commands are currently supported:
     centre point must be equal or an error will be thrown.
   \item \inltt{Line Loop}
   \item \inltt{Plane Surface}
+  \item \inltt{Ruled Surface} or, in newer versions of Gmsh, \inltt{Surface}
+  \item \inltt{Surface Loop}
+  \item \inltt{Volume}
 \end{itemize}
 
-At the present time, NekMesh does not support the full scripting capabilities of the
-GEO format. The used GEO files should be a straightforward succession of entity
-creations (see list above). This should however allow for the creation of quite
-a wide range of 2D geometries by transformation of arbitrary curves into generic
-splines and arcs.
+At the present time, NekMesh does not support the full scripting capabilities of
+the GEO format, but the evaluation of simple variables is supported. The used
+GEO files should be a straightforward succession of entity creations (see list
+above). This should however allow for the creation of quite a wide range of 2D
+and 3D geometries by transformation of arbitrary curves into generic splines and
+arcs.
 
 
 %%% Local Variables:

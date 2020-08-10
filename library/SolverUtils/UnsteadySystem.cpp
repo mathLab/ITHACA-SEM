@@ -149,6 +149,8 @@ namespace Nektar
                 m_session->LoadParameter("IO_FiltersInfoSteps",
                     m_filtersInfosteps, 10.0 * m_infosteps);
                 m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.0);
+                m_session->LoadParameter("CFLEnd", m_CFLEnd, 0.0);
+                m_session->LoadParameter("CFLGrowth", m_CFLGrowth, 1.0);
 
                 // Time tolerance between filter update time and time integration
                 m_session->LoadParameter("FilterTimeWarning",
@@ -169,6 +171,14 @@ namespace Nektar
                 {
                     ASSERTL0(m_timestep != 0.0,
                              "Need to set either TimeStep or CFL");
+                }
+
+                // Ensure that there is no conflict of parameters
+                if (m_CFLGrowth > 1.0)
+                {
+                    // Check final condition
+                    ASSERTL0(m_CFLEnd >= m_cflSafetyFactor,
+                             "m_CFLEnd >= m_cflSafetyFactor required");
                 }
 
                 // Set up time to be dumped in field information
@@ -209,7 +219,7 @@ namespace Nektar
         void UnsteadySystem::v_DoSolve()
         {
             ASSERTL0(m_intScheme != 0, "No time integration scheme.");
-
+            
             int i = 1;
             int nvariables = 0;
             int nfields = m_fields.size();
@@ -276,10 +286,17 @@ namespace Nektar
                 abortFile = m_session->GetSolverInfo("CheckAbortFile");
             }
 
+            m_timestepMax = m_timestep;
             while ((step   < m_steps ||
                    m_time < m_fintime - NekConstants::kNekZeroTol) &&
                    abortFlags[1] == 0)
             {
+                if (m_CFLGrowth > 1.0 && m_cflSafetyFactor < m_CFLEnd)
+                {
+                    m_cflSafetyFactor = min(
+                        m_CFLEnd, m_CFLGrowth * m_cflSafetyFactor);
+                }
+                
                 if (m_cflSafetyFactor)
                 {
                     m_timestep = GetTimeStep(fields);
@@ -351,7 +368,7 @@ namespace Nektar
                     }
                     m_fields[m_intVariables[i]]->SetPhysState(false);
                 }
-
+                
                 // Perform any solver-specific post-integration steps
                 if (v_PostIntegrate(step))
                 {

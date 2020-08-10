@@ -368,12 +368,10 @@ void ProcessExtrude::Process()
                 {
                     for( int j = 0; j < 2; j++)
                     {
-                        if (abs(itQ->GetVertex(iV)->m_x -
-                                itOc.second->m_items[iEd]->GetVertex(j)->m_x) <
-                                    NekConstants::kNekZeroTol &&
-                            abs(itQ->GetVertex(iV)->m_y -
-                                itOc.second->m_items[iEd]->GetVertex(j)->m_y) <
-                                    NekConstants::kNekZeroTol)
+                        if (LibUtilities::IsRealEqual(itQ->GetVertex(iV)->m_x,
+                                itOc.second->m_items[iEd]->GetVertex(j)->m_x) &&
+                            LibUtilities::IsRealEqual(itQ->GetVertex(iV)->m_y,
+                                itOc.second->m_items[iEd]->GetVertex(j)->m_y))
                         {
                             ++inCommon;
                         }
@@ -415,11 +413,11 @@ void ProcessExtrude::Process()
         }
         zdist = zdist / itQ->GetVertexList().size();
         unsigned int compPerId = 0;
-        if(std::abs(zdist - z0) < NekConstants::kNekZeroTol)
+        if(LibUtilities::IsRealEqual(zdist, z0))
         {
             compPerId = maxCompId-1;
         }
-        else if(std::abs(zdist - z0 - length) < NekConstants::kNekZeroTol)
+        else if(LibUtilities::IsRealEqual(zdist - z0, length))
         {
            compPerId = maxCompId;
         }

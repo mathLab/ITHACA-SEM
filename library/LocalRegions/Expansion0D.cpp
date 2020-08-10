@@ -38,11 +38,9 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-        Expansion0D::Expansion0D(SpatialDomains::Geometry0DSharedPtr pGeom) : StdExpansion(), Expansion(pGeom),
-                                     StdExpansion0D()
+        Expansion0D::Expansion0D(SpatialDomains::Geometry0DSharedPtr pGeom) :
+            StdExpansion(), Expansion(pGeom), StdExpansion0D()
         {
-            m_elementVertexLeft  = -1;
-            m_elementVertexRight = -1;
         }
     } //end of namespace
 } //end of namespace

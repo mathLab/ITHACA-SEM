@@ -85,6 +85,8 @@ namespace Nektar
     typedef LinearSystem                      DNekScalLinSys;
     typedef std::shared_ptr<DNekScalLinSys>   DNekScalLinSysSharedPtr;
 
+    static Array<OneD, DNekBlkMatSharedPtr>  NullArrayDNekBlkMatSharedPtr;
+
 }
 
 #endif //NEKTAR_LIB_UTILITIES_NEK_TYPEDEFS_HPP

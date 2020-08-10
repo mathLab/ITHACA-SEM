@@ -70,6 +70,28 @@ VariableConverter::~VariableConverter()
 }
 
 /**
+ * @brief Compute the dynamic energy
+ *        \f$ e = rho*V^2/2 \f$.
+ */
+void VariableConverter::GetDynamicEnergy(
+    const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+    Array<OneD, NekDouble> &energy)
+{
+    size_t nPts = physfield[m_spacedim + 1].size();
+    Vmath::Zero(nPts, energy, 1);
+
+    // tmp = (rho * u_i)^2
+    for (int i = 0; i < m_spacedim; ++i)
+    {
+        Vmath::Vvtvp(nPts, physfield[i + 1], 1, physfield[i + 1], 1, energy, 1,
+                     energy, 1);
+    }
+    // Divide by rho and multiply by 0.5 --> tmp = 0.5 * rho * u^2
+    Vmath::Vdiv(nPts, energy, 1, physfield[0], 1, energy, 1);
+    Vmath::Smul(nPts, 0.5, energy, 1, energy, 1);
+}
+
+/**
  * @brief Compute the specific internal energy
  *        \f$ e = (E - rho*V^2/2)/rho \f$.
  */
@@ -78,17 +100,9 @@ void VariableConverter::GetInternalEnergy(
     Array<OneD, NekDouble> &energy)
 {
     int nPts = physfield[0].size();
-    Array<OneD, NekDouble> tmp(nPts, 0.0);
+    Array<OneD, NekDouble> tmp(nPts);
 
-    // tmp = (rho * u_i)^2
-    for (int i = 0; i < m_spacedim; ++i)
-    {
-        Vmath::Vvtvp(nPts, physfield[i + 1], 1, physfield[i + 1], 1, tmp, 1,
-                     tmp, 1);
-    }
-    // Divide by rho and multiply by 0.5 --> tmp = 0.5 * rho * u^2
-    Vmath::Vdiv(nPts, tmp, 1, physfield[0], 1, tmp, 1);
-    Vmath::Smul(nPts, 0.5, tmp, 1, tmp, 1);
+    GetDynamicEnergy(physfield, tmp);
 
     // Calculate rhoe = E - rho*V^2/2
     Vmath::Vsub(nPts, physfield[m_spacedim + 1], 1, tmp, 1, energy, 1);

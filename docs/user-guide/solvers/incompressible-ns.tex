@@ -388,7 +388,237 @@ and so the number of quadrature points in this case is 9 in the first
 direction which uses Gauss-Lobatto-Legendre points but only 8 in the
 second direction since this uses a Gauss-Radau formula with
 $\alpha=1,\beta=0$ weights (see \cite{KaSh05} for details on why).
-        
+
+\subsection{Immersed Boundary Methods: Smoothed Profile Method}
+
+The usual way to solve any PDE requires the definition of a well defined domain
+where the solution is to be determined. Thus, for complex geometries, the
+meshing process may get cumbersome and, in any case, the solver will have to
+the meshing process may get cumbersome, and likely struggle to avoid the
+presence of highly deformed and skewed elements. In addition, when solving
+cases with moving boundaries, the mesh has to be updated every time step to
+follow the shape of the boundaries, leading to a very resource and
+time-consuming simulation that limits the capabilities of the solver.
+
+Immersed Boundary Methods may be very useful in these situations, where the
+definition of the boundaries requires a very complex mesh to reach
+convergence. The main idea behind them is the use of a forcing term in the
+incompressible Navier-Stokes equations in such a way that the mesh does not
+necessariliy follow the boundaries. The solution in the regions falling outside
+the boundaries is simply that of the boundaries, forcing the flow to behave as
+if there were a real object even if the mesh does not represent it. The method
+presented here is an adaptation of the Smoothed Profile Method
+\cite{NakayamaSPM} extended to a high-order semi-implicit splitting scheme
+\cite{LuoSPM, WangSPM}. This method ensures that the no-slip, no-penetration
+and incompressibility constraints are mathematically enforced. Starting from
+the incompressible Navier-Stokes equations, the term $\mathbf{f_s}$ is added to
+the right hand side:
+
+\begin{subequations}
+\begin{equation} \label{spm:eq:SPMeqmov}
+    \frac{\partial\mathbf{u}}{\partial t} + \mathbf{u}\cdot\nabla\mathbf{u} =
+        -\nabla p + \nu\nabla^2\mathbf{u} + \mathbf{f} + \mathbf{f_s}
+\end{equation}
+\begin{equation}
+    \nabla\cdot\mathbf{u} = 0
+\end{equation}
+\end{subequations}
+
+The definition of this term depends on the method but, for the Smoothed Profile
+Method (SPM), it is related to a \emph{shape function} $\Phi(\mathbf{x}, t)$
+valued 0 in the fluid domain and 1 outside. It is usually defined as:
+
+\begin{equation} \label{spm:eq:mask}
+    \Phi(\mathbf{x},t) = -\frac{1}{2} \left[ \tanh\left(\frac{d(\mathbf{x},t)}
+        {\xi}\right)-1 \right],
+\end{equation}
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{img/concentration.pdf}
+    \caption{Definition of the shape function $\Phi$ close to the boundary of
+        an immersed body.}
+    \label{spm:fig:shapefunc}
+\end{figure}
+
+being $\xi$ a scaling factor \cite{WangSPM} and $d(\mathbf{x}, t)$ a function
+representing the distance to the boundary (positive inside the body, negative
+inside the fluid). If the case to be simulated includes more than one immersed
+boundaries, the final shape function is calculated by adding the individual
+ones as long as they do not overlap:
+
+\begin{equation}
+    \Phi = \sum_i \Phi_i
+\end{equation}
+
+The approach followed during the implementation in \nekpp is an extension of
+the Velocity Correction Scheme, using the final velocity obtained with this
+method as an intermediate velocity to determine the value of the forcing term.
+The initial equation \eqref{spm:eq:SPMeqmov} is slightly modified and
+integrated in time by means of a \emph{stiffly-stable} scheme and, then,
+split into different smaller parts that are solved separately:
+
+\begin{equation}
+     \frac{\gamma_0\mathbf{u}^{n+1}-\sum_{q=0}^{J-1}\alpha_q~\mathbf{u}^{n-q}}
+        {\Delta t} = -\sum_{q=0}^{J-1}\beta_q~(\mathbf{u}\cdot
+        \nabla\mathbf{u})^{n-q} -\nabla (p^*+p_p)^{n+1} +
+        \nu\nabla^2\mathbf{u}^{n+1} + \mathbf{f}^{n+1} + \mathbf{f_s}^{n+1}
+\end{equation}
+
+\begin{subequations}
+\begin{gather}
+    \frac{\mathbf{\tilde{u}}-\sum_{q=0}^{J-1}\alpha_q~\mathbf{u}^{n-q}}
+        {\Delta t} = -\sum_{q=0}^{J-1}\beta_q~(\mathbf{u}\cdot
+        \nabla\mathbf{u})^{n-q} + \mathbf{f}^{n+1},\\
+    \frac{\mathbf{\hat{u}}-\mathbf{\tilde{u}}}{\Delta t} =
+        -\nabla {p^*}^{n+1},\\[3mm]
+    \frac{\gamma_0\mathbf{u^*}-\mathbf{\hat{u}}}{\Delta t} =
+        \nu\nabla^2\mathbf{u}^{n+1},\\[3mm]
+    \frac{\gamma_0\mathbf{u}^{n+1}-\gamma_0\mathbf{u^*}}{\Delta t} =
+        -\nabla p_p^{n+1} + \mathbf{f_s}^{n+1}
+\end{gather}
+\end{subequations}
+
+The new term $\mathbf{f_s}$ is defined as follows:
+
+\begin{equation}
+    \mathbf{f_s}^{n+1} = \frac{\gamma_0\Phi^{n+1}(\mathbf{u_p}^{n+1}-
+        \mathbf{u^*})}{\Delta t},
+\end{equation}
+
+where $\alpha_q$, $\beta_q$ and $\gamma_0$ are coefficients of the
+stiffly-stable time integration method and $\mathbf{u_p}$ is the velocity of
+the points that lay outside the boundaries. Thus, the new term is just an
+acceleration proportional to the difference between the expected and the
+intermediate velocity, forcing the flow to follow the shapes defined by $\Phi$
+and $\mathbf{u_p}$. Some transformations in these expressions lead to the final
+SPM equations:
+
+\begin{enumerate}
+    \item Advection and external forces:
+        \begin{equation}
+            \frac{\mathbf{\tilde{u}}-\sum_{q=0}^{J-1}\alpha_q~\mathbf{u}^{n-q}}
+                {\Delta t} = \sum_{q=0}^{J-1}\beta_q\left[-\mathbf{u}\cdot
+                \nabla\mathbf{u}+\mathbf{f}\right]^{n-q}
+        \end{equation}
+    \item Pressure:
+        \begin{subequations}
+        \begin{gather}
+            \nabla^2 p^* = \nabla\cdot\left(\frac{\mathbf{\tilde{u}}}
+                {\Delta t}\right),\\
+            \frac{\partial p}{\partial\mathbf{n}}^* = -\sum_{q=0}^{J-1}\beta_q
+                \left[-\mathbf{u}\cdot\nabla\mathbf{u}+\nu(\nabla\times\nabla
+                \times\mathbf{u})-\mathbf{f}\right]^{n-q}\cdot\mathbf{n}
+        \end{gather}
+        \end{subequations}
+    \item Viscous effects:
+        \begin{equation}
+            \left(\nabla^2 - \frac{\gamma_0}{\nu\Delta t}\right)\mathbf{u^*} =
+                \frac{\mathbf{\hat{u}}}{\nu\Delta t}
+        \end{equation}
+    \item SPM pressure:
+        \begin{subequations}
+        \begin{gather}
+            \nabla^2 p_p = \nabla\cdot\frac{\gamma_0\Phi^{n+1}(
+                \mathbf{u_p}^{n+1}-\mathbf{u^*})}{\Delta t},\\[3mm]
+            \frac{\partial p_p}{\partial\mathbf{n}} = \frac{\gamma_0\Phi^{n+1}
+                (\mathbf{u_p}^{n+1}-\mathbf{u^*})}{\Delta t}\cdot\mathbf{n}
+        \end{gather}
+        \end{subequations}
+    \item SPM force:
+        \begin{equation} \label{eq:SPM:incompressiblePressure}
+            \frac{\gamma_0\mathbf{u}^{n+1}-\gamma_0\mathbf{u^*}}{\Delta t} =
+                \frac{\gamma_0\Phi^{n+1}(\mathbf{u_p}^{n+1}-\mathbf{u^*})}
+                {\Delta t} - \nabla p_p
+        \end{equation}
+\end{enumerate}
+
+Since the term $\nabla p_p$ in the last equation may induce a velocity slightly
+different to $\mathbf{u_p}$ inside the bodies, it may be changed to
+$(1-\Phi)\nabla p_p$, cancelling this effect but adding some compressibitly to
+the flow \cite{LuoSPM}:
+
+\begin{equation} \label{eq:SPM:compressiblePressure}
+    \frac{\gamma_0\mathbf{u}^{n+1}-\gamma_0\mathbf{u^*}}{\Delta t} =
+        \frac{\gamma_0\Phi^{n+1}(\mathbf{u_p}^{n+1}-\mathbf{u^*})}{\Delta t} -
+        (1-\Phi) \nabla p_p
+\end{equation}
+
+\subsubsection{Input files}
+
+The session file follows the same rules as any other incompressible
+Navies-Stokes solver. However, there are some additional parameters that must
+be supplied when using this approach. First, the property \inltt{SolverType}
+must be set to \inltt{SmoothedProfileMethod}, while the immersed boundaries are
+defined in a function called \inltt{ShapeFunction}. Besides, the property
+\inltt{ForceBoundary} can be set to \inltt{True} if equation
+\eqref{eq:SPM:compressiblePressure} is preferred over
+\eqref{eq:SPM:incompressiblePressure}. Thus, the \inltt{SOLVERINFO} section
+could be similar to:
+
+\begin{lstlisting}[style=XMLStyle]
+<SOLVERINFO>
+    <I PROPERTY="SolverType"            VALUE="SmoothedProfileMethod" />
+    <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder3"            />
+    ...
+    <I PROPERTY="ForceBoundary"         VALUE="True"                  />
+</SOLVERINFO>
+\end{lstlisting}
+
+In addition, somewhere in the \inltt{CONDITIONS} section this function must
+appear:
+
+\begin{lstlisting}[style=XMLStyle]
+<FUNCTION NAME="ShapeFunction">
+    <E VAR="Phi" USERDEFINEDTYPE="TimeDependent" VALUE="..." />
+    <E VAR="Up" VALUE="..." />
+    <E VAR="Vp" VALUE="..." />
+    ...
+</FUNCTION>
+\end{lstlisting}
+
+As a brief guideline, to define a cylinder of radius 1 and center at the point
+(0,0) according to expression \eqref{spm:eq:mask}, the \inltt{"Phi"} field in
+the \inltt{ShapeFunction} function should be:
+
+\begin{lstlisting}[style=XMLStyle]
+    <E VAR="Phi" USERDEFINEDTYPE="TimeDependent" VALUE="-0.5*(tanh((rad(x,y)-1.0)/0.04)-1.0)" />
+\end{lstlisting}
+
+where the scaling coefficient has been set to 0.04. The variable names are
+compulsory, being \inltt{Phi} the shape of the bodies, and \inltt{Up},
+\inltt{Vp} and \inltt{Wp} functions representing the velocity field inside
+them. The attribute \inltt{USERDEFINEDTYPE} is compulsory only if the functions
+depend on time, when it must be set to \inltt{"TimeDependent"}.
+
+For immersed boundaries with geometries that cannot be represented by means of
+analytical functions, an \inltt{.stl} binary file can be supplied as well.
+However, the geometry file must be first converted to \inltt{.fld} format with
+the \texttt{phifile} module of \texttt{FieldConvert}. The simplest way to
+proceed is by issuing the command:
+
+\begin{lstlisting}[style=BashInputStyle]
+    FieldConvert -m phifile:file=geom.stl:scale=value session.xml geom.fld
+\end{lstlisting}
+
+where the value of \texttt{scale} corresponds to the coefficient $\xi$ in
+equation \eqref{spm:eq:mask}. More details can be found in section
+\ref{s:utilities:fieldconvert:sub:phifile}. In any case, it is important to
+remark that this functionality is still under development.
+
+In the \inltt{ShapeFunction} block of the session file, the line
+\inltt{<E VAR="Phi" ... />} indicates that the immersed bodies are defined by
+the function introduced in \inltt{VALUE}, while a line like the following:
+
+\begin{lstlisting}[style=XMLStyle]
+    <F VAR="Phi" FILE="geometry.fld" />
+\end{lstlisting}
+
+must be used when the $\Phi$ field is defined in an \inltt{.stl} file
+previously converted to \inltt{.fld} format. In this case, the solver only
+supports non-moving geometries and the attribute
+\inltt{USERDEFINEDTYPE="TimeDependent"}, if specified, will not be used.
+
 \subsection{Direct solver (coupled approach)}
 \label{DirectSolv}
 The second approach consists of directly solving the matrix problem
@@ -705,6 +935,7 @@ Possible values are:
 {Algorithm} & {\texttt{SolverType}} &{Dimensions}&{Projections} \\
 \midrule
 Velocity Correction Scheme (VCS) & \texttt{VelocityCorrectionScheme} & 2D, Quasi-3D, 3D & CG, CG-DG\\
+Smoothed Profile Method (SPM)    & \texttt{SmoothedProfileMethod}    & 2D, Quasi-3D, 3D & CG, CG-DG\\
 VCS with weak pressure & \texttt{VCSWeakPressure} & 2D, Quasi-3D, 3D & CG, CG-DG\\
 Direct solver & \texttt{CoupledLinearisedNS} & 2D, Quasi-3D, 3D &CG\\
 \bottomrule
@@ -1086,6 +1317,7 @@ available for this solver.
 
 \begin{itemize}
   \item \inltt{Aerodynamic forces} (section \ref{filters:AeroForces})
+  \item \inltt{Aerodynamic forces SPM} (section \ref{filters:sub:ForcesSPM})
   \item \inltt{Kinetic energy and enstrophy} (section \ref{filters:Energy})
   \item \inltt{Modal energy} (section \ref{filters:ModalEnergy})
   \item \inltt{Moving body} (section \ref{filters:MovingBody})

@@ -4,6 +4,7 @@ SET(LibUtilitiesUnitTestSources
     TestInterpreter.cpp
     TestSharedArray.cpp
     TestCheckedCast.cpp
+    TestRealComparison.cpp
     main.cpp
     ../util.cpp
 )

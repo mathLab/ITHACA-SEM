@@ -36,7 +36,7 @@
 #include <MultiRegions/PreconditionerLinearWithBlock.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <LocalRegions/MatrixKey.h>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 

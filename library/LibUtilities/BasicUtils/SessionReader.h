@@ -111,7 +111,7 @@ namespace Nektar
 
         class SessionReader;
         typedef std::shared_ptr<SessionReader> SessionReaderSharedPtr;
-
+        
         /// Reads and parses information from a Nektar++ XML session file.
         class SessionReader
         {

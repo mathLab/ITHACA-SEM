@@ -702,16 +702,6 @@ void LinearisedAdvection::DFT(const string file,
         }
 
 #endif
-
-        //scaling of the Fourier coefficients
-        NekDouble j=-1;
-        for (int i = 2; i < m_slices; i += 2)
-        {
-            Vmath::Smul(2*npoints,j,&m_interp[k][i*npoints],1,&m_interp[k][i*npoints],1);
-            j=-j;
-
-        }
-
     }
 
 }

@@ -39,7 +39,7 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
-#include <MultiRegions/ExpList2D.h>
+#include <MultiRegions/ExpList.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SpatialDomains/Conditions.h>
 #include <MultiRegions/GlobalLinSys.h>
@@ -190,6 +190,8 @@ namespace Nektar
 
             Array<OneD, MultiRegions::ExpListSharedPtr>  m_bndCondExpansions;
 
+            Array<OneD, NekDouble >                      m_bndCondBndWeight;
+
             ExpListSharedPtr m_trace;
 
             Array<OneD, int> m_traceBndMap;
@@ -295,6 +297,9 @@ namespace Nektar
             {
                 return m_traceBndMap;
             }
+            inline virtual void v_SetBndCondBwdWeight(
+                const int index, 
+                const NekDouble value);
         };
 
         typedef std::shared_ptr<DisContField3DHomogeneous1D>
@@ -322,6 +327,12 @@ namespace Nektar
             &DisContField3DHomogeneous1D::UpdateBndConditions()
         {
             return m_bndConditions;
+        }
+        inline void DisContField3DHomogeneous1D::v_SetBndCondBwdWeight(
+            const int index, 
+            const NekDouble value)
+        {
+            m_bndCondBndWeight[index]   =   value;
         }
     } //end of namespace
 } //end of namespace

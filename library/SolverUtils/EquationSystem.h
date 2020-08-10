@@ -351,6 +351,9 @@ class Interpolator;
             NekDouble                                   m_fintime;
             /// Time step size
             NekDouble                                   m_timestep;
+            /// Time step size
+            NekDouble                                   m_timestepMax = -1.0;
+            
             /// Lambda constant in real system if one required.
             NekDouble                                   m_lambda;
             /// Time between checkpoints.
@@ -655,7 +658,7 @@ class Interpolator;
 
         inline int EquationSystem::GetNumExpModes(void)
         {
-            return m_graph->GetExpansions().begin()->second->m_basisKeyVector[0]
+            return m_graph->GetExpansionInfo().begin()->second->m_basisKeyVector[0]
             .GetNumModes();
         }
 

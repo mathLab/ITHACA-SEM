@@ -156,54 +156,58 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_FillMode(
                 const int               mode,
                 Array<OneD, NekDouble> &outarray);
+            STD_REGIONS_EXPORT NekDouble v_PhysEvaluateBasis(
+                const Array<OneD, const NekDouble>& coords,
+                int mode) final;
 
 
             //---------------------------
             // Helper functions
             //---------------------------
             STD_REGIONS_EXPORT virtual int  v_GetNverts() const;
-            STD_REGIONS_EXPORT virtual int  v_GetNedges() const;
+            STD_REGIONS_EXPORT virtual int  v_GetNtraces() const;
             STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
             STD_REGIONS_EXPORT virtual int  v_NumBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int  v_NumDGBndryCoeffs() const;
-            STD_REGIONS_EXPORT virtual int  v_GetEdgeNcoeffs(const int i) const;
-            STD_REGIONS_EXPORT virtual int  v_GetEdgeNumPoints(const int i) const;
+            STD_REGIONS_EXPORT virtual int  v_GetTraceNcoeffs(const int i) const;
+            STD_REGIONS_EXPORT virtual int  v_GetTraceNumPoints(const int i) const;
             STD_REGIONS_EXPORT virtual int  v_CalcNumberOfCoefficients(
                 const std::vector<unsigned int> &nummodes,
                 int &modes_offset);
-            STD_REGIONS_EXPORT virtual LibUtilities::BasisType v_GetEdgeBasisType(
-                const int i) const;
             STD_REGIONS_EXPORT virtual void v_GetCoords(
                 Array<OneD, NekDouble> &coords_x,
                 Array<OneD, NekDouble> &coords_y,
                 Array<OneD, NekDouble> &coords_z);
             STD_REGIONS_EXPORT virtual bool v_IsBoundaryInteriorExpansion();
-            STD_REGIONS_EXPORT virtual int v_DetCartesianDirOfEdge(const int edge);
             STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey
-                v_DetEdgeBasisKey(const int edge) const;
+            v_GetTraceBasisKey(const int i, const int j) const;
 
 
             //--------------------------
             // Mappings
             //--------------------------
-            STD_REGIONS_EXPORT virtual void v_GetEdgeToElementMap(
-                const int                  eid,
-                const Orientation      edgeOrient,
-                Array<OneD, unsigned int>& maparray,
-                Array<OneD,          int>& signarray,
-                int P = -1);
             STD_REGIONS_EXPORT virtual int  v_GetVertexMap(int localVertexId,
                                                            bool useCoeffPacking = false);
-            STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(
-                const int                  eid,
-                const Orientation      edgeOrient,
-                Array<OneD, unsigned int>& maparray,
-                Array<OneD,          int>& signarray);
             STD_REGIONS_EXPORT virtual void v_GetInteriorMap(
                 Array<OneD, unsigned int>& outarray);
+
             STD_REGIONS_EXPORT virtual void v_GetBoundaryMap(
                 Array<OneD, unsigned int>& outarray);
 
+            STD_REGIONS_EXPORT  virtual void v_GetTraceToElementMap(
+                const int                  eid,
+                Array<OneD, unsigned int>& maparray,
+                Array<OneD,          int>& signarray,
+                Orientation          edgeOrient = eForwards,
+                int P = -1,
+                int Q = -1);
+
+            STD_REGIONS_EXPORT virtual  void v_GetTraceInteriorToElementMap(
+                const int                  eid,
+                Array<OneD, unsigned int>& maparray,
+                Array<OneD,          int>& signarray,
+                const Orientation          edgeOrient = eForwards);
+            
 
             //---------------------------------------
             // Wrapper functions
@@ -212,7 +216,6 @@ namespace Nektar
                 const StdMatrixKey &mkey);
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_CreateStdMatrix(
                 const StdMatrixKey &mkey);
-
 
             //---------------------------------------
             // Operator evaluation functions

@@ -5,7 +5,7 @@ v5.1.0
 ------
 **Library**
 - Restructure library to use local coefficient storage down to the GlobalLinSys
-  level. Removed GlobalCoeffs functionality (!963)
+  level. Removed GlobalCoeffs functionality (!963, !1145)
 - Add interior penalty method to DG framework (!1101)
 - Add an error filter for the time-evolution of the L2 and Linf errors (!1147)
 - Refactored time integration code using factory pattern (!1034)

@@ -52,6 +52,7 @@ v5.0.1
   Started using it in SharedArray and in NekMesh to fix peralign-extrude tool
   chain (!1134)
 - Fix Collection unit tests (!1160)
+- Fix periodic boundary conditions with HDF5 input file (!1163)
 
 **IncNavierStokesSolver**
 - Change the baseflow time in the Adjoint advection (!1133)

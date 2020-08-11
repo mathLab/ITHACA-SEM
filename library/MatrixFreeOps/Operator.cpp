@@ -23,6 +23,9 @@ std::string GetOpstring(LibUtilities::ShapeType shape, bool deformed)
     else if(shape == LibUtilities::eTetrahedron){
         op_string += "Tet";
     }
+    else if(shape == LibUtilities::ePyramid){
+        op_string += "Pyr";
+    }
     else if(shape == LibUtilities::ePrism){
         op_string += "Prism";
     }

@@ -1982,9 +1982,13 @@ namespace QuadCollectionTests
         Nektar::StdRegions::StdQuadExpSharedPtr stdExp =
             MemoryManager<Nektar::StdRegions::StdQuadExp>::AllocateSharedPtr(
             basisKeyDir1, basisKeyDir1);
+        int nelmts = 10;
 
         std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
-        CollExp.push_back(Exp);
+        for(int i = 0; i < nelmts; ++i)
+        {
+            CollExp.push_back(Exp);
+        }
 
         LibUtilities::SessionReaderSharedPtr dummySession;
         Collections::CollectionOptimisation colOpt(dummySession,
@@ -1994,13 +1998,13 @@ namespace QuadCollectionTests
 
         const int nq = Exp->GetTotPoints();
         const int nm = Exp->GetNcoeffs();
-        Array<OneD, NekDouble> phys1(nq);
-        Array<OneD, NekDouble> phys2(nq);
-        Array<OneD, NekDouble> phys3(nq);
-        Array<OneD, NekDouble> coeffsRef(nm);
-        Array<OneD, NekDouble> coeffs(nm);
+        Array<OneD, NekDouble> phys1(nelmts*nq);
+        Array<OneD, NekDouble> phys2(nelmts*nq);
+        Array<OneD, NekDouble> phys3(nelmts*nq);
+        Array<OneD, NekDouble> coeffsRef(nelmts*nm);
+        Array<OneD, NekDouble> coeffs(nelmts*nm);
 
-        Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+        Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq), tmp;
 
         Exp->GetCoords(xc, yc, zc);
 
@@ -2011,13 +2015,28 @@ namespace QuadCollectionTests
             phys3[i] = cos(xc[i])*sin(zc[i]);
         }
 
-        // Standard routines
-        Exp->IProductWRTDerivBase(0, phys1, coeffsRef);
-        Exp->IProductWRTDerivBase(1, phys2, coeffs);
-        Vmath::Vadd(nm,coeffsRef,1,coeffs,1,coeffsRef,1);
-        Exp->IProductWRTDerivBase(2, phys3, coeffs);
-        Vmath::Vadd(nm,coeffsRef,1,coeffs,1,coeffsRef,1);
+        for(int i = 1; i < nelmts; ++i)
+        {
+            Vmath::Vcopy(nq,phys1,1,tmp = phys1+i*nq,1);
+            Vmath::Vcopy(nq,phys2,1,tmp = phys2+i*nq,1);
+            Vmath::Vcopy(nq,phys2,1,tmp = phys3+i*nq,1);
+        }
 
+        for(int i = 0; i < nelmts; ++i)
+        {
+            // Standard routines
+            Exp->IProductWRTDerivBase(0, phys1 + i*nq,
+                                      tmp = coeffsRef + i*nm);
+            Exp->IProductWRTDerivBase(1, phys2 + i*nq,
+                                      tmp = coeffs + i*nm);
+            Vmath::Vadd(nm,coeffsRef + i*nm, 1, coeffs + i*nm, 1,
+                        tmp = coeffsRef + i*nm, 1);
+            Exp->IProductWRTDerivBase(2, phys3 + i*nq,
+                                      tmp = coeffs + i*nm);
+            Vmath::Vadd(nm,coeffsRef + i*nm, 1, coeffs + i*nm, 1,
+                        tmp = coeffsRef + i*nm, 1);
+        }
+        
         c.ApplyOperator(Collections::eIProductWRTDerivBase,
                         phys1, phys2, phys3, coeffs);
 

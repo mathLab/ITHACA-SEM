@@ -33,6 +33,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <LibUtilities/Communication/CommSerial.h>
 
 #include <iomanip>
 
@@ -76,6 +77,17 @@ void Timer::AccumulateRegion(std::string region)
     }
 }
 
+void Timer::PrintElapsedRegions()
+{
+    std::string  def("default");
+    char *argv = new char [def.length()+1];
+    std::strcpy(argv,def.c_str());
+    LibUtilities::CommSharedPtr comm = 
+        MemoryManager<LibUtilities::CommSerial>:: AllocateSharedPtr(1,&argv);
+
+    PrintElapsedRegions(comm);
+}
+    
 void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm)
 {
     if (comm->GetRank() == 0 &&

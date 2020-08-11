@@ -21,7 +21,11 @@ std::string __register_BwdTrans_Tet = GetOperatorFactory().
     RegisterCreatorFunction( std::string("BwdTrans_Tet_Regular"),
     &BwdTransTet::Create);
 
-std::string __register_BwdTrans_Prism = GetOperatorFactory().
+std::string __register_BwdTrans_Pyr = GetOperatorFactory().
+    RegisterCreatorFunction( std::string("BwdTrans_Pyr_Regular"),
+    &BwdTransPyr::Create);
+
+    std::string __register_BwdTrans_Prism = GetOperatorFactory().
     RegisterCreatorFunction( std::string("BwdTrans_Prism_Regular"),
     &BwdTransPrism::Create);
 

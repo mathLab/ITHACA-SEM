@@ -37,11 +37,15 @@
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
+#include <LibUtilities/BasicUtils/Timer.h>
+#include <LibUtilities/Communication/CommSerial.h>
 
-namespace Nektar
+namespace Nektar 
 {
     namespace TriCollectionTests
     {
+#define NELMTS 10
+        
         SpatialDomains::SegGeomSharedPtr CreateSegGeom(unsigned int id,
                                                        SpatialDomains::PointGeomSharedPtr v0,
                                                        SpatialDomains::PointGeomSharedPtr v1)
@@ -185,7 +189,7 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
-            int nelmts = 10;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -513,7 +517,7 @@ namespace Nektar
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
 
-            int nelmts = 10;
+            int nelmts = NELMTS;
             for(int i = 0; i < nelmts; ++i)
             {
                 CollExp.push_back(Exp);
@@ -619,7 +623,7 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
-            int nelmts = 10;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -784,7 +788,7 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
-            int nelmts = 10;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -1177,7 +1181,7 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
-            int nelmts = 10;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -1352,7 +1356,7 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
-            int nelmts = 10;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -1476,7 +1480,7 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
-            int nelmts = 10;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -1598,7 +1602,7 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
-            int nelmts = 10;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -1871,7 +1875,7 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
-            int nelmts = 10;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -2008,7 +2012,7 @@ namespace Nektar
         }
     }
 
-    BOOST_AUTO_TEST_CASE(TestTriIProductWRTDerivBase_MatrixFree_UniformP_Deformed)
+     BOOST_AUTO_TEST_CASE(TestTriIProductWRTDerivBase_MatrixFree_UniformP_Deformed_MultiElmt)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u,
             0u, -1.0, -1.0, 0.0));
@@ -2041,27 +2045,32 @@ namespace Nektar
         Nektar::LocalRegions::TriExpSharedPtr Exp =
             MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(
             basisKeyDir1, basisKeyDir2, triGeom);
-        std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
-        CollExp.push_back(Exp);
+        int nelmts = NELMTS;
 
+        std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+        for(int i = 0; i < nelmts; ++i)
+        {
+            CollExp.push_back(Exp);
+        }
 
         LibUtilities::SessionReaderSharedPtr dummySession;
-        Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+        Collections::CollectionOptimisation colOpt(dummySession,
+                                                   Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
 
         // ... only one op at the time ...
-        impTypes[Collections::eIProductWRTDerivBase] = Collections::eMatrixFree;
+        impTypes[Collections::eIProductWRTDerivBase]=Collections::eMatrixFree;
         Collections::Collection     c(CollExp, impTypes);
 
 
         const int nq = Exp->GetTotPoints();
         const int nm = Exp->GetNcoeffs();
-        Array<OneD, NekDouble> phys1(nq);
-        Array<OneD, NekDouble> phys2(nq);
-        Array<OneD, NekDouble> coeffsRef(nm);
-        Array<OneD, NekDouble> coeffs(nm);
+        Array<OneD, NekDouble> phys1(nelmts*nq);
+        Array<OneD, NekDouble> phys2(nelmts*nq);
+        Array<OneD, NekDouble> coeffsRef(nelmts*nm);
+        Array<OneD, NekDouble> coeffs(nelmts*nm);
 
-        Array<OneD, NekDouble> xc(nq), yc(nq);
+        Array<OneD, NekDouble> xc(nq), yc(nq), tmp;
 
         Exp->GetCoords(xc, yc);
 
@@ -2071,14 +2080,31 @@ namespace Nektar
             phys2[i] = cos(xc[i])*sin(yc[i]);
         }
 
-        // Standard routines
-        Exp->IProductWRTDerivBase(0, phys1, coeffsRef);
-        Exp->IProductWRTDerivBase(1, phys2, coeffs);
-        Vmath::Vadd(nm, coeffsRef, 1, coeffs, 1, coeffsRef, 1);
+        for(int i = 1; i < nelmts; ++i)
+        {
+            Vmath::Vcopy(nq,phys1,1,tmp = phys1+i*nq,1);
+            Vmath::Vcopy(nq,phys2,1,tmp = phys2+i*nq,1);
+        }
 
+        for(int i = 0; i < nelmts; ++i)
+        {
+            // Standard routines
+            Exp->IProductWRTDerivBase(0, phys1 + i*nq,
+                                      tmp  = coeffsRef + i*nm);
+            Exp->IProductWRTDerivBase(1, phys2 + i*nq,
+                                      tmp = coeffs + i*nm);
+            Vmath::Vadd(nm,coeffsRef +i*nm ,1,coeffs + i*nm ,1,
+                        tmp = coeffsRef + i*nm,1);
+        }
+
+        LibUtilities::Timer timer;
+        timer.Start();
         c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1,
                         phys2, coeffs);
-
+        timer.Stop();
+        timer.AccumulateRegion("Tri IPWRTDB");
+        timer.PrintElapsedRegions();
+               
         double epsilon = 1.0e-8;
         for(int i = 0; i < coeffsRef.size(); ++i)
         {
@@ -2087,8 +2113,9 @@ namespace Nektar
             BOOST_CHECK_CLOSE(coeffsRef[i], coeffs[i], epsilon);
         }
     }
-
-    BOOST_AUTO_TEST_CASE(TestTriIProductWRTDerivBase_MatrixFree_UniformP_Deformed_ThreeD)
+        
+#if 1
+        BOOST_AUTO_TEST_CASE(TestTriIProductWRTDerivBase_MatrixFree_UniformP_Deformed_MultiElmt_ThreeD)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u,
             0u, -1.0, -1.0, 0.0));
@@ -2121,28 +2148,33 @@ namespace Nektar
         Nektar::LocalRegions::TriExpSharedPtr Exp =
             MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(
             basisKeyDir1, basisKeyDir2, triGeom);
-        std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
-        CollExp.push_back(Exp);
+        int nelmts = NELMTS;
 
+        std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+        for(int i = 0; i < nelmts; ++i)
+        {
+            CollExp.push_back(Exp);
+        }
 
         LibUtilities::SessionReaderSharedPtr dummySession;
-        Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+        Collections::CollectionOptimisation colOpt(dummySession,
+                                                   Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
 
         // ... only one op at the time ...
-        impTypes[Collections::eIProductWRTDerivBase] = Collections::eMatrixFree;
+        impTypes[Collections::eIProductWRTDerivBase]=Collections::eMatrixFree;
         Collections::Collection     c(CollExp, impTypes);
 
 
         const int nq = Exp->GetTotPoints();
         const int nm = Exp->GetNcoeffs();
-        Array<OneD, NekDouble> phys1(nq);
-        Array<OneD, NekDouble> phys2(nq);
-        Array<OneD, NekDouble> phys3(nq);
-        Array<OneD, NekDouble> coeffsRef(nm);
-        Array<OneD, NekDouble> coeffs(nm);
+        Array<OneD, NekDouble> phys1(nelmts*nq);
+        Array<OneD, NekDouble> phys2(nelmts*nq);
+        Array<OneD, NekDouble> phys3(nelmts*nq);
+        Array<OneD, NekDouble> coeffsRef(nelmts*nm);
+        Array<OneD, NekDouble> coeffs(nelmts*nm);
 
-        Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+        Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq), tmp;
 
         Exp->GetCoords(xc, yc, zc);
 
@@ -2153,16 +2185,36 @@ namespace Nektar
             phys3[i] = cos(xc[i])*sin(zc[i]);
         }
 
-        // Standard routines
-        Exp->IProductWRTDerivBase(0, phys1, coeffsRef);
-        Exp->IProductWRTDerivBase(1, phys2, coeffs);
-        Vmath::Vadd(nm, coeffsRef, 1, coeffs, 1, coeffsRef, 1);
-        Exp->IProductWRTDerivBase(2, phys3, coeffs);
-        Vmath::Vadd(nm, coeffsRef, 1, coeffs, 1, coeffsRef, 1);
+        for(int i = 1; i < nelmts; ++i)
+        {
+            Vmath::Vcopy(nq,phys1,1,tmp = phys1+i*nq,1);
+            Vmath::Vcopy(nq,phys2,1,tmp = phys2+i*nq,1);
+            Vmath::Vcopy(nq,phys3,1,tmp = phys3+i*nq,1);
+        }
 
+        for(int i = 0; i < nelmts; ++i)
+        {
+            // Standard routines
+            Exp->IProductWRTDerivBase(0, phys1 + i*nq,
+                                      tmp  = coeffsRef + i*nm);
+            Exp->IProductWRTDerivBase(1, phys2 + i*nq,
+                                      tmp = coeffs + i*nm);
+            Vmath::Vadd(nm,coeffsRef +i*nm ,1,coeffs + i*nm ,1,
+                        tmp = coeffsRef + i*nm,1);
+            Exp->IProductWRTDerivBase(2, phys3 + i*nq,
+                                      tmp = coeffs + i*nm);
+            Vmath::Vadd(nm,coeffsRef +i*nm ,1,coeffs + i*nm ,1,
+                        tmp = coeffsRef + i*nm,1);
+        }
+
+        LibUtilities::Timer timer;
+        timer.Start();
         c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1,
                         phys2, phys3, coeffs);
-
+        timer.Stop();
+        timer.AccumulateRegion("Tri IPWRTDB 3D");
+        timer.PrintElapsedRegions();
+               
         double epsilon = 1.0e-8;
         for(int i = 0; i < coeffsRef.size(); ++i)
         {
@@ -2171,6 +2223,7 @@ namespace Nektar
             BOOST_CHECK_CLOSE(coeffsRef[i], coeffs[i], epsilon);
         }
     }
+#endif
         
     BOOST_AUTO_TEST_CASE(TestTriIProductWRTDerivBase_MatrixFree_UniformP_Deformed_OverInt)
     {
@@ -2340,7 +2393,7 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
-            int nelmts = 10;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -2485,7 +2538,7 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
-            int nelmts = 10;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -2564,7 +2617,7 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, triGeom);
 
-            int nelmts = 10;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)

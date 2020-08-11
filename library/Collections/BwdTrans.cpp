@@ -255,7 +255,10 @@ OperatorKey BwdTrans_MatrixFree::m_typeArr[] = {
         BwdTrans_MatrixFree::create, "BwdTrans_MatrixFree_Prism"),
     GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eTetrahedron,   eBwdTrans, eMatrixFree, false),
-        BwdTrans_MatrixFree::create, "BwdTrans_MatrixFree_Tet")
+        BwdTrans_MatrixFree::create, "BwdTrans_MatrixFree_Tet"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(ePyramid,   eBwdTrans, eMatrixFree, false),
+        BwdTrans_MatrixFree::create, "BwdTrans_MatrixFree_Pyr")
 };
 
 

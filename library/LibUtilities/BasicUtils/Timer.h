@@ -71,6 +71,10 @@ class Timer
         LIB_UTILITIES_EXPORT void AccumulateRegion(std::string);
 
         /// \brief Print elapsed time and call count for each region
+        /// with default serial communicator
+        LIB_UTILITIES_EXPORT static void PrintElapsedRegions();
+
+        /// \brief Print elapsed time and call count for each region
         LIB_UTILITIES_EXPORT static void PrintElapsedRegions
             (LibUtilities::CommSharedPtr comm);
 

@@ -299,9 +299,9 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray);
 
-            /// This function calculates the inner product of a function
-            /// \f$f(\boldsymbol{x})\f$ with respect to the derivative (in
-            /// direction \param dir) of all \em local expansion modes
+            /// This function calculates the inner product of a
+            /// function \f$f(\boldsymbol{x})\f$ with respect to the
+            /// derivative of all \em local expansion modes
             /// \f$\phi_n^e(\boldsymbol{x})\f$.
             MULTI_REGIONS_EXPORT void   IProductWRTDerivBase
                 (const Array<OneD, const Array<OneD, NekDouble> > &inarray,

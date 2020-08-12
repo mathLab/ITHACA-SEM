@@ -1,6 +1,7 @@
-FROM nektarpp/nektar-env:latest AS build
+ARG ENV_IMAGE=nektarpp/nektar-env:latest
+FROM $ENV_IMAGE AS build
 
-LABEL maintainer="David Moxey <d.moxey@exeter.ac.uk>"
+LABEL maintainer="Nektar++ Development Team <nektar-users@imperial.ac.uk>"
 
 COPY --chown=nektar:nektar . /home/nektar
 

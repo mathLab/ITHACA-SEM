@@ -52,6 +52,7 @@ v5.0.1
   Started using it in SharedArray and in NekMesh to fix peralign-extrude tool
   chain (!1134)
 - Fix Collection unit tests (!1160)
+- Fix DESTDIR issues for MacPorts (!1179)
 
 **IncNavierStokesSolver**
 - Change the baseflow time in the Adjoint advection (!1133)

@@ -1,6 +1,6 @@
 FROM debian:buster-slim
 
-LABEL maintainer="David Moxey <d.moxey@exeter.ac.uk>"
+LABEL maintainer="Nektar++ Development Team <nektar-users@imperial.ac.uk>"
 
 RUN DEBIAN_RELEASE=buster && \
     echo "deb http://deb.debian.org/debian ${DEBIAN_RELEASE} non-free" > \

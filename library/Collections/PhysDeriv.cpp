@@ -405,6 +405,9 @@ OperatorKey PhysDeriv_MatrixFree::m_typeArr[] =
         OperatorKey(ePrism, ePhysDeriv, eMatrixFree, false),
         PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Prism"),
     GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(ePyramid, ePhysDeriv, eMatrixFree, false),
+        PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Pyr"),
+    GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eTetrahedron, ePhysDeriv, eMatrixFree, false),
         PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Tet")
 
@@ -1789,6 +1792,7 @@ class PhysDeriv_SumFac_Pyr : public Operator
                 // dxi2 = (1+eta0)/(1-eta_2) d Eta_0 + d/dEta2;
                 Vmath::Vvtvp(nPhys,&m_fac1[0],1,Diff[0].get()+cnt,1,
                              Diff[2].get()+cnt,1,Diff[2].get()+cnt,1);
+
                 // dxi2 += (1+eta1)/(1-eta_2) d Eta_1
                 Vmath::Vvtvp(nPhys,&m_fac2[0],1,Diff[1].get()+cnt,1,
                              Diff[2].get()+cnt,1,Diff[2].get()+cnt,1);

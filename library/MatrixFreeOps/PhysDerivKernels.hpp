@@ -434,6 +434,98 @@ static void PhysDerivPrismKernel(
 }
 
 template<int NUMQUAD0, int NUMQUAD1, int NUMQUAD2, bool DEFORMED>
+static void PhysDerivPyrKernel(
+    const std::vector<vec_t, allocator<vec_t>>& in,
+    const std::vector<vec_t, allocator<vec_t>>& Z0,
+    const std::vector<vec_t, allocator<vec_t>>& Z1,
+    const std::vector<vec_t, allocator<vec_t>>& Z2,
+    const std::vector<vec_t, allocator<vec_t>>& D0,
+    const std::vector<vec_t, allocator<vec_t>>& D1,
+    const std::vector<vec_t, allocator<vec_t>>& D2,
+    const vec_t* df_ptr,
+    std::vector<vec_t, allocator<vec_t>>& out_d0,
+    std::vector<vec_t, allocator<vec_t>>& out_d1,
+    std::vector<vec_t, allocator<vec_t>>& out_d2)
+{
+    boost::ignore_unused(Z1);
+
+    constexpr auto nq0 = NUMQUAD0, nq1 = NUMQUAD1, nq2 = NUMQUAD2;
+    constexpr auto ndf = 9;
+
+    PhysDerivTensor3DKernel<NUMQUAD0, NUMQUAD1, NUMQUAD2>(
+        in,
+        D0, D1, D2,
+        out_d0, out_d1, out_d2);
+
+    vec_t df0, df1, df2, df3, df4, df5, df6, df7, df8;
+    if (!DEFORMED)
+    {
+        df0 = df_ptr[0];
+        df1 = df_ptr[1];
+        df2 = df_ptr[2];
+        df3 = df_ptr[3];
+        df4 = df_ptr[4];
+        df5 = df_ptr[5];
+        df6 = df_ptr[6];
+        df7 = df_ptr[7];
+        df8 = df_ptr[8];
+    }
+
+    int cnt_ijk = 0;
+    for (int k = 0; k < nq2; ++k)
+    {
+        vec_t xfrm_eta2 = 2.0 / (1.0 - Z2[k]); //Load 1x
+
+        for (int j = 0; j < nq1; ++j)
+        {
+            vec_t xfrm_eta1 = 0.5*(1+Z1[j]); //Load 1x
+
+            for (int i = 0; i < nq0; ++i, ++cnt_ijk)
+            {
+                
+                //Chain-rule for eta_0 and eta_2
+                vec_t d0 = out_d0[cnt_ijk] * xfrm_eta2; //Load 1x
+                vec_t d1 = out_d1[cnt_ijk] * xfrm_eta2; //Load 1x
+                
+                vec_t d2 = out_d2[cnt_ijk];//Load 1x
+                vec_t xfrm_eta0 = 0.5*(1+Z0[i]); //Load 1x
+                d2.fma(xfrm_eta0, d0);
+                d2.fma(xfrm_eta1, d1); 
+                
+                if (DEFORMED)
+                {
+                    df0 = df_ptr[cnt_ijk*ndf];
+                    df1 = df_ptr[cnt_ijk*ndf + 1];
+                    df2 = df_ptr[cnt_ijk*ndf + 2];
+                    df3 = df_ptr[cnt_ijk*ndf + 3];
+                    df4 = df_ptr[cnt_ijk*ndf + 4];
+                    df5 = df_ptr[cnt_ijk*ndf + 5];
+                    df6 = df_ptr[cnt_ijk*ndf + 6];
+                    df7 = df_ptr[cnt_ijk*ndf + 7];
+                    df8 = df_ptr[cnt_ijk*ndf + 8];
+                }
+                
+                //Metric for eta_0, xi_1, eta_2
+                vec_t out0 = d0 * df0;
+                out0.fma(d1, df1);
+                out0.fma(d2, df2);
+                out_d0[cnt_ijk] = out0; //Store 1x
+                
+                vec_t out1 = d0 * df3;
+                out1.fma(d1, df4);
+                out1.fma(d2, df5);
+                out_d1[cnt_ijk] = out1; //Store 1x
+                
+                vec_t out2 = d0 * df6;
+                out2.fma(d1, df7);
+                out2.fma(d2, df8);
+                out_d2[cnt_ijk] = out2; //Store 1x
+            }
+        }
+    }
+}
+
+template<int NUMQUAD0, int NUMQUAD1, int NUMQUAD2, bool DEFORMED>
 static void PhysDerivTetKernel(
     const std::vector<vec_t, allocator<vec_t>>& in,
     const std::vector<vec_t, allocator<vec_t>>& Z0,

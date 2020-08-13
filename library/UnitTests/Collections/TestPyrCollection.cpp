@@ -900,6 +900,94 @@ namespace Nektar
             }
         }
 
+        BOOST_AUTO_TEST_CASE(TestPyrPhysDeriv_MatrixFree_UniformP_MultiElmt)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(3u, 1u,  1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u,  1.0,  1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0,  1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(3u, 4u, -1.0, -1.0,  1.0));
+
+            SpatialDomains::PyrGeomSharedPtr pyrGeom = CreatePyr(v0, v1, v2, v3, v4);
+
+            unsigned int numQuadPoints = 5;
+            unsigned int numModes = 2;
+
+            Nektar::LibUtilities::PointsType     PointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            const Nektar::LibUtilities::PointsKey PointsKeyDir1(numQuadPoints, PointsTypeDir1);
+            Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir1(basisTypeDir1,numModes,PointsKeyDir1);
+
+            Nektar::LibUtilities::PointsType      PointsTypeDir2 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            const Nektar::LibUtilities::PointsKey PointsKeyDir2(numQuadPoints, PointsTypeDir2);
+            Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,numModes,PointsKeyDir2);
+
+            Nektar::LibUtilities::PointsType      PointsTypeDir3 = Nektar::LibUtilities::eGaussRadauMAlpha2Beta0;
+            const Nektar::LibUtilities::PointsKey PointsKeyDir3(numQuadPoints-1, PointsTypeDir3);
+            Nektar::LibUtilities::BasisType       basisTypeDir3 = Nektar::LibUtilities::eModifiedPyr_C;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir3(basisTypeDir3,numModes,PointsKeyDir3);
+
+
+            Nektar::LocalRegions::PyrExpSharedPtr Exp =
+                MemoryManager<Nektar::LocalRegions::PyrExp>::AllocateSharedPtr
+                (basisKeyDir1, basisKeyDir2, basisKeyDir3, pyrGeom);
+
+            int nelmts = 5;
+
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+            for(int i = 0; i < nelmts; ++i)
+            {
+                CollExp.push_back(Exp);
+            }
+
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession,
+                                                       Collections::eIterPerExp);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+
+            impTypes[Collections::ePhysDeriv] = Collections::eMatrixFree;
+            Collections::Collection     c(CollExp, impTypes);
+
+            const int nq = Exp->GetTotPoints();
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+            Array<OneD, NekDouble> phys(nelmts*nq),tmp,tmp1,tmp2;
+            Array<OneD, NekDouble> diff1(3*nelmts*nq);
+            Array<OneD, NekDouble> diff2(3*nelmts*nq);
+
+            Exp->GetCoords(xc, yc, zc);
+
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
+            }
+            Exp->PhysDeriv(phys, diff1,
+                           tmp1 = diff1+(nelmts)*nq,
+                           tmp2 = diff1+(2*nelmts)*nq);
+
+            for(int i = 1; i < nelmts; ++i)
+            {
+                Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
+                Exp->PhysDeriv(phys, tmp = diff1+i*nq,
+                               tmp1 = diff1+(nelmts+i)*nq,
+                               tmp2 = diff1+(2*nelmts+i)*nq);
+            }
+
+            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2,
+                            tmp  = diff2 + nelmts*nq,
+                            tmp2 = diff2+2*nelmts*nq);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < diff1.size(); ++i)
+            {
+                // clamp values below 1e-14 to zero
+                diff1[i] = (fabs(diff1[i]) < 1e-14)? 0.0: diff1[i];
+                diff2[i] = (fabs(diff2[i]) < 1e-14)? 0.0: diff2[i];
+                BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
+            }
+        }
+
+
         BOOST_AUTO_TEST_CASE(TestPyrIProductWRTBase_IterPerExp_UniformP_MultiElmt)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.0, -1.0, -1.0));
@@ -1833,6 +1921,87 @@ namespace Nektar
             }
         }
 
+        BOOST_AUTO_TEST_CASE(TestPyrBwdTrans_MatrixFree_UniformP_OverInt_MultiElmt)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(3u, 1u,  1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u,  1.0,  1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0,  1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(3u, 4u, -1.0, -1.0,  1.0));
+
+            SpatialDomains::PyrGeomSharedPtr pyrGeom =
+                CreatePyr(v0, v1, v2, v3, v4);
+            
+            unsigned int numQuadPoints = 8;
+            unsigned int numModes = 4;
+            
+            Nektar::LibUtilities::PointsType
+                PointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            const Nektar::LibUtilities::PointsKey
+                PointsKeyDir1(numQuadPoints, PointsTypeDir1);
+            Nektar::LibUtilities::BasisType
+                basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::BasisKey
+                basisKeyDir1(basisTypeDir1,numModes,PointsKeyDir1);
+
+            Nektar::LibUtilities::PointsType
+                PointsTypeDir2 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            const Nektar::LibUtilities::PointsKey
+                PointsKeyDir2(numQuadPoints, PointsTypeDir2);
+            Nektar::LibUtilities::BasisType
+                basisTypeDir2 = Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::BasisKey
+                basisKeyDir2(basisTypeDir2,numModes,PointsKeyDir2);
+
+            Nektar::LibUtilities::PointsType
+                PointsTypeDir3 = Nektar::LibUtilities::eGaussRadauMAlpha2Beta0;
+            const Nektar::LibUtilities::PointsKey
+                PointsKeyDir3(numQuadPoints-1, PointsTypeDir3);
+            Nektar::LibUtilities::BasisType
+                basisTypeDir3 = Nektar::LibUtilities::eModifiedPyr_C;
+            const Nektar::LibUtilities::BasisKey
+                basisKeyDir3(basisTypeDir3,numModes,PointsKeyDir3);
+            
+            Nektar::LocalRegions::PyrExpSharedPtr Exp =
+                MemoryManager<Nektar::LocalRegions::PyrExp>::AllocateSharedPtr
+                (basisKeyDir1, basisKeyDir2, basisKeyDir3, pyrGeom);
+
+            unsigned int nelmts = 10;
+
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+            for (unsigned int i = 0; i < nelmts; ++i)
+            {
+                CollExp.push_back(Exp);
+            }
+            
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession,
+                                                       Collections::eIterPerExp);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            
+            // ... only one op at the time ...
+            impTypes[Collections::eBwdTrans] = Collections::eMatrixFree;
+            Collections::Collection              c(CollExp, impTypes);
+
+            Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(),  1.0);
+            Array<OneD, NekDouble> physRef(nelmts*Exp->GetTotPoints(), 0.0);
+            Array<OneD, NekDouble> phys(nelmts*Exp->GetTotPoints(), 0.0);
+            Array<OneD, NekDouble> tmp;
+            
+            for (unsigned int i = 0; i < nelmts; ++i)
+            {
+                Exp->BwdTrans(coeffs + i*Exp->GetNcoeffs(),
+                              tmp = physRef+i*Exp->GetTotPoints());
+            }
+            c.ApplyOperator(Collections::eBwdTrans, coeffs, phys);
+            
+            double epsilon = 1.0e-8;
+            for (unsigned int i = 0; i < physRef.size(); ++i)
+            {
+                BOOST_CHECK_CLOSE(physRef[i], phys[i], epsilon);
+            }
+        }
+        
         BOOST_AUTO_TEST_CASE(TestPyrIProductWRTDerivBase_StdMat_VariableP_MultiElmt)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.5, -1.5, -1.5));

@@ -51,6 +51,7 @@ v5.0.1
 - Added IsRealEqual method to compare real numbers with relative tolerance.
   Started using it in SharedArray and in NekMesh to fix peralign-extrude tool
   chain (!1134)
+- Fix performance of GetExp(coord) by using octree lookup (!1165)
 - Fix Collection unit tests (!1160)
 - Fix periodic boundary conditions with HDF5 input file (!1163)
 

@@ -125,6 +125,13 @@ stages:
   <<: *build-env-debian-template-default
   stage: build-env-full
 
+bullseye-default-build-env:
+  <<: *build-env-debian-template-default
+
+bullseye-full-build-env:
+  <<: *build-env-debian-template-full
+  needs: ["bullseye-default-build-env"]
+
 buster-default-build-env:
   <<: *build-env-debian-template-default
 
@@ -138,6 +145,14 @@ stretch-default-build-env:
 stretch-full-build-env:
   <<: *build-env-debian-template-full
   needs: ["stretch-default-build-env"]
+
+bullseye-default-build-and-test:
+  <<: *build-and-test-template
+  needs: ["bullseye-default-build-env"]
+
+bullseye-full-build-and-test:
+  <<: *build-and-test-template
+  needs: ["bullseye-full-build-env"]
 
 buster-default-build-and-test:
   <<: *build-and-test-template
@@ -160,6 +175,14 @@ stretch-full-build-and-test:
 
 
 # COMPILER WARNINGS
+bullseye-default-warnings:
+  <<: *compiler-warning-template
+  needs: ["bullseye-default-build-and-test"]
+
+bullseye-full-warnings:
+  <<: *compiler-warning-template
+  needs: ["bullseye-full-build-and-test"]
+
 buster-default-warnings:
   <<: *compiler-warning-template
   needs: ["buster-default-build-and-test"]

@@ -557,6 +557,40 @@ void MeshGraphHDF5::PartitionMesh(LibUtilities::SessionReaderSharedPtr session)
         t.Stop();
         TIME_RESULT(verbRoot, "construct 3D elements", t);
     }
+
+    // Populate m_bndRegOrder.
+    if (m_session->DefinesElement("NEKTAR/CONDITIONS"))
+    {
+        std::set<int> vBndRegionIdList;
+        TiXmlElement *vConditions =
+            new TiXmlElement(*m_session->GetElement("Nektar/Conditions"));
+        TiXmlElement *vBndRegions =
+            vConditions->FirstChildElement("BOUNDARYREGIONS");
+        TiXmlElement *vItem;
+
+        if (vBndRegions)
+        {
+            vItem = vBndRegions->FirstChildElement();
+            while (vItem)
+            {
+                std::string vSeqStr =
+                    vItem->FirstChild()->ToText()->Value();
+                std::string::size_type indxBeg =
+                    vSeqStr.find_first_of('[') + 1;
+                std::string::size_type indxEnd =
+                    vSeqStr.find_last_of(']') - 1;
+                vSeqStr = vSeqStr.substr(indxBeg, indxEnd - indxBeg + 1);
+
+                std::vector<unsigned int> vSeq;
+                ParseUtils::GenerateSeqVector(vSeqStr.c_str(), vSeq);
+
+                int p = atoi(vItem->Attribute("ID"));
+                m_bndRegOrder[p] = vSeq;
+                vItem = vItem->NextSiblingElement();
+            }
+        }
+    }
+
     all.Stop();
     TIME_RESULT(verbRoot, "total time", all);
 }
@@ -929,6 +963,7 @@ void MeshGraphHDF5::ReadComposites()
         vector<unsigned int> seqVector;
 
         ParseUtils::GenerateSeqVector(indxStr, seqVector);
+        m_compOrder[ids[i]] = seqVector;
 
         switch (type)
         {

@@ -128,7 +128,7 @@ stages:
 bullseye-default-build-env:
   <<: *build-env-debian-template-default
 
-bullseye-full-build-env:
+bullseye-full_py3-build-env:
   <<: *build-env-debian-template-full
   needs: ["bullseye-default-build-env"]
 
@@ -150,9 +150,9 @@ bullseye-default-build-and-test:
   <<: *build-and-test-template
   needs: ["bullseye-default-build-env"]
 
-bullseye-full-build-and-test:
+bullseye-full_py3-build-and-test:
   <<: *build-and-test-template
-  needs: ["bullseye-full-build-env"]
+  needs: ["bullseye-full_py3-build-env"]
 
 buster-default-build-and-test:
   <<: *build-and-test-template
@@ -179,9 +179,9 @@ bullseye-default-warnings:
   <<: *compiler-warning-template
   needs: ["bullseye-default-build-and-test"]
 
-bullseye-full-warnings:
+bullseye-full_py3-warnings:
   <<: *compiler-warning-template
-  needs: ["bullseye-full-build-and-test"]
+  needs: ["bullseye-full_py3-build-and-test"]
 
 buster-default-warnings:
   <<: *compiler-warning-template

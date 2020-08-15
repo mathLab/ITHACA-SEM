@@ -40,14 +40,12 @@
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
-#include <SolverUtils/Core/TimeIntegrationUtils.h>
 
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ContField.h>
 
 using namespace std;
 using namespace Nektar;
-using namespace Nektar::SolverUtils;
 
 class Diffusion
 {
@@ -102,11 +100,11 @@ Diffusion::Diffusion( int argc, char* argv[] )
     // Create time integration scheme.
     if (session->DefinesTimeIntScheme())
     {
-        timeInt = m_session->GetTimeIntScheme();
+        timeInt = session->GetTimeIntScheme();
     }
     else
     {
-        timeInt.scheme = m_session->GetSolverInfo("TimeIntegrationMethod");
+        timeInt.method = session->GetSolverInfo("TimeIntegrationMethod");
     }
 
     nSteps        = session->GetParameter("NumSteps");
@@ -146,14 +144,14 @@ void Diffusion::TimeIntegrate()
     ode.DefineImplicitSolve(&Diffusion::DoImplicitSolve, this);
 
     // Initialise the scheme for actual time integration scheme
-    m_IntScheme->InitializeScheme(delta_t, fields, 0.0, ode);
+    intScheme->InitializeScheme(delta_t, fields, 0.0, ode);
 
     // Zero field coefficients for initial guess for linear solver.
     Vmath::Zero(field->GetNcoeffs(), field->UpdateCoeffs(), 1);
 
     for (int n = 0; n < nSteps; ++n)
     {
-        fields = m_IntScheme->TimeIntegrate( n, delta_t, ode );
+        fields = intScheme->TimeIntegrate( n, delta_t, ode );
     }
 
     Vmath::Vcopy(field->GetNpoints(), fields[0], 1, field->UpdatePhys(), 1);

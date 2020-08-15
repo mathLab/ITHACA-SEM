@@ -136,9 +136,9 @@ private:
 typedef std::shared_ptr<Edge> EdgeSharedPtr;
 
 NEKMESH_EXPORT bool operator==(EdgeSharedPtr const &p1,
-                                    EdgeSharedPtr const &p2);
+                               EdgeSharedPtr const &p2);
 NEKMESH_EXPORT bool operator<(EdgeSharedPtr const &p1,
-                                   EdgeSharedPtr const &p2);
+                              EdgeSharedPtr const &p2);
 
 /**
  * @brief Defines a hash function for edges.

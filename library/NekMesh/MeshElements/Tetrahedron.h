@@ -60,8 +60,8 @@ public:
     static LibUtilities::ShapeType m_type;
 
     NEKMESH_EXPORT Tetrahedron(ElmtConfig pConf,
-                                    std::vector<NodeSharedPtr> pNodeList,
-                                    std::vector<int> pTagList);
+                               std::vector<NodeSharedPtr> pNodeList,
+                               std::vector<int> pTagList);
     NEKMESH_EXPORT Tetrahedron(const Tetrahedron &pSrc);
     NEKMESH_EXPORT virtual ~Tetrahedron()
     {

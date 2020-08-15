@@ -61,8 +61,8 @@ public:
     static LibUtilities::ShapeType m_type;
 
     NEKMESH_EXPORT Triangle(ElmtConfig pConf,
-                                 std::vector<NodeSharedPtr> pNodeList,
-                                 std::vector<int> pTagList);
+                            std::vector<NodeSharedPtr> pNodeList,
+                            std::vector<int> pTagList);
     NEKMESH_EXPORT Triangle(const Triangle &pSrc);
     NEKMESH_EXPORT virtual ~Triangle()
     {

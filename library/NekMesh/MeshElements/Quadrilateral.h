@@ -60,8 +60,8 @@ public:
     static LibUtilities::ShapeType m_type;
 
     NEKMESH_EXPORT Quadrilateral(ElmtConfig pConf,
-                                      std::vector<NodeSharedPtr> pNodeList,
-                                      std::vector<int> pTagList);
+                                 std::vector<NodeSharedPtr> pNodeList,
+                                 std::vector<int> pTagList);
     NEKMESH_EXPORT Quadrilateral(const Quadrilateral &pSrc);
     NEKMESH_EXPORT virtual ~Quadrilateral()
     {

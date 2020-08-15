@@ -64,8 +64,8 @@ public:
      * @brief Create a hexahedral element.
      */
     NEKMESH_EXPORT Hexahedron(ElmtConfig pConf,
-                                   std::vector<NodeSharedPtr> pNodeList,
-                                   std::vector<int> pTagList);
+                              std::vector<NodeSharedPtr> pNodeList,
+                              std::vector<int> pTagList);
     /// copy hex element
     NEKMESH_EXPORT Hexahedron(const Hexahedron &pSrc);
     NEKMESH_EXPORT virtual ~Hexahedron()

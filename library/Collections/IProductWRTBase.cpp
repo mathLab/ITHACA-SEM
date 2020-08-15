@@ -282,6 +282,9 @@ OperatorKey IProductWRTBase_MatrixFree::m_typeArr[] = {
         OperatorKey(ePrism, eIProductWRTBase, eMatrixFree, false),
         IProductWRTBase_MatrixFree::create, "IProductWRTBase_MatrixFree_Prism"),
     GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(ePyramid, eIProductWRTBase, eMatrixFree, false),
+        IProductWRTBase_MatrixFree::create, "IProductWRTBase_MatrixFree_Pyr"),
+    GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eTetrahedron, eIProductWRTBase, eMatrixFree, false),
         IProductWRTBase_MatrixFree::create, "IProductWRTBase_MatrixFree_Tet")
 

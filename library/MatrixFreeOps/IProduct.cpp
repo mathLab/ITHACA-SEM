@@ -29,7 +29,13 @@ std::string __register_IProduct_Prism = GetOperatorFactory().RegisterCreatorFunc
 std::string __register_IProduct_Prism_Deformed = GetOperatorFactory().RegisterCreatorFunction(
     std::string("IProduct_Prism_Deformed"), &IProductPrism<true>::Create);
 
-std::string __register_IProduct_Hex = GetOperatorFactory().RegisterCreatorFunction(
+std::string __register_IProduct_Pyr = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("IProduct_Pyr_Regular"), &IProductPyr<>::Create);
+
+std::string __register_IProduct_Pyr_Deformed = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("IProduct_Pyr_Deformed"), &IProductPyr<true>::Create);
+
+    std::string __register_IProduct_Hex = GetOperatorFactory().RegisterCreatorFunction(
     std::string("IProduct_Hex_Regular"), &IProductHex<>::Create);
 
 std::string __register_IProduct_Hex_Deformed = GetOperatorFactory().RegisterCreatorFunction(

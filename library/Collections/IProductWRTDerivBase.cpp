@@ -410,6 +410,9 @@ OperatorKey IProductWRTDerivBase_MatrixFree::m_typeArr[] = {
         IProductWRTDerivBase_MatrixFree::create, "IProductWRTDerivBase_MatrixFree_Hex"),
     GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(ePrism, eIProductWRTDerivBase, eMatrixFree, false),
+        IProductWRTDerivBase_MatrixFree::create, "IProductWRTDerivBase_MatrixFree_Prism"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(ePyramid, eIProductWRTDerivBase, eMatrixFree, false),
         IProductWRTDerivBase_MatrixFree::create, "IProductWRTDerivBase_MatrixFree_Prism")
 };
 

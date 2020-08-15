@@ -1438,6 +1438,434 @@ private:
     int m_nmTot;
 };
 
+template<bool DEFORMED = false>
+struct IProductWRTDerivBasePyr : public IProductWRTDerivBase, public Helper<3, DEFORMED>
+{
+    IProductWRTDerivBasePyr(std::vector<LibUtilities::BasisSharedPtr> basis,
+                   int nElmt)
+        : IProductWRTDerivBase(basis, nElmt),
+          Helper<3, DEFORMED>(basis, nElmt),
+          m_nmTot(LibUtilities::StdPyrData::getNumberOfCoefficients(
+                      this->m_nm[0], this->m_nm[1], this->m_nm[2]))
+    {
+    }
+
+    static std::shared_ptr<Operator> Create(
+        std::vector<LibUtilities::BasisSharedPtr> basis,
+        int nElmt)
+    {
+        return std::make_shared<IProductWRTDerivBasePyr<DEFORMED>>(basis, nElmt);
+    }
+
+   void operator()( const Array<OneD, Array<OneD, NekDouble>> &in,
+        Array<OneD, NekDouble> &out) final
+    {
+        // Check preconditions
+        ASSERTL0(m_basis[0]->GetNumModes() == m_basis[1]->GetNumModes() &&
+            m_basis[0]->GetNumModes() == m_basis[2]->GetNumModes() &&
+            m_basis[0]->GetNumPoints() == m_basis[1]->GetNumPoints() &&
+            m_basis[0]->GetNumPoints() == m_basis[2]->GetNumPoints()+1,
+            "MatrixFree requires homogenous modes/points");
+
+        if (m_basis[0]->GetBasisType() == LibUtilities::eModified_A)
+        {
+            switch(m_basis[0]->GetNumModes())
+            {
+                case 2:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 3: IProductWRTDerivBasePyrImpl<2, 2, 2, 3, 3, 2, true>
+                            (in, out); break;
+                        case 4: IProductWRTDerivBasePyrImpl<2, 2, 2, 4, 4, 3, true>
+                            (in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBPyr: # of modes / points combo not implemented.");
+                    } break;
+                case 3:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 4: IProductWRTDerivBasePyrImpl<3, 3, 3, 4, 4, 3, true>
+                            (in, out); break;
+                        case 5: IProductWRTDerivBasePyrImpl<3, 3, 3, 5, 5, 4, true>
+                            (in, out); break;
+                        case 6: IProductWRTDerivBasePyrImpl<3, 3, 3, 6, 6, 5, true>
+                            (in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBPyr: # of modes / points combo not implemented.");
+                    } break;
+                case 4:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 5: IProductWRTDerivBasePyrImpl<4, 4, 4, 5, 5, 4, true>
+                            (in, out); break;
+                        case 6: IProductWRTDerivBasePyrImpl<4, 4, 4, 6, 6, 5, true>
+                            (in, out); break;
+                        case 7: IProductWRTDerivBasePyrImpl<4, 4, 4, 7, 7, 6, true>
+                            (in, out); break;
+                        case 8: IProductWRTDerivBasePyrImpl<4, 4, 4, 8, 8, 7, true>
+                            (in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBPyr: # of modes / points combo not implemented.");
+                    } break;
+                case 5:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 6: IProductWRTDerivBasePyrImpl<5 ,5, 5, 6, 6, 5, true>
+                            (in, out); break;
+                        case 7: IProductWRTDerivBasePyrImpl<5 ,5, 5, 7, 7, 6, true>
+                            (in, out); break;
+                        case 8: IProductWRTDerivBasePyrImpl<5 ,5, 5, 8, 8, 7, true>
+                            (in, out); break;
+                        case 9: IProductWRTDerivBasePyrImpl<5 ,5, 5, 9, 9, 8, true>
+                            (in, out); break;
+                        case 10: IProductWRTDerivBasePyrImpl<5 ,5, 5, 10, 10, 9, true>
+                            (in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBPyr: # of modes / points combo not implemented.");
+                    } break;
+                case 6:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 7: IProductWRTDerivBasePyrImpl<6, 6, 6, 7, 7, 6, true>
+                            (in, out); break;
+                        case 8: IProductWRTDerivBasePyrImpl<6, 6, 6, 8, 8, 7, true>
+                            (in, out); break;
+                        case 9: IProductWRTDerivBasePyrImpl<6, 6, 6, 9, 9, 8, true>
+                            (in, out); break;
+                        case 10: IProductWRTDerivBasePyrImpl<6, 6, 6, 10, 10, 9, true>
+                            (in, out); break;
+                        case 11: IProductWRTDerivBasePyrImpl<6, 6, 6, 11, 11, 10, true>
+                            (in, out); break;
+                        case 12: IProductWRTDerivBasePyrImpl<6, 6, 6, 12, 12, 11, true>
+                            (in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBPyr: # of modes / points combo not implemented.");
+                    } break;
+                case 7:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 8: IProductWRTDerivBasePyrImpl<7, 7, 7, 8, 8, 7, true>
+                            (in, out); break;
+                        case 9: IProductWRTDerivBasePyrImpl<7, 7, 7, 9, 9, 8, true>
+                            (in, out); break;
+                        case 10: IProductWRTDerivBasePyrImpl<7, 7, 7, 10, 10, 9, true>
+                            (in, out); break;
+                        case 11: IProductWRTDerivBasePyrImpl<7, 7, 7, 11, 11, 10, true>
+                            (in, out); break;
+                        case 12: IProductWRTDerivBasePyrImpl<7, 7, 7, 12, 12, 11, true>
+                            (in, out); break;
+                        case 13: IProductWRTDerivBasePyrImpl<7, 7, 7, 13, 13, 12, true>
+                            (in, out); break;
+                        case 14: IProductWRTDerivBasePyrImpl<7, 7, 7, 14, 14, 13, true>
+                            (in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBPyr: # of modes / points combo not implemented.");
+                    } break;
+                case 8:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 9: IProductWRTDerivBasePyrImpl<8, 8, 8, 9, 9, 8, true>
+                            (in, out); break;
+                        case 10: IProductWRTDerivBasePyrImpl<8, 8, 8, 10, 10, 9, true>
+                            (in, out); break;
+                        case 11: IProductWRTDerivBasePyrImpl<8, 8, 8, 11, 11, 10, true>
+                            (in, out); break;
+                        case 12: IProductWRTDerivBasePyrImpl<8, 8, 8, 12, 12, 11, true>
+                            (in, out); break;
+                        case 13: IProductWRTDerivBasePyrImpl<8, 8, 8, 13, 13, 12, true>
+                            (in, out); break;
+                        case 14: IProductWRTDerivBasePyrImpl<8, 8, 8, 14, 14, 13, true>
+                            (in, out); break;
+                        case 15: IProductWRTDerivBasePyrImpl<8, 8, 8, 15, 15, 14, true>
+                            (in, out); break;
+                        case 16: IProductWRTDerivBasePyrImpl<8, 8, 8, 16, 16, 15, true>
+                            (in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBPyr: # of modes / points combo not implemented.");
+                    } break;
+                default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBPyr: # of modes / points combo not implemented.");
+            }
+        }
+        else
+        {
+            switch(m_basis[0]->GetNumModes())
+            {
+                case 2:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 3: IProductWRTDerivBasePyrImpl<2, 2, 2, 3, 3, 2, false>
+                            (in, out); break;
+                        case 4: IProductWRTDerivBasePyrImpl<2, 2, 2, 4, 4, 3, false>
+                            (in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBPyr: # of modes / points combo not implemented.");
+                    } break;
+                case 3:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 4: IProductWRTDerivBasePyrImpl<3, 3, 3, 4, 4, 3, false>
+                            (in, out); break;
+                        case 5: IProductWRTDerivBasePyrImpl<3, 3, 3, 5, 5, 4, false>
+                            (in, out); break;
+                        case 6: IProductWRTDerivBasePyrImpl<3, 3, 3, 6, 6, 5, false>
+                            (in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBPyr: # of modes / points combo not implemented.");
+                    } break;
+                case 4:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 5: IProductWRTDerivBasePyrImpl<4, 4, 4, 5, 5, 4, false>
+                            (in, out); break;
+                        case 6: IProductWRTDerivBasePyrImpl<4, 4, 4, 6, 6, 5, false>
+                            (in, out); break;
+                        case 7: IProductWRTDerivBasePyrImpl<4, 4, 4, 7, 7, 6, false>
+                            (in, out); break;
+                        case 8: IProductWRTDerivBasePyrImpl<4, 4, 4, 8, 8, 7, false>
+                            (in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBPyr: # of modes / points combo not implemented.");
+                    } break;
+                case 5:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 6: IProductWRTDerivBasePyrImpl<5 ,5, 5, 6, 6, 5, false>
+                            (in, out); break;
+                        case 7: IProductWRTDerivBasePyrImpl<5 ,5, 5, 7, 7, 6, false>
+                            (in, out); break;
+                        case 8: IProductWRTDerivBasePyrImpl<5 ,5, 5, 8, 8, 7, false>
+                            (in, out); break;
+                        case 9: IProductWRTDerivBasePyrImpl<5 ,5, 5, 9, 9, 8, false>
+                            (in, out); break;
+                        case 10: IProductWRTDerivBasePyrImpl<5 ,5, 5, 10, 10, 9, false>
+                            (in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBPyr: # of modes / points combo not implemented.");
+                    } break;
+                case 6:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 7: IProductWRTDerivBasePyrImpl<6, 6, 6, 7, 7, 6, false>
+                            (in, out); break;
+                        case 8: IProductWRTDerivBasePyrImpl<6, 6, 6, 8, 8, 7, false>
+                            (in, out); break;
+                        case 9: IProductWRTDerivBasePyrImpl<6, 6, 6, 9, 9, 8, false>
+                            (in, out); break;
+                        case 10: IProductWRTDerivBasePyrImpl<6, 6, 6, 10, 10, 9, false>
+                            (in, out); break;
+                        case 11: IProductWRTDerivBasePyrImpl<6, 6, 6, 11, 11, 10, false>
+                            (in, out); break;
+                        case 12: IProductWRTDerivBasePyrImpl<6, 6, 6, 12, 12, 11, false>
+                            (in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBPyr: # of modes / points combo not implemented.");
+                    } break;
+                case 7:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 8: IProductWRTDerivBasePyrImpl<7, 7, 7, 8, 8, 7, false>
+                            (in, out); break;
+                        case 9: IProductWRTDerivBasePyrImpl<7, 7, 7, 9, 9, 8, false>
+                            (in, out); break;
+                        case 10: IProductWRTDerivBasePyrImpl<7, 7, 7, 10, 10, 9, false>
+                            (in, out); break;
+                        case 11: IProductWRTDerivBasePyrImpl<7, 7, 7, 11, 11, 10, false>
+                            (in, out); break;
+                        case 12: IProductWRTDerivBasePyrImpl<7, 7, 7, 12, 12, 11, false>
+                            (in, out); break;
+                        case 13: IProductWRTDerivBasePyrImpl<7, 7, 7, 13, 13, 12, false>
+                            (in, out); break;
+                        case 14: IProductWRTDerivBasePyrImpl<7, 7, 7, 14, 14, 13, false>
+                            (in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBPyr: # of modes / points combo not implemented.");
+                    } break;
+                case 8:
+                    switch(m_basis[0]->GetNumPoints())
+                    {
+                        case 9: IProductWRTDerivBasePyrImpl<8, 8, 8, 9, 9, 8, false>
+                            (in, out); break;
+                        case 10: IProductWRTDerivBasePyrImpl<8, 8, 8, 10, 10, 9, false>
+                            (in, out); break;
+                        case 11: IProductWRTDerivBasePyrImpl<8, 8, 8, 11, 11, 10, false>
+                            (in, out); break;
+                        case 12: IProductWRTDerivBasePyrImpl<8, 8, 8, 12, 12, 11, false>
+                            (in, out); break;
+                        case 13: IProductWRTDerivBasePyrImpl<8, 8, 8, 13, 13, 12, false>
+                            (in, out); break;
+                        case 14: IProductWRTDerivBasePyrImpl<8, 8, 8, 14, 14, 13, false>
+                            (in, out); break;
+                        case 15: IProductWRTDerivBasePyrImpl<8, 8, 8, 15, 15, 14, false>
+                            (in, out); break;
+                        case 16: IProductWRTDerivBasePyrImpl<8, 8, 8, 16, 16, 15, false>
+                            (in, out); break;
+                        default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBPyr: # of modes / points combo not implemented.");
+                    } break;
+                default: NEKERROR(ErrorUtil::efatal,
+                    "IProductWRTDBPyr: # of modes / points combo not implemented.");
+            }
+        }
+    }
+
+
+    template<int NM0, int NM1, int NM2, int NQ0, int NQ1, int NQ2, bool CORRECT>
+    void IProductWRTDerivBasePyrImpl(
+              const Array<OneD, Array<OneD, NekDouble>> &input,
+              Array<OneD,       NekDouble> &output)
+    {
+        auto* inptr0 = input[0].data();
+        auto* inptr1 = input[1].data();
+        auto* inptr2 = input[2].data();
+        auto* outptr = output.data();
+
+        constexpr auto ndf = 9u;
+        constexpr auto nqTot = NQ0 * NQ1 * NQ2;
+        constexpr auto nqBlocks = nqTot * vec_t::width;
+        const auto nmBlocks = m_nmTot * vec_t::width;
+
+
+        // Get size of jacobian factor block
+        auto dJSize = 1u;
+        auto dfSize = ndf;
+        if (DEFORMED)
+        {
+            dJSize = nqTot;
+            dfSize = ndf*nqTot;
+        }
+
+        vec_t sums_kj[NQ1 * NQ2];
+        vec_t sums_k[NQ2];
+
+        std::vector<vec_t, allocator<vec_t>>
+            tmpIn0(nqTot), tmpIn1(nqTot), tmpIn2(nqTot),
+            tmp0(nqTot), tmp1(nqTot), tmp2(nqTot), tmpOut(m_nmTot);
+
+        const vec_t* df_ptr;
+        const vec_t* jac_ptr;
+
+        std::vector<vec_t, allocator<vec_t>>& Z0 = this->m_Z[0];
+        std::vector<vec_t, allocator<vec_t>>& Z1 = this->m_Z[1];
+        std::vector<vec_t, allocator<vec_t>>& Z2 = this->m_Z[2];
+
+        for (int e =0; e < this->m_nBlocks; ++e)
+        {
+            // Jacobian
+            jac_ptr = &(this->m_jac[dJSize*e]);
+
+            // Derivative factor
+            df_ptr = &(this->m_df[dfSize*e]);
+
+            // Load and transpose data
+            load_interleave(inptr0, nqTot, tmpIn0);
+            load_interleave(inptr1, nqTot, tmpIn1);
+            load_interleave(inptr2, nqTot, tmpIn2);
+
+            vec_t df0, df1, df2, df3, df4, df5, df6, df7, df8;
+            if (!DEFORMED)
+            {
+                df0 = df_ptr[0];
+                df1 = df_ptr[1];
+                df2 = df_ptr[2];
+                df3 = df_ptr[3];
+                df4 = df_ptr[4];
+                df5 = df_ptr[5];
+                df6 = df_ptr[6];
+                df7 = df_ptr[7];
+                df8 = df_ptr[8];
+            }
+
+            for (size_t k = 0, cnt_kji = 0; k < NQ2; ++k)
+            {
+                // div in most external loop
+                vec_t f0 = 2.0 / (1.0 - Z2[k]); // Load 1x
+
+                for (size_t j = 0; j < NQ1; ++j)
+                {
+                    vec_t hf2 = 0.5 * (1.0 + Z1[j]); //Load 1x
+                    for (size_t i = 0; i < NQ0; ++i, ++cnt_kji)
+                    {
+                        if (DEFORMED)
+                        {
+                            df0 = df_ptr[cnt_kji * ndf];
+                            df1 = df_ptr[cnt_kji * ndf + 1];
+                            df2 = df_ptr[cnt_kji * ndf + 2];
+                            df3 = df_ptr[cnt_kji * ndf + 3];
+                            df4 = df_ptr[cnt_kji * ndf + 4];
+                            df5 = df_ptr[cnt_kji * ndf + 5];
+                            df6 = df_ptr[cnt_kji * ndf + 6];
+                            df7 = df_ptr[cnt_kji * ndf + 7];
+                            df8 = df_ptr[cnt_kji * ndf + 8];
+                        }
+
+                        // Calculate dx/dxi in[0] + dy/dxi in[1] + dz/dxi in[2]
+                        vec_t tI0 = tmpIn0[cnt_kji]; // load 1x
+                        vec_t tI1 = tmpIn1[cnt_kji]; // load 1x
+                        vec_t tI2 = tmpIn2[cnt_kji]; // load 1x
+                        vec_t t0 = df0 * tI0 + df3 * tI1 + df6 * tI2;
+                        vec_t t1 = df1 * tI0 + df4 * tI1 + df7 * tI2;
+                        vec_t t2 = df2 * tI0 + df5 * tI1 + df8 * tI2;
+
+                        // Scale by geometric factor 2/(1-z2)
+                        t0 *= f0;
+                        vec_t hf1 = 0.5 * (1.0 + Z0[i]); //Load 1x
+                        // Scale by geometric factor (1+z0)/(1-z2)
+                        vec_t f1t2 = hf1 * t2;
+                        t0.fma(f1t2, f0);
+
+                        // Scale by geometric factor 2/(1-z2)
+                        t1 *= f0;
+                        // Scale by geometric factor (1+z1)/(1-z2)
+                        f1t2 = hf2 * t2;
+                        t1.fma(f1t2, f0);
+                        
+                        // Store
+                        tmp0[cnt_kji] = t0; // store 1x
+                        tmp1[cnt_kji] = t1; // store 1x
+                        tmp2[cnt_kji] = t2; // store 1x
+                    }
+                }
+            }
+
+            // IP DB0 B1 B2
+            IProductPyrKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, CORRECT, false,
+                false, DEFORMED>(
+                tmp0, this->m_dbdata[0], this->m_bdata[1], this->m_bdata[2],
+                this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
+                sums_kj, sums_k,
+                tmpOut);
+
+            // IP B0 DB1 B2
+            IProductPyrKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, CORRECT, false,
+                true, DEFORMED>(
+                tmp1, this->m_bdata[0], this->m_dbdata[1], this->m_bdata[2],
+                this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
+                sums_kj, sums_k,
+                tmpOut);
+
+            // IP B0 B1 DB2
+            IProductPyrKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, CORRECT, false,
+                true, DEFORMED>(
+                tmp2, this->m_bdata[0], this->m_bdata[1], this->m_dbdata[2],
+                this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
+                sums_kj, sums_k,
+                tmpOut);
+
+            // de-interleave and store data
+            deinterleave_store(tmpOut, m_nmTot, outptr);
+
+            inptr0 += nqBlocks;
+            inptr1 += nqBlocks;
+            inptr2 += nqBlocks;
+            outptr += nmBlocks;
+        }
+    }
+
+private:
+    int m_nmTot;
+};
+    
 } // namespace MatrixFree
 } // namespace Nektar
 

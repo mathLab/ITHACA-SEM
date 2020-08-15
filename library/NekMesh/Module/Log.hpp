@@ -103,12 +103,17 @@ public:
      */
     virtual void Log(const std::string &msg) = 0;
 
+    /**
+     * @brief Returns true if this is an interactive (tty) terminal
+     * (e.g. stdout).
+     */
     bool IsTty() const
     {
         return m_isTty;
     }
 
 protected:
+    /// True if this log output is tty-based.
     bool m_isTty = true;
 
     /**
@@ -120,9 +125,19 @@ protected:
     virtual void Finalise() = 0;
 };
 
+/**
+ * @brief Log output for std::ostream objects.
+ */
 class StreamOutput : public LogOutput
 {
 public:
+    /**
+     * @brief Construct a stream output from the stream @p os.
+     *
+     * This attempts to determine whether the @p os is either std::cout or
+     * std::cerr, so that it can distinguish between tty-type output or
+     * file/buffer-based output streams.
+     */
     StreamOutput(std::ostream &os) : LogOutput(), m_os(os)
     {
         // Bit of a hack to figure out if we are a tty.
@@ -133,62 +148,131 @@ public:
         }
     }
 
+    /// Default destructor.
     virtual ~StreamOutput() = default;
 
+    /**
+     * @brief Writes a log message to @p m_os.
+     */
     void Log(const std::string &msg) override
     {
         m_os << msg << std::flush;
     }
 
 private:
+    /// Reference to output stream.
     std::ostream &m_os;
 
+    /// Finalise routine. By default we do nothing for streams and assume this
+    /// will be handled by the caller.
     void Finalise() override
     {
     }
 };
 
+/**
+ * @brief Convenience namespace for some basic ANSI terminal codes.
+ */
 namespace ansi
 {
+/// Bold text
 const std::string bold = "\x1B[1m";
+/// Red text
 const std::string red = "\033[0;31m";
+/// Green text
 const std::string green = "\033[1;32m";
+/// Yellow text
 const std::string yellow = "\033[1;33m";
+/// Cyan text
 const std::string cyan = "\033[0;36m";
+/// Magenta text
 const std::string magenta = "\033[0;35m";
+/// Reset/remove all formatting
 const std::string reset = "\033[0m";
 }
 
+/**
+ * @brief Basic logging class for the NekMesh library.
+ *
+ * Usage is like a normal std::ostream, but there is support for a number of
+ * additional things:
+ *
+ * - Various logging levels, defined by the #LogLevel enum.
+ * - Automatically preprend a prefix to output messages, which helps in
+ *   distinguishing which modules are generating output.
+ * - Messages are sent to a #LogOutput class, which handles the physical manner
+ *   of handling the string message. This allows for backends that print to
+ *   stdout, write to files, or redirect to Python for the NekPy bindings.
+ * - Logging levels are defined by the Logger's operator() function, and are
+ *   reset to the default LogLevel::INFO level when the logger sees a std::endl
+ *   or std::flush.
+ * - LogLevel::FATAL messages will trigger a #NekMeshException.
+ *
+ * Example usage:
+ *
+ * ```
+ * // Select the logger's output level.
+ * LogLevel outLevel = INFO;
+ * // Create a stream output object to write to std::cout.
+ * std::shared_ptr<LogOutput> out = std::make_shared<StreamOutput>(std::cout);
+ * // Create the logger.
+ * Logger log(out, outLevel);
+ * // Write some output
+ * log << "This is an 'INFO' level output and will be displayed" << std::endl;
+ * log(VERBOSE) << "This is an 'VERBOSE' level output and will not be "
+ *              << "displayed: the log level is set at INFO." << std::endl;
+ * log(FATAL)   << "This 'FATAL' level output will trigger an exception."
+ *              << std::endl;
+ * ```
+ */
 class Logger
 {
     typedef std::ostream&  (*ManipFn)(std::ostream&);
     typedef std::ios_base& (*FlagsFn)(std::ios_base&);
 
 public:
+    /// Default constructor.
     Logger() = default;
 
+    /**
+     * @brief Create a Logger given an output object @p logOutput and a minimum
+     * logging level @p level. Log messages above this level will be suppressed.
+     */
     Logger(std::shared_ptr<LogOutput> logOutput, LogLevel level) :
         m_logOutput(logOutput), m_level(level)
     {
     }
 
+    /**
+     * @brief Copy constructor.
+     */
     Logger(const Logger &log)
     {
         m_prefix = log.m_prefix;
         m_level = log.m_level;
         m_curLevel = log.m_curLevel;
         m_logOutput = log.m_logOutput;
+        m_prefixLen = log.m_prefixLen;
     }
 
+    /**
+     * @brief Assignment operator.
+     */
     Logger &operator=(const Logger &log)
     {
         m_prefix = log.m_prefix;
         m_level = log.m_level;
         m_curLevel = log.m_curLevel;
         m_logOutput = log.m_logOutput;
+        m_prefixLen = log.m_prefixLen;
         return *this;
     }
 
+    /**
+     * @brief Stream operator to act in the same manner as std::ostream.
+     *
+     * Writes the value @p val internally to a std::stringstream.
+     */
     template <typename T>
     Logger &operator<<(const T& val)
     {
@@ -196,6 +280,11 @@ public:
         return *this;
     }
 
+    /**
+     * @brief Stream operator to act in the same manner as std::ostream.
+     *
+     * Applies the manipulator @p manip internally to a std::stringstream.
+     */
     Logger &operator<<(ManipFn manip)
     {
         manip(m_buffer);
@@ -236,18 +325,29 @@ public:
         return *this;
     }
 
+    /**
+     * @brief Stream operator to act in the same manner as std::ostream.
+     *
+     * Applies the flags function @p manip internally to a std::stringstream.
+     */
     Logger& operator<<(FlagsFn manip)
     {
         manip(m_buffer);
         return *this;
     }
 
+    /**
+     * @brief Sets the log level of the current message to @p level.
+     */
     Logger &operator()(LogLevel level)
     {
         m_curLevel = level;
         return *this;
     }
 
+    /**
+     * @brief Prints a progress bar.
+     */
     void Progress(const int position, const int goal, const std::string message,
                   int lastprogress = -1)
     {
@@ -290,19 +390,73 @@ public:
         m_logOutput->Log(ss.str());
     }
 
+    /**
+     * @brief Logs a newline character. Helpful in combination with the
+     * #Progress function.
+     */
     void Newline()
     {
         m_logOutput->Log("\n");
     }
 
+    /**
+     * @brief Overwrites current line if TTY mode is enabled.
+     */
     void Overwrite()
     {
-        m_logOutput->Log("\r\e[0K");
+        if (m_logOutput->IsTty())
+        {
+            m_logOutput->Log("\r\e[0K");
+        }
     }
 
+    /**
+     * @brief Sets the prefix for this Logger that is automatically preprended
+     * to all messages.
+     *
+     * For example, the code
+     *
+     * ```c++
+     * log.SetPrefix("TestModule");
+     * log << "Test message" << std::endl;
+     * ```
+     *
+     * would produce the output
+     *
+     * ```
+     * [TestModule]       Test message
+     * ```
+     */
     void SetPrefix(const std::string &prefix)
     {
         m_prefix = prefix;
+    }
+
+    /**
+     * @brief Sets the prefix length used to calculate the correct spacing for
+     * prefix strings.
+     *
+     * This is a cosmetic feature intended to reducing spacing between the
+     * prefix and the message. For example, the code
+     *
+     * ```c++
+     * log.SetPrefix("TestModule");
+     * log.SetPrefixLen(10);
+     * log << "Test message" << std::endl;
+     * log.SetPrefixLen(15);
+     * log << "Test message" << std::endl;
+     * ```
+     *
+     * would produce the output:
+     *
+     * ```
+     * [TestModule] Test message
+     * [TestModule]      Test message
+     * ```
+     */
+    void SetPrefixLen(size_t prefixLen)
+    {
+        m_prefixLen = prefixLen;
     }
 
 private:
@@ -318,13 +472,17 @@ private:
     LogLevel m_curLevel = INFO;
     /// A prefix that will be enclosed with `[` and `]` in the output message.
     std::string m_prefix = "";
+    /// Default width for prefix.
+    size_t m_prefixLen = 0;
 
+    /**
+     * @brief Get the prefix string. This is a helper function that also applies
+     * basic formatting for the message.
+     */
     std::string GetPrefixString()
     {
         std::stringstream ss;
-
-        std::string msgcolour = "";
-        std::string msgprefix = "";
+        std::string msgcolour = "", msgprefix = "";
 
         switch(m_curLevel)
         {
@@ -340,6 +498,8 @@ private:
                 break;
         }
 
+        size_t prefixLen = m_prefixLen == 0 ? 20 : m_prefixLen + 3;
+
         if (m_prefix != "")
         {
             if (m_logOutput->IsTty())
@@ -347,7 +507,7 @@ private:
                 ss << msgcolour << ansi::bold;
             }
 
-            ss << std::setw(20) << std::left << ("[" + m_prefix + "]");
+            ss << std::setw(prefixLen) << std::left << ("[" + m_prefix + "]");
 
             if (m_logOutput->IsTty())
             {

@@ -171,6 +171,11 @@ namespace NekMesh
             m_log.SetPrefix(GetModuleName());
         }
 
+        NEKMESH_EXPORT Logger &GetLogger()
+        {
+            return m_log;
+        }
+
         NEKMESH_EXPORT void RegisterConfig(std::string key,
                                            std::string value = std::string());
         NEKMESH_EXPORT void PrintConfig();

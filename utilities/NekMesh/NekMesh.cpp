@@ -193,6 +193,9 @@ int main(int argc, char* argv[])
     modcmds.insert   (modcmds.begin(), inout[0]);
     modcmds.push_back(inout[1]);
 
+    // Keep track of maximum string length for nicer verbose output.
+    size_t maxModName = 0;
+
     for (int i = 0; i < modcmds.size(); ++i)
     {
         // First split each command by the colon separator.
@@ -264,13 +267,19 @@ int main(int argc, char* argv[])
             {
                 cerr << "ERROR: Invalid module configuration: format is "
                      << "either :arg or :arg=val" << endl;
-                abort();
+                return 1;
             }
         }
 
         // Ensure configuration options have been set.
         mod->SetDefaults();
+
+        // Track maximum module name length.
+        std::string modName = mod->GetModuleName();
+        maxModName = std::max(maxModName, modName.length());
     }
+
+    log.SetPrefixLen(maxModName);
 
     // Run mesh process.
     for (int i = 0; i < modules.size(); ++i)
@@ -279,6 +288,7 @@ int main(int argc, char* argv[])
         t.Start();
         try
         {
+            modules[i]->GetLogger().SetPrefixLen(maxModName);
             modules[i]->Process();
         }
         catch (NekMeshError &e)
@@ -289,7 +299,7 @@ int main(int argc, char* argv[])
 
         log.SetPrefix(modules[i]->GetModuleName());
         log(VERBOSE) << "  - Elapsed time: "
-                     << t.TimePerTest(1) << 's' << std::endl;
+                     << t.TimePerTest(1) << "s." << std::endl;
     }
 
     return 0;

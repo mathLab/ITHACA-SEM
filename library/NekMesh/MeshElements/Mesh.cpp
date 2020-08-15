@@ -295,31 +295,30 @@ void Mesh::MakeOrder(int order, LibUtilities::PointsType distType, Logger &log)
  */
 void Mesh::PrintStats(Logger &log)
 {
-    log << "Mesh statistics" << std::endl
-        << "---------------" << std::endl
-        << std::endl;
+    log << "Mesh statistics:" << std::endl;
 
-    log << "Mesh dimension       : " << m_spaceDim << std::endl
-        << "Element dimension    : " << m_expDim << std::endl
-        << "Has CAD attached     : " << (m_cad ? "yes" : "no") << std::endl
-        << "Node count           : " << m_vertexSet.size() << std::endl;
+    log << "  - Mesh dimension       : " << m_spaceDim << std::endl
+        << "  - Element dimension    : " << m_expDim << std::endl
+        << "  - Has CAD attached     : " << (m_cad ? "yes" : "no") << std::endl
+        << "  - Node count           : " << m_vertexSet.size() << std::endl;
 
     if (m_edgeSet.size() > 0)
     {
-        log << "Edge count           : " << m_edgeSet.size() << std::endl;
+        log << "  - Edge count           : " << m_edgeSet.size() << std::endl;
     }
 
     if (m_faceSet.size() > 0)
     {
-        log << "Face count           : " << m_faceSet.size() << std::endl;
+        log << "  - Face count           : " << m_faceSet.size() << std::endl;
     }
 
-    log << "Elements             : " << m_element[m_expDim].size() << std::endl
-        << "Bnd elements         : " << m_element[m_expDim - 1].size()
+    log << "  - Elements             : " << m_element[m_expDim].size()
+        << std::endl;
+    log << "  - Bnd elements         : " << m_element[m_expDim - 1].size()
         << std::endl;
 
     // Print out number of composites
-    log << "Number of composites : " << m_composite.size() << std::endl;
+    log << "  - Number of composites : " << m_composite.size() << std::endl;
 
     // Calculate domain extent
     auto extent = m_element[m_expDim][0]->GetBoundingBox();
@@ -334,9 +333,9 @@ void Mesh::PrintStats(Logger &log)
         extent.second.m_z = std::max(extent.second.m_z, el.second.m_z);
     }
 
-    log << "Lower mesh extent    : " << extent.first.m_x << " "
+    log << "  - Lower mesh extent    : " << extent.first.m_x << " "
         << extent.first.m_y << " " << extent.first.m_z << std::endl
-        << "Upper mesh extent    : " << extent.second.m_x << " "
+        << "  - Upper mesh extent    : " << extent.second.m_x << " "
         << extent.second.m_y << " " << extent.second.m_z << std::endl;
 
     std::map<LibUtilities::ShapeType, std::pair<int, int>> elmtCounts;
@@ -363,7 +362,7 @@ void Mesh::PrintStats(Logger &log)
         }
     }
 
-    log << std::endl << "Element counts (regular/deformed/total):" << std::endl;
+    log << "Element counts (regular/deformed/total):" << std::endl;
     for (int i = 1; i < LibUtilities::SIZE_ShapeType; ++i)
     {
         auto shapeType = (LibUtilities::ShapeType)i;
@@ -374,7 +373,7 @@ void Mesh::PrintStats(Logger &log)
             continue;
         }
 
-        log << "  " << std::setw(14)
+        log << "  - " << std::setw(12) << std::left
             << LibUtilities::ShapeTypeMap[(LibUtilities::ShapeType)i] << ": "
             << setw(12) << counts.first << "  " << setw(12) << counts.second
             << "  " << setw(12) << counts.first + counts.second << std::endl;

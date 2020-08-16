@@ -288,8 +288,39 @@ class PhysDeriv_MatrixFree : public Operator
             boost::ignore_unused( wsp);
             if (m_isPadded)
             {
-                NEKERROR(ErrorUtil::efatal,
-                         "PhysDeriv_MatrixFree: Not valid for this operator.");
+                // copy into padded vector
+                Vmath::Vcopy(input.size(), input, 1, m_input, 1);
+                // call op
+                if (m_coordim == 2)
+                {
+                    (*m_oper)(m_input, m_output[0], m_output[1]);
+                    // copy out of padded vector
+                    if(dir == 0)
+                    {
+                        Vmath::Vcopy(output.size(), m_output[0], 1, output, 1);
+                    }
+                    else
+                    {
+                        Vmath::Vcopy(output.size(), m_output[1], 1, output, 1);
+                    }
+                }
+                else
+                {
+                    (*m_oper)(m_input, m_output[0], m_output[1], m_output[2]);
+                    // copy out of padded vector
+                    switch(dir)
+                    {
+                    case 0:
+                        Vmath::Vcopy(output.size(), m_output[0], 1, output, 1);
+                        break;
+                    case 1:
+                        Vmath::Vcopy(output.size(), m_output[1], 1, output, 1);
+                        break;
+                    case 2:
+                        Vmath::Vcopy(output.size(), m_output[2], 1, output, 1);
+                        break;
+                    }
+                }
             }
             else
             {

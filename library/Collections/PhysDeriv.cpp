@@ -285,7 +285,7 @@ class PhysDeriv_MatrixFree : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            boost::ignore_unused( wsp);
+            boost::ignore_unused(wsp);
             if (m_isPadded)
             {
                 // copy into padded vector
@@ -324,17 +324,18 @@ class PhysDeriv_MatrixFree : public Operator
             }
             else
             {
+                
                 // Just use full derivative for now. Could potentially
                 // be optimised further
                 if (m_coordim == 2)
                 {
                     if(dir == 0)
                     {
-                        (*m_oper)(input, output, wsp);
+                        (*m_oper)(input, output, m_output[0]);
                     }
                     else
                     {
-                        (*m_oper)(input, wsp, output);
+                        (*m_oper)(input, m_output[0], output);
                     }
                 }
                 else
@@ -342,10 +343,10 @@ class PhysDeriv_MatrixFree : public Operator
                     switch(dir)
                     {
                     case 0:
-                        (*m_oper)(input, output, m_output[1], m_output[2]);
+                        (*m_oper)(input, output, m_output[0], m_output[1]);
                         break;
                     case 1:
-                        (*m_oper)(input, m_output[0], output, m_output[2]);
+                        (*m_oper)(input, m_output[0], output, m_output[1]);
                         break;
                     case 2:
                         (*m_oper)(input, m_output[0], m_output[1], output);
@@ -390,6 +391,15 @@ class PhysDeriv_MatrixFree : public Operator
                 if (m_coordim == 3)
                 {
                     m_output[2] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+                }
+            }
+            else
+            {
+                m_output = Array<OneD, Array<OneD, NekDouble>> {m_coordim-1};
+                m_output[0] = Array<OneD, NekDouble>{nqElmt * nElmtNoPad, 0.0};
+                if (m_coordim == 3)
+                {
+                    m_output[1] = Array<OneD, NekDouble>{nqElmt * nElmtNoPad, 0.0};
                 }
             }
 

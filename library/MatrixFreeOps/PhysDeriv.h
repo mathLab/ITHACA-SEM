@@ -455,8 +455,8 @@ struct PhysDerivHex : public PhysDeriv, public Helper<3,DEFORMED>
     }
 
     void operator()(const Array<OneD, const NekDouble> &in,
-                                Array<OneD,       NekDouble> &out_d0,
-                                Array<OneD,       NekDouble> &out_d1) final
+                          Array<OneD,       NekDouble> &out_d0,
+                          Array<OneD,       NekDouble> &out_d1) final
     {
         boost::ignore_unused(in, out_d0, out_d1);
         throw; //Only for 2D, but need to implement since its abstract

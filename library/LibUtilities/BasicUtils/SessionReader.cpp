@@ -1993,24 +1993,21 @@ namespace Nektar
             TiXmlElement *variant = timeInt->FirstChildElement("VARIANT");
             TiXmlElement *order = timeInt->FirstChildElement("ORDER");
             TiXmlElement *params = timeInt->FirstChildElement("FREEPARAMETERS");
+
+            // Only the method and order are required.
             ASSERTL0(method, "Missing METHOD tag inside "
-                     "TIMEINTEGRATIONSCHEME.");
-            ASSERTL0(variant, "Missing VARIANT tag inside "
                      "TIMEINTEGRATIONSCHEME.");
             ASSERTL0(order, "Missing ORDER tag inside "
                      "TIMEINTEGRATIONSCHEME.");
 
-            m_timeIntScheme.method = method->GetText();
-            m_timeIntScheme.variant = variant->GetText();
-
-            std::string orderStr = order->GetText();
-
             ASSERTL0(m_timeIntScheme.method.size() > 0,
                      "Empty text inside METHOD tag in TIMEINTEGRATIONSCHEME.");
-            ASSERTL0(m_timeIntScheme.variant.size() > 0,
-                     "Empty text inside VARIANT tag in TIMEINTEGRATIONSCHEME.");
-            ASSERTL0(orderStr.size() > 0,
+            ASSERTL0(m_timeIntScheme.method.size() > 0,
                      "Empty text inside ORDER tag in TIMEINTEGRATIONSCHEME.");
+
+            m_timeIntScheme.method = method->GetText();
+            std::string orderStr = order->GetText();
+
             try
             {
                 m_timeIntScheme.order = boost::lexical_cast<unsigned int>(
@@ -2020,6 +2017,11 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal, "In ORDER tag, unable to convert "
                          "string '" + orderStr + "' to an unsigned integer.");
+            }
+
+            if( variant )
+            {
+                m_timeIntScheme.variant = variant->GetText();
             }
 
             if (params)

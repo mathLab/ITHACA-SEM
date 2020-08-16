@@ -269,7 +269,7 @@ namespace Nektar
                                                                                basisKeyDir3,
                                                                                pyrGeom);
 
-            int nelmts = 10;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -292,7 +292,12 @@ namespace Nektar
             {
                 Exp->BwdTrans(coeffs + i*Exp->GetNcoeffs(), tmp = phys1+i*Exp->GetTotPoints());
             }
+
+            LibUtilities::Timer timer;
+            timer.Start();
             c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
+            timer.Stop();
+            timer.AccumulateRegion("Pyr BwdTrans SumFactor");
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < phys1.size(); ++i)
@@ -522,7 +527,7 @@ namespace Nektar
                                                                                basisKeyDir2,
                                                                                basisKeyDir3,
                                                                                pyrGeom);
-            int nelmts = 10;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -559,9 +564,13 @@ namespace Nektar
                                tmp2 = diff1+(2*nelmts+i)*nq);
             }
 
+            LibUtilities::Timer timer;
+            timer.Start();
             c.ApplyOperator(Collections::ePhysDeriv, phys, diff2,
                             tmp  = diff2 + nelmts*nq,
                             tmp2 = diff2+2*nelmts*nq);
+            timer.Stop();
+            timer.AccumulateRegion("Pyr PhysDeriv IterPerExp");
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < diff1.size(); ++i)
@@ -686,7 +695,7 @@ namespace Nektar
                                                                                basisKeyDir2,
                                                                                basisKeyDir3,
                                                                                pyrGeom);
-            int nelmts = 2;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -724,9 +733,13 @@ namespace Nektar
                                tmp2 = diff1+(2*nelmts+i)*nq);
             }
 
+            LibUtilities::Timer timer;
+            timer.Start();
             c.ApplyOperator(Collections::ePhysDeriv, phys, diff2,
                             tmp  = diff2 + nelmts*nq,
                             tmp2 = diff2+2*nelmts*nq);
+            timer.Stop();
+            timer.AccumulateRegion("Pyr PhysDeriv SumFactor");
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < diff1.size(); ++i)
@@ -942,7 +955,7 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::PyrExp>::AllocateSharedPtr
                 (basisKeyDir1, basisKeyDir2, basisKeyDir3, pyrGeom);
 
-            int nelmts = 5;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -982,9 +995,13 @@ namespace Nektar
                                tmp2 = diff1+(2*nelmts+i)*nq);
             }
 
+            LibUtilities::Timer timer;
+            timer.Start();
             c.ApplyOperator(Collections::ePhysDeriv, phys, diff2,
                             tmp  = diff2 + nelmts*nq,
                             tmp2 = diff2+2*nelmts*nq);
+            timer.Stop();
+            timer.AccumulateRegion("Pyr PhysDeriv MatrixFree");
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < diff1.size(); ++i)
@@ -1030,7 +1047,7 @@ namespace Nektar
                                                                                  basisKeyDir3,
                                                                                  pyrGeom);
 
-            int nelmts = 10;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -1064,7 +1081,11 @@ namespace Nektar
                 Exp->IProductWRTBase(phys +i*nq, tmp = coeffs1 + i*Exp->GetNcoeffs());
             }
 
+            LibUtilities::Timer timer;
+            timer.Start();
             c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
+            timer.Stop();
+            timer.AccumulateRegion("Pyr IProdWRTB IterPerExp");
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < coeffs1.size(); ++i)
@@ -1189,7 +1210,7 @@ namespace Nektar
                                                                                  basisKeyDir3,
                                                                                  pyrGeom);
 
-            int nelmts = 10;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -1224,7 +1245,11 @@ namespace Nektar
                 Exp->IProductWRTBase(phys +i*nq, tmp = coeffs1 + i*Exp->GetNcoeffs());
             }
 
+            LibUtilities::Timer timer;
+            timer.Start();
             c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
+            timer.Stop();
+            timer.AccumulateRegion("Pyr IProdWRTB SumFactor");
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < coeffs1.size(); ++i)
@@ -1511,7 +1536,7 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::PyrExp>::AllocateSharedPtr
                 (basisKeyDir1, basisKeyDir2, basisKeyDir3, pyrGeom);
 
-            int nelmts = 5;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -1547,7 +1572,11 @@ namespace Nektar
                 Exp->IProductWRTBase(phys +i*nq, tmp = coeffs1 + i*Exp->GetNcoeffs());
             }
 
+            LibUtilities::Timer timer;
+            timer.Start();
             c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
+            timer.Stop();
+            timer.AccumulateRegion("Pyr IProdWRTB MatrixFree");
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < coeffs1.size(); ++i)
@@ -1679,12 +1708,10 @@ namespace Nektar
             const Nektar::LibUtilities::BasisKey  basisKeyDir3(basisTypeDir3,4,PointsKeyDir3);
 
             Nektar::LocalRegions::PyrExpSharedPtr Exp =
-                MemoryManager<Nektar::LocalRegions::PyrExp>::AllocateSharedPtr(basisKeyDir1,
-                                                                                 basisKeyDir2,
-                                                                                 basisKeyDir3,
-                                                                                 pyrGeom);
+                MemoryManager<Nektar::LocalRegions::PyrExp>::AllocateSharedPtr
+                (basisKeyDir1, basisKeyDir2, basisKeyDir3, pyrGeom);
 
-            int nelmts = 10;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -1732,8 +1759,12 @@ namespace Nektar
                 Vmath::Vadd(nm,coeffs1+i*nm ,1,coeffs2+i*nm ,1,tmp = coeffs1 + i*nm,1);
             }
 
+            LibUtilities::Timer timer;
+            timer.Start();
             c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1,
                             phys2, phys3, coeffs2);
+            timer.Stop();
+            timer.AccumulateRegion("Pyr IProdWRTDB IterPerExp");
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < coeffs1.size(); ++i)
@@ -1864,12 +1895,10 @@ namespace Nektar
 
 
             Nektar::LocalRegions::PyrExpSharedPtr Exp =
-                MemoryManager<Nektar::LocalRegions::PyrExp>::AllocateSharedPtr(basisKeyDir1,
-                                                                                 basisKeyDir2,
-                                                                                 basisKeyDir3,
-                                                                                 pyrGeom);
+                MemoryManager<Nektar::LocalRegions::PyrExp>::AllocateSharedPtr
+                (basisKeyDir1, basisKeyDir2, basisKeyDir3, pyrGeom);
 
-            int nelmts = 10;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -1917,8 +1946,12 @@ namespace Nektar
                 Vmath::Vadd(nm,coeffs1+i*nm ,1,coeffs2+i*nm ,1,tmp = coeffs1 + i*nm,1);
             }
 
+            LibUtilities::Timer timer;
+            timer.Start();
             c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1,
                             phys2, phys3, coeffs2);
+            timer.Stop();
+            timer.AccumulateRegion("Pyr IProdWRTDB SumFactor");
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < coeffs1.size(); ++i)
@@ -2068,7 +2101,7 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::PyrExp>::AllocateSharedPtr
                 (basisKeyDir1, basisKeyDir2, basisKeyDir3, pyrGeom);
 
-            int nelmts = 5;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -2116,8 +2149,12 @@ namespace Nektar
                 Vmath::Vadd(nm,coeffs1+i*nm,1,coeffs2+i*nm,1,tmp=coeffs1+i*nm,1);
             }
 
+            LibUtilities::Timer timer;
+            timer.Start();
             c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1,
                             phys2, phys3, coeffs2);
+            timer.Stop();
+            timer.AccumulateRegion("Pyr IProdWRTDB MatrixFree");
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < coeffs1.size(); ++i)

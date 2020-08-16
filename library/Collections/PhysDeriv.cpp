@@ -285,9 +285,43 @@ class PhysDeriv_MatrixFree : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &wsp)
         {
-            boost::ignore_unused(dir, input, output, wsp);
-            NEKERROR(ErrorUtil::efatal,
-                "PhysDeriv_MatrixFree: Not valid for this operator.");
+            boost::ignore_unused( wsp);
+            if (m_isPadded)
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "PhysDeriv_MatrixFree: Not valid for this operator.");
+            }
+            else
+            {
+                // Just use full derivative for now. Could potentially
+                // be optimised further
+                if (m_coordim == 2)
+                {
+                    if(dir == 0)
+                    {
+                        (*m_oper)(input, output, wsp);
+                    }
+                    else
+                    {
+                        (*m_oper)(input, wsp, output);
+                    }
+                }
+                else
+                {
+                    switch(dir)
+                    {
+                    case 0:
+                        (*m_oper)(input, output, m_output[1], m_output[2]);
+                        break;
+                    case 1:
+                        (*m_oper)(input, m_output[0], output, m_output[2]);
+                        break;
+                    case 2:
+                        (*m_oper)(input, m_output[0], m_output[1], output);
+                        break;
+                    }
+                }
+            }
         }
 
     private:

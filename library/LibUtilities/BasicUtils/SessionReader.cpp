@@ -2000,14 +2000,15 @@ namespace Nektar
             ASSERTL0(order, "Missing ORDER tag inside "
                      "TIMEINTEGRATIONSCHEME.");
 
-            ASSERTL0(m_timeIntScheme.method.size() > 0,
-                     "Empty text inside METHOD tag in TIMEINTEGRATIONSCHEME.");
-            ASSERTL0(m_timeIntScheme.method.size() > 0,
-                     "Empty text inside ORDER tag in TIMEINTEGRATIONSCHEME.");
-
             m_timeIntScheme.method = method->GetText();
+
             std::string orderStr = order->GetText();
 
+            // Only the method and order are required.
+            ASSERTL0(m_timeIntScheme.method.size() > 0,
+                     "Empty text inside METHOD tag in TIMEINTEGRATIONSCHEME.");
+            ASSERTL0(orderStr.size() > 0,
+                     "Empty text inside ORDER tag in TIMEINTEGRATIONSCHEME.");
             try
             {
                 m_timeIntScheme.order = boost::lexical_cast<unsigned int>(

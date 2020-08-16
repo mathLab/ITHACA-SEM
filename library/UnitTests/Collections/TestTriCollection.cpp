@@ -2103,7 +2103,6 @@ namespace Nektar
                         phys2, coeffs);
         timer.Stop();
         timer.AccumulateRegion("Tri IPWRTDB");
-        timer.PrintElapsedRegions();
                
         double epsilon = 1.0e-8;
         for(int i = 0; i < coeffsRef.size(); ++i)

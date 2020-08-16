@@ -37,6 +37,8 @@
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
+#include <LibUtilities/BasicUtils/Timer.h>
+#include <LibUtilities/Communication/CommSerial.h>
 
 #include <boost/test/auto_unit_test.hpp>
 
@@ -44,6 +46,8 @@ namespace Nektar
 {
     namespace PyrCollectionTests
     {
+#define NELMTS 10
+
         SpatialDomains::SegGeomSharedPtr CreateSegGeom(unsigned int id,
                                       SpatialDomains::PointGeomSharedPtr v0,
                                       SpatialDomains::PointGeomSharedPtr v1)
@@ -133,7 +137,7 @@ namespace Nektar
             Nektar::LocalRegions::PyrExpSharedPtr Exp =
                 MemoryManager<Nektar::LocalRegions::PyrExp>::AllocateSharedPtr(basisKeyDir1, basisKeyDir2, basisKeyDir3, pyrGeom);
 
-            int nelmts = 10;
+            int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
@@ -155,7 +159,12 @@ namespace Nektar
                 Exp->BwdTrans(coeffs + i*Exp->GetNcoeffs(),
                               tmp = phys1+i*Exp->GetTotPoints());
             }
+
+            LibUtilities::Timer timer;
+            timer.Start();
             c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
+            timer.Stop();
+            timer.AccumulateRegion("Pyr BwdTrans IterPerExp");
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < phys1.size(); ++i)
@@ -2267,7 +2276,7 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::PyrExp>::AllocateSharedPtr
                 (basisKeyDir1, basisKeyDir2, basisKeyDir3, pyrGeom);
 
-            unsigned int nelmts = 10;
+            unsigned int nelmts = NELMTS;
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for (unsigned int i = 0; i < nelmts; ++i)
@@ -2294,7 +2303,11 @@ namespace Nektar
                 Exp->BwdTrans(coeffs + i*Exp->GetNcoeffs(),
                               tmp = physRef+i*Exp->GetTotPoints());
             }
+            LibUtilities::Timer timer;
+            timer.Start();
             c.ApplyOperator(Collections::eBwdTrans, coeffs, phys);
+            timer.Stop();
+            timer.AccumulateRegion("Pyr BwdTrans MatrixFree");
             
             double epsilon = 1.0e-8;
             for (unsigned int i = 0; i < physRef.size(); ++i)

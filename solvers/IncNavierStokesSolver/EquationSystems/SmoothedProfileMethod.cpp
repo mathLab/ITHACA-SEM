@@ -188,10 +188,13 @@ namespace Nektar
         {
             timeInt.method = m_session->GetSolverInfo("TimeIntegrationMethod");
             timeInt.order = timeInt.method.back() - '0';
+
+	    // Remove everything past the IMEX.
+	    timeInt.method = timeInt.method.substr(0,4);
         }
 
         // Select 'm_gamma0' depending on IMEX order
-        ASSERTL0(boost::iequals(timeInt.method, "IMEXOrder") &&
+        ASSERTL0(boost::iequals(timeInt.method, "IMEX") &&
                  1 <= timeInt.order && timeInt.order <= 4,
                  "The TimeIntegrationMethod scheme must be IMEX with order '1' to '4'.")
 

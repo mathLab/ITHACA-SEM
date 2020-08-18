@@ -109,6 +109,7 @@ namespace Nektar
 	int use_fine_grid_VV;
 	int use_fine_grid_VV_and_load_ref;
 	int use_fine_grid_VV_random;
+	int use_sparse_poly;
 
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm;
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm_Coeffs;
@@ -185,6 +186,7 @@ namespace Nektar
 
 	void offline_phase();
 	void online_phase();
+	void compute_sparse_poly_approx();
 	Array<OneD, NekDouble> param_point;
 	Array<OneD, Array<OneD, NekDouble> > general_param_vector;
 	Array<OneD, Array<OneD, NekDouble> > fine_general_param_vector;

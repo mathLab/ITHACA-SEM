@@ -6884,8 +6884,23 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	return min_distance_index;
     }
 
+    void CoupledLinearNS_TT::compute_sparse_poly_approx()
+	{
+
+		int sparse_poly_approx_dimension = 10;
+		
+
+	}
+
     void CoupledLinearNS_TT::online_phase()
     {
+
+	if (use_sparse_poly)
+	{
+		compute_sparse_poly_approx();
+		return;
+	}
+
 	Eigen::MatrixXd mat_compare = Eigen::MatrixXd::Zero(f_bnd_dbc_full_size.rows(), 3);  // is of size M_truth_size
 	// start sweeping 
 	for (int iter_index = 0; iter_index < Nmax; ++iter_index)
@@ -8208,6 +8223,14 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		{
 			fine_grid_dir1 = 0;
 		} 
+		if (m_session->DefinesParameter("use_sparse_poly")) 
+		{
+			use_sparse_poly = m_session->GetParameter("use_sparse_poly");
+		}
+		else
+		{
+			use_sparse_poly = 0;
+		} 
 		Array<OneD, NekDouble> index_vector(parameter_space_dimension, 0.0);
 
 //		for(int i = 0; i < parameter_space_dimension; ++i)
@@ -8528,7 +8551,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			{
 				load_snapshots_geometry_params_conv_Oseen(number_of_snapshots); 
 			}
-			if (use_fine_grid_VV_and_load_ref)
+			if (use_fine_grid_VV && use_fine_grid_VV_and_load_ref)
 			{
 				// load the refs -- maybe 	InitObject();   has to happen first
 				Array<OneD, NekDouble> collected_fine_grid_ref_qoi = Array<OneD, NekDouble> (fine_grid_dir0*fine_grid_dir1);
@@ -8985,7 +9008,14 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		cout << "use_fine_grid_VV " << use_fine_grid_VV << endl;
 		evaluate_local_clusters(optimal_clusters);
 
+	}   // 	if (use_LocROM)
+
+	if (use_sparse_poly)
+	{
+		cout << "encountered use_sparse_poly, return from offline_phase" << endl;
+		return ;
 	}
+
 
 	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_all(collect_f_all, Eigen::ComputeThinU);
 //	cout << "svd_collect_f_all.singularValues() " << svd_collect_f_all.singularValues() << endl << endl;

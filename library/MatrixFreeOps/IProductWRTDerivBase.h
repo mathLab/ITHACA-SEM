@@ -15,6 +15,359 @@ namespace MatrixFree
 {
 
 template<bool DEFORMED = false>
+struct IProductWRTDerivBaseSeg : public IProductWRTDerivBase, public Helper<1, DEFORMED>
+{
+public:
+
+    IProductWRTDerivBaseSeg(std::vector<LibUtilities::BasisSharedPtr> basis,
+                   int nElmt)
+        : IProductWRTDerivBase(basis, nElmt),
+          Helper<1, DEFORMED>(basis, nElmt),
+          m_nmTot(LibUtilities::StdSegData::getNumberOfCoefficients(this->m_nm[0]))
+    {
+    }
+
+    static std::shared_ptr<Operator> Create(
+        std::vector<LibUtilities::BasisSharedPtr> basis,
+        int nElmt)
+    {
+        return std::make_shared<IProductWRTDerivBaseSeg<DEFORMED>>(basis, nElmt);
+    }
+
+    void operator()( const Array<OneD, Array<OneD, NekDouble>> &in,
+        Array<OneD, NekDouble> &out) final
+    {
+        switch(m_basis[0]->GetNumModes())
+        {
+            case 2:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 2: IProductWRTDerivBaseSegImpl<2 ,2 > (in, out);
+                        break;
+                    case 3: IProductWRTDerivBaseSegImpl<2 ,3 > (in, out);
+                        break;
+                    case 4: IProductWRTDerivBaseSegImpl<2 ,4 > (in, out);
+                        break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductWRTDerivBaseSeg: # of modes / points combo not"
+                " implemented.");
+                } break;
+            case 3:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 3: IProductWRTDerivBaseSegImpl<3 ,3 > (in, out);
+                        break;
+                    case 4: IProductWRTDerivBaseSegImpl<3 ,4 > (in, out);
+                        break;
+                    case 5: IProductWRTDerivBaseSegImpl<3 ,5 > (in, out);
+                        break;
+                    case 6: IProductWRTDerivBaseSegImpl<3 ,6 > (in, out);
+                        break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductWRTDerivBaseSeg: # of modes / points combo not"
+                " implemented.");
+                } break;
+            case 4:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 4: IProductWRTDerivBaseSegImpl<4 ,4 >
+                    (in, out); break;
+                    case 5: IProductWRTDerivBaseSegImpl<4 ,5 >
+                    (in, out); break;
+                    case 6: IProductWRTDerivBaseSegImpl<4 ,6 >
+                    (in, out); break;
+                    case 7: IProductWRTDerivBaseSegImpl<4 ,7 >
+                    (in, out); break;
+                    case 8: IProductWRTDerivBaseSegImpl<4 ,8 >
+                    (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductWRTDerivBaseSeg: # of modes / points combo not"
+                " implemented.");
+                } break;
+            case 5:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 5: IProductWRTDerivBaseSegImpl<5 ,5 >
+                    (in, out); break;
+                    case 6: IProductWRTDerivBaseSegImpl<5 ,6 >
+                    (in, out); break;
+                    case 7: IProductWRTDerivBaseSegImpl<5 ,7 >
+                    (in, out); break;
+                    case 8: IProductWRTDerivBaseSegImpl<5 ,8 >
+                    (in, out); break;
+                    case 9: IProductWRTDerivBaseSegImpl<5 ,9 >
+                    (in, out); break;
+                    case 10: IProductWRTDerivBaseSegImpl<5 ,10 >
+                    (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductWRTDerivBaseSeg: # of modes / points combo not"
+                " implemented.");
+                } break;
+            case 6:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 6: IProductWRTDerivBaseSegImpl<6 ,6 >
+                    (in, out); break;
+                    case 7: IProductWRTDerivBaseSegImpl<6 ,7 >
+                    (in, out); break;
+                    case 8: IProductWRTDerivBaseSegImpl<6 ,8 >
+                    (in, out); break;
+                    case 9: IProductWRTDerivBaseSegImpl<6 ,9 >
+                    (in, out); break;
+                    case 10: IProductWRTDerivBaseSegImpl<6 ,10 >
+                    (in, out); break;
+                    case 11: IProductWRTDerivBaseSegImpl<6 ,11 >
+                    (in, out); break;
+                    case 12: IProductWRTDerivBaseSegImpl<6 ,12 >
+                    (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductWRTDerivBaseSeg: # of modes / points combo not"
+                " implemented.");
+                } break;
+            case 7:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 7: IProductWRTDerivBaseSegImpl<7 ,7 >
+                    (in, out); break;
+                    case 8: IProductWRTDerivBaseSegImpl<7 ,8 >
+                    (in, out); break;
+                    case 9: IProductWRTDerivBaseSegImpl<7 ,9 >
+                    (in, out); break;
+                    case 10: IProductWRTDerivBaseSegImpl<7 ,10 >
+                    (in, out); break;
+                    case 11: IProductWRTDerivBaseSegImpl<7 ,11 >
+                    (in, out); break;
+                    case 12: IProductWRTDerivBaseSegImpl<7 ,12 >
+                    (in, out); break;
+                    case 13: IProductWRTDerivBaseSegImpl<7 ,13 >
+                    (in, out); break;
+                    case 14: IProductWRTDerivBaseSegImpl<7 ,14 >
+                    (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductWRTDerivBaseSeg: # of modes / points combo not"
+                " implemented.");
+                } break;
+            case 8:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 8: IProductWRTDerivBaseSegImpl<8 ,8 >
+                    (in, out); break;
+                    case 9: IProductWRTDerivBaseSegImpl<8 ,9 >
+                    (in, out); break;
+                    case 10: IProductWRTDerivBaseSegImpl<8 ,10 >
+                    (in, out); break;
+                    case 11: IProductWRTDerivBaseSegImpl<8 ,11 >
+                    (in, out); break;
+                    case 12: IProductWRTDerivBaseSegImpl<8 ,12 >
+                    (in, out); break;
+                    case 13: IProductWRTDerivBaseSegImpl<8 ,13 >
+                    (in, out); break;
+                    case 14: IProductWRTDerivBaseSegImpl<8 ,14 >
+                    (in, out); break;
+                    case 15: IProductWRTDerivBaseSegImpl<8 ,15 >
+                    (in, out); break;
+                    case 16: IProductWRTDerivBaseSegImpl<8 ,16 >
+                    (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductWRTDerivBaseSeg: # of modes / points combo not"
+                " implemented.");
+                } break;;
+            default: NEKERROR(ErrorUtil::efatal,
+                "IProductWRTDerivBaseSeg: # of modes / points combo not"
+                " implemented.");
+        }
+    }
+
+    template<int NM0, int NQ0>
+    void IProductWRTDerivBaseSegImpl(
+        const Array<OneD, Array<OneD,  NekDouble>> &input,
+              Array<OneD,       NekDouble> &output)
+    {
+        int  inputdim = input.size();
+
+        auto* inptr0 = input[0].data();
+        auto* outptr = output.data();
+
+        constexpr auto nqTot = NQ0;
+        constexpr auto nqBlocks = nqTot * vec_t::width;
+        const auto nmBlocks = m_nmTot * vec_t::width;
+
+        auto ndf  = inputdim;
+
+        // Get size of jacobian factor block
+        auto dJSize = 1u;
+        auto dfSize = ndf;
+        if(DEFORMED)
+        {
+            dJSize = nqTot;
+            dfSize = ndf*nqTot;
+        }
+
+        std::vector<vec_t, allocator<vec_t>> tmpIn0(nqTot),tmp0(nqTot),
+            tmpOut(m_nmTot);
+        
+        const vec_t* df_ptr;
+        const vec_t* jac_ptr;
+        switch(inputdim)
+        {
+        case 1:
+        {
+
+            for (int e = 0; e < this->m_nBlocks; ++e)
+            {
+                // Jacobian
+                jac_ptr = &(this->m_jac[e*dJSize]);
+                
+                // Derivative factor
+                df_ptr = &(this->m_df[e*dfSize]);
+
+                // Load and transpose data
+                load_interleave(inptr0, nqTot, tmpIn0);
+                
+                // Calculate dxi/dx in[0] 
+                vec_t df0;
+                    
+                if(!DEFORMED)
+                {
+                    df0 = df_ptr[0];
+                }
+                
+                for (int i = 0; i < nqTot; ++i)
+                {
+                    if(DEFORMED)
+                    {
+                        df0 = df_ptr[i * ndf];
+                    }
+                    tmp0[i] = df0 * tmpIn0[i];
+                }
+            
+                // IP DB0
+                IProductSegKernel<NM0, NQ0, false, false, DEFORMED>(
+                   tmp0, this->m_dbdata[0],  this->m_w[0], jac_ptr, tmpOut);
+
+                // de-interleave and store data
+                deinterleave_store(tmpOut, m_nmTot, outptr);
+                
+                inptr0 += nqBlocks;
+                outptr += nmBlocks;
+            }
+        }
+        break;
+        case 2:
+        {
+            auto* inptr1 = input[1].data();
+            std::vector<vec_t, allocator<vec_t>> tmpIn1(nqTot);
+
+            for (int e = 0; e < this->m_nBlocks; ++e)
+            {
+                // Jacobian
+                jac_ptr = &(this->m_jac[e*dJSize]);
+                
+                // Derivative factor
+                df_ptr = &(this->m_df[e*dfSize]);
+                
+                // Load and transpose data
+                load_interleave(inptr0, nqTot, tmpIn0);
+                load_interleave(inptr1, nqTot, tmpIn1);
+
+                // Calculate dxi/dx in[0] + dxi/dy in[1]
+                vec_t df0, df1;
+
+                if(!DEFORMED)
+                {
+                    df0 = df_ptr[0];
+                    df1 = df_ptr[1];
+                }
+
+                for (int i = 0; i < nqTot; ++i)
+                {
+                    if(DEFORMED)
+                    {
+                        df0 = df_ptr[i * ndf];
+                        df1 = df_ptr[i * ndf + 1];
+                    }
+                    tmp0[i] = df0 * tmpIn0[i] + df1 * tmpIn1[i];
+                }
+                
+                // IP DB0
+                IProductSegKernel<NM0, NQ0, false, false, DEFORMED>(
+                   tmp0, this->m_dbdata[0],  this->m_w[0], jac_ptr, tmpOut);
+
+                // de-interleave and store data
+                deinterleave_store(tmpOut, m_nmTot, outptr);
+
+                inptr0 += nqBlocks;
+                inptr1 += nqBlocks;
+                outptr += nmBlocks;
+            }
+        }
+        break;
+        case 3:
+        {
+            auto* inptr1 = input[1].data();
+            auto* inptr2 = input[2].data();
+
+            std::vector<vec_t, allocator<vec_t>> tmpIn1(nqTot), tmpIn2(nqTot);
+
+            for (int e = 0; e < this->m_nBlocks; ++e)
+            {
+                // Jacobian
+                jac_ptr = &(this->m_jac[e*dJSize]);
+                
+                // Derivative factor
+                df_ptr = &(this->m_df[e*dfSize]);
+                
+                // Load and transpose data
+                load_interleave(inptr0, nqTot, tmpIn0);
+                load_interleave(inptr1, nqTot, tmpIn1);
+                load_interleave(inptr2, nqTot, tmpIn2);
+
+                // Calculate dxi/dx in[0] + dxi/dy in[1] + dxi/dz in[2]
+                vec_t df0, df1, df2;
+
+                if(!DEFORMED)
+                {
+                    df0 = df_ptr[0];
+                    df1 = df_ptr[1];
+                    df2 = df_ptr[1];
+                }
+
+                for (int i = 0; i < nqTot; ++i)
+                {
+                    if(DEFORMED)
+                    {
+                        df0 = df_ptr[i * ndf];
+                        df1 = df_ptr[i * ndf + 1];
+                        df2 = df_ptr[i * ndf + 2];
+                    }
+                    tmp0[i] = df0 * tmpIn0[i] + df1 * tmpIn1[i] + df2 *tmpIn2[i];
+                }
+                
+                // IP DB0
+                IProductSegKernel<NM0, NQ0, false, false, DEFORMED>(
+                   tmp0, this->m_dbdata[0],  this->m_w[0], jac_ptr, tmpOut);
+
+                // de-interleave and store data
+                deinterleave_store(tmpOut, m_nmTot, outptr);
+
+                inptr0 += nqBlocks;
+                inptr1 += nqBlocks;
+                inptr2 += nqBlocks;
+                outptr += nmBlocks;
+            }
+        }
+        break;
+        default:
+            NEKERROR(ErrorUtil::efatal,
+                     "Dimnesion out of scope");
+            break;
+        }
+    }
+private:
+    int m_nmTot;
+};
+
+template<bool DEFORMED = false>
 struct IProductWRTDerivBaseQuad : public IProductWRTDerivBase, public Helper<2, DEFORMED>
 {
 public:
@@ -54,9 +407,10 @@ public:
                         break;
                     case 4: IProductWRTDerivBaseQuadImpl<2 ,2 ,4 ,4 > (in, out);
                         break;
-                    default: NEKERROR(ErrorUtil::efatal,
-                "IProductWRTDerivBaseQuad: # of modes / points combo not"
-                " implemented.");
+                    default:
+                        NEKERROR(ErrorUtil::efatal,
+                                 "IProductWRTDerivBaseQuad: # of modes / points "
+                                 "combo not implemented.");
                 } break;
             case 3:
                 switch(m_basis[0]->GetNumPoints())

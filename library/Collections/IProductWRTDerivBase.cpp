@@ -250,16 +250,30 @@ class IProductWRTDerivBase_MatrixFree : public Operator
             boost::ignore_unused(wsp);
 
             Array<OneD, NekDouble> output;
-            output = (m_coordim == 2)? entry2: entry3;
 
             if (m_isPadded)
             {
                 // copy into padded vector
-                Vmath::Vcopy(entry0.size(), entry0, 1, m_input[0], 1);
-                Vmath::Vcopy(entry1.size(), entry1, 1, m_input[1], 1);
-                if (m_coordim == 3)
+                switch(m_coordim)
                 {
+                case 1:
+                    output = entry1;
+                    Vmath::Vcopy(entry0.size(), entry0, 1, m_input[0], 1);
+                    break;
+                case 2:
+                    output = entry2;
+                    Vmath::Vcopy(entry0.size(), entry0, 1, m_input[0], 1);
+                    Vmath::Vcopy(entry1.size(), entry1, 1, m_input[1], 1);
+                    break;
+                case 3:
+                    output = entry3;
+                    Vmath::Vcopy(entry0.size(), entry0, 1, m_input[0], 1);
+                    Vmath::Vcopy(entry1.size(), entry1, 1, m_input[1], 1);
                     Vmath::Vcopy(entry0.size(), entry2, 1, m_input[2], 1);
+                    break;
+                default:
+                    NEKERROR(ErrorUtil::efatal, "coordim not valid");
+                    break;
                 }
 
                 // call op
@@ -270,12 +284,30 @@ class IProductWRTDerivBase_MatrixFree : public Operator
             else
             {
                 Array<OneD, Array<OneD, NekDouble>> input{m_coordim};
-                input[0] = entry0;
-                input[1] = entry1;
-                if (m_coordim == 3)
+
+                // copy into padded vector
+                switch(m_coordim)
                 {
+                case 1:
+                    output = entry1;
+                    input[0] = entry0;
+                    break;
+                case 2:
+                    output = entry2;
+                    input[0] = entry0;
+                    input[1] = entry1;
+                    break;
+                case 3:
+                    output = entry3;
+                    input[0] = entry0;
+                    input[1] = entry1;
                     input[2] = entry2;
+                    break;
+                default:
+                    NEKERROR(ErrorUtil::efatal, "coordim not valid");
+                    break;
                 }
+                
                 (*m_oper)(input, output);
             }
         }
@@ -399,6 +431,9 @@ class IProductWRTDerivBase_MatrixFree : public Operator
 
 /// Factory initialisation for the IProductWRTDerivBase_MatrixFree operators
 OperatorKey IProductWRTDerivBase_MatrixFree::m_typeArr[] = {
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eSegment, eIProductWRTDerivBase, eMatrixFree, false),
+        IProductWRTDerivBase_MatrixFree::create, "IProductWRTDerivBase_MatrixFree_Seg"),
     GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eQuadrilateral, eIProductWRTDerivBase, eMatrixFree, false),
         IProductWRTDerivBase_MatrixFree::create, "IProductWRTDerivBase_MatrixFree_Quad"),

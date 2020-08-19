@@ -14,6 +14,205 @@ namespace MatrixFree
 {
 
 template<bool DEFORMED = false>
+struct IProductSeg : public IProduct, public Helper<1, DEFORMED>
+{
+    IProductSeg(std::vector<LibUtilities::BasisSharedPtr> basis,
+                   int nElmt)
+        : IProduct(basis, nElmt),
+          Helper<1, DEFORMED>(basis, nElmt),
+          m_nmTot(LibUtilities::StdSegData::getNumberOfCoefficients(
+                                                 this->m_nm[0]))
+    {
+    }
+
+    static std::shared_ptr<Operator> Create(
+        std::vector<LibUtilities::BasisSharedPtr> basis,
+        int nElmt)
+    {
+        return std::make_shared<IProductSeg<DEFORMED>>(basis, nElmt);
+    }
+
+    void operator()(const Array<OneD, const NekDouble> &in,
+                          Array<OneD,       NekDouble> &out) final
+    {
+        switch(m_basis[0]->GetNumModes())
+        {
+            case 2:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 2: IProductSegImpl<2 ,2 >(in, out); break;
+                    case 3: IProductSegImpl<2 ,3 >(in, out); break;
+                    case 4: IProductSegImpl<2 ,4 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductSeg: # of modes / points combo not implemented.");
+                } break;
+            case 3:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 3: IProductSegImpl<3 ,3 >(in, out); break;
+                    case 4: IProductSegImpl<3 ,4 >(in, out); break;
+                    case 5: IProductSegImpl<3 ,5 >(in, out); break;
+                    case 6: IProductSegImpl<3 ,6 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductSeg: # of modes / points combo not implemented.");
+                } break;
+            case 4:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 4: IProductSegImpl<4 ,4 >(in, out); break;
+                    case 5: IProductSegImpl<4 ,5 >(in, out); break;
+                    case 6: IProductSegImpl<4 ,6 >(in, out); break;
+                    case 7: IProductSegImpl<4 ,7 >(in, out); break;
+                    case 8: IProductSegImpl<4 ,8 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductSeg: # of modes / points combo not implemented.");
+                } break;
+            case 5:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 5: IProductSegImpl<5 ,5 >(in, out); break;
+                    case 6: IProductSegImpl<5 ,6 >(in, out); break;
+                    case 7: IProductSegImpl<5 ,7 >(in, out); break;
+                    case 8: IProductSegImpl<5 ,8 >(in, out); break;
+                    case 9: IProductSegImpl<5 ,9 >(in, out); break;
+                    case 10: IProductSegImpl<5 ,10 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductSeg: # of modes / points combo not implemented.");
+                } break;
+            case 6:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 6: IProductSegImpl<6 ,6 >(in, out); break;
+                    case 7: IProductSegImpl<6 ,7 >(in, out); break;
+                    case 8: IProductSegImpl<6 ,8 >(in, out); break;
+                    case 9: IProductSegImpl<6 ,9 >(in, out); break;
+                    case 10: IProductSegImpl<6 ,10 >(in, out); break;
+                    case 11: IProductSegImpl<6 ,11 >(in, out); break;
+                    case 12: IProductSegImpl<6 ,12 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductSeg: # of modes / points combo not implemented.");
+                } break;
+            case 7:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 7: IProductSegImpl<7 ,7 >(in, out); break;
+                    case 8: IProductSegImpl<7 ,8 >(in, out); break;
+                    case 9: IProductSegImpl<7 ,9 >(in, out); break;
+                    case 10: IProductSegImpl<7 ,10 >(in, out); break;
+                    case 11: IProductSegImpl<7 ,11 >(in, out); break;
+                    case 12: IProductSegImpl<7 ,12 >(in, out); break;
+                    case 13: IProductSegImpl<7 ,13 >(in, out); break;
+                    case 14: IProductSegImpl<7 ,14 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductSeg: # of modes / points combo not implemented.");
+                } break;
+            case 8:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 8: IProductSegImpl<8 ,8 >(in, out); break;
+                    case 9: IProductSegImpl<8 ,9 >(in, out); break;
+                    case 10: IProductSegImpl<8 ,10 >(in, out); break;
+                    case 11: IProductSegImpl<8 ,11 >(in, out); break;
+                    case 12: IProductSegImpl<8 ,12 >(in, out); break;
+                    case 13: IProductSegImpl<8 ,13 >(in, out); break;
+                    case 14: IProductSegImpl<8 ,14 >(in, out); break;
+                    case 15: IProductSegImpl<8 ,15 >(in, out); break;
+                    case 16: IProductSegImpl<8 ,16 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductSeg: # of modes / points combo not implemented.");
+                } break;;
+            default: NEKERROR(ErrorUtil::efatal,
+                "IProductSeg: # of modes / points combo not implemented.");
+        }
+    }
+
+ template<int NM0, int NQ0>
+    void IProductSegImpl(
+        const Array<OneD, const NekDouble> &input,
+              Array<OneD,       NekDouble> &output)
+    {
+        auto *inptr = &input[0];
+        auto *outptr = &output[0];
+
+        constexpr auto nqTot = NQ0;
+        constexpr auto nqBlocks = nqTot * vec_t::width;
+        const auto nmBlocks = m_nmTot * vec_t::width;
+
+        std::vector<vec_t, allocator<vec_t>> tmpIn(nqTot), tmpOut(m_nmTot);
+        vec_t* jac_ptr;
+        for (int e = 0; e < this->m_nBlocks; ++e)
+        {
+            if (DEFORMED)
+            {
+                jac_ptr = &(this->m_jac[nqTot*e]);
+            }
+            else
+            {
+                jac_ptr = &(this->m_jac[e]);
+            }
+
+            // Load and transpose data
+            load_interleave(inptr, nqTot, tmpIn);
+
+            IProductSegKernel<NM0, NQ0, false, false, DEFORMED>(
+                tmpIn, this->m_bdata[0], this->m_w[0], jac_ptr, tmpOut);
+
+            // de-interleave and store data
+            deinterleave_store(tmpOut, m_nmTot, outptr);
+
+            inptr += nqBlocks;
+            outptr += nmBlocks;
+        }
+    }
+public:
+    static NekDouble FlopsPerElement(
+        const int nm,
+        const int nq0)
+    {
+        int loop_ji = nm * nq0  * 4;
+        return  loop_ji;
+    }
+
+    NekDouble GFlops() final
+    {
+        const int nm = m_basis[0]->GetNumModes();
+        const int nq0 = m_basis[0]->GetNumPoints();
+
+        int flops = this->m_nElmt * IProductSeg::FlopsPerElement(nm, nq0);
+        return 1e-9 * flops;
+    }
+
+    NekDouble NStores() final
+    {
+        const int nm = m_basis[0]->GetNumModes();
+
+        int store_p = nm;
+        int store_expected = store_p;
+
+        return this->m_nElmt * store_expected;
+    }
+
+    NekDouble NLoads() final
+    {
+        const int nm = m_basis[0]->GetNumModes();
+        const int nq0 = m_basis[0]->GetNumPoints();
+
+        int load_pji = nm * nq0 * 3;
+        int load_expected = load_pji;
+
+        return this->m_nElmt * load_expected;
+    }
+
+    NekDouble Ndof() final
+    {
+        return m_nmTot * this->m_nElmt;
+    }
+                  
+private:
+    int m_nmTot;
+};
+
+template<bool DEFORMED = false>
 struct IProductQuad : public IProduct, public Helper<2, DEFORMED>
 {
     IProductQuad(std::vector<LibUtilities::BasisSharedPtr> basis,
@@ -228,6 +427,7 @@ public:
 private:
     int m_nmTot;
 };
+
 
 template<bool DEFORMED = false>
 struct IProductTri : public IProduct, public Helper<2, DEFORMED>

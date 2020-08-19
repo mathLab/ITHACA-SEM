@@ -532,16 +532,13 @@ struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, D
         }
     }
 
-#define  DO3D
 
     template<int NM0, int NM1, int NQ0, int NQ1, bool CORRECT>
     void IProductWRTDerivBaseTriImpl(
         const Array<OneD, Array<OneD,  NekDouble>> &input,
               Array<OneD,       NekDouble> &output)
     {
-#ifdef DO3D
         bool inputdim3 = (input.size() == 3);
-#endif
         
         auto* inptr0 = input[0].data();
         auto* inptr1 = input[1].data();
@@ -553,13 +550,11 @@ struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, D
         const auto nmBlocks = m_nmTot * vec_t::width;
 
         auto ndf = 4u;
-#ifdef DO3D
         if(inputdim3)
         {
             ndf = 6u;
             inptr2 = input[2].data();
         }
-#endif
         
         // Get size of jacobian factor block
         auto dJSize = 1u;
@@ -591,15 +586,12 @@ struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, D
             // Load and transpose data
             load_interleave(inptr0, nqTot, tmpIn0);
             load_interleave(inptr1, nqTot, tmpIn1);
-#ifdef DO3D
             if(inputdim3)
             {
                 load_interleave(inptr2, nqTot, tmpIn2);
             }
             vec_t df0, df1, df2, df3, df4, df5;
-#else
-            vec_t df0, df1, df2, df3;
-#endif
+
             if (!DEFORMED)
             {
                 df0 = df_ptr[0];
@@ -607,16 +599,13 @@ struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, D
                 df2 = df_ptr[2];
                 df3 = df_ptr[3];
 
-#ifdef DO3D
                 if(inputdim3)
                 {
                     df4 = df_ptr[4];
                     df5 = df_ptr[5];
                 }
-#endif
             }
 
-#ifdef DO3D
             if(inputdim3)
             {
                 size_t cnt_ji = 0;
@@ -658,7 +647,6 @@ struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, D
                 }
             }
             else
-#endif
             {
                 size_t cnt_ji = 0;
                 for (size_t j = 0; j < NQ1; ++j)

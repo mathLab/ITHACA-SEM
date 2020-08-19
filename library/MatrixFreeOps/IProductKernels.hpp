@@ -36,6 +36,43 @@ inline static void ScaleAppend(
     }
 }
 
+template<int NUMMODE0, int NUMQUAD0,
+         bool SCALE, bool APPEND, bool DEFORMED>
+inline static void IProductSegKernel(
+    const std::vector<vec_t, allocator<vec_t>> &in,
+    const std::vector<vec_t, allocator<vec_t>> &basis0,
+    const std::vector<vec_t, allocator<vec_t>> &w0,
+    const vec_t *jac,
+    std::vector<vec_t, allocator<vec_t>> &out,
+    NekDouble scale = 1.0)
+{
+    constexpr auto nm0 = NUMMODE0;
+    constexpr auto nq0 = NUMQUAD0;
+
+    for (int p = 0; p < nm0; ++p)
+    {
+        vec_t sum = 0.0;
+        for (int i = 0; i < nq0; ++i)
+        {
+            vec_t jac_val;
+            if(DEFORMED)
+            {
+                jac_val = jac[i]; //J for each quadrature point.
+            }
+            else
+            {
+                jac_val = jac[0];
+            }
+
+            vec_t prod = in[i] * basis0[p*nq0 + i] * jac_val; //Load 2x
+            sum.fma(prod, w0[i]); //Load 1x
+        }
+
+        //Modes are reversed from what they normally are for tris, tets etc.
+        ScaleAppend<SCALE, APPEND>(out[p], sum, scale); // Store x1
+    }
+}
+
 template<int NUMMODE0, int NUMMODE1,
          int NUMQUAD0, int NUMQUAD1,
          bool SCALE, bool APPEND, bool DEFORMED>
@@ -94,7 +131,7 @@ inline static void IProductQuadKernel(
     }
 
 }
-
+    
 template<int NUMMODE0, int NUMMODE1,
          int NUMQUAD0, int NUMQUAD1,
          bool CORRECT, bool SCALE, bool APPEND,

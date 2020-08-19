@@ -242,6 +242,9 @@ class BwdTrans_MatrixFree final : public Operator
 /// Factory initialisation for the BwdTrans_MatrixFree operators
 OperatorKey BwdTrans_MatrixFree::m_typeArr[] = {
     GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eSegment, eBwdTrans, eMatrixFree, false),
+        BwdTrans_MatrixFree::create, "BwdTrans_MatrixFree_Seg"),
+    GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eQuadrilateral, eBwdTrans, eMatrixFree, false),
         BwdTrans_MatrixFree::create, "BwdTrans_MatrixFree_Quad"),
     GetOperatorFactory().RegisterCreatorFunction(

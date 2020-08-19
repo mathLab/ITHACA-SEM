@@ -4,6 +4,9 @@ namespace Nektar
 {
 namespace MatrixFree
 {
+std::string __register_BwdTrans_Seg = GetOperatorFactory().
+    RegisterCreatorFunction( std::string("BwdTrans_Seg_Regular"),
+    &BwdTransSeg::Create);
 
 std::string __register_BwdTrans_Quad = GetOperatorFactory().
     RegisterCreatorFunction( std::string("BwdTrans_Quad_Regular"),

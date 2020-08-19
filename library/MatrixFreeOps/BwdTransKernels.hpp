@@ -11,8 +11,29 @@ namespace MatrixFree
 using namespace tinysimd;
 using vec_t = simd<NekDouble>;
 
-template<unsigned short NUMMODE0, unsigned short NUMMODE1,
-         unsigned short NUMQUAD0, unsigned short NUMQUAD1>
+template<unsigned short NUMMODE0,  unsigned short NUMQUAD0>
+inline static void BwdTransSegKernel(
+    const std::vector<vec_t, allocator<vec_t>> &in,
+    const std::vector<vec_t, allocator<vec_t>> &bdata0,
+    std::vector<vec_t, allocator<vec_t>> &out)
+{
+
+    constexpr auto nm0 = NUMMODE0; 
+    constexpr auto nq0 = NUMQUAD0; 
+
+    for (int i = 0; i < nq0; ++i)
+    {
+        vec_t tmp =  in[0] * bdata0[i]; //Load 2x
+        for (int p = 1; p < nm0; ++p)
+        {
+            tmp.fma(in[p], bdata0[p * nq0 + i]); //Load 2x
+        }
+        out[i] = tmp; //Store 1x
+    }
+}
+
+template<int NUMMODE0, int NUMMODE1,
+         int NUMQUAD0, int NUMQUAD1>
 inline static void BwdTransQuadKernel(
     const std::vector<vec_t, allocator<vec_t>> &in,
     const std::vector<vec_t, allocator<vec_t>> &bdata0,
@@ -53,7 +74,7 @@ inline static void BwdTransQuadKernel(
     }
 
 }
-
+    
 template<int NUMMODE0, int NUMMODE1,
          int NUMQUAD0, int NUMQUAD1,
          bool CORRECT>

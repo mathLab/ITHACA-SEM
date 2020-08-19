@@ -249,33 +249,27 @@ class PhysDeriv_MatrixFree : public Operator
             {
                 // copy into padded vector
                 Vmath::Vcopy(input.size(), input, 1, m_input, 1);
-                // call op
-                if (m_coordim == 2)
-                {
-                    (*m_oper)(m_input, m_output[0], m_output[1]);
-                    // copy out of padded vector
-                    Vmath::Vcopy(output1.size(), m_output[0], 1, output0, 1);
-                    Vmath::Vcopy(output1.size(), m_output[1], 1, output1, 1);
-                }
-                else
-                {
-                    (*m_oper)(m_input, m_output[0], m_output[1], m_output[2]);
-                    // copy out of padded vector
-                    Vmath::Vcopy(output2.size(), m_output[0], 1, output0, 1);
-                    Vmath::Vcopy(output2.size(), m_output[1], 1, output1, 1);
-                    Vmath::Vcopy(output2.size(), m_output[2], 1, output2, 1);
-                }
             }
-            else
+
+            (*m_oper)(input, m_output);
+            switch(m_coordim)
             {
-                if (m_coordim == 2)
-                {
-                    (*m_oper)(input, output0, output1);
-                }
-                else
-                {
-                    (*m_oper)(input, output0, output1, output2);
-                }
+            case 1:
+                Vmath::Vcopy(output0.size(), m_output[0], 1, output0, 1);
+                break;
+            case 2:
+                Vmath::Vcopy(output1.size(), m_output[0], 1, output0, 1);
+                Vmath::Vcopy(output1.size(), m_output[1], 1, output1, 1);
+                break;
+            case 3:
+                Vmath::Vcopy(output2.size(), m_output[0], 1, output0, 1);
+                Vmath::Vcopy(output2.size(), m_output[1], 1, output1, 1);
+                Vmath::Vcopy(output2.size(), m_output[2], 1, output2, 1);
+                break;
+            default:
+                NEKERROR(ErrorUtil::efatal,
+                         "Unknown coordiminate dimension");
+                break;
             }
         }
 
@@ -290,70 +284,9 @@ class PhysDeriv_MatrixFree : public Operator
             {
                 // copy into padded vector
                 Vmath::Vcopy(input.size(), input, 1, m_input, 1);
-                // call op
-                if (m_coordim == 2)
-                {
-                    (*m_oper)(m_input, m_output[0], m_output[1]);
-                    // copy out of padded vector
-                    if(dir == 0)
-                    {
-                        Vmath::Vcopy(output.size(), m_output[0], 1, output, 1);
-                    }
-                    else
-                    {
-                        Vmath::Vcopy(output.size(), m_output[1], 1, output, 1);
-                    }
-                }
-                else
-                {
-                    (*m_oper)(m_input, m_output[0], m_output[1], m_output[2]);
-                    // copy out of padded vector
-                    switch(dir)
-                    {
-                    case 0:
-                        Vmath::Vcopy(output.size(), m_output[0], 1, output, 1);
-                        break;
-                    case 1:
-                        Vmath::Vcopy(output.size(), m_output[1], 1, output, 1);
-                        break;
-                    case 2:
-                        Vmath::Vcopy(output.size(), m_output[2], 1, output, 1);
-                        break;
-                    }
-                }
             }
-            else
-            {
-                
-                // Just use full derivative for now. Could potentially
-                // be optimised further
-                if (m_coordim == 2)
-                {
-                    if(dir == 0)
-                    {
-                        (*m_oper)(input, output, m_output[0]);
-                    }
-                    else
-                    {
-                        (*m_oper)(input, m_output[0], output);
-                    }
-                }
-                else
-                {
-                    switch(dir)
-                    {
-                    case 0:
-                        (*m_oper)(input, output, m_output[0], m_output[1]);
-                        break;
-                    case 1:
-                        (*m_oper)(input, m_output[0], output, m_output[1]);
-                        break;
-                    case 2:
-                        (*m_oper)(input, m_output[0], m_output[1], output);
-                        break;
-                    }
-                }
-            }
+            (*m_oper)(m_input, m_output);
+            Vmath::Vcopy(output.size(), m_output[dir], 1, output, 1);
         }
 
     private:
@@ -379,29 +312,39 @@ class PhysDeriv_MatrixFree : public Operator
             using vec_t = tinysimd::simd<NekDouble>;
             const auto nElmtNoPad = pCollExp.size();
             auto nElmtPad = nElmtNoPad;
+            m_output = Array<OneD, Array<OneD, NekDouble>> {m_coordim};
+
             if (nElmtNoPad % vec_t::width != 0)
             {
                 m_isPadded = true;
                 nElmtPad = nElmtNoPad + vec_t::width -
                     (nElmtNoPad % vec_t::width);
                 m_input = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                m_output = Array<OneD, Array<OneD, NekDouble>> {m_coordim};
                 m_output[0] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                m_output[1] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+                if(m_coordim == 2)
+                {
+                    m_output[1] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+                }
                 if (m_coordim == 3)
                 {
+                    m_output[1] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
                     m_output[2] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
                 }
             }
             else
             {
-                m_output = Array<OneD, Array<OneD, NekDouble>> {m_coordim-1};
                 m_output[0] = Array<OneD, NekDouble>{nqElmt * nElmtNoPad, 0.0};
-                if (m_coordim == 3)
+                if (m_coordim == 2)
                 {
                     m_output[1] = Array<OneD, NekDouble>{nqElmt * nElmtNoPad, 0.0};
                 }
+                if (m_coordim == 3)
+                {
+                    m_output[1] = Array<OneD, NekDouble>{nqElmt * nElmtNoPad, 0.0};
+                    m_output[2] = Array<OneD, NekDouble>{nqElmt * nElmtNoPad, 0.0};
+                }
             }
+        
 
             // Check if deformed
             bool deformed{pGeomData->IsDeformed(pCollExp)};
@@ -417,10 +360,10 @@ class PhysDeriv_MatrixFree : public Operator
 
             // Get derivative factors
             const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
-            Array<TwoD, NekDouble> df(dim * dim, jacSizePad, 0.0);
+            Array<TwoD, NekDouble> df(dim * m_coordim, jacSizePad, 0.0);
             if (deformed)
             {
-                for (unsigned int j = 0; j < dim * dim; ++j)
+                for (unsigned int j = 0; j < dim * m_coordim; ++j)
                 {
                     Vmath::Vcopy(jacSizeNoPad,
                         &(pGeomData->GetDerivFactors(pCollExp))[j][0], 1,
@@ -431,7 +374,7 @@ class PhysDeriv_MatrixFree : public Operator
             {
                 for (unsigned int e = 0; e < nElmtNoPad; ++e)
                 {
-                    for (unsigned int j = 0; j < dim * dim; ++j)
+                    for (unsigned int j = 0; j < dim * m_coordim; ++j)
                     {
                         df[j][e] =
                             (pGeomData->GetDerivFactors(pCollExp))[j][e*nqElmt];
@@ -467,6 +410,9 @@ class PhysDeriv_MatrixFree : public Operator
 /// Factory initialisation for the PhysDeriv_MatrixFree operators
 OperatorKey PhysDeriv_MatrixFree::m_typeArr[] =
 {
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eSegment, ePhysDeriv, eMatrixFree, false),
+        PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Seg"),
     GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eTriangle, ePhysDeriv, eMatrixFree, false),
         PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Tri"),

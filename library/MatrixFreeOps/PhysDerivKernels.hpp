@@ -10,6 +10,32 @@ namespace MatrixFree
 using namespace tinysimd;
 using vec_t = simd<NekDouble>;
 
+template<int NUMQUAD0>
+inline static void PhysDerivTensor1DKernel(
+    const std::vector<vec_t, allocator<vec_t>> &in,
+    const std::vector<vec_t, allocator<vec_t>> &D0,
+    std::vector<vec_t, allocator<vec_t>> &outptr_d0)
+{
+    constexpr auto nq0 = NUMQUAD0;
+
+    //All matricies are column major ordered since operators used to
+    //be computed via BLAS.
+
+    //D0 * in
+    for (int i = 0; i < nq0; ++i)
+    { //row index of D0 matrix
+        vec_t prod_sum = 0.0;
+        for (int k = 0; k < nq0; ++k)
+        { //Col index of D0, row index of IN
+            vec_t v1 = D0[k * nq0 + i]; //Load 1x
+            vec_t v2 = in[k]; //Load 1x
+            
+            prod_sum.fma(v1, v2);
+        }
+        outptr_d0[i] = prod_sum; //Store 1x
+    }
+}
+
 template<int NUMQUAD0, int NUMQUAD1>
 inline static void PhysDerivTensor2DKernel(
     const std::vector<vec_t, allocator<vec_t>> &in,
@@ -63,6 +89,38 @@ inline static void PhysDerivTensor2DKernel(
 
 }
 
+#if 0 
+template<int NUMQUAD0, bool DEFORMED>
+static void PhysDerivSegKernel(
+    const std::vector<vec_t, allocator<vec_t>> &in,
+    const std::vector<vec_t, allocator<vec_t>> &D0,
+    const vec_t* df_ptr,
+    std::vector<vec_t, allocator<vec_t>> &out_d0)
+{
+
+    constexpr auto nq0 = NUMQUAD0;
+
+    PhysDerivTensor1DKernel<NUMQUAD0>(in, D0, out_d0);
+    //Results written to out_d0
+
+    vec_t df0;
+    if (!DEFORMED)
+    {
+        df0 = df_ptr[0];
+    }
+
+    for (int j = 0; j < nq0; ++j)
+    {
+        if (DEFORMED)
+        {
+            df0 = df_ptr[j];
+        }
+        //Multiply by derivative factors
+        out_d0[j] *= df0; //Store 1x
+    }
+}
+#endif
+    
 template<int NUMQUAD0, int NUMQUAD1, bool DEFORMED>
 static void PhysDerivQuadKernel(
     const std::vector<vec_t, allocator<vec_t>> &in,

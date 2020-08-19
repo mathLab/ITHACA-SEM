@@ -276,6 +276,55 @@ namespace Nektar
             }
         }
 
+        BOOST_AUTO_TEST_CASE(TestSegBwdTrans_MatrixFree_UniformP_MultiElmt)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.0, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
+
+            SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
+
+            Nektar::LibUtilities::PointsType segPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            unsigned int numSegPoints = 6;
+            const Nektar::LibUtilities::PointsKey segPointsKeyDir1(numSegPoints, segPointsTypeDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,segPointsKeyDir1);
+
+            Nektar::LocalRegions::SegExpSharedPtr Exp =
+                MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1, segGeom);
+
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+
+            int nelmts = 10;
+            for(int i = 0; i < nelmts; ++i)
+            {
+                CollExp.push_back(Exp);
+            }
+
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession,
+                                                      Collections::eIterPerExp);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            impTypes[Collections::eBwdTrans] = Collections::eMatrixFree;
+            Collections::Collection     c(CollExp, impTypes);
+
+
+            Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
+            Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
+            Array<OneD, NekDouble> phys2(nelmts*Exp->GetTotPoints());
+
+            for(int i = 0; i < nelmts; ++i)
+            {
+                Exp->BwdTrans(coeffs + i*Exp->GetNcoeffs(), tmp = phys1+i*Exp->GetTotPoints());
+            }
+            c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < phys1.size(); ++i)
+            {
+                BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
+            }
+        }
+
 
         BOOST_AUTO_TEST_CASE(TestSegIProductWRTBase_IterPerExp_UniformP_MultiElmt)
         {
@@ -451,6 +500,66 @@ namespace Nektar
             }
         }
 
+
+        BOOST_AUTO_TEST_CASE(TestSegIProductWRTBase_MatrixFree_UniformP_MultiElmt)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.5, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
+
+            SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
+
+            Nektar::LibUtilities::PointsType segPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            const Nektar::LibUtilities::PointsKey segPointsKeyDir1(5, segPointsTypeDir1);
+            Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir1(basisTypeDir1,4,segPointsKeyDir1);
+
+            Nektar::LocalRegions::SegExpSharedPtr Exp =
+                MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1,
+                                                                               segGeom);
+
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+
+            int nelmts = 10;
+            for(int i = 0; i < nelmts; ++i)
+            {
+                CollExp.push_back(Exp);
+            }
+
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession,
+                                                    Collections::eIterPerExp);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            impTypes[Collections::eIProductWRTBase] = Collections::eMatrixFree; 
+            Collections::Collection     c(CollExp, impTypes);
+
+            const int nq = Exp->GetTotPoints();
+            const int nc = Exp->GetNcoeffs();
+            Array<OneD, NekDouble> xc(nq),yc(nq);
+            Array<OneD, NekDouble> phys(nelmts*nq),tmp;
+            Array<OneD, NekDouble> coeffs1(nelmts*nc);
+            Array<OneD, NekDouble> coeffs2(nelmts*nc);
+
+            Exp->GetCoords(xc,yc);
+
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i]);
+            }
+            Exp->IProductWRTBase(phys, coeffs1);
+
+            for(int i = 1; i < nelmts; ++i)
+            {
+                Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
+                Exp->IProductWRTBase(phys + i*nq ,tmp = coeffs1 + i*nc);
+            }
+            c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < coeffs1.size(); ++i)
+            {
+                BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
+            }
+        }
 
         BOOST_AUTO_TEST_CASE(TestSegPhysDeriv_IterPerExp_UniformP)
         {
@@ -729,6 +838,200 @@ namespace Nektar
             }
         }
 
+
+        BOOST_AUTO_TEST_CASE(TestSegPhysDeriv_MatrixFree_UniformP_MultiElmt_1D)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.5, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
+
+            SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
+
+            Nektar::LibUtilities::PointsType segPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            const Nektar::LibUtilities::PointsKey segPointsKeyDir1(5, segPointsTypeDir1);
+            Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir1(basisTypeDir1,4,segPointsKeyDir1);
+
+            Nektar::LocalRegions::SegExpSharedPtr Exp =
+                MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1,
+                                                                               segGeom);
+
+            int nelmts = 10;
+
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+            for(int i = 0; i < nelmts; ++i)
+            {
+                CollExp.push_back(Exp);
+            }
+
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession,
+                                                       Collections::eIterPerExp);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            impTypes[Collections::ePhysDeriv] = Collections::eMatrixFree;
+            Collections::Collection     c(CollExp, impTypes);
+
+            const int nq = Exp->GetTotPoints();
+            Array<OneD, NekDouble> xc(nq);
+            Array<OneD, NekDouble> phys(nelmts*nq),tmp;
+            Array<OneD, NekDouble> diff1(nelmts*nq);
+            Array<OneD, NekDouble> diff2(nelmts*nq);
+
+            Exp->GetCoords(xc);
+
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i]);
+            }
+            Exp->PhysDeriv(phys, diff1);
+
+            for(int i = 1; i < nelmts; ++i)
+            {
+                Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
+                Exp->PhysDeriv(phys + i*nq, tmp = diff1+i*nq);
+            }
+
+            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < diff1.size(); ++i)
+            {
+                diff1[i] = (fabs(diff1[i]) < 1e-14)? 0.0: diff1[i];
+                diff2[i] = (fabs(diff2[i]) < 1e-14)? 0.0: diff2[i];
+                BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
+            }
+        }
+
+        BOOST_AUTO_TEST_CASE(TestSegPhysDeriv_MatrixFree_UniformP_MultiElmt_2D)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, 1.0, 0.0));
+
+            SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1, 2u);
+
+            Nektar::LibUtilities::PointsType segPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            const Nektar::LibUtilities::PointsKey segPointsKeyDir1(5, segPointsTypeDir1);
+            Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir1(basisTypeDir1,4,segPointsKeyDir1);
+
+            Nektar::LocalRegions::SegExpSharedPtr Exp =
+                MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1,
+                                                                               segGeom);
+
+            int nelmts = 10;
+
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+            for(int i = 0; i < nelmts; ++i)
+            {
+                CollExp.push_back(Exp);
+            }
+
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession,
+                                                       Collections::eIterPerExp);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            impTypes[Collections::ePhysDeriv] = Collections::eMatrixFree;
+            Collections::Collection     c(CollExp, impTypes);
+
+            const int nq = Exp->GetTotPoints();
+            Array<OneD, NekDouble> xc(nq), yc(nq);
+            Array<OneD, NekDouble> phys(nelmts*nq),tmp,tmp1;
+            Array<OneD, NekDouble> diff1(2*nelmts*nq);
+            Array<OneD, NekDouble> diff2(2*nelmts*nq);
+
+            Exp->GetCoords(xc,yc);
+
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i])*cos(yc[i]);
+            }
+            Exp->PhysDeriv(phys, diff1, tmp  = diff1+nelmts*nq);
+
+            for(int i = 1; i < nelmts; ++i)
+            {
+                Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
+                Exp->PhysDeriv(phys + i*nq,
+                               tmp = diff1+i*nq,
+                               tmp1 = diff1+(nelmts+i)*nq);
+            }
+
+            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2,
+                            tmp=diff2+nelmts*nq);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < diff1.size(); ++i)
+            {
+                diff1[i] = (fabs(diff1[i]) < 1e-14)? 0.0: diff1[i];
+                diff2[i] = (fabs(diff2[i]) < 1e-14)? 0.0: diff2[i];
+                BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
+            }
+        }
+
+        BOOST_AUTO_TEST_CASE(TestSegPhysDeriv_MatrixFree_UniformP_MultiElmt_3D)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.5, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(3u, 1u,  1.0, 1.0, 1.0));
+
+            SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1, 3u);
+
+            Nektar::LibUtilities::PointsType segPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            const Nektar::LibUtilities::PointsKey segPointsKeyDir1(5, segPointsTypeDir1);
+            Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir1(basisTypeDir1,4,segPointsKeyDir1);
+
+            Nektar::LocalRegions::SegExpSharedPtr Exp =
+                MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1,
+                                                                               segGeom);
+
+            int nelmts = 10;
+
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+            for(int i = 0; i < nelmts; ++i)
+            {
+                CollExp.push_back(Exp);
+            }
+
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession,
+                                                       Collections::eIterPerExp);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            impTypes[Collections::ePhysDeriv] = Collections::eMatrixFree;
+            Collections::Collection     c(CollExp, impTypes);
+
+            const int nq = Exp->GetTotPoints();
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+            Array<OneD, NekDouble> phys(nelmts*nq),tmp,tmp1,tmp2;
+            Array<OneD, NekDouble> diff1(3*nelmts*nq);
+            Array<OneD, NekDouble> diff2(3*nelmts*nq);
+
+            Exp->GetCoords(xc,yc,zc);
+
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
+            }
+            Exp->PhysDeriv(phys, diff1, tmp  = diff1+nelmts*nq,
+                           tmp1 = diff1+2*nelmts*nq);
+
+            for(int i = 1; i < nelmts; ++i)
+            {
+                Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
+                Exp->PhysDeriv(phys + i*nq,
+                               tmp = diff1+i*nq,
+                               tmp1 = diff1+(nelmts+i)*nq,
+                               tmp2 = diff1+(2*nelmts+i)*nq);
+            }
+
+            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2,
+                            tmp=diff2+nelmts*nq, tmp1 = diff2+2*nelmts*nq);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < diff1.size(); ++i)
+            {
+                diff1[i] = (fabs(diff1[i]) < 1e-14)? 0.0: diff1[i];
+                diff2[i] = (fabs(diff2[i]) < 1e-14)? 0.0: diff2[i];
+                BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
+            }
+        }
 
         BOOST_AUTO_TEST_CASE(TestSegIProductWRTDerivBase_IterPerExp_UniformP)
         {

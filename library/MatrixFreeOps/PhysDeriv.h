@@ -14,6 +14,284 @@ namespace MatrixFree
 {
 
 template<bool DEFORMED = false>
+struct PhysDerivSeg : public PhysDeriv, public Helper<1, DEFORMED>
+{
+    PhysDerivSeg(std::vector<LibUtilities::BasisSharedPtr> basis,
+                     int nElmt)
+    : PhysDeriv(basis, nElmt),
+      Helper<1, DEFORMED>(basis, nElmt),
+      m_nmTot(LibUtilities::StdSegData::getNumberOfCoefficients(
+                this->m_nm[0]))
+    {
+    }
+
+    static std::shared_ptr<Operator> Create(
+        std::vector<LibUtilities::BasisSharedPtr> basis,
+        int nElmt)
+    {
+        return std::make_shared<PhysDerivSeg<DEFORMED>>(basis, nElmt);
+    }
+
+    static NekDouble FlopsPerElement(
+        const int nq0)
+    {
+        int derivTensor = 2 * nq0 *nq0; 
+        int deriv = nq0  * 6;
+        return (derivTensor + deriv);
+    }
+
+    double GFlops() final
+    {
+        const int nq0 = m_basis[0]->GetNumPoints();
+
+        int flops = this->m_nElmt * PhysDerivSeg::FlopsPerElement(nq0);
+        return flops * 1e-9;
+    }
+
+    NekDouble Ndof() final
+    {
+        return m_nmTot * this->m_nElmt;
+    }
+
+    NekDouble NLoads() final
+    {
+        const int nq0 = m_basis[0]->GetNumPoints();
+
+        int t_d0 = nq0 * nq0 * 2;
+        int physDerivTensor = t_d0;
+
+        int physDeriv = nq0 * 2;
+        int load_expected = physDerivTensor + physDeriv;
+
+        return this->m_nElmt * load_expected;
+    }
+
+    NekDouble NStores() final
+    {
+        const int nq0 = m_basis[0]->GetNumPoints();
+
+        int physDerivTensor = nq0*2;
+        int physDeriv = nq0;
+
+        return this->m_nElmt * (physDerivTensor + physDeriv);
+    }
+
+
+    void operator()(const Array<OneD, const NekDouble> &in,
+                    Array<OneD, Array<OneD, NekDouble> >&out) final
+    {
+        switch(m_basis[0]->GetNumPoints())
+        {
+            case 2:
+                PhysDerivSegImpl<2>(in, out); break;
+            case 3:
+                PhysDerivSegImpl<3>(in, out); break;
+            case 4:
+                PhysDerivSegImpl<4>(in, out); break;
+            case 5:
+                PhysDerivSegImpl<5>(in, out); break;
+            case 6:
+                PhysDerivSegImpl<6>(in, out); break;
+            case 7:
+                PhysDerivSegImpl<7>(in, out); break;
+            case 8:
+                PhysDerivSegImpl<8>(in, out); break;
+            case 9:
+                PhysDerivSegImpl<9>(in, out); break;
+            case 10:
+                PhysDerivSegImpl<10>(in, out); break;
+            case 11:
+                PhysDerivSegImpl<11>(in, out); break;
+            case 12:
+                PhysDerivSegImpl<12>(in, out); break;
+            case 13:
+                PhysDerivSegImpl<13>(in, out); break;
+            case 14:
+                PhysDerivSegImpl<14>(in, out); break;
+            case 15:
+                PhysDerivSegImpl<15>(in, out); break;
+            case 16:
+                PhysDerivSegImpl<16>(in, out); break;
+            default: NEKERROR(ErrorUtil::efatal,
+                "PhysDerivSeg: # of modes / points combo not implemented.");
+        }
+    }
+
+    template<int NQ0>
+    void PhysDerivSegImpl(
+        const Array<OneD, const NekDouble> &input,
+        Array<OneD, Array<OneD,    NekDouble> >&out)
+    {
+        auto* inptr  = &input[0];
+        auto* out_d0 = &out[0][0];
+
+        int outdim = out.size();
+        
+        constexpr auto nq0   = NQ0;
+        constexpr auto nqTot = NQ0;
+        constexpr auto nqBlocks = nqTot * vec_t::width;
+
+        // Get size of derivative factor block
+        auto dfSize = outdim;
+        if (DEFORMED)
+        {
+            dfSize *= nqTot;
+        }
+        
+        // call 1D kernel
+        const vec_t* df_ptr;
+        vec_t df0,df1,df2;
+        switch(outdim)
+        {
+        case 1:
+         {
+             std::vector<vec_t, allocator<vec_t>> tmpIn(nqTot), tmpOut_d0(nqTot);
+             
+             for (int e = 0; e < this->m_nBlocks; ++e)
+             {
+                 auto edfs = e*dfSize;
+                 
+                 // Load and transpose data
+                 load_interleave(inptr, nqTot, tmpIn);
+                 
+                 // Get Basic derivative
+                 PhysDerivTensor1DKernel<NQ0>(tmpIn, this->m_D[0], tmpOut_d0);
+                 df_ptr = &(this->m_df[edfs]);
+                 
+                 if(!DEFORMED)
+                 {
+                     df0 = df_ptr[0];
+                 }
+                 
+                 for (int j = 0; j < nq0; ++j)
+                 {
+                     if (DEFORMED)
+                     {
+                         df0 = df_ptr[j];  // load 1x
+                     }
+                     //Multiply by derivative factors
+                     tmpOut_d0[j] *= df0; //Store 1x
+                 }
+
+                 // de-interleave and store data
+                 deinterleave_store(tmpOut_d0, nqTot, out_d0);
+                 
+                 inptr  += nqBlocks;
+                 out_d0 += nqBlocks;
+             }
+         }
+         break;
+        case 2:
+        {
+            std::vector<vec_t, allocator<vec_t>> tmpIn(nqTot),
+                tmpOut_d0(nqTot), tmpOut_d1(nqTot);
+
+            auto* out_d1 = &out[1][0];
+
+            for (int e = 0; e < this->m_nBlocks; ++e)
+            {
+                 auto edfs = e*dfSize;
+
+                 // Load and transpose data
+                load_interleave(inptr, nqTot, tmpIn);
+                
+                // Get Basic derivative
+                PhysDerivTensor1DKernel<NQ0>(tmpIn, this->m_D[0], tmpOut_d0);
+                df_ptr = &(this->m_df[edfs]);
+                
+                if(!DEFORMED)
+                {
+                    df0 = df_ptr[0];
+                    df1 = df_ptr[1];
+                }
+                
+                for (int j = 0; j < nq0; ++j)
+                {
+                    if (DEFORMED)
+                    {
+                        df0 = df_ptr[j*outdim];  // load 1x
+                        df1 = df_ptr[j*outdim + 1];
+                    }
+                    
+                    //Multiply by derivative factors
+                    tmpOut_d1[j] = tmpOut_d0[j]*df1; //Store 1x
+                    tmpOut_d0[j] *= df0; //Store 1x
+                }
+
+                // de-interleave and store data
+                deinterleave_store(tmpOut_d0, nqTot, out_d0);
+                deinterleave_store(tmpOut_d1, nqTot, out_d1);
+                
+                inptr  += nqBlocks;
+                out_d0 += nqBlocks;
+                out_d1 += nqBlocks;
+            }
+        }
+        break;
+        case 3:
+        {
+            std::vector<vec_t, allocator<vec_t>> tmpIn(nqTot),
+                tmpOut_d0(nqTot), tmpOut_d1(nqTot), tmpOut_d2(nqTot);
+            
+            auto* out_d1 = &out[1][0];
+            auto* out_d2 = &out[2][0];
+
+            for (int e = 0; e < this->m_nBlocks; ++e)
+            {
+                 auto edfs = e*dfSize;
+
+                 // Load and transpose data
+                load_interleave(inptr, nqTot, tmpIn);
+                
+                // Get Basic derivative
+                PhysDerivTensor1DKernel<NQ0>(tmpIn, this->m_D[0],tmpOut_d0);
+                df_ptr = &(this->m_df[edfs]);
+                
+                if(!DEFORMED)
+                {
+                    df0 = df_ptr[0];
+                    df1 = df_ptr[1];
+                    df2 = df_ptr[2];
+                }
+                
+                for (int j = 0; j < nq0; ++j)
+                {
+                    if (DEFORMED)
+                    {
+                        df0 = df_ptr[j*outdim];  // load 1x
+                        df1 = df_ptr[j*outdim + 1];
+                        df2 = df_ptr[j*outdim + 2];
+                    }
+                    
+                    //Multiply by derivative factors
+                    tmpOut_d1[j] = tmpOut_d0[j]*df1; //Store 1x
+                    tmpOut_d2[j] = tmpOut_d0[j]*df2; //Store 1x
+                    tmpOut_d0[j] *= df0; //Store 1x
+                }
+                
+                // de-interleave and store data
+                deinterleave_store(tmpOut_d0, nqTot, out_d0);
+                deinterleave_store(tmpOut_d1, nqTot, out_d1);
+                deinterleave_store(tmpOut_d2, nqTot, out_d2);
+                
+                inptr += nqBlocks;
+                out_d0 += nqBlocks;
+                out_d1 += nqBlocks;
+                out_d2 += nqBlocks;           
+            }
+        }
+        break;
+        default:
+            NEKERROR(ErrorUtil::efatal,"Incorrection dimension");
+            break;
+        }
+    }
+private:
+    int m_nmTot;
+
+};
+
+template<bool DEFORMED = false>
 struct PhysDerivQuad : public PhysDeriv, public Helper<2, DEFORMED>
 {
     PhysDerivQuad(std::vector<LibUtilities::BasisSharedPtr> basis,
@@ -82,23 +360,16 @@ struct PhysDerivQuad : public PhysDeriv, public Helper<2, DEFORMED>
     }
 
     void operator()(const Array<OneD, const NekDouble> &in,
-                          Array<OneD,       NekDouble> &out_d0,
-                          Array<OneD,       NekDouble> &out_d1,
-                          Array<OneD,       NekDouble> &out_d2) final
-    {
-        //Only for 3D, but need to implement since its abstract
-        boost::ignore_unused(in, out_d0, out_d1, out_d2);
-        NEKERROR(ErrorUtil::efatal,
-                "Something went horribly wrong... calling 3D op for 2D op");
-    }
-
-    void operator()(const Array<OneD, const NekDouble> &in,
-                          Array<OneD,       NekDouble> &out_d0,
-                          Array<OneD,       NekDouble> &out_d1) final
+                    Array<OneD, Array<OneD, NekDouble> >&out) final
     {
         // Check preconditions
         ASSERTL0(m_basis[0]->GetNumPoints() == m_basis[1]->GetNumPoints(),
             "MatrixFree op requires homogenous points");
+        ASSERTL0(out.size() > 1, "Cannot call 2D routine with one output");
+        ASSERTL0(out.size() != 3, "Routine needs setting up for 3D coordinates"); 
+
+        Array<OneD, NekDouble> out_d0 = out[0];
+        Array<OneD, NekDouble> out_d1 = out[1];
 
         switch(m_basis[0]->GetNumPoints())
         {
@@ -190,6 +461,7 @@ private:
 
 };
 
+    
 template<bool DEFORMED=false>
 struct PhysDerivTri : public PhysDeriv, public Helper<2,DEFORMED>
 {
@@ -264,23 +536,16 @@ struct PhysDerivTri : public PhysDeriv, public Helper<2,DEFORMED>
     }
 
     void operator()(const Array<OneD, const NekDouble> &in,
-                          Array<OneD,       NekDouble> &out_d0,
-                          Array<OneD,       NekDouble> &out_d1,
-                          Array<OneD,       NekDouble> &out_d2) final
-    {
-        // Only for 3D, but need to implement since its abstract
-        boost::ignore_unused(in, out_d0, out_d1, out_d2);
-        NEKERROR(ErrorUtil::efatal,
-                "Something went horribly wrong... calling 3D op for 2D element");
-    }
-
-    void operator()(const Array<OneD, const NekDouble> &in,
-                          Array<OneD,       NekDouble> &out_d0,
-                          Array<OneD,       NekDouble> &out_d1)  final
+                    Array<OneD, Array<OneD,NekDouble> >&out) final
     {
         // Check preconditions
         ASSERTL0(m_basis[0]->GetNumPoints() == (m_basis[1]->GetNumPoints()+1),
             "MatrixFree op requires homogenous points");
+        ASSERTL0(out.size() > 1, "Cannot call 2D routine with one output");
+        ASSERTL0(out.size() != 3, "Routine needs setting up for 3D coordinates"); 
+
+        Array<OneD, NekDouble> out_d0 = out[0];
+        Array<OneD, NekDouble> out_d1 = out[1];
 
         switch(m_basis[0]->GetNumPoints())
         {
@@ -455,22 +720,17 @@ struct PhysDerivHex : public PhysDeriv, public Helper<3,DEFORMED>
     }
 
     void operator()(const Array<OneD, const NekDouble> &in,
-                          Array<OneD,       NekDouble> &out_d0,
-                          Array<OneD,       NekDouble> &out_d1) final
-    {
-        boost::ignore_unused(in, out_d0, out_d1);
-        throw; //Only for 2D, but need to implement since its abstract
-    }
-
-    void operator()(const Array<OneD, const NekDouble> &in,
-                                  Array<OneD,       NekDouble> &out_d0,
-                                  Array<OneD,       NekDouble> &out_d1,
-                                  Array<OneD,       NekDouble> &out_d2) final
+                    Array<OneD, Array<OneD, NekDouble> >&out) final
     {
         // Check preconditions
         ASSERTL0(m_basis[0]->GetNumPoints() == m_basis[1]->GetNumPoints() &&
             m_basis[0]->GetNumPoints() == m_basis[2]->GetNumPoints(),
             "MatrixFree op requires homogenous points");
+        ASSERTL0(out.size() == 3,"Cannot call 3D routine with 1 or 2 outputs");
+
+        Array<OneD, NekDouble> out_d0 = out[0];
+        Array<OneD, NekDouble> out_d1 = out[1];
+        Array<OneD, NekDouble> out_d2 = out[2];
 
         switch(m_basis[0]->GetNumPoints())
         {
@@ -656,24 +916,17 @@ struct PhysDerivPrism : public PhysDeriv, public Helper<3, DEFORMED>
     }
 
     void operator()(const Array<OneD, const NekDouble> &in,
-                          Array<OneD,       NekDouble> &out_d0,
-                          Array<OneD,       NekDouble> &out_d1) final
+                    Array<OneD, Array<OneD, NekDouble> >&out) final
     {
-        // Only for 2D, but need to implement since its abstract
-        boost::ignore_unused(in, out_d0, out_d1);
-        NEKERROR(ErrorUtil::efatal,
-                "Something went horribly wrong... calling 2D op for 3D element");
-    }
-
-    void operator()(const Array<OneD, const NekDouble> &in,
-                          Array<OneD,       NekDouble> &out_d0,
-                          Array<OneD,       NekDouble> &out_d1,
-                          Array<OneD,       NekDouble> &out_d2) final
-    {
-         // Check preconditions
+        // Check preconditions
         ASSERTL0(m_basis[0]->GetNumPoints() == m_basis[1]->GetNumPoints() &&
             m_basis[0]->GetNumPoints() == (m_basis[2]->GetNumPoints()+1),
             "MatrixFree op requires homogenous points");
+        ASSERTL0(out.size() == 3,"Cannot call 3D routine with 1 or 2 outputs");
+
+        Array<OneD, NekDouble> out_d0 = out[0];
+        Array<OneD, NekDouble> out_d1 = out[1];
+        Array<OneD, NekDouble> out_d2 = out[2];
 
         switch(m_basis[0]->GetNumPoints())
         {
@@ -853,24 +1106,19 @@ struct PhysDerivPyr : public PhysDeriv, public Helper<3, DEFORMED>
     }
 
     void operator()(const Array<OneD, const NekDouble> &in,
-                          Array<OneD,       NekDouble> &out_d0,
-                          Array<OneD,       NekDouble> &out_d1) final
+                    Array<OneD, Array<OneD, NekDouble> >&out) final
     {
-        // Only for 2D, but need to implement since its abstract
-        boost::ignore_unused(in, out_d0, out_d1);
-        NEKERROR(ErrorUtil::efatal,
-                "Something went horribly wrong... calling 2D op for 3D element");
-    }
-
-    void operator()(const Array<OneD, const NekDouble> &in,
-                          Array<OneD,       NekDouble> &out_d0,
-                          Array<OneD,       NekDouble> &out_d1,
-                          Array<OneD,       NekDouble> &out_d2) final
-    {
-         // Check preconditions
+        // Check preconditions
+        // Check preconditions
         ASSERTL0(m_basis[0]->GetNumPoints() == m_basis[1]->GetNumPoints() &&
             m_basis[0]->GetNumPoints() == (m_basis[2]->GetNumPoints()+1),
             "MatrixFree op requires homogenous points");
+        ASSERTL0(out.size() == 3,"Cannot call 3D routine with 1 or 2 outputs");
+
+        Array<OneD, NekDouble> out_d0 = out[0];
+        Array<OneD, NekDouble> out_d1 = out[1];
+        Array<OneD, NekDouble> out_d2 = out[2];
+
 
         switch(m_basis[0]->GetNumPoints())
         {
@@ -1063,24 +1311,18 @@ struct PhysDerivTet : public PhysDeriv, public Helper<3, DEFORMED>
     }
 
     void operator()(const Array<OneD, const NekDouble> &in,
-                                Array<OneD,       NekDouble> &out_d0,
-                                Array<OneD,       NekDouble> &out_d1) final
-    {
-        // Only for 2D, but need to implement since its abstract
-        boost::ignore_unused(in, out_d0, out_d1);
-        NEKERROR(ErrorUtil::efatal,
-            "Something went horribly wrong... calling 2D op for 3D element");
-    }
-
-    void operator()(const Array<OneD, const NekDouble> &in,
-                                  Array<OneD,       NekDouble> &out_d0,
-                                  Array<OneD,       NekDouble> &out_d1,
-                                  Array<OneD,       NekDouble> &out_d2) final
+                    Array<OneD, Array<OneD, NekDouble> >&out) final
     {
         // Check preconditions
         ASSERTL0(m_basis[0]->GetNumPoints() == (m_basis[1]->GetNumPoints()+1) &&
             m_basis[0]->GetNumPoints() == (m_basis[2]->GetNumPoints()+1),
             "MatrixFree op requires homogenous points");
+        ASSERTL0(out.size() == 3,"Cannot call 3D routine with 1 or 2 outputs");
+
+        Array<OneD, NekDouble> out_d0 = out[0];
+        Array<OneD, NekDouble> out_d1 = out[1];
+        Array<OneD, NekDouble> out_d2 = out[2];
+
 
         switch(m_basis[0]->GetNumPoints())
         {

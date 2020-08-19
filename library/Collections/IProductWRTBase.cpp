@@ -270,6 +270,9 @@ class IProductWRTBase_MatrixFree : public Operator
 /// Factory initialisation for the IProductWRTBase_MatrixFree operators
 OperatorKey IProductWRTBase_MatrixFree::m_typeArr[] = {
     GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eSegment, eIProductWRTBase, eMatrixFree, false),
+        IProductWRTBase_MatrixFree::create, "IProductWRTBase_MatrixFree_Seg"),
+    GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eQuadrilateral, eIProductWRTBase, eMatrixFree, false),
         IProductWRTBase_MatrixFree::create, "IProductWRTBase_MatrixFree_Quad"),
     GetOperatorFactory().RegisterCreatorFunction(

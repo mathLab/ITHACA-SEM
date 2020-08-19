@@ -13,6 +13,201 @@ namespace Nektar
 namespace MatrixFree
 {
 
+struct BwdTransSeg : public BwdTrans, public Helper<1>
+{
+    BwdTransSeg(std::vector<LibUtilities::BasisSharedPtr> basis,
+                    int nElmt)
+        : BwdTrans(basis, nElmt),
+          Helper<1>(basis, nElmt),
+          m_nmTot(LibUtilities::StdSegData::getNumberOfCoefficients(
+                                                     this->m_nm[0]))
+    {
+    }
+
+    static std::shared_ptr<Operator> Create(
+        std::vector<LibUtilities::BasisSharedPtr> basis,
+        int nElmt)
+    {
+        return std::make_shared<BwdTransSeg>(basis, nElmt);
+    }
+
+    static NekDouble FlopsPerElement(
+        const int nm,
+        const int nq0)
+    {
+        int loop_i = nq0*nm*2;
+        return loop_i;
+    }
+
+    NekDouble GFlops() final
+    {
+
+        const int nm  = m_basis[0]->GetNumModes();
+        const int nq0 = m_basis[0]->GetNumPoints();
+
+        int flops = m_nElmt * BwdTransSeg::FlopsPerElement(nm, nq0);
+        return flops * 1e-9;
+    }
+
+    NekDouble NLoads() final
+    {
+        const int nm0 = m_basis[0]->GetNumModes();
+        const int nq0 = m_basis[0]->GetNumPoints();
+
+        int load_iqp = nq0 * nm0 * 2;
+        int load_expected = load_iqp;
+
+        return m_nElmt * load_expected;
+    }
+
+    NekDouble NStores() final
+    {
+        const int nq0 = m_basis[0]->GetNumPoints();
+
+        int store_i = nq0;
+        int store_expected = store_i; 
+
+        return m_nElmt * store_expected;
+    }
+
+    NekDouble Ndof() final
+    {
+        return m_nmTot * this->m_nElmt;
+    }
+
+    void operator()(const Array<OneD, const NekDouble> &in,
+        Array<OneD,       NekDouble> &out) final
+    {
+
+        switch(m_basis[0]->GetNumModes())
+        {
+            case 2:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 2: BwdTransSegImpl<2 ,2 >(in, out); break;
+                    case 3: BwdTransSegImpl<2 ,3 >(in, out); break;
+                    case 4: BwdTransSegImpl<2 ,4 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransSeg: # of modes / points combo not implemented.");
+                } break;
+            case 3:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 3: BwdTransSegImpl<3 ,3 >(in, out); break;
+                    case 4: BwdTransSegImpl<3 ,4 >(in, out); break;
+                    case 5: BwdTransSegImpl<3 ,5 >(in, out); break;
+                    case 6: BwdTransSegImpl<3 ,6 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransSeg: # of modes / points combo not implemented.");
+                } break;
+            case 4:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 4: BwdTransSegImpl<4 ,4 >(in, out); break;
+                    case 5: BwdTransSegImpl<4 ,5 >(in, out); break;
+                    case 6: BwdTransSegImpl<4 ,6 >(in, out); break;
+                    case 7: BwdTransSegImpl<4 ,7 >(in, out); break;
+                    case 8: BwdTransSegImpl<4 ,8 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransSeg: # of modes / points combo not implemented.");
+                } break;
+            case 5:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 5: BwdTransSegImpl<5 ,5 >(in, out); break;
+                    case 6: BwdTransSegImpl<5 ,6 >(in, out); break;
+                    case 7: BwdTransSegImpl<5 ,7 >(in, out); break;
+                    case 8: BwdTransSegImpl<5 ,8 >(in, out); break;
+                    case 9: BwdTransSegImpl<5 ,9 >(in, out); break;
+                    case 10: BwdTransSegImpl<5 ,10 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransSeg: # of modes / points combo not implemented.");
+                } break;
+            case 6:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 6: BwdTransSegImpl<6, 6 >(in, out); break;
+                    case 7: BwdTransSegImpl<6, 7 >(in, out); break;
+                    case 8: BwdTransSegImpl<6, 8 >(in, out); break;
+                    case 9: BwdTransSegImpl<6, 9 >(in, out); break;
+                    case 10: BwdTransSegImpl<6, 10 >(in, out); break;
+                    case 11: BwdTransSegImpl<6, 11 >(in, out); break;
+                    case 12: BwdTransSegImpl<6, 12 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransSeg: # of modes / points combo not implemented.");
+                } break;
+            case 7:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 7: BwdTransSegImpl<7 ,7 >(in, out); break;
+                    case 8: BwdTransSegImpl<7 ,8 >(in, out); break;
+                    case 9: BwdTransSegImpl<7 ,9 >(in, out); break;
+                    case 10: BwdTransSegImpl<7 ,10 >(in, out); break;
+                    case 11: BwdTransSegImpl<7 ,11 >(in, out); break;
+                    case 12: BwdTransSegImpl<7 ,12 >(in, out); break;
+                    case 13: BwdTransSegImpl<7 ,13 >(in, out); break;
+                    case 14: BwdTransSegImpl<7 ,14 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransSeg: # of modes / points combo not implemented.");
+                } break;
+            case 8:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 8: BwdTransSegImpl<8 ,8 >(in, out); break;
+                    case 9: BwdTransSegImpl<8 ,9 >(in, out); break;
+                    case 10: BwdTransSegImpl<8 ,10 >(in, out); break;
+                    case 11: BwdTransSegImpl<8 ,11 >(in, out); break;
+                    case 12: BwdTransSegImpl<8 ,12 >(in, out); break;
+                    case 13: BwdTransSegImpl<8 ,13 >(in, out); break;
+                    case 14: BwdTransSegImpl<8 ,14 >(in, out); break;
+                    case 15: BwdTransSegImpl<8 ,15 >(in, out); break;
+                    case 16: BwdTransSegImpl<8 ,16 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransSeg: # of modes / points combo not implemented.");
+                } break;;
+            default: NEKERROR(ErrorUtil::efatal,
+                "BwdTransSeg: # of modes / points combo not implemented.");
+        }
+    }
+
+    template<int NM0, int NQ0>
+    void BwdTransSegImpl(
+        const Array<OneD, const NekDouble> &input,
+              Array<OneD,       NekDouble> &output)
+    {
+        using namespace tinysimd;
+        using vec_t = simd<NekDouble>;
+
+        auto *inptr  = &input[0];
+        auto *outptr = &output[0];
+
+        constexpr auto nqTot = NQ0;
+        constexpr auto nqBlocks = nqTot * vec_t::width;
+        const auto nmBlocks = m_nmTot * vec_t::width;
+
+        std::vector<vec_t, allocator<vec_t>> tmpIn(m_nmTot), tmpOut(nqTot);
+
+        for (int e = 0; e < this->m_nBlocks; ++e)
+        {
+            // Load and transpose data
+            load_interleave(inptr, m_nmTot, tmpIn);
+
+            BwdTransSegKernel<NM0, NQ0>(
+                tmpIn, this->m_bdata[0], tmpOut);
+
+            // de-interleave and store data
+            deinterleave_store(tmpOut, nqTot, outptr);
+
+            inptr  += nmBlocks;
+            outptr += nqBlocks;
+        }
+    }
+
+private:
+    int m_nmTot;
+};
+
+
 struct BwdTransQuad : public BwdTrans, public Helper<2>
 {
     BwdTransQuad(std::vector<LibUtilities::BasisSharedPtr> basis,

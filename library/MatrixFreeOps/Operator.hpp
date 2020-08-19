@@ -194,32 +194,7 @@ public:
     }
 
     virtual void operator()(const Array<OneD, const NekDouble> &in,
-                                Array<OneD,       NekDouble> &out_d0,
-                                Array<OneD,       NekDouble> &out_d1) = 0;
-
-    virtual void operator()(
-        const Array<OneD, const NekDouble> &input,
-        Array<OneD, NekDouble> &output0,
-        Array<OneD, NekDouble> &output1,
-        Array<OneD, NekDouble> &output2) = 0;
-
-    // void Ref(MultiRegions::ExpListSharedPtr expList,
-    //             Array<OneD, NekDouble> &ref_fn,
-    //             Array<OneD, NekDouble> &d0,
-    //             Array<OneD, NekDouble> &d1,
-    //             Array<OneD, NekDouble> &d2 = NullNekDouble1DArray)
-    // {
-    //     const int dim = expList->GetExp(0)->GetShapeDimension();
-
-    //     this->RefFn(expList, ref_fn);
-
-    //     if(dim == 2){
-    //         expList->PhysDeriv(ref_fn, d0, d1);
-    //     }
-    //     else if(dim == 3){
-    //         expList->PhysDeriv(ref_fn, d0, d1, d2);
-    //     }
-    // }
+                            Array<OneD, Array<OneD,   NekDouble> > &out) = 0;
 
 protected:
     std::vector<LibUtilities::BasisSharedPtr> m_basis;

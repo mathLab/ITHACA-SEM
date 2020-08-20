@@ -1400,6 +1400,75 @@ namespace QuadCollectionTests
     }
 
     
+    BOOST_AUTO_TEST_CASE(TestQuadPhysDeriv_Directional_MatrixFree_UniformP_Undeformed)
+    {
+        SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u,
+            0u, -1.0, -1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u,
+            1u,  1.0, -1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u,
+            2u,  1.0, 1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(2u,
+            3u, -1.0, 1.0, 0.0));
+
+        SpatialDomains::QuadGeomSharedPtr quadGeom = CreateQuad(v0, v1, v2, v3);
+
+        Nektar::LibUtilities::PointsType quadPointsTypeDir1 =
+            Nektar::LibUtilities::eGaussLobattoLegendre;
+        Nektar::LibUtilities::BasisType basisTypeDir1 =
+            Nektar::LibUtilities::eModified_A;
+        unsigned int numQuadPoints = 5;
+        unsigned int numModes = 2;
+        const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(numQuadPoints,
+            quadPointsTypeDir1);
+        const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,
+            numModes, quadPointsKeyDir1);
+
+        Nektar::LocalRegions::QuadExpSharedPtr Exp =
+            MemoryManager<Nektar::LocalRegions::QuadExp>::AllocateSharedPtr(
+            basisKeyDir1, basisKeyDir1, quadGeom);
+
+        Nektar::StdRegions::StdQuadExpSharedPtr stdExp =
+            MemoryManager<Nektar::StdRegions::StdQuadExp>::AllocateSharedPtr(
+                basisKeyDir1, basisKeyDir1);
+
+        std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+        CollExp.push_back(Exp);
+
+        LibUtilities::SessionReaderSharedPtr dummySession;
+        Collections::CollectionOptimisation colOpt(dummySession,
+            Collections::eMatrixFree);
+        Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+        Collections::Collection     c(CollExp, impTypes);
+
+        const int nq = Exp->GetTotPoints();
+        Array<OneD, NekDouble> xc(nq), yc(nq);
+        Array<OneD, NekDouble> phys(nq), tmp, tmp1;
+        Array<OneD, NekDouble> derivRef(2*nq);
+        Array<OneD, NekDouble> deriv(2*nq);
+
+        Exp->GetCoords(xc, yc);
+
+        for (int i = 0; i < nq; ++i)
+        {
+            phys[i] = sin(xc[i])*cos(yc[i]);
+        }
+
+        Exp->PhysDeriv(0, phys, derivRef);
+        Exp->PhysDeriv(1, phys, tmp = derivRef+nq);
+
+        c.ApplyOperator(Collections::ePhysDeriv, 0, phys, deriv);
+        c.ApplyOperator(Collections::ePhysDeriv, 1, phys, tmp = deriv + nq);
+
+        double epsilon = 1.0e-8;
+        for (int i = 0; i < derivRef.size(); ++i)
+        {
+            derivRef[i] = (std::abs(derivRef[i]) < 1e-14)? 0.0: derivRef[i];
+            deriv[i] = (std::abs(deriv[i]) < 1e-14)? 0.0: deriv[i];
+            BOOST_CHECK_CLOSE(derivRef[i], deriv[i], epsilon);
+        }
+    }
+
     BOOST_AUTO_TEST_CASE(TestQuadPhysDeriv_StdMat_UniformP)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));

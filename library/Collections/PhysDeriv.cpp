@@ -248,23 +248,23 @@ class PhysDeriv_MatrixFree : public Operator
             if (m_isPadded)
             {
                 // copy into padded vector
-                Vmath::Vcopy(input.size(), input, 1, m_input, 1);
+                Vmath::Vcopy(m_nqtot, input, 1, m_input, 1);
             }
 
             (*m_oper)(input, m_output);
             switch(m_coordim)
             {
             case 1:
-                Vmath::Vcopy(output0.size(), m_output[0], 1, output0, 1);
+                Vmath::Vcopy(m_nqtot, m_output[0], 1, output0, 1);
                 break;
             case 2:
-                Vmath::Vcopy(output1.size(), m_output[0], 1, output0, 1);
-                Vmath::Vcopy(output1.size(), m_output[1], 1, output1, 1);
+                Vmath::Vcopy(m_nqtot, m_output[0], 1, output0, 1);
+                Vmath::Vcopy(m_nqtot, m_output[1], 1, output1, 1);
                 break;
             case 3:
-                Vmath::Vcopy(output2.size(), m_output[0], 1, output0, 1);
-                Vmath::Vcopy(output2.size(), m_output[1], 1, output1, 1);
-                Vmath::Vcopy(output2.size(), m_output[2], 1, output2, 1);
+                Vmath::Vcopy(m_nqtot, m_output[0], 1, output0, 1);
+                Vmath::Vcopy(m_nqtot, m_output[1], 1, output1, 1);
+                Vmath::Vcopy(m_nqtot, m_output[2], 1, output2, 1);
                 break;
             default:
                 NEKERROR(ErrorUtil::efatal,
@@ -284,21 +284,26 @@ class PhysDeriv_MatrixFree : public Operator
             {
                 // copy into padded vector
                 Vmath::Vcopy(input.size(), input, 1, m_input, 1);
+                (*m_oper)(m_input, m_output);
             }
-            (*m_oper)(m_input, m_output);
-            Vmath::Vcopy(output.size(), m_output[dir], 1, output, 1);
+            else
+            {
+                (*m_oper)(input, m_output);
+            }
+            Vmath::Vcopy(m_nqtot, m_output[dir], 1, output, 1);
         }
 
     private:
         std::shared_ptr<MatrixFree::PhysDeriv> m_oper;
         /// flag for padding
         bool m_isPadded{false};
-        /// padded input/output vectors
+        /// padded or unpadded input/output vectors
         Array<OneD, NekDouble> m_input;
         Array<OneD, Array<OneD, NekDouble>> m_output;
         /// coordinate dimensions
         unsigned short m_coordim;
-
+        unsigned int m_nqtot; 
+    
         PhysDeriv_MatrixFree(
                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                 CoalescedGeomDataSharedPtr                pGeomData)
@@ -312,6 +317,9 @@ class PhysDeriv_MatrixFree : public Operator
             using vec_t = tinysimd::simd<NekDouble>;
             const auto nElmtNoPad = pCollExp.size();
             auto nElmtPad = nElmtNoPad;
+
+            m_nqtot = nElmtNoPad*nqElmt; 
+
             m_output = Array<OneD, Array<OneD, NekDouble>> {m_coordim};
 
             if (nElmtNoPad % vec_t::width != 0)
@@ -333,19 +341,18 @@ class PhysDeriv_MatrixFree : public Operator
             }
             else
             {
-                m_output[0] = Array<OneD, NekDouble>{nqElmt * nElmtNoPad, 0.0};
+                m_output[0] = Array<OneD, NekDouble>{m_nqtot, 0.0};
                 if (m_coordim == 2)
                 {
-                    m_output[1] = Array<OneD, NekDouble>{nqElmt * nElmtNoPad, 0.0};
+                    m_output[1] = Array<OneD, NekDouble>{m_nqtot, 0.0};
                 }
                 if (m_coordim == 3)
                 {
-                    m_output[1] = Array<OneD, NekDouble>{nqElmt * nElmtNoPad, 0.0};
-                    m_output[2] = Array<OneD, NekDouble>{nqElmt * nElmtNoPad, 0.0};
+                    m_output[1] = Array<OneD, NekDouble>{m_nqtot, 0.0};
+                    m_output[2] = Array<OneD, NekDouble>{m_nqtot, 0.0};
                 }
             }
-        
-
+       
             // Check if deformed
             bool deformed{pGeomData->IsDeformed(pCollExp)};
 

@@ -6200,11 +6200,12 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	collect_f_all.block(collect_f_bnd.rows()+collect_f_p.rows(),0,collect_f_int.rows(),collect_f_int.cols()) = collect_f_int;
 
 	// do the same for VV reference solutions
-
-	cout << "\n attempting trafo for VV reference solutions \n \n";
-
-        for(int i = fine_grid_dir0*fine_grid_dir1; i < fine_grid_dir0*fine_grid_dir1; ++i)
+    for(int i = fine_grid_dir0*fine_grid_dir1; i < fine_grid_dir0*fine_grid_dir1; ++i)
 	{
+
+		cout << "\n attempting trafo for VV reference solutions \n \n";
+
+
 		double err_threshold = 1e-9;
 		int num_iter = 0;
 		Eigen::VectorXd ref_f_bnd;
@@ -6884,12 +6885,139 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	return min_distance_index;
     }
 
+    double CoupledLinearNS_TT::lagrange_interp(double curr_param, int curr_index, int sparse_poly_approx_dimension)
+	{
+		double lagrange_value = 1;
+		for (int i = 0; i < sparse_poly_approx_dimension; ++i)
+		{
+			if (general_param_vector[curr_index][0] != general_param_vector[i][0])
+				lagrange_value *= (curr_param - general_param_vector[i][0]) / (general_param_vector[curr_index][0] - general_param_vector[i][0]);
+		}
+		return lagrange_value;
+	}
+
+	void CoupledLinearNS_TT::sparse_approx_VV(int sparse_poly_approx_dimension, double& max, double& mean)
+	{
+		Array<OneD, NekDouble> collect_rel_L2error(fine_grid_dir0*fine_grid_dir1);
+		for (int iter_index = 0; iter_index < fine_grid_dir0*fine_grid_dir1; ++iter_index)
+		{
+			int current_index = iter_index;
+			Array<OneD, NekDouble> current_param = fine_general_param_vector[current_index];
+			double w = current_param[0];	
+			double current_nu = current_param[1];
+			Array<OneD, NekDouble> interpolant_x(snapshot_x_collection[0].num_elements());
+			Array<OneD, NekDouble> interpolant_y(snapshot_y_collection[0].num_elements());
+			for (int i = 0; i < snapshot_x_collection[0].num_elements(); ++i)
+			{
+				interpolant_x[i] = 0.0;
+				interpolant_y[i] = 0.0;
+			}
+			for (int index_interpol_op = 0; index_interpol_op < sparse_poly_approx_dimension; ++index_interpol_op)
+			{
+				double lagrange_value = lagrange_interp(w, index_interpol_op, sparse_poly_approx_dimension);
+				for (int i = 0; i < snapshot_x_collection[0].num_elements(); ++i)	
+				{
+					interpolant_x[i] += snapshot_x_collection[index_interpol_op][i] * lagrange_value;
+					interpolant_y[i] += snapshot_y_collection[index_interpol_op][i] * lagrange_value;
+				}
+			}
+			double rel_L2error = L2norm_abs_error_ITHACA(interpolant_x, interpolant_y, snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]) / L2norm_ITHACA(snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]);
+			collect_rel_L2error[iter_index] = rel_L2error;
+		}
+		mean = 0;
+		max = 0;
+		for (int iter_index = 0; iter_index < fine_grid_dir0*fine_grid_dir1; ++iter_index)
+		{
+			mean += collect_rel_L2error[iter_index] / (fine_grid_dir0*fine_grid_dir1);
+			if (collect_rel_L2error[iter_index] > max)
+				max = collect_rel_L2error[iter_index];
+		}
+	}
+
+
     void CoupledLinearNS_TT::compute_sparse_poly_approx()
 	{
-
-		int sparse_poly_approx_dimension = 10;
-		
-
+		int sparse_poly_approx_dimension = max_sparse_poly_approx_dimension;
+		// L2 error works on the snapshot_x_collection and snapshot_y_collection
+		// start sweeping 
+		for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+		{
+			int current_index = iter_index;
+			double current_nu;
+			double w;
+			if (parameter_space_dimension == 1)
+			{
+				current_nu = param_vector[current_index];
+			}
+			else if (parameter_space_dimension == 2)
+			{
+				Array<OneD, NekDouble> current_param = general_param_vector[current_index];
+				w = current_param[0];	
+				current_nu = current_param[1];
+			}		
+			// only case of w parameter
+			Array<OneD, NekDouble> interpolant_x(snapshot_x_collection[0].num_elements());
+			Array<OneD, NekDouble> interpolant_y(snapshot_y_collection[0].num_elements());
+			for (int i = 0; i < snapshot_x_collection[0].num_elements(); ++i)
+			{
+				interpolant_x[i] = 0.0;
+				interpolant_y[i] = 0.0;
+			}
+			for (int index_interpol_op = 0; index_interpol_op < sparse_poly_approx_dimension; ++index_interpol_op)
+			{
+				double lagrange_value = lagrange_interp(w, index_interpol_op, sparse_poly_approx_dimension);
+				for (int i = 0; i < snapshot_x_collection[0].num_elements(); ++i)	
+				{
+					interpolant_x[i] += snapshot_x_collection[index_interpol_op][i] * lagrange_value;
+					interpolant_y[i] += snapshot_y_collection[index_interpol_op][i] * lagrange_value;
+				}
+			}
+			double rel_L2error = L2norm_abs_error_ITHACA(interpolant_x, interpolant_y, snapshot_x_collection[iter_index], snapshot_y_collection[iter_index]) / L2norm_ITHACA(snapshot_x_collection[iter_index], snapshot_y_collection[iter_index]);
+			cout << "rel_L2error at parameter " << w << " is " << rel_L2error << endl;
+		}
+		Array<OneD, NekDouble> collect_max(sparse_poly_approx_dimension);
+		Array<OneD, NekDouble> collect_mean(sparse_poly_approx_dimension);
+		double max, mean;
+		for (int approx_dim = 1; approx_dim <= sparse_poly_approx_dimension; ++approx_dim)
+		{
+			sparse_approx_VV(approx_dim, max, mean);
+			cout << "max at dim " << approx_dim << " is " << max << endl;
+			cout << "mean at dim " << approx_dim << " is " << mean << endl;
+			collect_max[approx_dim-1] = max;
+			collect_mean[approx_dim-1] = mean;
+		}
+		{
+		std::stringstream sstm;
+		sstm << "sparse_conv_mean.txt";
+		std::string sparse_conv_mean = sstm.str();
+		const char* outname = sparse_conv_mean.c_str();
+		ofstream myfile (outname);
+		if (myfile.is_open())
+		{
+			for (int i0 = 0; i0 < sparse_poly_approx_dimension; i0++)
+			{
+				myfile << std::setprecision(17) << collect_mean[i0] << "\t";
+			}
+			myfile.close();
+		}
+		else cout << "Unable to open file"; 
+		}
+		{
+		std::stringstream sstm;
+		sstm << "sparse_conv_max.txt";
+		std::string sparse_conv_max = sstm.str();
+		const char* outname = sparse_conv_max.c_str();
+		ofstream myfile (outname);
+		if (myfile.is_open())
+		{
+			for (int i0 = 0; i0 < sparse_poly_approx_dimension; i0++)
+			{
+				myfile << std::setprecision(17) << collect_max[i0] << "\t";
+			}
+			myfile.close();
+		}
+		else cout << "Unable to open file"; 
+		}
 	}
 
     void CoupledLinearNS_TT::online_phase()
@@ -8230,6 +8358,14 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		else
 		{
 			use_sparse_poly = 0;
+		} 
+		if (m_session->DefinesParameter("max_sparse_poly_approx_dimension")) 
+		{
+			max_sparse_poly_approx_dimension = m_session->GetParameter("max_sparse_poly_approx_dimension");
+		}
+		else
+		{
+			max_sparse_poly_approx_dimension = 1;
 		} 
 		Array<OneD, NekDouble> index_vector(parameter_space_dimension, 0.0);
 
@@ -10893,9 +11029,9 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
     void CoupledLinearNS_TT::load_snapshots_geometry_params(int number_of_snapshots)
     {
 
-	// assuming it is prepared in the correct ordering - i.e. - outer loop dir0, inner loop dir1
+		// assuming it is prepared in the correct ordering - i.e. - outer loop dir0, inner loop dir1
 
-	int nvelo = 2;
+		int nvelo = 2;
         Array<OneD, Array<OneD, NekDouble> > test_load_snapshot(nvelo); // for a 2D problem
 
         for(int i = 0; i < nvelo; ++i)
@@ -10903,9 +11039,9 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
             test_load_snapshot[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);  // number of phys points
         }
 
-	cout << "a size of double  " << sizeof(double) << endl;	
-	cout << "no of phys points " << GetNpoints() << endl;
-	cout << "memory requirements for snapshots in bytes " << sizeof(double)*number_of_snapshots*2*GetNpoints() << endl;
+		cout << "a size of double  " << sizeof(double) << endl;	
+		cout << "no of phys points " << GetNpoints() << endl;
+		cout << "memory requirements for snapshots in bytes " << sizeof(double)*number_of_snapshots*2*GetNpoints() << endl;
 
         std::vector<std::string> fieldStr;
         for(int i = 0; i < nvelo; ++i)
@@ -10913,7 +11049,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
            fieldStr.push_back(m_session->GetVariable(i));
         }
 
-	// better way - difficult:
+		// better way - difficult:
         for(int i = 0; i < number_of_snapshots; ++i)
         {
 		// generate the correct string
@@ -10945,27 +11081,27 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 		EvaluateFunctionFld(fieldStr[0], test_load_snapshot[0], pFunctionName, 0.0, 0);
 */
-	}
+		}
 
 
-	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
-	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+		snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+		snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
         for(int i = 0; i < number_of_snapshots; ++i)
         {
-		// generate the correct string
-		std::stringstream sstm;
-		sstm << "TestSnap" << i+1;
-		std::string result = sstm.str();
-		const char* rr = result.c_str();
+			// generate the correct string
+			std::stringstream sstm;
+			sstm << "TestSnap" << i+1;
+			std::string result = sstm.str();
+			const char* rr = result.c_str();
 
 	        EvaluateFunction(fieldStr, test_load_snapshot, result);
-		snapshot_x_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
-		snapshot_y_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
-		for (int j=0; j < GetNpoints(); ++j)
-		{
-			snapshot_x_collection[i][j] = test_load_snapshot[0][j];
-			snapshot_y_collection[i][j] = test_load_snapshot[1][j];
-		}
+			snapshot_x_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+			snapshot_y_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+			for (int j=0; j < GetNpoints(); ++j)
+			{
+				snapshot_x_collection[i][j] = test_load_snapshot[0][j];
+				snapshot_y_collection[i][j] = test_load_snapshot[1][j];
+			}
         }
 
     }

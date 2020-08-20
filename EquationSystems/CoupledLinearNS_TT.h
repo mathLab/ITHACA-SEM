@@ -300,8 +300,12 @@ namespace Nektar
         Eigen::VectorXd remove_rows(Eigen::VectorXd the_vector, std::set<int> elements_to_be_removed);
 
 	NekDouble Get_m_kinvis(void);
+	double lagrange_interp(double curr_param, int curr_index, int sparse_poly_approx_dimension);
+	void sparse_approx_VV(int sparse_poly_approx_dimension, double& max, double& mean);
 	void Set_m_kinvis(NekDouble);
 	Array<OneD, Array<OneD, NekDouble> > myAdvField_Newton;
+
+	int max_sparse_poly_approx_dimension;
 
     protected:
         

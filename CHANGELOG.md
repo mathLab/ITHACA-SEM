@@ -55,7 +55,7 @@ v5.0.1
 - Fix Collection unit tests (!1160)
 - Fix periodic boundary conditions with HDF5 input file (!1163)
 - Fix DESTDIR issues for MacPorts (!1179)
-
+- Fix Bodyforcing and history point filter bounds issue (!1184)
 **IncNavierStokesSolver**
 - Change the baseflow time in the Adjoint advection (!1133)
 

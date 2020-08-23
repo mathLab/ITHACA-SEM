@@ -58,6 +58,8 @@ class Collection
                 std::vector<StdRegions::StdExpansionSharedPtr>  pCollExp,
                 OperatorImpMap                                 &impTypes);
 
+        void Initialise(const OperatorType opType);
+
         inline void ApplyOperator(
                 const OperatorType                           &op,
                 const Array<OneD, const NekDouble>           &inarray,
@@ -94,9 +96,13 @@ class Collection
             return m_geomData;
         }
 
+    
     protected:
-        std::unordered_map<OperatorType, OperatorSharedPtr, EnumHash> m_ops;
-        CoalescedGeomDataSharedPtr                                    m_geomData;
+    std::unordered_map<OperatorType, OperatorSharedPtr, EnumHash> m_ops;
+    CoalescedGeomDataSharedPtr                                    m_geomData;
+    // store details for initialisation on call rather than default initialisation
+    std::vector<StdRegions::StdExpansionSharedPtr>                m_collExp; 
+    OperatorImpMap                                                m_impTypes;
 
 };
 
@@ -163,6 +169,7 @@ inline bool Collection::HasOperator(const OperatorType &op)
 {
     return (m_ops.find(op) != m_ops.end());
 }
+
 
 }
 }

@@ -1177,6 +1177,9 @@ namespace Nektar
 
             Collections::CollectionVector m_collections;
 
+            /// Vector of bools to act as an initialise on first call flag
+            std::vector<bool> m_collectionsDoInit;
+            
             /// Offset of elemental data into the array #m_coeffs
             std::vector<int>  m_coll_coeff_offset;
 
@@ -1195,9 +1198,10 @@ namespace Nektar
             NekOptimize::GlobalOptParamSharedPtr m_globalOptParam;
 
             BlockMatrixMapShPtr  m_blockMat;
-
-            //@todo should this be in ExpList or ExpListHomogeneous1D.cpp
-            // it's a bool which determine if the expansion is in the wave space (coefficient space)
+            
+            //@todo should this be in ExpList or
+            // ExpListHomogeneous1D.cpp it's a bool which determine if
+            // the expansion is in the wave space (coefficient space)
             // or not
             bool m_WaveSpace;
 

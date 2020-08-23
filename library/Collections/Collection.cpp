@@ -45,11 +45,14 @@ namespace Collections {
  */
 Collection::Collection(
         vector<StdRegions::StdExpansionSharedPtr>    pCollExp,
-        OperatorImpMap                              &impTypes)
+        OperatorImpMap                              &impTypes):
+    m_collExp(pCollExp), 
+    m_impTypes(impTypes)
 {
     // Initialise geometry data.
     m_geomData = MemoryManager<CoalescedGeomData>::AllocateSharedPtr();
 
+#if 0 
     // Loop over all operator types.
     for (int i = 0; i < SIZE_OperatorType; ++i)
     {
@@ -72,8 +75,37 @@ Collection::Collection(
                                                 opKey, pCollExp, m_geomData);
         }
     }
+#endif    
 }
 
+void Collection::Initialise(const OperatorType opType)
+{
+    if(!HasOperator(opType))
+    {
+        auto it = m_impTypes.find(opType);
+        
+        if (it != m_impTypes.end())
+        {
+            ImplementationType impType = it->second;
+            OperatorKey opKey(m_collExp[0]->DetShapeType(), opType, impType,
+                              m_collExp[0]->IsNodalNonTensorialExp());
+            
+            stringstream ss;
+            ss << opKey;
+            ASSERTL0(GetOperatorFactory().ModuleExists(opKey),
+                     "Requested unknown operator "+ss.str());
+            
+            m_ops[opType] = GetOperatorFactory().CreateInstance(
+                                          opKey, m_collExp, m_geomData);
+        }
+        else
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "Failed to determine implmentation to initialise "
+                     "collection operator");
+        }
+    }
+}
 }
 }
 

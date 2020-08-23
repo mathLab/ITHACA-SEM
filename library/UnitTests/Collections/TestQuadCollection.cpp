@@ -100,6 +100,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eBwdTrans);
 
         Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
         Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
@@ -147,7 +148,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
-
+        c.Initialise(Collections::eBwdTrans);
 
         Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
         Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
@@ -199,6 +200,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eBwdTrans);
 
 
         Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
@@ -248,6 +250,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eBwdTrans);
 
         Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
         Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
@@ -294,7 +297,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
-
+        c.Initialise(Collections::eBwdTrans);
 
         Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
         Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
@@ -349,6 +352,7 @@ namespace QuadCollectionTests
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         impTypes[Collections::eBwdTrans] = Collections::eMatrixFree;
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eBwdTrans);
 
         Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
         Array<OneD, NekDouble> physRef(Exp->GetTotPoints());
@@ -400,6 +404,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eBwdTrans);
 
         Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
         Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
@@ -453,6 +458,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eBwdTrans);
 
         Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
         Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
@@ -508,6 +514,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eBwdTrans);
 
         Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
         Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
@@ -562,6 +569,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eBwdTrans);
 
         Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
         Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
@@ -610,7 +618,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
-
+        c.Initialise(Collections::eIProductWRTBase);
 
         const int nq = Exp->GetTotPoints();
         Array<OneD, NekDouble> phys(nq);
@@ -670,6 +678,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eIProductWRTBase);
 
 
         const int nq = Exp->GetTotPoints();
@@ -735,6 +744,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eIProductWRTBase);
 
 
         const int nq = Exp->GetTotPoints();
@@ -798,7 +808,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
-
+        c.Initialise(Collections::eIProductWRTBase);
 
         const int nq = Exp->GetTotPoints();
         Array<OneD, NekDouble> phys(nq);
@@ -857,6 +867,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eIProductWRTBase);
 
         const int nq = Exp->GetTotPoints();
         Array<OneD, NekDouble> phys(nq);
@@ -915,6 +926,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eIProductWRTBase);
 
         const int nq = Exp->GetTotPoints();
         Array<OneD, NekDouble> phys(nq);
@@ -982,6 +994,7 @@ namespace QuadCollectionTests
             Collections::eMatrixFree);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eIProductWRTBase);
 
         const int nq = Exp->GetTotPoints();
         Array<OneD, NekDouble> phys(nq);
@@ -1049,6 +1062,7 @@ namespace QuadCollectionTests
             Collections::eMatrixFree);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eIProductWRTBase);
 
         const int nq = Exp->GetTotPoints();
         Array<OneD, NekDouble> phys(nq);
@@ -1116,6 +1130,7 @@ namespace QuadCollectionTests
             Collections::eMatrixFree);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eIProductWRTBase);
 
         const int nq = Exp->GetTotPoints();
         Array<OneD, NekDouble> phys(nq);
@@ -1175,6 +1190,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::ePhysDeriv);
 
         const int nq = Exp->GetTotPoints();
         Array<OneD, NekDouble> xc(nq), yc(nq);
@@ -1234,7 +1250,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
-
+        c.Initialise(Collections::ePhysDeriv);
 
         const int nq = Exp->GetTotPoints();
         Array<OneD, NekDouble> xc(nq), yc(nq);
@@ -1307,6 +1323,7 @@ namespace QuadCollectionTests
             Collections::eMatrixFree);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::ePhysDeriv);
 
         const int nq = Exp->GetTotPoints();
         Array<OneD, NekDouble> xc(nq), yc(nq);
@@ -1373,6 +1390,7 @@ namespace QuadCollectionTests
             Collections::eMatrixFree);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::ePhysDeriv);
 
         const int nq = Exp->GetTotPoints();
         Array<OneD, NekDouble> xc(nq), yc(nq);
@@ -1440,6 +1458,7 @@ namespace QuadCollectionTests
             Collections::eMatrixFree);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::ePhysDeriv);
 
         const int nq = Exp->GetTotPoints();
         Array<OneD, NekDouble> xc(nq), yc(nq);
@@ -1499,7 +1518,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
-
+        c.Initialise(Collections::ePhysDeriv);
 
         const int nq = Exp->GetTotPoints();
         Array<OneD, NekDouble> xc(nq), yc(nq);
@@ -1560,7 +1579,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
-
+        c.Initialise(Collections::ePhysDeriv);
 
         const int nq = Exp->GetTotPoints();
         Array<OneD, NekDouble> xc(nq), yc(nq);
@@ -1624,6 +1643,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::ePhysDeriv);
 
         const int nq = Exp->GetTotPoints();
         Array<OneD, NekDouble> xc(nq), yc(nq);
@@ -1684,6 +1704,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::ePhysDeriv);
 
         const int nq = Exp->GetTotPoints();
         Array<OneD, NekDouble> xc(nq), yc(nq);
@@ -1747,7 +1768,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
-
+        c.Initialise(Collections::eIProductWRTDerivBase);
 
         const int nq = Exp->GetTotPoints();
         const int nm = Exp->GetNcoeffs();
@@ -1820,6 +1841,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eIProductWRTDerivBase);
 
         const int nq = Exp->GetTotPoints();
         const int nm = Exp->GetNcoeffs();
@@ -1904,7 +1926,9 @@ namespace QuadCollectionTests
             Collections::eMatrixFree);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     cref(CollExp, impTypes);
+        cref.Initialise(Collections::eIProductWRTDerivBase);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eIProductWRTDerivBase);
 
         const int nq = Exp->GetTotPoints();
         const int nm = Exp->GetNcoeffs();
@@ -1982,7 +2006,9 @@ namespace QuadCollectionTests
             Collections::eMatrixFree);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     cref(CollExp, impTypes);
+        cref.Initialise(Collections::eIProductWRTDerivBase);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eIProductWRTDerivBase);
 
         const int nq = Exp->GetTotPoints();
         const int nm = Exp->GetNcoeffs();
@@ -2064,6 +2090,7 @@ namespace QuadCollectionTests
             Collections::eMatrixFree);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eIProductWRTDerivBase);
 
         const int nq = Exp->GetTotPoints();
         const int nm = Exp->GetNcoeffs();
@@ -2158,7 +2185,9 @@ namespace QuadCollectionTests
             Collections::eMatrixFree);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     cref(CollExp, impTypes);
+        cref.Initialise(Collections::eIProductWRTDerivBase);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eIProductWRTDerivBase);
 
         const int nq = Exp->GetTotPoints();
         const int nm = Exp->GetNcoeffs();
@@ -2226,6 +2255,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eIProductWRTDerivBase);
 
 
         const int nq = Exp->GetTotPoints();
@@ -2299,6 +2329,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eIProductWRTDerivBase);
 
 
         const int nq = Exp->GetTotPoints();
@@ -2374,6 +2405,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eIProductWRTDerivBase);
 
         const int nq = Exp->GetTotPoints();
         const int nm = Exp->GetNcoeffs();
@@ -2445,6 +2477,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eIProductWRTDerivBase);
 
         const int nq = Exp->GetTotPoints();
         const int nm = Exp->GetNcoeffs();
@@ -2523,6 +2556,7 @@ namespace QuadCollectionTests
         Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
         Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eIProductWRTDerivBase);
         
         const int nq = Exp->GetTotPoints();
         const int nm = Exp->GetNcoeffs();

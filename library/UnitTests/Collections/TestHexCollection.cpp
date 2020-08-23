@@ -141,7 +141,8 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
             Collections::Collection     c(CollExp, impTypes);
-
+            c.Initialise(Collections::eBwdTrans);
+            
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
             Array<OneD, NekDouble> phys2(Exp->GetTotPoints());
@@ -194,6 +195,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eBwdTrans);
 
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
@@ -244,6 +246,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eBwdTrans);
 
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
@@ -297,6 +300,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eBwdTrans);
 
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
@@ -305,6 +309,7 @@ namespace Nektar
 
             Exp->BwdTrans(coeffs, phys1);
             c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
+            c.Initialise(Collections::eBwdTrans);
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < phys1.size(); ++i)
@@ -353,7 +358,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
-
+            c.Initialise(Collections::eBwdTrans);
 
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
@@ -410,6 +415,7 @@ namespace Nektar
                                                        Collections::eNoCollection);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eBwdTrans);
 
 
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
@@ -465,7 +471,8 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
-
+            c.Initialise(Collections::eBwdTrans);
+                
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
             Array<OneD, NekDouble> phys2(nelmts*Exp->GetTotPoints());
@@ -520,6 +527,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eBwdTrans);
 
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
@@ -573,12 +581,15 @@ namespace Nektar
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
+            {
                 CollExp.push_back(Exp);
+            }
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eBwdTrans);
 
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
@@ -631,12 +642,15 @@ namespace Nektar
 
             std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
+            {
                 CollExp.push_back(Exp);
+            }
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eBwdTrans);
 
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
@@ -706,6 +720,7 @@ namespace Nektar
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eBwdTrans);
 
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> physRef(Exp->GetTotPoints());
@@ -757,6 +772,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTBase);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -833,6 +849,7 @@ namespace Nektar
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTBase);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -911,6 +928,7 @@ namespace Nektar
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTBase);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -989,6 +1007,7 @@ namespace Nektar
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTBase);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -1055,6 +1074,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTBase);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -1072,6 +1092,7 @@ namespace Nektar
 
             Exp->IProductWRTBase(phys, coeffs1);
             c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
+            c.Initialise(Collections::eIProductWRTBase);
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < coeffs1.size(); ++i)
@@ -1119,6 +1140,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eNoCollection);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTBase);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -1136,6 +1158,7 @@ namespace Nektar
 
             Exp->IProductWRTBase(phys, coeffs1);
             c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
+            c.Initialise(Collections::eIProductWRTBase);
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < coeffs1.size(); ++i)
@@ -1181,6 +1204,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTBase);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -1244,6 +1268,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTBase);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -1307,6 +1332,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTBase);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -1376,6 +1402,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTBase);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nelmts*nq), tmp;
@@ -1452,6 +1479,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTBase);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nelmts*nq), tmp;
@@ -1520,6 +1548,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTBase);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -1586,6 +1615,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTBase);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -1652,6 +1682,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTBase);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nelmts*nq), tmp;
@@ -1725,6 +1756,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTBase);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nelmts*nq), tmp;
@@ -1799,6 +1831,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTBase);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nelmts*nq), tmp;
@@ -1873,6 +1906,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTBase);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nelmts*nq), tmp;
@@ -1940,7 +1974,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
-
+            c.Initialise(Collections::ePhysDeriv);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
@@ -2015,6 +2049,7 @@ namespace Nektar
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::ePhysDeriv);
 
 
             const int nq = Exp->GetTotPoints();
@@ -2094,6 +2129,7 @@ namespace Nektar
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::ePhysDeriv);
 
 
             const int nq = Exp->GetTotPoints();
@@ -2165,6 +2201,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::ePhysDeriv);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
@@ -2242,6 +2279,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eNoCollection);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::ePhysDeriv);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
@@ -2311,6 +2349,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::ePhysDeriv);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
@@ -2377,6 +2416,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::ePhysDeriv);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
@@ -2445,6 +2485,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::ePhysDeriv);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
@@ -2511,6 +2552,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::ePhysDeriv);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
@@ -2545,7 +2587,7 @@ namespace Nektar
             }
         }
 
-        BOOST_AUTO_TEST_CASE(TestHexIProductWRTDerivBase_IterPerExp_UniformP)
+        BOOST_AUTO_TEST_CASE(TestHexIProductWRTDerivBase_Iterperexp_UniformP)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.5, -1.5, -1.5));
             SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(3u, 1u, 1.0, -1.0, -1.0));
@@ -2579,6 +2621,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTDerivBase);
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
@@ -2668,6 +2711,7 @@ namespace Nektar
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTDerivBase);
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
@@ -2757,6 +2801,7 @@ namespace Nektar
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTDerivBase);
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
@@ -2846,6 +2891,7 @@ namespace Nektar
             Collections::OperatorImpMap impTypes =
                 colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTDerivBase);
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
@@ -2927,6 +2973,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTDerivBase);
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
@@ -3012,6 +3059,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTDerivBase);
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
@@ -3094,7 +3142,8 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
-
+            c.Initialise(Collections::eIProductWRTDerivBase);
+            
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
             Array<OneD, NekDouble> phys1(nelmts*nq,   0.0);
@@ -3187,6 +3236,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eNoCollection);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTDerivBase);
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
@@ -3271,6 +3321,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTDerivBase);
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
@@ -3352,6 +3403,7 @@ namespace Nektar
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
             Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
+            c.Initialise(Collections::eIProductWRTDerivBase);
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();

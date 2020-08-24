@@ -152,19 +152,19 @@ namespace Nektar
 			// Setup an ExpList1DHomogeneous2D expansion for boundary
             // conditions and link to class declared in m_lines.
 
-			size_t nlines = m_lines.size();
+            size_t nlines = m_lines.size();
 
-			const SpatialDomains::BoundaryRegionCollection  &bregions = bcs.GetBoundaryRegions();
-
-			size_t nbnd = bregions.size();
-
-			m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(nbnd);
-			m_bndCondBndWeight  = Array<OneD, NekDouble> {nbnd, 0.0};
-			
-			Array<OneD, MultiRegions::ExpListSharedPtr> LinesBndCondExp(nlines);
-
-			m_bndConditions = m_lines[0]->UpdateBndConditions();
-
+            const SpatialDomains::BoundaryRegionCollection  &bregions = bcs.GetBoundaryRegions();
+            
+            size_t nbnd = bregions.size();
+            
+            m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(nbnd);
+            m_bndCondBndWeight  = Array<OneD, NekDouble> {nbnd, 0.0};
+            
+            Array<OneD, MultiRegions::ExpListSharedPtr> LinesBndCondExp(nlines);
+            
+            m_bndConditions = m_lines[0]->UpdateBndConditions();
+            
             for(int i = 0; i < nbnd; ++i)
             {
                 for(int n = 0; n < nlines; ++n)

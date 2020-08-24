@@ -378,6 +378,10 @@ OperatorImpMap CollectionOptimisation::SetWithTimings(
         }
 
         Collection collloc(pCollExp,impTypes);
+        for (int i = 0; i < SIZE_OperatorType; ++i)
+        {
+            collloc.Initialise((OperatorType)i);
+        }
         coll.push_back(collloc);
     }
 

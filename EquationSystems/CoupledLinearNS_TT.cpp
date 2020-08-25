@@ -7310,14 +7310,14 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			}
 			cout << "snap_x.norm() " << snap_x.norm() << endl;
 			cout << "snap_y.norm() " << snap_y.norm() << endl;
-			for (int index_recr = 0; index_recr < cluster_mean_x.num_elements(); ++index_recr)
+/*			for (int index_recr = 0; index_recr < cluster_mean_x.num_elements(); ++index_recr)
 			{
 				snap_x(index_recr) = snapshot_x_collection[iter_index][index_recr];
 				snap_y(index_recr) = snapshot_y_collection[iter_index][index_recr];
 			}
 			cout << "sample snap_x.norm() " << snap_x.norm() << endl;
 			cout << "sample snap_y.norm() " << snap_y.norm() << endl;
-
+*/
 
 			Eigen::MatrixXd curr_xy_proj = project_onto_basis(cluster_mean_x, cluster_mean_y);
 			Eigen::MatrixXd affine_mat_proj;
@@ -7350,17 +7350,17 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 				}
 				else if (parameter_space_dimension == 2)
 				{
-					cout << " VV online phase current nu " << current_nu << endl;
-					cout << " VV online phase current w " << w << endl;
+					//cout << " VV online phase current nu " << current_nu << endl;
+					//cout << " VV online phase current w " << w << endl;
 					affine_mat_proj = gen_affine_mat_proj_2d(current_nu, w);
 					affine_vec_proj = gen_affine_vec_proj_2d(current_nu, w, current_index);
 				}
 				solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
 				relative_change_error = (solve_affine - prev_solve_affine).norm() / prev_solve_affine.norm();
-				cout << "relative_change_error " << relative_change_error << " no_iter " << no_iter << endl;
+				//cout << "relative_change_error " << relative_change_error << " no_iter " << no_iter << endl;
 				no_iter++;
 			} 
-			while( ((relative_change_error > 1e-12) && (no_iter < 10000)) );
+			while( ((relative_change_error > 1e-12) && (no_iter < 100)) );
 //			cout << "ROM solve no iters used " << no_iter << endl;
 			Eigen::VectorXd repro_solve_affine = RB * solve_affine;
 			Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
@@ -7617,7 +7617,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //				cout << "relative_change_error " << relative_change_error << endl;
 				no_iter++;
 			} 
-			while( ((relative_change_error > 1e-12) && (no_iter < 20000)) );
+			while( ((relative_change_error > 1e-12) && (no_iter < 100)) );
 //			cout << "ROM solve no iters used " << no_iter << endl;
 			repro_solve_affine = RB.leftCols(RBsize-reduction_int)  * solve_affine;
 			Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);

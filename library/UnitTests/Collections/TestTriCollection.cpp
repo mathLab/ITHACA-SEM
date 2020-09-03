@@ -2716,5 +2716,192 @@ namespace Nektar
                 BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
             }
         }
-}
+        
+
+        BOOST_AUTO_TEST_CASE(TestTriHelmholtz_MatrixFree_UniformP)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
+
+            SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
+
+            unsigned int numQuadPoints = 5;
+            unsigned int numModes = 4;
+            
+            Nektar::LibUtilities::PointsType triPointsTypeDir1 =
+                Nektar::LibUtilities::eGaussLobattoLegendre;
+            const Nektar::LibUtilities::PointsKey triPointsKeyDir1(numQuadPoints,
+                                                                   triPointsTypeDir1);
+            Nektar::LibUtilities::BasisType       basisTypeDir1 =
+                Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir1(basisTypeDir1,
+                                                   numModes,triPointsKeyDir1);
+
+            Nektar::LibUtilities::PointsType triPointsTypeDir2 =
+                Nektar::LibUtilities::eGaussRadauMAlpha1Beta0;
+            const Nektar::LibUtilities::PointsKey triPointsKeyDir2(numQuadPoints-1,
+                                                                   triPointsTypeDir2);
+            Nektar::LibUtilities::BasisType       basisTypeDir2 =
+                Nektar::LibUtilities::eModified_B;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,
+                                                   numModes,triPointsKeyDir2);
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
+                MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, triGeom);
+
+            Nektar::StdRegions::StdTriExpSharedPtr stdExp =
+                MemoryManager<Nektar::StdRegions::StdTriExp>::AllocateSharedPtr(
+            basisKeyDir1, basisKeyDir1);
+
+            int nelmts = 10;
+            
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+
+            for(int i = 0; i < nelmts; ++i)
+            {
+                CollExp.push_back(Exp);
+            }
+            
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession,
+                                                       Collections::eMatrixFree);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(CollExp, impTypes);
+            c.Initialise (Collections::eHelmholtz);
+            StdRegions::ConstFactorMap factors;
+            
+            factors[StdRegions::eFactorLambda] = 1.5; 
+            
+            const int nm = Exp->GetNcoeffs();
+            Array<OneD, NekDouble> coeffsIn(nelmts*nm);
+            Array<OneD, NekDouble> coeffsRef(nelmts*nm);
+            Array<OneD, NekDouble> coeffs(nelmts*nm), tmp;
+
+            for (int i = 0; i < nm; ++i)
+            {
+                coeffsIn[i] = 1.0; 
+            }
+            
+            for(int i = 1; i < nelmts; ++i)
+            {
+                Vmath::Vcopy(nm,coeffsIn,1,tmp = coeffsIn + i*nm,1);
+            }
+            
+            StdRegions::StdMatrixKey mkey(StdRegions::eHelmholtz,
+                                          Exp->DetShapeType(),
+                                          *Exp, factors);
+            
+            for(int i = 0; i < nelmts; ++i)
+            {            
+                // Standard routines
+                Exp->GeneralMatrixOp(coeffsIn + i*nm,
+                                     tmp = coeffsRef + i*nm, mkey);
+            }
+            
+            c.ApplyOperator(Collections::eHelmholtz,coeffsIn,coeffs,factors);
+            
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < coeffsRef.size(); ++i)
+            {
+                coeffsRef[i] = (std::abs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
+                coeffs[i] = (std::abs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
+                BOOST_CHECK_CLOSE(coeffsRef[i], coeffs[i], epsilon);
+            }
+        }
+
+        BOOST_AUTO_TEST_CASE(TestTriHelmholtz_MatrixFree_UniformP_OverInt)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
+
+            SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
+
+            unsigned int numQuadPoints = 8;
+            unsigned int numModes = 4;
+            
+            Nektar::LibUtilities::PointsType triPointsTypeDir1 =
+                Nektar::LibUtilities::eGaussLobattoLegendre;
+            const Nektar::LibUtilities::PointsKey triPointsKeyDir1(numQuadPoints,
+                                                                   triPointsTypeDir1);
+            Nektar::LibUtilities::BasisType       basisTypeDir1 =
+                Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir1(basisTypeDir1,
+                                                   numModes,triPointsKeyDir1);
+
+            Nektar::LibUtilities::PointsType triPointsTypeDir2 =
+                Nektar::LibUtilities::eGaussRadauMAlpha1Beta0;
+            const Nektar::LibUtilities::PointsKey triPointsKeyDir2(numQuadPoints-1,
+                                                                   triPointsTypeDir2);
+            Nektar::LibUtilities::BasisType       basisTypeDir2 =
+                Nektar::LibUtilities::eModified_B;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,
+                                                   numModes,triPointsKeyDir2);
+
+            Nektar::LocalRegions::TriExpSharedPtr Exp =
+                MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, triGeom);
+
+            Nektar::StdRegions::StdTriExpSharedPtr stdExp =
+                MemoryManager<Nektar::StdRegions::StdTriExp>::AllocateSharedPtr(
+            basisKeyDir1, basisKeyDir1);
+
+            int nelmts = 10;
+            
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+
+            for(int i = 0; i < nelmts; ++i)
+            {
+                CollExp.push_back(Exp);
+            }
+            
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession,
+                                                       Collections::eMatrixFree);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(CollExp, impTypes);
+            c.Initialise (Collections::eHelmholtz);
+            StdRegions::ConstFactorMap factors;
+            
+            factors[StdRegions::eFactorLambda] = 1.5; 
+            
+            const int nm = Exp->GetNcoeffs();
+            Array<OneD, NekDouble> coeffsIn(nelmts*nm);
+            Array<OneD, NekDouble> coeffsRef(nelmts*nm);
+            Array<OneD, NekDouble> coeffs(nelmts*nm), tmp;
+
+            for (int i = 0; i < nm; ++i)
+            {
+                coeffsIn[i] = 1.0; 
+            }
+            
+            for(int i = 1; i < nelmts; ++i)
+            {
+                Vmath::Vcopy(nm,coeffsIn,1,tmp = coeffsIn + i*nm,1);
+            }
+            
+            StdRegions::StdMatrixKey mkey(StdRegions::eHelmholtz,
+                                          Exp->DetShapeType(),
+                                          *Exp, factors);
+            
+            for(int i = 0; i < nelmts; ++i)
+            {            
+                // Standard routines
+                Exp->GeneralMatrixOp(coeffsIn + i*nm,
+                                     tmp = coeffsRef + i*nm, mkey);
+            }
+            
+            c.ApplyOperator(Collections::eHelmholtz,coeffsIn,coeffs,factors);
+            
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < coeffsRef.size(); ++i)
+            {
+                coeffsRef[i] = (std::abs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
+                coeffs[i] = (std::abs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
+                BOOST_CHECK_CLOSE(coeffsRef[i], coeffs[i], epsilon);
+            }
+        }
+    }
 }

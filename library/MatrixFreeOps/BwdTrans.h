@@ -376,7 +376,7 @@ struct BwdTransQuad : public BwdTrans, public Helper<2>
                 "BwdTransQuad: # of modes / points combo not implemented.");
                 } break;;
             default: NEKERROR(ErrorUtil::efatal,
-                "BwdTransQuad: # of modes / points combo not implemented.");
+                "BwdTransQuad: # of modes / points combo not yet initialised.");
         }
     }
 

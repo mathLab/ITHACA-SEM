@@ -80,7 +80,8 @@ struct HelmholtzQuad : public Helmholtz, public Helper<2, DEFORMED>
         // Allocate sufficient workspace for backwards transform and inner
         // product kernels.
         constexpr auto wspInnerProd = NQ1;
-        const auto wspSize = wspInnerProd > m_nmTot ? wspInnerProd : m_nmTot;
+        constexpr auto wspBwdTrans = NQ0 * NM0;
+        constexpr auto wspSize = wspInnerProd > wspBwdTrans ? wspInnerProd : wspBwdTrans;
 
         vec_t wsp[wspSize]; // workspace for kernels
 
@@ -248,7 +249,7 @@ public:
     }
 
 private:
-    int m_nmTot;
+    const int m_nmTot;
 };
 
 

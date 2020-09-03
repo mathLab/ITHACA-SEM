@@ -100,9 +100,10 @@ void Collection::Initialise(const OperatorType opType)
         }
         else
         {
-            NEKERROR(ErrorUtil::efatal,
+            NEKERROR(ErrorUtil::ewarning,
                      "Failed to determine implmentation to initialise "
-                     "collection operator");
+                     "collection operator: " +
+                     std::string(Collections::OperatorTypeMap[opType]));
         }
     }
 }

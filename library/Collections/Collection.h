@@ -63,8 +63,10 @@ class Collection
         inline void ApplyOperator(
                 const OperatorType                           &op,
                 const Array<OneD, const NekDouble>           &inarray,
-                      Array<OneD,       NekDouble>           &output);
-
+                      Array<OneD,       NekDouble>           &output,
+                const StdRegions::ConstFactorMap             &factors =
+                      StdRegions::NullConstFactorMap);
+    
         inline void ApplyOperator(
                 const OperatorType                           &op,
                 const Array<OneD, const NekDouble>           &inarray,
@@ -76,7 +78,9 @@ class Collection
                 const Array<OneD, const NekDouble>           &inarray,
                       Array<OneD,       NekDouble>           &output0,
                       Array<OneD,       NekDouble>           &output1,
-                      Array<OneD,       NekDouble>           &output2);
+                      Array<OneD,       NekDouble>           &output2, 
+                const StdRegions::ConstFactorMap             &factors =
+                      StdRegions::NullConstFactorMap);
 
         inline void ApplyOperator(
                 const OperatorType                           &op,
@@ -116,11 +120,12 @@ typedef std::shared_ptr<CollectionVector> CollectionVectorSharedPtr;
 inline void Collection::ApplyOperator(
         const OperatorType                 &op,
         const Array<OneD, const NekDouble> &inarray,
-              Array<OneD,       NekDouble> &output)
+        Array<OneD,       NekDouble>       &output,
+        const StdRegions::ConstFactorMap   &factors)
 {
     Array<OneD, NekDouble> wsp(m_ops[op]->GetWspSize());
     (*m_ops[op])(inarray, output, NullNekDouble1DArray,
-                 NullNekDouble1DArray, wsp);
+                 NullNekDouble1DArray, wsp, factors);
 }
 
 
@@ -146,10 +151,11 @@ inline void Collection::ApplyOperator(
         const Array<OneD, const NekDouble> &inarray,
               Array<OneD,       NekDouble> &output0,
               Array<OneD,       NekDouble> &output1,
-              Array<OneD,       NekDouble> &output2)
+              Array<OneD,       NekDouble> &output2,
+        const StdRegions::ConstFactorMap   &factors)
 {
     Array<OneD, NekDouble> wsp(m_ops[op]->GetWspSize());
-    (*m_ops[op])(inarray, output0, output1, output2, wsp);
+    (*m_ops[op])(inarray, output0, output1, output2, wsp, factors);
 }
 
 /**

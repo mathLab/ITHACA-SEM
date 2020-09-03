@@ -238,7 +238,8 @@ class Helmholtz : virtual public Operator
 public:
     Helmholtz(std::vector<LibUtilities::BasisSharedPtr> basis,
               int nElmt) :
-        m_basis(basis), m_nElmt(nElmt)
+        m_basis(basis), m_nElmt(nElmt),
+        m_lambda(1.0)
     {
     }
 
@@ -260,28 +261,15 @@ public:
         const Array<OneD, const NekDouble> &input,
         Array<OneD, NekDouble> &output) = 0;
 
-    // void Ref(MultiRegions::ExpListSharedPtr expList,
-    //          Array<OneD, NekDouble> &ref_exp,
-    //          Array<OneD, NekDouble> &ref_helm)
-    // {
-    //     Array<OneD, NekDouble> ref_fn(expList->GetNpoints());
-    //     this->RefFn(expList, ref_fn);
-    //     expList->FwdTrans_IterPerExp(ref_fn, ref_exp);
-
-    //     StdRegions::ConstFactorMap factors;
-    //     factors[StdRegions::eFactorLambda] = 1.0;
-
-    //     MultiRegions::GlobalMatrixKey mkey(
-    //         StdRegions::eHelmholtz,
-    //         MultiRegions::NullAssemblyMapSharedPtr,
-    //         factors);
-
-    //     expList->GeneralMatrixOp_IterPerExp(mkey, ref_exp, ref_helm);
-    // }
+    inline void SetLambda(NekDouble lambda)
+    {
+        m_lambda = lambda;
+    }
 
 protected:
     std::vector<LibUtilities::BasisSharedPtr> m_basis;
     int m_nElmt;
+    NekDouble m_lambda;
 };
 
 // template<int VW>

@@ -169,11 +169,11 @@ static void PhysDerivQuadKernel(
             }
 
             //Multiply by derivative factors
-            vec_t out0 = d0 * df0; //d0 * df00 + d1 * df10
+            vec_t out0 = d0 * df0; //d0 * df0 + d1 * df1
             out0.fma(d1, df1);
             out_d0[cnt_ji] = out0; //Store 1x
 
-            vec_t out1 = d0 * df2; //d0 * df2 + d1 * df30
+            vec_t out1 = d0 * df2; //d0 * df2 + d1 * df3
             out1.fma(d1, df3);
             out_d1[cnt_ji] = out1; //Store 1x
         }

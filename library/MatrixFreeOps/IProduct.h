@@ -37,7 +37,7 @@ struct IProductSeg : public IProduct, public Helper<1, DEFORMED>
     {
         switch(m_basis[0]->GetNumModes())
         {
-            case 2:
+        case 2:
                 switch(m_basis[0]->GetNumPoints())
                 {
                     case 2: IProductSegImpl<2 ,2 >(in, out); break;

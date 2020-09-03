@@ -71,8 +71,11 @@ class IProductWRTDerivBase_StdMat : public Operator
                       Array<OneD,       NekDouble> &entry1,
                       Array<OneD,       NekDouble> &entry2,
                       Array<OneD,       NekDouble> &entry3,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
+            boost::ignore_unused(factors);
+
             int nPhys = m_stdExp->GetTotPoints();
             int ntot = m_numElmt*nPhys;
             int nmodes = m_stdExp->GetNcoeffs();
@@ -245,9 +248,10 @@ class IProductWRTDerivBase_MatrixFree : public Operator
                            Array<OneD, NekDouble> &entry1,
                            Array<OneD, NekDouble> &entry2,
                            Array<OneD, NekDouble> &entry3,
-                           Array<OneD, NekDouble> &wsp)
+                           Array<OneD, NekDouble> &wsp,
+                const StdRegions::ConstFactorMap  &factors) final
         {
-            boost::ignore_unused(wsp);
+            boost::ignore_unused(wsp,factors);
 
             Array<OneD, NekDouble> output;
 
@@ -468,8 +472,11 @@ class IProductWRTDerivBase_IterPerExp : public Operator
                       Array<OneD, NekDouble> &entry1,
                       Array<OneD, NekDouble> &entry2,
                       Array<OneD, NekDouble> &entry3,
-                      Array<OneD, NekDouble> &wsp)
+                      Array<OneD, NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
+            boost::ignore_unused(factors);
+
             unsigned int nPhys  = m_stdExp->GetTotPoints();
             unsigned int ntot   = m_numElmt*nPhys;
             unsigned int nmodes = m_stdExp->GetNcoeffs();
@@ -620,9 +627,10 @@ class IProductWRTDerivBase_NoCollection : public Operator
                       Array<OneD, NekDouble> &entry1,
                       Array<OneD, NekDouble> &entry2,
                       Array<OneD, NekDouble> &entry3,
-                      Array<OneD, NekDouble> &wsp)
+                      Array<OneD, NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
-            boost::ignore_unused(wsp);
+            boost::ignore_unused(wsp,factors);
 
             unsigned int nmodes = m_expList[0]->GetNcoeffs();
             unsigned int nPhys  = m_expList[0]->GetTotPoints();
@@ -744,8 +752,11 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
                       Array<OneD,       NekDouble> &entry1,
                       Array<OneD,       NekDouble> &entry2,
                       Array<OneD,       NekDouble> &entry3,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
+            boost::ignore_unused(factors);
+
             Array<OneD, Array<OneD, const NekDouble> > in(3);
             Array<OneD, NekDouble> output;
 
@@ -771,46 +782,46 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
                         &output[0], m_nmodes0);
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
-        {
-            boost::ignore_unused(dir, input, output, wsp);
-            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
-        }
+    virtual void operator()(
+                            int                           dir,
+                            const Array<OneD, const NekDouble> &input,
+                            Array<OneD,       NekDouble> &output,
+                            Array<OneD,       NekDouble> &wsp)
+    {
+        boost::ignore_unused(dir, input, output, wsp);
+        NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
+    }
 
-    protected:
-        const int                       m_nquad0;
-        const int                       m_nmodes0;
-        int                             m_coordim;
-        Array<OneD, const NekDouble>    m_jac;
-        Array<OneD, const NekDouble>    m_derbase0;
-        Array<TwoD, const NekDouble>    m_derivFac;
+protected:
+    const int                       m_nquad0;
+    const int                       m_nmodes0;
+    int                             m_coordim;
+    Array<OneD, const NekDouble>    m_jac;
+    Array<OneD, const NekDouble>    m_derbase0;
+    Array<TwoD, const NekDouble>    m_derivFac;
 
-    private:
-        IProductWRTDerivBase_SumFac_Seg(
-                vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                CoalescedGeomDataSharedPtr                pGeomData)
-            : Operator  (pCollExp, pGeomData),
-              m_nquad0  (m_stdExp->GetNumPoints(0)),
-              m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
-              m_derbase0(m_stdExp->GetBasis(0)->GetDbdata())
-        {
-            m_coordim  = pCollExp[0]->GetCoordim();
-            m_wspSize = m_numElmt*m_nquad0;
-            m_derivFac = pGeomData->GetDerivFactors(pCollExp);
-            m_jac = pGeomData->GetJacWithStdWeights(pCollExp);
-        }
+private:
+    IProductWRTDerivBase_SumFac_Seg(
+                                    vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                                    CoalescedGeomDataSharedPtr                pGeomData)
+        : Operator  (pCollExp, pGeomData),
+          m_nquad0  (m_stdExp->GetNumPoints(0)),
+          m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+          m_derbase0(m_stdExp->GetBasis(0)->GetDbdata())
+    {
+        m_coordim  = pCollExp[0]->GetCoordim();
+        m_wspSize = m_numElmt*m_nquad0;
+        m_derivFac = pGeomData->GetDerivFactors(pCollExp);
+        m_jac = pGeomData->GetJacWithStdWeights(pCollExp);
+    }
 };
 
 /// Factory initialisation for the IProductWRTDerivBase_SumFac_Seg operator
 OperatorKey IProductWRTDerivBase_SumFac_Seg::m_type = GetOperatorFactory().
     RegisterCreatorFunction(
-        OperatorKey(eSegment, eIProductWRTDerivBase, eSumFac, false),
-        IProductWRTDerivBase_SumFac_Seg::create,
-        "IProductWRTDerivBase_SumFac_Seg");
+                            OperatorKey(eSegment, eIProductWRTDerivBase, eSumFac, false),
+                            IProductWRTDerivBase_SumFac_Seg::create,
+                            "IProductWRTDerivBase_SumFac_Seg");
 
 
 /**
@@ -818,120 +829,123 @@ OperatorKey IProductWRTDerivBase_SumFac_Seg::m_type = GetOperatorFactory().
  */
 class IProductWRTDerivBase_SumFac_Quad : public Operator
 {
-    public:
-        OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Quad)
+public:
+    OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Quad)
 
-        virtual ~IProductWRTDerivBase_SumFac_Quad()
+    virtual ~IProductWRTDerivBase_SumFac_Quad()
+    {
+    }
+
+    virtual void operator()(
+                            const Array<OneD, const NekDouble> &entry0,
+                            Array<OneD, NekDouble> &entry1,
+                            Array<OneD, NekDouble> &entry2,
+                            Array<OneD, NekDouble> &entry3,
+                            Array<OneD, NekDouble> &wsp,
+                            const StdRegions::ConstFactorMap   &factors) final
+    {
+        boost::ignore_unused(factors);
+
+        unsigned int nPhys  = m_stdExp->GetTotPoints();
+        unsigned int ntot   = m_numElmt*nPhys;
+        unsigned int nmodes = m_stdExp->GetNcoeffs();
+        unsigned int nmax   = max(ntot,m_numElmt*nmodes);
+        Array<OneD, Array<OneD, const NekDouble> > in(3);
+        Array<OneD, NekDouble> output, wsp1;
+        Array<OneD, Array<OneD, NekDouble> > tmp(2);
+
+        in[0] = entry0; in[1] = entry1; in[2] = entry2;
+
+        output = (m_coordim == 2)? entry2: entry3;
+
+        tmp[0] = wsp; tmp[1] = wsp + nmax;
+        wsp1   = wsp + 2*nmax;
+
+        // calculate dx/dxi in[0] + dy/dxi in[1]
+        for(int i = 0; i < 2; ++i)
         {
-        }
-
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD, NekDouble> &entry1,
-                      Array<OneD, NekDouble> &entry2,
-                      Array<OneD, NekDouble> &entry3,
-                      Array<OneD, NekDouble> &wsp)
-        {
-            unsigned int nPhys  = m_stdExp->GetTotPoints();
-            unsigned int ntot   = m_numElmt*nPhys;
-            unsigned int nmodes = m_stdExp->GetNcoeffs();
-            unsigned int nmax   = max(ntot,m_numElmt*nmodes);
-            Array<OneD, Array<OneD, const NekDouble> > in(3);
-            Array<OneD, NekDouble> output, wsp1;
-            Array<OneD, Array<OneD, NekDouble> > tmp(2);
-
-            in[0] = entry0; in[1] = entry1; in[2] = entry2;
-
-            output = (m_coordim == 2)? entry2: entry3;
-
-            tmp[0] = wsp; tmp[1] = wsp + nmax;
-            wsp1   = wsp + 2*nmax;
-
-            // calculate dx/dxi in[0] + dy/dxi in[1]
-            for(int i = 0; i < 2; ++i)
+            Vmath::Vmul(ntot, m_derivFac[i], 1, in[0], 1, tmp[i], 1);
+            for(int j = 1; j < m_coordim; ++j)
             {
-                Vmath::Vmul(ntot, m_derivFac[i], 1, in[0], 1, tmp[i], 1);
-                for(int j = 1; j < m_coordim; ++j)
-                {
-                    Vmath::Vvtvp(ntot, m_derivFac[i + 2*j], 1, in[j], 1,
-                                 tmp[i], 1, tmp[i], 1);
-                }
+                Vmath::Vvtvp(ntot, m_derivFac[i + 2*j], 1, in[j], 1,
+                             tmp[i], 1, tmp[i], 1);
             }
-
-            // Iproduct wrt derivative of base 0
-            QuadIProduct(false, m_colldir1, m_numElmt,
-                         m_nquad0,   m_nquad1,
-                         m_nmodes0,  m_nmodes1,
-                         m_derbase0, m_base1,
-                         m_jac, tmp[0], output, wsp1);
-
-            // Iproduct wrt derivative of base 1
-            QuadIProduct(m_colldir0, false, m_numElmt,
-                         m_nquad0,   m_nquad1,
-                         m_nmodes0,  m_nmodes1,
-                         m_base0, m_derbase1,
-                         m_jac, tmp[1],  tmp[0], wsp1);
-
-            Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
-        {
-            boost::ignore_unused(dir, input, output, wsp);
-            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
-        }
+        // Iproduct wrt derivative of base 0
+        QuadIProduct(false, m_colldir1, m_numElmt,
+                     m_nquad0,   m_nquad1,
+                     m_nmodes0,  m_nmodes1,
+                     m_derbase0, m_base1,
+                     m_jac, tmp[0], output, wsp1);
 
-    protected:
-        const int                       m_nquad0;
-        const int                       m_nquad1;
-        const int                       m_nmodes0;
-        const int                       m_nmodes1;
-        const bool                      m_colldir0;
-        const bool                      m_colldir1;
-        int                             m_coordim;
-        Array<TwoD, const NekDouble>    m_derivFac;
-        Array<OneD, const NekDouble>    m_jac;
-        Array<OneD, const NekDouble>    m_base0;
-        Array<OneD, const NekDouble>    m_base1;
-        Array<OneD, const NekDouble>    m_derbase0;
-        Array<OneD, const NekDouble>    m_derbase1;
+        // Iproduct wrt derivative of base 1
+        QuadIProduct(m_colldir0, false, m_numElmt,
+                     m_nquad0,   m_nquad1,
+                     m_nmodes0,  m_nmodes1,
+                     m_base0, m_derbase1,
+                     m_jac, tmp[1],  tmp[0], wsp1);
 
-    private:
-        IProductWRTDerivBase_SumFac_Quad(
-                vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                CoalescedGeomDataSharedPtr                pGeomData)
-            : Operator(pCollExp, pGeomData),
-              m_nquad0  (m_stdExp->GetNumPoints(0)),
-              m_nquad1  (m_stdExp->GetNumPoints(1)),
-              m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
-              m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
-              m_colldir0(m_stdExp->GetBasis(0)->Collocation()),
-              m_colldir1(m_stdExp->GetBasis(1)->Collocation()),
-              m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
-              m_base1   (m_stdExp->GetBasis(1)->GetBdata()),
-              m_derbase0(m_stdExp->GetBasis(0)->GetDbdata()),
-              m_derbase1(m_stdExp->GetBasis(1)->GetDbdata())
-        {
-            LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
-            m_coordim  = pCollExp[0]->GetCoordim();
+        Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
+    }
 
-            m_derivFac = pGeomData->GetDerivFactors(pCollExp);
-            m_jac      = pGeomData->GetJacWithStdWeights(pCollExp);
-            m_wspSize  = 4 * m_numElmt * (max(m_nquad0*m_nquad1,
-                                              m_nmodes0*m_nmodes1));
-        }
+    virtual void operator()(
+                            int                           dir,
+                            const Array<OneD, const NekDouble> &input,
+                            Array<OneD,       NekDouble> &output,
+                            Array<OneD,       NekDouble> &wsp)
+    {
+        boost::ignore_unused(dir, input, output, wsp);
+        NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
+    }
+
+protected:
+    const int                       m_nquad0;
+    const int                       m_nquad1;
+    const int                       m_nmodes0;
+    const int                       m_nmodes1;
+    const bool                      m_colldir0;
+    const bool                      m_colldir1;
+    int                             m_coordim;
+    Array<TwoD, const NekDouble>    m_derivFac;
+    Array<OneD, const NekDouble>    m_jac;
+    Array<OneD, const NekDouble>    m_base0;
+    Array<OneD, const NekDouble>    m_base1;
+    Array<OneD, const NekDouble>    m_derbase0;
+    Array<OneD, const NekDouble>    m_derbase1;
+
+private:
+    IProductWRTDerivBase_SumFac_Quad(
+                                     vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                                     CoalescedGeomDataSharedPtr                pGeomData)
+        : Operator(pCollExp, pGeomData),
+          m_nquad0  (m_stdExp->GetNumPoints(0)),
+          m_nquad1  (m_stdExp->GetNumPoints(1)),
+          m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+          m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+          m_colldir0(m_stdExp->GetBasis(0)->Collocation()),
+          m_colldir1(m_stdExp->GetBasis(1)->Collocation()),
+          m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
+          m_base1   (m_stdExp->GetBasis(1)->GetBdata()),
+          m_derbase0(m_stdExp->GetBasis(0)->GetDbdata()),
+          m_derbase1(m_stdExp->GetBasis(1)->GetDbdata())
+    {
+        LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
+        m_coordim  = pCollExp[0]->GetCoordim();
+
+        m_derivFac = pGeomData->GetDerivFactors(pCollExp);
+        m_jac      = pGeomData->GetJacWithStdWeights(pCollExp);
+        m_wspSize  = 4 * m_numElmt * (max(m_nquad0*m_nquad1,
+                                          m_nmodes0*m_nmodes1));
+    }
 };
 
 /// Factory initialisation for the IProductWRTDerivBase_SumFac_Quad operator
 OperatorKey IProductWRTDerivBase_SumFac_Quad::m_type =
     GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eQuadrilateral, eIProductWRTDerivBase, eSumFac, false),
-        IProductWRTDerivBase_SumFac_Quad::create,
-        "IProductWRTDerivBase_IterPerExp_Quad");
+                                                 OperatorKey(eQuadrilateral, eIProductWRTDerivBase, eSumFac, false),
+                                                 IProductWRTDerivBase_SumFac_Quad::create,
+                                                 "IProductWRTDerivBase_IterPerExp_Quad");
 
 
 /**
@@ -939,7 +953,7 @@ OperatorKey IProductWRTDerivBase_SumFac_Quad::m_type =
  */
 class IProductWRTDerivBase_SumFac_Tri : public Operator
 {
-    public:
+public:
         OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Tri)
 
         virtual ~IProductWRTDerivBase_SumFac_Tri()
@@ -982,8 +996,11 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
                       Array<OneD, NekDouble>       &entry1,
                       Array<OneD, NekDouble>       &entry2,
                       Array<OneD, NekDouble>       &entry3,
-                      Array<OneD, NekDouble>       &wsp)
+                      Array<OneD, NekDouble>       &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
+            boost::ignore_unused(factors);
+
             unsigned int nPhys  = m_stdExp->GetTotPoints();
             unsigned int ntot   = m_numElmt*nPhys;
             unsigned int nmodes = m_stdExp->GetNcoeffs();
@@ -1148,8 +1165,11 @@ class IProductWRTDerivBase_SumFac_Hex : public Operator
                       Array<OneD, NekDouble>       &entry1,
                       Array<OneD, NekDouble>       &entry2,
                       Array<OneD, NekDouble>       &entry3,
-                      Array<OneD, NekDouble>       &wsp)
+                      Array<OneD, NekDouble>       &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
+            boost::ignore_unused(factors);
+
             unsigned int nPhys  = m_stdExp->GetTotPoints();
             unsigned int ntot   = m_numElmt*nPhys;
             unsigned int nmodes = m_stdExp->GetNcoeffs();
@@ -1337,8 +1357,11 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
                       Array<OneD, NekDouble>       &entry1,
                       Array<OneD, NekDouble>       &entry2,
                       Array<OneD, NekDouble>       &entry3,
-                      Array<OneD, NekDouble>       &wsp)
+                      Array<OneD, NekDouble>       &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
+            boost::ignore_unused(factors);
+
             unsigned int nPhys  = m_stdExp->GetTotPoints();
             unsigned int ntot   = m_numElmt*nPhys;
             unsigned int nmodes = m_stdExp->GetNcoeffs();
@@ -1588,8 +1611,11 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
                       Array<OneD, NekDouble>       &entry1,
                       Array<OneD, NekDouble>       &entry2,
                       Array<OneD, NekDouble>       &entry3,
-                      Array<OneD, NekDouble>       &wsp)
+                      Array<OneD, NekDouble>       &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
+            boost::ignore_unused(factors);
+
             unsigned int nPhys  = m_stdExp->GetTotPoints();
             unsigned int ntot   = m_numElmt*nPhys;
             unsigned int nmodes = m_stdExp->GetNcoeffs();
@@ -1825,8 +1851,11 @@ class IProductWRTDerivBase_SumFac_Pyr : public Operator
                       Array<OneD, NekDouble>       &entry1,
                       Array<OneD, NekDouble>       &entry2,
                       Array<OneD, NekDouble>       &entry3,
-                      Array<OneD, NekDouble>       &wsp)
+                      Array<OneD, NekDouble>       &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
+            boost::ignore_unused(factors);
+
             unsigned int nPhys  = m_stdExp->GetTotPoints();
             unsigned int ntot   = m_numElmt*nPhys;
             unsigned int nmodes = m_stdExp->GetNcoeffs();

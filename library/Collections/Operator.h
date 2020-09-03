@@ -65,6 +65,7 @@ typedef std::shared_ptr<CoalescedGeomData>   CoalescedGeomDataSharedPtr;
 enum OperatorType
 {
     eBwdTrans,
+    eHelmholtz,
     eIProductWRTBase,
     eIProductWRTDerivBase,
     ePhysDeriv,
@@ -74,6 +75,7 @@ enum OperatorType
 const char* const OperatorTypeMap[] =
 {
     "BwdTrans",
+    "Helmholtz",
     "IProductWRTBase",
     "IProductWRTDerivBase",
     "PhysDeriv"
@@ -129,7 +131,9 @@ class Operator
                       Array<OneD,       NekDouble> &output1,
                       Array<OneD,       NekDouble> &output2,
                       Array<OneD,       NekDouble> &wsp
-                                                    = NullNekDouble1DArray) = 0;
+                = NullNekDouble1DArray,
+                const StdRegions::ConstFactorMap   &factors =
+                StdRegions::NullConstFactorMap) = 0;
 
         COLLECTIONS_EXPORT virtual void operator()(
                       int                           dir,

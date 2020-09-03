@@ -2013,32 +2013,56 @@ namespace Nektar
                                                  const Array<OneD,const NekDouble> &inarray,
                                                  Array<OneD,      NekDouble> &outarray)
         {
-            Array<OneD,NekDouble> tmp_outarray;
             int nvarcoeffs = gkey.GetNVarCoeffs();
 
-            for(int i= 0; i < (*m_exp).size(); ++i)
+            if((nvarcoeffs == 0)&&(gkey.GetMatrixType() == StdRegions::eHelmholtz))
             {
-                // need to be initialised with zero size for non
-                // variable coefficient case
-                StdRegions::VarCoeffMap varcoeffs;
-
-                if(nvarcoeffs>0)
+                // initialise if required
+                if(m_collections.size()&&m_collectionsDoInit[Collections::eHelmholtz])
                 {
-                    for (auto &x : gkey.GetVarCoeffs())
+                    for (int i = 0; i < m_collections.size(); ++i)
                     {
-                        varcoeffs[x.first] = x.second + m_phys_offset[i];
+                        m_collections[i].Initialise(Collections::eHelmholtz);
                     }
+                    m_collectionsDoInit[Collections::eHelmholtz] = false; 
                 }
 
-                StdRegions::StdMatrixKey mkey(gkey.GetMatrixType(),
-                                              (*m_exp)[i]->DetShapeType(),
-                                              *((*m_exp)[i]),
-                                              gkey.GetConstFactors(),varcoeffs);
-
-                (*m_exp)[i]->GeneralMatrixOp(inarray + m_coeff_offset[i],
-                                             tmp_outarray = outarray+
-                                             m_coeff_offset[i],
-                                             mkey);
+                Array<OneD, NekDouble> tmp;
+                for (int i = 0; i < m_collections.size(); ++i)
+                {
+                    m_collections[i].ApplyOperator(Collections::eHelmholtz,
+                                                   inarray + m_coll_coeff_offset[i],
+                                                   tmp = outarray + m_coll_phys_offset[i],
+                                                   gkey.GetConstFactors());
+                }
+            }
+            else
+            {
+                Array<OneD,NekDouble> tmp_outarray;
+                for(int i= 0; i < (*m_exp).size(); ++i)
+                {
+                    // need to be initialised with zero size for non
+                    // variable coefficient case
+                    StdRegions::VarCoeffMap varcoeffs;
+                    
+                    if(nvarcoeffs>0)
+                    {
+                        for (auto &x : gkey.GetVarCoeffs())
+                        {
+                            varcoeffs[x.first] = x.second + m_phys_offset[i];
+                        }
+                    }
+                    
+                    StdRegions::StdMatrixKey mkey(gkey.GetMatrixType(),
+                                                  (*m_exp)[i]->DetShapeType(),
+                                                  *((*m_exp)[i]),
+                                                  gkey.GetConstFactors(),varcoeffs);
+                    
+                    (*m_exp)[i]->GeneralMatrixOp(inarray + m_coeff_offset[i],
+                                                 tmp_outarray = outarray+
+                                                 m_coeff_offset[i],
+                                                 mkey);
+                }
             }
         }
 

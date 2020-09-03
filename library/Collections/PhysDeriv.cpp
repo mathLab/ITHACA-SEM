@@ -70,8 +70,11 @@ class PhysDeriv_StdMat : public Operator
                       Array<OneD,       NekDouble> &output0,
                       Array<OneD,       NekDouble> &output1,
                       Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
+            boost::ignore_unused(factors);
+
             int nPhys = m_stdExp->GetTotPoints();
             int ntot = m_numElmt*nPhys;
             Array<OneD, NekDouble> tmp0,tmp1,tmp2;
@@ -231,235 +234,239 @@ OperatorKey PhysDeriv_StdMat::m_typeArr[] =
 class PhysDeriv_MatrixFree : public Operator
 {
     public:
-        OPERATOR_CREATE(PhysDeriv_MatrixFree)
+    OPERATOR_CREATE(PhysDeriv_MatrixFree)
 
-        virtual ~PhysDeriv_MatrixFree()
+    virtual ~PhysDeriv_MatrixFree()
+    {
+    }
+
+    virtual void operator()(
+                            const Array<OneD, const NekDouble> &input,
+                            Array<OneD,       NekDouble> &output0,
+                            Array<OneD,       NekDouble> &output1,
+                            Array<OneD,       NekDouble> &output2,
+                            Array<OneD,       NekDouble> &wsp,
+                            const StdRegions::ConstFactorMap   &factors) final
+    {
+        boost::ignore_unused(wsp,factors);
+        if (m_isPadded)
         {
+            // copy into padded vector
+            Vmath::Vcopy(m_nqtot, input, 1, m_input, 1);
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output0,
-                      Array<OneD,       NekDouble> &output1,
-                      Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+        (*m_oper)(input, m_output);
+        switch(m_coordim)
         {
-            boost::ignore_unused(wsp);
-            if (m_isPadded)
-            {
-                // copy into padded vector
-                Vmath::Vcopy(m_nqtot, input, 1, m_input, 1);
-            }
+        case 1:
+            Vmath::Vcopy(m_nqtot, m_output[0], 1, output0, 1);
+            break;
+        case 2:
+            Vmath::Vcopy(m_nqtot, m_output[0], 1, output0, 1);
+            Vmath::Vcopy(m_nqtot, m_output[1], 1, output1, 1);
+            break;
+        case 3:
+            Vmath::Vcopy(m_nqtot, m_output[0], 1, output0, 1);
+            Vmath::Vcopy(m_nqtot, m_output[1], 1, output1, 1);
+            Vmath::Vcopy(m_nqtot, m_output[2], 1, output2, 1);
+            break;
+        default:
+            NEKERROR(ErrorUtil::efatal,
+                     "Unknown coordiminate dimension");
+            break;
+        }
+    }
 
+    virtual void operator()(
+                            int                           dir,
+                            const Array<OneD, const NekDouble> &input,
+                            Array<OneD,       NekDouble> &output,
+                            Array<OneD,       NekDouble> &wsp)
+    {
+        boost::ignore_unused(wsp);
+        if (m_isPadded)
+        {
+            // copy into padded vector
+            Vmath::Vcopy(input.size(), input, 1, m_input, 1);
+            (*m_oper)(m_input, m_output);
+        }
+        else
+        {
             (*m_oper)(input, m_output);
-            switch(m_coordim)
-            {
-            case 1:
-                Vmath::Vcopy(m_nqtot, m_output[0], 1, output0, 1);
-                break;
-            case 2:
-                Vmath::Vcopy(m_nqtot, m_output[0], 1, output0, 1);
-                Vmath::Vcopy(m_nqtot, m_output[1], 1, output1, 1);
-                break;
-            case 3:
-                Vmath::Vcopy(m_nqtot, m_output[0], 1, output0, 1);
-                Vmath::Vcopy(m_nqtot, m_output[1], 1, output1, 1);
-                Vmath::Vcopy(m_nqtot, m_output[2], 1, output2, 1);
-                break;
-            default:
-                NEKERROR(ErrorUtil::efatal,
-                         "Unknown coordiminate dimension");
-                break;
-            }
         }
+        Vmath::Vcopy(m_nqtot, m_output[dir], 1, output, 1);
+    }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
-        {
-            boost::ignore_unused(wsp);
-            if (m_isPadded)
-            {
-                // copy into padded vector
-                Vmath::Vcopy(input.size(), input, 1, m_input, 1);
-                (*m_oper)(m_input, m_output);
-            }
-            else
-            {
-                (*m_oper)(input, m_output);
-            }
-            Vmath::Vcopy(m_nqtot, m_output[dir], 1, output, 1);
-        }
-
-    private:
-        std::shared_ptr<MatrixFree::PhysDeriv> m_oper;
-        /// flag for padding
-        bool m_isPadded{false};
-        /// padded or unpadded input/output vectors
-        Array<OneD, NekDouble> m_input;
-        Array<OneD, Array<OneD, NekDouble>> m_output;
-        /// coordinate dimensions
-        unsigned short m_coordim;
-        unsigned int m_nqtot; 
+private:
+    std::shared_ptr<MatrixFree::PhysDeriv> m_oper;
+    /// flag for padding
+    bool m_isPadded{false};
+    /// padded or unpadded input/output vectors
+    Array<OneD, NekDouble> m_input;
+    Array<OneD, Array<OneD, NekDouble>> m_output;
+    /// coordinate dimensions
+    unsigned short m_coordim;
+    unsigned int m_nqtot; 
     
-        PhysDeriv_MatrixFree(
-                vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                CoalescedGeomDataSharedPtr                pGeomData)
-            : Operator(pCollExp, pGeomData)
+    PhysDeriv_MatrixFree(
+                         vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                         CoalescedGeomDataSharedPtr                pGeomData)
+        : Operator(pCollExp, pGeomData)
+    {
+        m_coordim  = pCollExp[0]->GetCoordim();
+
+        const auto nqElmt = pCollExp[0]->GetStdExp()->GetTotPoints();
+
+        // Padding if needed
+        using vec_t = tinysimd::simd<NekDouble>;
+        const auto nElmtNoPad = pCollExp.size();
+        auto nElmtPad = nElmtNoPad;
+
+        m_nqtot = nElmtNoPad*nqElmt; 
+
+        m_output = Array<OneD, Array<OneD, NekDouble>> {m_coordim};
+
+        if (nElmtNoPad % vec_t::width != 0)
         {
-            m_coordim  = pCollExp[0]->GetCoordim();
-
-            const auto nqElmt = pCollExp[0]->GetStdExp()->GetTotPoints();
-
-            // Padding if needed
-            using vec_t = tinysimd::simd<NekDouble>;
-            const auto nElmtNoPad = pCollExp.size();
-            auto nElmtPad = nElmtNoPad;
-
-            m_nqtot = nElmtNoPad*nqElmt; 
-
-            m_output = Array<OneD, Array<OneD, NekDouble>> {m_coordim};
-
-            if (nElmtNoPad % vec_t::width != 0)
+            m_isPadded = true;
+            nElmtPad = nElmtNoPad + vec_t::width -
+                (nElmtNoPad % vec_t::width);
+            m_input = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+            m_output[0] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+            if(m_coordim == 2)
             {
-                m_isPadded = true;
-                nElmtPad = nElmtNoPad + vec_t::width -
-                    (nElmtNoPad % vec_t::width);
-                m_input = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                m_output[0] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                if(m_coordim == 2)
-                {
-                    m_output[1] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                }
-                if (m_coordim == 3)
-                {
-                    m_output[1] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                    m_output[2] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                }
+                m_output[1] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
             }
-            else
+            if (m_coordim == 3)
             {
-                m_output[0] = Array<OneD, NekDouble>{m_nqtot, 0.0};
-                if (m_coordim == 2)
-                {
-                    m_output[1] = Array<OneD, NekDouble>{m_nqtot, 0.0};
-                }
-                if (m_coordim == 3)
-                {
-                    m_output[1] = Array<OneD, NekDouble>{m_nqtot, 0.0};
-                    m_output[2] = Array<OneD, NekDouble>{m_nqtot, 0.0};
-                }
+                m_output[1] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+                m_output[2] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
             }
+        }
+        else
+        {
+            m_output[0] = Array<OneD, NekDouble>{m_nqtot, 0.0};
+            if (m_coordim == 2)
+            {
+                m_output[1] = Array<OneD, NekDouble>{m_nqtot, 0.0};
+            }
+            if (m_coordim == 3)
+            {
+                m_output[1] = Array<OneD, NekDouble>{m_nqtot, 0.0};
+                m_output[2] = Array<OneD, NekDouble>{m_nqtot, 0.0};
+            }
+        }
        
-            // Check if deformed
-            bool deformed{pGeomData->IsDeformed(pCollExp)};
+        // Check if deformed
+        bool deformed{pGeomData->IsDeformed(pCollExp)};
 
-            // Size of jacobian
-            int jacSizeNoPad{nElmtNoPad};
-            int jacSizePad{nElmtPad};
-            if (deformed)
+        // Size of jacobian
+        int jacSizeNoPad{nElmtNoPad};
+        int jacSizePad{nElmtPad};
+        if (deformed)
+        {
+            jacSizeNoPad = nElmtNoPad * nqElmt;
+            jacSizePad = nElmtPad * nqElmt;
+        }
+
+        // Get derivative factors
+        const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
+        Array<TwoD, NekDouble> df(dim * m_coordim, jacSizePad, 0.0);
+        if (deformed)
+        {
+            for (unsigned int j = 0; j < dim * m_coordim; ++j)
             {
-                jacSizeNoPad = nElmtNoPad * nqElmt;
-                jacSizePad = nElmtPad * nqElmt;
+                Vmath::Vcopy(jacSizeNoPad,
+                             &(pGeomData->GetDerivFactors(pCollExp))[j][0], 1,
+                             &df[j][0], 1);
             }
-
-            // Get derivative factors
-            const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
-            Array<TwoD, NekDouble> df(dim * m_coordim, jacSizePad, 0.0);
-            if (deformed)
+        }
+        else
+        {
+            for (unsigned int e = 0; e < nElmtNoPad; ++e)
             {
                 for (unsigned int j = 0; j < dim * m_coordim; ++j)
                 {
-                    Vmath::Vcopy(jacSizeNoPad,
-                        &(pGeomData->GetDerivFactors(pCollExp))[j][0], 1,
-                        &df[j][0], 1);
+                    df[j][e] =
+                        (pGeomData->GetDerivFactors(pCollExp))[j][e*nqElmt];
                 }
             }
-            else
-            {
-                for (unsigned int e = 0; e < nElmtNoPad; ++e)
-                {
-                    for (unsigned int j = 0; j < dim * m_coordim; ++j)
-                    {
-                        df[j][e] =
-                            (pGeomData->GetDerivFactors(pCollExp))[j][e*nqElmt];
-                    }
-                }
-            }
-
-            // Basis vector.
-            std::vector<LibUtilities::BasisSharedPtr> basis(dim);
-            for (auto i = 0; i < dim; ++i)
-            {
-                basis[i] = pCollExp[0]->GetBasis(i);
-            }
-
-            // Get shape type
-            auto shapeType = pCollExp[0]->GetStdExp()->DetShapeType();
-
-            // Generate operator string and create operator.
-            std::string op_string = "PhysDeriv";
-            op_string += MatrixFree::GetOpstring(shapeType, deformed);
-            auto oper = MatrixFree::GetOperatorFactory().
-                CreateInstance(op_string, basis, nElmtPad);
-
-            // Store derivative factor
-            oper->SetDF(df);
-
-            m_oper = std::dynamic_pointer_cast<MatrixFree::PhysDeriv>(oper);
-            ASSERTL0(m_oper, "Failed to cast pointer.");
-
         }
+
+        // Basis vector.
+        std::vector<LibUtilities::BasisSharedPtr> basis(dim);
+        for (auto i = 0; i < dim; ++i)
+        {
+            basis[i] = pCollExp[0]->GetBasis(i);
+        }
+
+        // Get shape type
+        auto shapeType = pCollExp[0]->GetStdExp()->DetShapeType();
+
+        // Generate operator string and create operator.
+        std::string op_string = "PhysDeriv";
+        op_string += MatrixFree::GetOpstring(shapeType, deformed);
+        auto oper = MatrixFree::GetOperatorFactory().
+            CreateInstance(op_string, basis, nElmtPad);
+
+        // Store derivative factor
+        oper->SetDF(df);
+
+        m_oper = std::dynamic_pointer_cast<MatrixFree::PhysDeriv>(oper);
+        ASSERTL0(m_oper, "Failed to cast pointer.");
+
+    }
 };
 
 /// Factory initialisation for the PhysDeriv_MatrixFree operators
 OperatorKey PhysDeriv_MatrixFree::m_typeArr[] =
-{
-    GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eSegment, ePhysDeriv, eMatrixFree, false),
-        PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Seg"),
-    GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eTriangle, ePhysDeriv, eMatrixFree, false),
-        PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Tri"),
-    GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eQuadrilateral, ePhysDeriv, eMatrixFree, false),
-        PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Quad"),
-    GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eHexahedron, ePhysDeriv, eMatrixFree, false),
-        PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Hex"),
-    GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(ePrism, ePhysDeriv, eMatrixFree, false),
-        PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Prism"),
-    GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(ePyramid, ePhysDeriv, eMatrixFree, false),
-        PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Pyr"),
-    GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eTetrahedron, ePhysDeriv, eMatrixFree, false),
-        PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Tet")
+    {
+     GetOperatorFactory().RegisterCreatorFunction(
+                                                  OperatorKey(eSegment, ePhysDeriv, eMatrixFree, false),
+                                                  PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Seg"),
+     GetOperatorFactory().RegisterCreatorFunction(
+                                                  OperatorKey(eTriangle, ePhysDeriv, eMatrixFree, false),
+                                                  PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Tri"),
+     GetOperatorFactory().RegisterCreatorFunction(
+                                                  OperatorKey(eQuadrilateral, ePhysDeriv, eMatrixFree, false),
+                                                  PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Quad"),
+     GetOperatorFactory().RegisterCreatorFunction(
+                                                  OperatorKey(eHexahedron, ePhysDeriv, eMatrixFree, false),
+                                                  PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Hex"),
+     GetOperatorFactory().RegisterCreatorFunction(
+                                                  OperatorKey(ePrism, ePhysDeriv, eMatrixFree, false),
+                                                  PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Prism"),
+     GetOperatorFactory().RegisterCreatorFunction(
+                                                  OperatorKey(ePyramid, ePhysDeriv, eMatrixFree, false),
+                                                  PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Pyr"),
+     GetOperatorFactory().RegisterCreatorFunction(
+                                                  OperatorKey(eTetrahedron, ePhysDeriv, eMatrixFree, false),
+                                                  PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Tet")
 
-};
+    };
 
 /**
  * @brief Phys deriv operator using element-wise operation
  */
 class PhysDeriv_IterPerExp : public Operator
 {
-    public:
-        OPERATOR_CREATE(PhysDeriv_IterPerExp)
+public:
+    OPERATOR_CREATE(PhysDeriv_IterPerExp)
 
-        virtual ~PhysDeriv_IterPerExp()
-        {
-        }
+    virtual ~PhysDeriv_IterPerExp()
+    {
+    }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output0,
-                      Array<OneD,       NekDouble> &output1,
-                      Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+    virtual void operator()(
+                            const Array<OneD, const NekDouble> &input,
+                            Array<OneD,       NekDouble> &output0,
+                            Array<OneD,       NekDouble> &output1,
+                            Array<OneD,       NekDouble> &output2,
+                      Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors)
         {
+            boost::ignore_unused(factors);            
+
             int nPhys = m_stdExp->GetTotPoints();
             int ntot = m_numElmt*nPhys;
             Array<OneD, NekDouble> tmp0,tmp1,tmp2;
@@ -609,9 +616,10 @@ class PhysDeriv_NoCollection : public Operator
                       Array<OneD,       NekDouble> &output0,
                       Array<OneD,       NekDouble> &output1,
                       Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors)
         {
-            boost::ignore_unused(wsp);
+            boost::ignore_unused(wsp,factors);
 
             const int nPhys   = m_expList[0]->GetTotPoints();
             Array<OneD, NekDouble> tmp0,tmp1,tmp2;
@@ -739,8 +747,11 @@ class PhysDeriv_SumFac_Seg : public Operator
                       Array<OneD,       NekDouble> &output0,
                       Array<OneD,       NekDouble> &output1,
                       Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors)
         {
+            boost::ignore_unused(factors);
+
             const int nqcol   = m_nquad0*m_numElmt;
 
             ASSERTL1(wsp.size() == m_wspSize,
@@ -840,8 +851,11 @@ class PhysDeriv_SumFac_Quad : public Operator
                       Array<OneD,       NekDouble> &output0,
                       Array<OneD,       NekDouble> &output1,
                       Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors)
         {
+            boost::ignore_unused(factors);
+
             const int nqtot   = m_nquad0 * m_nquad1;
             const int nqcol   = nqtot*m_numElmt;
 
@@ -969,8 +983,11 @@ class PhysDeriv_SumFac_Tri : public Operator
                       Array<OneD,       NekDouble> &output0,
                       Array<OneD,       NekDouble> &output1,
                       Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors)
         {
+            boost::ignore_unused(factors);
+
             const int nqtot   = m_nquad0 * m_nquad1;
             const int nqcol   = nqtot*m_numElmt;
 
@@ -1151,8 +1168,11 @@ class PhysDeriv_SumFac_Hex : public Operator
                       Array<OneD,       NekDouble> &output0,
                       Array<OneD,       NekDouble> &output1,
                       Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors)
         {
+            boost::ignore_unused(factors);
+
             int nPhys = m_stdExp->GetTotPoints();
             int ntot = m_numElmt*nPhys;
             Array<OneD, NekDouble> tmp0,tmp1,tmp2;
@@ -1307,8 +1327,11 @@ class PhysDeriv_SumFac_Tet : public Operator
                       Array<OneD,       NekDouble> &output0,
                       Array<OneD,       NekDouble> &output1,
                       Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors)
         {
+            boost::ignore_unused(factors);
+
             int nPhys = m_stdExp->GetTotPoints();
             int ntot = m_numElmt*nPhys;
             Array<OneD, NekDouble> tmp0,tmp1,tmp2;
@@ -1567,8 +1590,11 @@ class PhysDeriv_SumFac_Prism : public Operator
                       Array<OneD,       NekDouble> &output0,
                       Array<OneD,       NekDouble> &output1,
                       Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors)
         {
+            boost::ignore_unused(factors);
+
             int nPhys = m_stdExp->GetTotPoints();
             int ntot = m_numElmt*nPhys;
             Array<OneD, NekDouble> tmp0,tmp1,tmp2;
@@ -1770,8 +1796,11 @@ class PhysDeriv_SumFac_Pyr : public Operator
                       Array<OneD,       NekDouble> &output0,
                       Array<OneD,       NekDouble> &output1,
                       Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors)
         {
+            boost::ignore_unused(factors);
+
             int nPhys = m_stdExp->GetTotPoints();
             int ntot = m_numElmt*nPhys;
             Array<OneD, NekDouble> tmp0,tmp1,tmp2;

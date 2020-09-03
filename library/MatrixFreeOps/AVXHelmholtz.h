@@ -182,6 +182,7 @@ struct AVXHelmholtzQuad : public Helmholtz, public AVXHelper<VW, 2, DEFORMED>
 
                         T d0(deriv0 + cnt), d1(deriv1 + cnt);
                         T tmp = metric00 * d0;
+
                         tmp.fma(metric01, d1);
                         tmp.store(bwd + cnt);
 

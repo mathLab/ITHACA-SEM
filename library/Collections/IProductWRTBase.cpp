@@ -71,9 +71,10 @@ class IProductWRTBase_StdMat : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &output1,
                       Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
-            boost::ignore_unused(output1, output2);
+            boost::ignore_unused(output1, output2, factors);
 
             ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
@@ -168,9 +169,10 @@ class IProductWRTBase_MatrixFree : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &output1,
                       Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
-            boost::ignore_unused(output1, output2, wsp);
+            boost::ignore_unused(output1, output2, wsp, factors);
             if (m_isPadded)
             {
                 // copy into padded vector
@@ -190,7 +192,7 @@ class IProductWRTBase_MatrixFree : public Operator
                       int                           dir,
                 const Array<OneD, const NekDouble> &input,
                       Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -311,9 +313,10 @@ class IProductWRTBase_IterPerExp : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &output1,
                       Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
-            boost::ignore_unused(output1, output2);
+            boost::ignore_unused(output1, output2, factors);
 
             ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
@@ -427,9 +430,10 @@ class IProductWRTBase_NoCollection : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &output1,
                       Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
-            boost::ignore_unused(output1, output2, wsp);
+            boost::ignore_unused(output1, output2, wsp, factors);
 
             const int nCoeffs = m_expList[0]->GetNcoeffs();
             const int nPhys   = m_expList[0]->GetTotPoints();
@@ -528,9 +532,10 @@ class IProductWRTBase_SumFac_Seg : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &output1,
                       Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
-            boost::ignore_unused(output1, output2);
+            boost::ignore_unused(output1, output2, factors);
 
             if(m_colldir0)
             {
@@ -604,9 +609,10 @@ class IProductWRTBase_SumFac_Quad : public Operator
                                 Array<OneD,       NekDouble> &output,
                                 Array<OneD,       NekDouble> &output1,
                                 Array<OneD,       NekDouble> &output2,
-                                Array<OneD,       NekDouble> &wsp)
+                                Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
-            boost::ignore_unused(output1, output2);
+            boost::ignore_unused(output1, output2, factors);
 
             ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
@@ -683,9 +689,10 @@ class IProductWRTBase_SumFac_Tri : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &output1,
                       Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
-            boost::ignore_unused(output1, output2);
+            boost::ignore_unused(output1, output2, factors);
 
             ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
@@ -766,9 +773,10 @@ class IProductWRTBase_SumFac_Hex : public Operator
                       Array<OneD, NekDouble> &output,
                       Array<OneD, NekDouble> &output1,
                       Array<OneD, NekDouble> &output2,
-                      Array<OneD, NekDouble> &wsp)
+                      Array<OneD, NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
-            boost::ignore_unused(output1, output2);
+            boost::ignore_unused(output1, output2, factors);
 
             ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
@@ -855,9 +863,10 @@ class IProductWRTBase_SumFac_Tet : public Operator
                       Array<OneD,       NekDouble> &output,
                       Array<OneD,       NekDouble> &output1,
                       Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+                      Array<OneD,       NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
-            boost::ignore_unused(output1, output2);
+            boost::ignore_unused(output1, output2, factors);
 
             ASSERTL1(wsp.size() == m_wspSize,
                     "Incorrect workspace size");
@@ -950,9 +959,10 @@ class IProductWRTBase_SumFac_Prism : public Operator
                       Array<OneD, NekDouble> &output,
                       Array<OneD, NekDouble> &output1,
                       Array<OneD, NekDouble> &output2,
-                      Array<OneD, NekDouble> &wsp)
+                      Array<OneD, NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
-            boost::ignore_unused(output1, output2);
+            boost::ignore_unused(output1, output2, factors);
 
             ASSERTL1(wsp.size() == m_wspSize,
                     "Incorrect workspace size");
@@ -1045,9 +1055,10 @@ class IProductWRTBase_SumFac_Pyr : public Operator
                       Array<OneD, NekDouble> &output,
                       Array<OneD, NekDouble> &output1,
                       Array<OneD, NekDouble> &output2,
-                      Array<OneD, NekDouble> &wsp)
+                      Array<OneD, NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
         {
-            boost::ignore_unused(output1, output2);
+            boost::ignore_unused(output1, output2, factors);
 
             ASSERTL1(wsp.size() == m_wspSize,
                     "Incorrect workspace size");

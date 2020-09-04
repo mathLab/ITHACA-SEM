@@ -101,6 +101,9 @@ SET(LIB_DIR "lib")
 IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE )
     SET(LIB_DIR "lib64")
 ENDIF()
+IF (DEFINED NEKTAR_LIB_DIR)
+    SET(LIB_DIR ${NEKTAR_LIB_DIR})
+ENDIF()
 SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
 
 SET(NEKTAR_BIN_DIR bin)
@@ -110,11 +113,19 @@ SET(NEKTAR_SHARE_DIR share/nektar++)
 SET(NEKTAR_DOC_DIR share/doc/nektar++)
 SET(NEKTAR_CMAKE_DIR ${LIB_DIR}/nektar++/cmake)
 
+# Allow for overriding final include header directory (for Fedora/CentOS
+# packaging)
+IF (DEFINED NEKTAR_INCLUDE_ROOT)
+    SET(NEKTAR_INCLUDE_DIST_DIR ${NEKTAR_INCLUDE_ROOT}/nektar++)
+ELSE()
+    SET(NEKTAR_INCLUDE_DIST_DIR ${CMAKE_INSTALL_PREFIX}/${NEKTAR_INCLUDE_DIR})
+ENDIF()
+
 # Set ThirdParty locations.
 SET(TPSRC   ${CMAKE_SOURCE_DIR}/ThirdParty)
 SET(TPBUILD ${CMAKE_BINARY_DIR}/ThirdParty)
 SET(TPDIST  ${CMAKE_BINARY_DIR}/ThirdParty/dist)
-SET(TPINC   ${CMAKE_INSTALL_PREFIX}/include/ThirdParty)
+SET(TPINC   ${NEKTAR_INCLUDE_DIST_DIR}/ThirdParty)
 SET(TPLIB   ${CMAKE_INSTALL_PREFIX}/${NEKTAR_LIB_DIR}/nektar++/thirdparty)
 
 # Create ThirdParty source directory if it doesn't exist already.

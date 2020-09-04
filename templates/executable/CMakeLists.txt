@@ -7,7 +7,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.5.1)
 
 # TODO - Put the name of your project here.
-PROJECT(ExampleSolver)
+PROJECT(ExampleSolver C CXX)
 
 # Finds Nektar++. This may introduce other dependencies, such as Boost.
 FIND_PACKAGE(Nektar++ REQUIRED)

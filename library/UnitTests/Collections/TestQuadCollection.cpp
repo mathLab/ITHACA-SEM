@@ -1382,15 +1382,11 @@ namespace Nektar
 
             Exp->GetCoords(xc, yc);
 
-            std::cout << phys1[0] << '\t' << phys2[0] << '\n';
-
             for (int i = 0; i < nq; ++i)
             {
                 phys1[i] = sin(xc[i])*cos(yc[i]);
                 phys2[i] = cos(xc[i])*sin(yc[i]);
             }
-
-            std::cout << phys1[0] << '\t' << phys2[0] << '\n';
 
             for(int i = 1; i < nelmts; ++i)
             {
@@ -1398,40 +1394,24 @@ namespace Nektar
                 Vmath::Vcopy(nq,phys2,1,tmp = phys2+i*nq,1);
             }
 
-            std::cout << phys1[0] << '\t' << phys2[0] << '\n';
-
             for(int i = 0; i < nelmts; ++i)
             {
-                std::cout << i << '\t' << coeffs1[i] << '\t' << coeffs2[i] << '\n';
-
                 // Standard routines
                 Exp->IProductWRTDerivBase(0, phys1 + i*nq,
                                           tmp  = coeffs1 + i*nm);
-
-                std::cout << i << '\t' << coeffs1[i] << '\t' << coeffs2[i] << '\n';
                 Exp->IProductWRTDerivBase(1, phys2 + i*nq,
                                           tmp1 = coeffs2 + i*nm);
-                std::cout << i << '\t' << coeffs1[i] << '\t' << coeffs2[i] << '\n';
                 Vmath::Vadd(nm,coeffs1 +i*nm ,1,coeffs2 + i*nm ,1,
                             tmp = coeffs1 + i*nm,1);
-                std::cout << i << '\t' << coeffs1[i] << '\t' << coeffs2[i] << '\n';
-            }
-
-            std::cout << coeffs1[0] << '\t' << coeffs2[0] << '\n';
+             }
 
             c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1, phys2, coeffs2);
-
-            std::cout << coeffs1[0] << '\t' << coeffs2[0] << '\n';
 
             double epsilon = 1.0e-8;
             for(size_t i = 0; i < coeffs1.size(); ++i)
             {
-                // std::cout << i << '\t' << coeffs1[i] << '\t' << coeffs2[i] << '\n';
-
                 coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
                 coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
-
-                // std::cout << i << '\t' << coeffs1[i] << '\t' << coeffs2[i] << '\n';
                 BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
             }
         }

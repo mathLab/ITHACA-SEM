@@ -67,7 +67,7 @@ public:
 
     /// Returns the ID of the element (or associated edge or face for
     /// boundary elements).
-    NEKMESH_EXPORT unsigned int GetId() const
+    unsigned int GetId() const
     {
         if (m_faceLink.get() != 0)
             return m_faceLink->m_id;
@@ -76,22 +76,22 @@ public:
         return m_id;
     }
     /// Returns the expansion dimension of the element.
-    NEKMESH_EXPORT unsigned int GetDim() const
+    unsigned int GetDim() const
     {
         return m_dim;
     }
     /// Returns the configuration of the element.
-    NEKMESH_EXPORT ElmtConfig GetConf() const
+    ElmtConfig GetConf() const
     {
         return m_conf;
     }
     ///returns the shapetype
-    NEKMESH_EXPORT LibUtilities::ShapeType GetShapeType() const
+    LibUtilities::ShapeType GetShapeType() const
     {
         return m_conf.m_e;
     }
     /// Returns the tag which defines the element shape.
-    NEKMESH_EXPORT std::string GetTag() const
+    std::string GetTag() const
     {
         if (m_faceLink.get() != 0)
             return "F";
@@ -100,49 +100,49 @@ public:
         return m_tag;
     }
     /// Access a vertex node.
-    NEKMESH_EXPORT NodeSharedPtr GetVertex(unsigned int i) const
+    NodeSharedPtr GetVertex(unsigned int i) const
     {
         return m_vertex[i];
     }
     /// Access an edge.
-    NEKMESH_EXPORT EdgeSharedPtr GetEdge(unsigned int i) const
+    EdgeSharedPtr GetEdge(unsigned int i) const
     {
         return m_edge[i];
     }
     /// Access a face.
-    NEKMESH_EXPORT FaceSharedPtr GetFace(unsigned int i) const
+    FaceSharedPtr GetFace(unsigned int i) const
     {
         return m_face[i];
     }
     /// Access the list of vertex nodes.
-    NEKMESH_EXPORT std::vector<NodeSharedPtr> GetVertexList() const
+    std::vector<NodeSharedPtr> GetVertexList() const
     {
         return m_vertex;
     }
     /// Access the list of edges.
-    NEKMESH_EXPORT std::vector<EdgeSharedPtr> GetEdgeList() const
+    std::vector<EdgeSharedPtr> GetEdgeList() const
     {
         return m_edge;
     }
     /// Access the list of faces.
-    NEKMESH_EXPORT std::vector<FaceSharedPtr> GetFaceList() const
+    std::vector<FaceSharedPtr> GetFaceList() const
     {
         return m_face;
     }
     /// Access the list of volume nodes.
-    NEKMESH_EXPORT std::vector<NodeSharedPtr> GetVolumeNodes() const
+    std::vector<NodeSharedPtr> GetVolumeNodes() const
     {
         return m_volumeNodes;
     }
-    NEKMESH_EXPORT void SetVolumeNodes(std::vector<NodeSharedPtr> &nodes)
+    void SetVolumeNodes(std::vector<NodeSharedPtr> &nodes)
     {
         m_volumeNodes = nodes;
     }
-    NEKMESH_EXPORT LibUtilities::PointsType GetCurveType() const
+    LibUtilities::PointsType GetCurveType() const
     {
         return m_curveType;
     }
-    NEKMESH_EXPORT void SetCurveType(LibUtilities::PointsType cT)
+    void SetCurveType(LibUtilities::PointsType cT)
     {
         m_curveType = cT;
     }
@@ -150,27 +150,27 @@ public:
     /// face nodes and volume nodes).
     NEKMESH_EXPORT unsigned int GetNodeCount();
     /// Access the list of tags associated with this element.
-    NEKMESH_EXPORT std::vector<int> GetTagList() const
+    std::vector<int> GetTagList() const
     {
         return m_taglist;
     }
     /// Returns the number of vertices.
-    NEKMESH_EXPORT unsigned int GetVertexCount() const
+    unsigned int GetVertexCount() const
     {
         return m_vertex.size();
     }
     /// Returns the number of edges.
-    NEKMESH_EXPORT unsigned int GetEdgeCount() const
+    unsigned int GetEdgeCount() const
     {
         return m_edge.size();
     }
     /// Returns the number of faces.
-    NEKMESH_EXPORT unsigned int GetFaceCount() const
+    unsigned int GetFaceCount() const
     {
         return m_face.size();
     }
     /// Change the ID of the element.
-    NEKMESH_EXPORT void SetId(unsigned int p)
+    void SetId(unsigned int p)
     {
         m_id = p;
     }
@@ -212,34 +212,34 @@ public:
     NEKMESH_EXPORT void SetFace(unsigned int p, FaceSharedPtr pNew);
     /// Set a correspondence between this element and an edge
     /// (2D boundary element).
-    NEKMESH_EXPORT void SetEdgeLink(EdgeSharedPtr pLink)
+    void SetEdgeLink(EdgeSharedPtr pLink)
     {
         m_edgeLink = pLink;
     }
     /// Get correspondence between this element and an edge.
-    NEKMESH_EXPORT EdgeSharedPtr GetEdgeLink()
+    EdgeSharedPtr GetEdgeLink()
     {
         return m_edgeLink;
     }
     /// Set a correspondence between this element and a face
     /// (3D boundary element).
-    NEKMESH_EXPORT void SetFaceLink(FaceSharedPtr pLink)
+    void SetFaceLink(FaceSharedPtr pLink)
     {
         m_faceLink = pLink;
     }
     /// Get correspondence between this element and a face.
-    NEKMESH_EXPORT FaceSharedPtr GetFaceLink()
+    FaceSharedPtr GetFaceLink()
     {
         return m_faceLink;
     }
     /// Set a correspondence between edge or face i and its
     /// representative boundary element m->element[expDim-1][j].
-    NEKMESH_EXPORT void SetBoundaryLink(int i, int j)
+    void SetBoundaryLink(int i, int j)
     {
         m_boundaryLinks[i] = j;
     }
     /// Get the location of the boundary face/edge i for this element.
-    NEKMESH_EXPORT int GetBoundaryLink(int i)
+    int GetBoundaryLink(int i)
     {
         std::map<int, int>::iterator it = m_boundaryLinks.find(i);
         if (it == m_boundaryLinks.end())
@@ -252,19 +252,19 @@ public:
         }
     }
     /// Is this element connected to a boundary
-    NEKMESH_EXPORT bool HasBoundaryLinks()
+    bool HasBoundaryLinks()
     {
         return m_boundaryLinks.size() > 0;
     }
     /// Set the list of tags associated with this element.
-    NEKMESH_EXPORT void SetTagList(const std::vector<int> &tags)
+    void SetTagList(const std::vector<int> &tags)
     {
         m_taglist = tags;
     }
     /// Generate a list of vertices (1D), edges (2D), or faces (3D).
     NEKMESH_EXPORT virtual std::string GetXmlString();
     /// get list of volume interior nodes
-    NEKMESH_EXPORT virtual void GetCurvedNodes(
+    virtual void GetCurvedNodes(
         std::vector<NodeSharedPtr> &nodeList) const
     {
         boost::ignore_unused(nodeList);
@@ -276,7 +276,7 @@ public:
     /// associated with this element.
     NEKMESH_EXPORT std::string GetXmlCurveString();
     /// Generate a Nektar++ geometry object for this element.
-    NEKMESH_EXPORT virtual SpatialDomains::GeometrySharedPtr GetGeom(
+    virtual SpatialDomains::GeometrySharedPtr GetGeom(
         int coordDim)
     {
         boost::ignore_unused(coordDim);
@@ -294,7 +294,7 @@ public:
      * @brief Determines whether an element is deformed by inspecting whether
      * there are any edge, face or volume interior nodes.
      */
-    NEKMESH_EXPORT bool IsDeformed()
+    bool IsDeformed()
     {
         if (m_volumeNodes.size() > 0)
         {
@@ -325,7 +325,7 @@ public:
      * coordinates of all vertices, edges and faces of the element. Note that
      * this does not robustly take into account the curvature of the element.
      */
-    NEKMESH_EXPORT std::pair<Node, Node> GetBoundingBox()
+    std::pair<Node, Node> GetBoundingBox()
     {
 #define SWAP_NODE(a)                                            \
         lower.m_x = std::min(lower.m_x, a->m_x);                  \
@@ -377,7 +377,7 @@ public:
      *                       elements, which just require copying of face or
      *                       edge interior nodes.
      */
-    NEKMESH_EXPORT virtual void MakeOrder(
+    virtual void MakeOrder(
         int                                order,
         SpatialDomains::GeometrySharedPtr  geom,
         LibUtilities::PointsType           edgeType,
@@ -394,7 +394,7 @@ public:
      * @brief Get the edge orientation of @p edge with respect to the local
      * element, which lies at edge index @p edgeId.
      */
-    NEKMESH_EXPORT virtual StdRegions::Orientation GetEdgeOrient(
+    virtual StdRegions::Orientation GetEdgeOrient(
         int edgeId, EdgeSharedPtr edge)
     {
         boost::ignore_unused(edgeId, edge);
@@ -406,7 +406,7 @@ public:
     /**
      * @brief Returns the local index of vertex @p j of face @p i.
      */
-    NEKMESH_EXPORT virtual int GetFaceVertex(int i, int j)
+    virtual int GetFaceVertex(int i, int j)
     {
         boost::ignore_unused(i, j);
         NEKERROR(ErrorUtil::efatal,
@@ -415,7 +415,7 @@ public:
     }
 
     template<class T>
-    NEKMESH_EXPORT void Print(T &out)
+    void Print(T &out)
     {
         int i, j;
         for (i = 0; i < m_vertex.size(); ++i)
@@ -446,7 +446,7 @@ public:
     /**
      * @brief returns the normal to the element
      */
-    NEKMESH_EXPORT virtual Array<OneD, NekDouble> Normal(bool inward = false)
+    virtual Array<OneD, NekDouble> Normal(bool inward = false)
     {
         boost::ignore_unused(inward);
         NEKERROR(ErrorUtil::efatal,
@@ -493,16 +493,16 @@ typedef std::shared_ptr<Element> ElementSharedPtr;
 /// vector of elements of that dimension.
 typedef std::array<std::vector<ElementSharedPtr>, 4> ElementMap;
 /// Element factory definition.
-typedef Nektar::LibUtilities::NekFactory<LibUtilities::ShapeType,
-                                         Element,
-                                         ElmtConfig,
-                                         std::vector<NodeSharedPtr>,
-                                         std::vector<int> > ElementFactory;
+typedef LibUtilities::NekFactory<LibUtilities::ShapeType,
+                                 Element,
+                                 ElmtConfig,
+                                 std::vector<NodeSharedPtr>,
+                                 std::vector<int> > ElementFactory;
 
 NEKMESH_EXPORT ElementFactory &GetElementFactory();
 
 NEKMESH_EXPORT bool operator==(ElementSharedPtr const &e1,
-                                    ElementSharedPtr const &e2);
+                               ElementSharedPtr const &e2);
 
 /// Define element ordering based on ID.
 struct element_id_less_than

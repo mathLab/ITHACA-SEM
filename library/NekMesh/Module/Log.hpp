@@ -406,7 +406,7 @@ public:
     {
         if (m_logOutput->IsTty())
         {
-            m_logOutput->Log("\r\e[0K");
+            m_logOutput->Log("\r\033[0K");
         }
     }
 

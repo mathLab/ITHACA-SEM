@@ -15,6 +15,24 @@ std::string __register_Helmholtz_Tri = GetOperatorFactory().RegisterCreatorFunct
 
 std::string __register_Helmholtz_Tri_Deformed = GetOperatorFactory().RegisterCreatorFunction(
     std::string("Helmholtz_Tri_Deformed"), &HelmholtzTri<true>::Create);
+
+std::string __register_Helmholtz_Hex = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("Helmholtz_Hex_Regular"), &HelmholtzHex<>::Create);
+
+std::string __register_Helmholtz_Hex_Deformed = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("Helmholtz_Hex_Deformed"), &HelmholtzHex<true>::Create);
+
+std::string __register_Helmholtz_Prism = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("Helmholtz_Prism_Regular"), &HelmholtzPrism<>::Create);
+
+std::string __register_Helmholtz_Prism_Deformed = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("Helmholtz_Prism_Deformed"), &HelmholtzPrism<true>::Create);
+
+std::string __register_Helmholtz_Tet = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("Helmholtz_Tet_Regular"), &HelmholtzTet<>::Create);
+
+std::string __register_Helmholtz_Tet_Deformed = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("Helmholtz_Tet_Deformed"), &HelmholtzTet<true>::Create);
     
 } // namespace MatrixFree
 } // namespace Nektar

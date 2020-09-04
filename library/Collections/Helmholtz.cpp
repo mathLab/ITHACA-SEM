@@ -330,6 +330,15 @@ OperatorKey Helmholtz_MatrixFree::m_typeArr[] =
     GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eTriangle, eHelmholtz, eMatrixFree, false),
         Helmholtz_MatrixFree::create, "Helmholtz_MatrixFree_Tri"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eHexahedron, eHelmholtz, eMatrixFree, false),
+        Helmholtz_MatrixFree::create, "Helmholtz_MatrixFree_Hex"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(ePrism, eHelmholtz, eMatrixFree, false),
+        Helmholtz_MatrixFree::create, "Helmholtz_MatrixFree_Prism"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eTetrahedron, eHelmholtz, eMatrixFree, false),
+        Helmholtz_MatrixFree::create, "Helmholtz_MatrixFree_Tet"),
 };
 
 }

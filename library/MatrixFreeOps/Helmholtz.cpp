@@ -28,7 +28,13 @@ std::string __register_Helmholtz_Prism = GetOperatorFactory().RegisterCreatorFun
 std::string __register_Helmholtz_Prism_Deformed = GetOperatorFactory().RegisterCreatorFunction(
     std::string("Helmholtz_Prism_Deformed"), &HelmholtzPrism<true>::Create);
 
-std::string __register_Helmholtz_Tet = GetOperatorFactory().RegisterCreatorFunction(
+std::string __register_Helmholtz_Pyr = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("Helmholtz_Pyr_Regular"), &HelmholtzPyr<>::Create);
+
+std::string __register_Helmholtz_Pyr_Deformed = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("Helmholtz_Pyr_Deformed"), &HelmholtzPyr<true>::Create);
+
+    std::string __register_Helmholtz_Tet = GetOperatorFactory().RegisterCreatorFunction(
     std::string("Helmholtz_Tet_Regular"), &HelmholtzTet<>::Create);
 
 std::string __register_Helmholtz_Tet_Deformed = GetOperatorFactory().RegisterCreatorFunction(

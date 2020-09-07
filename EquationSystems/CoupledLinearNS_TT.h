@@ -306,6 +306,7 @@ namespace Nektar
 	Array<OneD, Array<OneD, NekDouble> > myAdvField_Newton;
 
 	int max_sparse_poly_approx_dimension;
+	bool use_ANN;
 
     protected:
         

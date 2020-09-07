@@ -7617,7 +7617,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //				cout << "relative_change_error " << relative_change_error << endl;
 				no_iter++;
 			} 
-			while( ((relative_change_error > 1e-12) && (no_iter < 100)) );
+			while( ((relative_change_error > 1e-12) && (no_iter < 10)) );
 //			cout << "ROM solve no iters used " << no_iter << endl;
 			repro_solve_affine = RB.leftCols(RBsize-reduction_int)  * solve_affine;
 			Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
@@ -8258,6 +8258,14 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	else
 	{
 		use_Newton = 0;
+	}
+	if (m_session->DefinesParameter("use_ANN")) // after POD output data for ANN construction and then break
+	{
+		use_ANN = m_session->GetParameter("use_ANN");
+	}
+	else
+	{
+		use_ANN = 0;
 	}
 	if (m_session->DefinesParameter("use_non_unique_up_to_two")) // set if Newton or Oseen iteration
 	{
@@ -9210,6 +9218,14 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		cout << "c_f_all_PODmodes_wo_dbc.rows() " << c_f_all_PODmodes_wo_dbc.rows() << endl;
 		cout << "c_f_all_PODmodes_wo_dbc.cols() " << c_f_all_PODmodes_wo_dbc.cols() << endl;
 	}
+
+	if (use_ANN)
+	{
+		cout << "encountered use_ANN, writing train data and return from offline" << endl;
+		// project snapshot data onto the POD basis
+		return;
+	}
+
 	time(&timer_1);
 	gen_phys_base_vecs();
 	time(&timer_2);

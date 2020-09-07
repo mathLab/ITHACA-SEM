@@ -10,6 +10,9 @@ v5.1.0
 - Corrected the use of communicator in AssemblyMapDG and AssemblyCommDG which was not using GetRowComm() (!1144)
 - Add interior penalty method to DG framework (!1101)
 - Add an error filter for the time-evolution of the L2 and Linf errors (!1147)
+- Fix bug in PreconditionerLowEnergy (!1161)
+
+**FieldConvert**
 - Refactored time integration code using factory pattern (!1034)
 - Fix to preprocessor logic for boost with Visual Studio >= 2015 (!1115)
 - Fix type consistency and real comparison in SharedArray.hpp, replaced

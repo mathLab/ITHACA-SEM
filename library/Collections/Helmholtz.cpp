@@ -72,9 +72,9 @@ class Helmholtz_NoCollection : public Operator
                       Array<OneD, NekDouble> &entry2,
                       Array<OneD, NekDouble> &entry3,
                       Array<OneD, NekDouble> &wsp,
-                const StdRegions::ConstFactorMap   &factors) final
+                const StdRegions::ConstFactorMap  &factors) final
         {
-            boost::ignore_unused(entry2,entry3,wsp,factors);
+            boost::ignore_unused(entry2,entry3,wsp);
 
             unsigned int nmodes = m_expList[0]->GetNcoeffs();
             Array<OneD, NekDouble> tmp;
@@ -161,6 +161,180 @@ OperatorKey Helmholtz_NoCollection::m_typeArr[] = {
         "Helmholtz_NoCollection_Hex")
 };
 
+
+/**
+ * @brief Helmholtz operator using LocalRegions implementation.
+ */
+class Helmholtz_IterPerExp : public Operator
+{
+    public:
+        OPERATOR_CREATE(Helmholtz_IterPerExp)
+
+        virtual ~Helmholtz_IterPerExp()
+        {
+        }
+
+        virtual void operator()(
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD, NekDouble> &output,
+                      Array<OneD, NekDouble> &output1,
+                      Array<OneD, NekDouble> &output2,
+                      Array<OneD, NekDouble> &wsp,
+                const StdRegions::ConstFactorMap   &factors) final
+        {
+            boost::ignore_unused(output1,output2);
+
+            const int nCoeffs = m_stdExp->GetNcoeffs();
+            const int nPhys   = m_stdExp->GetTotPoints();
+
+            Array<OneD, NekDouble> tmpphys, t1; 
+            Array<OneD, Array<OneD, NekDouble> > dtmp(3);
+            Array<OneD, Array<OneD, NekDouble> > tmp(3);
+
+            auto x = factors.find(StdRegions::eFactorLambda);
+            ASSERTL1(x != factors.end(),
+                     "Constant factor not defined: "
+                     + std::string(StdRegions::ConstFactorTypeMap
+                                   [StdRegions::eFactorLambda]));
+            NekDouble lambda = x->second; 
+            
+            tmpphys = wsp; 
+            for(int i = 1; i < m_dim+1; ++i)
+            {
+                dtmp[i-1] = wsp + i*nPhys;
+                tmp[i-1]  = wsp + (i+m_dim)*nPhys; 
+            }
+
+            for (int i = 0; i < m_numElmt; ++i)
+            {
+                m_stdExp->BwdTrans(input + i*nCoeffs, tmpphys);
+
+                // local derivative 
+                m_stdExp->PhysDeriv(tmpphys, dtmp[0], dtmp[1], dtmp[2]);
+
+                // determine mass matrix term 
+                Vmath::Vmul(nPhys,m_jac+i*nPhys,1,tmpphys,1,tmpphys,1);
+                m_stdExp->IProductWRTBase(tmpphys,t1 = output + i*nCoeffs); 
+                Vmath::Smul(nCoeffs,lambda,output + i*nCoeffs,1,
+                            t1 = output+i*nCoeffs,1);
+                
+                // calculate full derivative
+                for(int j = 0; j < m_coordim; ++j)
+                {
+                    Vmath::Vmul(nPhys,m_derivFac[j*m_dim].origin() + i*nPhys,1,
+                                &dtmp[0][0],1,&tmp[j][0],1);
+
+                    for(int k = 1; k < m_dim; ++k)
+                    {
+                        Vmath::Vvtvp (nPhys, m_derivFac[j*m_dim+k].origin()
+                                      + i*nPhys, 1, &dtmp[k][0], 1,
+                                      &tmp[j][0],   1,  &tmp[j][0],   1);
+                    }
+                }
+
+                // calculate dx/dxi tmp[0] + dy/dxi tmp[2] + dz/dxi tmp[3]
+                for(int j = 0; j < m_dim; ++j)
+                {
+                    Vmath::Vmul (nPhys,m_derivFac[j].origin() + i*nPhys,1,
+                                 &tmp[0][0], 1, &dtmp[j][0],1);
+
+                    for(int k = 1; k < m_coordim; ++k)
+                    {
+                        Vmath::Vvtvp (nPhys, m_derivFac[j +k*m_dim].origin()
+                                      + i*nPhys, 1, &tmp[k][0], 1,
+                                      &dtmp[j][0], 1, &dtmp[j][0], 1);
+                    }
+                }
+
+                // calculate Iproduct WRT Std Deriv
+                for(int j = 0; j < m_dim; ++j)
+                {
+                    // multiply by Jacobian
+                    Vmath::Vmul(nPhys,m_jac+i*nPhys,1,dtmp[j],1,dtmp[j],1);
+                    m_stdExp->IProductWRTDerivBase(j,dtmp[j],tmp[0]);
+                    Vmath::Vadd(nCoeffs,tmp[0],1,output+i*nCoeffs,1,
+                                t1 = output+i*nCoeffs,1);
+                }
+            }
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
+        }
+
+    protected:
+        Array<TwoD, const NekDouble>    m_derivFac;
+        Array<OneD, const NekDouble>    m_jac;
+        int                             m_dim;
+        int                             m_coordim;
+    
+    private:
+        Helmholtz_IterPerExp(
+                vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                CoalescedGeomDataSharedPtr                pGeomData)
+            : Operator(pCollExp, pGeomData)
+        {
+            LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
+            m_dim      = PtsKey.size();
+            m_coordim  = pCollExp[0]->GetCoordim();
+            int nqtot  = m_stdExp->GetTotPoints();
+
+            m_derivFac = pGeomData->GetDerivFactors(pCollExp);
+            m_jac      = pGeomData->GetJac(pCollExp);
+            m_wspSize = (2*m_dim+1)*nqtot;
+        }
+};
+
+/// Factory initialisation for the Helmholtz_IterPerExp operators
+OperatorKey Helmholtz_IterPerExp::m_typeArr[] = {
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eSegment,       eHelmholtz, eIterPerExp,false),
+        Helmholtz_IterPerExp::create,
+        "Helmholtz_IterPerExp_Seg"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eTriangle,      eHelmholtz, eIterPerExp,false),
+        Helmholtz_IterPerExp::create,
+        "Helmholtz_IterPerExp_Tri"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eTriangle,      eHelmholtz, eIterPerExp,true),
+        Helmholtz_IterPerExp::create,
+        "Helmholtz_IterPerExp_NodalTri"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eQuadrilateral, eHelmholtz, eIterPerExp,false),
+        Helmholtz_IterPerExp::create,
+        "Helmholtz_IterPerExp_Quad"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eTetrahedron,   eHelmholtz, eIterPerExp,false),
+        Helmholtz_IterPerExp::create,
+        "Helmholtz_IterPerExp_Tet"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eTetrahedron,   eHelmholtz, eIterPerExp,true),
+        Helmholtz_IterPerExp::create,
+        "Helmholtz_IterPerExp_NodalTet"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(ePyramid,       eHelmholtz, eIterPerExp,false),
+        Helmholtz_IterPerExp::create,
+        "Helmholtz_IterPerExp_Pyr"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(ePrism,         eHelmholtz, eIterPerExp,false),
+        Helmholtz_IterPerExp::create,
+        "Helmholtz_IterPerExp_Prism"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(ePrism,         eHelmholtz, eIterPerExp,true),
+        Helmholtz_IterPerExp::create,
+        "Helmholtz_IterPerExp_NodalPrism"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eHexahedron,    eHelmholtz, eIterPerExp,false),
+        Helmholtz_IterPerExp::create,
+        "Helmholtz_IterPerExp_Hex")
+};
+    
 /**
  * @brief Helmholtz operator using matrix free operators.
  */

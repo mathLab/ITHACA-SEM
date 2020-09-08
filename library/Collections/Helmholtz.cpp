@@ -367,9 +367,9 @@ public:
         if (m_isPadded)
         {
             // copy into padded vector
-            Vmath::Vcopy(m_nqtot, input, 1, m_input, 1);
+            Vmath::Vcopy(m_nmtot, input, 1, m_input, 1);
             (*m_oper)(m_input, m_output);
-            Vmath::Vcopy(m_nqtot, m_output, 1, output0, 1);
+            Vmath::Vcopy(m_nmtot, m_output, 1, output0, 1);
         }
         else
         {
@@ -394,7 +394,7 @@ private:
     /// padded or unpadded input/output vectors
     Array<OneD, NekDouble> m_input;
     Array<OneD, NekDouble> m_output;
-    unsigned int m_nqtot; 
+    unsigned int m_nmtot; 
     
     Helmholtz_MatrixFree(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                          CoalescedGeomDataSharedPtr                pGeomData)
@@ -410,14 +410,14 @@ private:
         const auto nElmtNoPad = pCollExp.size();
         auto nElmtPad = nElmtNoPad;
         
-        m_nqtot = nElmtNoPad*nqElmt; 
+        m_nmtot = nElmtNoPad*nmElmt; 
 
         if (nElmtNoPad % vec_t::width != 0)
         {
             m_isPadded = true;
             nElmtPad = nElmtNoPad + vec_t::width -
                 (nElmtNoPad % vec_t::width);
-            m_input = Array<OneD, NekDouble>{nmElmt * nElmtPad, 0.0};
+            m_input  = Array<OneD, NekDouble>{nmElmt * nElmtPad, 0.0};
             m_output = Array<OneD, NekDouble>{nmElmt * nElmtPad, 0.0};
         }
         else

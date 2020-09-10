@@ -108,6 +108,8 @@ namespace Nektar
 	double end_param_dir1;
 	int use_fine_grid_VV;
 	int use_fine_grid_VV_and_load_ref;
+	int use_fine_grid_VV_random;
+	int use_sparse_poly;
 
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm;
         Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm_Coeffs;
@@ -184,6 +186,7 @@ namespace Nektar
 
 	void offline_phase();
 	void online_phase();
+	void compute_sparse_poly_approx();
 	Array<OneD, NekDouble> param_point;
 	Array<OneD, Array<OneD, NekDouble> > general_param_vector;
 	Array<OneD, Array<OneD, NekDouble> > fine_general_param_vector;
@@ -297,8 +300,13 @@ namespace Nektar
         Eigen::VectorXd remove_rows(Eigen::VectorXd the_vector, std::set<int> elements_to_be_removed);
 
 	NekDouble Get_m_kinvis(void);
+	double lagrange_interp(double curr_param, int curr_index, int sparse_poly_approx_dimension);
+	void sparse_approx_VV(int sparse_poly_approx_dimension, double& max, double& mean);
 	void Set_m_kinvis(NekDouble);
 	Array<OneD, Array<OneD, NekDouble> > myAdvField_Newton;
+
+	int max_sparse_poly_approx_dimension;
+	bool use_ANN;
 
     protected:
         

@@ -99,8 +99,8 @@ namespace Nektar
 	void write_curr_field(std::string filename);
         
 	int parameter_space_dimension;
-	int load_cO_snapshot_data_from_files;
-	int do_trafo_check;
+	bool load_cO_snapshot_data_from_files;
+	bool do_trafo_check;
 	double POD_tolerance;
 	double start_param_dir0;
 	double end_param_dir0;
@@ -201,7 +201,7 @@ namespace Nektar
 	int globally_connected;
 	int use_Newton;
 	int use_non_unique_up_to_two;
-	int debug_mode;
+	bool debug_mode;
 	int use_overlap_p_space;
 	int write_ROM_field;
 	int snapshot_computation_plot_rel_errors;

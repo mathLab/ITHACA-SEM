@@ -9222,7 +9222,10 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	if (use_ANN)
 	{
 		cout << "encountered use_ANN, writing train data and return from offline" << endl;
-		// project snapshot data onto the POD basis
+		// project original snapshot data onto the POD basis
+
+
+		// write the training data to *.txt files
 		return;
 	}
 

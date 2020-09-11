@@ -184,9 +184,11 @@ namespace Nektar
 	double recover_snapshot_data(Eigen::VectorXd, int);
 	void recover_snapshot_loop(Eigen::VectorXd, Array<OneD, double> &, Array<OneD, double> &);
 
+	Eigen::MatrixXd ANN_POD_coeffs;
 	void offline_phase();
 	void online_phase();
 	void compute_sparse_poly_approx();
+	void compute_ANN_approx();
 	Array<OneD, NekDouble> param_point;
 	Array<OneD, Array<OneD, NekDouble> > general_param_vector;
 	Array<OneD, Array<OneD, NekDouble> > fine_general_param_vector;
@@ -307,6 +309,8 @@ namespace Nektar
 
 	int max_sparse_poly_approx_dimension;
 	bool use_ANN;
+	Eigen::MatrixXd train_data_x;
+	Eigen::MatrixXd train_data_y;
 
     protected:
         

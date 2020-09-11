@@ -7020,12 +7020,135 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		}
 	}
 
+
+    void CoupledLinearNS_TT::compute_ANN_approx()
+	{
+		ANN_POD_coeffs = Eigen::MatrixXd::Zero(fine_grid_dir0*fine_grid_dir1, RBsize*2);
+		std::string predANN_txt = "evaluate/pred_fsg.txt";
+		const char* predANN_txt_t = predANN_txt.c_str();
+		ifstream myfile_predANN_txt_t (predANN_txt_t);
+		std::vector< std::vector<double> > all_double;
+		if (myfile_predANN_txt_t.is_open())
+		{
+			std::string line;
+			std::vector< std::vector<double> > all_double;
+			int counter = 0;
+			while ( getline( myfile_predANN_txt_t, line ) ) 
+			{
+				cout << line << endl;
+				std::istringstream is( line );
+				std::vector<double> nn = std::vector<double>( std::istream_iterator<double>(is), std::istream_iterator<double>() );
+				cout << "nn.size() "  << nn.size() << endl;
+				for (int i = 0; i < nn.size(); ++i)
+				{
+					//optimal_clusters[counter].insert(nn[i]);
+					//cout << nn[i] << endl;
+					//cout << "counter " << counter << endl;
+					ANN_POD_coeffs(counter,i) == nn[i];
+				}
+				++counter;
+//				      all_integers.push_back( std::vector<int>( std::istream_iterator<int>(is), std::istream_iterator<int>() ) );
+			}
+
+	/*			for (int i = 0; i < no_clusters; ++i)
+				{
+					for (std::set<int>::iterator it=optimal_clusters[i].begin(); it!=optimal_clusters[i].end(); ++it)
+					{
+						myfile_optimal_clustering_txt_t << *it << "\t";
+					}
+					myfile_optimal_clustering_txt_t << endl;
+				} */
+			myfile_predANN_txt_t.close(); 
+		}
+		else cout << "Unable to open file evaluate/pred_fsg.txt"; 
+		// L2 error works on the snapshot_x_collection and snapshot_y_collection
+		// start sweeping 
+		for (int iter_index = 0; iter_index < fine_grid_dir0*fine_grid_dir1; ++iter_index)
+		{
+			cout << "test" << endl;
+			int current_index = iter_index;
+			double current_nu;
+			double w;
+			if (parameter_space_dimension == 1)
+			{
+				current_nu = param_vector[current_index];
+			}
+			else if (parameter_space_dimension == 2)
+			{
+				Array<OneD, NekDouble> current_param = fine_general_param_vector[current_index];
+				w = current_param[0];	
+				current_nu = current_param[1];
+			}		
+			Array<OneD, NekDouble> interpolant_x(snapshot_x_collection[0].num_elements());
+			Array<OneD, NekDouble> interpolant_y(snapshot_y_collection[0].num_elements());
+			for (int i = 0; i < snapshot_x_collection[0].num_elements(); ++i)
+			{
+				interpolant_x[i] = 0.0;
+				interpolant_y[i] = 0.0;
+			}
+			for (int index_interpol_op = 0; index_interpol_op < RBsize; ++index_interpol_op)
+			{
+				for (int i = 0; i < snapshot_x_collection[0].num_elements(); ++i)	
+				{
+					interpolant_x[i] += eigen_phys_basis_x(i, index_interpol_op) * ANN_POD_coeffs(iter_index, index_interpol_op);
+					interpolant_y[i] += eigen_phys_basis_y(i, index_interpol_op) * ANN_POD_coeffs(iter_index, index_interpol_op + RBsize);
+				}
+			}
+			double rel_L2error = L2norm_abs_error_ITHACA(interpolant_x, interpolant_y, snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]) / L2norm_ITHACA(snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]);
+			cout << "rel_L2error at parameter " << w << " and " << current_nu << " is " << rel_L2error << endl;
+		}
+		for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+		{
+			cout << "test" << endl;
+			int current_index = iter_index;
+			double current_nu;
+			double w;
+			if (parameter_space_dimension == 1)
+			{
+				current_nu = param_vector[current_index];
+			}
+			else if (parameter_space_dimension == 2)
+			{
+				Array<OneD, NekDouble> current_param = general_param_vector[current_index];
+				w = current_param[0];	
+				current_nu = current_param[1];
+			}		
+			Array<OneD, NekDouble> interpolant_x(snapshot_x_collection[0].num_elements());
+			Array<OneD, NekDouble> interpolant_y(snapshot_y_collection[0].num_elements());
+			for (int i = 0; i < snapshot_x_collection[0].num_elements(); ++i)
+			{
+				interpolant_x[i] = 0.0;
+				interpolant_y[i] = 0.0;
+			}
+			for (int index_interpol_op = 0; index_interpol_op < RBsize; ++index_interpol_op)
+			{
+				for (int i = 0; i < snapshot_x_collection[0].num_elements(); ++i)	
+				{
+					interpolant_x[i] += eigen_phys_basis_x(i, index_interpol_op) * train_data_x(index_interpol_op, iter_index);
+					interpolant_y[i] += eigen_phys_basis_y(i, index_interpol_op) * train_data_y(index_interpol_op, iter_index);
+				}
+			}
+			double rel_L2error = L2norm_abs_error_ITHACA(interpolant_x, interpolant_y, snapshot_x_collection[iter_index], snapshot_y_collection[iter_index]) / L2norm_ITHACA(snapshot_x_collection[iter_index], snapshot_y_collection[iter_index]);
+			cout << "rel_L2error at parameter " << w << " and " << current_nu << " is " << rel_L2error << endl;
+		}
+	}
+
+
+
+
+
     void CoupledLinearNS_TT::online_phase()
     {
 
 	if (use_sparse_poly)
 	{
 		compute_sparse_poly_approx();
+		return;
+	}
+
+	if (use_ANN)
+	{
+		compute_ANN_approx();
 		return;
 	}
 
@@ -9232,10 +9355,43 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	if (use_ANN)
 	{
 		cout << "encountered use_ANN, writing train data and return from offline" << endl;
-		// project original snapshot data onto the POD basis
-		Eigen::MatrixXd snapshot_xy_proj = project_onto_basis(snapshot_x_collection[0], snapshot_y_collection[0]);
-		cout << "snapshot_xy_proj.rows() " << snapshot_xy_proj.rows() << " snapshot_xy_proj.cols() " << snapshot_xy_proj.cols() << endl;
+		train_data_x = Eigen::MatrixXd::Zero(RBsize, Nmax);
+		train_data_y = Eigen::MatrixXd::Zero(RBsize, Nmax);
+		for (int i = 0; i < Nmax; ++i) // for all original snapshots
+		{
+			// project original snapshot data onto the POD basis
+			Eigen::MatrixXd snapshot_xy_proj = project_onto_basis(snapshot_x_collection[i], snapshot_y_collection[i]);
+			//			cout << "snapshot_xy_proj.rows() " << snapshot_xy_proj.rows() << " snapshot_xy_proj.cols() " << snapshot_xy_proj.cols() << endl;
+			train_data_x.col(i) = snapshot_xy_proj.col(0);
+			train_data_y.col(i) = snapshot_xy_proj.col(1);
+		}
 		// write the training data to *.txt files
+
+
+		ofstream myfileANN ("trainANN.txt");
+		if (myfileANN.is_open())
+		{
+			for (int i = 0; i < RBsize; i++)
+			{
+				for (int j = 0; j < Nmax; j++)
+				{
+					myfileANN << std::setprecision(17) << train_data_x(i,j) << "\t";
+				}
+				myfileANN << "\n";
+			}
+			for (int i = 0; i < RBsize; i++)
+			{
+				for (int j = 0; j < Nmax; j++)
+				{
+					myfileANN << std::setprecision(17) << train_data_y(i,j) << "\t";
+				}
+				myfileANN << "\n";
+			}
+            myfileANN.close();
+		}
+		else cout << "Unable to open file"; 
+
+
 		return;
 	}
 

@@ -7131,6 +7131,16 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			double rel_L2error = L2norm_abs_error_ITHACA(interpolant_x, interpolant_y, snapshot_x_collection[iter_index], snapshot_y_collection[iter_index]) / L2norm_ITHACA(snapshot_x_collection[iter_index], snapshot_y_collection[iter_index]);
 			cout << "rel_L2error at parameter " << w << " and " << current_nu << " is " << rel_L2error << endl;
 		}
+		
+		cout << "comparing the first coeffs, ANN:" << endl;
+		for (int index_interpol_op = 0; index_interpol_op < RBsize; ++index_interpol_op)
+		{
+			cout << "ANN_POD_coeffs(0, index_interpol_op) " << ANN_POD_coeffs(0, index_interpol_op) << endl;
+			cout << "ANN_POD_coeffs(0, index_interpol_op + RBsize) " << ANN_POD_coeffs(0, index_interpol_op + RBsize) << endl;
+			cout << "train_data_x(index_interpol_op, 0) " << train_data_x(index_interpol_op, 0) << endl;
+			cout << "train_data_y(index_interpol_op, 0) " << train_data_y(index_interpol_op, 0) << endl;
+		}
+		
 	}
 
 

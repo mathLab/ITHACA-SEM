@@ -357,11 +357,14 @@ class IProductWRTDerivBase_MatrixFree : public Operator
                     (nElmtNoPad % vec_t::width);
                 m_input = Array<OneD, Array<OneD, NekDouble>> (m_coordim);
                 m_input[0] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                m_input[1] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                if (m_coordim == 3)
-                {
-                    m_input[2] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                }
+		if (m_coordim > 1)
+		{
+                    m_input[1] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+                    if (m_coordim == 3)
+                    {
+                         m_input[2] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
+                    }
+		}
                 m_output = Array<OneD, NekDouble>{nmElmt * nElmtPad, 0.0};
             }
 

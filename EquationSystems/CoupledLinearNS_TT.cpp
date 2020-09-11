@@ -7044,7 +7044,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 					//optimal_clusters[counter].insert(nn[i]);
 					//cout << nn[i] << endl;
 					//cout << "counter " << counter << endl;
-					ANN_POD_coeffs(counter,i) == nn[i];
+					ANN_POD_coeffs(counter,i) = nn[i];
 				}
 				++counter;
 //				      all_integers.push_back( std::vector<int>( std::istream_iterator<int>(is), std::istream_iterator<int>() ) );

@@ -187,6 +187,11 @@ class Helmholtz_IterPerExp : public Operator
             const int nCoeffs = m_stdExp->GetNcoeffs();
             const int nPhys   = m_stdExp->GetTotPoints();
 
+            ASSERTL1(input.size() >= m_numElmt*nCoeffs,
+                     "input array size is insufficient");
+            ASSERTL1(output.size() >= m_numElmt*nCoeffs,
+                     "output array size is insufficient");
+            
             Array<OneD, NekDouble> tmpphys, t1; 
             Array<OneD, Array<OneD, NekDouble> > dtmp(3);
             Array<OneD, Array<OneD, NekDouble> > tmp(3);

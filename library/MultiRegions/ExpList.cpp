@@ -2030,10 +2030,11 @@ namespace Nektar
                 Array<OneD, NekDouble> tmp;
                 for (int i = 0; i < m_collections.size(); ++i)
                 {
-                    m_collections[i].ApplyOperator(Collections::eHelmholtz,
-                                                   inarray + m_coll_coeff_offset[i],
-                                                   tmp = outarray + m_coll_phys_offset[i],
-                                                   gkey.GetConstFactors());
+                    m_collections[i].ApplyOperator
+                        (Collections::eHelmholtz,
+                         inarray + m_coll_coeff_offset[i],
+                         tmp = outarray + m_coll_coeff_offset[i],
+                         gkey.GetConstFactors());
                 }
             }
             else

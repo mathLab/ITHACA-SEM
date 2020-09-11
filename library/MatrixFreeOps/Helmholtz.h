@@ -29,9 +29,8 @@ struct HelmholtzQuad : public Helmholtz, public Helper<2, DEFORMED>
     }
 
     static std::shared_ptr<Operator> Create(
-
-                                            std::vector<LibUtilities::BasisSharedPtr> basis,
-        int nElmt)
+                     std::vector<LibUtilities::BasisSharedPtr> basis,
+                     int nElmt)
     {
         return std::make_shared<HelmholtzQuad<DEFORMED>>(basis, nElmt);
     }

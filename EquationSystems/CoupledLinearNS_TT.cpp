@@ -9223,8 +9223,8 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	{
 		cout << "encountered use_ANN, writing train data and return from offline" << endl;
 		// project original snapshot data onto the POD basis
-
-
+		Eigen::MatrixXd snapshot_xy_proj = project_onto_basis(snapshot_x_collection[0], snapshot_y_collection[0]);
+		cout << "snapshot_xy_proj.rows() " << snapshot_xy_proj.rows() << " snapshot_xy_proj.cols() " << snapshot_xy_proj.cols() << endl;
 		// write the training data to *.txt files
 		return;
 	}

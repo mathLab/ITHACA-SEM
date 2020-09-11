@@ -9219,6 +9219,16 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		cout << "c_f_all_PODmodes_wo_dbc.cols() " << c_f_all_PODmodes_wo_dbc.cols() << endl;
 	}
 
+
+
+	time(&timer_1);
+	gen_phys_base_vecs();
+	time(&timer_2);
+	if (debug_mode)	
+	{
+		cout << "finished gen_phys_base_vecs in " << difftime(timer_2, timer_1) << " seconds" << endl;
+	}
+
 	if (use_ANN)
 	{
 		cout << "encountered use_ANN, writing train data and return from offline" << endl;
@@ -9229,13 +9239,6 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		return;
 	}
 
-	time(&timer_1);
-	gen_phys_base_vecs();
-	time(&timer_2);
-	if (debug_mode)	
-	{
-		cout << "finished gen_phys_base_vecs in " << difftime(timer_2, timer_1) << " seconds" << endl;
-	}
 	if (parameter_space_dimension == 1)
 	{
 		gen_proj_adv_terms();

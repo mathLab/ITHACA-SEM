@@ -79,8 +79,8 @@
 
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-        <D VAR="A" USERDEFINEDTYPE="A-inflow" VALUE="1.5*sin(t)" />
-        <D VAR="u" USERDEFINEDTYPE="A-inflow" VALUE="1.0" />
+        <D VAR="A" USERDEFINEDTYPE="U-inflow" VALUE="1.5" />
+        <D VAR="u" USERDEFINEDTYPE="U-inflow" VALUE="1.0 * cos(t)" />
       </REGION>
       <REGION REF="1">
         <D VAR="A" VALUE="1.0" />

@@ -29,6 +29,11 @@ v5.1.0
 - Add new filter AeroForcesSPM to compute aerodynamic forces in immersed
   boundaries (!1065)
 
+**PulseWaveSolver**
+- Added viscoelasticity (!1138)
+- Added empirical and power laws (!1138)
+- Code tidying (!1138)
+
 **Documentation**:
 - Updated Windows source build instructions in user guide (!1152)
 

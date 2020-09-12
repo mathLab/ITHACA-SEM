@@ -204,10 +204,10 @@ class Helmholtz_IterPerExp : public Operator
             NekDouble lambda = x->second; 
             
             tmpphys = wsp; 
-            for(int i = 1; i < m_dim+1; ++i)
+            for(int i = 1; i < m_coordim+1; ++i)
             {
                 dtmp[i-1] = wsp + i*nPhys;
-                tmp[i-1]  = wsp + (i+m_dim)*nPhys; 
+                tmp [i-1] = wsp + (i+m_coordim)*nPhys; 
             }
 
             for (int i = 0; i < m_numElmt; ++i)
@@ -292,7 +292,7 @@ class Helmholtz_IterPerExp : public Operator
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
             m_jac      = pGeomData->GetJac(pCollExp);
-            m_wspSize = (2*m_dim+1)*nqtot;
+            m_wspSize = (2*m_coordim+1)*nqtot;
         }
 };
 

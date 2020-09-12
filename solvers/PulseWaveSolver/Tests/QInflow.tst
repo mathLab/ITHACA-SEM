@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>Q-inflow Riemann Solver, P=5</description>
+    <description>QInflow Inlet Condition, P=5</description>
     <executable>PulseWaveSolver</executable>
-    <parameters>Q_inflow.xml</parameters>
+    <parameters>QInflow.xml</parameters>
     <files>
-        <file description="Session File">Q_inflow.xml</file>
+        <file description="Session File">QInflow.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">
@@ -17,5 +17,3 @@
         </metric>
     </metrics>
 </test>
-
-

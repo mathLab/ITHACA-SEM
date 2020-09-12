@@ -21,6 +21,7 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 ITHACASEM
+ITHACASEM_Deflation
 
 # Distribution / packaging
 .Python

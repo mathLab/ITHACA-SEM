@@ -7035,10 +7035,10 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			int counter = 0;
 			while ( getline( myfile_predANN_txt_t, line ) ) 
 			{
-				cout << line << endl;
+			//	cout << line << endl;
 				std::istringstream is( line );
 				std::vector<double> nn = std::vector<double>( std::istream_iterator<double>(is), std::istream_iterator<double>() );
-				cout << "nn.size() "  << nn.size() << endl;
+			//	cout << "nn.size() "  << nn.size() << endl;
 				for (int i = 0; i < nn.size(); ++i)
 				{
 					//optimal_clusters[counter].insert(nn[i]);
@@ -7063,9 +7063,10 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		else cout << "Unable to open file evaluate/pred_fsg.txt"; 
 		// L2 error works on the snapshot_x_collection and snapshot_y_collection
 		// start sweeping 
+		double mean_L2 = 0;
+		double max_L2 = 0;
 		for (int iter_index = 0; iter_index < fine_grid_dir0*fine_grid_dir1; ++iter_index)
 		{
-			cout << "test" << endl;
 			int current_index = iter_index;
 			double current_nu;
 			double w;
@@ -7096,8 +7097,12 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			}
 			double rel_L2error = L2norm_abs_error_ITHACA(interpolant_x, interpolant_y, snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]) / L2norm_ITHACA(snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]);
 			cout << "rel_L2error at parameter " << w << " and " << current_nu << " is " << rel_L2error << endl;
+			if (rel_L2error > max_L2) max_L2 = rel_L2error;
+			mean_L2 += rel_L2error / (fine_grid_dir0*fine_grid_dir1);
 		}
-		for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+		cout << "mean_L2 ann " << mean_L2 << endl;
+		cout << "max_L2 ann " << max_L2 << endl;
+/*		for (int iter_index = 0; iter_index < Nmax; ++iter_index)
 		{
 			cout << "test" << endl;
 			int current_index = iter_index;
@@ -7139,7 +7144,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			cout << "ANN_POD_coeffs(0, index_interpol_op + RBsize) " << ANN_POD_coeffs(0, index_interpol_op + RBsize) << endl;
 			cout << "train_data_x(index_interpol_op, 0) " << train_data_x(index_interpol_op, 0) << endl;
 			cout << "train_data_y(index_interpol_op, 0) " << train_data_y(index_interpol_op, 0) << endl;
-		}
+		}   */
 		
 	}
 

@@ -7750,7 +7750,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //				cout << "relative_change_error " << relative_change_error << endl;
 				no_iter++;
 			} 
-			while( ((relative_change_error > 1e-12) && (no_iter < 10)) );
+			while( ((relative_change_error > 1e-12) && (no_iter < 100)) );
 //			cout << "ROM solve no iters used " << no_iter << endl;
 			repro_solve_affine = RB.leftCols(RBsize-reduction_int)  * solve_affine;
 			Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);

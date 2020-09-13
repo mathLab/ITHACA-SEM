@@ -42,6 +42,11 @@ v5.1.0
 - Updated minimum required CMake version to 3.5.1 (!1152)
 - Updated third party Boost version 1.71 (!1152)
 
+v5.0.2
+------
+**CI**
+- Add Debian Bullseye to CI system (!1181)
+
 v5.0.1
 ------
 **Library**

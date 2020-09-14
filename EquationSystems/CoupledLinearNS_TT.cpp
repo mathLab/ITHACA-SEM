@@ -7065,6 +7065,8 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		// start sweeping 
 		double mean_L2 = 0;
 		double max_L2 = 0;
+		double mean_Linf = 0;
+		double max_Linf = 0;
 		for (int iter_index = 0; iter_index < fine_grid_dir0*fine_grid_dir1; ++iter_index)
 		{
 			int current_index = iter_index;
@@ -7096,12 +7098,17 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 				}
 			}
 			double rel_L2error = L2norm_abs_error_ITHACA(interpolant_x, interpolant_y, snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]) / L2norm_ITHACA(snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]);
-			cout << "rel_L2error at parameter " << w << " and " << current_nu << " is " << rel_L2error << endl;
+			double rel_Linferror = Linfnorm_abs_error_ITHACA(interpolant_x, interpolant_y, snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]) / Linfnorm_ITHACA(snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]);
+		//	cout << "rel_L2error at parameter " << w << " and " << current_nu << " is " << rel_L2error << endl;
 			if (rel_L2error > max_L2) max_L2 = rel_L2error;
 			mean_L2 += rel_L2error / (fine_grid_dir0*fine_grid_dir1);
+			if (rel_Linferror > max_Linf) max_Linf = rel_Linferror;
+			mean_Linf += rel_Linferror / (fine_grid_dir0*fine_grid_dir1);
 		}
 		cout << "mean_L2 ann " << mean_L2 << endl;
 		cout << "max_L2 ann " << max_L2 << endl;
+		cout << "mean_Linf ann " << mean_Linf << endl;
+		cout << "max_Linf ann " << max_Linf << endl;
 /*		for (int iter_index = 0; iter_index < Nmax; ++iter_index)
 		{
 			cout << "test" << endl;
@@ -7641,7 +7648,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		if (compute_smaller_model_errs)
 		{
 			// repeat the parameter sweep with decreasing RB sizes up to 1, but in a separate function for readability
-			for (int i=1; i < RBsize; ++i)
+			for (int i=0; i < RBsize; ++i)
 			{
     			online_snapshot_check_with_smaller_basis_VV(i);
 			}

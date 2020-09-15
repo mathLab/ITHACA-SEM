@@ -7444,7 +7444,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			}
 
 			// test for debug purpose
-			cluster_mean_x = snapshot_x_collection_VV[iter_index];
+	/*		cluster_mean_x = snapshot_x_collection_VV[iter_index];
 			cluster_mean_y = snapshot_y_collection_VV[iter_index];
 			Eigen::VectorXd snap_x = Eigen::VectorXd::Zero(cluster_mean_x.num_elements());
 			Eigen::VectorXd snap_y = Eigen::VectorXd::Zero(cluster_mean_x.num_elements());
@@ -7454,7 +7454,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 				snap_y(index_recr) = snapshot_y_collection_VV[iter_index][index_recr];
 			}
 			cout << "snap_x.norm() " << snap_x.norm() << endl;
-			cout << "snap_y.norm() " << snap_y.norm() << endl;
+			cout << "snap_y.norm() " << snap_y.norm() << endl;   */
 /*			for (int index_recr = 0; index_recr < cluster_mean_x.num_elements(); ++index_recr)
 			{
 				snap_x(index_recr) = snapshot_x_collection[iter_index][index_recr];
@@ -7510,8 +7510,8 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			Eigen::VectorXd repro_solve_affine = RB * solve_affine;
 			Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
 			recover_snapshot_loop(reconstruct_solution, field_x, field_y);
-			snap_x = Eigen::VectorXd::Zero(cluster_mean_x.num_elements());
-			snap_y = Eigen::VectorXd::Zero(cluster_mean_x.num_elements());
+			Eigen::VectorXd  snap_x = Eigen::VectorXd::Zero(cluster_mean_x.num_elements());
+			Eigen::VectorXd  snap_y = Eigen::VectorXd::Zero(cluster_mean_x.num_elements());
 			for (int index_recr = 0; index_recr < cluster_mean_x.num_elements(); ++index_recr)
 			{
 				snap_x(index_recr) = field_x[index_recr];

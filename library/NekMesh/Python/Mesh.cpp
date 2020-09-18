@@ -45,7 +45,6 @@ void export_Mesh()
                boost::noncopyable>(
                    "Mesh", py::init<>())
         .def_readwrite("node", &Mesh::m_vertexSet)
-        .def_readwrite("verbose", &Mesh::m_verbose)
         .def_readwrite("expDim", &Mesh::m_expDim)
         .def_readwrite("spaceDim", &Mesh::m_spaceDim)
         .def_readwrite("nummode", &Mesh::m_nummode)

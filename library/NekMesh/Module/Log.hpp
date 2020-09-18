@@ -459,6 +459,14 @@ public:
         m_prefixLen = prefixLen;
     }
 
+    /**
+     * @brief Returns the current log level.
+     */
+    LogLevel GetLogLevel()
+    {
+        return m_level;
+    }
+
 private:
     /// Log output method.
     std::shared_ptr<LogOutput> m_logOutput;

@@ -79,7 +79,6 @@ void ProcessInsertSurface::Process()
     m_log(VERBOSE) << "Inserting surface from file '" << file << "'." << endl;
 
     MeshSharedPtr inMsh = std::shared_ptr<Mesh>(new Mesh());
-    inMsh->m_verbose = m_mesh->m_verbose;
     ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
         ModuleKey(eInputModule, "xml"), inMsh);
     mod->RegisterConfig("infile", file);

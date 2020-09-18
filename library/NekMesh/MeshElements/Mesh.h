@@ -91,12 +91,10 @@ NEKMESH_EXPORT bool operator==(ConditionSharedPtr const &c1,
 class Mesh
 {
 public:
-    NEKMESH_EXPORT Mesh() : m_verbose(false), m_nummode(0)
+    NEKMESH_EXPORT Mesh() : m_nummode(0)
     {
     }
 
-    /// Verbose flag
-    bool                            m_verbose;
     /// Dimension of the expansion.
     unsigned int                    m_expDim;
     /// Dimension of the space in which the mesh is defined.

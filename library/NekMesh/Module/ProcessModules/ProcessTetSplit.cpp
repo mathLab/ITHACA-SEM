@@ -202,7 +202,7 @@ void ProcessTetSplit::Process()
             }
         }
 
-        int offset;
+        int offset = 0;
 
         // Split prism using paper criterion.
         int id1 = min(nodeList[indir[minId][1]]->m_id,

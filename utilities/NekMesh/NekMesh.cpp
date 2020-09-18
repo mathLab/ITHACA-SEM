@@ -179,11 +179,6 @@ int main(int argc, char* argv[])
     vector<ModuleSharedPtr> modules;
     vector<string>          modcmds;
 
-    if (vm.count("verbose"))
-    {
-        mesh->m_verbose = true;
-    }
-
     if (vm.count("module"))
     {
         modcmds = vm["module"].as<vector<string> >();

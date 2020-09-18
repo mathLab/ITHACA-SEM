@@ -158,11 +158,10 @@ void ProcessJac::Process()
         ProcessComposites();
     }
 
-    if (printList || m_mesh->m_verbose)
-    {
-        m_log << "Total negative Jacobians: " << nNeg << endl;
-    }
-    else if (nNeg > 0)
+    LogLevel level = printList ? INFO : m_log.GetLogLevel();
+    m_log(level) << "Total negative Jacobians: " << nNeg << endl;
+
+    if (nNeg > 0)
     {
         m_log(WARNING) << "Detected " << nNeg << " element"
                        << (nNeg == 1 ? "" : "s") << " with negative Jacobian."

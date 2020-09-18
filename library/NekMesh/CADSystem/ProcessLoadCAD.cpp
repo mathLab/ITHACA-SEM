@@ -59,8 +59,6 @@ ProcessLoadCAD::ProcessLoadCAD(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "", "naca domain");
     m_config["usecfimesh"] =
         ConfigOption(true, "", "Use mesh from CFI file");
-    m_config["verbose"] =
-        ConfigOption(true, "", "verbose output from cadsystem");
     m_config["voidpoints"] =
         ConfigOption(false, "", "A list of points, separated by semicolons,"
                                 "that defines holes within the volume.");
@@ -102,11 +100,6 @@ void ProcessLoadCAD::Process()
     if(m_config["NACA"].beenSet)
     {
         m_mesh->m_cad->SetConfig("UseNACA", m_config["NACA"].as<std::string>());
-    }
-
-    if(m_config["verbose"].beenSet)
-    {
-        m_mesh->m_cad->SetVerbose();
     }
 
     std::string voidPoints = m_config["voidpoints"].as<std::string>();

@@ -74,10 +74,6 @@ void InputCADfix::Process()
     ModuleSharedPtr module = GetModuleFactory().CreateInstance(
         ModuleKey(eProcessModule, "loadcad"), m_mesh);
     module->RegisterConfig("filename", m_config["infile"].as<string>());
-    if (m_mesh->m_verbose)
-    {
-        module->RegisterConfig("verbose", "");
-    }
 
     // Set CFI mesh flag so that we always use the mesh from the CFI file.
     module->RegisterConfig("usecfimesh", "");

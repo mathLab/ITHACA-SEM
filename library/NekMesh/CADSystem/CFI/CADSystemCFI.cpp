@@ -121,20 +121,14 @@ bool CADSystemCFI::LoadCAD()
     m_scal = 1.0;
     if (m_model->getUnits() == cfi::UNIT_INCHES)
     {
-        if (m_verbose)
-        {
-            m_log(VERBOSE) << "  - Model is in inches, scaling accordingly"
-                           << endl;
-        }
+        m_log(VERBOSE) << "  - Model is in inches, scaling accordingly"
+                       << endl;
         m_scal = 0.0254;
     }
     else if (m_model->getUnits() == cfi::UNIT_MILLIMETERS ||
              m_model->getUnits() == cfi::UNIT_MILLIMETRES)
     {
-        if (m_verbose)
-        {
-            m_log(VERBOSE) << "  - Model is in mm, scaling accordingly" << endl;
-        }
+        m_log(VERBOSE) << "  - Model is in mm, scaling accordingly" << endl;
         m_scal = 1e-3;
     }
 
@@ -277,10 +271,7 @@ bool CADSystemCFI::LoadCAD()
         }
     }
 
-    if (m_verbose)
-    {
-        Report();
-    }
+    Report();
 
     // Tidy up
     delete bds;

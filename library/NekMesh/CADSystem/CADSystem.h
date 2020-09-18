@@ -135,14 +135,6 @@ public:
     }
 
     /**
-     * @brief Sets the verbose flag for additional output.
-     */
-    void SetVerbose(bool verbose = true)
-    {
-        m_verbose = verbose;
-    }
-
-    /**
      * @brief Initialises CAD and makes surface, curve and vertex maps.
      *
      * @return true if completed successfully
@@ -272,8 +264,6 @@ protected:
     std::map<int, CADSurfSharedPtr> m_surfs;
     /// Map of vertices
     std::map<int, CADVertSharedPtr> m_verts;
-    /// Verbosity
-    bool m_verbose = false;
     /// 2D cad flag
     bool m_2d = false;
     /// Configuration options which might be used per-engine, serialised in

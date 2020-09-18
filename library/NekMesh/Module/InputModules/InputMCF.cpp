@@ -435,10 +435,6 @@ void InputMCF::Process()
     module->SetLogger(m_log);
     module->RegisterConfig("filename", m_cadfile);
     module->RegisterConfig("voidpoints", m_voidPts);
-    if (m_mesh->m_verbose)
-    {
-        module->RegisterConfig("verbose", "");
-    }
     if (m_2D)
     {
         module->RegisterConfig("2D", "");

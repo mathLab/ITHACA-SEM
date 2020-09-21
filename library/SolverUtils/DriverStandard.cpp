@@ -98,8 +98,6 @@ namespace Nektar
                 cout << "-------------------------------------------" << endl;
             }
 
-            int nwidthcolm = 7+6; // the second value determines the number of sigificant digits
-
             // Evaluate and output computation time and solution accuracy.
             // The specific format of the error output is essential for the
             // regression tests to work.
@@ -118,13 +116,9 @@ namespace Nektar
                 if (m_comm->GetRank() == 0)
                 {
                     out << "L 2 error (variable " << m_equ[0]->GetVariable(i) 
-                        << ") : " ;
-                    out <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8) 
-                        << vL2Error << endl;
+                        << ") : " << vL2Error << endl;
                     out << "L inf error (variable " << m_equ[0]->GetVariable(i) 
-                        << ") : " ;
-                    out <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8) 
-                        << vLinfError << endl;
+                        << ") : " << vLinfError << endl;
                 }
             }
         }

@@ -130,7 +130,7 @@ class LinSysDemo
                     const  bool     &flag = false)
         {
             boost::ignore_unused(flag);
-            int ntmp = inarray.num_elements();
+            int ntmp = inarray.size();
             ASSERTL0(m_matDim==ntmp,"m_matDim==ntmp not true");
             NekDouble x = inarray[0];
             NekDouble y = inarray[1];

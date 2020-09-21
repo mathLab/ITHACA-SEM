@@ -63,8 +63,8 @@ namespace Nektar
         /// Rounds an array of double precision numbers to integers.
         void RoundNekDoubleToInt(const Array<OneD,const NekDouble> inarray, Array<OneD,int> outarray)
         {
-            int size = inarray.num_elements();
-            ASSERTL1(outarray.num_elements()>=size,"Array sizes not compatible");
+            int size = inarray.size();
+            ASSERTL1(outarray.size()>=size,"Array sizes not compatible");
 
             NekDouble x;
             for(int i = 0; i < size; i++)
@@ -116,7 +116,7 @@ namespace Nektar
             m_LinIteratSovler = pSession->GetSolverInfoAsEnum<LinIteratSovler>(
                                                             "LinIteratSovler");
 
-            // Override values with data from GlobalSysSolnInfo section 
+            // Override values with data from GlobalSysSolnInfo section
             if(pSession->DefinesGlobalSysSolnInfo(variable, "GlobalSysSoln"))
             {
                 std::string sysSoln = pSession->GetGlobalSysSolnInfo(variable,
@@ -184,8 +184,8 @@ namespace Nektar
             }
 
         }
-        
-        /** 
+
+        /**
          * Create a new level of mapping using the information in
          * multiLevelGraph and performing the following steps:
          */
@@ -246,13 +246,14 @@ namespace Nektar
             //   according to the patch it belongs to (i.e. dofs in first block
             //   all are numbered 0, the second block numbered are 1, etc...)
             multiLevelGraph->MaskPatches(newLevel,globHomPatchMask);
-            
+
             // Map from Global Dofs to Local Dofs
             // As a result, we know for each local dof whether
             // it is mapped to the boundary of the next level, or to which
             // patch. Based upon this, we can than later associate every patch
             // of the current level with a patch in the next level.
-            oldLevelMap->GlobalToLocalBndWithoutSign(globPatchMask,locPatchMask_NekDouble);
+            oldLevelMap->GlobalToLocalBndWithoutSign(globPatchMask,
+                                                     locPatchMask_NekDouble);
 
             // Convert the result to an array of integers rather than doubles
             RoundNekDoubleToInt(locPatchMask_NekDouble,locPatchMask);
@@ -266,7 +267,7 @@ namespace Nektar
             // Retrieve the number of patches at the next level
             int numPatchesWithIntNew = multiLevelGraph->GetNpatchesWithInterior(newLevel);
             int numPatchesNew        = numPatchesWithIntNew;
-            
+
             // Allocate memory to store the number of local dofs associated to
             // each of elemental boundaries of these patches
             std::map<int, int> numLocalBndCoeffsPerPatchNew;
@@ -296,7 +297,7 @@ namespace Nektar
                 maxval = *max_element(&locPatchMask[cnt],
                                       &locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
                 ASSERTL0((minval==maxval)||(minval==-1),"These values should never be the same");
-                
+
                 if(maxval == -1)
                 {
                     curPatch = numPatchesNew;
@@ -307,7 +308,7 @@ namespace Nektar
                 {
                     curPatch = maxval;
                 }
-                
+
                 for(j = 0; j < numLocalBndCoeffsPerPatchOld[i]; j++ )
                 {
                     ASSERTL0((locPatchMask[cnt]==maxval)||(locPatchMask[cnt]==minval),
@@ -322,16 +323,20 @@ namespace Nektar
 
             // Count how many local dofs of the old level are mapped
             // to the local boundary dofs of the new level
+            m_numLocalCoeffs     = 0;
             m_numLocalBndCoeffs  = 0;
             m_numPatches         = numLocalBndCoeffsPerPatchNew.size();
             m_numLocalBndCoeffsPerPatch = Array<OneD, unsigned int>(m_numPatches);
             m_numLocalIntCoeffsPerPatch = Array<OneD, unsigned int>(m_numPatches,0u);
+            multiLevelGraph->GetNintDofsPerPatch(newLevel,m_numLocalIntCoeffsPerPatch);
+
             for(int i = 0; i < m_numPatches; i++)
             {
                 m_numLocalBndCoeffsPerPatch[i] = (unsigned int) numLocalBndCoeffsPerPatchNew[i];
-                m_numLocalBndCoeffs           += numLocalBndCoeffsPerPatchNew[i];
+                m_numLocalBndCoeffs  += m_numLocalBndCoeffsPerPatch[i];
+                m_numLocalCoeffs     += m_numLocalBndCoeffsPerPatch[i]
+                    + m_numLocalIntCoeffsPerPatch[i];
             }
-            multiLevelGraph->GetNintDofsPerPatch(newLevel,m_numLocalIntCoeffsPerPatch);
 
             // Also initialise some more data members
             m_solnType              = solnTypeOld;
@@ -350,24 +355,42 @@ namespace Nektar
             m_numGlobalCoeffs       = multiLevelGraph->GetNumGlobalDofs(newLevel) +
                 m_numGlobalDirBndCoeffs;
             m_localToGlobalBndMap   = Array<OneD,int>(m_numLocalBndCoeffs);
-            if(m_signChange)
+
+            m_localToLocalBndMap    = Array<OneD,int>(m_numLocalBndCoeffs);
+            m_localToLocalIntMap    = Array<OneD,int>(m_numLocalCoeffs-m_numLocalBndCoeffs);
+
+            //local to bnd map is just a copy 
+            for(int i = 0; i < m_numLocalBndCoeffs; ++i)
             {
-                m_localToGlobalBndSign    = Array<OneD,NekDouble>(m_numLocalBndCoeffs);
+                m_localToLocalBndMap[i] = i;
             }
             
+            // local to int map is just a copy plus offset 
+            for(int i = m_numLocalBndCoeffs; i < m_numLocalCoeffs; ++i)
+            {
+                m_localToLocalIntMap[i-m_numLocalBndCoeffs]  = i;
+            }
+            
+            if(m_signChange)
+            {
+                m_localToGlobalBndSign = Array<OneD,NekDouble>(m_numLocalBndCoeffs);
+            }
+
             m_patchMapFromPrevLevel = MemoryManager<PatchMap>::AllocateSharedPtr(numLocalBndCoeffsOld);
 
             m_globalToUniversalBndMap = Array<OneD, int>(
-                m_numGlobalBndCoeffs, oldLevelMap->GetGlobalToUniversalBndMap());
+               m_numGlobalBndCoeffs,oldLevelMap->GetGlobalToUniversalBndMap());
             m_globalToUniversalBndMapUnique = Array<OneD, int>(
-                m_numGlobalBndCoeffs, oldLevelMap->GetGlobalToUniversalBndMapUnique());
+               m_numGlobalBndCoeffs, oldLevelMap->GetGlobalToUniversalBndMapUnique());
 
             // Set up an offset array that denotes the offset of the local
             // boundary degrees of freedom of the next level
             Array<OneD, int> numLocalBndCoeffsPerPatchOffset(m_numPatches+1,0);
             for(int i = 1; i < m_numPatches+1; i++)
             {
-                numLocalBndCoeffsPerPatchOffset[i] += numLocalBndCoeffsPerPatchOffset[i-1] + numLocalBndCoeffsPerPatchNew[i-1];
+                numLocalBndCoeffsPerPatchOffset[i] +=
+                    numLocalBndCoeffsPerPatchOffset[i-1] +
+                    numLocalBndCoeffsPerPatchNew[i-1];
             }
 
             int additionalPatchCnt = numPatchesWithIntNew;
@@ -376,11 +399,15 @@ namespace Nektar
             bool isBndDof;
             NekDouble sign;
             Array<OneD, int> bndDofPerPatchCnt(m_numPatches,0);
+
             for(i = cnt = 0; i < numPatchesOld; i++)
             {
-                minval = *min_element(&locPatchMask[cnt],&locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
-                maxval = *max_element(&locPatchMask[cnt],&locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
-                ASSERTL0((minval==maxval)||(minval==-1),"These values should never be the same");
+                minval = *min_element(&locPatchMask[cnt],
+                         &locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
+                maxval = *max_element(&locPatchMask[cnt],
+                         &locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
+                ASSERTL0((minval==maxval)||(minval==-1),
+                         "These values should never be the same");
 
                 if(maxval == -1)
                 {
@@ -394,7 +421,8 @@ namespace Nektar
 
                 for(j = 0; j < numLocalBndCoeffsPerPatchOld[i]; j++ )
                 {
-                    ASSERTL0((locPatchMask[cnt]==maxval)||(locPatchMask[cnt]==minval),
+                    ASSERTL0((locPatchMask[cnt]==maxval)||
+                             (locPatchMask[cnt]==minval),
                              "These values should never be the same");
 
                     sign = oldLevelMap->GetLocalToGlobalBndSign(cnt);
@@ -403,7 +431,9 @@ namespace Nektar
                     {
                         newid = numLocalBndCoeffsPerPatchOffset[curPatch];
 
-                        m_localToGlobalBndMap[newid] = oldLevelMap->GetLocalToGlobalBndMap(cnt);
+                        m_localToGlobalBndMap[newid] = oldLevelMap->
+                            GetLocalToGlobalBndMap(cnt);
+                        
                         if(m_signChange)
                         {
                             m_localToGlobalBndSign[ newid ] = sign;
@@ -411,7 +441,6 @@ namespace Nektar
 
                         blockid = bndDofPerPatchCnt[curPatch];
                         isBndDof = true;
-
 
                         numLocalBndCoeffsPerPatchOffset[curPatch]++;
                         bndDofPerPatchCnt[curPatch]++;
@@ -422,31 +451,39 @@ namespace Nektar
                             m_numGlobalBndCoeffs+m_numLocalBndCoeffs;
 
                         blockid = oldLevelMap->GetLocalToGlobalBndMap(cnt)-
-                            m_numGlobalDirBndCoeffs - multiLevelGraph->GetInteriorOffset(newLevel,curPatch);
+                            m_numGlobalDirBndCoeffs -
+                            multiLevelGraph->GetInteriorOffset(newLevel,curPatch);
                         isBndDof = false;
                     }
 
                     sign = isBndDof?1.0:sign;
 
                     m_patchMapFromPrevLevel->SetPatchMap(cnt,curPatch,blockid,isBndDof,sign);
-
                     cnt++;
                 }
             }
+        
+
+            // set up local to local mapping from previous to new level 
+            m_patchMapFromPrevLevel->SetNewLevelMap(m_numLocalBndCoeffsPerPatch,
+                                                    m_numLocalIntCoeffsPerPatch);
+
+
             CalculateBndSystemBandWidth();
 
             // Postprocess the computed information - Update the old
-            // level with the mapping to new evel
+            // level with the mapping to new level
             // oldLevelMap->SetLocalBndToNextLevelMap(oldLocalBndToNewLevelMap,oldLocalBndToNewLevelSign);
+            
             // - Construct the next level mapping object
             if(m_staticCondLevel < (multiLevelGraph->GetNlevels()-1))
             {
                 m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMap>::AllocateSharedPtr(this,multiLevelGraph);
             }
+        
         }
 
-
-        AssemblyMap::~AssemblyMap(void)
+            AssemblyMap::~AssemblyMap(void)
         {
         }
 
@@ -586,6 +623,7 @@ namespace Nektar
                      "Not defined for this type of mapping.");
         }
 
+        
         void AssemblyMap::v_GlobalToLocal(
                 const Array<OneD, const NekDouble>& global,
                       Array<OneD,       NekDouble>& loc) const
@@ -710,7 +748,7 @@ namespace Nektar
             static Array<OneD, const int> result;
             return result;
         }
-        
+
         std::shared_ptr<AssemblyMap> AssemblyMap::v_LinearSpaceMap(
             const ExpList &locexp, GlobalSysSolnType solnType)
         {
@@ -771,6 +809,7 @@ namespace Nektar
             return v_GetLocalToGlobalSign();
         }
 
+        
         void AssemblyMap::LocalToGlobal(
                 const Array<OneD, const NekDouble>& loc,
                 Array<OneD,       NekDouble>& global,
@@ -832,6 +871,77 @@ namespace Nektar
                       int                         offset) const
         {
             v_UniversalAssemble(pGlobal, offset);
+        }
+
+        void AssemblyMap::PatchLocalToGlobal(
+                    const Array<OneD, const NekDouble>& loc,
+                    Array<OneD,       NekDouble>& global) const
+        {
+            Array<OneD, const NekDouble> local;
+
+            Array<OneD, const int> map = m_patchMapFromPrevLevel->GetNewLevelMap();
+            Array<OneD, const NekDouble> sign = m_patchMapFromPrevLevel->GetSign();
+
+            if(global.data() == loc.data())
+            {
+                local = Array<OneD, NekDouble>(map.size(),loc.data());
+            }
+            else
+            {
+                local = loc; // create reference
+            }
+
+            
+            Vmath::Scatr(map.size(), sign.get(),
+                         local.get(), map.get(), global.get());
+        }
+
+
+        void AssemblyMap::PatchGlobalToLocal(
+                    const Array<OneD, const NekDouble>& global,
+                          Array<OneD,       NekDouble>& loc) const
+        {
+            Array<OneD, const NekDouble> glo;
+
+            Array<OneD, const int> map = m_patchMapFromPrevLevel->GetNewLevelMap();
+            Array<OneD, const NekDouble> sign = m_patchMapFromPrevLevel->GetSign();
+            
+            if(global.data() == loc.data())
+            {
+                glo = Array<OneD, NekDouble>(global.size(),global.data());
+            }
+            else
+            {
+                glo = global; // create reference
+            }
+
+            Vmath::Gathr(map.size(),sign.get(),glo.get(),map.get(),loc.get());
+        }
+
+        void AssemblyMap::PatchAssemble(
+                    const Array<OneD, const NekDouble> &loc,
+                          Array<OneD,       NekDouble> &global) const
+        {
+            Array<OneD, const NekDouble> local;
+            Array<OneD, const int>       map  = m_patchMapFromPrevLevel->GetNewLevelMap();
+            Array<OneD, const NekDouble> sign = m_patchMapFromPrevLevel->GetSign();
+            
+            if(global.data() == loc.data())
+            {
+                local = Array<OneD, NekDouble>(map.size(),loc.data());
+            }
+            else
+            {
+                local = loc; // create reference
+            }
+
+            // since we are calling mapping from level down from array
+            // the m_numLocaBndCoeffs represents the size of the
+            // boundary elements we need to assemble into
+            Vmath::Zero(m_numLocalCoeffs,global.get(), 1);
+
+            Vmath::Assmb(map.size(), sign.get(), local.get(),
+                         map.get(), global.get());
         }
 
         int AssemblyMap::GetFullSystemBandWidth() const
@@ -930,43 +1040,35 @@ namespace Nektar
         }
 
 
-        int AssemblyMap::GetBndCondCoeffsToGlobalCoeffsMap(
-                    const int i)
+        const Array<OneD,const int>&
+                    AssemblyMap::GetBndCondCoeffsToLocalCoeffsMap()
         {
-            return m_bndCondCoeffsToGlobalCoeffsMap[i];
+            return  m_bndCondCoeffsToLocalCoeffsMap;
         }
-
-
-        int AssemblyMap::GetBndCondTraceToGlobalTraceMap(
-                    const int i)
+        
+        const Array<OneD, NekDouble > &AssemblyMap::GetBndCondCoeffsToLocalCoeffsSign()
         {
-            ASSERTL1(i < m_bndCondTraceToGlobalTraceMap.num_elements(),
-                     "Index out of range.");
-            return m_bndCondTraceToGlobalTraceMap[i];
-        }
-
-        const Array<OneD, const int> &AssemblyMap
-            ::GetBndCondTraceToGlobalTraceMap()
-        {
-            return m_bndCondTraceToGlobalTraceMap;
-        }
-
-        NekDouble AssemblyMap::GetBndCondCoeffsToGlobalCoeffsSign(const int i)
-        {
-            if(m_signChange)
-            {
-                return m_bndCondCoeffsToGlobalCoeffsSign[i];
-            }
-            else
-            {
-                return 1.0;
-            }
+            return m_bndCondCoeffsToLocalCoeffsSign;
         }
 
         const Array<OneD,const int>&
-                    AssemblyMap::GetBndCondCoeffsToGlobalCoeffsMap()
+                AssemblyMap::GetBndCondCoeffsToLocalTraceMap()
         {
-            return m_bndCondCoeffsToGlobalCoeffsMap;
+            return m_bndCondCoeffsToLocalTraceMap;
+        }
+
+
+        int AssemblyMap::GetBndCondIDToGlobalTraceID(
+                    const int i)
+        {
+            ASSERTL1(i < m_bndCondIDToGlobalTraceID.size(),
+                     "Index out of range.");
+            return m_bndCondIDToGlobalTraceID[i];
+        }
+        
+        const Array<OneD, const int> &AssemblyMap::GetBndCondIDToGlobalTraceID()
+        {
+            return m_bndCondIDToGlobalTraceID;
         }
 
 
@@ -1027,8 +1129,8 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& global,
                     Array<OneD,NekDouble>& loc, int offset) const
         {
-            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
+            ASSERTL1(loc.size() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.size() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
 
             // offset input data by length "offset" for Dirichlet boundary conditions.
             Array<OneD,NekDouble> tmp(m_numGlobalBndCoeffs,0.0);
@@ -1049,8 +1151,8 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& global,
                     Array<OneD,NekDouble>& loc) const
         {
-            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
+            ASSERTL1(loc.size() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.size() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
 
             if(m_signChange)
             {
@@ -1063,21 +1165,12 @@ namespace Nektar
         }
 
         void AssemblyMap::LocalBndToGlobal(
-                    const NekVector<NekDouble>& loc,
-                    NekVector<NekDouble>& global,
-                    int offset) const
-        {
-            LocalBndToGlobal(loc.GetPtr(), global.GetPtr(), offset);
-        }
-
-
-        void AssemblyMap::LocalBndToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                     Array<OneD,NekDouble>& global,
-                    int offset) const
+                    int offset, bool UseComm) const
         {
-            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
+            ASSERTL1(loc.size() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.size() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
 
             // offset input data by length "offset" for Dirichlet boundary conditions.
             Array<OneD,NekDouble> tmp(m_numGlobalBndCoeffs,0.0);
@@ -1091,24 +1184,20 @@ namespace Nektar
                 Vmath::Scatr(m_numLocalBndCoeffs, loc.get(), m_localToGlobalBndMap.get(), tmp.get());
             }
 
-            UniversalAssembleBnd(tmp);
+            // Ensure each processor has unique value with a max gather. 
+            if(UseComm)
+            {
+                Gs::Gather(tmp, Gs::gs_max, m_bndGsh);
+            }
             Vmath::Vcopy(m_numGlobalBndCoeffs-offset, tmp.get()+offset, 1, global.get(), 1);
         }
-        
-        void AssemblyMap::LocalBndToGlobal(
-                    const NekVector<NekDouble>& loc,
-                    NekVector<NekDouble>& global) const
-        {
-            LocalBndToGlobal(loc.GetPtr(), global.GetPtr());
-        }
-
 
         void AssemblyMap::LocalBndToGlobal(
                     const Array<OneD, const NekDouble>& loc,
-                    Array<OneD,NekDouble>& global)  const
+                    Array<OneD,NekDouble>& global, bool UseComm)  const
         {
-            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
+            ASSERTL1(loc.size() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.size() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
 
             if(m_signChange)
             {
@@ -1118,6 +1207,52 @@ namespace Nektar
             {
                 Vmath::Scatr(m_numLocalBndCoeffs, loc.get(), m_localToGlobalBndMap.get(), global.get());
             }
+            if(UseComm)
+            {
+                Gs::Gather(global, Gs::gs_max, m_bndGsh);
+            }
+        }
+
+
+        void AssemblyMap::LocalToLocalBnd(
+                                          const Array<OneD, const NekDouble>& local,
+                                          Array<OneD,NekDouble>& locbnd) const
+        {
+            ASSERTL1(locbnd.size() >= m_numLocalBndCoeffs,"LocBnd vector is not of correct dimension");
+            ASSERTL1(local.size() >= m_numLocalCoeffs,"Local vector is not of correct dimension");
+
+            Vmath::Gathr(m_numLocalBndCoeffs, local.get(), m_localToLocalBndMap.get(), locbnd.get());
+        }
+
+        void AssemblyMap::LocalToLocalInt(
+                                          const Array<OneD, const NekDouble>& local,
+                                          Array<OneD,NekDouble>& locint) const
+        {
+            ASSERTL1(locint.size() >= m_numLocalCoeffs-m_numLocalBndCoeffs,"Locint vector is not of correct dimension");
+            ASSERTL1(local.size() >= m_numLocalCoeffs,"Local vector is not of correct dimension");
+
+            Vmath::Gathr(m_numLocalCoeffs-m_numLocalBndCoeffs, local.get(), m_localToLocalIntMap.get(), locint.get());
+        }
+
+
+        void AssemblyMap::LocalBndToLocal(
+                                          const Array<OneD, const NekDouble>& locbnd,
+                                          Array<OneD,NekDouble>& local) const
+        {
+            ASSERTL1(locbnd.size() >= m_numLocalBndCoeffs,"LocBnd vector is not of correct dimension");
+            ASSERTL1(local.size() >= m_numLocalCoeffs,"Local vector is not of correct dimension");
+
+            Vmath::Scatr(m_numLocalBndCoeffs, locbnd.get(), m_localToLocalBndMap.get(), local.get());
+        }
+
+        void AssemblyMap::LocalIntToLocal(
+                                          const Array<OneD, const NekDouble>& locint,
+                                          Array<OneD,NekDouble>& local) const
+        {
+            ASSERTL1(locint.size() >= m_numLocalCoeffs-m_numLocalBndCoeffs,"LocBnd vector is not of correct dimension");
+            ASSERTL1(local.size() >= m_numLocalCoeffs,"Local vector is not of correct dimension");
+
+            Vmath::Scatr(m_numLocalCoeffs-m_numLocalBndCoeffs, locint.get(), m_localToLocalIntMap.get(), local.get());
         }
 
 
@@ -1141,8 +1276,8 @@ namespace Nektar
                     const Array<OneD,const NekDouble>& loc,
                     Array<OneD, NekDouble>& global, int offset) const
         {
-            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local array is not of correct dimension");
-            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs-offset,"Global array is not of correct dimension");
+            ASSERTL1(loc.size() >= m_numLocalBndCoeffs,"Local array is not of correct dimension");
+            ASSERTL1(global.size() >= m_numGlobalBndCoeffs-offset,"Global array is not of correct dimension");
             Array<OneD,NekDouble> tmp(m_numGlobalBndCoeffs,0.0);
 
             if(m_signChange)
@@ -1162,8 +1297,8 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& loc,
                     Array<OneD, NekDouble>& global) const
         {
-            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
+            ASSERTL1(loc.size() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.size() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
 
             Vmath::Zero(m_numGlobalBndCoeffs, global.get(), 1);
 
@@ -1182,7 +1317,7 @@ namespace Nektar
         void AssemblyMap::UniversalAssembleBnd(
                       Array<OneD,     NekDouble>& pGlobal) const
         {
-            ASSERTL1(pGlobal.num_elements() == m_numGlobalBndCoeffs,
+            ASSERTL1(pGlobal.size() >= m_numGlobalBndCoeffs,
                      "Wrong size.");
             Gs::Gather(pGlobal, Gs::gs_add, m_bndGsh);
         }
@@ -1203,6 +1338,11 @@ namespace Nektar
             if (offset > 0)  Vmath::Vcopy(offset, tmp, 1, pGlobal, 1);
         }
 
+        void AssemblyMap::UniversalAbsMaxBnd(Array<OneD, NekDouble> &bndvals)
+        {
+            Gs::Gather(bndvals, Gs::gs_amax, m_dirBndGsh);
+        }
+
         int AssemblyMap::GetBndSystemBandWidth() const
         {
             return m_bndSystemBandWidth;
@@ -1212,7 +1352,7 @@ namespace Nektar
         {
             return m_staticCondLevel;
         }
-        
+
         int AssemblyMap::GetNumPatches() const
         {
             return m_numPatches;
@@ -1279,8 +1419,8 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& global,
                     Array<OneD,NekDouble>& loc)
         {
-            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
+            ASSERTL1(loc.size() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.size() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
 
             Vmath::Gathr(m_numLocalBndCoeffs, global.get(), m_localToGlobalBndMap.get(), loc.get());
         }

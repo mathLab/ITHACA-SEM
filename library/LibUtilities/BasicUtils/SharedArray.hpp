@@ -40,6 +40,7 @@
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
+#include <LibUtilities/BasicUtils/Deprecated.hpp>
 
 #include <boost/core/ignore_unused.hpp>
 #include <boost/multi_array.hpp>
@@ -84,7 +85,7 @@ namespace Nektar
                 m_capacity( 0 ),
                 m_data( nullptr ),
                 m_count( nullptr ),
-                m_offset( 0 )                
+                m_offset( 0 )
             {
                 CreateStorage(m_capacity);
             }
@@ -94,7 +95,7 @@ namespace Nektar
             /// If DataType is a fundamental type (double, int, etc.), then the allocated array is
             /// uninitialized.  If it is any other type, each element is initialized with DataType's default
             /// constructor.
-            explicit Array(size_t dim1Size) :
+            explicit Array(size_type dim1Size) :
 #ifdef WITH_PYTHON
                 m_pythonInfo(nullptr),
 #endif
@@ -102,7 +103,7 @@ namespace Nektar
                 m_capacity( dim1Size ),
                 m_data( nullptr ),
                 m_count( nullptr ),
-                m_offset( 0 )                
+                m_offset( 0 )
             {
                 CreateStorage(m_capacity);
                 ArrayInitializationPolicy<DataType>::Initialize( m_data, m_capacity );
@@ -117,7 +118,7 @@ namespace Nektar
             /// then the initial value is copied directly into each
             /// element.  Otherwise, the DataType's copy constructor
             /// is used to initialize each element.
-            Array(size_t dim1Size, const DataType& initValue) :
+            Array(size_type dim1Size, const DataType& initValue) :
 #ifdef WITH_PYTHON
                 m_pythonInfo(nullptr),
 #endif
@@ -125,7 +126,7 @@ namespace Nektar
                 m_capacity( dim1Size ),
                 m_data( nullptr ),
                 m_count( nullptr ),
-                m_offset( 0 )                
+                m_offset( 0 )
             {
                 CreateStorage(m_capacity);
                 ArrayInitializationPolicy<DataType>::Initialize( m_data, m_capacity, initValue );
@@ -138,7 +139,7 @@ namespace Nektar
             /// If DataType is a fundamental type (double, int, etc.), then data is copied
             /// directly into the underlying storage.  Otherwise, the DataType's copy constructor
             /// is used to copy each element.
-            Array(size_t dim1Size, const DataType* data) :
+            Array(size_type dim1Size, const DataType* data) :
 #ifdef WITH_PYTHON
                 m_pythonInfo(nullptr),
 #endif
@@ -146,7 +147,7 @@ namespace Nektar
                 m_capacity( dim1Size ),
                 m_data( nullptr ),
                 m_count( nullptr ),
-                m_offset( 0 )                
+                m_offset( 0 )
             {
                 CreateStorage(m_capacity);
                 ArrayInitializationPolicy<DataType>::Initialize( m_data, m_capacity, data );
@@ -161,7 +162,7 @@ namespace Nektar
             /// Any changes to rhs will be reflected in this array.
             /// The memory for the array will only be deallocated when
             /// both rhs and this array have gone out of scope.
-            Array(size_t dim1Size, const Array<OneD, const DataType>& rhs) :
+            Array(size_type dim1Size, const Array<OneD, const DataType>& rhs) :
 #ifdef WITH_PYTHON
                 m_pythonInfo(rhs.m_pythonInfo),
 #endif
@@ -169,10 +170,11 @@ namespace Nektar
                 m_capacity(rhs.m_capacity),
                 m_data(rhs.m_data),
                 m_count(rhs.m_count),
-                m_offset(rhs.m_offset)                
+                m_offset(rhs.m_offset)
             {
                 *m_count += 1;
-                ASSERTL0(m_size <= rhs.num_elements(), "Requested size is larger than input array size.");
+                ASSERTL0(m_size <= rhs.size(), "Requested size is \
+                    larger than input array size.");
             }
 
 #ifdef WITH_PYTHON
@@ -181,14 +183,15 @@ namespace Nektar
             /// \param data The data to reference.
             /// \param memory_pointer Pointer to the memory address of the array
             /// \param python_decrement Pointer to decrementer
-            Array(size_t dim1Size, DataType* data, void* memory_pointer, void (*python_decrement)(void *)) :
+            Array(size_type dim1Size, DataType* data, void* memory_pointer,
+                    void (*python_decrement)(void *)) :
                 m_size( dim1Size ),
                 m_capacity( dim1Size ),
                 m_data( data ),
                 m_count( nullptr ),
-                m_offset( 0 )                               
+                m_offset( 0 )
             {
-                m_count = new size_t(); 
+                m_count = new size_type();
                 *m_count = 1;
 
                 m_pythonInfo = new PythonInfo *();
@@ -207,7 +210,7 @@ namespace Nektar
                 m_capacity(rhs.m_capacity),
                 m_data(rhs.m_data),
                 m_count(rhs.m_count),
-                m_offset(rhs.m_offset)                
+                m_offset(rhs.m_offset)
             {
                 *m_count += 1;
             }
@@ -248,7 +251,7 @@ namespace Nektar
             }
 
             /// \brief Creates a reference to rhs.
-            Array<OneD, const DataType>& operator=(const Array<OneD, const DataType>& rhs) 
+            Array<OneD, const DataType>& operator=(const Array<OneD, const DataType>& rhs)
             {
                 *m_count -= 1;
                 if( *m_count == 0 )
@@ -289,7 +292,7 @@ namespace Nektar
             const_iterator begin() const { return m_data + m_offset; }
             const_iterator end() const { return m_data + m_offset + m_size; }
 
-            const_reference operator[](size_t i) const
+            const_reference operator[](size_type i) const
             {
                 ASSERTL1(i < m_size,
                          std::string("Element ") + std::to_string(i) +
@@ -305,18 +308,29 @@ namespace Nektar
             const element* data() const { return m_data + m_offset; }
 
             /// \brief Returns 1.
-            size_t num_dimensions() const { return 1; }
+            size_type num_dimensions() const { return 1; }
 
             /// \brief Returns the array's size.
-            size_t num_elements() const { return m_size; }
+            size_type size() const { return m_size; }
 
-            size_t capacity() const { return m_capacity; }
+            /// \brief Returns the array's size.
+            /// Deprecated
+            DEPRECATED(5.1.0, size) size_type num_elements() const
+            {
+                WARNINGL1(false,
+                          "member function num_elements() is deprecated, "
+                          "use size() instead.");
+                return m_size;
+            }
+
+            /// \brief Returns the array's capacity.
+            size_type capacity() const { return m_capacity; }
 
             /// \brief Returns the array's offset.
-            size_t GetOffset() const { return m_offset; }
+            size_type GetOffset() const { return m_offset; }
 
             /// \brief Returns the array's reference counter.
-            size_t GetCount() const { return *m_count; }
+            size_type GetCount() const { return *m_count; }
 
             /// \brief Returns true is this array and rhs overlap.
             bool Overlaps(const Array<OneD, const DataType>& rhs) const
@@ -325,7 +339,7 @@ namespace Nektar
                 const element* end = start + m_size;
 
                 const element* rhs_start = rhs.get();
-                const element* rhs_end = rhs_start + rhs.num_elements();
+                const element* rhs_end = rhs_start + rhs.size();
 
                 return (rhs_start >= start && rhs_start <= end) ||
                        (rhs_end >= start && rhs_end <= end);
@@ -345,11 +359,6 @@ namespace Nektar
             }
 #endif
 
-            template<typename T1, typename T2>
-            friend bool operator==(const Array<OneD, T1>&, const Array<OneD, T2>&);
-            LIB_UTILITIES_EXPORT friend bool operator==(const Array<OneD, NekDouble>&, const Array<OneD, NekDouble>&);
-            LIB_UTILITIES_EXPORT friend bool IsEqual(const Array<OneD, const NekDouble>&,const Array<OneD, const NekDouble>&,NekDouble);
-
             /// \brief Creates an array with a specified offset.
             ///
             /// The return value will reference the same array as lhs,
@@ -361,10 +370,12 @@ namespace Nektar
             /// \endcode
             /// result[0] == anArray[10];
             template<typename T>
-            friend Array<OneD, T> operator+(const Array<OneD, T>& lhs, size_t offset);
+            friend Array<OneD, T> operator+(const Array<OneD, T>& lhs,
+                typename Array<OneD, T>::size_type offset);
 
             template<typename T>
-            friend Array<OneD, T> operator+(unsigned int offset, const Array<OneD, T>& rhs);
+            friend Array<OneD, T> operator+(typename Array<OneD, T>::size_type offset,
+                const Array<OneD, T>& rhs);
 
         protected:
 
@@ -372,15 +383,15 @@ namespace Nektar
             PythonInfo **m_pythonInfo;
 #endif
 
-            size_t m_size;
-            size_t m_capacity;
+            size_type m_size;
+            size_type m_capacity;
             DataType* m_data;
 
             // m_count points to an integer used as a reference count to this array's data (m_data).
             // Previously, the reference count was stored in the first 4 bytes of the m_data array.
-            size_t* m_count;
+            size_type* m_count;
 
-            size_t m_offset;
+            size_type m_offset;
 
         private:
         //            struct DestroyArray
@@ -397,7 +408,7 @@ namespace Nektar
         //            };
         //
         void
-            CreateStorage( size_t size )
+            CreateStorage( size_type size )
             {
                 DataType* storage = MemoryManager<DataType>::RawAllocate( size );
                 m_data = storage;
@@ -405,7 +416,7 @@ namespace Nektar
                 // Allocate an integer to hold the reference count.  Note 1, all arrays that share this array's
                 // data (ie, point to m_data) will also share the m_count data.  Note 2, previously m_count
                 // pointed to "(unsigned int*)storage".
-                m_count = new size_t();
+                m_count = new size_type();
                 *m_count = 1;
 #ifdef WITH_PYTHON
                 m_pythonInfo = new PythonInfo*();
@@ -414,7 +425,7 @@ namespace Nektar
             }
 
             template<typename T>
-            static Array<OneD, T> CreateWithOffset(const Array<OneD, T>& rhs, size_t offset)
+            static Array<OneD, T> CreateWithOffset(const Array<OneD, T>& rhs, size_type offset)
             {
                 Array<OneD, T> result(rhs);
                 result.m_offset += offset;
@@ -442,7 +453,6 @@ namespace Nektar
             typedef typename ArrayType::size_type size_type;
 
 
-
         public:
             Array() :
                 m_data(CreateStorage<DataType>(0, 0))
@@ -450,22 +460,25 @@ namespace Nektar
             }
 
             /// \brief Constructs a 2 dimensional array.  The elements of the array are not initialized.
-            Array(size_t dim1Size, size_t dim2Size) :
+            Array(size_type dim1Size, size_type dim2Size) :
                 m_data(CreateStorage<DataType>(dim1Size, dim2Size))
             {
-                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements());
+                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(),
+                    m_data->num_elements());
             }
 
-            Array(size_t dim1Size, size_t dim2Size, const DataType& initValue) :
+            Array(size_type dim1Size, size_type dim2Size, const DataType& initValue) :
                 m_data(CreateStorage<DataType>(dim1Size, dim2Size))
             {
-                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), initValue);
+                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(),
+                    m_data->num_elements(), initValue);
             }
 
-            Array(size_t dim1Size, size_t dim2Size, const DataType* data) :
+            Array(size_type dim1Size, size_type dim2Size, const DataType* data) :
                 m_data(CreateStorage<DataType>(dim1Size, dim2Size))
             {
-                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(), m_data->num_elements(), data);
+                ArrayInitializationPolicy<DataType>::Initialize(m_data->data(),
+                    m_data->num_elements(), data);
             }
 
             Array(const Array<TwoD, const DataType>& rhs) :
@@ -473,28 +486,33 @@ namespace Nektar
             {
             }
 
-            Array<TwoD, const DataType>& operator=(const Array<TwoD, const DataType>& rhs)
+            Array<TwoD, const DataType>& operator=(const Array<TwoD,
+                const DataType>& rhs)
             {
                 m_data = rhs.m_data;
                 return *this;
             }
-
-            template<typename T>
-            friend bool operator==(const Array<TwoD, T>&, const Array<TwoD, T>&);
-            LIB_UTILITIES_EXPORT friend bool operator==(const Array<TwoD, NekDouble>&, const Array<TwoD, NekDouble>&);
-            LIB_UTILITIES_EXPORT friend bool IsEqual(const Array<TwoD, const NekDouble>&,const Array<TwoD, const NekDouble>&,NekDouble);
 
             const_iterator begin() const { return m_data->begin(); }
             const_iterator end() const { return m_data->end(); }
             const_reference operator[](index i) const { return (*m_data)[i]; }
             const element* get() const { return m_data->data(); }
             const element* data() const { return m_data->data(); }
-            size_t num_dimensions() const { return m_data->num_dimensions(); }
+            size_type num_dimensions() const { return m_data->num_dimensions(); }
             const size_type* shape() const { return m_data->shape(); }
-            size_t num_elements() const { return m_data->num_elements(); }
+            // m_data is a shared_ptr to a boost::multi_array_ref
+            size_type size() const { return m_data->num_elements(); }
+            // deprecated interface
+            DEPRECATED(5.1.0, size) size_type num_elements() const
+            {
+                WARNINGL1(false,
+                          "member function num_elements() is deprecated, "
+                          "use size() instead.");
+                return m_data->num_elements();
+            }
 
-            size_t GetRows() const { return m_data->shape()[0]; }
-            size_t GetColumns() const { return m_data->shape()[1]; }
+            size_type GetRows() const { return m_data->shape()[0]; }
+            size_type GetColumns() const { return m_data->shape()[1]; }
 
         protected:
             std::shared_ptr<ArrayType> m_data;
@@ -535,27 +553,27 @@ namespace Nektar
             {
             }
 
-            explicit Array(size_t dim1Size) :
+            explicit Array(size_type dim1Size) :
                 BaseType(dim1Size)
             {
             }
 
-            Array(size_t dim1Size, const DataType& initValue) :
+            Array(size_type dim1Size, const DataType& initValue) :
                 BaseType(dim1Size, initValue)
             {
             }
 
-            Array(size_t dim1Size, const DataType* data) :
+            Array(size_type dim1Size, const DataType* data) :
                 BaseType(dim1Size, data)
             {
             }
 
-            Array(size_t dim1Size, const Array<OneD, DataType>& rhs) :
+            Array(size_type dim1Size, const Array<OneD, DataType>& rhs) :
                 BaseType(dim1Size, rhs)
             {
             }
 
-            Array(size_t dim1Size, const Array<OneD, const DataType>& rhs) :
+            Array(size_type dim1Size, const Array<OneD, const DataType>& rhs) :
                 BaseType(dim1Size, rhs.data())
             {
             }
@@ -566,12 +584,12 @@ namespace Nektar
             }
 
             Array(const Array<OneD, const DataType>& rhs) :
-                BaseType(rhs.num_elements(), rhs.data())
+                BaseType(rhs.size(), rhs.data())
             {
             }
 
 #ifdef WITH_PYTHON
-            Array(size_t dim1Size, DataType* data, void* memory_pointer, void (*python_decrement)(void *)) :
+            Array(size_type dim1Size, DataType* data, void* memory_pointer, void (*python_decrement)(void *)) :
                 BaseType(dim1Size, data, memory_pointer, python_decrement)
             {
             }
@@ -604,12 +622,12 @@ namespace Nektar
             iterator end() { return this->m_data + this->m_offset + this->m_size; }
 
             using BaseType::operator[];
-            reference operator[](size_t i)
+            reference operator[](size_type i)
             {
-                ASSERTL1(static_cast<size_type>(i) < this->num_elements(),
+                ASSERTL1(static_cast<size_type>(i) < this->size(),
                          std::string("Element ") + std::to_string(i) +
                          std::string(" requested in an array of size ") +
-                         std::to_string(this->num_elements()));
+                         std::to_string(this->size()));
                 return (get())[i];
             }
 
@@ -635,7 +653,7 @@ namespace Nektar
                 boost::ignore_unused(a);
             }
 
-            void ChangeSize(size_t newSize)
+            void ChangeSize(size_type newSize)
             {
                 ASSERTL1(newSize <= this->m_capacity, "Can't change an array size to something larger than its capacity.");
                 this->m_size = newSize;
@@ -663,17 +681,17 @@ namespace Nektar
             {
             }
 
-            Array(size_t dim1Size, size_t dim2Size) :
+            Array(size_type dim1Size, size_type dim2Size) :
                 BaseType(dim1Size, dim2Size)
             {
             }
 
-            Array(size_t dim1Size, size_t dim2Size, const DataType& initValue) :
+            Array(size_type dim1Size, size_type dim2Size, const DataType& initValue) :
                 BaseType(dim1Size, dim2Size, initValue)
             {
             }
 
-            Array(size_t dim1Size, size_t dim2Size, const DataType* data) :
+            Array(size_type dim1Size, size_type dim2Size, const DataType* data) :
                 BaseType(dim1Size, dim2Size, data)
             {
             }
@@ -708,27 +726,46 @@ namespace Nektar
 
     };
 
-    LIB_UTILITIES_EXPORT bool IsEqual(const Array<OneD, const NekDouble>& lhs,
-                 const Array<OneD, const NekDouble>& rhs,
-                 NekDouble tol = NekConstants::kNekZeroTol);
-    LIB_UTILITIES_EXPORT bool operator==(const Array<OneD, NekDouble>& lhs, const Array<OneD, NekDouble>& rhs);
+    // compare whatever
+    template<typename T>
+    inline bool IsEqualImpl(const T& lhs, const T& rhs, std::false_type)
+    {
+        return lhs == rhs;
+    }
+
+    // compare floating point value
+    template<typename T>
+    inline bool IsEqualImpl(const T& lhs, const T& rhs, std::true_type)
+    {
+        T tol = NekConstants::kNekFloatCompFact *
+            std::numeric_limits<T>::epsilon();
+        return std::abs(lhs-rhs) < std::max(std::abs(lhs), std::abs(rhs)) * tol;
+    }
+
+    template<typename T>
+    inline bool IsEqual(const T& lhs, const T& rhs)
+    {
+        return IsEqualImpl(lhs, rhs, std::is_floating_point<T>());
+    }
 
     template<typename T1, typename T2>
-    bool operator==(const Array<OneD, T1>& lhs, const Array<OneD, T2>& rhs)
+    bool operator==(const Array<OneD, T1>& lhs,
+                    const Array<OneD, T2>& rhs)
     {
-        if( lhs.num_elements() != rhs.num_elements() )
+        if (lhs.size() != rhs.size())
         {
             return false;
         }
 
-        if( lhs.data() == rhs.data() )
+        if (lhs.data() == rhs.data())
         {
             return true;
         }
 
-        for(unsigned int i = 0; i < lhs.num_elements(); ++i)
+        typename Array<OneD, T1>::size_type size_value(lhs.size());
+        for (typename Array<OneD, T1>::size_type i = 0; i < size_value; ++i)
         {
-            if( lhs[i] != rhs[i] )
+            if (!IsEqual(lhs[i], rhs[i]))
             {
                 return false;
             }
@@ -738,44 +775,42 @@ namespace Nektar
     }
 
     template<typename T1, typename T2>
-    bool operator!=(const Array<OneD, T1>& lhs, const Array<OneD, T2>& rhs)
+    bool operator!=(const Array<OneD, T1>& lhs,
+                    const Array<OneD, T2>& rhs)
     {
         return !(lhs == rhs);
     }
 
     template<typename DataType>
-    Array<OneD, DataType> operator+(const Array<OneD, DataType>& lhs, size_t offset)
+    Array<OneD, DataType> operator+(const Array<OneD, DataType>& lhs,
+        typename Array<OneD, DataType>::size_type offset)
     {
         return Array<OneD, const DataType>::CreateWithOffset(lhs, offset);
     }
 
     template<typename DataType>
-    Array<OneD, DataType> operator+(size_t offset, const Array<OneD, DataType>& rhs)
+    Array<OneD, DataType> operator+(typename Array<OneD, DataType>::size_type offset,
+        const Array<OneD, DataType>& rhs)
     {
         return Array<OneD, const DataType>::CreateWithOffset(rhs, offset);
     }
 
-//    template<typename DataType>
-//    Array<OneD, DataType> operator+(const Array<OneD, DataType>& lhs, size_t offset)
-//    {
-//        return Array<OneD, DataType>::CreateWithOffset(lhs, offset);
-//    }
-
     template<typename ConstDataType, typename DataType>
     void CopyArray(const Array<OneD, ConstDataType>& source, Array<OneD, DataType>& dest)
     {
-        if( dest.num_elements() != source.num_elements() )
+        if( dest.size() != source.size() )
         {
-            dest = Array<OneD, DataType>(source.num_elements());
+            dest = Array<OneD, DataType>(source.size());
         }
 
-        std::copy(source.data(), source.data() + source.num_elements(), dest.data());
+        std::copy(source.data(), source.data() + source.size(), dest.data());
     }
 
     template<typename ConstDataType, typename DataType>
-    void CopyArrayN(const Array<OneD, ConstDataType>& source, Array<OneD, DataType>& dest, unsigned int n)
+    void CopyArrayN(const Array<OneD, ConstDataType>& source, Array<OneD,
+        DataType>& dest, typename Array<OneD, DataType>::size_type n)
     {
-        if( dest.num_elements() != n )
+        if( dest.size() != n )
         {
             dest = Array<OneD, DataType>(n);
         }
@@ -786,21 +821,49 @@ namespace Nektar
     static Array<OneD, int> NullInt1DArray;
     static Array<OneD, NekDouble> NullNekDouble1DArray;
     static Array<OneD, Array<OneD, NekDouble> > NullNekDoubleArrayofArray;
-    static Array<OneD, Array<OneD, Array<OneD, NekDouble> > > NullNekDoubleArrayofArrayofArray;
+    static Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
+            NullNekDoubleArrayofArrayofArray;
 
-    LIB_UTILITIES_EXPORT bool IsEqual(const Array<TwoD, const NekDouble>& lhs,
-                 const Array<TwoD, const NekDouble>& rhs,
-                 NekDouble tol = NekConstants::kNekZeroTol);
-    LIB_UTILITIES_EXPORT bool operator==(const Array<TwoD, NekDouble>& lhs, const Array<TwoD, NekDouble>& rhs) ;
+    template<class T>
+    using TensorOfArray1D = Array<OneD, T>;
+    template<class T>
+    using TensorOfArray2D = Array<OneD, Array<OneD, T>>;
+    template<class T>
+    using TensorOfArray3D = Array<OneD, Array<OneD, Array<OneD, T>>>;
 
-    template<typename DataType>
-    bool operator==(const Array<TwoD, DataType>& lhs, const Array<TwoD, DataType>& rhs)
+    template<typename T1, typename T2>
+    bool operator==(const Array<TwoD, T1>& lhs,
+                    const Array<TwoD, T2>& rhs)
     {
-        return *lhs.m_data == *rhs.m_data;
+        if ( (lhs.GetRows() != rhs.GetRows()) ||
+            (lhs.GetColumns() != rhs.GetColumns()) )
+        {
+            return false;
+        }
+
+        if ( lhs.data() == rhs.data() )
+        {
+            return true;
+        }
+
+        for (typename Array<OneD, T1>::size_type i = 0; i < lhs.GetRows(); ++i)
+        {
+            for (typename Array<OneD, T1>::size_type j = 0;
+                j < lhs.GetColumns(); ++j)
+            {
+                if (!IsEqual(lhs[i][j], rhs[i][j]))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
-    template<typename DataType>
-    bool operator!=(const Array<TwoD, DataType>& lhs, const Array<TwoD, DataType>& rhs)
+    template<typename T1, typename T2>
+    bool operator!=(const Array<TwoD, T1>& lhs,
+                    const Array<TwoD, T2>& rhs)
     {
         return !(lhs == rhs);
     }

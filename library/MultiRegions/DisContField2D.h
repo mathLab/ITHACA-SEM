@@ -63,20 +63,20 @@ namespace Nektar
                 const bool DeclareCoeffPhysArrays = true,
                 const Collections::ImplementationType ImpType
                                              = Collections::eNoImpType);
-            
+
             MULTI_REGIONS_EXPORT DisContField2D(
                 const DisContField2D                     &In,
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const std::string                        &variable,
                 const bool SetUpJustDG            = false,
                 const bool DeclareCoeffPhysArrays = true);
-            
+
             MULTI_REGIONS_EXPORT DisContField2D(
                 const DisContField2D &In,
                 const bool DeclareCoeffPhysArrays = true);
 
             MULTI_REGIONS_EXPORT virtual ~DisContField2D();
-            
+
             MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalBndLinSys(
                 const GlobalLinSysKey &mkey);
 
@@ -86,14 +86,14 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT void EvaluateHDGPostProcessing(
                 Array<OneD, NekDouble> &outarray);
-            
+
             virtual ExpListSharedPtr &v_GetTrace()
             {
                 if(m_trace == NullExpListSharedPtr)
                 {
                     SetUpDG();
                 }
-                
+
                 return m_trace;
             }
 
@@ -125,7 +125,7 @@ namespace Nektar
              */
             inline  LibUtilities::BasisType GetBasisType(const int dir) const
             {
-                ASSERTL1(dir < m_base.num_elements(), "dir is larger than m_numbases");
+                ASSERTL1(dir < m_base.size(), "dir is larger than m_numbases");
                 return(m_base[dir]->GetBasisType());
             }
 
@@ -142,17 +142,18 @@ namespace Nektar
             Array<OneD,MultiRegions::ExpListSharedPtr> m_bndCondExpansions;
 
             /**
-             * @brief A Double to determine the weight of Bwd trace value when averaging 
-             *        the Fwd and Bwd in diffusion flux calculation.
+             * @brief A Double to determine the weight of Bwd trace value when 
+             * averaging the Fwd and Bwd in diffusion flux calculation.
              *
-             * It is necessary because for some boundaries the Bwd itself is the target value,
-             * while for other boundaries some average of Fwd and Bwd is the target value.
+             * It is necessary because for some boundaries the Bwd itself is 
+             * the target value, while for other boundaries some average of 
+             * Fwd and Bwd is the target value.
              * Using this parameter they can be treated uniformly.
-             * This array stores a Double value for each variable for each ExpListSharedPtr, which 
-             * assumes that for each ExpListSharedPtr the same kind of boundary treatment is used.
-             *  
+             * This array stores a Double value for each variable for each 
+             * ExpListSharedPtr, which assumes that for each ExpListSharedPtr 
+             * the same kind of boundary treatment is used.
              */
-            Array<OneD,NekDouble> m_BndCondBwdWeight;
+            Array<OneD,NekDouble> m_bndCondBndWeight;
 
             /**
              * @brief An array which contains the information about
@@ -163,7 +164,7 @@ namespace Nektar
             GlobalLinSysMapShPtr   m_globalBndMat;
             ExpListSharedPtr       m_trace;
             AssemblyMapDGSharedPtr m_traceMap;
-            
+
             /**
              * Map of local trace (the points at the face of
              * the element) to the trace space discretisation
@@ -178,7 +179,7 @@ namespace Nektar
              * @brief A set storing the global IDs of any boundary edges.
              */
             std::set<int> m_boundaryEdges;
-            
+
             /**
              * @brief A map which identifies groups of periodic vertices.
              */
@@ -188,8 +189,8 @@ namespace Nektar
              * @brief A map which identifies pairs of periodic edges.
              */
             PeriodicMap m_periodicEdges;
-            
-            
+
+
             /**
              * @brief A vector indicating degress of freedom which need to be
              * copied from forwards to backwards space in case of a periodic
@@ -214,7 +215,7 @@ namespace Nektar
             void FindPeriodicEdges(
                 const SpatialDomains::BoundaryConditions &bcs,
                 const std::string                        &variable);
-            
+
             bool IsLeftAdjacentEdge(const int n, const int e);
 
             virtual void v_AddTraceIntegral(
@@ -225,18 +226,17 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Fn,
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_AddFwdBwdTraceIntegral(
-                const Array<OneD, const NekDouble> &Fwd, 
-                const Array<OneD, const NekDouble> &Bwd, 
+                const Array<OneD, const NekDouble> &Fwd,
+                const Array<OneD, const NekDouble> &Bwd,
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(
-                const Array<OneD, const NekDouble> &inarray, 
+                const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
-                const FlagList &flags,
                 const StdRegions::ConstFactorMap   &factors,
                 const StdRegions::VarCoeffMap      &varcoeff,
                 const MultiRegions::VarFactorsMap &varfactors,
@@ -245,8 +245,7 @@ namespace Nektar
             virtual void v_GeneralMatrixOp(
                 const GlobalMatrixKey             &gkey,
                 const Array<OneD,const NekDouble> &inarray,
-                      Array<OneD,      NekDouble> &outarray,
-                CoeffState                         coeffstate = eLocal);
+                Array<OneD,      NekDouble> &outarray);
             virtual void v_GetBoundaryToElmtMap(
                 Array<OneD, int> &ElmtID,
                 Array<OneD, int> &EdgeID);
@@ -269,7 +268,7 @@ namespace Nektar
                 periodicEdges = m_periodicEdges;
             }
 
-            
+
             virtual AssemblyMapDGSharedPtr &v_GetTraceMap()
             {
                 return m_traceMap;
@@ -288,13 +287,13 @@ namespace Nektar
                 return m_bndConditions;
             }
 
-            virtual MultiRegions::ExpListSharedPtr 
+            virtual MultiRegions::ExpListSharedPtr
                 &v_UpdateBndCondExpansion(int i)
             {
                 return m_bndCondExpansions[i];
             }
 
-            virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr> 
+            virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                 &v_UpdateBndConditions()
             {
                 return m_bndConditions;
@@ -308,74 +307,16 @@ namespace Nektar
 
             virtual std::map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
 
-            virtual void v_FillBwdWITHBound(
+            virtual void v_FillBwdWithBound(
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
-            virtual void v_FillBwdWITHBoundDeriv(
+            virtual void v_FillBwdWithBoundDeriv(
                 const int                          Dir,
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
-            virtual void v_FillBwdWITHBwdWeight(
+            virtual void v_FillBwdWithBwdWeight(
                     Array<OneD,       NekDouble> &weightave,
                     Array<OneD,       NekDouble> &weightjmp);
-            
-            virtual void v_GetFwdBwdTracePhys(
-                Array<OneD, NekDouble> &Fwd,
-                Array<OneD, NekDouble> &Bwd)
-            {
-                v_GetFwdBwdTracePhys(m_phys, Fwd, Bwd);
-            }
-            
-            virtual void v_GetFwdBwdTracePhys(
-                const Array<OneD, const NekDouble> &field,
-                    Array<OneD,       NekDouble> &Fwd,
-                    Array<OneD,       NekDouble> &Bwd)
-            {
-                v_GetFwdBwdTracePhys_serial(field, Fwd, Bwd);
-                m_traceMap->UniversalTraceAssemble(Fwd);
-                m_traceMap->UniversalTraceAssemble(Bwd);
-            }
-
-            virtual void v_GetFwdBwdTracePhysNoBndFill(
-                const Array<OneD, const NekDouble> &field,
-                    Array<OneD,       NekDouble> &Fwd,
-                    Array<OneD,       NekDouble> &Bwd)
-            {
-                v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
-                m_traceMap->UniversalTraceAssemble(Fwd);
-                m_traceMap->UniversalTraceAssemble(Bwd);
-            }
-
-            virtual void v_GetFwdBwdTracePhysDeriv(
-                const int                          Dir,
-                const Array<OneD, const NekDouble> &field,
-                    Array<OneD,       NekDouble> &Fwd,
-                    Array<OneD,       NekDouble> &Bwd)
-            {
-                v_GetFwdBwdTracePhysDeriv_serial(Dir,field, Fwd, Bwd);
-
-                m_traceMap->UniversalTraceAssemble(Fwd);
-                m_traceMap->UniversalTraceAssemble(Bwd);
-            }
-
-            virtual void v_GetFwdBwdTracePhysDeriv_serial(
-                const int                          Dir,
-                const Array<OneD, const NekDouble> &field,
-                    Array<OneD,       NekDouble> &Fwd,
-                    Array<OneD,       NekDouble> &Bwd)
-            {
-                v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
-                v_FillBwdWITHBoundDeriv(Dir,Fwd,Bwd);
-            }
-
-            virtual void v_GetFwdBwdTracePhys_serial(
-                const Array<OneD, const NekDouble> &field,
-                    Array<OneD,       NekDouble> &Fwd,
-                    Array<OneD,       NekDouble> &Bwd)
-            {
-                v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
-                v_FillBwdWITHBound(Fwd,Bwd);
-            }
 
             virtual void v_GetFwdBwdTracePhysInterior(
                 const Array<OneD, const NekDouble> &field,
@@ -386,34 +327,137 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Fwd,
                 const Array<OneD, const NekDouble> &Bwd,
                     Array<OneD,       NekDouble> &field);
+            
+            inline virtual void v_GetFwdBwdTracePhys(
+                Array<OneD, NekDouble> &Fwd,
+                Array<OneD, NekDouble> &Bwd);
+            
+            inline virtual void v_GetFwdBwdTracePhys(
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd);
 
-            virtual void v_PeriodicBwdCopy(
+            inline virtual void v_GetFwdBwdTracePhysNoBndFill(
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd);
+
+            inline virtual void v_GetFwdBwdTracePhysDeriv(
+                const int                          Dir,
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd);
+
+            inline virtual void v_GetFwdBwdTracePhysDeriv_serial(
+                const int                          Dir,
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd);
+
+            inline virtual void v_GetFwdBwdTracePhys_serial(
+                const Array<OneD, const NekDouble> &field,
+                    Array<OneD,       NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd);
+
+            inline virtual void v_PeriodicBwdCopy(
                 const Array<OneD, const NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd)
-            {
-                for (int n = 0; n < m_periodicFwdCopy.size(); ++n)
-                {
-                    Bwd[m_periodicBwdCopy[n]] = Fwd[m_periodicFwdCopy[n]];
-                }
-            }
+                      Array<OneD,       NekDouble> &Bwd);
 
-            virtual const Array<OneD,const NekDouble>
-                &v_GetBndCondBwdWeight()
-            {
-                return m_BndCondBwdWeight;
-            }
+            inline virtual const Array<OneD,const NekDouble>
+                &v_GetBndCondBwdWeight();
 
-            virtual void v_SetBndCondBwdWeight(const int index, const NekDouble value)
-            {
-                m_BndCondBwdWeight[index]   =   value;
-            }
+            inline virtual void v_SetBndCondBwdWeight(
+                const int index, 
+                const NekDouble value);
 
-            virtual const LocTraceToTraceMapSharedPtr &v_GetlocTraceToTraceMap() const
-            {
-                return m_locTraceToTraceMap;
-            }
+            inline virtual const LocTraceToTraceMapSharedPtr 
+                    &v_GetLocTraceToTraceMap() const;
         };
+
+        void DisContField2D::v_GetFwdBwdTracePhys(
+            Array<OneD, NekDouble> &Fwd,
+            Array<OneD, NekDouble> &Bwd)
+        {
+            v_GetFwdBwdTracePhys(m_phys, Fwd, Bwd);
+        }
         
+        void DisContField2D::v_GetFwdBwdTracePhys(
+            const Array<OneD, const NekDouble> &field,
+                Array<OneD,       NekDouble> &Fwd,
+                Array<OneD,       NekDouble> &Bwd)
+        {
+            v_GetFwdBwdTracePhys_serial(field, Fwd, Bwd);
+            m_traceMap->GetAssemblyCommDG()->PerformExchange(Fwd, Bwd);
+        }
+
+        void DisContField2D::v_GetFwdBwdTracePhysNoBndFill(
+            const Array<OneD, const NekDouble> &field,
+                Array<OneD,       NekDouble> &Fwd,
+                Array<OneD,       NekDouble> &Bwd)
+        {
+            v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
+            m_traceMap->GetAssemblyCommDG()->PerformExchange(Fwd, Bwd);
+        }
+
+        void DisContField2D::v_GetFwdBwdTracePhysDeriv(
+            const int                          Dir,
+            const Array<OneD, const NekDouble> &field,
+                Array<OneD,       NekDouble> &Fwd,
+                Array<OneD,       NekDouble> &Bwd)
+        {
+            v_GetFwdBwdTracePhysDeriv_serial(Dir,field, Fwd, Bwd);
+
+            m_traceMap->GetAssemblyCommDG()->PerformExchange(Fwd, Bwd);
+        }
+
+        void DisContField2D::v_GetFwdBwdTracePhysDeriv_serial(
+            const int                          Dir,
+            const Array<OneD, const NekDouble> &field,
+                Array<OneD,       NekDouble> &Fwd,
+                Array<OneD,       NekDouble> &Bwd)
+        {
+            v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
+            v_FillBwdWithBoundDeriv(Dir, Fwd, Bwd);
+        }
+
+        void DisContField2D::v_GetFwdBwdTracePhys_serial(
+            const Array<OneD, const NekDouble> &field,
+                Array<OneD,       NekDouble> &Fwd,
+                Array<OneD,       NekDouble> &Bwd)
+        {
+            v_GetFwdBwdTracePhysInterior(field, Fwd, Bwd);
+            v_FillBwdWithBound(Fwd, Bwd);
+        }
+
+        void DisContField2D::v_PeriodicBwdCopy(
+            const Array<OneD, const NekDouble> &Fwd,
+                    Array<OneD,       NekDouble> &Bwd)
+        {
+            for (int n = 0; n < m_periodicFwdCopy.size(); ++n)
+            {
+                Bwd[m_periodicBwdCopy[n]] = Fwd[m_periodicFwdCopy[n]];
+            }
+        }
+
+        const Array<OneD,const NekDouble>
+            &DisContField2D::v_GetBndCondBwdWeight()
+        {
+            return m_bndCondBndWeight;
+        }
+
+        void DisContField2D::v_SetBndCondBwdWeight(
+            const int index, 
+            const NekDouble value)
+        {
+            m_bndCondBndWeight[index]   =   value;
+        }
+
+        const LocTraceToTraceMapSharedPtr 
+                &DisContField2D::v_GetLocTraceToTraceMap() const
+        {
+            return m_locTraceToTraceMap;
+        }
+
         typedef std::shared_ptr<DisContField2D>   DisContField2DSharedPtr;
     } //end of namespace
 } //end of namespace

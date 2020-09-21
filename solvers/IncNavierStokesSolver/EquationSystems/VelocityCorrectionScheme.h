@@ -200,7 +200,7 @@ namespace Nektar
 
         virtual bool v_RequireFwdTrans()
         {
-            return false || m_flowrate > 0.0;
+            return false;
         }
 
         virtual std::string v_GetExtrapolateStr(void)

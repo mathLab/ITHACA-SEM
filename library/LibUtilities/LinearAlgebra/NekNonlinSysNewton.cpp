@@ -199,7 +199,7 @@ namespace Nektar
             // int nwidthcolm = 12;
             // NekDouble resmaxm  = 0.0;
             NekDouble resratio = 1.0;
-            int ntotal = Residual.num_elements();
+            int ntotal = Residual.size();
 
             m_SysResNorm = Vmath::Dot(ntotal,Residual,Residual);
             m_Comm->AllReduce(m_SysResNorm, Nektar::LibUtilities::ReduceSum);

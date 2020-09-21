@@ -123,16 +123,20 @@ namespace Nektar
                 LOCAL_REGIONS_EXPORT NekDouble VectorFlux(
                     const Array<OneD, Array<OneD, NekDouble > > &vec);
 
-                LOCAL_REGIONS_EXPORT const Array<OneD, const NekDouble > &GetElmtBndNormalDirctnElmtLength(const int nbnd) const;
+                LOCAL_REGIONS_EXPORT const Array<OneD, const NekDouble > 
+                        &GetElmtBndNormDirElmtLen(const int nbnd) const;
 
             protected:
                 SpatialDomains::GeometrySharedPtr  m_geom;
                 SpatialDomains::GeomFactorsSharedPtr m_metricinfo;
                 MetricMap m_metrics;
 
-                // the element length in the each element boundary(Vertex, edge or face) normal direction
-                // calculated based on the local m_metricinfo times the standard element length(which is 2.0)
-                std::map<int, Array<OneD, NekDouble>  > m_ElmtBndNormalDirctnElmtLength;
+                /// the element length in the each element boundary(Vertex, 
+                /// edge or face) normal direction calculated based on the 
+                /// local m_metricinfo times the standard element length
+                /// (which is 2.0)
+                std::map<int, Array<OneD, NekDouble>  > 
+                        m_elmtBndNormDirElmtLen;
 
                 void ComputeLaplacianMetric();
                 void ComputeQuadratureMetric();
@@ -144,7 +148,7 @@ namespace Nektar
                 virtual void v_MultiplyByQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray);
-                virtual void v_DividByQuadratureMetric(
+                virtual void v_DivideByQuadratureMetric(
                                 const Array<OneD, const NekDouble>  &inarray,
                                       Array<OneD, NekDouble>        &outarray);
 

@@ -36,7 +36,6 @@
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_NAVIERSTOKESCFE_H
 
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
-#include <CompressibleFlowSolver/Misc/EquationOfState.h>
 
 namespace Nektar
 {
@@ -71,8 +70,6 @@ namespace Nektar
     NekDouble                           m_Prandtl;
 
     NekDouble                            m_Twall;
-    /// Equation of system for computing temperature
-    EquationOfStateSharedPtr             m_eos;
     NekDouble                           m_muRef;
     NekDouble                           m_thermalConductivityRef;
     Array<OneD, NekDouble>              m_mu;
@@ -83,18 +80,23 @@ namespace Nektar
                     const SpatialDomains::MeshGraphSharedPtr& pGraph);
     
     void GetViscousFluxVectorConservVar(
-        const int                                                       nDim,
-        const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
-        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &outarray,
-              Array< OneD, int >                                        &nonZeroIndex       =   NullInt1DArray,    
-        const Array<OneD, Array<OneD, NekDouble> >                      &normal             =   NullNekDoubleArrayofArray,           
-        const Array<OneD, NekDouble>                                    &ArtifDiffFactor    =   NullNekDouble1DArray);
-    
-    void GetPrimDerivFromConsDeriv(
-        const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
-        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &outarray);
+        const int                                                nDim,
+        const Array<OneD, Array<OneD, NekDouble> >               &inarray,
+        const TensorOfArray3D<NekDouble>                         &qfields,
+        TensorOfArray3D<NekDouble>                               &outarray,
+        Array< OneD, int >                                       
+            &nonZeroIndex       =   NullInt1DArray,    
+        const Array<OneD, Array<OneD, NekDouble> >               
+            &normal             =   NullNekDoubleArrayofArray,           
+        const Array<OneD, NekDouble>                             
+            &ArtifDiffFactor    =   NullNekDouble1DArray);
+    void GetViscousSymmtrFluxConservVar(
+            const int                                           nSpaceDim,
+            const Array<OneD, Array<OneD, NekDouble> >          &inaverg,
+            const Array<OneD, Array<OneD, NekDouble > >         &inarray,
+            TensorOfArray3D<NekDouble>                          &outarray,
+            Array< OneD, int >                                  &nonZeroIndex,    
+            const Array<OneD, Array<OneD, NekDouble> >          &normals);
     
     void SpecialBndTreat(
               Array<OneD,       Array<OneD, NekDouble> >    &consvar);
@@ -104,12 +106,12 @@ namespace Nektar
               Array<OneD,             NekDouble  >  &muav);
 
     void GetViscousFluxBilinearForm(
-        const int                                                       nSpaceDim,
-        const int                                                       FluxDirection,
-        const int                                                       DerivDirection,
-        const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
-        const Array<OneD, const Array<OneD, NekDouble> >                &injumpp,
-              Array<OneD, Array<OneD, NekDouble> >                      &outarray);
+        const int                                           nSpaceDim,
+        const int                                           FluxDirection,
+        const int                                           DerivDirection,
+        const Array<OneD, const Array<OneD, NekDouble> >    &inaverg,
+        const Array<OneD, const Array<OneD, NekDouble> >    &injumpp,
+        Array<OneD, Array<OneD, NekDouble> >                &outarray);
     
     virtual void v_InitObject();
 
@@ -119,35 +121,20 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >   &pBwd);
     virtual void v_DoDiffusion_coeff(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-               Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >   &pBwd);
-    
-    virtual void v_DoDiffusionFlux(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeFlux,
-            Array<OneD, Array<OneD, NekDouble>>              &TraceFlux,
-            const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
+        const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
+        Array<OneD, Array<OneD, NekDouble> >                &outarray,
+        const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
+        const Array<OneD, Array<OneD, NekDouble> >          &pBwd);
 
     virtual void v_GetViscousFluxVector(
         const Array<OneD, Array<OneD, NekDouble> >         &physfield,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
+        TensorOfArray3D<NekDouble>                         &derivatives,
+        TensorOfArray3D<NekDouble>                         &viscousTensor);
     virtual void v_GetViscousFluxVectorDeAlias(
         const Array<OneD, Array<OneD, NekDouble> >         &physfield,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
+        TensorOfArray3D<NekDouble>                         &derivatives,
+        TensorOfArray3D<NekDouble>                         &viscousTensor);
 
-    
-    virtual void v_GetViscousSymmtrFluxConservVar(
-            const int                                                       nSpaceDim,
-            const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
-            const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
-            Array< OneD, int >                                              &nonZeroIndex,    
-            const Array<OneD, Array<OneD, NekDouble> >                      &normals);
     virtual void v_GetFluxPenalty(
         const Array<OneD, Array<OneD, NekDouble> > &uFwd,
         const Array<OneD, Array<OneD, NekDouble> > &uBwd,

@@ -134,7 +134,7 @@ namespace Nektar
                     }
                     else
                     {
-                        Vmath::Vcopy(outarray.num_elements(),inarray,1,outarray,1);
+                        Vmath::Vcopy(outarray.size(),inarray,1,outarray,1);
                     }
                     
                 }

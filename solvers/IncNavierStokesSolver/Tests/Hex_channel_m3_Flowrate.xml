@@ -146,7 +146,7 @@
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="3" FIELDS="u,v,w,p" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="u,v,w,p" TYPE="MODIFIED" />
     </EXPANSIONS>
     <CONDITIONS>
         <SOLVERINFO>

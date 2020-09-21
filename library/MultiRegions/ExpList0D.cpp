@@ -61,17 +61,17 @@ namespace Nektar
         {
             SetExpType(e0D);
         }
-		
+
         ExpList0D::ExpList0D(const SpatialDomains::PointGeomSharedPtr &geom):
             ExpList()
         {
             SetExpType(e0D);
             m_ncoeffs = 1;
             m_npoints = 1;
-            
+
             // Set up m_coeffs, m_phys.
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-            m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
+            m_coeffs = Array<OneD, NekDouble> {size_t(m_ncoeffs), 0.0};
+            m_phys   = Array<OneD, NekDouble> {size_t(m_npoints), 0.0};
 
             LocalRegions::PointExpSharedPtr Point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(geom);
             (*m_exp).push_back(Point);
@@ -97,7 +97,7 @@ namespace Nektar
          */
         ExpList0D::ExpList0D(
             const Array<OneD, const ExpListSharedPtr> &bndConstraint,
-            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> 
+            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                       &bndCond,
             const LocalRegions::ExpansionVector       &locexp,
             const SpatialDomains::MeshGraphSharedPtr  &graph1D,
@@ -107,7 +107,7 @@ namespace Nektar
         {
             boost::ignore_unused(graph1D, periodicVerts);
 
-            SetExpType(e0D);            
+            SetExpType(e0D);
 
             int i, j, id, elmtid=0;
             map<int,int> EdgeDone;
@@ -116,9 +116,9 @@ namespace Nektar
             SpatialDomains::PointGeomSharedPtr PointGeom;
             LocalRegions::PointExpSharedPtr Point;
 			LocalRegions::Expansion1DSharedPtr exp;
-			
+
             // First loop over boundary conditions to renumber Dirichlet boundaries
-            for(i = 0; i < bndCond.num_elements(); ++i)
+            for(i = 0; i < bndCond.size(); ++i)
             {
                 if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
@@ -134,7 +134,7 @@ namespace Nektar
                     }
                 }
             }
-			
+
             // loop over all other edges and fill out other connectivities
             for(i = 0; i < locexp.size(); ++i)
             {
@@ -143,17 +143,17 @@ namespace Nektar
                     exp = locexp[i]->as<LocalRegions::Expansion1D>();
                     PointGeom = (exp->GetGeom1D())->GetVertex(j);
 					id = PointGeom->GetVid();
-					
+
                     if(EdgeDone.count(id)==0)
-                    {						
+                    {
                         Point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(PointGeom);
                         EdgeDone[id] = elmtid;
-                        
+
                         //if (periodicVertices.count(id) > 0)
                         //{
                         //   EdgeDone[periodicVertices.find(id)->second] = elmtid;
                         //}
-						
+
                         Point->SetElmtId(elmtid++);
 						(*m_exp).push_back(Point);
                     }
@@ -161,7 +161,7 @@ namespace Nektar
                     {
                         LibUtilities::BasisKey EdgeBkey
 						= locexp[i]->DetEdgeBasisKey(j);
-						
+
                         if((*m_exp)[EdgeDone[id]]->GetNumPoints(0) >= EdgeBkey.GetNumPoints()
 						   && (*m_exp)[EdgeDone[id]]->GetBasisNumModes(0) >= EdgeBkey.GetNumModes())
                         {
@@ -183,25 +183,19 @@ namespace Nektar
                     }*/
 			 }
             }
-		 
-		 
-			
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>::AllocateSharedPtr(nel);
 
             // Set up offset information and array sizes
             SetCoeffPhysOffsets();
-			
+
             // Set up m_coeffs, m_phys.
             if(DeclareCoeffPhysArrays)
             {
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-                m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
+                m_coeffs = Array<OneD, NekDouble> {size_t(m_ncoeffs),0.0};
+                m_phys   = Array<OneD, NekDouble> {size_t(m_npoints),0.0};
             }
         }
-		
-		
+
+
         /**
          *
          */
@@ -219,28 +213,28 @@ namespace Nektar
         {
             int i,j,k,e_npoints,offset;
             Array<OneD,Array<OneD,NekDouble> > locnormals;
-			
+
             // Assume whole array is of same coordinate dimension
             int coordim = (*m_exp)[0]->GetGeom()->GetCoordim();
-			
-            ASSERTL1(normals.num_elements() >= coordim,
+
+            ASSERTL1(normals.size() >= coordim,
                      "Output vector does not have sufficient dimensions to "
                      "match coordim");
-            
+
             // Process each expansion.
             for(i = 0; i < m_exp->size(); ++i)
             {
                 LocalRegions::Expansion0DSharedPtr loc_exp = (*m_exp)[i]->as<LocalRegions::Expansion0D>();
 
                 LocalRegions::Expansion1DSharedPtr loc_elmt = loc_exp->GetLeftAdjacentElementExp();
-                
+
                 // Get the number of points and normals for this expansion.
                 e_npoints  = 1;
                 locnormals = loc_elmt->GetVertexNormal(loc_exp->GetLeftAdjacentElementVertex());
-				
+
                 // Get the physical data offset for this expansion.
                 offset = m_phys_offset[i];
-				
+
                 // Process each point in the expansion.
                 for(j = 0; j < e_npoints; ++j)
                 {
@@ -254,56 +248,53 @@ namespace Nektar
             }
         }
 
-        /**
-         * For each local element, copy the element length in boundary normal direction stored in the element list
-         * into the array \a normals.
-         */
         void ExpList0D::v_GetElmtNormalLength(
             Array<OneD, NekDouble>  &lengthsFwd,
             Array<OneD, NekDouble>  &lengthsBwd)
         {
-            int i,j,e_npoints,offset;
+            int e_npoints;
 
-            Array<OneD,NekDouble> locLeng;
-            Array<OneD,NekDouble> lengintp;
-            Array<OneD,NekDouble> lengAdd;
-            Array<OneD,int      > LRbndnumbs(2);
+            Array<OneD, NekDouble> locLeng;
+            Array<OneD, NekDouble> lengintp;
+            Array<OneD, NekDouble> lengAdd;
+            Array<OneD, int      > LRbndnumbs(2);
             Array<OneD, Array<OneD,NekDouble> > lengLR(2);
             lengLR[0]   =   lengthsFwd;
             lengLR[1]   =   lengthsBwd;
-            Array<OneD,LocalRegions::Expansion1DSharedPtr> LRelmts(2);
+            Array<OneD, LocalRegions::Expansion1DSharedPtr> LRelmts(2);
             LocalRegions::Expansion1DSharedPtr loc_elmt;
             LocalRegions::Expansion0DSharedPtr loc_exp;
             int e_npoints0  =   -1; 
-            for (i = 0; i < m_exp->size(); ++i)
+            for (int i = 0; i < m_exp->size(); ++i)
             {
                 loc_exp = (*m_exp)[i]->as<LocalRegions::Expansion0D>();
-                offset = m_phys_offset[i];
+                int offset = m_phys_offset[i];
                 
                 e_npoints  = (*m_exp)[i]->GetNumPoints(0);
-                if(e_npoints0<e_npoints)
+                if (e_npoints0 < e_npoints)
                 {
-                    lengintp = Array<OneD, NekDouble>(e_npoints,0.0);
+                    lengintp = Array<OneD, NekDouble> {size_t(e_npoints), 0.0};
                     e_npoints0 = e_npoints;
                 }
                 
                 LRelmts[0] = loc_exp->GetLeftAdjacentElementExp();
                 LRelmts[1] = loc_exp->GetRightAdjacentElementExp();
 
-                LRbndnumbs[0]   =   loc_exp->GetLeftAdjacentElementVertex();
-                LRbndnumbs[1]   =   loc_exp->GetRightAdjacentElementVertex();
-                for(int nlr=0;nlr<2;nlr++)
+                LRbndnumbs[0] = loc_exp->GetLeftAdjacentElementVertex();
+                LRbndnumbs[1] = loc_exp->GetRightAdjacentElementVertex();
+                for (int nlr = 0; nlr < 2; ++nlr)
                 {
-                    Vmath::Zero(e_npoints0,lengintp,1);
+                    Vmath::Zero(e_npoints0, lengintp, 1);
                     lengAdd     =   lengintp;
                     int bndNumber = LRbndnumbs[nlr];
                     loc_elmt = LRelmts[nlr];
-                    if(bndNumber>=0)
+                    if (bndNumber >= 0)
                     {
-                        locLeng         = loc_elmt->GetElmtBndNormalDirctnElmtLength(bndNumber);
+                        locLeng  = loc_elmt->
+                                    GetElmtBndNormDirElmtLen(bndNumber);
                         lengAdd  =   locLeng;
                     }
-                    for (j = 0; j < e_npoints; ++j)
+                    for (int j = 0; j < e_npoints; ++j)
                     {
                         lengLR[nlr][offset + j] = lengAdd[j];
                     }
@@ -313,7 +304,7 @@ namespace Nektar
         
         /**
          * One-dimensional upwind.
-         * 
+         *
          * @param   Vn          Velocity field.
          * @param   Fwd         Left state.
          * @param   Bwd         Right state.
@@ -325,7 +316,7 @@ namespace Nektar
                                        Array<OneD,       NekDouble> &Upwind)
         {
             // Process each point in the expansion.
-            for(int j = 0; j < Fwd.num_elements(); ++j)
+            for(int j = 0; j < Fwd.size(); ++j)
             {
                 // Upwind based on one-dimensional velocity.
                 if(Vn[j] > 0.0)

@@ -33,15 +33,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/HashUtils.hpp>
+#include <MultiRegions/AssemblyMap/AssemblyCommDG.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <MultiRegions/ExpList.h>
 #include <LocalRegions/SegExp.h>
-#include <LocalRegions/TriExp.h>
-#include <LocalRegions/QuadExp.h>
-#include <LocalRegions/HexExp.h>
-#include <LocalRegions/TetExp.h>
-#include <LocalRegions/PrismExp.h>
-#include <LocalRegions/PyrExp.h>
 #include <LocalRegions/PointExp.h>
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
@@ -49,9 +44,6 @@
 #include <boost/core/ignore_unused.hpp>
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/cuthill_mckee_ordering.hpp>
-#include <boost/graph/properties.hpp>
-#include <boost/graph/bandwidth.hpp>
 
 using namespace std;
 
@@ -81,10 +73,10 @@ namespace Nektar
         {
             boost::ignore_unused(graph);
 
-            int i, j, k, cnt, eid, id, id1, gid;
+            int i, j, k, cnt, id, id1, gid;
             int order_e   = 0;
             int nTraceExp = trace->GetExpSize();
-            int nbnd      = bndCondExp.num_elements();
+            int nbnd      = bndCondExp.size();
 
             LocalRegions::ExpansionSharedPtr  exp;
             LocalRegions::ExpansionSharedPtr  bndExp;
@@ -118,10 +110,11 @@ namespace Nektar
             for(cnt = i = 0; i < nel; ++i)
             {
                 m_elmtToTrace[i] = tracemap + cnt;
-
-                for(j = 0; j < expList[i]->GetNtrace(); ++j)
+                exp = expList[i];
+                
+                for(j = 0; j < exp->GetNtrace(); ++j)
                 {
-                    id = expList[i]->GetGeom()->GetTid(j);
+                    id = exp->GetGeom()->GetTid(j);
 
                     if(meshTraceId.count(id) > 0)
                     {
@@ -134,7 +127,7 @@ namespace Nektar
                     }
                 }
 
-                cnt += expList[i]->GetNtrace();
+                cnt += exp->GetNtrace();
             }
 
             // Set up boundary mapping
@@ -154,7 +147,7 @@ namespace Nektar
             m_numLocalDirBndCoeffs = 0;
             m_numDirichletBndPhys  = 0;
 
-            for(i = 0; i < bndCondExp.num_elements(); ++i)
+            for(i = 0; i < bndCondExp.size(); ++i)
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
@@ -183,11 +176,10 @@ namespace Nektar
             int nbndry = 0;
             for(i = 0; i < nel; ++i) // count number of elements in array
             {
-                eid     = i;
-                nbndry += expList[eid]->NumDGBndryCoeffs();
+                int BndCoeffs = expList[i]->NumDGBndryCoeffs();
+                nbndry += BndCoeffs;
                 m_numLocalIntCoeffsPerPatch[i] = 0;
-                m_numLocalBndCoeffsPerPatch[i] =
-                    (unsigned int) expList[eid]->NumDGBndryCoeffs();
+                m_numLocalBndCoeffsPerPatch[i] = (unsigned int) BndCoeffs;
             }
 
             m_numGlobalDirBndCoeffs = m_numLocalDirBndCoeffs;
@@ -210,7 +202,7 @@ namespace Nektar
             int trace_id, trace_id1;
             int dirOffset = 0;
 
-            // make trace trace renumbering map where first solved trace starts
+            // make trace renumbering map where first solved trace starts
             // at 0 so we can set up graph.
             for(i = 0; i < nTraceExp; ++i)
             {
@@ -235,20 +227,20 @@ namespace Nektar
             // Set up boost Graph
             for(i = 0; i < nel; ++i)
             {
-                eid = i;
-
-                for(j = 0; j < expList[eid]->GetNtrace(); ++j)
+                exp = expList[i];
+                
+                for(j = 0; j < exp->GetNtrace(); ++j)
                 {
                     // Add trace to boost graph for non-Dirichlet Boundary
-                    traceGeom = m_elmtToTrace[eid][j]->GetGeom();
+                    traceGeom = m_elmtToTrace[i][j]->GetGeom();
                     id        = traceGeom->GetGlobalID();
                     trace_id  = meshTraceId.find(id)->second;
 
                     if(dirTrace.count(id) == 0)
                     {
-                        for(k = j+1; k < expList[eid]->GetNtrace(); ++k)
+                        for(k = j+1; k < exp->GetNtrace(); ++k)
                         {
-                            traceGeom = m_elmtToTrace[eid][k]->GetGeom();
+                            traceGeom = m_elmtToTrace[i][k]->GetGeom();
                             id1       = traceGeom->GetGlobalID();
                             trace_id1 = meshTraceId.find(id1)->second;
 
@@ -320,20 +312,18 @@ namespace Nektar
             }
 
             // Now have trace edges Gid position
-
             cnt = 0;
             for(i = 0; i < nel; ++i)
             {
-                eid = i;
-                exp = expList[eid];
+                exp = expList[i];
 
                 for(j = 0; j < exp->GetNtrace(); ++j)
                 {
-                    traceGeom = m_elmtToTrace[eid][j]->GetGeom();
+                    traceGeom = m_elmtToTrace[i][j]->GetGeom();
                     id        = traceGeom->GetGlobalID();
                     gid       = traceElmtGid[meshTraceId.find(id)->second];
 
-                    const int nDim = expList[eid]->GetNumBases();
+                    const int nDim = exp->GetNumBases();
 
                     if (nDim == 1)
                     {
@@ -342,9 +332,9 @@ namespace Nektar
                     }
                     else if (nDim == 2)
                     {
-                        order_e = expList[eid]->GetEdgeNcoeffs(j);
+                        order_e = exp->GetEdgeNcoeffs(j);
                     
-                        if(expList[eid]->GetEorient(j) == StdRegions::eForwards)
+                        if(exp->GetEorient(j) == StdRegions::eForwards)
                         {
                             for(k = 0; k < order_e; ++k)
                             {
@@ -353,7 +343,7 @@ namespace Nektar
                         }
                         else
                         {
-                            switch(m_elmtToTrace[eid][j]->GetBasisType(0))
+                            switch(m_elmtToTrace[i][j]->GetBasisType(0))
                             {
                                 case LibUtilities::eModified_A:
                                 {
@@ -399,7 +389,7 @@ namespace Nektar
                     }
                     else if (nDim == 3)
                     {
-                        order_e = expList[eid]->GetFaceNcoeffs(j);
+                        order_e = exp->GetFaceNcoeffs(j);
 
                         std::map<int, int> orientMap;
 
@@ -408,20 +398,20 @@ namespace Nektar
                         Array<OneD, unsigned int> elmMap2 (order_e);
                         Array<OneD,          int> elmSign2(order_e);
 
-                        StdRegions::Orientation fo = expList[eid]->GetForient(j);
+                        StdRegions::Orientation fo = exp->GetForient(j);
 
                         // Construct mapping which will permute global IDs
                         // according to face orientations.
-                        expList[eid]->GetFaceToElementMap(j,fo,elmMap1,elmSign1);
-                        expList[eid]->GetFaceToElementMap(
+                        exp->GetFaceToElementMap(j,fo,elmMap1,elmSign1);
+                        exp->GetFaceToElementMap(
                             j,StdRegions::eDir1FwdDir1_Dir2FwdDir2,elmMap2,elmSign2);
 
-                        for (k = 0; k < elmMap1.num_elements(); ++k)
+                        for (k = 0; k < elmMap1.size(); ++k)
                         {
                             // Find the elemental co-efficient in the original
                             // mapping.
                             int idx = -1;
-                            for (int l = 0; l < elmMap2.num_elements(); ++l)
+                            for (int l = 0; l < elmMap2.size(); ++l)
                             {
                                 if (elmMap1[k] == elmMap2[l])
                                 {
@@ -445,8 +435,29 @@ namespace Nektar
                 }
             }
 
-            // set up m_bndCondCoeffsToGlobalCoeffsMap to align with map
-            cnt = 0;
+            // set up identify map for lcoal to lcoal 
+            m_localToLocalBndMap    = Array<OneD,int>(m_numLocalBndCoeffs);
+
+            //local to bnd map is just a copy 
+            for(i = 0; i < m_numLocalBndCoeffs; ++i)
+            {
+                m_localToLocalBndMap[i] = i;
+            }
+
+
+            m_numGlobalBndCoeffs = trace->GetNcoeffs();
+            m_numGlobalCoeffs    = m_numGlobalBndCoeffs;
+
+            CalculateBndSystemBandWidth();
+
+            // set up m_bndCondCoeffsToLocalTraceMap 
+            // Number of boundary expansions
+            int nbndexp = 0;
+            int bndTotal = 0;
+            int bndOffset;
+            int traceOffset;
+
+            cnt = 0; 
             for(i = 0; i < nbnd; ++i)
             {
                 if (bndCond[i]->GetBoundaryConditionType() ==
@@ -455,13 +466,14 @@ namespace Nektar
                     continue;
                 }
                 cnt += bndCondExp[i]->GetNcoeffs();
+                nbndexp  += bndCondExp[i]->GetExpSize();
             }
+            
+            m_bndCondCoeffsToLocalTraceMap = Array<OneD, int>(cnt); 
+            m_bndCondIDToGlobalTraceID = Array<OneD, int>(nbndexp);
 
-            m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD, int>(cnt);
-
-            // Number of boundary expansions
-            int nbndexp = 0, bndOffset, bndTotal = 0;
-            for(cnt = i = 0; i < nbnd; ++i)
+            cnt = 0;
+            for(i = 0; i < bndCondExp.size(); ++i)
             {
                 if (bndCond[i]->GetBoundaryConditionType() ==
                     SpatialDomains::ePeriodic)
@@ -473,51 +485,48 @@ namespace Nektar
                 {
                     bndExp    = bndCondExp[i]->GetExp(j);
                     id        = bndExp->GetGeom()->GetGlobalID();
-                    gid       = traceElmtGid[meshTraceId.find(id)->second];
-                    bndOffset = bndCondExp[i]->GetCoeff_Offset(j) + bndTotal;
 
-                    // Since boundary information is defined to be aligned with
-                    // the geometry just use forward/forward (both coordinate
-                    // directions) defintiion for gid's
+                    int meshId = meshTraceId.find(id)->second;
+                    m_bndCondIDToGlobalTraceID[cnt++] = meshId;
+
+                    // initialy set up map with global bnd location
+                    // and then use the localToGlobalBndMap to invert
+                    // since this is a one to one mapping on boundaries
+                    traceOffset = traceElmtGid[meshId];
+                    bndOffset   = bndCondExp[i]->GetCoeff_Offset(j) + bndTotal;
+
+
                     for(k = 0; k < bndExp->GetNcoeffs(); ++k)
                     {
-                        m_bndCondCoeffsToGlobalCoeffsMap[bndOffset+k] = gid + k;
+                        m_bndCondCoeffsToLocalTraceMap[bndOffset+k] =
+                            traceOffset + k;
                     }
                 }
-
-                nbndexp  += bndCondExp[i]->GetExpSize();
                 bndTotal += bndCondExp[i]->GetNcoeffs();
             }
 
-            m_numGlobalBndCoeffs = trace->GetNcoeffs();
-            m_numGlobalCoeffs    = m_numGlobalBndCoeffs;
-
-            CalculateBndSystemBandWidth();
-
-            cnt = 0;
-            m_bndCondTraceToGlobalTraceMap = Array<OneD, int>(nbndexp);
-            for(i = 0; i < bndCondExp.num_elements(); ++i)
+            // generate an inverse local to global bnd map;
+            map<int,int> invLocToGloMap;
+            for(i = 0; i < nbndry; ++i)
             {
-                if (bndCond[i]->GetBoundaryConditionType() ==
-                    SpatialDomains::ePeriodic)
-                {
-                    continue;
-                }
-
-                for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
-                {
-                    bndExp    = bndCondExp[i]->GetExp(j);
-                    traceGeom = bndExp->GetGeom();
-                    id        = traceGeom->GetGlobalID();
-                    m_bndCondTraceToGlobalTraceMap[cnt++] =
-                        meshTraceId.find(id)->second;
-                }
+                invLocToGloMap[m_localToGlobalBndMap[i]] = i;
             }
 
+            // reset bndCondCoeffToLocalTraceMap to hold local rather
+            // than global reference
+            for(i = 0; i < m_bndCondCoeffsToLocalTraceMap.size(); ++i)
+            {
+                m_bndCondCoeffsToLocalTraceMap[i] =
+                    invLocToGloMap[m_bndCondCoeffsToLocalTraceMap[i]];
+            }
+            
             // Now set up mapping from global coefficients to universal.
             ExpListSharedPtr tr = std::dynamic_pointer_cast<ExpList>(trace);
             SetUpUniversalDGMap   (locExp);
-            SetUpUniversalTraceMap(locExp, tr, periodicTrace);
+
+            m_assemblyComm = AssemblyCommDGSharedPtr(
+                MemoryManager<AssemblyCommDG>::AllocateSharedPtr(
+                    locExp, tr, m_elmtToTrace, bndCondExp, bndCond, periodicTrace));
 
             if ((m_solnType == eDirectMultiLevelStaticCond ||
                  m_solnType == eIterativeMultiLevelStaticCond ||
@@ -555,7 +564,6 @@ namespace Nektar
         void AssemblyMapDG::SetUpUniversalDGMap(const ExpList &locExp)
         {
             LocalRegions::ExpansionSharedPtr locExpansion;
-            int eid       = 0;
             int cnt       = 0;
             int id        = 0;
             int order_e   = 0;
@@ -606,8 +614,7 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                eid = i;
-                locExpansion = locExpVector[eid];
+                locExpansion = locExpVector[i];
                 nDim = locExpansion->GetShapeDimension();
 
                 // Populate mapping for each edge of the element.
@@ -617,7 +624,7 @@ namespace Nektar
                     for(j = 0; j < nverts; ++j)
                     {
                         LocalRegions::PointExpSharedPtr locPointExp =
-                            m_elmtToTrace[eid][j]->as<LocalRegions::PointExp>();
+                            m_elmtToTrace[i][j]->as<LocalRegions::PointExp>();
                         id = locPointExp->GetGeom()->GetGlobalID();
                         vGlobalId = m_localToGlobalBndMap[cnt+j];
                         m_globalToUniversalBndMap[vGlobalId]
@@ -630,7 +637,7 @@ namespace Nektar
                     for(j = 0; j < locExpansion->GetNedges(); ++j)
                     {
                         LocalRegions::SegExpSharedPtr locSegExp =
-                            m_elmtToTrace[eid][j]->as<LocalRegions::SegExp>();
+                            m_elmtToTrace[i][j]->as<LocalRegions::SegExp>();
 
                         id  = locSegExp->GetGeom()->GetGlobalID();
                         order_e = locExpansion->GetEdgeNcoeffs(j);
@@ -642,12 +649,12 @@ namespace Nektar
                         locExpansion->GetEdgeToElementMap(j, StdRegions::eForwards, map1, sign1);
                         locExpansion->GetEdgeToElementMap(j, locExpansion->GetEorient(j), map2, sign2);
 
-                        for (k = 0; k < map1.num_elements(); ++k)
+                        for (k = 0; k < map1.size(); ++k)
                         {
                             // Find the elemental co-efficient in the original
                             // mapping.
                             int idx = -1;
-                            for (int l = 0; l < map2.num_elements(); ++l)
+                            for (int l = 0; l < map2.size(); ++l)
                             {
                                 if (map1[k] == map2[l])
                                 {
@@ -674,7 +681,7 @@ namespace Nektar
                     for(j = 0; j < locExpansion->GetNfaces(); ++j)
                     {
                         LocalRegions::Expansion2DSharedPtr locFaceExp =
-                                m_elmtToTrace[eid][j]
+                                m_elmtToTrace[i][j]
                                            ->as<LocalRegions::Expansion2D>();
 
                         id  = locFaceExp->GetGeom()->GetGlobalID();
@@ -687,12 +694,12 @@ namespace Nektar
                         locExpansion->GetFaceToElementMap(j, StdRegions::eDir1FwdDir1_Dir2FwdDir2, map1, sign1);
                         locExpansion->GetFaceToElementMap(j, locExpansion->GetForient(j), map2, sign2);
 
-                        for (k = 0; k < map1.num_elements(); ++k)
+                        for (k = 0; k < map1.size(); ++k)
                         {
                             // Find the elemental co-efficient in the original
                             // mapping.
                             int idx = -1;
-                            for (int l = 0; l < map2.num_elements(); ++l)
+                            for (int l = 0; l < map2.size(); ++l)
                             {
                                 if (map1[k] == map2[l])
                                 {
@@ -717,141 +724,16 @@ namespace Nektar
             }
 
             // Initialise GSlib and populate the unique map.
-            Array<OneD, long> tmp(m_globalToUniversalBndMap.num_elements());
-            for (i = 0; i < m_globalToUniversalBndMap.num_elements(); ++i)
+            Array<OneD, long> tmp(m_globalToUniversalBndMap.size());
+            for (i = 0; i < m_globalToUniversalBndMap.size(); ++i)
             {
                 tmp[i] = m_globalToUniversalBndMap[i];
             }
             m_bndGsh = m_gsh = Gs::Init(tmp, m_comm);
             Gs::Unique(tmp, m_comm);
-            for (i = 0; i < m_globalToUniversalBndMap.num_elements(); ++i)
+            for (i = 0; i < m_globalToUniversalBndMap.size(); ++i)
             {
                 m_globalToUniversalBndMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
-            }
-        }
-
-        void AssemblyMapDG::SetUpUniversalTraceMap(
-            const ExpList         &locExp,
-            const ExpListSharedPtr trace,
-            const PeriodicMap     &perMap)
-        {
-            Array<OneD, int> tmp;
-            LocalRegions::ExpansionSharedPtr locExpansion;
-            int i;
-            int maxQuad = 0, quad = 0, nDim = 0, eid = 0, offset = 0;
-
-            const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
-
-            int nTracePhys = trace->GetTotPoints();
-
-            // Initialise the trace to universal maps.
-            m_traceToUniversalMap       =
-                Nektar::Array<OneD, int>(nTracePhys, -1);
-            m_traceToUniversalMapUnique =
-                Nektar::Array<OneD, int>(nTracePhys, -1);
-
-            // Assume that each element of the expansion is of the same
-            // dimension.
-            nDim = locExpVector[0]->GetShapeDimension();
-
-            if (nDim == 1)
-            {
-                maxQuad = (1 > maxQuad ? 1 : maxQuad);
-            }
-            else
-            {
-                for (i = 0; i < trace->GetExpSize(); ++i)
-                {
-                    quad = trace->GetExp(i)->GetTotPoints();
-                    if (quad > maxQuad)
-                    {
-                        maxQuad = quad;
-                    }
-                }
-            }
-            m_comm->AllReduce(maxQuad, LibUtilities::ReduceMax);
-
-            if (nDim == 1)
-            {
-                for (int i = 0; i < trace->GetExpSize(); ++i)
-                {
-                    eid = trace->GetExp(i)->GetGeom()->GetGlobalID();
-                    offset = trace->GetPhys_Offset(i);
-
-                    // Check to see if this vert is periodic. If it is, then we
-                    // need use the unique eid of the two points
-                    auto it = perMap.find(eid);
-                    if (perMap.count(eid) > 0)
-                    {
-                        PeriodicEntity ent = it->second[0];
-                        if (ent.isLocal == false) // Not sure if true in 1D
-                        {
-                            eid = min(eid, ent.id);
-                        }
-                    }
-
-                    m_traceToUniversalMap[offset] = eid*maxQuad+1;
-                }
-            }
-            else
-            {
-                for (int i = 0; i < trace->GetExpSize(); ++i)
-                {
-                    eid    = trace->GetExp(i)->GetGeom()->GetGlobalID();
-                    offset = trace->GetPhys_Offset(i);
-                    quad   = trace->GetExp(i)->GetTotPoints();
-
-                    // Check to see if this edge is periodic. If it is, then we
-                    // need to reverse the trace order of one edge only in the
-                    // universal map so that the data are reversed w.r.t each
-                    // other. We do this by using the minimum of the two IDs.
-                    auto it = perMap.find(eid);
-                    bool realign = false;
-                    if (perMap.count(eid) > 0)
-                    {
-                        PeriodicEntity ent = it->second[0];
-                        if (ent.isLocal == false)
-                        {
-                            realign = eid == min(eid, ent.id);
-                            eid = min(eid, ent.id);
-                        }
-                    }
-
-                    for (int j = 0; j < quad; ++j)
-                    {
-                        m_traceToUniversalMap[j+offset] = eid*maxQuad+j+1;
-                    }
-
-                    if (realign)
-                    {
-                        if (nDim == 2)
-                        {
-                            RealignTraceElement(
-                                tmp = m_traceToUniversalMap+offset,
-                                it->second[0].orient, quad);
-                        }
-                        else
-                        {
-                            RealignTraceElement(
-                                tmp = m_traceToUniversalMap+offset,
-                                it->second[0].orient,
-                                trace->GetExp(i)->GetNumPoints(0),
-                                trace->GetExp(i)->GetNumPoints(1));
-                        }
-                    }
-                }
-            }
-
-            Array<OneD, long> tmp2(nTracePhys);
-            for (int i = 0; i < nTracePhys; ++i)
-            {
-                tmp2[i] = m_traceToUniversalMap[i];
-            }
-            m_traceGsh = Gs::Init(tmp2, m_comm);
-            Gs::Unique(tmp2, m_comm);
-            for (int i = 0; i < nTracePhys; ++i)
-            {
-                m_traceToUniversalMapUnique[i] = tmp2[i];
             }
         }
 
@@ -935,12 +817,6 @@ namespace Nektar
             }
         }
 
-        void AssemblyMapDG::UniversalTraceAssemble(
-            Array<OneD, NekDouble> &pGlobal) const
-        {
-            Gs::Gather(pGlobal, Gs::gs_add, m_traceGsh);
-        }
-
         int AssemblyMapDG::v_GetLocalToGlobalMap(const int i) const
         {
             return m_localToGlobalBndMap[i];
@@ -982,17 +858,7 @@ namespace Nektar
                     Array<OneD,       NekDouble>& global,
                     bool useComm ) const
         {
-            boost::ignore_unused(useComm);
-            AssembleBnd(loc,global);
-        }
-
-        void AssemblyMapDG::v_LocalToGlobal(
-                    const NekVector<NekDouble>& loc,
-                    NekVector<      NekDouble>& global,
-                    bool useComm) const
-        {
-            boost::ignore_unused(useComm);
-            AssembleBnd(loc,global);
+            LocalBndToGlobal(loc,global,useComm);
         }
 
         void AssemblyMapDG::v_GlobalToLocal(
@@ -1040,16 +906,6 @@ namespace Nektar
             return GetBndSystemBandWidth();
         }
 
-        int AssemblyMapDG::GetTraceToUniversalMap(int i)
-        {
-            return m_traceToUniversalMap[i];
-        }
-
-        int AssemblyMapDG::GetTraceToUniversalMapUnique(int i)
-        {
-            return m_traceToUniversalMapUnique[i];
-        }
-
         int AssemblyMapDG::GetNumDirichletBndPhys()
         {
             return m_numDirichletBndPhys;
@@ -1058,7 +914,7 @@ namespace Nektar
         Array<OneD, LocalRegions::ExpansionSharedPtr>&
                     AssemblyMapDG::GetElmtToTrace(const int i)
         {
-            ASSERTL1(i >= 0 && i < m_elmtToTrace.num_elements(),
+            ASSERTL1(i >= 0 && i < m_elmtToTrace.size(),
                      "i is out of range");
             return m_elmtToTrace[i];
         }
@@ -1068,5 +924,11 @@ namespace Nektar
         {
             return m_elmtToTrace;
         }
+
+        AssemblyCommDGSharedPtr AssemblyMapDG::GetAssemblyCommDG()
+        {
+            return m_assemblyComm;
+        }
+
     } //namespace
 } // namespace

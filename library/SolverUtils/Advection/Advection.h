@@ -95,11 +95,11 @@ public:
         const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
         const Array<OneD, Array<OneD, NekDouble>>         &pAdvVel,
         const Array<OneD, Array<OneD, NekDouble>>         &pInarray,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &pVolumeFlux,
+        TensorOfArray3D<NekDouble>                        &pVolumeFlux,
         const NekDouble                                   &pTime)
     {
-        v_AdvectVolumeFlux(nConvectiveFields, pFields, pAdvVel, pInarray, pVolumeFlux,
-                   pTime);
+        v_AdvectVolumeFlux(nConvectiveFields, pFields, pAdvVel, pInarray, 
+                            pVolumeFlux, pTime);
     }
 
     /// Interface function to advect the Trace field.
@@ -110,13 +110,21 @@ public:
         const Array<OneD, Array<OneD, NekDouble>>         &pInarray,
         Array<OneD, Array<OneD, NekDouble>>               &pTraceFlux,
         const NekDouble                                   &pTime,
-        const Array<OneD, Array<OneD, NekDouble>>         &pFwd = NullNekDoubleArrayofArray,
-        const Array<OneD, Array<OneD, NekDouble>>         &pBwd = NullNekDoubleArrayofArray)
+        const Array<OneD, Array<OneD, NekDouble>>         
+            &pFwd = NullNekDoubleArrayofArray,
+        const Array<OneD, Array<OneD, NekDouble>>         
+            &pBwd = NullNekDoubleArrayofArray)
     {
         v_AdvectTraceFlux(nConvectiveFields, pFields, pAdvVel, pInarray, 
                   pTraceFlux, pTime, pFwd, pBwd);
     }
     
+    /**
+     * @brief Similar with Advection::Advect(): calculate the advection flux 
+     * The difference is in the outarray:
+     *  it is the coefficients of basis for Advect_coeff() 
+     *  it is the physics on quadrature points for Advect() 
+     */
     SOLVER_UTILS_EXPORT void Advect_coeff(
         const int nConvectiveFields,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -124,8 +132,10 @@ public:
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray,
         const NekDouble                                   &time,
-        const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-        const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+        const Array<OneD, Array<OneD, NekDouble> > 
+            &pFwd = NullNekDoubleArrayofArray,
+        const Array<OneD, Array<OneD, NekDouble> > 
+            &pBwd = NullNekDoubleArrayofArray);
 
     /**
      * @brief Set the flux vector callback function.
@@ -204,7 +214,7 @@ protected:
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
         const Array<OneD, Array<OneD, NekDouble> >        &advVel,
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &pVolumeFlux,
+        TensorOfArray3D<NekDouble>                        &pVolumeFlux,
         const NekDouble                                   &time);
     
     /// Advects Trace Flux.
@@ -215,8 +225,10 @@ protected:
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble>>               &pTraceFlux,
         const NekDouble                                   &time,
-        const Array<OneD, Array<OneD, NekDouble> >        &pFwd = NullNekDoubleArrayofArray,
-        const Array<OneD, Array<OneD, NekDouble> >        &pBwd = NullNekDoubleArrayofArray);
+        const Array<OneD, Array<OneD, NekDouble> >        
+            &pFwd = NullNekDoubleArrayofArray,
+        const Array<OneD, Array<OneD, NekDouble> >        
+            &pBwd = NullNekDoubleArrayofArray);
 
     SOLVER_UTILS_EXPORT virtual void v_Advect_coeff(
         const int nConvectiveFields,
@@ -225,8 +237,10 @@ protected:
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
               Array<OneD, Array<OneD, NekDouble> >        &outarray,
         const NekDouble                                   &time,
-        const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-        const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+        const Array<OneD, Array<OneD, NekDouble> > 
+            &pFwd = NullNekDoubleArrayofArray,
+        const Array<OneD, Array<OneD, NekDouble> > 
+            &pBwd = NullNekDoubleArrayofArray);
 
     /// Overrides the base flow used during linearised advection
     SOLVER_UTILS_EXPORT virtual void v_SetBaseFlow(

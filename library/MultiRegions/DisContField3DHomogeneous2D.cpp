@@ -47,7 +47,7 @@ namespace Nektar
         DisContField3DHomogeneous2D::DisContField3DHomogeneous2D(void):
             ExpList3DHomogeneous2D(),
             m_bndCondExpansions(),
-            m_BndCondBwdWeight(),
+            m_bndCondBndWeight(),
             m_bndConditions()
         {
         }
@@ -63,7 +63,7 @@ namespace Nektar
                     const Collections::ImplementationType ImpType):
             ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing,ImpType),
             m_bndCondExpansions(),
-            m_BndCondBwdWeight(),
+            m_bndCondBndWeight(),
             m_bndConditions()
         {
         }
@@ -71,18 +71,18 @@ namespace Nektar
         DisContField3DHomogeneous2D::DisContField3DHomogeneous2D(const DisContField3DHomogeneous2D &In, const bool DeclareLinesSetCoeffPhys):
             ExpList3DHomogeneous2D (In,false),
             m_bndCondExpansions    (In.m_bndCondExpansions),
-            m_BndCondBwdWeight     (In.m_BndCondBwdWeight),
+            m_bndCondBndWeight     (In.m_bndCondBndWeight),
             m_bndConditions        (In.m_bndConditions)
         {
             if(DeclareLinesSetCoeffPhys)
             {
                 DisContField1DSharedPtr zero_line = std::dynamic_pointer_cast<DisContField1D> (In.m_lines[0]);
-                
-                for(int n = 0; n < m_lines.num_elements(); ++n)
+
+                for(int n = 0; n < m_lines.size(); ++n)
                 {
                     m_lines[n] = MemoryManager<DisContField1D>::AllocateSharedPtr(*zero_line);
                 }
-                
+
                 SetCoeffPhys();
             }
         }
@@ -100,14 +100,14 @@ namespace Nektar
                          const Collections::ImplementationType ImpType):
             ExpList3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing,ImpType),
             m_bndCondExpansions(),
-            m_BndCondBwdWeight(),
+            m_bndCondBndWeight(),
             m_bndConditions()
         {
             int i,n,nel;
             DisContField1DSharedPtr line_zero;
             SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
 
-            //  
+            //
             m_lines[0] = line_zero = MemoryManager<DisContField1D>::AllocateSharedPtr(pSession,graph1D,variable,ImpType);
 
             m_exp = MemoryManager<LocalRegions::ExpansionVector>::AllocateSharedPtr();
@@ -117,10 +117,10 @@ namespace Nektar
             {
                 (*m_exp).push_back(m_lines[0]->GetExp(i));
             }
-            
+
             int nylines = m_homogeneousBasis_y->GetNumPoints();
             int nzlines = m_homogeneousBasis_z->GetNumPoints();
-            
+
             for(n = 1; n < nylines*nzlines; ++n)
             {
                 m_lines[n] = MemoryManager<DisContField1D>::AllocateSharedPtr(pSession,graph1D,variable,ImpType);
@@ -128,14 +128,11 @@ namespace Nektar
                 {
                     (*m_exp).push_back((*m_exp)[i]);
                 }
-            }            
+            }
 
-            // Setup Default optimisation information. 
+            // Setup Default optimisation information.
             nel = GetExpSize();
 
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
-            
             SetCoeffPhys();
 
             SetupBoundaryConditions(HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,bcs);
@@ -152,36 +149,33 @@ namespace Nektar
 																  const NekDouble lhom_z,
 																  SpatialDomains::BoundaryConditions &bcs)
         {
-            int i,n;
-            
 			// Setup an ExpList1DHomogeneous2D expansion for boundary
             // conditions and link to class declared in m_lines.
-			
-			int nlines = m_lines.num_elements();
-			
+
+			size_t nlines = m_lines.size();
+
 			const SpatialDomains::BoundaryRegionCollection  &bregions = bcs.GetBoundaryRegions();
-			
-			int nbnd = bregions.size();
-			
-			
+
+			size_t nbnd = bregions.size();
+
 			m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(nbnd);
-			m_BndCondBwdWeight  = Array<OneD,NekDouble>(nbnd,0.0);
+			m_bndCondBndWeight  = Array<OneD, NekDouble> {nbnd, 0.0};
 			
 			Array<OneD, MultiRegions::ExpListSharedPtr> LinesBndCondExp(nlines);
-			
+
 			m_bndConditions = m_lines[0]->UpdateBndConditions();
 
-            for(i = 0; i < nbnd; ++i)
+            for(int i = 0; i < nbnd; ++i)
             {
-                for(n = 0; n < nlines; ++n)
+                for(int n = 0; n < nlines; ++n)
                 {
                     LinesBndCondExp[n] = m_lines[n]->UpdateBndCondExpansion(i);
                 }
-                
+
                 m_bndCondExpansions[i] = MemoryManager<ExpList1DHomogeneous2D>::AllocateSharedPtr(m_session,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,m_useFFT,false,LinesBndCondExp);
-                
+
             }
-            
+
             EvaluateBoundaryConditions();
         }
 
@@ -198,28 +192,27 @@ namespace Nektar
                 for (m = 0; m < m_ny; ++m)
                 {
                     m_lines[m+(n*m_ny)]->EvaluateBoundaryConditions(
-                        time, varName, 0.5*m_lhom_y*(1.0+y[m]), 
+                        time, varName, 0.5*m_lhom_y*(1.0+y[m]),
                         0.5*m_lhom_z*(1.0+z[n]));
                 }
             }
-            
+
             // Fourier transform coefficient space boundary values
-            for (n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            for (n = 0; n < m_bndCondExpansions.size(); ++n)
             {
                 if (time == 0.0 || m_bndConditions[n]->IsTimeDependent())
                 {
-                    m_BndCondBwdWeight[n]   =   1.0;
+                    m_bndCondBndWeight[n]   =   1.0;
                     m_bndCondExpansions[n]->HomogeneousFwdTrans(
-                        m_bndCondExpansions[n]->GetCoeffs(), 
+                        m_bndCondExpansions[n]->GetCoeffs(),
                         m_bndCondExpansions[n]->UpdateCoeffs());
                 }
-            }    
+            }
         }
-        
+
         void DisContField3DHomogeneous2D::v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
-                const FlagList &flags,
                 const StdRegions::ConstFactorMap &factors,
                 const StdRegions::VarCoeffMap &varcoeff,
                 const MultiRegions::VarFactorsMap &varfactors,
@@ -234,9 +227,9 @@ namespace Nektar
             NekDouble beta_y;
 			NekDouble beta_z;
 			StdRegions::ConstFactorMap new_factors;
-			
+
             Array<OneD, NekDouble> e_out;
-            Array<OneD, NekDouble> fce(inarray.num_elements());
+            Array<OneD, NekDouble> fce(inarray.size());
             Array<OneD, const NekDouble> wfce;
 
             // Fourier transform forcing function
@@ -244,7 +237,7 @@ namespace Nektar
             {
                 fce = inarray;
             }
-            else 
+            else
             {
                 HomogeneousFwdTrans(inarray,fce);
             }
@@ -258,70 +251,70 @@ namespace Nektar
                     new_factors = factors;
                     new_factors[StdRegions::eFactorLambda] +=
                         beta_y*beta_y + beta_z*beta_z;
-                    
+
                     wfce = (PhysSpaceForcing)? fce+cnt:fce+cnt1;
                     m_lines[n]->HelmSolve(wfce,
                                           e_out = outarray + cnt1,
-                                          flags, new_factors,
+                                          new_factors,
                                           varcoeff, varfactors,dirForcing,
                                           PhysSpaceForcing);
-                    
+
                     cnt  += m_lines[n]->GetTotPoints();
                     cnt1 += m_lines[n]->GetNcoeffs();
                 }
             }
         }
-		
+
         void DisContField3DHomogeneous2D::v_EvaluateBoundaryConditions(
             const NekDouble   time,
             const std::string varName,
-            const NekDouble   x2_in, 
+            const NekDouble   x2_in,
             const NekDouble   x3_in)
         {
             boost::ignore_unused(x2_in, x3_in);
             EvaluateBoundaryConditions(time, varName);
         }
-		
+
 		const Array<OneD,const std::shared_ptr<ExpList> > &DisContField3DHomogeneous2D::v_GetBndCondExpansions(void)
 		{
 			return GetBndCondExpansions();
 		}
-		
+
 		const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &DisContField3DHomogeneous2D::v_GetBndConditions()
 		{
 			return GetBndConditions();
 		}
-		
+
 		std::shared_ptr<ExpList> &DisContField3DHomogeneous2D::v_UpdateBndCondExpansion(int i)
 		{
 			return UpdateBndCondExpansion(i);
 		}
-		
+
 		Array<OneD, SpatialDomains::BoundaryConditionShPtr> &DisContField3DHomogeneous2D::v_UpdateBndConditions()
 		{
 			return UpdateBndConditions();
 		}
-		
+
         void DisContField3DHomogeneous2D::GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, Array<OneD,int> &EdgeID)
         {
-            if(m_BCtoElmMap.num_elements() == 0)
+            if(m_BCtoElmMap.size() == 0)
             {
                 Array<OneD, int> ElmtID_tmp;
                 Array<OneD, int> EdgeID_tmp;
-				
+
                 m_lines[0]->GetBoundaryToElmtMap(ElmtID_tmp,EdgeID_tmp);
                 int nel_per_lines = m_lines[0]->GetExpSize();
-                int nlines = m_lines.num_elements();
-				
-                int MapSize = ElmtID_tmp.num_elements();
-				
+                int nlines = m_lines.size();
+
+                int MapSize = ElmtID_tmp.size();
+
                 m_BCtoElmMap = Array<OneD, int>(nlines*MapSize);
                 m_BCtoEdgMap = Array<OneD, int>(nlines*MapSize);
                 if (MapSize > 0)
                 {
                     int i ,j, n, cnt;
                     int cntLine = 0;
-                    for (cnt=n=0; n < m_bndCondExpansions.num_elements(); ++n)
+                    for (cnt=n=0; n < m_bndCondExpansions.size(); ++n)
                     {
                         int lineExpSize = m_lines[0]
                                                 ->GetBndCondExpansions()[n]
@@ -350,11 +343,11 @@ namespace Nektar
         {
             int n, cnt, nq;
             int offsetOld, offsetNew;
-            
+
             std::vector<unsigned int> eIDs;
             Array<OneD, int> ElmtID,EdgeID;
             GetBoundaryToElmtMap(ElmtID,EdgeID);
-            
+
             // Skip other boundary regions
             for (cnt = n = 0; n < i; ++n)
             {
@@ -366,12 +359,12 @@ namespace Nektar
             {
                 eIDs.push_back(ElmtID[cnt+n]);
             }
-            
+
             // Create expansion list
-            result = 
+            result =
                 MemoryManager<ExpList3DHomogeneous2D>::AllocateSharedPtr
                     (*this, eIDs);
-            
+
             // Copy phys and coeffs to new explist
             if ( DeclareCoeffPhysArrays)
             {

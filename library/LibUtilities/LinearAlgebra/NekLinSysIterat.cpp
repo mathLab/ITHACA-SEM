@@ -105,8 +105,8 @@ namespace Nektar
 
         void NekLinSysIterat::setUniversalUniqueMap(Array<OneD, int> &map)
         {
-            int nmap = map.num_elements();
-            if(m_map.num_elements()!=nmap)
+            int nmap = map.size();
+            if(m_map.size()!=nmap)
             {
                 m_map   =   Array<OneD, int>(nmap,0);
             }
@@ -122,7 +122,7 @@ namespace Nektar
             const NekVector<NekDouble> &pIn)
         {
             Array<OneD, NekDouble> vExchange(1, 0.0);
-            if (m_map.num_elements() > 0)
+            if (m_map.size() > 0)
             {
                 vExchange[0] = Vmath::Dot2(pIn.GetDimension(),
                                         &pIn[0], &pIn[0], &m_map[0]);

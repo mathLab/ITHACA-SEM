@@ -86,35 +86,29 @@ namespace Nektar
          * @param   In   ExpList2D object to copy.
          */
         ExpList2D::ExpList2D(
-            const ExpList2D &In, 
+            const ExpList2D &In,
             const bool DeclareCoeffPhysArrays):
             ExpList(In,DeclareCoeffPhysArrays)
         {
             SetExpType(e2D);
         }
-        
+
         /**
          * @param   In   ExpList2D object to copy.
          * @param   eIDs Id of elements that should be copied.
          */
         ExpList2D::ExpList2D(
-            const ExpList2D &In, 
+            const ExpList2D &In,
             const std::vector<unsigned int> &eIDs,
             const bool DeclareCoeffPhysArrays,
             const Collections::ImplementationType ImpType):
             ExpList(In,eIDs,DeclareCoeffPhysArrays)
         {
             SetExpType(e2D);
-            
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
 
             // set up offset arrays.
             SetCoeffPhysOffsets();
 
-            ReadGlobalOptimizationParameters();
             CreateCollections(ImpType);
         }
 
@@ -222,23 +216,16 @@ namespace Nektar
                 (*m_exp)[i]->SetElmtId(i);
             }
 
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
-
-
             // set up offset arrays.
             SetCoeffPhysOffsets();
 
             if (DeclareCoeffPhysArrays)
             {
                 // Set up m_coeffs, m_phys.
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-                m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
+                m_coeffs = Array<OneD, NekDouble> {size_t(m_ncoeffs), 0.0};
+                m_phys   = Array<OneD, NekDouble> {size_t(m_npoints), 0.0};
              }
 
-            ReadGlobalOptimizationParameters();
             CreateCollections(ImpType);
          }
 
@@ -338,23 +325,16 @@ namespace Nektar
 
             }
 
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
-
-
             // set up offset arrays.
             SetCoeffPhysOffsets();
 
             if (DeclareCoeffPhysArrays)
             {
                 // Set up m_coeffs, m_phys.
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-                m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
+                m_coeffs = Array<OneD, NekDouble> {size_t(m_ncoeffs), 0.0};
+                m_phys   = Array<OneD, NekDouble> {size_t(m_npoints), 0.0};
              }
 
-            ReadGlobalOptimizationParameters();
             CreateCollections(ImpType);
         }
 
@@ -403,7 +383,7 @@ namespace Nektar
             LocalRegions::QuadExpSharedPtr quad;
             SpatialDomains::Composite comp;
 
-            const SpatialDomains::ExpansionMap &expansions = 
+            const SpatialDomains::ExpansionMap &expansions =
                 graph2D->GetExpansions();
             m_ncoeffs = 0;
             m_npoints = 0;
@@ -421,7 +401,7 @@ namespace Nektar
                     if (TriNb < LibUtilities::SIZE_PointsType)
                     {
                         Ntri = MemoryManager<LocalRegions::NodalTriExp>::
-                            AllocateSharedPtr(TriBa, TriBb, TriNb, 
+                            AllocateSharedPtr(TriBa, TriBb, TriNb,
                                               TriangleGeom);
                         Ntri->SetElmtId(elmtid++);
                         (*m_exp).push_back(Ntri);
@@ -435,7 +415,7 @@ namespace Nektar
                     }
 
                     m_ncoeffs += (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2
-                        + TriBa.GetNumModes() * (TriBb.GetNumModes() - 
+                        + TriBa.GetNumModes() * (TriBb.GetNumModes() -
                                                  TriBa.GetNumModes());
                     m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
                 }
@@ -458,22 +438,16 @@ namespace Nektar
 
             }
 
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
-
             // Set up m_coeffs, m_phys and offset arrays.
             SetCoeffPhysOffsets();
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-            m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
+            m_coeffs = Array<OneD, NekDouble> {size_t(m_ncoeffs), 0.0};
+            m_phys   = Array<OneD, NekDouble> {size_t(m_npoints), 0.0};
 
-            ReadGlobalOptimizationParameters();
             CreateCollections(ImpType);
         }
 
         /**
-         * Specialized constructor for trace expansions. Store 
+         * Specialized constructor for trace expansions. Store
          * expansions for the trace space used in DisContField3D
          *
          * @param   bndConstraint  Array of ExpList2D objects each containing a
@@ -485,7 +459,7 @@ namespace Nektar
          * @param   locexp   Complete domain expansion list.
          * @param   graph3D   3D mesh corresponding to the expansion list.
          * @param   periodicFaces   List of periodic faces.
-         * @param   DeclareCoeffPhysArrays   If true, set up m_coeffs, 
+         * @param   DeclareCoeffPhysArrays   If true, set up m_coeffs,
          *                                   m_phys arrays
          **/
         ExpList2D::ExpList2D(
@@ -495,9 +469,9 @@ namespace Nektar
             const LocalRegions::ExpansionVector &locexp,
             const SpatialDomains::MeshGraphSharedPtr &graph3D,
             const PeriodicMap &periodicFaces,
-            const bool DeclareCoeffPhysArrays, 
+            const bool DeclareCoeffPhysArrays,
             const std::string variable,
-            const Collections::ImplementationType ImpType):            
+            const Collections::ImplementationType ImpType):
             ExpList(pSession, graph3D)
         {
             boost::ignore_unused(periodicFaces, variable);
@@ -517,7 +491,7 @@ namespace Nektar
 
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
-            for (i = 0; i < bndCond.num_elements(); ++i)
+            for (i = 0; i < bndCond.size(); ++i)
             {
                 if (bndCond[i]->GetBoundaryConditionType()
                                             == SpatialDomains::eDirichlet)
@@ -774,20 +748,14 @@ namespace Nektar
                 }
             }
 
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
-
             // Set up offset information and array sizes
             SetCoeffPhysOffsets();
 
             // Set up m_coeffs, m_phys.
             if(DeclareCoeffPhysArrays)
             {
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-                m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
+                m_coeffs = Array<OneD, NekDouble> {size_t(m_ncoeffs), 0.0};
+                m_phys   = Array<OneD, NekDouble> {size_t(m_npoints), 0.0};
             }
 
             CreateCollections(ImpType);
@@ -804,7 +772,7 @@ namespace Nektar
           * @param   graph3D     A mesh, containing information about the domain
           *                      and the spectral/hp element expansions.
           */
-        ExpList2D::ExpList2D(   
+        ExpList2D::ExpList2D(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const SpatialDomains::CompositeMap &domain,
             const SpatialDomains::MeshGraphSharedPtr &graph3D,
@@ -826,7 +794,7 @@ namespace Nektar
              SpatialDomains::Composite comp;
              SpatialDomains::TriGeomSharedPtr TriangleGeom;
              SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
-             
+
              LocalRegions::TriExpSharedPtr tri;
              LocalRegions::NodalTriExpSharedPtr Ntri;
              LibUtilities::PointsType TriNb;
@@ -850,7 +818,7 @@ namespace Nektar
                              = graph3D->GetFaceBasisKey(TriangleGeom,1,variable);
 
                          if (graph3D->GetExpansions().begin()->second->
-                             m_basisKeyVector[0].GetBasisType() == 
+                             m_basisKeyVector[0].GetBasisType() ==
                              LibUtilities::eGLL_Lagrange)
                          {
                              ASSERTL0(false,"This method needs sorting");
@@ -908,18 +876,15 @@ namespace Nektar
 
              // Setup Default optimisation information.
              nel = GetExpSize();
-             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                 ::AllocateSharedPtr(nel);
 
              // Set up m_coeffs, m_phys and offset arrays.
             SetCoeffPhysOffsets();
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs,0.0);
-            m_phys   = Array<OneD, NekDouble>(m_npoints,0.0);
+            m_coeffs = Array<OneD, NekDouble> {size_t(m_ncoeffs), 0.0};
+            m_phys   = Array<OneD, NekDouble> {size_t(m_npoints), 0.0};
 
-            ReadGlobalOptimizationParameters(); 
             CreateCollections(ImpType);
         }
-        
+
         /**
          * One-dimensional upwind.
          * @param   Vn          Velocity field.
@@ -942,7 +907,7 @@ namespace Nektar
                 f_npoints = (*m_exp)[i]->GetNumPoints(0)*
                             (*m_exp)[i]->GetNumPoints(1);
                 offset    = m_phys_offset[i];
-                
+
                 // Process each point in the expansion.
                 for(j = 0; j < f_npoints; ++j)
                 {
@@ -1041,7 +1006,7 @@ namespace Nektar
             int i, j;
             const int coordim = GetCoordim(0);
 
-            ASSERTL1(normals.num_elements() >= coordim,
+            ASSERTL1(normals.size() >= coordim,
                      "Output vector does not have sufficient dimensions to "
                      "match coordim");
 
@@ -1078,9 +1043,9 @@ namespace Nektar
                     fromid1 = 0;
                 }
 
-                LibUtilities::BasisKey faceBasis0 
+                LibUtilities::BasisKey faceBasis0
                     = exp3D->DetFaceBasisKey(faceNum, fromid0);
-                LibUtilities::BasisKey faceBasis1 
+                LibUtilities::BasisKey faceBasis1
                     = exp3D->DetFaceBasisKey(faceNum, fromid1);
                 LibUtilities::BasisKey traceBasis0
                     = traceExp->GetBasis(0)->GetBasisKey();
@@ -1107,29 +1072,29 @@ namespace Nektar
         }
 
         /**
-         * For each local element, copy the element length in boundary normal direction stored in the element list
-         * into the array \a normals.
+         * For each local element, copy the element length in boundary normal 
+         * direction stored in the element list into the array \a normals.
          */
         void ExpList2D::v_GetElmtNormalLength(
             Array<OneD, NekDouble>  &lengthsFwd,
             Array<OneD, NekDouble>  &lengthsBwd)
         {
-            int i,j,e_npoints,offset;
+            int e_npoints;
 
-            Array<OneD,NekDouble> locLeng;
-            Array<OneD,NekDouble> lengintp;
-            Array<OneD,int      > LRbndnumbs(2);
+            Array<OneD, NekDouble> locLeng;
+            Array<OneD, NekDouble> lengintp;
+            Array<OneD, int      > LRbndnumbs(2);
             Array<OneD, Array<OneD,NekDouble> > lengLR(2);
             lengLR[0]   =   lengthsFwd;
             lengLR[1]   =   lengthsBwd;
-            Array<OneD,LocalRegions::Expansion3DSharedPtr> LRelmts(2);
+            Array<OneD, LocalRegions::Expansion3DSharedPtr> LRelmts(2);
             LocalRegions::Expansion3DSharedPtr loc_elmt;
             LocalRegions::Expansion2DSharedPtr loc_exp;
             int e_npoints0  =   -1; 
-            for (i = 0; i < m_exp->size(); ++i)
+            for (int i = 0; i < m_exp->size(); ++i)
             {
                 loc_exp = (*m_exp)[i]->as<LocalRegions::Expansion2D>();
-                offset = m_phys_offset[i];
+                int offset = m_phys_offset[i];
 
                 LibUtilities::BasisKey traceBasis0
                     = loc_exp->GetBasis(0)->GetBasisKey();
@@ -1138,9 +1103,9 @@ namespace Nektar
                 const int TraceNq0 = traceBasis0.GetNumPoints();
                 const int TraceNq1 = traceBasis1.GetNumPoints();
                 e_npoints  =   TraceNq0*TraceNq1;
-                if(e_npoints0<e_npoints)
+                if (e_npoints0 < e_npoints)
                 {
-                    lengintp = Array<OneD, NekDouble>(e_npoints,0.0);
+                    lengintp = Array<OneD, NekDouble>{size_t(e_npoints), 0.0};
                     e_npoints0 = e_npoints;
                 }
                 
@@ -1149,20 +1114,22 @@ namespace Nektar
 
                 LRbndnumbs[0]   =   loc_exp->GetLeftAdjacentElementFace();
                 LRbndnumbs[1]   =   loc_exp->GetRightAdjacentElementFace();
-                for(int nlr=0;nlr<2;nlr++)
+                for (int nlr = 0; nlr < 2; ++nlr)
                 {
-                    Vmath::Zero(e_npoints0,lengintp,1);
+                    Vmath::Zero(e_npoints0, lengintp, 1);
                     int bndNumber = LRbndnumbs[nlr];
                     loc_elmt = LRelmts[nlr];
-                    if(bndNumber>=0)
+                    if (bndNumber >= 0)
                     {
-                        locLeng         = loc_elmt->GetElmtBndNormalDirctnElmtLength(bndNumber);
+                        locLeng = loc_elmt->GetElmtBndNormDirElmtLen(
+                                                bndNumber);
                         // Project normals from 3D element onto the same orientation as
                         // the trace expansion.
-                        StdRegions::Orientation orient = loc_elmt->GetForient(bndNumber);
+                        StdRegions::Orientation orient = loc_elmt->GetForient(
+                                                            bndNumber);
 
                         int fromid0,fromid1;
-                        if(orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)
+                        if (orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)
                         {
                             fromid0 = 0;
                             fromid1 = 1;
@@ -1191,7 +1158,7 @@ namespace Nektar
                             traceBasis1.GetPointsKey(),
                             lengintp);
                     }
-                    for (j = 0; j < e_npoints; ++j)
+                    for (int j = 0; j < e_npoints; ++j)
                     {
                         lengLR[nlr][offset + j] = lengintp[j];
                     }
@@ -1214,26 +1181,6 @@ namespace Nektar
             }
         }
 
-
-        void ExpList2D::v_ReadGlobalOptimizationParameters()
-        {
-            Array<OneD, int> NumShape(2,0);
-
-            for(int i = 0; i < GetExpSize(); ++i)
-            {
-                if((*m_exp)[i]->DetShapeType() == LibUtilities::eTriangle)
-                {
-                    NumShape[0] += 1;
-                }
-                else  // Quadrilateral element
-                {
-                    NumShape[1] += 1;
-                }
-            }
-
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(m_session,2,NumShape);
-        }
 
         void ExpList2D::v_WriteVtkPieceHeader(
             std::ostream &outfile,
@@ -1265,7 +1212,7 @@ namespace Nektar
             {
                 for (j = 0; j < 3; ++j)
                 {
-                    outfile << setprecision(8)     << scientific 
+                    outfile << setprecision(8)     << scientific
                             << (float)coords[j][i] << " ";
                 }
                 outfile << endl;
@@ -1310,7 +1257,7 @@ namespace Nektar
 
 
         void ExpList2D::v_PhysInterp1DScaled(
-            const NekDouble scale, 
+            const NekDouble scale,
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble> &outarray)
         {
@@ -1324,13 +1271,13 @@ namespace Nektar
                 int pt1 = (*m_exp)[i]->GetNumPoints(1);
                 int npt0 = (int) pt0*scale;
                 int npt1 = (int) pt1*scale;
-                
+
                 LibUtilities::PointsKey newPointsKey0(npt0,
                                                 (*m_exp)[i]->GetPointsType(0));
-                LibUtilities::PointsKey newPointsKey1(npt1, 
+                LibUtilities::PointsKey newPointsKey1(npt1,
                                                 (*m_exp)[i]->GetPointsType(1));
 
-                // Interpolate points; 
+                // Interpolate points;
                 LibUtilities::Interp2D((*m_exp)[i]->GetBasis(0)->GetPointsKey(),
                                        (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
                                        &inarray[cnt],newPointsKey0,
@@ -1340,10 +1287,10 @@ namespace Nektar
                 cnt1 += npt0*npt1;
             }
         }
-        
+
         void ExpList2D::v_PhysGalerkinProjection1DScaled(
-            const NekDouble scale, 
-            const Array<OneD, NekDouble> &inarray, 
+            const NekDouble scale,
+            const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble> &outarray)
         {
             int cnt,cnt1;
@@ -1356,21 +1303,21 @@ namespace Nektar
                 int pt1 = (*m_exp)[i]->GetNumPoints(1);
                 int npt0 = (int) pt0*scale;
                 int npt1 = (int) pt1*scale;
-                
-                LibUtilities::PointsKey newPointsKey0(npt0, 
+
+                LibUtilities::PointsKey newPointsKey0(npt0,
                                                 (*m_exp)[i]->GetPointsType(0));
-                LibUtilities::PointsKey newPointsKey1(npt1, 
+                LibUtilities::PointsKey newPointsKey1(npt1,
                                                 (*m_exp)[i]->GetPointsType(1));
 
-                // Project points; 
+                // Project points;
                 LibUtilities::PhysGalerkinProject2D(
-                                        newPointsKey0, 
+                                        newPointsKey0,
                                         newPointsKey1,
                                        &inarray[cnt],
                                        (*m_exp)[i]->GetBasis(0)->GetPointsKey(),
                                        (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
                                        &outarray[cnt1]);
-                
+
                 cnt  += npt0*npt1;
                 cnt1 += pt0*pt1;
             }

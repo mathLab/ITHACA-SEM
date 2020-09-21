@@ -34,9 +34,10 @@
 #ifndef NEKTAR_LIB_UTILITIES_COMM_H
 #define NEKTAR_LIB_UTILITIES_COMM_H
 
-#include <vector>
 #include <memory>
 #include <type_traits>
+#include <utility>
+#include <vector>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -70,12 +71,19 @@ enum ReduceOperator
     SIZE_ReduceOperator
 };
 
-const char* const ReduceOperatorMap[] =
+const char *const ReduceOperatorMap[] = {"ReduceSum", "ReduceMax", "ReduceMin"};
+
+/// Class for communicator request type
+class CommRequest
 {
-    "ReduceSum",
-    "ReduceMax",
-    "ReduceMin"
+public:
+    /// Default constructor
+    CommRequest() = default;
+    /// Default destructor
+    virtual ~CommRequest() = default;
 };
+
+typedef std::shared_ptr<CommRequest> CommRequestSharedPtr;
 
 /// Base communications class
 class Comm : public std::enable_shared_from_this<Comm>
@@ -87,7 +95,7 @@ public:
     LIB_UTILITIES_EXPORT inline void Finalise();
 
     /// Returns number of processes
-    LIB_UTILITIES_EXPORT inline int GetSize();
+    LIB_UTILITIES_EXPORT inline int GetSize() const;
     LIB_UTILITIES_EXPORT inline int GetRank();
     LIB_UTILITIES_EXPORT inline const std::string &GetType() const;
 
@@ -108,31 +116,46 @@ public:
 
     template <class T> void AlltoAll(T &pSendData, T &pRecvData);
     template <class T1, class T2>
-    void AlltoAllv(T1 &pSendData,
-                   T2 &pSendDataSizeMap,
-                   T2 &pSendDataOffsetMap,
-                   T1 &pRecvData,
-                   T2 &pRecvDataSizeMap,
-                   T2 &pRecvDataOffsetMap);
+    void AlltoAllv(T1 &pSendData, T2 &pSendDataSizeMap, T2 &pSendDataOffsetMap,
+                   T1 &pRecvData, T2 &pRecvDataSizeMap, T2 &pRecvDataOffsetMap);
 
     template <class T> void AllGather(T &pSendData, T &pRecvData);
     template <class T>
-    void AllGatherv(T &pSendData,
-                    T &pRecvData,
+    void AllGatherv(T &pSendData, T &pRecvData,
                     Array<OneD, int> &pRecvDataSizeMap,
                     Array<OneD, int> &pRecvDataOffsetMap);
     template <class T>
-    void AllGatherv(T &pRecvData,
-                    Array<OneD, int> &pRecvDataSizeMap,
+    void AllGatherv(T &pRecvData, Array<OneD, int> &pRecvDataSizeMap,
                     Array<OneD, int> &pRecvDataOffsetMap);
 
-    template <class T> void Bcast(T &data, int rootProc);
+    template <class T> void Bcast(T &pData, int pRoot);
+
+    template <class T> void Exscan(T &pData, enum ReduceOperator pOp, T &ans);
+
+    template <class T> T Gather(int rootProc, T &val);
+    template <class T> T Scatter(int rootProc, T &pData);
 
     template <class T>
-    void Exscan(T &pData, const enum ReduceOperator pOp, T &ans);
-
-    template <class T> T Gather(const int rootProc, T &val);
-    template <class T> T Scatter(const int rootProc, T &pData);
+    void DistGraphCreateAdjacent(T &sources, T &sourceweights, int reorder);
+    template <class T1, class T2>
+    void NeighborAlltoAllv(T1 &pSendData, T2 &pSendDataSizeMap,
+                           T2 &pSendDataOffsetMap, T1 &pRecvData,
+                           T2 &pRecvDataSizeMap, T2 &pRecvDataOffsetMap);
+    template <class T>
+    void Irsend(int pProc, T &pData, int count,
+                const CommRequestSharedPtr &request, int loc);
+    template <class T>
+    void SendInit(int pProc, T &pData, int count,
+                  const CommRequestSharedPtr &request, int loc);
+    template <class T>
+    void Irecv(int pProc, T &pData, int count,
+               const CommRequestSharedPtr &request, int loc);
+    template <class T>
+    void RecvInit(int pProc, T &pData, int count,
+                  const CommRequestSharedPtr &request, int loc);
+    inline void StartAll(const CommRequestSharedPtr &request);
+    inline void WaitAll(const CommRequestSharedPtr &request);
+    inline CommRequestSharedPtr CreateRequest(int num);
 
     LIB_UTILITIES_EXPORT inline CommSharedPtr CommCreateIf(int flag);
 
@@ -140,9 +163,10 @@ public:
     LIB_UTILITIES_EXPORT inline CommSharedPtr GetRowComm();
     LIB_UTILITIES_EXPORT inline CommSharedPtr GetColumnComm();
 
-    LIB_UTILITIES_EXPORT inline bool TreatAsRankZero(void);
-    LIB_UTILITIES_EXPORT inline bool IsSerial(void);
-    LIB_UTILITIES_EXPORT inline bool RemoveExistingFiles(void);
+    LIB_UTILITIES_EXPORT inline bool TreatAsRankZero();
+    LIB_UTILITIES_EXPORT inline bool IsSerial();
+    LIB_UTILITIES_EXPORT inline std::tuple<int, int, int> GetVersion();
+    LIB_UTILITIES_EXPORT inline bool RemoveExistingFiles();
 
 protected:
     int m_size;                 ///< Number of processes
@@ -152,53 +176,78 @@ protected:
 
     Comm();
 
-    virtual void v_Finalise()   = 0;
-    virtual int v_GetRank()     = 0;
-    virtual void v_Block()      = 0;
-    virtual NekDouble v_Wtime() = 0;
+    virtual void v_Finalise()                                              = 0;
+    virtual int v_GetRank()                                                = 0;
+    virtual void v_Block()                                                 = 0;
+    virtual NekDouble v_Wtime()                                            = 0;
     virtual void v_Send(void *buf, int count, CommDataType dt, int dest)   = 0;
     virtual void v_Recv(void *buf, int count, CommDataType dt, int source) = 0;
     virtual void v_SendRecv(void *sendbuf, int sendcount, CommDataType sendtype,
                             int dest, void *recvbuf, int recvcount,
-                            CommDataType recvtype, int source) = 0;
+                            CommDataType recvtype, int source)             = 0;
     virtual void v_SendRecvReplace(void *buf, int count, CommDataType dt,
-                                   int pSendProc, int pRecvProc) = 0;
+                                   int pSendProc, int pRecvProc)           = 0;
     virtual void v_AllReduce(void *buf, int count, CommDataType dt,
-                             enum ReduceOperator pOp) = 0;
+                             enum ReduceOperator pOp)                      = 0;
     virtual void v_AlltoAll(void *sendbuf, int sendcount, CommDataType sendtype,
                             void *recvbuf, int recvcount,
-                            CommDataType recvtype) = 0;
+                            CommDataType recvtype)                         = 0;
     virtual void v_AlltoAllv(void *sendbuf, int sendcounts[], int sensdispls[],
                              CommDataType sendtype, void *recvbuf,
                              int recvcounts[], int rdispls[],
-                             CommDataType recvtype) = 0;
-    virtual void v_AllGather(void *sendbuf, int sendcount, CommDataType sendtype,
-                             void *recvbuf, int recvcount,
-                             CommDataType recvtype) = 0;
-    virtual void v_AllGatherv(void *sendbuf, int sendcount, CommDataType sendtype,
-                              void *recvbuf, int recvcounts[], int rdispls[],
-                              CommDataType recvtype) = 0;
+                             CommDataType recvtype)                        = 0;
+    virtual void v_AllGather(void *sendbuf, int sendcount,
+                             CommDataType sendtype, void *recvbuf,
+                             int recvcount, CommDataType recvtype)         = 0;
+    virtual void v_AllGatherv(void *sendbuf, int sendcount,
+                              CommDataType sendtype, void *recvbuf,
+                              int recvcounts[], int rdispls[],
+                              CommDataType recvtype)                       = 0;
     virtual void v_AllGatherv(void *recvbuf, int recvcounts[], int rdispls[],
-                              CommDataType recvtype) = 0;
+                              CommDataType recvtype)                       = 0;
     virtual void v_Bcast(void *buffer, int count, CommDataType dt,
-                         int root) = 0;
+                         int root)                                         = 0;
 
     virtual void v_Exscan(Array<OneD, unsigned long long> &pData,
-                          const enum ReduceOperator pOp,
+                          enum ReduceOperator pOp,
                           Array<OneD, unsigned long long> &ans) = 0;
 
     virtual void v_Gather(void *sendbuf, int sendcount, CommDataType sendtype,
                           void *recvbuf, int recvcount, CommDataType recvtype,
-                          int root) = 0;
+                          int root)  = 0;
     virtual void v_Scatter(void *sendbuf, int sendcount, CommDataType sendtype,
                            void *recvbuf, int recvcount, CommDataType recvtype,
                            int root) = 0;
 
     virtual CommSharedPtr v_CommCreateIf(int flag) = 0;
+
+    virtual void v_DistGraphCreateAdjacent(int indegree, const int sources[],
+                                           const int sourceweights[],
+                                           int reorder) = 0;
+
+    virtual void v_NeighborAlltoAllv(void *sendbuf, int sendcounts[],
+                                     int sdispls[], CommDataType sendtype,
+                                     void *recvbuf, int recvcounts[],
+                                     int rdispls[], CommDataType recvtype) = 0;
+
+    virtual void v_Irsend(void *buf, int count, CommDataType dt, int dest,
+                          CommRequestSharedPtr request, int loc)   = 0;
+    virtual void v_SendInit(void *buf, int count, CommDataType dt, int dest,
+                            CommRequestSharedPtr request, int loc) = 0;
+    virtual void v_Irecv(void *buf, int count, CommDataType dt, int source,
+                         CommRequestSharedPtr request, int loc)    = 0;
+    virtual void v_RecvInit(void *buf, int count, CommDataType dt, int source,
+                            CommRequestSharedPtr request, int loc) = 0;
+    virtual void v_StartAll(CommRequestSharedPtr request)          = 0;
+    virtual void v_WaitAll(CommRequestSharedPtr request)           = 0;
+    virtual CommRequestSharedPtr v_CreateRequest(int num)          = 0;
+
     virtual void v_SplitComm(int pRows, int pColumns) = 0;
-    virtual bool v_TreatAsRankZero(void) = 0;
-    virtual bool v_IsSerial(void) = 0;
-    LIB_UTILITIES_EXPORT virtual bool v_RemoveExistingFiles(void);
+    virtual bool v_TreatAsRankZero()                  = 0;
+    virtual bool v_IsSerial()                         = 0;
+    virtual std::tuple<int, int, int> v_GetVersion()  = 0;
+
+    LIB_UTILITIES_EXPORT virtual bool v_RemoveExistingFiles();
 };
 
 /**
@@ -212,7 +261,7 @@ inline void Comm::Finalise()
 /**
  *
  */
-inline int Comm::GetSize()
+inline int Comm::GetSize() const
 {
     return m_size;
 }
@@ -301,9 +350,8 @@ template <class T> void Comm::AllReduce(T &pData, enum ReduceOperator pOp)
 
 template <class T> void Comm::AlltoAll(T &pSendData, T &pRecvData)
 {
-    static_assert(
-        CommDataTypeTraits<T>::IsVector,
-        "AlltoAll only valid with Array or vector arguments.");
+    static_assert(CommDataTypeTraits<T>::IsVector,
+                  "AlltoAll only valid with Array or vector arguments.");
     int sendSize = CommDataTypeTraits<T>::GetCount(pSendData);
     int recvSize = CommDataTypeTraits<T>::GetCount(pRecvData);
     ASSERTL0(sendSize == recvSize,
@@ -323,29 +371,23 @@ template <class T> void Comm::AlltoAll(T &pSendData, T &pRecvData)
  *
  */
 template <class T1, class T2>
-void Comm::AlltoAllv(T1 &pSendData,
-                     T2 &pSendDataSizeMap,
-                     T2 &pSendDataOffsetMap,
-                     T1 &pRecvData,
-                     T2 &pRecvDataSizeMap,
-                     T2 &pRecvDataOffsetMap)
+void Comm::AlltoAllv(T1 &pSendData, T2 &pSendDataSizeMap,
+                     T2 &pSendDataOffsetMap, T1 &pRecvData,
+                     T2 &pRecvDataSizeMap, T2 &pRecvDataOffsetMap)
 {
-    static_assert(
-        CommDataTypeTraits<T1>::IsVector,
-        "AlltoAllv only valid with Array or vector arguments.");
-    static_assert(
-        std::is_same<T2, std::vector<int>>::value ||
-        std::is_same<T2, Array<OneD, int>>::value,
-        "Alltoallv size and offset maps should be integer vectors.");
-    v_AlltoAllv(
-        CommDataTypeTraits<T1>::GetPointer(pSendData),
-        (int *)CommDataTypeTraits<T2>::GetPointer(pSendDataSizeMap),
-        (int *)CommDataTypeTraits<T2>::GetPointer(pSendDataOffsetMap),
-        CommDataTypeTraits<T1>::GetDataType(),
-        CommDataTypeTraits<T1>::GetPointer(pRecvData),
-        (int *)CommDataTypeTraits<T2>::GetPointer(pRecvDataSizeMap),
-        (int *)CommDataTypeTraits<T2>::GetPointer(pRecvDataOffsetMap),
-        CommDataTypeTraits<T1>::GetDataType());
+    static_assert(CommDataTypeTraits<T1>::IsVector,
+                  "AlltoAllv only valid with Array or vector arguments.");
+    static_assert(std::is_same<T2, std::vector<int>>::value ||
+                      std::is_same<T2, Array<OneD, int>>::value,
+                  "Alltoallv size and offset maps should be integer vectors.");
+    v_AlltoAllv(CommDataTypeTraits<T1>::GetPointer(pSendData),
+                (int *)CommDataTypeTraits<T2>::GetPointer(pSendDataSizeMap),
+                (int *)CommDataTypeTraits<T2>::GetPointer(pSendDataOffsetMap),
+                CommDataTypeTraits<T1>::GetDataType(),
+                CommDataTypeTraits<T1>::GetPointer(pRecvData),
+                (int *)CommDataTypeTraits<T2>::GetPointer(pRecvDataSizeMap),
+                (int *)CommDataTypeTraits<T2>::GetPointer(pRecvDataOffsetMap),
+                CommDataTypeTraits<T1>::GetDataType());
 }
 
 template <class T> void Comm::AllGather(T &pSendData, T &pRecvData)
@@ -360,19 +402,18 @@ template <class T> void Comm::AllGather(T &pSendData, T &pRecvData)
     pRecvData = T(recvSize * GetSize());
 
     v_AllGather(CommDataTypeTraits<T>::GetPointer(pSendData), sendSize,
-               CommDataTypeTraits<T>::GetDataType(),
-               CommDataTypeTraits<T>::GetPointer(pRecvData), recvSize,
-               CommDataTypeTraits<T>::GetDataType());
+                CommDataTypeTraits<T>::GetDataType(),
+                CommDataTypeTraits<T>::GetPointer(pRecvData), recvSize,
+                CommDataTypeTraits<T>::GetDataType());
 }
 
 /**
  *
  */
 template <class T>
-void Comm::AllGatherv(T &pSendData,
-                    T &pRecvData,
-                    Array<OneD, int> &pRecvDataSizeMap,
-                    Array<OneD, int> &pRecvDataOffsetMap)
+void Comm::AllGatherv(T &pSendData, T &pRecvData,
+                      Array<OneD, int> &pRecvDataSizeMap,
+                      Array<OneD, int> &pRecvDataOffsetMap)
 {
     BOOST_STATIC_ASSERT_MSG(
         CommDataTypeTraits<T>::IsVector,
@@ -383,8 +424,7 @@ void Comm::AllGatherv(T &pSendData,
     v_AllGatherv(CommDataTypeTraits<T>::GetPointer(pSendData), sendSize,
                  CommDataTypeTraits<T>::GetDataType(),
                  CommDataTypeTraits<T>::GetPointer(pRecvData),
-                 pRecvDataSizeMap.get(),
-                 pRecvDataOffsetMap.get(),
+                 pRecvDataSizeMap.get(), pRecvDataOffsetMap.get(),
                  CommDataTypeTraits<T>::GetDataType());
 }
 
@@ -392,8 +432,7 @@ void Comm::AllGatherv(T &pSendData,
  *
  */
 template <class T>
-void Comm::AllGatherv(T &pRecvData,
-                      Array<OneD, int> &pRecvDataSizeMap,
+void Comm::AllGatherv(T &pRecvData, Array<OneD, int> &pRecvDataSizeMap,
                       Array<OneD, int> &pRecvDataOffsetMap)
 {
     BOOST_STATIC_ASSERT_MSG(
@@ -401,8 +440,7 @@ void Comm::AllGatherv(T &pRecvData,
         "AllGatherv only valid with Array or vector arguments.");
 
     v_AllGatherv(CommDataTypeTraits<T>::GetPointer(pRecvData),
-                 pRecvDataSizeMap.get(),
-                 pRecvDataOffsetMap.get(),
+                 pRecvDataSizeMap.get(), pRecvDataOffsetMap.get(),
                  CommDataTypeTraits<T>::GetDataType());
 }
 
@@ -434,9 +472,8 @@ void Comm::Exscan(T &pData, const enum ReduceOperator pOp, T &ans)
  */
 template <class T> T Comm::Gather(const int rootProc, T &val)
 {
-    static_assert(
-        CommDataTypeTraits<T>::IsVector,
-        "Gather only valid with Array or vector arguments.");
+    static_assert(CommDataTypeTraits<T>::IsVector,
+                  "Gather only valid with Array or vector arguments.");
     bool amRoot  = (GetRank() == rootProc);
     unsigned nEl = CommDataTypeTraits<T>::GetCount(val);
 
@@ -454,9 +491,8 @@ template <class T> T Comm::Gather(const int rootProc, T &val)
  */
 template <class T> T Comm::Scatter(const int rootProc, T &pData)
 {
-    static_assert(
-        CommDataTypeTraits<T>::IsVector,
-        "Scatter only valid with Array or vector arguments.");
+    static_assert(CommDataTypeTraits<T>::IsVector,
+                  "Scatter only valid with Array or vector arguments.");
 
     bool amRoot  = (GetRank() == rootProc);
     unsigned nEl = CommDataTypeTraits<T>::GetCount(pData) / GetSize();
@@ -468,6 +504,178 @@ template <class T> T Comm::Scatter(const int rootProc, T &pData)
               CommDataTypeTraits<T>::GetPointer(ans), nEl,
               CommDataTypeTraits<T>::GetDataType(), rootProc);
     return ans;
+}
+
+/**
+ * This replaces the current MPI communicator with a new one that also holds
+ * the distributed graph topology information. If reordering is enabled using
+ * this might break code where process/rank numbers are assumed to remain
+ * constant. This also assumes that the graph is bi-directional, so all
+ * sources are also destinations with equal weighting.
+ *
+ * @param sources       Ranks of processes for which the calling process is the
+ *                      destination/source
+ * @param sourceweights Weights of the corresponding edges into the calling
+ *                      process
+ * @param reorder       Ranks may be reordered (true) or not (false)
+ */
+template <class T>
+void Comm::DistGraphCreateAdjacent(T &sources, T &sourceweights, int reorder)
+{
+    static_assert(
+        CommDataTypeTraits<T>::IsVector,
+        "DistGraphCreateAdjacent only valid with Array or vector arguments.");
+
+    ASSERTL0(CommDataTypeTraits<T>::GetCount(sources) ==
+                 CommDataTypeTraits<T>::GetCount(sourceweights),
+             "Sources and weights array sizes don't match");
+
+    int indegree = CommDataTypeTraits<T>::GetCount(sources);
+
+    v_DistGraphCreateAdjacent(
+        indegree, (const int *)CommDataTypeTraits<T>::GetPointer(sources),
+        (const int *)CommDataTypeTraits<T>::GetPointer(sourceweights), reorder);
+}
+
+/**
+ * Sends data to neighboring processes in a virtual topology communicator. All
+ * processes send different amounts of data to, and receive different amounts
+ * of data from, all neighbors
+ *
+ * @param pSendData          Array/vector to send to neighbors
+ * @param pSendDataSizeMap   Array/vector where entry i specifies the number
+ *                           of elements to send to neighbor i
+ * @param pSendDataOffsetMap Array/vector where entry i specifies the
+ *                           displacement (offset from pSendData) from which to
+ *                           send data to neighbor i
+ * @param pRecvData          Array/vector to place incoming data in to
+ * @param pRecvDataSizeMap   Array/vector where entry i specifies the number
+ *                           of elements to receive from neighbor i
+ * @param pRecvDataOffsetMap Array/vector where entry i specifies the
+ *                           displacement (offset from pRecvData) from which to
+ *                           receive data from neighbor i
+ */
+template <class T1, class T2>
+void Comm::NeighborAlltoAllv(T1 &pSendData, T2 &pSendDataSizeMap,
+                             T2 &pSendDataOffsetMap, T1 &pRecvData,
+                             T2 &pRecvDataSizeMap, T2 &pRecvDataOffsetMap)
+{
+    static_assert(
+        CommDataTypeTraits<T1>::IsVector,
+        "NeighbourAlltoAllv only valid with Array or vector arguments.");
+    static_assert(
+        std::is_same<T2, std::vector<int>>::value ||
+            std::is_same<T2, Array<OneD, int>>::value,
+        "NeighborAllToAllv size and offset maps should be integer vectors.");
+    v_NeighborAlltoAllv(
+        CommDataTypeTraits<T1>::GetPointer(pSendData),
+        (int *)CommDataTypeTraits<T2>::GetPointer(pSendDataSizeMap),
+        (int *)CommDataTypeTraits<T2>::GetPointer(pSendDataOffsetMap),
+        CommDataTypeTraits<T1>::GetDataType(),
+        CommDataTypeTraits<T1>::GetPointer(pRecvData),
+        (int *)CommDataTypeTraits<T2>::GetPointer(pRecvDataSizeMap),
+        (int *)CommDataTypeTraits<T2>::GetPointer(pRecvDataOffsetMap),
+        CommDataTypeTraits<T1>::GetDataType());
+}
+
+/**
+ * Starts a ready-mode nonblocking send
+ *
+ * @param pProc   Rank of destination
+ * @param pData   Array/vector to send
+ * @param count   Number of elements to send in pData
+ * @param request Communication request object
+ * @param loc     Location in request to use
+ */
+template <class T>
+void Comm::Irsend(int pProc, T &pData, int count,
+                  const CommRequestSharedPtr &request, int loc)
+{
+    v_Irsend(CommDataTypeTraits<T>::GetPointer(pData), count,
+             CommDataTypeTraits<T>::GetDataType(), pProc, request, loc);
+}
+
+/**
+ * Creates a persistent request for a send
+ *
+ * @param pProc   Rank of destination
+ * @param pData   Array/vector to send
+ * @param count   Number of elements to send in pData
+ * @param request Communication request object
+ * @param loc     Location in request to use
+ */
+template <class T>
+void Comm::SendInit(int pProc, T &pData, int count,
+                    const CommRequestSharedPtr &request, int loc)
+{
+    v_SendInit(CommDataTypeTraits<T>::GetPointer(pData), count,
+               CommDataTypeTraits<T>::GetDataType(), pProc, request, loc);
+}
+
+/**
+ * Begins a nonblocking receive
+ *
+ * @param pProc   Rank of source
+ * @param pData   Array/vector to place incoming data in to
+ * @param count   Number of elements to receive in to pData
+ * @param request Communication request object
+ * @param loc     Location in request to use
+ */
+template <class T>
+void Comm::Irecv(int pProc, T &pData, int count,
+                 const CommRequestSharedPtr &request, int loc)
+{
+    v_Irecv(CommDataTypeTraits<T>::GetPointer(pData), count,
+            CommDataTypeTraits<T>::GetDataType(), pProc, request, loc);
+}
+
+/**
+ * Create a persistent request for a receive
+ *
+ * @param pProc   Rank of source
+ * @param pData   Array/vector to place incoming data in to
+ * @param count   Number of elements to receive in to pData
+ * @param request Communication request object
+ * @param loc     Location in request to use
+ */
+template <class T>
+void Comm::RecvInit(int pProc, T &pData, int count,
+                    const CommRequestSharedPtr &request, int loc)
+{
+    v_RecvInit(CommDataTypeTraits<T>::GetPointer(pData), count,
+               CommDataTypeTraits<T>::GetDataType(), pProc, request, loc);
+}
+
+/**
+ * Starts a collection of persistent requests
+ *
+ * @param request Communication request object
+ */
+inline void Comm::StartAll(const CommRequestSharedPtr &request)
+{
+    v_StartAll(request);
+}
+
+/**
+ * Waits for all CommRequests in the request object to complete.
+ *
+ * @param request Communication request object
+ */
+inline void Comm::WaitAll(const CommRequestSharedPtr &request)
+{
+    v_WaitAll(request);
+}
+
+/**
+ * Creates a number of CommRequests.
+ *
+ * @param num Number of requests to generate in the communication request object
+ *
+ * @return Communication request object
+ */
+inline CommRequestSharedPtr Comm::CreateRequest(int num)
+{
+    return v_CreateRequest(num);
 }
 
 /**
@@ -519,22 +727,30 @@ inline CommSharedPtr Comm::GetColumnComm()
     }
 }
 
-inline bool Comm::TreatAsRankZero(void)
+inline bool Comm::TreatAsRankZero()
 {
     return v_TreatAsRankZero();
 }
 
-inline bool Comm::IsSerial(void)
+inline bool Comm::IsSerial()
 {
     return v_IsSerial();
 }
 
-inline bool Comm::RemoveExistingFiles(void)
+/**
+ * @return tuple of {major, minor, patch} version numbers
+ */
+inline std::tuple<int, int, int> Comm::GetVersion()
+{
+    return v_GetVersion();
+}
+
+inline bool Comm::RemoveExistingFiles()
 {
     return v_RemoveExistingFiles();
 }
 
-}
-}
+} // namespace LibUtilities
+} // namespace Nektar
 
 #endif

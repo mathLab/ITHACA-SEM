@@ -232,6 +232,7 @@ private:
             homs(in.homs)
         {
         }
+        OffsetHelper& operator=(const OffsetHelper &in) = default;
 
         uint64_t data, order, homy, homz, homs;
     };

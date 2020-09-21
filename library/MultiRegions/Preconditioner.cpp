@@ -70,7 +70,7 @@ namespace Nektar
         /**
          * @class Preconditioner
          *
-         * This class implements preconditioning for the conjugate 
+         * This class implements preconditioning for the conjugate
 	 * gradient matrix solver.
 	 */
 
@@ -82,7 +82,7 @@ namespace Nektar
               m_locToGloMap(pLocToGloMap)
         {
         }
-        
+
         /**
          *
          */
@@ -99,7 +99,7 @@ namespace Nektar
 
         /**
          * \brief Apply a preconditioner to the conjugate gradient method
-         */ 
+         */
         void Preconditioner::v_DoPreconditioner(
             const Array<OneD, NekDouble>& pInput,
                   Array<OneD, NekDouble>& pOutput)
@@ -111,7 +111,7 @@ namespace Nektar
         /**
          * \brief Apply a preconditioner to the conjugate gradient method with
          * an output for non-vertex degrees of freedom.
-         */ 
+         */
         void Preconditioner::v_DoPreconditionerWithNonVertOutput(
             const Array<OneD, NekDouble> &pInput,
                   Array<OneD, NekDouble> &pOutput,
@@ -125,47 +125,35 @@ namespace Nektar
         /**
          * \brief Transform from original basis to low energy basis
          */ 
-        void Preconditioner::v_DoTransformToLowEnergy(
-            Array<OneD, NekDouble>& pInOut,
-            int offset)
+        void Preconditioner::v_DoTransformBasisToLowEnergy(
+                             Array<OneD, NekDouble>& pInOut)
         {
-            boost::ignore_unused(pInOut, offset);
+            boost::ignore_unused(pInOut);
         }
 
         /**
-         * \brief Transform from original basis to low energy basis
+         * \brief Transform from low energy coeffs to orignal basis
          */ 
-        void Preconditioner::v_DoTransformToLowEnergy(
-            const Array<OneD, NekDouble> &pInOut,
-                  Array<OneD, NekDouble> &pOutput)
+        void Preconditioner::v_DoTransformCoeffsFromLowEnergy(
+            Array<OneD, NekDouble>& pInOut)
         {
-            boost::ignore_unused(pInOut, pOutput);
-        }
-
-        /**
-         * \brief Transform from low energy basis to orignal basis
-         */ 
-        void Preconditioner::v_DoTransformFromLowEnergy(
-            Array<OneD, NekDouble>& pInput)
-        {
-            Vmath::Smul(pInput.num_elements(), 1.0, pInput, 1, pInput, 1);
-        }
+            boost::ignore_unused(pInOut);
+	}
 
         /**
          * \brief Multiply by the block inverse transformation matrix
          */ 
-        void Preconditioner::v_DoMultiplybyInverseTransformationMatrix(
+        void Preconditioner::v_DoTransformCoeffsToLowEnergy(
             const Array<OneD, NekDouble> &pInput,
                   Array<OneD, NekDouble> &pOutput)
         {
             boost::ignore_unused(pInput, pOutput);
-            NEKERROR(ErrorUtil::efatal,"Method does not exist" );
-        }
+	}
 
         /**
          * \brief Multiply by the block transposed inverse transformation matrix
          */ 
-        void Preconditioner::v_DoMultiplybyInverseTransposedTransformationMatrix(
+        void Preconditioner::v_DoTransformBasisFromLowEnergy(
             const Array<OneD, NekDouble> &pInput,
                   Array<OneD, NekDouble> &pOutput)
         {

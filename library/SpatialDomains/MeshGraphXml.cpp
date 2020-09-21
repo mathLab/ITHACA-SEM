@@ -259,8 +259,14 @@ void MeshGraphXml::PartitionMesh(
                     }
 
                     // Send across data.
-                    comm->Bcast(keys, 0);
-                    comm->Bcast(vals, 0);
+                    if (!keys.empty())
+                    {
+                        comm->Bcast(keys, 0);
+                    }
+                    if (!vals.empty())
+                    {
+                        comm->Bcast(vals, 0);
+                    }
                     for (auto &bIt : m_bndRegOrder)
                     {
                         comm->Bcast(bIt.second, 0);
@@ -293,9 +299,14 @@ void MeshGraphXml::PartitionMesh(
 
                     keys.resize(bndSize);
                     vals.resize(bndSize);
-                    comm->Bcast(keys, 0);
-                    comm->Bcast(vals, 0);
-
+                    if (!keys.empty())
+                    {
+                        comm->Bcast(keys, 0);
+                    }
+                    if (!vals.empty())
+                    {
+                        comm->Bcast(vals, 0);
+                    }
                     for (int i = 0; i < keys.size(); ++i)
                     {
                         vector<unsigned int> tmp(vals[i]);

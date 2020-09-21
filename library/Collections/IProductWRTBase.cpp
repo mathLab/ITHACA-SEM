@@ -72,10 +72,10 @@ class IProductWRTBase_StdMat : public Operator
         {
             boost::ignore_unused(output1, output2);
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
 
-            Vmath::Vmul(m_jac.num_elements(),m_jac,1,input,1,wsp,1);
+            Vmath::Vmul(m_jac.size(),m_jac,1,input,1,wsp,1);
 
             Blas::Dgemm('N', 'N', m_mat->GetRows(), m_numElmt,
                         m_mat->GetColumns(), 1.0, m_mat->GetRawPtr(),
@@ -170,14 +170,14 @@ class IProductWRTBase_IterPerExp : public Operator
         {
             boost::ignore_unused(output1, output2);
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
 
             const int nCoeffs = m_stdExp->GetNcoeffs();
             const int nPhys   = m_stdExp->GetTotPoints();
             Array<OneD, NekDouble> tmp;
 
-            Vmath::Vmul(m_jac.num_elements(),m_jac,1,input,1,wsp,1);
+            Vmath::Vmul(m_jac.size(),m_jac,1,input,1,wsp,1);
 
             for (int i = 0; i < m_numElmt; ++i)
             {
@@ -463,7 +463,7 @@ class IProductWRTBase_SumFac_Quad : public Operator
         {
             boost::ignore_unused(output1, output2);
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
 
             QuadIProduct(m_colldir0,m_colldir1,m_numElmt,
@@ -542,7 +542,7 @@ class IProductWRTBase_SumFac_Tri : public Operator
         {
             boost::ignore_unused(output1, output2);
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
 
             TriIProduct(m_sortTopVertex, m_numElmt, m_nquad0, m_nquad1,
@@ -625,7 +625,7 @@ class IProductWRTBase_SumFac_Hex : public Operator
         {
             boost::ignore_unused(output1, output2);
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
 
             HexIProduct(m_colldir0,m_colldir1,m_colldir2, m_numElmt,
@@ -714,7 +714,7 @@ class IProductWRTBase_SumFac_Tet : public Operator
         {
             boost::ignore_unused(output1, output2);
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                     "Incorrect workspace size");
 
             TetIProduct(m_sortTopEdge, m_numElmt,
@@ -809,7 +809,7 @@ class IProductWRTBase_SumFac_Prism : public Operator
         {
             boost::ignore_unused(output1, output2);
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                     "Incorrect workspace size");
 
             PrismIProduct(m_sortTopVertex, m_numElmt,
@@ -904,7 +904,7 @@ class IProductWRTBase_SumFac_Pyr : public Operator
         {
             boost::ignore_unused(output1, output2);
 
-            ASSERTL1(wsp.num_elements() == m_wspSize,
+            ASSERTL1(wsp.size() == m_wspSize,
                     "Incorrect workspace size");
 
             PyrIProduct(m_sortTopVertex, m_numElmt,

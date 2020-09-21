@@ -79,7 +79,7 @@ namespace Nektar
             m_root    = (vComm->GetRank())? false : true;
 
             int successiveRHS;
-            
+
             if((successiveRHS = pLocToGloMap->GetSuccessiveRHS()))
             {
                 m_prevLinSol.set_capacity(successiveRHS);
@@ -95,9 +95,8 @@ namespace Nektar
         {
         }
 
-
         /**
-         * 
+         *
          */
         void GlobalLinSysIterative::v_SolveLinearSystem(
                     const int nGlobal,
@@ -156,7 +155,7 @@ namespace Nektar
             const NekVector<NekDouble> &pIn)
         {
             Array<OneD, NekDouble> vExchange(1, 0.0);
-            if (m_map.num_elements() > 0)
+            if (m_map.size() > 0)
             {
                 vExchange[0] = Vmath::Dot2(pIn.GetDimension(),
                                         &pIn[0],&pIn[0],&m_map[0]);
@@ -177,8 +176,8 @@ namespace Nektar
             }
             else
             {
-                m_rhs_magnitude = (m_rhs_mag_sm*(m_rhs_magnitude) + 
-                                   (1.0-m_rhs_mag_sm)*new_rhs_mag); 
+                m_rhs_magnitude = (m_rhs_mag_sm*(m_rhs_magnitude) +
+                                   (1.0-m_rhs_mag_sm)*new_rhs_mag);
             }
         }
 

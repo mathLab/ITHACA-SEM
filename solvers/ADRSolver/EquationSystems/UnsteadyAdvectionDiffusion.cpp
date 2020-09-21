@@ -219,7 +219,7 @@ namespace Nektar
         // Reset the normal velocity
         Vmath::Zero(nTracePts, m_traceVn, 1);
 
-        for (i = 0; i < velfield.num_elements(); ++i)
+        for (i = 0; i < velfield.size(); ++i)
         {
             m_fields[0]->ExtractTracePhys(velfield[i], tmp);
 
@@ -247,7 +247,7 @@ namespace Nektar
         const NekDouble time)
     {
         // Number of fields (variables of the problem)
-        int nVariables = inarray.num_elements();
+        int nVariables = inarray.size();
 
         // Number of solution points
         int nSolutionPts = GetNpoints();
@@ -295,7 +295,7 @@ namespace Nektar
         const NekDouble time)
     {
         int i;
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         SetBoundaryConditions(time);
         switch(m_projectionType)
         {
@@ -344,7 +344,7 @@ namespace Nektar
         const NekDouble time,
         const NekDouble lambda)
     {
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         int nq = m_fields[0]->GetNpoints();
 
         StdRegions::ConstFactorMap factors;
@@ -383,8 +383,7 @@ namespace Nektar
         for (int i = 0; i < nvariables; ++i)
         {
             // Solve a system of equations with Helmholtz solver
-            m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(),
-                                   NullFlagList, factors);
+            m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(), factors);
 
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), outarray[i]);
         }
@@ -400,14 +399,14 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >               &physfield,
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
     {
-        ASSERTL1(flux[0].num_elements() == m_velocity.num_elements(),
+        ASSERTL1(flux[0].size() == m_velocity.size(),
                  "Dimension of flux array and velocity array do not match");
 
         const int nq = m_fields[0]->GetNpoints();
 
-        for (int i = 0; i < flux.num_elements(); ++i)
+        for (int i = 0; i < flux.size(); ++i)
         {
-            for (int j = 0; j < flux[0].num_elements(); ++j)
+            for (int j = 0; j < flux[0].size(); ++j)
             {
                 Vmath::Vmul(nq, physfield[i], 1, m_velocity[j], 1,
                             flux[i][j], 1);
@@ -431,9 +430,9 @@ namespace Nektar
     {
         boost::ignore_unused(inarray);
 
-        unsigned int nDim = qfield.num_elements();
-        unsigned int nConvectiveFields = qfield[0].num_elements();
-        unsigned int nPts = qfield[0][0].num_elements();
+        unsigned int nDim = qfield.size();
+        unsigned int nConvectiveFields = qfield[0].size();
+        unsigned int nPts = qfield[0][0].size();
         for (unsigned int j = 0; j < nDim; ++j)
         {
             for (unsigned int i = 0; i < nConvectiveFields; ++i)
@@ -599,7 +598,7 @@ namespace Nektar
         const NekDouble time)
     {
         int i;
-        int nVariables     = inarray.num_elements();
+        int nVariables     = inarray.size();
 
         /// Get the number of coefficients
         int ncoeffs = m_fields[0]->GetNcoeffs();
@@ -652,11 +651,11 @@ namespace Nektar
     {
         boost::ignore_unused(time);
 
-        ASSERTL1(inarray.num_elements() == outarray.num_elements(),"Inarray and outarray of different sizes ");
+        ASSERTL1(inarray.size() == outarray.size(),"Inarray and outarray of different sizes ");
 
-        for(int i = 0; i < inarray.num_elements(); ++i)
+        for(int i = 0; i < inarray.size(); ++i)
         {
-            Vmath::Vcopy(inarray[i].num_elements(),inarray[i],1,outarray[i],1);
+            Vmath::Vcopy(inarray[i].size(),inarray[i],1,outarray[i],1);
         }
     }
 
@@ -665,7 +664,7 @@ namespace Nektar
                                 const Array<OneD, const Array<OneD, NekDouble> > &physfield,
                                 Array<OneD, Array<OneD, NekDouble> > &Outarray)
     {
-        ASSERTL1(physfield.num_elements() == Outarray.num_elements(),
+        ASSERTL1(physfield.size() == Outarray.size(),
                  "Physfield and outarray are of different dimensions");
 
         int i;
@@ -685,7 +684,7 @@ namespace Nektar
         /// Normal velocity array
         Array<OneD, NekDouble> Vn  = GetNormalVel(velfield);
 
-        for(i = 0; i < physfield.num_elements(); ++i)
+        for(i = 0; i < physfield.size(); ++i)
         {
             /// Extract forwards/backwards trace spaces
             /// Note: Needs to have correct i value to get boundary conditions
@@ -714,7 +713,7 @@ namespace Nektar
 
         int n_points_0      = m_fields[0]->GetExp(0)->GetTotPoints();
         int n_element       = m_fields[0]->GetExpSize();
-        int nvel            = inarray.num_elements();
+        int nvel            = inarray.size();
         int cnt;
 
         ASSERTL0(nvel >= 2, "Method not implemented for 1D");

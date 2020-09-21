@@ -125,20 +125,20 @@ namespace Nektar
 
             if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                if (out_d0.num_elements())
+                if (out_d0.size())
                 {
                     Vmath::Vmul  (nqtot, df[0], 1, diff0, 1, out_d0, 1);
-                    Vmath::Vvtvp (nqtot, df[1], 1, diff1, 1, out_d0, 1, 
+                    Vmath::Vvtvp (nqtot, df[1], 1, diff1, 1, out_d0, 1,
                     					 out_d0,1);
                 }
 
-                if(out_d1.num_elements())
+                if(out_d1.size())
                 {
                     Vmath::Vmul  (nqtot,df[2],1,diff0,1, out_d1, 1);
                     Vmath::Vvtvp (nqtot,df[3],1,diff1,1, out_d1, 1, out_d1,1);
                 }
 
-                if (out_d2.num_elements())
+                if (out_d2.size())
                 {
                     Vmath::Vmul  (nqtot,df[4],1,diff0,1, out_d2, 1);
                     Vmath::Vvtvp (nqtot,df[5],1,diff1,1, out_d2, 1, out_d2,1);
@@ -146,19 +146,19 @@ namespace Nektar
             }
             else // regular geometry
             {
-                if (out_d0.num_elements())
+                if (out_d0.size())
                 {
                     Vmath::Smul (nqtot, df[0][0], diff0, 1, out_d0, 1);
                     Blas::Daxpy (nqtot, df[1][0], diff1, 1, out_d0, 1);
                 }
 
-                if (out_d1.num_elements())
+                if (out_d1.size())
                 {
                     Vmath::Smul (nqtot, df[2][0], diff0, 1, out_d1, 1);
                     Blas::Daxpy (nqtot, df[3][0], diff1, 1, out_d1, 1);
                 }
 
-                if (out_d2.num_elements())
+                if (out_d2.size())
                 {
                     Vmath::Smul (nqtot, df[4][0], diff0, 1, out_d2, 1);
                     Blas::Daxpy (nqtot, df[5][0], diff1, 1, out_d2, 1);
@@ -236,7 +236,7 @@ namespace Nektar
                 }
 
                 /// D_v = d/dx_v^s + d/dx_v^r
-                if (out.num_elements())
+                if (out.size())
                 {
                     Vmath::Vmul  (nqtot,
                                   &tangmat[0][0], 1,
@@ -450,7 +450,7 @@ namespace Nektar
             {
                 Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad1*order0);
                 Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);
-                
+
                 MultiplyByQuadratureMetric(inarray,tmp);
                 StdQuadExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
                                                          m_base[1]->GetBdata(),
@@ -459,7 +459,7 @@ namespace Nektar
             else
             {
                 Array<OneD,NekDouble> wsp(nquad1*order0);
-                
+
                 StdQuadExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
                                                          m_base[1]->GetBdata(),
                                                          inarray,outarray,wsp,true,true);
@@ -569,7 +569,7 @@ namespace Nektar
                         ASSERTL1(false,"input dir is out of range");
                     }
                     break;
-            }   
+            }
 
             MatrixKey      iprodmatkey(mtype,DetShapeType(),*this);
             DNekScalMatSharedPtr iprodmat = m_matrixManager[iprodmatkey];
@@ -588,11 +588,11 @@ namespace Nektar
         {
             int nq = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
             Array<OneD, NekDouble> Fn(nq);
-            
-            const Array<OneD, const Array<OneD, NekDouble> > &normals = 
+
+            const Array<OneD, const Array<OneD, NekDouble> > &normals =
                 GetLeftAdjacentElementExp()->GetFaceNormal(
                     GetLeftAdjacentElementFace());
-            
+
             if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 Vmath::Vvtvvtp(nq,&normals[0][0],1,&Fx[0],1,
@@ -754,8 +754,8 @@ namespace Nektar
                 break;
             }
         }
-        
-        
+
+
         void QuadExp::v_GetTracePhysVals(
              const int edge,
              const StdRegions::StdExpansionSharedPtr &EdgeExp,
@@ -776,7 +776,7 @@ namespace Nektar
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
-            
+
             // Implementation for all the basis except Gauss points
             if (m_base[0]->GetPointsType() !=
                 LibUtilities::eGaussGaussLegendre &&
@@ -809,20 +809,20 @@ namespace Nektar
             {
                 QuadExp::v_GetEdgeInterpVals(edge, inarray, outarray);
             }
-            
+
             // Interpolate if required
             if (m_base[edge%2]->GetPointsKey() !=
                 EdgeExp->GetBasis(0)->GetPointsKey())
             {
                 Array<OneD,NekDouble> outtmp(max(nquad0,nquad1));
-				
+
                 outtmp = outarray;
-				
+
                 LibUtilities::Interp1D(
                     m_base[edge%2]->GetPointsKey(), outtmp,
                     EdgeExp->GetBasis(0)->GetPointsKey(), outarray);
             }
-            
+
             //Reverse data if necessary
             if(GetEorient(edge) == StdRegions::eBackwards)
             {
@@ -830,7 +830,7 @@ namespace Nektar
                                &outarray[0], 1);
             }
         }
-        
+
         void QuadExp::v_GetEdgeInterpVals(const int edge,
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD,NekDouble> &outarray)
@@ -845,7 +845,7 @@ namespace Nektar
              StdRegions::StdMatrixKey key(
                  StdRegions::eInterpGauss,
                  DetShapeType(),*this,factors);
-             
+
              DNekScalMatSharedPtr mat_gauss = m_matrixManager[key];
 
              switch (edge)
@@ -895,15 +895,15 @@ namespace Nektar
                      break;
              }
         }
-        
-        
+
+
         void QuadExp::v_GetEdgePhysMap(
             const int                edge,
             Array<OneD, int>        &outarray)
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
-            
+
             // Get points in Cartesian orientation
             switch (edge)
             {
@@ -939,12 +939,12 @@ namespace Nektar
                     ASSERTL0(false, "edge value (< 3) is out of range");
                     break;
             }
-            
+
         }
-    
-        
-        
-        
+
+
+
+
         void QuadExp::v_GetEdgeQFactors(
                 const int edge,
                 Array<OneD, NekDouble> &outarray)
@@ -956,13 +956,13 @@ namespace Nektar
             LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
             const Array<OneD, const NekDouble>& jac = m_metricinfo->GetJac(ptsKeys);
             const Array<TwoD, const NekDouble>& df  = m_metricinfo->GetDerivFactors(ptsKeys);
-            
+
             Array<OneD, NekDouble> j (max(nquad0, nquad1), 0.0);
             Array<OneD, NekDouble> g0(max(nquad0, nquad1), 0.0);
             Array<OneD, NekDouble> g1(max(nquad0, nquad1), 0.0);
             Array<OneD, NekDouble> g2(max(nquad0, nquad1), 0.0);
             Array<OneD, NekDouble> g3(max(nquad0, nquad1), 0.0);
-            
+
             if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 // Implementation for all the basis except Gauss points
@@ -979,7 +979,7 @@ namespace Nektar
                             Vmath::Vcopy(nquad0, &(df[3][0]),
                                          1, &(g3[0]), 1);
                             Vmath::Vcopy(nquad0, &(jac[0]),1, &(j[0]),  1);
-                            
+
                             for (i = 0; i < nquad0; ++i)
                             {
                                 outarray[i] = j[i]*sqrt(g1[i]*g1[i]
@@ -990,15 +990,15 @@ namespace Nektar
                             Vmath::Vcopy(nquad1,
                                          &(df[0][0])+(nquad0-1), nquad0,
                                          &(g0[0]), 1);
-                            
+
                             Vmath::Vcopy(nquad1,
                                          &(df[2][0])+(nquad0-1), nquad0,
                                          &(g2[0]), 1);
-                            
+
                             Vmath::Vcopy(nquad1,
                                          &(jac[0])+(nquad0-1), nquad0,
                                          &(j[0]), 1);
-                            
+
                             for (i = 0; i < nquad1; ++i)
                             {
                                 outarray[i] = j[i]*sqrt(g0[i]*g0[i] +
@@ -1006,19 +1006,19 @@ namespace Nektar
                             }
                             break;
                         case 2:
-                            
+
                             Vmath::Vcopy(nquad0,
                                          &(df[1][0])+(nquad0*(nquad1-1)), 1,
                                          &(g1[0]), 1);
-                            
+
                             Vmath::Vcopy(nquad0,
                                          &(df[3][0])+(nquad0*(nquad1-1)), 1,
                                          &(g3[0]), 1);
-                            
+
                             Vmath::Vcopy(nquad0,
                                          &(jac[0])+(nquad0*(nquad1-1)), 1,
                                          &(j[0]), 1);
-                            
+
                             for (i = 0; i < nquad0; ++i)
                             {
                                 outarray[i] =
@@ -1026,11 +1026,11 @@ namespace Nektar
                             }
                             break;
                         case 3:
-                            
+
                             Vmath::Vcopy(nquad1, &(df[0][0]), nquad0,&(g0[0]), 1);
                             Vmath::Vcopy(nquad1, &(df[2][0]), nquad0,&(g2[0]), 1);
                             Vmath::Vcopy(nquad1, &(jac[0]), nquad0, &(j[0]), 1);
-                            
+
                             for (i = 0; i < nquad1; ++i)
                             {
                                 outarray[i] = j[i]*sqrt(g0[i]*g0[i] +
@@ -1054,7 +1054,7 @@ namespace Nektar
                     Array<OneD, NekDouble> g2_edge(max(nquad0, nquad1), 0.0);
                     Array<OneD, NekDouble> g3_edge(max(nquad0, nquad1), 0.0);
                     Array<OneD, NekDouble> jac_edge(max(nquad0, nquad1), 0.0);
-                    
+
                     switch (edge)
                     {
                         case 0:
@@ -1066,14 +1066,14 @@ namespace Nektar
                                 edge, tmp_gmat1, g1_edge);
                             QuadExp::v_GetEdgeInterpVals(
                                 edge, tmp_gmat3, g3_edge);
-                            
+
                             for (i = 0; i < nquad0; ++i)
                             {
                                 outarray[i] = sqrt(g1_edge[i]*g1_edge[i] +
                                                    g3_edge[i]*g3_edge[i]);
                             }
                             break;
-                            
+
                         case 1:
                             Vmath::Vmul(nqtot,
                                         &(df[0][0]), 1,
@@ -1088,16 +1088,16 @@ namespace Nektar
                                 edge, tmp_gmat0, g0_edge);
                             QuadExp::v_GetEdgeInterpVals(
                                 edge, tmp_gmat2, g2_edge);
-                            
+
                             for (i = 0; i < nquad1; ++i)
                             {
                                 outarray[i] = sqrt(g0_edge[i]*g0_edge[i]
                                                    + g2_edge[i]*g2_edge[i]);
                             }
-                            
+
                             break;
                         case 2:
-                
+
                             Vmath::Vmul(nqtot,
                                         &(df[1][0]), 1,
                                         &jac[0], 1,
@@ -1110,16 +1110,16 @@ namespace Nektar
                                 edge, tmp_gmat1, g1_edge);
                             QuadExp::v_GetEdgeInterpVals(
                                 edge, tmp_gmat3, g3_edge);
-                            
-                            
+
+
                             for (i = 0; i < nquad0; ++i)
                             {
                                 outarray[i] = sqrt(g1_edge[i]*g1_edge[i]
                                                    + g3_edge[i]*g3_edge[i]);
                             }
-                            
+
                             Vmath::Reverse(nquad0,&outarray[0],1,&outarray[0],1);
-                            
+
                             break;
                         case 3:
                             Vmath::Vmul(nqtot,
@@ -1134,18 +1134,18 @@ namespace Nektar
                                 edge, tmp_gmat0, g0_edge);
                             QuadExp::v_GetEdgeInterpVals(
                                 edge, tmp_gmat2, g2_edge);
-                            
-                            
+
+
                             for (i = 0; i < nquad1; ++i)
                             {
                                 outarray[i] = sqrt(g0_edge[i]*g0_edge[i] +
                                                    g2_edge[i]*g2_edge[i]);
                             }
-                            
+
                             Vmath::Reverse(nquad1,
                                            &outarray[0], 1,
                                            &outarray[0], 1);
-                            
+
                             break;
                         default:
                             ASSERTL0(false,"edge value (< 3) is out of range");
@@ -1155,13 +1155,13 @@ namespace Nektar
             }
             else
             {
-                
+
                 switch (edge)
                 {
                     case 0:
-                        
-                        
-                        
+
+
+
                         for (i = 0; i < nquad0; ++i)
                         {
                             outarray[i] = jac[0]*sqrt(df[1][0]*df[1][0] +
@@ -1191,7 +1191,7 @@ namespace Nektar
                         break;
                     default:
                         ASSERTL0(false,"edge value (< 3) is out of range");
-                        break; 
+                        break;
                 }
             }
         }
@@ -1236,10 +1236,12 @@ namespace Nektar
                 normal[i] = Array<OneD, NekDouble>(nqe);
             }
 
-            int nqb = nqe;
-            int nbnd= edge;
-            m_ElmtBndNormalDirctnElmtLength[nbnd] = Array<OneD, NekDouble>(nqb,0.0);
-            Array<OneD, NekDouble>  &length = m_ElmtBndNormalDirctnElmtLength[nbnd];
+            size_t nqb = nqe;
+            size_t nbnd= edge;
+            m_elmtBndNormDirElmtLen[nbnd] = 
+                    Array<OneD, NekDouble> {nqb, 0.0};
+            Array<OneD, NekDouble>  &length = 
+                    m_elmtBndNormDirElmtLen[nbnd];
 
             // Regular geometry case
             if ((type == SpatialDomains::eRegular)||
@@ -1285,7 +1287,7 @@ namespace Nektar
                 }
                 fac = 1.0/sqrt(fac);
 
-                Vmath::Fill(nqb,fac,length,1);
+                Vmath::Fill(nqb, fac, length, 1);
 
                 for (i = 0; i < vCoordDim; ++i)
                 {
@@ -1295,19 +1297,19 @@ namespace Nektar
             else   // Set up deformed normals
             {
                 int j;
-                
+
                 int nquad0 = ptsKeys[0].GetNumPoints();
                 int nquad1 = ptsKeys[1].GetNumPoints();
-                
+
                 LibUtilities::PointsKey from_key;
-                
+
                 Array<OneD,NekDouble> normals(vCoordDim*max(nquad0,nquad1),0.0);
                 Array<OneD,NekDouble> edgejac(vCoordDim*max(nquad0,nquad1),0.0);
-                
+
                 // Extract Jacobian along edges and recover local
                 // derivates (dx/dr) for polynomial interpolation by
                 // multiplying m_gmat by jacobian
-                
+
                 // Implementation for all the basis except Gauss points
                 if (m_base[0]->GetPointsType() !=
                    LibUtilities::eGaussGaussLegendre
@@ -1375,7 +1377,7 @@ namespace Nektar
                     int nqtot =  nquad0 * nquad1;
                     Array<OneD,  NekDouble> tmp_gmat(nqtot, 0.0);
                     Array<OneD,  NekDouble> tmp_gmat_edge(nqe, 0.0);
-                    
+
                     switch (edge)
                     {
                         case 0:
@@ -1446,15 +1448,15 @@ namespace Nektar
                             ASSERTL0(false,"edge is out of range (edge < 3)");
                     }
                 }
-                
+
                 int nq  = from_key.GetNumPoints();
                 Array<OneD,NekDouble> work(nqe,0.0);
-                
+
                 // interpolate Jacobian and invert
                 LibUtilities::Interp1D(
                     from_key,jac, m_base[0]->GetPointsKey(), work);
                 Vmath::Sdiv(nqe,1.0,&work[0],1,&work[0],1);
-                
+
                 // interpolate
                 for (i = 0; i < GetCoordim(); ++i)
                 {
@@ -1464,7 +1466,7 @@ namespace Nektar
                         &normal[i][0]);
                     Vmath::Vmul(nqe, work, 1, normal[i], 1, normal[i], 1);
                 }
-                
+
                 //normalise normal vectors
                 Vmath::Zero(nqe,work,1);
                 for (i = 0; i < GetCoordim(); ++i)
@@ -1475,11 +1477,11 @@ namespace Nektar
                                  work, 1,
                                  work, 1);
                 }
-                
+
                 Vmath::Vsqrt(nqe,work,1,work,1);
                 Vmath::Sdiv(nqe,1.0,work,1,work,1);
 
-                Vmath::Vcopy(nqb,work,1,length,1);
+                Vmath::Vcopy(nqb, work, 1, length, 1);
 
                 for (i = 0; i < GetCoordim(); ++i)
                 {
@@ -1545,7 +1547,7 @@ namespace Nektar
 
                 tmpQuad.BwdTrans(tmpData, tmpBwd);
                 tmpQuad2.FwdTrans(tmpBwd, tmpOut);
-                Vmath::Vcopy(tmpOut.num_elements(), &tmpOut[0], 1, coeffs, 1);
+                Vmath::Vcopy(tmpOut.size(), &tmpOut[0], 1, coeffs, 1);
 
                 return;
             }
@@ -1775,7 +1777,7 @@ namespace Nektar
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);
-                        
+
                         returnval = MemoryManager<DNekScalMat>::
                             AllocateSharedPtr(one,mat);
                     }
@@ -2220,7 +2222,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
         {
-            int n_coeffs = inarray.num_elements();
+            int n_coeffs = inarray.size();
 
             Array<OneD, NekDouble> coeff    (n_coeffs);
             Array<OneD, NekDouble> coeff_tmp(n_coeffs, 0.0);
@@ -2282,7 +2284,7 @@ namespace Nektar
             int       nmodes1 = m_base[1]->GetNumModes();
             int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
 
-            ASSERTL1(wsp.num_elements() >= 3*wspsize,
+            ASSERTL1(wsp.size() >= 3*wspsize,
                      "Workspace is of insufficient size.");
 
             const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
@@ -2355,15 +2357,15 @@ namespace Nektar
                 }
             }
         }
-        
+
         void QuadExp::v_SVVLaplacianFilter(
                     Array<OneD, NekDouble> &array,
                     const StdRegions::StdMatrixKey &mkey)
         {
             int nq = GetTotPoints();
-            
+
             // Calculate sqrt of the Jacobian
-            Array<OneD, const NekDouble> jac = 
+            Array<OneD, const NekDouble> jac =
                                     m_metricinfo->GetJac(GetPointsKeys());
             Array<OneD, NekDouble> sqrt_jac(nq);
             if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
@@ -2374,16 +2376,16 @@ namespace Nektar
             {
                 Vmath::Fill(nq,sqrt(jac[0]),sqrt_jac,1);
             }
-            
+
             // Multiply array by sqrt(Jac)
             Vmath::Vmul(nq,sqrt_jac,1,array,1,array,1);
-            
+
             // Apply std region filter
             StdQuadExp::v_SVVLaplacianFilter( array, mkey);
-            
+
             // Divide by sqrt(Jac)
             Vmath::Vdiv(nq,array,1,sqrt_jac,1,array,1);
-        }        
+        }
 
     }//end of namespace
 }//end of namespace

@@ -115,8 +115,8 @@ namespace SolverUtils
             m_Forcing[i] = Array<OneD, NekDouble> (pFields[0]->GetTotPoints(), 0.0);
         }
 
-        Array<OneD, Array<OneD, NekDouble> > tmp(pFields.num_elements());
-        for (int i = 0; i < pFields.num_elements(); ++i)
+        Array<OneD, Array<OneD, NekDouble> > tmp(pFields.size());
+        for (int i = 0; i < pFields.size(); ++i)
         {
             tmp[i] = pFields[i]->GetPhys();
         }
@@ -142,7 +142,7 @@ namespace SolverUtils
             std::vector<Array<OneD, const NekDouble>> fielddata = {
                 xc, yc, zc, t};
 
-            for (int i = 0; i < pFields.num_elements(); ++i)
+            for (int i = 0; i < pFields.size(); ++i)
             {
                 varstr += " " + m_session->GetVariable(i);
                 fielddata.push_back(inarray[i]);
@@ -194,7 +194,7 @@ namespace SolverUtils
             {
                 EvaluateTimeFunction(time, m_timeFcnEqn, TimeFcn);
 
-                Vmath::Svtvp(outarray[i].num_elements(), TimeFcn[0],
+                Vmath::Svtvp(outarray[i].size(), TimeFcn[0],
                              m_Forcing[i], 1,
                              outarray[i],  1,
                              outarray[i],  1);
@@ -206,7 +206,7 @@ namespace SolverUtils
 
             for (int i = 0; i < m_NumVariable; i++)
             {
-                Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
+                Vmath::Vadd(outarray[i].size(), outarray[i], 1,
                             m_Forcing[i], 1, outarray[i], 1);
             }
         }
@@ -218,7 +218,7 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> > &outarray,
             const NekDouble &time)
     {
-        int ncoeff = outarray[m_NumVariable-1].num_elements();
+        int ncoeff = outarray[m_NumVariable-1].size();
         Array<OneD, NekDouble> tmp(ncoeff, 0.0);
 
         if(m_hasTimeFcnScaling)

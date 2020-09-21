@@ -88,7 +88,7 @@ namespace Nektar
 
         m_cell = GetCellModelFactory().CreateInstance(vCellModel, m_session, m_fields[0]);
         m_intVariables.push_back(0);
-        m_intVariables.push_back(1);       
+        m_intVariables.push_back(1);
 
         // Load variable coefficients
         StdRegions::VarCoeffType varCoeffEnum[3] = {
@@ -97,8 +97,8 @@ namespace Nektar
                 StdRegions::eVarCoeffD22
         };
         std::string varName[3] = {
-                "AnisotropicConductivityX", 
-                "AnisotropicConductivityY", 
+                "AnisotropicConductivityX",
+                "AnisotropicConductivityY",
                 "AnisotropicConductivityZ"
         };
 
@@ -134,9 +134,9 @@ namespace Nektar
                     m_vardiffi[varCoeffEnum[i]] = tmp1[i];
                     m_vardiffie[varCoeffEnum[i]] = tmp3[i];
             }
-        } 
+        }
 
-        
+
         if (m_session->DefinesParameter("StimulusDuration"))
         {
             ASSERTL0(m_session->DefinesFunction("Stimulus", "u"),
@@ -191,7 +191,7 @@ namespace Nektar
             const NekDouble time,
             const NekDouble lambda)
     {
-        int nvariables  = inarray.num_elements();
+        int nvariables  = inarray.size();
         int nq          = m_fields[0]->GetNpoints();
 
         Array<OneD, NekDouble> grad0(nq), grad1(nq), grad2(nq), grad(nq);
@@ -229,51 +229,51 @@ namespace Nektar
                 Vmath::Vadd(nq, ggrad, 1, temp, 1, m_fields[i]->UpdatePhys(), 1);
                 // Solve a system of equations with Helmholtz solver and transform
                 // back into physical space.
-                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(),NullFlagList,factors);
+                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(), factors);
                 m_fields[i]->BwdTrans( m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
                 m_fields[i]->SetPhysState(true);
                 // Copy the solution vector (required as m_fields must be set).
                 outarray[i] = m_fields[i]->GetPhys();
                 }
-                
+
                 if (m_spacedim==2) {
                 // Take first partial derivative
                 m_fields[i]->PhysDeriv(inarray[1],ggrad0,ggrad1);
                 // Take second partial derivative
                 m_fields[i]->PhysDeriv(0,ggrad0,ggrad0);
                 m_fields[i]->PhysDeriv(1,ggrad1,ggrad1);
-                // Multiply by Intracellular-Conductivity 
+                // Multiply by Intracellular-Conductivity
 		if (m_session->DefinesFunction("IntracellularConductivity") && m_session->DefinesFunction("ExtracellularConductivity"))
-		{                 
-                Vmath::Smul(nq, m_session->GetParameter("sigmaix"), ggrad0, 1, ggrad0, 1);   
-                Vmath::Smul(nq, m_session->GetParameter("sigmaiy"), ggrad1, 1, ggrad1, 1); 
+		{
+                Vmath::Smul(nq, m_session->GetParameter("sigmaix"), ggrad0, 1, ggrad0, 1);
+                Vmath::Smul(nq, m_session->GetParameter("sigmaiy"), ggrad1, 1, ggrad1, 1);
                 }
                 // Add partial derivatives together
                 Vmath::Vadd(nq, ggrad0, 1, ggrad1, 1, ggrad, 1);
-                Vmath::Smul(nq, -1.0, ggrad, 1, ggrad, 1); 
+                Vmath::Smul(nq, -1.0, ggrad, 1, ggrad, 1);
                 // Multiply 1.0/timestep/lambda
                 Vmath::Smul(nq, -factors[StdRegions::eFactorLambda], inarray[i], 1, temp, 1);
                 Vmath::Vadd(nq, ggrad, 1, temp, 1, m_fields[i]->UpdatePhys(), 1);
                 // Solve a system of equations with Helmholtz solver and transform
                 // back into physical space.
-                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(),NullFlagList,factors,m_vardiffi);
+                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(),factors,m_vardiffi);
                 m_fields[i]->BwdTrans( m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
                 m_fields[i]->SetPhysState(true);
                 // Copy the solution vector (required as m_fields must be set).
-                outarray[i] = m_fields[i]->GetPhys();                                                                          
+                outarray[i] = m_fields[i]->GetPhys();
                 }
-                
+
                 if (m_spacedim==3) {
                 // Take first partial derivative
                 m_fields[i]->PhysDeriv(inarray[1],ggrad0,ggrad1,ggrad2);
                 // Take second partial derivative
                 m_fields[i]->PhysDeriv(0,ggrad0,ggrad0);
-                m_fields[i]->PhysDeriv(1,ggrad1,ggrad1);                
-                m_fields[i]->PhysDeriv(2,ggrad2,ggrad2); 
-                // Multiply by Intracellular-Conductivity 
+                m_fields[i]->PhysDeriv(1,ggrad1,ggrad1);
+                m_fields[i]->PhysDeriv(2,ggrad2,ggrad2);
+                // Multiply by Intracellular-Conductivity
 		if (m_session->DefinesFunction("IntracellularConductivity") && m_session->DefinesFunction("ExtracellularConductivity"))
-		{                 
-                Vmath::Smul(nq, m_session->GetParameter("sigmaix"), ggrad0, 1, ggrad0, 1);  
+		{
+                Vmath::Smul(nq, m_session->GetParameter("sigmaix"), ggrad0, 1, ggrad0, 1);
                 Vmath::Smul(nq, m_session->GetParameter("sigmaiy"), ggrad1, 1, ggrad1, 1);
                 Vmath::Smul(nq, m_session->GetParameter("sigmaiz"), ggrad2, 1, ggrad2, 1);
                 }
@@ -286,12 +286,12 @@ namespace Nektar
                 Vmath::Vadd(nq, ggrad, 1, temp, 1, m_fields[i]->UpdatePhys(), 1);
                 // Solve a system of equations with Helmholtz solver and transform
                 // back into physical space.
-                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(),NullFlagList,factors,m_vardiffi);
+                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(),factors,m_vardiffi);
                 m_fields[i]->BwdTrans( m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
                 m_fields[i]->SetPhysState(true);
                 // Copy the solution vector (required as m_fields must be set).
-                outarray[i] = m_fields[i]->GetPhys();                                         
-                }                                
+                outarray[i] = m_fields[i]->GetPhys();
+                }
 
             }
             if (i == 1) {
@@ -301,75 +301,75 @@ namespace Nektar
                 // Take first partial derivative
                 m_fields[i]->PhysDeriv(m_fields[0]->UpdatePhys(),grad0);
                 // Take second derivative
-                m_fields[i]->PhysDeriv(0,grad0,grad0);  
+                m_fields[i]->PhysDeriv(0,grad0,grad0);
                 // Multiply by Intracellular-Conductivity
 		if (m_session->DefinesFunction("IntracellularConductivity") && m_session->DefinesFunction("ExtracellularConductivity"))
-		{                
-                Vmath::Smul(nq, m_session->GetParameter("sigmaix"), grad0, 1, grad0, 1);   
+		{
+                Vmath::Smul(nq, m_session->GetParameter("sigmaix"), grad0, 1, grad0, 1);
                 }
                 // and sum terms
                 Vmath::Vcopy(nq, grad0, 1, grad, 1);
-                Vmath::Smul(nq, (-1.0*m_session->GetParameter("sigmaix"))/(m_session->GetParameter("sigmaix")+m_session->GetParameter("sigmaix")), grad, 1, grad, 1);  
+                Vmath::Smul(nq, (-1.0*m_session->GetParameter("sigmaix"))/(m_session->GetParameter("sigmaix")+m_session->GetParameter("sigmaix")), grad, 1, grad, 1);
                 // Now solve Poisson problem for \phi_e
                 m_fields[i]->SetPhys(grad);
-                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(), NullFlagList, factors);
+                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(), factors);
                 m_fields[i]->BwdTrans( m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
                 m_fields[i]->SetPhysState(true);
                 // Copy the solution vector (required as m_fields must be set).
-                outarray[i] = m_fields[i]->GetPhys();                                                         
+                outarray[i] = m_fields[i]->GetPhys();
                 }
-                
+
                 if (m_spacedim==2) {
                 // Take first partial derivative
                 m_fields[i]->PhysDeriv(m_fields[0]->UpdatePhys(),grad0,grad1);
                 // Take second derivative
                 m_fields[i]->PhysDeriv(0,grad0,grad0);
-                m_fields[i]->PhysDeriv(1,grad1,grad1);  
+                m_fields[i]->PhysDeriv(1,grad1,grad1);
                 // Multiply by Intracellular-Conductivity
 		if (m_session->DefinesFunction("IntracellularConductivity") && m_session->DefinesFunction("ExtracellularConductivity"))
-		{                
+		{
                 Vmath::Smul(nq, m_session->GetParameter("sigmaix"), grad0, 1, grad0, 1);
-                Vmath::Smul(nq, m_session->GetParameter("sigmaiy"), grad1, 1, grad1, 1); 
+                Vmath::Smul(nq, m_session->GetParameter("sigmaiy"), grad1, 1, grad1, 1);
                 }
                 // and sum terms
                 Vmath::Vadd(nq, grad0, 1, grad1, 1, grad, 1);
-                Vmath::Smul(nq, -1.0, grad, 1, grad, 1);   
+                Vmath::Smul(nq, -1.0, grad, 1, grad, 1);
                 // Now solve Poisson problem for \phi_e
                 m_fields[i]->SetPhys(grad);
-                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(), NullFlagList, factors, m_vardiffie);
+                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(), factors, m_vardiffie);
                 m_fields[i]->BwdTrans( m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
                 m_fields[i]->SetPhysState(true);
                 // Copy the solution vector (required as m_fields must be set).
-                outarray[i] = m_fields[i]->GetPhys();                                                        
+                outarray[i] = m_fields[i]->GetPhys();
                 }
-                
+
                 if (m_spacedim==3) {
                 // Take first partial derivative
                 m_fields[i]->PhysDeriv(m_fields[0]->UpdatePhys(),grad0,grad1,grad2);
                 // Take second derivative
                 m_fields[i]->PhysDeriv(0,grad0,grad0);
                 m_fields[i]->PhysDeriv(1,grad1,grad1);
-                m_fields[i]->PhysDeriv(2,grad2,grad2); 
+                m_fields[i]->PhysDeriv(2,grad2,grad2);
                 // Multiply by Intracellular-Conductivity
 		if (m_session->DefinesFunction("IntracellularConductivity") && m_session->DefinesFunction("ExtracellularConductivity"))
-		{                
+		{
                 Vmath::Smul(nq, m_session->GetParameter("sigmaix"), grad0, 1, grad0, 1);
                 Vmath::Smul(nq, m_session->GetParameter("sigmaiy"), grad1, 1, grad1, 1);
-                Vmath::Smul(nq, m_session->GetParameter("sigmaiz"), grad2, 1, grad2, 1);       
+                Vmath::Smul(nq, m_session->GetParameter("sigmaiz"), grad2, 1, grad2, 1);
                 }
                 // and sum terms
                 Vmath::Vadd(nq, grad0, 1, grad1, 1, grad, 1);
                 Vmath::Vadd(nq, grad2, 1, grad, 1, grad, 1);
-                Vmath::Smul(nq, -1.0, grad, 1, grad, 1);  
+                Vmath::Smul(nq, -1.0, grad, 1, grad, 1);
                 // Now solve Poisson problem for \phi_e
                 m_fields[i]->SetPhys(grad);
-                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(), NullFlagList, factors, m_vardiffie);
+                m_fields[i]->HelmSolve(m_fields[i]->GetPhys(), m_fields[i]->UpdateCoeffs(), factors, m_vardiffie);
                 m_fields[i]->BwdTrans( m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
                 m_fields[i]->SetPhysState(true);
                 // Copy the solution vector (required as m_fields must be set).
-                outarray[i] = m_fields[i]->GetPhys();                                                      
+                outarray[i] = m_fields[i]->GetPhys();
                 }
-                                                
+
             }
         }
     }
@@ -397,7 +397,7 @@ namespace Nektar
             ifunc->Evaluate(x0,x1,x2,time, result);
 
             Vmath::Vadd(nq, outarray[0], 1, result, 1, outarray[0], 1);
-        }        
+        }
         Vmath::Smul(nq, 1.0/m_capMembrane, outarray[0], 1, outarray[0], 1);
     }
 

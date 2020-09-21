@@ -305,8 +305,6 @@ void DriverSteadyState::v_Execute(ostream &out)
     ///We save the final solution into a .fld file
     m_equ[m_nequ - 1]->Output();
 
-    int nwidthcolm = 7+6; // the second value determines the number of sigificant digits
-
     for(int j = 0; j < m_equ[m_nequ - 1]->GetNvariables(); ++j)
     {
         NekDouble vL2Error = m_equ[m_nequ - 1]->L2Error(j,false);
@@ -314,14 +312,9 @@ void DriverSteadyState::v_Execute(ostream &out)
         if (m_comm->GetRank() == 0)
         {
             out << "L 2 error (variable " << m_equ[m_nequ - 1]->GetVariable(j)
-                << ") : ";
-            out <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8) 
-                << vL2Error << endl;    
+                << ") : " << vL2Error << endl;
             out << "L inf error (variable " << m_equ[m_nequ - 1]->GetVariable(j)
-                << ") : ";
-            out <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8) 
-                << vLinfError << endl;
-            
+                << ") : " << vLinfError << endl;
         }
     }
 }
@@ -355,12 +348,12 @@ void DriverSteadyState::ComputeSFD(const int i,
     qBar1[i] = Array<OneD, NekDouble> (m_equ[m_nequ - 1]->GetTotPoints(),0.0);
 
     ///Encapsulated SFD method
-    Vmath::Svtvp(q1[i].num_elements(), M11, q0[i],    1, q1[i], 1, q1[i], 1 );
-    Vmath::Svtvp(q1[i].num_elements(), M12, qBar0[i], 1, q1[i], 1, q1[i], 1 );
+    Vmath::Svtvp(q1[i].size(), M11, q0[i],    1, q1[i], 1, q1[i], 1 );
+    Vmath::Svtvp(q1[i].size(), M12, qBar0[i], 1, q1[i], 1, q1[i], 1 );
 
-    Vmath::Svtvp(qBar1[i].num_elements(), M21, q0[i],    1, qBar1[i], 1,
+    Vmath::Svtvp(qBar1[i].size(), M21, q0[i],    1, qBar1[i], 1,
                                                             qBar1[i], 1 );
-    Vmath::Svtvp(qBar1[i].num_elements(), M22, qBar0[i], 1, qBar1[i], 1,
+    Vmath::Svtvp(qBar1[i].size(), M22, qBar0[i], 1, qBar1[i], 1,
                                                             qBar1[i], 1 );
 }
 

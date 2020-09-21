@@ -90,11 +90,11 @@ namespace Nektar
 
         // Forcing terms for the sponge region
         m_forcing = SolverUtils::Forcing::Load(m_session, shared_from_this(),
-                                        m_fields, m_fields.num_elements());
+                                        m_fields, m_fields.size());
 
         // User-defined boundary conditions
         int cnt = 0;
-        for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+        for (int n = 0; n < m_fields[0]->GetBndConditions().size(); ++n)
         {
             std::string type =
                 m_fields[0]->GetBndConditions()[n]->GetUserDefined();
@@ -105,7 +105,7 @@ namespace Nektar
                 continue;
             }
 
-            if(!type.empty())
+            if (!type.empty())
             {
                 m_bndConds.push_back(GetCFSBndCondFactory().CreateInstance(
                         type,
@@ -149,7 +149,7 @@ namespace Nektar
         ASSERTL0(LibUtilities::GetNekNonlinSysFactory().ModuleExists(SovlerType),
                 "NekNonlinSys '" + SovlerType + "' is not defined.\n");
         LibUtilities::CommSharedPtr v_Comm  = m_fields[0]->GetComm()->GetRowComm();
-        int ntotal = m_fields[0]->GetNcoeffs()*m_fields.num_elements();
+        int ntotal = m_fields[0]->GetNcoeffs()*m_fields.size();
         m_nonlinsol = LibUtilities::GetNekNonlinSysFactory().CreateInstance(
                             SovlerType, m_session,v_Comm,ntotal);
 
@@ -181,7 +181,7 @@ namespace Nektar
         // Load parameters for exponential filtering
         m_session->MatchSolverInfo("ExponentialFiltering","True",
                                    m_useFiltering, false);
-        if(m_useFiltering)
+        if (m_useFiltering)
         {
             m_session->LoadParameter ("FilterAlpha", m_filterAlpha, 36);
             m_session->LoadParameter ("FilterExponent", m_filterExponent, 16);
@@ -191,7 +191,7 @@ namespace Nektar
         // Load CFL for local time-stepping (for steady state)
         m_session->MatchSolverInfo("LocalTimeStep","True",
                                    m_useLocalTimeStep, false);
-        if(m_useLocalTimeStep)
+        if (m_useLocalTimeStep)
         {
             ASSERTL0(m_cflSafetyFactor != 0,
                     "Local time stepping requires CFL parameter.");
@@ -254,7 +254,7 @@ namespace Nektar
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
         const NekDouble                                   time)
     {
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         int npoints    = GetNpoints();
         int nTracePts  = GetTraceTotPoints();
 
@@ -271,7 +271,7 @@ namespace Nektar
         }
         else
         {
-            for(int i = 0; i < nvariables; ++i)
+            for (int i = 0; i < nvariables; ++i)
             {
                 Fwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
                 Bwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
@@ -309,12 +309,12 @@ namespace Nektar
             GetElmtTimeStep(inarray, tstep);
 
             // Loop over elements
-            for(int n = 0; n < nElements; ++n)
+            for (int n = 0; n < nElements; ++n)
             {
                 nq     = m_fields[0]->GetExp(n)->GetTotPoints();
                 offset = m_fields[0]->GetPhys_Offset(n);
                 fac    = tstep[n] / m_timestep;
-                for(int i = 0; i < nvariables; ++i)
+                for (int i = 0; i < nvariables; ++i)
                 {
                     Vmath::Smul(nq, fac, outarray[i] + offset, 1,
                                          tmp = outarray[i] + offset, 1);
@@ -332,8 +332,7 @@ namespace Nektar
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
         const NekDouble                                   time)
     {
-        int i;
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
 
         switch(m_projectionType)
         {
@@ -342,10 +341,10 @@ namespace Nektar
                 // Just copy over array
                 int npoints = GetNpoints();
 
-                for(i = 0; i < nvariables; ++i)
+                for (int i = 0; i < nvariables; ++i)
                 {
                     Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
-                    if(m_useFiltering)
+                    if (m_useFiltering)
                     {
                         m_fields[i]->ExponentialFilter(outarray[i],
                             m_filterAlpha, m_filterExponent, m_filterCutoff);
@@ -377,7 +376,7 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
         const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
     {
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
 
         m_advObject->Advect(nvariables, m_fields, advVel, inarray,
@@ -403,7 +402,7 @@ namespace Nektar
         const bool                      &flag)
     {
         boost::ignore_unused(flag);
-        unsigned int nvariables     = m_fields.num_elements();
+        unsigned int nvariables     = m_fields.size();
         unsigned int npoints        = m_fields[0]->GetNcoeffs();
         Array<OneD, Array<OneD, NekDouble> > in2D(nvariables),out2D(nvariables);
         for(int i = 0; i < nvariables; i++)
@@ -421,8 +420,8 @@ namespace Nektar
     {
         const Array<OneD, const NekDouble> refsol = m_nonlinsol->GetRefSolution();
         //inforc = m_TimeIntegForce;
-        unsigned int nvariable  = inarray.num_elements();
-        unsigned int ncoeffs    = inarray[nvariable-1].num_elements();
+        unsigned int nvariable  = inarray.size();
+        unsigned int ncoeffs    = inarray[nvariable-1].size();
         unsigned int npoints    = m_fields[0]->GetNpoints();
 
         Array<OneD, Array<OneD, NekDouble> > inpnts(nvariable);
@@ -453,7 +452,7 @@ namespace Nektar
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
         const NekDouble                                   time)
     {
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         int nTracePts  = GetTraceTotPoints();
         int ncoeffs    = GetNcoeffs();
         // Store forwards/backwards space along trace space
@@ -546,7 +545,7 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
         const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
     {
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
 
         m_advObject->Advect_coeff(nvariables, m_fields, advVel, inarray,
@@ -555,6 +554,7 @@ namespace Nektar
 
     /**
      * @brief Add the diffusions terms to the right-hand side
+     * Similar to DoDiffusion() but with outarray in coefficient space
      */
     void CompressibleFlowSystem::DoDiffusion_coeff(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
@@ -571,7 +571,7 @@ namespace Nektar
                                                  const NekDouble time,
                                                  const NekDouble lambda)
     {
-        unsigned int nvariables  = inpnts.num_elements();
+        unsigned int nvariables  = inpnts.size();
         unsigned int ncoeffs     = m_fields[0]->GetNcoeffs();
         unsigned int ntotal      = nvariables*ncoeffs;
 
@@ -606,7 +606,7 @@ namespace Nektar
         boost::ignore_unused(inpnts);
         m_TimeIntegLambda               = lambda;
         m_BndEvaluateTime               = time;
-        unsigned int ntotal             = inarray.num_elements();
+        unsigned int ntotal             = inarray.size();
 
         if(m_inArrayNorm<0.0)
         {
@@ -623,8 +623,8 @@ namespace Nektar
     void CompressibleFlowSystem::CalcRefValues(
             const Array<OneD, NekDouble>        &inarray)
     {
-        unsigned int nvariables         = m_fields.num_elements();
-        unsigned int ntotal             = inarray.num_elements();
+        unsigned int nvariables         = m_fields.size();
+        unsigned int ntotal             = inarray.size();
         unsigned int npoints            = ntotal/nvariables;
 
         unsigned int ntotalGlobal       = ntotal;
@@ -681,14 +681,14 @@ namespace Nektar
         const Array<OneD, const NekDouble> refres = m_nonlinsol->GetRefResidual();
         NekDouble eps = m_JFEps;
         NekDouble magnitdEstimatMax =0.0;
-        for(int i = 0; i < m_magnitdEstimat.num_elements(); i++)
+        for(int i = 0; i < m_magnitdEstimat.size(); i++)
         {
             magnitdEstimatMax = max(magnitdEstimatMax,m_magnitdEstimat[i]);
         }
         eps *= magnitdEstimatMax;
         NekDouble oeps = 1.0/eps;
-        unsigned int nvariables = m_fields.num_elements();
-        unsigned int ntotal     = inarray.num_elements();
+        unsigned int nvariables = m_fields.size();
+        unsigned int ntotal     = inarray.size();
         unsigned int npoints    = ntotal/nvariables;
         Array<OneD, NekDouble > tmp;
         Array<OneD,       Array<OneD, NekDouble> > solplus(nvariables);
@@ -724,7 +724,7 @@ namespace Nektar
             NekDouble                                         time)
     {
         int nTracePts  = GetTraceTotPoints();
-        int nvariables = physarray.num_elements();
+        int nvariables = physarray.size();
 
         Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
         for (int i = 0; i < nvariables; ++i)
@@ -742,7 +742,10 @@ namespace Nektar
             }
         }
     }
-
+    /**
+     * @brief Set up a weight on physical boundaries for boundary condition 
+     * applications
+     */
     void CompressibleFlowSystem::SetBoundaryConditionsBwdWeight()
     {
         if (m_bndConds.size())
@@ -755,61 +758,6 @@ namespace Nektar
         }
     }
 
-    void CompressibleFlowSystem::SetBoundaryConditionsDeriv(
-            const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
-            NekDouble                                                           time,
-            const Array<OneD, const Array<OneD, NekDouble> >                    &pFwd,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &pDervFwd)
-    {
-        int nTracePts  = GetTraceTotPoints();
-        int nvariables = physarray.num_elements();
-
-        Array<OneD, Array<OneD, NekDouble> > Fwd;
-        if(pFwd.num_elements())
-        {
-            Fwd = pFwd;
-        }
-        else
-        {
-            Fwd = Array<OneD, Array<OneD, NekDouble> >(nvariables);
-            for (int i = 0; i < nvariables; ++i)
-            {
-                Fwd[i] = Array<OneD, NekDouble>(nTracePts);
-                m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
-            }
-        }
-
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > DervFwd;
-        if(pDervFwd.num_elements())
-        {
-            DervFwd = pDervFwd;
-        }
-        else
-        {
-            int nDim      = m_fields[0]->GetCoordim(0);
-            DervFwd =   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(nDim);
-            for (int nd = 0; nd < nDim; ++nd)
-            {
-                DervFwd[nd]     =   Array<OneD, Array<OneD, NekDouble> > (nvariables);
-                for (int i = 0; i < nvariables; ++i)
-                {
-                    DervFwd[nd][i]    = Array<OneD, NekDouble>(nTracePts,0.0);
-                    m_fields[i]->ExtractTracePhys(dervarray[nd][i], DervFwd[nd][i]);
-                }
-            }
-        }
-
-        if (m_bndConds.size())
-        {
-            // Loop over user-defined boundary conditions
-            for (auto &x : m_bndConds)
-            {
-                x->ApplyDeriv(Fwd, physarray, DervFwd, dervarray, time);
-            }
-        }
-    }
-
     /**
      * @brief Return the flux vector for the compressible Euler equations.
      *
@@ -817,12 +765,12 @@ namespace Nektar
      * @param flux        Resulting flux.
      */
     void CompressibleFlowSystem::GetFluxVector(
-        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
+        const Array<OneD, Array<OneD, NekDouble> >  &physfield,
+        TensorOfArray3D<NekDouble>                  &flux)
     {
         int i, j;
-        int nq = physfield[0].num_elements();
-        int nVariables = m_fields.num_elements();
+        int nq = physfield[0].size();
+        int nVariables = m_fields.size();
 
         Array<OneD, NekDouble> pressure(nq);
         Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
@@ -879,12 +827,12 @@ namespace Nektar
      * @param flux        Resulting flux.
      */
     void CompressibleFlowSystem::GetFluxVectorDeAlias(
-        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
+        const Array<OneD, Array<OneD, NekDouble> >      &physfield,
+        TensorOfArray3D<NekDouble>                      &flux)
     {
         int i, j;
-        int nq = physfield[0].num_elements();
-        int nVariables = m_fields.num_elements();
+        int nq = physfield[0].size();
+        int nVariables = m_fields.size();
 
         // Factor to rescale 1d points in dealiasing
         NekDouble OneDptscale = 2;
@@ -894,8 +842,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
 
         Array<OneD, Array<OneD, NekDouble> > physfield_interp(nVariables);
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > flux_interp(
-                                                            nVariables);
+        TensorOfArray3D<NekDouble> flux_interp(nVariables);
 
         for (i = 0; i < nVariables; ++ i)
         {
@@ -974,7 +921,6 @@ namespace Nektar
     {
         boost::ignore_unused(inarray);
 
-        int n;
         int nElements = m_fields[0]->GetExpSize();
 
         // Change value of m_timestep (in case it is set to zero)
@@ -988,7 +934,7 @@ namespace Nektar
         NekDouble alpha     = MaxTimeStepEstimator();
 
         // Loop over elements to compute the time-step limit for each element
-        for(n = 0; n < nElements; ++n)
+        for (int n = 0; n < nElements; ++n)
         {
             tstep[n] = m_cflSafetyFactor * alpha / cfl[n];
         }
@@ -1032,7 +978,7 @@ namespace Nektar
         Array<OneD, NekDouble> noise(phystot);
 
         m_session->LoadParameter("Noise", Noise,0.0);
-        int m_nConvectiveFields =  m_fields.num_elements();
+        int m_nConvectiveFields =  m_fields.size();
 
         if (Noise > 0.0)
         {
@@ -1065,7 +1011,7 @@ namespace Nektar
         int nTotQuadPoints = GetTotPoints();
         int n_element      = m_fields[0]->GetExpSize();
         int expdim         = m_fields[0]->GetGraph()->GetMeshDimension();
-        int nfields        = m_fields.num_elements();
+        int nfields        = m_fields.size();
         int offset;
         Array<OneD, NekDouble> tmp;
 
@@ -1094,7 +1040,7 @@ namespace Nektar
         m_varConv->GetVelocityVector(physfields, velocity);
         m_varConv->GetSoundSpeed    (physfields, soundspeed);
 
-        for(int el = 0; el < n_element; ++el)
+        for (int el = 0; el < n_element; ++el)
         {
             ptsKeys = m_fields[0]->GetExp(el)->GetPointsKeys();
             offset  = m_fields[0]->GetPhys_Offset(el);
@@ -1109,7 +1055,7 @@ namespace Nektar
             // Convert to standard element
             //    consider soundspeed in all directions
             //    (this might overestimate the cfl)
-            if(metricInfo->GetGtype() == SpatialDomains::eDeformed)
+            if (metricInfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 // d xi/ dx = gmat = 1/J * d x/d xi
                 for (int i = 0; i < expdim; ++i)
@@ -1242,9 +1188,9 @@ namespace Nektar
         {
             const int nPhys   = m_fields[0]->GetNpoints();
             const int nCoeffs = m_fields[0]->GetNcoeffs();
-            Array<OneD, Array<OneD, NekDouble> > tmp(m_fields.num_elements());
+            Array<OneD, Array<OneD, NekDouble> > tmp(m_fields.size());
 
-            for (int i = 0; i < m_fields.num_elements(); ++i)
+            for (int i = 0; i < m_fields.size(); ++i)
             {
                 tmp[i] = m_fields[i]->GetPhys();
             }
@@ -1322,18 +1268,6 @@ namespace Nektar
         }
     }
 
-    void CompressibleFlowSystem::v_GetViscousSymmtrFluxConservVar(
-            const int                                                       nConvectiveFields,
-            const int                                                       nSpaceDim,
-            const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
-            const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
-            Array< OneD, int >                                              &nonZeroIndex,    
-            const Array<OneD, Array<OneD, NekDouble> >                      &normals)
-    {
-        boost::ignore_unused(nConvectiveFields,nSpaceDim,inaverg,inarray,outarray,nonZeroIndex,normals);
-        ASSERTL0(false, "v_GetViscousSymmtrFluxConservVar not coded");
-    }
     /**
      *
      */
@@ -1364,6 +1298,29 @@ namespace Nektar
         m_varConv->GetVelocityVector(physfield, velocity);
     }
 
+    void CompressibleFlowSystem::v_DoDiffusion(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
+        const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
+    {
+        boost::ignore_unused(inarray, outarray, pFwd, pBwd);
+        if (m_shockCaptureType != "Off")
+        {
+            m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
+        }
+    }
+
+    void CompressibleFlowSystem::v_DoDiffusion_coeff(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
+        const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
+    {
+        boost::ignore_unused(inarray, outarray, pFwd, pBwd);
+        // Do nothing by default
+    }
+
 /**
  * @brief Compute an estimate of minimum h/p
  * for each element of the expansion.
@@ -1384,7 +1341,7 @@ Array<OneD, NekDouble>  CompressibleFlowSystem::GetElmtMinHP(void)
             {
                 LocalRegions::Expansion3DSharedPtr exp3D;
                 exp3D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion3D>();
-                for(int i = 0; i < exp3D->GetNedges(); ++i)
+                for (int i = 0; i < exp3D->GetNedges(); ++i)
                 {
                     h = min(h, exp3D->GetGeom3D()->GetEdge(i)->GetVertex(0)->
                         dist(*(exp3D->GetGeom3D()->GetEdge(i)->GetVertex(1))));
@@ -1396,7 +1353,7 @@ Array<OneD, NekDouble>  CompressibleFlowSystem::GetElmtMinHP(void)
             {
                 LocalRegions::Expansion2DSharedPtr exp2D;
                 exp2D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion2D>();
-                for(int i = 0; i < exp2D->GetNedges(); ++i)
+                for (int i = 0; i < exp2D->GetNedges(); ++i)
                 {
                     h = min(h, exp2D->GetGeom2D()->GetEdge(i)->GetVertex(0)->
                         dist(*(exp2D->GetGeom2D()->GetEdge(i)->GetVertex(1))));

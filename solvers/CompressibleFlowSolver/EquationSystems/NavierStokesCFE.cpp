@@ -6,14 +6,14 @@
 //
 // The MIT License
 //
-// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA), 
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the "Software"),
+// copy of this software and associated documentation files (the "Software"), 
 // to deal in the Software without restriction, including without limitation
-// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
 // and/or sell copies of the Software, and to permit persons to whom the
 // Software is furnished to do so, subject to the following conditions:
 //
@@ -21,7 +21,7 @@
 // in all copies or substantial portions of the Software.
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 // THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
@@ -40,13 +40,13 @@ namespace Nektar
 {
     string NavierStokesCFE::className =
         SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
-            "NavierStokesCFE", NavierStokesCFE::create,
+            "NavierStokesCFE", NavierStokesCFE::create, 
             "NavierStokes equations in conservative variables.");
 
     NavierStokesCFE::NavierStokesCFE(
-        const LibUtilities::SessionReaderSharedPtr& pSession,
+        const LibUtilities::SessionReaderSharedPtr& pSession, 
         const SpatialDomains::MeshGraphSharedPtr& pGraph)
-        : UnsteadySystem(pSession, pGraph),
+        : UnsteadySystem(pSession, pGraph), 
           CompressibleFlowSystem(pSession, pGraph)
     {
     }
@@ -67,16 +67,9 @@ namespace Nektar
         NekDouble gasConstant;
         m_session->LoadParameter ("GasConstant",   gasConstant,   287.058);
         m_Cp      = m_gamma / (m_gamma - 1.0) * gasConstant;
-        m_Cv      = m_Cp   /  m_gamma;
+        m_Cv      = m_Cp / m_gamma;
 
         m_session->LoadParameter ("Twall", m_Twall, 300.15);
-
-        // Create equation of state object
-        std::string eosType;
-        m_session->LoadSolverInfo("EquationOfState",
-                                  eosType, "IdealGas");
-        m_eos = GetEquationOfStateFactory()
-                                .CreateInstance(eosType, m_session);
 
         // Viscosity
         int nPts = m_fields[0]->GetNpoints();
@@ -85,12 +78,12 @@ namespace Nektar
         m_mu = Array<OneD, NekDouble>(nPts, m_muRef);
 
         // Thermal conductivity or Prandtl
-        if( m_session->DefinesParameter("thermalConductivity"))
+        if ( m_session->DefinesParameter("thermalConductivity"))
         {
-            ASSERTL0( !m_session->DefinesParameter("Pr"),
+            ASSERTL0( !m_session->DefinesParameter("Pr"), 
                  "Cannot define both Pr and thermalConductivity.");
 
-            m_session->LoadParameter ("thermalConductivity",
+            m_session->LoadParameter ("thermalConductivity", 
                                         m_thermalConductivityRef);
             m_Prandtl = m_Cp * m_muRef / m_thermalConductivityRef;
         }
@@ -107,7 +100,7 @@ namespace Nektar
 
         m_diffusion = SolverUtils::GetDiffusionFactory()
                                     .CreateInstance(diffName, diffName);
-        if("InteriorPenalty"==diffName)
+        if ("InteriorPenalty" == diffName)
         {
             SetBoundaryConditionsBwdWeight();
         }
@@ -115,18 +108,16 @@ namespace Nektar
         if (m_specHP_dealiasing)
         {
             m_diffusion->SetFluxVectorNS(
-                &NavierStokesCFE::v_GetViscousFluxVectorDeAlias,
+                &NavierStokesCFE::v_GetViscousFluxVectorDeAlias, 
                 this);
             m_diffusion->SetDiffusionFluxCons(
                 &NavierStokesCFE::GetViscousFluxVectorConservVar, this);
-            m_diffusion->SetFunctorDerivBndCond(
-                &NavierStokesCFE::SetBoundaryConditionsDeriv, this);
             
             m_diffusion->SetSpecialBndTreat(
                 &NavierStokesCFE::SpecialBndTreat, this);
 
             m_diffusion->SetDiffusionSymmFluxCons(
-                &NavierStokesCFE::v_GetViscousSymmtrFluxConservVar, this);
+                &NavierStokesCFE::GetViscousSymmtrFluxConservVar, this);
 
             if (m_shockCaptureType != "Off")
             {
@@ -140,14 +131,12 @@ namespace Nektar
                                           v_GetViscousFluxVector, this);
             m_diffusion->SetDiffusionFluxCons(
                 &NavierStokesCFE::GetViscousFluxVectorConservVar, this);
-            m_diffusion->SetFunctorDerivBndCond(
-                &NavierStokesCFE::SetBoundaryConditionsDeriv, this);
 
             m_diffusion->SetSpecialBndTreat(
                 &NavierStokesCFE::SpecialBndTreat, this);
 
             m_diffusion->SetDiffusionSymmFluxCons(
-                &NavierStokesCFE::v_GetViscousSymmtrFluxConservVar, this);
+                &NavierStokesCFE::GetViscousSymmtrFluxConservVar, this);
 
             if (m_shockCaptureType != "Off")
             {
@@ -157,276 +146,68 @@ namespace Nektar
         }
 
         // Set up penalty term for LDGNS
-        m_diffusion->SetFluxPenaltyNS(&NavierStokesCFE::
-            v_GetFluxPenalty, this);
+        if ("LDGNS" == diffName||
+            "LDGNS3DHomogeneous1D" == diffName)
+        {
+            m_diffusion->SetFluxPenaltyNS(&NavierStokesCFE::
+                v_GetFluxPenalty, this);
+        }
 
         // Concluding initialisation of diffusion operator
         m_diffusion->InitObject         (m_session, m_fields);
-        
-        //Only NavierStokes equation and using weakDG,LDGNS can temparary use the codes
-        string advName;
-        m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
-	    m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-        
     }
 
     void NavierStokesCFE::v_DoDiffusion(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+              Array<OneD,       Array<OneD, NekDouble> > &outarray, 
+            const Array<OneD, Array<OneD, NekDouble> >   &pFwd, 
             const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
     {
-        int i;
-        int nvariables = inarray.num_elements();
-        int npoints    = GetNpoints();
-        int nTracePts  = GetTraceTotPoints();
+        size_t nvariables = inarray.size();
+        size_t npoints    = GetNpoints();
+        size_t nTracePts  = GetTraceTotPoints();
 
         Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
-        for (i = 0; i < nvariables; ++i)
-        {
-            outarrayDiff[i] = Array<OneD, NekDouble>(npoints,0.0);
-        }
-
-        string diffName;
-        m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-        if("InteriorPenalty"==diffName)
-        {
-            if(m_BndEvaluateTime<0.0)
-            {
-                ASSERTL0(false, "m_BndEvaluateTime not setup");
-            }
-            m_diffusion->Diffuse(nvariables, m_fields, inarray, outarrayDiff,m_BndEvaluateTime,
-                                pFwd, pBwd);
-            for (i = 0; i < nvariables; ++i)
-            {
-                Vmath::Vadd(npoints,
-                            outarrayDiff[i], 1,
-                            outarray[i], 1,
-                            outarray[i], 1);
-            }
-        }
-        else
-        {
-            Array<OneD, Array<OneD, NekDouble> > inarrayDiff(nvariables-1);
-            Array<OneD, Array<OneD, NekDouble> > inFwd(nvariables-1);
-            Array<OneD, Array<OneD, NekDouble> > inBwd(nvariables-1);
-
-            
-            for (i = 0; i < nvariables-1; ++i)
-            {
-                inarrayDiff[i] = Array<OneD, NekDouble>(npoints);
-                inFwd[i]       = Array<OneD, NekDouble>(nTracePts);
-                inBwd[i]       = Array<OneD, NekDouble>(nTracePts);
-            }
-
-            // Extract pressure
-            //    (use inarrayDiff[0] as a temporary storage for the pressure)
-            m_varConv->GetPressure(inarray, inarrayDiff[0]);
-
-            // Extract temperature
-            m_varConv->GetTemperature(inarray, inarrayDiff[nvariables-2]);
-
-            // Extract velocities
-            m_varConv->GetVelocityVector(inarray, inarrayDiff);
-
-            // Repeat calculation for trace space
-            if (pFwd == NullNekDoubleArrayofArray ||
-                pBwd == NullNekDoubleArrayofArray)
-            {
-                inFwd = NullNekDoubleArrayofArray;
-                inBwd = NullNekDoubleArrayofArray;
-            }
-            else
-            {
-                m_varConv->GetPressure(pFwd,    inFwd[0]);
-                m_varConv->GetPressure(pBwd,    inBwd[0]);
-
-                m_varConv->GetTemperature(pFwd, inFwd[nvariables-2]);
-                m_varConv->GetTemperature(pBwd, inBwd[nvariables-2]);
-
-                m_varConv->GetVelocityVector(pFwd, inFwd);
-                m_varConv->GetVelocityVector(pBwd, inBwd);
-            }
-
-            // Diffusion term in physical rhs form
-            m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarrayDiff,
-                                inFwd, inBwd);
-
-            for (i = 0; i < nvariables; ++i)
-            {
-                Vmath::Vadd(npoints,
-                            outarrayDiff[i], 1,
-                            outarray[i], 1,
-                            outarray[i], 1);
-            }
-        }
-    }
-
-
-    void NavierStokesCFE::v_DoDiffusion_coeff(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
-    {
-        int i;
-        int nvariables = inarray.num_elements();
-        int npoints    = GetNpoints();
-        int ncoeffs    = GetNcoeffs();
-        int nTracePts  = GetTraceTotPoints();
-
-        Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
-        for (i = 0; i < nvariables; ++i)
-        {
-            outarrayDiff[i] = Array<OneD, NekDouble>(ncoeffs,0.0);
-        }
-
-        string diffName;
-        m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-        if("InteriorPenalty"==diffName)
-        {
-            if(m_BndEvaluateTime<0.0)
-            {
-                ASSERTL0(false, "m_BndEvaluateTime not setup");
-            }
-            m_diffusion->Diffuse_coeff(nvariables, m_fields, inarray, outarrayDiff,m_BndEvaluateTime,
-                                pFwd, pBwd);
-            for (i = 0; i < nvariables; ++i)
-            {
-                Vmath::Vadd(ncoeffs,
-                            outarrayDiff[i], 1,
-                            outarray[i], 1,
-                            outarray[i], 1);
-            }
-        }
-        else
-        {
-            Array<OneD, Array<OneD, NekDouble> > inarrayDiff(nvariables-1);
-            Array<OneD, Array<OneD, NekDouble> > inFwd(nvariables-1);
-            Array<OneD, Array<OneD, NekDouble> > inBwd(nvariables-1);
-
-            for (i = 0; i < nvariables-1; ++i)
-            {
-                inarrayDiff[i] = Array<OneD, NekDouble>(npoints);
-                inFwd[i]       = Array<OneD, NekDouble>(nTracePts);
-                inBwd[i]       = Array<OneD, NekDouble>(nTracePts);
-            }
-
-            // Extract pressure
-            //    (use inarrayDiff[0] as a temporary storage for the pressure)
-            m_varConv->GetPressure(inarray, inarrayDiff[0]);
-
-            // Extract temperature
-            m_varConv->GetTemperature(inarray, inarrayDiff[nvariables-2]);
-
-            // Extract velocities
-            m_varConv->GetVelocityVector(inarray, inarrayDiff);
-
-            // Repeat calculation for trace space
-            if (pFwd == NullNekDoubleArrayofArray ||
-                pBwd == NullNekDoubleArrayofArray)
-            {
-                inFwd = NullNekDoubleArrayofArray;
-                inBwd = NullNekDoubleArrayofArray;
-            }
-            else
-            {
-                m_varConv->GetPressure(pFwd,    inFwd[0]);
-                m_varConv->GetPressure(pBwd,    inBwd[0]);
-
-                m_varConv->GetTemperature(pFwd, inFwd[nvariables-2]);
-                m_varConv->GetTemperature(pBwd, inBwd[nvariables-2]);
-
-                m_varConv->GetVelocityVector(pFwd, inFwd);
-                m_varConv->GetVelocityVector(pBwd, inBwd);
-            }
-
-            // Diffusion term in physical rhs form
-            m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarrayDiff,
-                                inFwd, inBwd);
-
-            for (i = 0; i < nvariables; ++i)
-            {
-                Vmath::Vadd(npoints,
-                            outarrayDiff[i], 1,
-                            outarray[i], 1,
-                            outarray[i], 1);
-            }
-
-            // m_diffusion->v_Diffuse_coeff(inarray, outarray, pFwd, pBwd);
-            if (m_shockCaptureType != "Off")
-            {
-                m_artificialDiffusion->DoArtificialDiffusion_coeff(inarray, outarray);
-            }
-        }
-    }
-
-    void NavierStokesCFE::v_DoDiffusionFlux(
-        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble>>>&VolumeFlux,
-        Array<OneD, Array<OneD, NekDouble>>             &TraceFlux,
-        const Array<OneD, Array<OneD, NekDouble>>       &pFwd,
-        const Array<OneD, Array<OneD, NekDouble>>       &pBwd)
-    {
-        int nDim= m_fields[0]->GetCoordim(0);
-        int nvariables = inarray.num_elements();
-        int npoints    = GetNpoints();
-        int nTracePts  = GetTraceTotPoints();
-
-        Array<OneD, Array<OneD, NekDouble>> outarrayDiff(nvariables);
         for (int i = 0; i < nvariables; ++i)
         {
-            outarrayDiff[i] = Array<OneD, NekDouble>(npoints,0.0);
+            outarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);
         }
-        
+
         string diffName;
         m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-        if("InteriorPenalty"==diffName)
+        if ("InteriorPenalty" == diffName)
         {
-            Array<OneD,Array<OneD, Array<OneD, NekDouble>>> inarrayDiffderivative(nDim);
-            for (int i = 0; i < nDim; i++)
+            if (m_BndEvaluateTime < 0.0)
             {
-                inarrayDiffderivative[i]=Array<OneD, Array<OneD, NekDouble>> (nvariables);
-                for(int j=0;j<nvariables;j++)
-                {
-                    inarrayDiffderivative[i][j]=Array<OneD, NekDouble>(npoints,0.0);
-                }
+                ASSERTL0(false, "m_BndEvaluateTime not setup");
             }
-            m_diffusion->DiffuseCalculateDerivative(m_fields,inarray,inarrayDiffderivative,pFwd,pBwd);
-            m_diffusion->DiffuseVolumeFlux(m_fields, inarray,inarrayDiffderivative, VolumeFlux);
-            m_diffusion->DiffuseTraceFlux(m_fields, inarray,inarrayDiffderivative,VolumeFlux,TraceFlux,pFwd,pBwd);
+            m_diffusion->Diffuse(nvariables, m_fields, inarray, outarrayDiff, 
+                                m_BndEvaluateTime, 
+                                pFwd, pBwd);
+            for (int i = 0; i < nvariables; ++i)
+            {
+                Vmath::Vadd(npoints, 
+                            outarrayDiff[i], 1, 
+                            outarray[i], 1, 
+                            outarray[i], 1);
+            }
         }
         else
         {
-            Array<OneD, Array<OneD, NekDouble>> inarrayDiff;
-            Array<OneD, Array<OneD, NekDouble>> inFwd;
-            Array<OneD, Array<OneD, NekDouble>> inBwd;
-            Array<OneD,Array<OneD, Array<OneD, NekDouble>>> inarrayDiffderivative(nDim);
+            Array<OneD, Array<OneD, NekDouble> > inarrayDiff(nvariables-1);
+            Array<OneD, Array<OneD, NekDouble> > inFwd(nvariables-1);
+            Array<OneD, Array<OneD, NekDouble> > inBwd(nvariables-1);
+
             
-            //Allocate memory
-            inarrayDiff=Array<OneD, Array<OneD, NekDouble>> (nvariables - 1);
-            inFwd=Array<OneD, Array<OneD, NekDouble>>(nvariables - 1);
-            inBwd=Array<OneD, Array<OneD, NekDouble>> (nvariables - 1);
-            inarrayDiffderivative=Array<OneD,Array<OneD, Array<OneD, NekDouble>>> (nDim);
-
-            for (int i = 0; i < nvariables-1; ++i)
+            for (int i = 0; i < nvariables - 1; ++i)
             {
-                inarrayDiff[i] = Array<OneD, NekDouble>(npoints,0.0);
-                inFwd[i]       = Array<OneD, NekDouble>(nTracePts,0.0);
-                inBwd[i]       = Array<OneD, NekDouble>(nTracePts,0.0);
-            }
-
-            for (int i = 0; i < nDim; i++)
-            {
-                inarrayDiffderivative[i]=Array<OneD, Array<OneD, NekDouble>> (nvariables-1);
-                for(int j=0;j<nvariables-1;j++)
-                {
-                    inarrayDiffderivative[i][j]=Array<OneD, NekDouble>(npoints,0.0);
-                }
+                inarrayDiff[i] = Array<OneD, NekDouble>{npoints};
+                inFwd[i]       = Array<OneD, NekDouble>{nTracePts};
+                inBwd[i]       = Array<OneD, NekDouble>{nTracePts};
             }
 
             // Extract pressure
-            //    (use inarrayDiff[0] as a temporary storage for the pressure)
+            // (use inarrayDiff[0] as a temporary storage for the pressure)
             m_varConv->GetPressure(inarray, inarrayDiff[0]);
 
             // Extract temperature
@@ -436,7 +217,8 @@ namespace Nektar
             m_varConv->GetVelocityVector(inarray, inarrayDiff);
 
             // Repeat calculation for trace space
-            if (pFwd == NullNekDoubleArrayofArray || pBwd == NullNekDoubleArrayofArray)
+            if (pFwd == NullNekDoubleArrayofArray ||
+                pBwd == NullNekDoubleArrayofArray)
             {
                 inFwd = NullNekDoubleArrayofArray;
                 inBwd = NullNekDoubleArrayofArray;
@@ -454,15 +236,114 @@ namespace Nektar
             }
 
             // Diffusion term in physical rhs form
-            // To notice, needs to firstly calculate volumeflux, traceflux uses it.
-            m_diffusion->DiffuseCalculateDerivative(m_fields,inarrayDiff,inarrayDiffderivative,inFwd,inBwd);
-            m_diffusion->DiffuseVolumeFlux(m_fields, inarrayDiff,inarrayDiffderivative, VolumeFlux);
-            m_diffusion->DiffuseTraceFlux(m_fields, inarrayDiff,inarrayDiffderivative,VolumeFlux,TraceFlux, inFwd, inBwd);
+            m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, 
+                                outarrayDiff, inFwd, inBwd);
 
-            //Artificial Diffusion need to implement
+            for (int i = 0; i < nvariables; ++i)
+            {
+                Vmath::Vadd(npoints, 
+                            outarrayDiff[i], 1, 
+                            outarray[i], 1, 
+                            outarray[i], 1);
+            }
+        }
+    }
+
+
+    void NavierStokesCFE::v_DoDiffusion_coeff(
+        const Array<OneD, const Array<OneD, NekDouble> >    &inarray, 
+        Array<OneD, Array<OneD, NekDouble> >                &outarray, 
+        const Array<OneD, Array<OneD, NekDouble> >          &pFwd, 
+        const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
+    {
+        size_t nvariables = inarray.size();
+        size_t npoints    = GetNpoints();
+        size_t ncoeffs    = GetNcoeffs();
+        size_t nTracePts  = GetTraceTotPoints();
+
+        Array<OneD, Array<OneD, NekDouble> > outarrayDiff{nvariables};
+        for (int i = 0; i < nvariables; ++i)
+        {
+            outarrayDiff[i] = Array<OneD, NekDouble>{ncoeffs, 0.0};
+        }
+
+        string diffName;
+        m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
+        if ("InteriorPenalty" == diffName)
+        {
+            if (m_BndEvaluateTime < 0.0)
+            {
+                ASSERTL0(false, "m_BndEvaluateTime not setup");
+            }
+            m_diffusion->Diffuse_coeff(nvariables, m_fields, inarray, 
+                                        outarrayDiff, m_BndEvaluateTime, 
+                                        pFwd, pBwd);
+            for (int i = 0; i < nvariables; ++i)
+            {
+                Vmath::Vadd(ncoeffs, 
+                            outarrayDiff[i], 1, 
+                            outarray[i], 1, 
+                            outarray[i], 1);
+            }
+        }
+        else
+        {
+            Array<OneD, Array<OneD, NekDouble> > inarrayDiff{nvariables - 1};
+            Array<OneD, Array<OneD, NekDouble> > inFwd{nvariables - 1};
+            Array<OneD, Array<OneD, NekDouble> > inBwd{nvariables-1};
+
+            for (int i = 0; i < nvariables-1; ++i)
+            {
+                inarrayDiff[i] = Array<OneD, NekDouble>{npoints};
+                inFwd[i]       = Array<OneD, NekDouble>{nTracePts};
+                inBwd[i]       = Array<OneD, NekDouble>{nTracePts};
+            }
+
+            // Extract pressure
+            //    (use inarrayDiff[0] as a temporary storage for the pressure)
+            m_varConv->GetPressure(inarray, inarrayDiff[0]);
+
+            // Extract temperature
+            m_varConv->GetTemperature(inarray, inarrayDiff[nvariables-2]);
+
+            // Extract velocities
+            m_varConv->GetVelocityVector(inarray, inarrayDiff);
+
+            // Repeat calculation for trace space
+            if (pFwd == NullNekDoubleArrayofArray ||
+                pBwd == NullNekDoubleArrayofArray)
+            {
+                inFwd = NullNekDoubleArrayofArray;
+                inBwd = NullNekDoubleArrayofArray;
+            }
+            else
+            {
+                m_varConv->GetPressure(pFwd,    inFwd[0]);
+                m_varConv->GetPressure(pBwd,    inBwd[0]);
+
+                m_varConv->GetTemperature(pFwd, inFwd[nvariables-2]);
+                m_varConv->GetTemperature(pBwd, inBwd[nvariables-2]);
+
+                m_varConv->GetVelocityVector(pFwd, inFwd);
+                m_varConv->GetVelocityVector(pBwd, inBwd);
+            }
+
+            // Diffusion term in physical rhs form
+            m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarrayDiff, 
+                                inFwd, inBwd);
+
+            for (int i = 0; i < nvariables; ++i)
+            {
+                Vmath::Vadd(npoints, 
+                            outarrayDiff[i], 1, 
+                            outarray[i], 1, 
+                            outarray[i], 1);
+            }
+
             if (m_shockCaptureType != "Off")
             {
-                m_artificialDiffusion->DoArtificialDiffusionFlux(inarray, VolumeFlux,TraceFlux);
+                m_artificialDiffusion->DoArtificialDiffusion_coeff(
+                    inarray, outarray);
             }
         }
     }
@@ -472,26 +353,26 @@ namespace Nektar
      * \todo Complete the viscous flux vector
      */
     void NavierStokesCFE::v_GetViscousFluxVector(
-        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
+        const Array<OneD, Array<OneD, NekDouble> >              &physfield, 
+        TensorOfArray3D<NekDouble>                              &derivativesO1, 
+        TensorOfArray3D<NekDouble>                              &viscousTensor)
     {
         // Auxiliary variables
-        int nScalar    = physfield.num_elements();
-        int nPts       = physfield[0].num_elements();
+        size_t nScalar    = physfield.size();
+        size_t nPts       = physfield[0].size();
         Array<OneD, NekDouble > divVel             (nPts, 0.0);
 
         // Stokes hypothesis
         const NekDouble lambda = -2.0/3.0;
 
         // Update viscosity and thermal conductivity
-        GetViscosityAndThermalCondFromTemp(physfield[nScalar-1], m_mu,
+        GetViscosityAndThermalCondFromTemp(physfield[nScalar-1], m_mu, 
             m_thermalConductivity);
 
         // Velocity divergence
         for (int j = 0; j < m_spacedim; ++j)
         {
-            Vmath::Vadd(nPts, divVel, 1, derivativesO1[j][j], 1,
+            Vmath::Vadd(nPts, divVel, 1, derivativesO1[j][j], 1, 
                         divVel, 1);
         }
 
@@ -510,25 +391,25 @@ namespace Nektar
         {
             for (int j = i; j < m_spacedim; ++j)
             {
-                Vmath::Vadd(nPts, derivativesO1[i][j], 1,
-                                  derivativesO1[j][i], 1,
+                Vmath::Vadd(nPts, derivativesO1[i][j], 1, 
+                                  derivativesO1[j][i], 1, 
                                   viscousTensor[i][j+1], 1);
 
-                Vmath::Vmul(nPts, m_mu, 1,
-                                  viscousTensor[i][j+1], 1,
+                Vmath::Vmul(nPts, m_mu, 1, 
+                                  viscousTensor[i][j+1], 1, 
                                   viscousTensor[i][j+1], 1);
 
                 if (i == j)
                 {
                     // Add divergence term to diagonal
-                    Vmath::Vadd(nPts, viscousTensor[i][j+1], 1,
-                                  divVel, 1,
+                    Vmath::Vadd(nPts, viscousTensor[i][j+1], 1, 
+                                  divVel, 1, 
                                   viscousTensor[i][j+1], 1);
                 }
                 else
                 {
                     // Copy to make symmetric
-                    Vmath::Vcopy(nPts, viscousTensor[i][j+1], 1,
+                    Vmath::Vcopy(nPts, viscousTensor[i][j+1], 1, 
                                        viscousTensor[j][i+1], 1);
                 }
             }
@@ -541,15 +422,15 @@ namespace Nektar
             // u_j * tau_ij
             for (int j = 0; j < m_spacedim; ++j)
             {
-                Vmath::Vvtvp(nPts, physfield[j], 1,
-                               viscousTensor[i][j+1], 1,
-                               viscousTensor[i][m_spacedim+1], 1,
+                Vmath::Vvtvp(nPts, physfield[j], 1, 
+                               viscousTensor[i][j+1], 1, 
+                               viscousTensor[i][m_spacedim+1], 1, 
                                viscousTensor[i][m_spacedim+1], 1);
             }
             // Add k*T_i
-            Vmath::Vvtvp(nPts, m_thermalConductivity, 1,
-                               derivativesO1[i][m_spacedim], 1,
-                               viscousTensor[i][m_spacedim+1], 1,
+            Vmath::Vvtvp(nPts, m_thermalConductivity, 1, 
+                               derivativesO1[i][m_spacedim], 1, 
+                               viscousTensor[i][m_spacedim+1], 1, 
                                viscousTensor[i][m_spacedim+1], 1);
         }
     }
@@ -559,16 +440,16 @@ namespace Nektar
      * \todo Complete the viscous flux vector
      */
     void NavierStokesCFE::v_GetViscousFluxVectorDeAlias(
-        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
+        const Array<OneD, Array<OneD, NekDouble> >               &physfield, 
+              TensorOfArray3D<NekDouble>                         &derivativesO1, 
+              TensorOfArray3D<NekDouble>                         &viscousTensor)
     {
         // Factor to rescale 1d points in dealiasing.
         NekDouble OneDptscale = 2;
         // Get number of points to dealias a cubic non-linearity
-        int nScalar   = physfield.num_elements();
+        size_t nScalar   = physfield.size();
         int nPts      = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
-        int nPts_orig = physfield[0].num_elements();
+        size_t nPts_orig = physfield[0].size();
 
         // Auxiliary variables
         Array<OneD, NekDouble > divVel             (nPts, 0.0);
@@ -577,15 +458,13 @@ namespace Nektar
         const NekDouble lambda = -2.0/3.0;
 
         // Update viscosity and thermal conductivity
-        GetViscosityAndThermalCondFromTemp(physfield[nScalar-1], m_mu,
+        GetViscosityAndThermalCondFromTemp(physfield[nScalar-1], m_mu, 
             m_thermalConductivity);
 
         // Interpolate inputs and initialise interpolated output
         Array<OneD, Array<OneD, NekDouble> > vel_interp(m_spacedim);
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                             deriv_interp(m_spacedim);
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                             out_interp(m_spacedim);
+        TensorOfArray3D<NekDouble>           deriv_interp(m_spacedim);
+        TensorOfArray3D<NekDouble>           out_interp(m_spacedim);
         for (int i = 0; i < m_spacedim; ++i)
         {
             // Interpolate velocity
@@ -594,7 +473,8 @@ namespace Nektar
                 OneDptscale, physfield[i], vel_interp[i]);
 
             // Interpolate derivatives
-            deriv_interp[i] = Array<OneD,Array<OneD,NekDouble> > (m_spacedim+1);
+            deriv_interp[i] = Array<OneD, Array<OneD, NekDouble> >
+                             (m_spacedim+1);
             for (int j = 0; j < m_spacedim+1; ++j)
             {
                 deriv_interp[i][j] = Array<OneD, NekDouble> (nPts);
@@ -603,7 +483,7 @@ namespace Nektar
             }
 
             // Output (start from j=1 since flux is zero for rho)
-            out_interp[i] = Array<OneD,Array<OneD,NekDouble> > (m_spacedim+2);
+            out_interp[i] = Array<OneD, Array<OneD, NekDouble> > (m_spacedim+2);
             for (int j = 1; j < m_spacedim+2; ++j)
             {
                 out_interp[i][j] = Array<OneD, NekDouble> (nPts);
@@ -613,7 +493,7 @@ namespace Nektar
         // Velocity divergence
         for (int j = 0; j < m_spacedim; ++j)
         {
-            Vmath::Vadd(nPts, divVel, 1, deriv_interp[j][j], 1,
+            Vmath::Vadd(nPts, divVel, 1, deriv_interp[j][j], 1, 
                         divVel, 1);
         }
 
@@ -632,19 +512,19 @@ namespace Nektar
         {
             for (int j = i; j < m_spacedim; ++j)
             {
-                Vmath::Vadd(nPts, deriv_interp[i][j], 1,
-                                  deriv_interp[j][i], 1,
+                Vmath::Vadd(nPts, deriv_interp[i][j], 1, 
+                                  deriv_interp[j][i], 1, 
                                   out_interp[i][j+1], 1);
 
-                Vmath::Vmul(nPts, m_mu, 1,
-                                  out_interp[i][j+1], 1,
+                Vmath::Vmul(nPts, m_mu, 1, 
+                                  out_interp[i][j+1], 1, 
                                   out_interp[i][j+1], 1);
 
                 if (i == j)
                 {
                     // Add divergence term to diagonal
-                    Vmath::Vadd(nPts, out_interp[i][j+1], 1,
-                                  divVel, 1,
+                    Vmath::Vadd(nPts, out_interp[i][j+1], 1, 
+                                  divVel, 1, 
                                   out_interp[i][j+1], 1);
                 }
                 else
@@ -662,15 +542,15 @@ namespace Nektar
             // u_j * tau_ij
             for (int j = 0; j < m_spacedim; ++j)
             {
-                Vmath::Vvtvp(nPts, vel_interp[j], 1,
-                               out_interp[i][j+1], 1,
-                               out_interp[i][m_spacedim+1], 1,
+                Vmath::Vvtvp(nPts, vel_interp[j], 1, 
+                               out_interp[i][j+1], 1, 
+                               out_interp[i][m_spacedim+1], 1, 
                                out_interp[i][m_spacedim+1], 1);
             }
             // Add k*T_i
-            Vmath::Vvtvp(nPts, m_thermalConductivity, 1,
-                               deriv_interp[i][m_spacedim], 1,
-                               out_interp[i][m_spacedim+1], 1,
+            Vmath::Vvtvp(nPts, m_thermalConductivity, 1, 
+                               deriv_interp[i][m_spacedim], 1, 
+                               out_interp[i][m_spacedim+1], 1, 
                                out_interp[i][m_spacedim+1], 1);
         }
 
@@ -680,125 +560,60 @@ namespace Nektar
             for (int j = 1; j < m_spacedim+2; ++j)
             {
                 m_fields[0]->PhysGalerkinProjection1DScaled(
-                    OneDptscale,
-                    out_interp[i][j],
+                    OneDptscale, 
+                    out_interp[i][j], 
                     viscousTensor[i][j]);
             }
         }
     }
 
-    /**
-     * @brief Return the flux vector for the IP diffusion problem.
-     * \TODO:: RECODE USING VARIABLE CONVERTORS
-     */
-    void NavierStokesCFE::GetPrimDerivFromConsDeriv(
-        const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
-        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &physderivatives)
-    {
-        //can be nPoints/nTracePoints
-        int nPts                = inarray[0].num_elements();
-        int nConvectiveFields   = inarray.num_elements();
-        int nDim                = qfields.num_elements();
-        Array<OneD,NekDouble> tmp(nPts,0.0);
-        int nScalars=nConvectiveFields-1;
-        Array<OneD,Array<OneD,NekDouble>> physfield(nScalars);
-        for(int i=0;i<nScalars;i++)
-        {
-            physfield[i]=Array<OneD,NekDouble> (nPts,0.0);
-        }
-
-        //Transfer conservative variables to primal variables u,v,w
-        //E
-        Array<OneD,NekDouble> E(nPts,0.0);
-        Vmath::Vdiv(nPts,&inarray[nConvectiveFields-1][0],1,&inarray[0][0],1,&E[0],1);
-        //q2
-        for(int i=0;i<nScalars-1;i++)
-        {
-            Vmath::Vdiv(nPts,&inarray[i+1][0],1,&inarray[0][0],1,&physfield[i][0],1);
-            Vmath::Vvtvp(nPts,&physfield[i][0],1,&physfield[i][0],1,&tmp[0],1,&tmp[0],1);
-        }
-        //e=E-0.5q2
-        Vmath::Smul(nPts,0.5,&tmp[0],1,&tmp[0],1);
-        Vmath::Vsub(nPts,&E[0],1,&tmp[0],1,&physfield[nScalars-1][0],1);
-        //T=e/Cv
-        NekDouble oCv=1./m_Cv;
-        Vmath::Smul(nPts,oCv,&physfield[nScalars-1][0],1,&physfield[nScalars-1][0],1);
-
-        //Transfer conservative variable derivatives to primal variables du,dv,dw
-        Array<OneD,NekDouble> orho1(nPts,0.0);
-        Array<OneD,NekDouble> orho2(nPts,0.0);
-        Vmath::Sdiv(nPts,1.0,&inarray[0][0],1,&orho1[0],1);
-        Vmath::Vmul(nPts,&orho1[0],1,&orho1[0],1,&orho2[0],1);
-        for(int i=0;i<nDim;i++)
-        {
-            for(int j=0;j<nScalars-1;j++)
-            {
-                Vmath::Vmul(nPts,&qfields[i][0][0],1,&physfield[j][0],1,&tmp[0],1);
-                Vmath::Vsub(nPts,&qfields[i][j+1][0],1,&tmp[0],1,&physderivatives[i][j][0],1);
-                Vmath::Vmul(nPts,&orho1[0],1,&physderivatives[i][j][0],1,&physderivatives[i][j][0],1);
-            }
-        }
-
-        //Construct dT_dx,dT_dy,dT_dz
-        for(int i=0;i<nDim;i++)
-        {
-            Vmath::Vmul(nPts,&qfields[i][0][0],1,&E[0],1,&tmp[0],1);
-            Vmath::Vsub(nPts,&qfields[i][nConvectiveFields-1][0],1,&tmp[0],1,&physderivatives[i][nScalars-1][0],1);
-            Vmath::Vmul(nPts,&orho1[0],1,&physderivatives[i][nScalars-1][0],1,&physderivatives[i][nScalars-1][0],1);
-
-            for(int j=0;j<nScalars-1;j++)
-            {
-               Vmath::Vmul(nPts,&physfield[j][0],1,&physderivatives[i][j][0],1,&tmp[0],1);
-               Vmath::Vsub(nPts,&physderivatives[i][nScalars-1][0],1,&tmp[0],1,&physderivatives[i][nScalars-1][0],1);
-            }
-            Vmath::Smul(nPts,oCv,&physderivatives[i][nScalars-1][0],1,&physderivatives[i][nScalars-1][0],1);
-        }
-    }
-
       /**
-     * @brief Return the flux vector for the IP diffusion problem.
-     * \todo Complete the viscous flux vector
+     * @brief Return the flux vector for the IP diffusion problem, based on 
+     * conservative variables
      */
     void NavierStokesCFE::GetViscousFluxVectorConservVar(
-        const int                                                       nDim,
-        const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
-        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &outarray,
-              Array< OneD, int >                                        &nonZeroIndex,    
-        const Array<OneD, Array<OneD, NekDouble> >                      &normal,         
-        const Array<OneD, NekDouble>                                    &ArtifDiffFactor)
+        const int                                              nDim, 
+        const Array<OneD, Array<OneD, NekDouble> >             &inarray, 
+        const TensorOfArray3D<NekDouble>                       &qfields, 
+        TensorOfArray3D<NekDouble>                             &outarray, 
+        Array< OneD, int >                                     &nonZeroIndex,    
+        const Array<OneD, Array<OneD, NekDouble> >             &normal,         
+        const Array<OneD, NekDouble>                           &ArtifDiffFactor)
     {
-        int nConvectiveFields   = inarray.num_elements();
-        int nPts=inarray[0].num_elements();
-        int n_nonZero   =   nConvectiveFields-1;
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fluxVec;
-        Array<OneD,Array<OneD,NekDouble>> outtmp(nConvectiveFields);
+        size_t nConvectiveFields   = inarray.size();
+        size_t nPts=inarray[0].size();
+        int n_nonZero   =   nConvectiveFields - 1;
+        TensorOfArray3D<NekDouble> fluxVec;
+        Array<OneD, Array<OneD, NekDouble>> outtmp{nConvectiveFields};
 
-        for(int i=0; i<nConvectiveFields;i++)
+        for (int i = 0; i < nConvectiveFields; ++i)
         {
-            outtmp[i]=Array<OneD,NekDouble>(nPts,0.0);
+            outtmp[i]=Array<OneD, NekDouble>{nPts, 0.0};
         }
 
-        for(int i=0; i< outarray.num_elements(); i++)
+        for (int i = 0; i < outarray.size(); ++i)
         {
-            for(int j=0; j< nConvectiveFields; j++)
+            for (int j = 0; j < nConvectiveFields; ++j)
             {
-                Vmath::Zero(nPts,outarray[i][j],1);
+                Vmath::Zero(nPts, outarray[i][j], 1);
             }
         }
 
-        if(normal.num_elements())
+        if (normal.size())
         {
-            for(int nd=0;nd<nDim;nd++)
+            for (int nd = 0; nd < nDim; ++nd)
             {
-                for(int nderiv=0;nderiv<nDim;nderiv++)
+                for (int nderiv = 0; nderiv < nDim; ++nderiv)
                 {
-                    GetViscousFluxBilinearForm(nDim,nd,nderiv,inarray,qfields[nderiv],outtmp);
+                    GetViscousFluxBilinearForm(nDim, nd, nderiv, inarray, 
+                                                qfields[nderiv], outtmp);
 
-                    for(int j=0;j<nConvectiveFields;j++)
+                    for (int j = 0; j < nConvectiveFields; ++j)
                     {
-                        Vmath::Vvtvp(nPts,&normal[nd][0],1,&outtmp[j][0],1,&outarray[0][j][0],1,&outarray[0][j][0],1);
+                        Vmath::Vvtvp(nPts, &normal[nd][0], 1, 
+                                    &outtmp[j][0], 1, 
+                                    &outarray[0][j][0], 1, 
+                                    &outarray[0][j][0], 1);
                     }
                 }
             }
@@ -807,85 +622,88 @@ namespace Nektar
         {
             fluxVec = outarray;
 
-            for(int nd=0;nd<nDim;nd++)
+            for (int nd = 0; nd < nDim; ++nd)
             {
-                for(int nderiv=0;nderiv<nDim;nderiv++)
+                for (int nderiv = 0; nderiv < nDim; ++nderiv)
                 {
-                    GetViscousFluxBilinearForm(nDim,nd,nderiv,inarray,qfields[nderiv],outtmp);
+                    GetViscousFluxBilinearForm(nDim, nd, nderiv, inarray, 
+                                                qfields[nderiv], outtmp);
 
-                    for(int j=0;j<nConvectiveFields;j++)
+                    for (int j = 0; j < nConvectiveFields; ++j)
                     {
-                        Vmath::Vadd(nPts,&outtmp[j][0],1,&fluxVec[nd][j][0],1,&fluxVec[nd][j][0],1);
+                        Vmath::Vadd(nPts, &outtmp[j][0], 1, 
+                                    &fluxVec[nd][j][0], 1, 
+                                    &fluxVec[nd][j][0], 1);
                     }
                 }
             }
         }
 
-        if(ArtifDiffFactor.num_elements())
+        if (ArtifDiffFactor.size())
         {
             n_nonZero   =   nConvectiveFields;
             
-            if(normal.num_elements())
+            if (normal.size())
             {
-                Array<OneD, NekDouble> tmparray(nPts,0.0);
-                for(int i=0; i< nDim; i++)
+                Array<OneD, NekDouble> tmparray{nPts, 0.0};
+                for (int i = 0; i < nDim; ++i)
                 {
-                    Vmath::Vmul(nPts,ArtifDiffFactor,1,normal[i],1,tmparray,1);
-                    for(int j=0; j< nConvectiveFields; j++)
+                    Vmath::Vmul(nPts, ArtifDiffFactor, 1, normal[i], 1, 
+                                tmparray, 1);
+                    for (int j = 0; j < nConvectiveFields; ++j)
                     {
-                        Vmath::Vvtvp(nPts,tmparray,1,qfields[i][j],1,outarray[0][j],1,outarray[0][j],1);
+                        Vmath::Vvtvp(nPts, tmparray, 1, qfields[i][j], 1, 
+                                    outarray[0][j], 1, outarray[0][j], 1);
                     }
                 }
             }
             else
             {
-                for(int i=0; i< nDim; i++)
+                for (int i = 0; i < nDim; ++i)
                 {
-                    for(int j=0; j< nConvectiveFields; j++)
+                    for (int j = 0; j < nConvectiveFields; ++j)
                     {
-                        Vmath::Vvtvp(nPts,ArtifDiffFactor,1,qfields[i][j],1,outarray[i][j],1,outarray[i][j],1);
+                        Vmath::Vvtvp(nPts, ArtifDiffFactor, 1, qfields[i][j], 1, 
+                                    outarray[i][j], 1, outarray[i][j], 1);
                     }
                 }
             }
         }
 
-        nonZeroIndex = Array< OneD, int > (n_nonZero,0);
-        for(int i=1;i<n_nonZero+1; i++)
+        nonZeroIndex = Array< OneD, int > {size_t(n_nonZero), 0};
+        for (int i = 1; i < n_nonZero + 1; ++i)
         {
-            nonZeroIndex[n_nonZero-i] =   nConvectiveFields-i;
+            nonZeroIndex[n_nonZero - i] =   nConvectiveFields - i;
         }
     }
 
     /**
-     * @brief For very special treatment. For general boundaries it should do nothing
-     * TODO: check WallViscous Boundary and Twall setting and remove the special treatment here
+     * @brief For very special treatment. For general boundaries it does nothing
+     * But for WallViscous and WallAdiabatic, special treatment is needed 
+     * because they get the same Bwd value, special treatment is needed for 
+     * boundary treatment of diffusion flux
+     * Note: This special treatment could be removed by seperating 
+     * WallViscous and WallAdiabatic into two different classes.
      *
      */
     void NavierStokesCFE::SpecialBndTreat(
               Array<OneD,       Array<OneD, NekDouble> >    &consvar)
     {            
-        int nConvectiveFields   = consvar.num_elements();
+        size_t nConvectiveFields = consvar.size();
         int ndens       = 0;
-        int nengy       = nConvectiveFields-1;
-        int nvelst      = ndens + 1;
-        int nveled      = nengy;
-        
-        int cnt;
-        int j, e;
-        int id2;
+        int nengy       = nConvectiveFields - 1;
 
-        int nBndEdgePts, nBndEdges, nBndRegions;
+        Array<OneD, Array<OneD, NekDouble>> bndCons {nConvectiveFields};         
+        Array<OneD, NekDouble> bndTotEngy;
+        Array<OneD, NekDouble> bndPressure;          
+        Array<OneD, NekDouble> bndRho;      
+        Array<OneD, NekDouble> bndIntEndy; 
+        int nLengthArray = 0;
 
-        NekDouble InternalEnergy  =   m_eos->GetInternalEnergy(m_Twall);
-        
-        Array<OneD, NekDouble> wallTotEngy;
-        int nLengthArray    =0;
-
-        // Compute boundary conditions  for Energy
-        cnt = 0;
-        nBndRegions = m_fields[nengy]->
-        GetBndCondExpansions().num_elements();
-        for (j = 0; j < nBndRegions; ++j)
+        int cnt = 0;
+        int nBndRegions = m_fields[nengy]->
+            GetBndCondExpansions().size();
+        for (int j = 0; j < nBndRegions; ++j)
         {
             if (m_fields[nengy]->GetBndConditions()[j]->
                 GetBoundaryConditionType() ==
@@ -894,230 +712,273 @@ namespace Nektar
                 continue;
             }
 
-            nBndEdges = m_fields[nengy]->
+            size_t nBndEdges = m_fields[nengy]->
             GetBndCondExpansions()[j]->GetExpSize();
-            for (e = 0; e < nBndEdges; ++e)
+            for (int e = 0; e < nBndEdges; ++e)
             {
-                nBndEdgePts = m_fields[nengy]->
+                size_t nBndEdgePts = m_fields[nengy]->
                 GetBndCondExpansions()[j]->GetExp(e)->GetTotPoints();
 
-                id2 = m_fields[0]->GetTrace()->
+                int id2 = m_fields[0]->GetTrace()->
                 GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                            GetBndCondTraceToGlobalTraceMap(cnt++));
+                            GetBndCondIDToGlobalTraceID(cnt++));
 
                 // Imposing Temperature Twall at the wall 
                 if (boost::iequals(m_fields[nengy]->GetBndConditions()[j]->
-                    GetUserDefined(),"WallViscous"))
+                    GetUserDefined(), "WallViscous"))
                 {
-                    if(nBndEdgePts>nLengthArray)
+                    if (nBndEdgePts != nLengthArray)
                     {
-                        wallTotEngy     =   Array<OneD, NekDouble> (nBndEdgePts,0.0);
-                        nLengthArray    =   nBndEdgePts;
+                        for (int i = 0; i < nConvectiveFields; ++i)
+                        {
+                            bndCons[i] = Array<OneD, NekDouble>
+                                        {nBndEdgePts, 0.0};
+                        }
+                        bndTotEngy  = Array<OneD, NekDouble> {nBndEdgePts, 0.0};
+                        bndPressure = Array<OneD, NekDouble> {nBndEdgePts, 0.0};
+                        bndRho      = Array<OneD, NekDouble> {nBndEdgePts, 0.0};
+                        bndIntEndy  = Array<OneD, NekDouble> {nBndEdgePts, 0.0};
+                        nLengthArray = nBndEdgePts;
                     }
                     else
                     {
-                        Vmath::Fill(nLengthArray,0.0,wallTotEngy,1);
+                        Vmath::Zero(nLengthArray, bndPressure, 1);
+                        Vmath::Zero(nLengthArray, bndRho     , 1);
+                        Vmath::Zero(nLengthArray, bndIntEndy , 1);
                     }
 
-                    for(int k=nvelst;k<nveled;k++)
+                    for (int k = 0; k < nConvectiveFields; ++k)
                     {
-                        Vmath::Vvtvp(nBndEdgePts,&consvar[k][id2],1,&consvar[k][id2],1,&wallTotEngy[0],1,&wallTotEngy[0],1);
+                        Vmath::Vcopy(nBndEdgePts, &consvar[k][id2], 1, 
+                                    &bndCons[k][0], 1);
                     }
-                    Vmath::Vdiv(nBndEdgePts,&wallTotEngy[0],1,&consvar[ndens][id2],1,&wallTotEngy[0],1);
-                    Vmath::Svtvp(nBndEdgePts,InternalEnergy,&consvar[ndens][id2],1,&wallTotEngy[0],1,&wallTotEngy[0],1);
+
+                    m_varConv->GetPressure(bndCons, bndPressure);
+                    Vmath::Fill(nLengthArray, m_Twall, bndTotEngy, 1);
+                    m_varConv->GetRhoFromPT(bndPressure, bndTotEngy, bndRho);
+                    m_varConv->GetEFromRhoP(bndRho, bndPressure, bndIntEndy);
+                    m_varConv->GetDynamicEnergy(bndCons, bndTotEngy);
+
+                    Vmath::Vvtvp(nBndEdgePts, &bndIntEndy[0], 1, 
+                                &bndCons[ndens][0], 1, &bndTotEngy[0], 1, 
+                                &bndTotEngy[0], 1);
                     
 
                     Vmath::Vcopy(nBndEdgePts, 
-                                &wallTotEngy[0], 1, 
+                                &bndTotEngy[0], 1, 
                                 &consvar[nengy][id2], 1);
                 }                    
             }
         }
     }
 
+    /**
+     * @brief Calculate and return the ArtificialViscosity for shock-capturing.
+     */
     void NavierStokesCFE::GetArtificialViscosity(
-        const Array<OneD, Array<OneD, NekDouble> >  &inarray,
+        const Array<OneD, Array<OneD, NekDouble> >  &inarray, 
               Array<OneD,             NekDouble  >  &muav)
     {            
-        m_artificialDiffusion->GetArtificialViscosity(inarray,muav);
+        m_artificialDiffusion->GetArtificialViscosity(inarray, muav);
     }
 
-    void NavierStokesCFE::v_GetViscousSymmtrFluxConservVar(
-        const int                                                       nSpaceDim,
-        const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
-        const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
-        Array< OneD, int >                                              &nonZeroIndex,    
-        const Array<OneD, Array<OneD, NekDouble> >                      &normals)
+    /**
+     * @brief Calculate and return the Symmetric flux in IP method.
+     */
+    void NavierStokesCFE::GetViscousSymmtrFluxConservVar(
+        const int                                           nSpaceDim, 
+        const Array<OneD, Array<OneD, NekDouble> >          &inaverg, 
+        const Array<OneD, Array<OneD, NekDouble > >         &inarray, 
+        TensorOfArray3D<NekDouble>                          &outarray, 
+        Array< OneD, int >                                  &nonZeroIndex,    
+        const Array<OneD, Array<OneD, NekDouble> >          &normals)
     {
-        int nConvectiveFields   = inarray.num_elements();
-        int nPts                = inaverg[nConvectiveFields-1].num_elements();
-        nonZeroIndex = Array<OneD, int>(nConvectiveFields-1,0);
-        for(int i=0;i<nConvectiveFields-1;i++)
+        size_t nConvectiveFields   = inarray.size();
+        size_t nPts                = inaverg[nConvectiveFields - 1].size();
+        nonZeroIndex = Array<OneD, int>{nConvectiveFields - 1, 0};
+        for (int i = 0; i < nConvectiveFields - 1; ++i)
         {
-            nonZeroIndex[i] =   i+1;
+            nonZeroIndex[i] =   i + 1;
         }
-        Array<OneD, Array<OneD, NekDouble> > outtmp( nConvectiveFields );
-        for(int i=0;i<nConvectiveFields;i++)
+        Array<OneD, Array<OneD, NekDouble> > outtmp{nConvectiveFields};
+        for (int i = 0; i < nConvectiveFields; ++i)
         {
-            outtmp[i] =   Array<OneD, NekDouble> (nPts, 0.0);
+            outtmp[i] =   Array<OneD, NekDouble> {nPts, 0.0};
         }
-        for(int nd = 0; nd< nSpaceDim; nd++)
+        for (int nd = 0; nd < nSpaceDim; ++nd)
         {
-            for(int nderiv =0; nderiv<nSpaceDim;nderiv++)
+            for (int nderiv = 0; nderiv < nSpaceDim; ++nderiv)
             {
-                GetViscousFluxBilinearForm(nSpaceDim,nd,nderiv,inaverg,inarray,outtmp);
+                GetViscousFluxBilinearForm(nSpaceDim, nd, nderiv, inaverg, 
+                                            inarray, outtmp);
 
-                for(int i=0;i<nConvectiveFields;i++)
+                for (int i = 0; i < nConvectiveFields; ++i)
                 {
-                    Vmath::Vvtvp(nPts,&outtmp[i][0],1,&normals[nderiv][0],1,&outarray[nd][i][0],1,&outarray[nd][i][0],1);
+                    Vmath::Vvtvp(nPts, &outtmp[i][0], 1, &normals[nderiv][0], 1, 
+                                &outarray[nd][i][0], 1, &outarray[nd][i][0], 1);
                 }
             }
         }
     }
+
+    /**
+     * @brief Calculate diffusion flux using the Jacobian form.
+     */
     void NavierStokesCFE::GetViscousFluxBilinearForm(
-        const int                                                       nSpaceDim,
-        const int                                                       FluxDirection,
-        const int                                                       DerivDirection,
-        const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
-        const Array<OneD, const Array<OneD, NekDouble> >                &injumpp,
-              Array<OneD, Array<OneD, NekDouble> >                      &outarray)
+        const int                                           nSpaceDim, 
+        const int                                           FluxDirection, 
+        const int                                           DerivDirection, 
+        const Array<OneD, const Array<OneD, NekDouble> >    &inaverg, 
+        const Array<OneD, const Array<OneD, NekDouble> >    &injumpp, 
+        Array<OneD, Array<OneD, NekDouble> >                &outarray)
     {
-        int nConvectiveFields   = inaverg.num_elements();
-        int nPts                = inaverg[nConvectiveFields-1].num_elements();
-        int nDim=nSpaceDim;
-        // Auxiliary variables
+        size_t nConvectiveFields   = inaverg.size();
+        size_t nPts = inaverg[nConvectiveFields - 1].size();
+        size_t nDim=nSpaceDim;
 
-        // // Variable viscosity through the Sutherland's law
-        // if (m_ViscosityType == "Variable")
-        // {
-        //     Array<OneD, NekDouble > temperature        (nPts, 0.0);
-        //     m_varConv->GetTemperature(inaverg,temperature);
-        //     m_varConv->GetDynamicViscosity(temperature, mu);
-        // }
-        // else
-        // {
-        //     Vmath::Fill(nPts, m_mu, mu, 1);
-        // }
-        Array<OneD, NekDouble > temperature        (nPts, 0.0);
-        Array<OneD, NekDouble > mu                 (nPts, 0.0);
-        Array<OneD, NekDouble > thermalConductivity        (nPts, 0.0);
-        m_varConv->GetTemperature(inaverg,temperature);
-        GetViscosityAndThermalCondFromTemp(temperature, mu, thermalConductivity);
+        Array<OneD, NekDouble > temperature        {nPts, 0.0};
+        Array<OneD, NekDouble > mu                 {nPts, 0.0};
+        Array<OneD, NekDouble > thermalConductivity        {nPts, 0.0};
+        m_varConv->GetTemperature(inaverg, temperature);
+        GetViscosityAndThermalCondFromTemp(temperature, mu, 
+                                            thermalConductivity);
 
-        Array<OneD,Array<OneD, NekDouble>> outtmp = outarray;
-        for(int i=0; i<nConvectiveFields;i++)
+        Array<OneD, Array<OneD, NekDouble>> outtmp = outarray;
+        for (int i = 0; i < nConvectiveFields; ++i)
         {
-            Vmath::Zero(nPts,&outarray[i][0],1);
-            // outtmp[i]=Array<OneD,NekDouble> (nPts,0.0);
+            Vmath::Zero(nPts, &outarray[i][0], 1);
         }
 
-        //TODO: to get primary variable outside.(even in the beginning of DoODERhs)
-        Array<OneD,Array<OneD,NekDouble>> u(nDim);
-        Array<OneD,Array<OneD,NekDouble>> u2(nDim);
-        for(int i=0;i<nDim;i++)
+        Array<OneD, Array<OneD, NekDouble>> u{nDim};
+        Array<OneD, Array<OneD, NekDouble>> u2{nDim};
+        for (int i = 0; i < nDim; ++i)
         {
-            u[i]=Array<OneD,NekDouble> (nPts,0.0);
-            u2[i]=Array<OneD,NekDouble> (nPts,0.0);
+            u[i]=Array<OneD, NekDouble> {nPts, 0.0};
+            u2[i]=Array<OneD, NekDouble> {nPts, 0.0};
         }
-        Array<OneD,NekDouble> q2(nPts,0.0);
-        Array<OneD,NekDouble> E_minus_q2(nPts,0.0);
-        Array<OneD,NekDouble> orho(nPts,0.0);
-        Array<OneD,NekDouble>tmp(nPts,0.0);
-        Array<OneD,NekDouble>tmp1(nPts,0.0);
+        Array<OneD, NekDouble> q2{nPts, 0.0};
+        Array<OneD, NekDouble> E_minus_q2{nPts, 0.0};
+        Array<OneD, NekDouble> orho{nPts, 0.0};
+        Array<OneD, NekDouble>tmp {nPts, 0.0};
+        Array<OneD, NekDouble>tmp1{nPts, 0.0};
 
         //Constants
-        int nDim_plus_one=nDim+1;
-        int FluxDirection_plus_one=FluxDirection+1;
-        NekDouble gamma=m_gamma;
-        NekDouble Pr=m_Prandtl;
-        NekDouble gammaoPr=gamma/Pr;
-        NekDouble one_minus_gammaoPr=1.0-gammaoPr;
-        const NekDouble OneThird=1./3.;
-        const NekDouble TwoThird=2.*OneThird;
-        const NekDouble FourThird=4.*OneThird;
+        int nDim_plus_one = nDim + 1;
+        int FluxDirection_plus_one = FluxDirection + 1;
+        NekDouble gamma = m_gamma;
+        NekDouble Pr = m_Prandtl;
+        NekDouble gammaoPr = gamma / Pr;
+        NekDouble one_minus_gammaoPr = 1.0 - gammaoPr;
+        const NekDouble OneThird = 1. / 3.;
+        const NekDouble TwoThird = 2. * OneThird;
+        const NekDouble FourThird = 4. * OneThird;
 
-        Vmath::Sdiv(nPts,1.0,&inaverg[0][0],1,&orho[0],1);
-        for(int i=0;i<nDim;i++)
+        Vmath::Sdiv(nPts, 1.0, &inaverg[0][0], 1, &orho[0], 1);
+        m_varConv->GetVelocityVector(inaverg, u);
+        for (int i = 0; i < nDim; ++i)
         {
-            Vmath::Vmul(nPts,&inaverg[i+1][0],1,&orho[0],1,&u[i][0],1);
-            Vmath::Vmul(nPts,&u[i][0],1,&u[i][0],1,&u2[i][0],1);
-            Vmath::Vadd(nPts,&q2[0],1,&u2[i][0],1,&q2[0],1);
+            Vmath::Vmul(nPts, &u[i][0], 1, &u[i][0], 1, &u2[i][0], 1);
+            Vmath::Vadd(nPts, &q2[0], 1, &u2[i][0], 1, &q2[0], 1);
         }
-        Vmath::Vmul(nPts,&inaverg[nDim_plus_one][0],1,&orho[0],1,&E_minus_q2[0],1);
-        Vmath::Vsub(nPts,&E_minus_q2[0],1,&q2[0],1,&E_minus_q2[0],1);
-        Vmath::Vmul(nPts,&mu[0],1,&orho[0],1,&tmp[0],1);
+        Vmath::Vmul(nPts, &inaverg[nDim_plus_one][0], 1, 
+                    &orho[0], 1, &E_minus_q2[0], 1);
+        Vmath::Vsub(nPts, &E_minus_q2[0], 1, &q2[0], 1, &E_minus_q2[0], 1);
+        Vmath::Vmul(nPts, &mu[0], 1, &orho[0], 1, &tmp[0], 1);
 
-        int DerivDirection_plus_one=DerivDirection+1;
-        if(DerivDirection==FluxDirection)
+        int DerivDirection_plus_one = DerivDirection + 1;
+        if (DerivDirection == FluxDirection)
         {
-            Vmath::Svtvp(nPts,OneThird,&u2[FluxDirection][0],1,&q2[0],1,&tmp1[0],1);
-            Vmath::Svtvp(nPts,gammaoPr,&E_minus_q2[0],1,&tmp1[0],1,&tmp1[0],1);
-            Vmath::Vmul(nPts,&tmp1[0],1,&injumpp[0][0],1,&tmp1[0],1);
+            Vmath::Svtvp(nPts, OneThird, &u2[FluxDirection][0], 1, 
+                        &q2[0], 1, &tmp1[0], 1);
+            Vmath::Svtvp(nPts, gammaoPr, &E_minus_q2[0], 1, 
+                        &tmp1[0], 1,
+                        &tmp1[0], 1);
+            Vmath::Vmul(nPts, &tmp1[0], 1, &injumpp[0][0], 1, &tmp1[0], 1);
             //orho is tmperary array
-            Vmath::Svtvm(nPts,gammaoPr,&injumpp[nDim_plus_one][0],1,&tmp1[0],1,&orho[0],1);
+            Vmath::Svtvm(nPts, gammaoPr, &injumpp[nDim_plus_one][0], 1, 
+                        &tmp1[0], 1, &orho[0], 1);
 
-            for(int i=0;i<nDim;i++)
+            for (int i = 0; i < nDim; ++i)
             {
-                int i_plus_one=i+1;
-                //flux[rhou,rhov,rhow]
-                Vmath::Vvtvm(nPts,&u[i][0],1,&injumpp[0][0],1,&injumpp[i_plus_one][0],1,&outtmp[i_plus_one][0],1);
-                Vmath::Neg(nPts,&outtmp[i_plus_one][0],1);
-                Vmath::Vmul(nPts,&tmp[0],1,&outtmp[i_plus_one][0],1,&outtmp[i_plus_one][0],1);
+                int i_plus_one = i + 1;
+                //flux[rhou, rhov, rhow]
+                Vmath::Vvtvm(nPts, &u[i][0], 1, &injumpp[0][0], 1, 
+                            &injumpp[i_plus_one][0], 1, 
+                            &outtmp[i_plus_one][0], 1);
+                Vmath::Neg(nPts, &outtmp[i_plus_one][0], 1);
+                Vmath::Vmul(nPts, &tmp[0], 1, &outtmp[i_plus_one][0], 1, 
+                            &outtmp[i_plus_one][0], 1);
                 //flux rhoE
-                Vmath::Smul(nPts,one_minus_gammaoPr,&u[i][0],1,&tmp1[0],1);
-                Vmath::Vvtvp(nPts,&tmp1[0],1,&injumpp[i_plus_one][0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
+                Vmath::Smul(nPts, one_minus_gammaoPr, &u[i][0], 1, &tmp1[0], 1);
+                Vmath::Vvtvp(nPts, &tmp1[0], 1, &injumpp[i_plus_one][0], 1, 
+                            &outtmp[nDim_plus_one][0], 1, 
+                            &outtmp[nDim_plus_one][0], 1);
 
-                if(i==FluxDirection)
+                if (i == FluxDirection)
                 {
-                    Vmath::Smul(nPts,FourThird,&outtmp[i_plus_one][0],1,&outtmp[i_plus_one][0],1);
-                    Vmath::Smul(nPts,OneThird,&u[FluxDirection][0],1,&tmp1[0],1);
-                    Vmath::Vvtvp(nPts,&tmp1[0],1,&injumpp[FluxDirection_plus_one][0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
+                    Vmath::Smul(nPts, FourThird, &outtmp[i_plus_one][0], 1, 
+                                &outtmp[i_plus_one][0], 1);
+                    Vmath::Smul(nPts, OneThird, 
+                                &u[FluxDirection][0], 1, &tmp1[0], 1);
+                    Vmath::Vvtvp(nPts, &tmp1[0], 1, 
+                                &injumpp[FluxDirection_plus_one][0], 1, 
+                                &outtmp[nDim_plus_one][0], 1, 
+                                &outtmp[nDim_plus_one][0], 1);
                 }
             }
-            Vmath::Vadd(nPts,&orho[0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
-            Vmath::Vmul(nPts,&tmp[0],1,&outtmp[nDim_plus_one][0],1,&outtmp[nDim_plus_one][0],1);
+            Vmath::Vadd(nPts, &orho[0], 1, &outtmp[nDim_plus_one][0], 1, 
+                        &outtmp[nDim_plus_one][0], 1);
+            Vmath::Vmul(nPts, &tmp[0], 1, &outtmp[nDim_plus_one][0], 1, 
+                        &outtmp[nDim_plus_one][0], 1);
 
         }
         else
         {
-            Vmath::Vvtvm(nPts,&u[DerivDirection][0],1,&injumpp[0][0],1,&injumpp[DerivDirection_plus_one][0],1,&tmp1[0],1);
-            Vmath::Smul(nPts,TwoThird,&tmp1[0],1,&tmp1[0],1);
-            Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[FluxDirection_plus_one][0],1);
+            Vmath::Vvtvm(nPts, &u[DerivDirection][0], 1, &injumpp[0][0], 1, 
+                        &injumpp[DerivDirection_plus_one][0], 1, &tmp1[0], 1);
+            Vmath::Smul(nPts, TwoThird, &tmp1[0], 1, &tmp1[0], 1);
+            Vmath::Vmul(nPts, &tmp[0], 1, &tmp1[0], 1, 
+                        &outtmp[FluxDirection_plus_one][0], 1);
 
-            Vmath::Vvtvm(nPts,&u[FluxDirection][0],1,&injumpp[0][0],1,&injumpp[FluxDirection_plus_one][0],1,&tmp1[0],1);
-            Vmath::Neg(nPts,&tmp1[0],1);
-            Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[DerivDirection_plus_one][0],1);
+            Vmath::Vvtvm(nPts, &u[FluxDirection][0], 1, &injumpp[0][0], 1, 
+                        &injumpp[FluxDirection_plus_one][0], 1, &tmp1[0], 1);
+            Vmath::Neg(nPts, &tmp1[0], 1);
+            Vmath::Vmul(nPts, &tmp[0], 1, &tmp1[0], 1, 
+                        &outtmp[DerivDirection_plus_one][0], 1);
 
-            Vmath::Smul(nPts,OneThird,&u[FluxDirection][0],1,&tmp1[0],1);
-            Vmath::Vmul(nPts,&tmp1[0],1,&u[DerivDirection][0],1,&tmp1[0],1);
-            Vmath::Vmul(nPts,&tmp1[0],1,&injumpp[0][0],1,&tmp1[0],1);
+            Vmath::Smul(nPts, OneThird, &u[FluxDirection][0], 1, &tmp1[0], 1);
+            Vmath::Vmul(nPts, &tmp1[0], 1, &u[DerivDirection][0], 1, 
+                        &tmp1[0], 1);
+            Vmath::Vmul(nPts, &tmp1[0], 1, &injumpp[0][0], 1, &tmp1[0], 1);
             //previous orho as a tmperary memory because it is non-used any more
-            Vmath::Smul(nPts,TwoThird,&u[FluxDirection][0],1,&orho[0],1);
-            Vmath::Vmul(nPts,&orho[0],1,&injumpp[DerivDirection_plus_one][0],1,&orho[0],1);
-            Vmath::Vadd(nPts,&tmp1[0],1,&orho[0],1,&tmp1[0],1);
-            Vmath::Neg(nPts,&tmp1[0],1);
-            Vmath::Vvtvp(nPts,&u[DerivDirection][0],1,&injumpp[FluxDirection_plus_one][0],1,&tmp1[0],1,&tmp1[0],1);
-            Vmath::Vmul(nPts,&tmp[0],1,&tmp1[0],1,&outtmp[nDim_plus_one][0],1);
-            
+            Vmath::Smul(nPts, TwoThird, &u[FluxDirection][0], 1, &orho[0], 1);
+            Vmath::Vmul(nPts, &orho[0], 1, 
+                        &injumpp[DerivDirection_plus_one][0], 1, 
+                        &orho[0], 1);
+            Vmath::Vadd(nPts, &tmp1[0], 1, &orho[0], 1, &tmp1[0], 1);
+            Vmath::Neg(nPts, &tmp1[0], 1);
+            Vmath::Vvtvp(nPts, &u[DerivDirection][0], 1, 
+                        &injumpp[FluxDirection_plus_one][0], 1, &tmp1[0], 1, 
+                        &tmp1[0], 1);
+            Vmath::Vmul(nPts, &tmp[0], 1, &tmp1[0], 1, 
+                        &outtmp[nDim_plus_one][0], 1);
         }
- 
     }
 
     /**
      * @brief Return the penalty vector for the LDGNS diffusion problem.
      */
     void NavierStokesCFE::v_GetFluxPenalty(
-        const Array<OneD, Array<OneD, NekDouble> >  &uFwd,
-        const Array<OneD, Array<OneD, NekDouble> >  &uBwd,
+        const Array<OneD, Array<OneD, NekDouble> >  &uFwd, 
+        const Array<OneD, Array<OneD, NekDouble> >  &uBwd, 
               Array<OneD, Array<OneD, NekDouble> >  &penaltyCoeff)
     {
-        unsigned int nTracePts  = uFwd[0].num_elements();
+        unsigned int nTracePts  = uFwd[0].size();
 
         // Compute average temperature
-        unsigned int nVariables = uFwd.num_elements();
+        unsigned int nVariables = uFwd.size();
         Array<OneD, NekDouble> tAve{nTracePts, 0.0};
-        Vmath::Svtsvtp(nTracePts, 0.5, uFwd[nVariables-1], 1,
+        Vmath::Svtsvtp(nTracePts, 0.5, uFwd[nVariables-1], 1, 
             0.5, uBwd[nVariables-1], 1, tAve, 1);
 
         // Get average viscosity and thermal conductivity
@@ -1134,12 +995,12 @@ namespace Nektar
             // Multiply by variable coefficient = {coeff} ( u^+ - u^- )
             if ( i < nVariables-1 )
             {
-                Vmath::Vmul(nTracePts, muAve, 1, penaltyCoeff[i], 1,
+                Vmath::Vmul(nTracePts, muAve, 1, penaltyCoeff[i], 1, 
                     penaltyCoeff[i], 1);
             }
             else
             {
-                Vmath::Vmul(nTracePts, tcAve, 1, penaltyCoeff[i], 1,
+                Vmath::Vmul(nTracePts, tcAve, 1, penaltyCoeff[i], 1, 
                     penaltyCoeff[i], 1);
             }
         }
@@ -1151,11 +1012,11 @@ namespace Nektar
      * todo: add artificial viscosity here
      */
     void NavierStokesCFE::GetViscosityAndThermalCondFromTemp(
-        const Array<OneD, NekDouble> &temperature,
-        Array<OneD, NekDouble> &mu,
+        const Array<OneD, NekDouble> &temperature, 
+        Array<OneD, NekDouble> &mu, 
         Array<OneD, NekDouble> &thermalCond)
     {
-        int nPts       = temperature.num_elements();
+        int nPts       = temperature.size();
 
         // Variable viscosity through the Sutherland's law
         if (m_ViscosityType == "Variable")

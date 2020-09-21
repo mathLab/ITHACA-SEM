@@ -80,7 +80,7 @@ namespace Nektar
             const NekDouble                     tol         )
         {
             bool converged = false;
-            int ntotal = Residual.num_elements();
+            int ntotal = Residual.size();
             boost::ignore_unused(nIteration);
 
             NekDouble   SysResNorm = Vmath::Dot(ntotal,Residual,Residual);

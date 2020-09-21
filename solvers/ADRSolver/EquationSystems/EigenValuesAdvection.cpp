@@ -28,7 +28,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -130,7 +130,7 @@ namespace Nektar
         // Reset the normal velocity
         Vmath::Zero(nTracePts, m_traceVn, 1);
 
-        for (int i = 0; i < m_velocity.num_elements(); ++i)
+        for (int i = 0; i < m_velocity.size(); ++i)
         {
             m_fields[0]->ExtractTracePhys(m_velocity[i], tmp);
 
@@ -143,10 +143,10 @@ namespace Nektar
 
         return m_traceVn;
     }
-	
+
 	void EigenValuesAdvection::v_DoInitialise()
     {
-       
+
     }
 
     EigenValuesAdvection::~EigenValuesAdvection()
@@ -159,15 +159,15 @@ namespace Nektar
         int nvariables = 1;
         int dofs = GetNcoeffs();
 		//bool UseContCoeffs = false;
-		
+
 		Array<OneD, Array<OneD, NekDouble> > inarray(nvariables);
 		Array<OneD, Array<OneD, NekDouble> > tmp(nvariables);
 		Array<OneD, Array<OneD, NekDouble> > outarray(nvariables);
 		Array<OneD, Array<OneD, NekDouble> > WeakAdv(nvariables);
-		
+
 		int npoints = GetNpoints();
 		int ncoeffs = GetNcoeffs();
-		
+
 		switch (m_projectionType)
 		{
                 case MultiRegions::eDiscontinuous:
@@ -183,24 +183,24 @@ namespace Nektar
                         break;
                     }
 		}
-		
+
 		cout << endl;
 		cout << "Num Phys Points = " << npoints << endl; // phisical points
 		cout << "Num Coeffs      = " << ncoeffs << endl; //
 		cout << "Num Cont Coeffs = " << dofs << endl;
-		
+
 		inarray[0]  = Array<OneD, NekDouble>(npoints,0.0);
 		outarray[0] = Array<OneD, NekDouble>(npoints,0.0);
 		tmp[0] = Array<OneD, NekDouble>(npoints,0.0);
-		
+
 		WeakAdv[0]  = Array<OneD, NekDouble>(ncoeffs,0.0);
 		Array<OneD, NekDouble> MATRIX(npoints*npoints,0.0);
-		
+
 		for (int j = 0; j < npoints; j++)
 		{
-		
+
 		inarray[0][j] = 1.0;
-       
+
 	    /// Feeding the weak Advection oprator with  a vector (inarray)
         /// Looping on inarray and changing the position of the only non-zero entry
 		/// we simulate the multiplication by the identity matrix.
@@ -223,41 +223,41 @@ namespace Nektar
                     //m_fields[i]->MultiplyByInvMassMatrix(WeakAdv[i],WeakAdv[i]);
                     //Projection
                     m_fields[i]->FwdTrans(outarray[i],WeakAdv[i]);
-                    
+
                     m_fields[i]->BwdTrans_IterPerExp(WeakAdv[i],outarray[i]);
                 }
                 break;
             }
         }
-	
+
         /// The result is stored in outarray (is the j-th columns of the weak advection operator).
         /// We now store it in MATRIX(j)
         Vmath::Vcopy(npoints,&(outarray[0][0]),1,&(MATRIX[j]),npoints);
-	
+
         /// Set the j-th entry of inarray back to zero
         inarray[0][j] = 0.0;
 		}
-                
+
 		////////////////////////////////////////////////////////////////////////////////
 		/// Calulating the eigenvalues of the weak advection operator stored in (MATRIX)
 		/// using Lapack routines
-		
+
 		char jobvl = 'N';
 		char jobvr = 'N';
 		int info = 0, lwork = 3*npoints;
 		NekDouble dum;
-		
+
 		Array<OneD, NekDouble> EIG_R(npoints);
 		Array<OneD, NekDouble> EIG_I(npoints);
-		
+
 		Array<OneD, NekDouble> work(lwork);
-		
+
 		Lapack::Dgeev(jobvl,jobvr,npoints,MATRIX.get(),npoints,EIG_R.get(),EIG_I.get(),&dum,1,&dum,1,&work[0],lwork,info);
-		
+
 		////////////////////////////////////////////////////////
 		//Print Matrix
 		FILE *mFile;
-		
+
 		mFile = fopen ("WeakAdvMatrix.txt","w");
 		for(int j = 0; j<npoints; j++)
 		{
@@ -268,18 +268,18 @@ namespace Nektar
 			fprintf(mFile,"\n");
 		}
 		fclose (mFile);
-		
+
 		////////////////////////////////////////////////////////
 		//Output of the EigenValues
 		FILE *pFile;
-		
+
 		pFile = fopen ("Eigenvalues.txt","w");
 		for(int j = 0; j<npoints; j++)
 		{
 			fprintf(pFile,"%e %e\n",EIG_R[j],EIG_I[j]);
 		}
 		fclose (pFile);
-		
+
 		cout << "\nEigenvalues : " << endl;
 		for(int j = 0; j<npoints; j++)
 		{
@@ -292,14 +292,14 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >               &physfield,
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
     {
-        ASSERTL1(flux[0].num_elements() == m_velocity.num_elements(),
+        ASSERTL1(flux[0].size() == m_velocity.size(),
                  "Dimension of flux array and velocity array do not match");
 
-        int nq = physfield[0].num_elements();
+        int nq = physfield[0].size();
 
-        for (int i = 0; i < flux.num_elements(); ++i)
+        for (int i = 0; i < flux.size(); ++i)
         {
-            for (int j = 0; j < flux[0].num_elements(); ++j)
+            for (int j = 0; j < flux[0].size(); ++j)
             {
                 Vmath::Vmul(nq, physfield[i], 1, m_velocity[j], 1,
                             flux[i][j], 1);

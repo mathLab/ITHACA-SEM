@@ -80,6 +80,10 @@ namespace Nektar
                 const unsigned int bndPatch,
                 const NekDouble    sign);
 
+            void SetNewLevelMap(Array<OneD, const unsigned int> numLocalBndCondPerPatch,
+                                Array<OneD, const unsigned int> numLocalIntCondPerPatch);
+
+
             inline Array<OneD, const int> GetPatchId() const 
             {
                 return m_patchId;
@@ -88,6 +92,11 @@ namespace Nektar
             inline Array<OneD, const int>  GetDofId() const
             {
                 return m_dofId;
+            }
+            
+            inline Array<OneD, const int>  GetNewLevelMap() const
+            {
+                return m_newLevelMap;
             }
             
             inline Array<OneD, const unsigned int> IsBndDof() const
@@ -103,6 +112,7 @@ namespace Nektar
         protected:
             Array<OneD, int>          m_patchId;
             Array<OneD, int>          m_dofId;
+            Array<OneD, int>          m_newLevelMap;
             Array<OneD, unsigned int> m_bndPatch; 
             Array<OneD, NekDouble>    m_sign; 
         };

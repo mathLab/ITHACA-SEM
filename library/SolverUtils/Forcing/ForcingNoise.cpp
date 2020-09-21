@@ -67,7 +67,7 @@ namespace SolverUtils
         const TiXmlElement* noiseElmt = pForce->FirstChildElement("WHITENOISE");
         ASSERTL0(noiseElmt, "Requires WHITENOISE tag specifying "
                                "magnitude of white noise force.");
-        
+
         string noiseValue = noiseElmt->GetText();
 
         m_noise = boost::lexical_cast<NekDouble>(noiseValue);
@@ -131,7 +131,7 @@ namespace SolverUtils
         {
             for (int i = 0; i < m_NumVariable; ++i)
             {
-                Vmath::FillWhiteNoise(outarray[i].num_elements(),
+                Vmath::FillWhiteNoise(outarray[i].size(),
                                       m_noise,m_Forcing[i],1);
             }
         }
@@ -139,7 +139,7 @@ namespace SolverUtils
         // Apply forcing
         for (int i = 0; i < m_NumVariable; i++)
         {
-            Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
+            Vmath::Vadd(outarray[i].size(), outarray[i], 1,
                         m_Forcing[i], 1, outarray[i], 1);
         }
 

@@ -43,14 +43,6 @@ namespace Nektar
     namespace MultiRegions
     {
 
-        enum CoeffState
-        {
-            eNotSet,   ///< No state set
-            eLocal,    ///< Local  coefficients 
-            eHybrid,   ///< Hybrid coefficients
-            eGlobal,   ///< Global coefficients 
-        };
-
         // Orientation of adjacent edge for use with boundary
         // constraints
         enum AdjacentTraceOrientation

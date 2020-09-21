@@ -193,8 +193,6 @@ namespace Nektar
                 Array<OneD, NekDouble>  &lengthsBwd);
 
         private:
-            virtual void v_ReadGlobalOptimizationParameters();
-            
             /// Set up the normals on each expansion.
             virtual void v_SetUpPhysNormals();
             /// const StdRegions::StdExpansionVector &locexp);

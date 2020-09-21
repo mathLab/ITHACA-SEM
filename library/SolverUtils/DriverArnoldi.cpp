@@ -76,13 +76,13 @@ void DriverArnoldi::v_InitObject(ostream &out)
     {
         m_period  = m_session->GetParameter("TimeStep")
                   * m_session->GetParameter("NumSteps");
-        m_nfields = m_equ[0]->UpdateFields().num_elements() - 1;
+        m_nfields = m_equ[0]->UpdateFields().size() - 1;
 
     }
     else
     {
         m_period  = 1.0;
-        m_nfields = m_equ[0]->UpdateFields().num_elements();
+        m_nfields = m_equ[0]->UpdateFields().size();
     }
 
     if(m_session->DefinesSolverInfo("ModeType") &&
@@ -264,7 +264,7 @@ void DriverArnoldi::WriteFld(std::string file, Array<OneD, NekDouble> coeffs)
     std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_nfields);
 
     int ncoeffs = m_equ[0]->UpdateFields()[0]->GetNcoeffs();
-    ASSERTL1(coeffs.num_elements() >= ncoeffs*m_nfields,"coeffs is not of sufficient size");
+    ASSERTL1(coeffs.size() >= ncoeffs*m_nfields,"coeffs is not of sufficient size");
 
     for(int i = 0; i < m_nfields; ++i)
     {
@@ -283,30 +283,20 @@ void DriverArnoldi::WriteEvs(
         NekDouble resid,
         bool DumpInverse)
 {
-    int ndigits     = 6;  // the number of sigificant digits
-    int nothers     = 10; // extra width to place -, E, and power
-    int nwidthcolm  = nothers+ndigits-1; // the second value determines the number of sigificant digits
     if (m_timeSteppingAlgorithm)
     {
         NekDouble abs_ev = hypot (re_ev, im_ev);
         NekDouble ang_ev = atan2 (im_ev, re_ev);
 
         evlout << "EV: " << setw(2)  << i
-               <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
-               << abs_ev
-               << " "
-               << ang_ev
-               << " "
-               << log (abs_ev) / m_period
-               << " "
-               << ang_ev       / m_period;
+               << setw(12) << abs_ev
+               << setw(12) << ang_ev
+               << setw(12) << log (abs_ev) / m_period
+               << setw(12) << ang_ev       / m_period;
 
         if(resid != NekConstants::kNekUnsetDouble)
         {
-            evlout 
-                    <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
-                    << " "
-                    << resid;
+            evlout << setw(12) << resid;
         }
         evlout << endl;
     }
@@ -324,27 +314,18 @@ void DriverArnoldi::WriteEvs(
         }
 
         evlout << "EV: " << setw(2)  <<  i
-               <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
-               <<  sign*re_ev
-               << " "
-               <<  sign*im_ev;
+               << setw(14) <<  sign*re_ev
+               << setw(14) <<  sign*im_ev;
 
         if(DumpInverse)
         {
-            evlout 
-                    <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
-                    << " "
-                    <<  sign*re_ev*invmag + m_realShift
-                    << " "
-                    <<  sign*im_ev*invmag + m_imagShift;
+            evlout << setw(14) <<  sign*re_ev*invmag + m_realShift
+                   << setw(14) <<  sign*im_ev*invmag + m_imagShift;
         }
 
         if(resid != NekConstants::kNekUnsetDouble)
         {
-            evlout 
-                    <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
-                    << " "
-                    << resid;
+            evlout << setw(12) << resid;
         }
         evlout << endl;
     }

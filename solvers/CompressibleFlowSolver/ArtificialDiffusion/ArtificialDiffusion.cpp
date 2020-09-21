@@ -129,7 +129,7 @@ void ArtificialDiffusion::v_DoArtificialDiffusion_coeff(
         outarrayDiff[i] = Array<OneD, NekDouble>{ncoeffs, 0.0};
     }
 
-    m_diffusion->Diffuse_coeff(nvariables, m_fields, inarray, outarrayDiff);
+    m_diffusion->DiffuseCoeffs(nvariables, m_fields, inarray, outarrayDiff);
 
     for (int i = 0; i < nvariables; ++i)
     {

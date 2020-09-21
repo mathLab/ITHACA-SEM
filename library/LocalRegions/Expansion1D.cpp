@@ -43,6 +43,16 @@ namespace Nektar
 {
     namespace LocalRegions
     {
+        const NormalVector &Expansion1D::v_GetTraceNormal(
+                    const int edge) const
+        {
+            std::map<int, NormalVector>::const_iterator x;
+            x = m_vertexNormals.find(edge);
+            ASSERTL1 (x != m_vertexNormals.end(),
+                        "Vertex normal not computed.");
+            return x->second;
+        }
+
         DNekMatSharedPtr Expansion1D::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             DNekMatSharedPtr returnval;
@@ -410,7 +420,7 @@ namespace Nektar
         {
             const Array<OneD, const Array<OneD, NekDouble> >
                 &normals = GetLeftAdjacentElementExp()->
-                GetEdgeNormal(GetLeftAdjacentElementEdge());
+                GetTraceNormal(GetLeftAdjacentElementTrace());
 
             int nq = m_base[0]->GetNumPoints();
             Array<OneD, NekDouble > Fn(nq);
@@ -419,6 +429,23 @@ namespace Nektar
 
             return Integral(Fn);
         }
+
+        void Expansion1D::v_ReOrientTracePhysMap
+                  (const StdRegions::Orientation orient,
+                   Array<OneD, int> &idmap,
+                   const int nq0,  const int nq1)
+        {
+            boost::ignore_unused(orient, nq0, nq1);
+
+            if (idmap.size() != 2)
+            {
+                idmap = Array<OneD, int>(2);
+            }
+
+            idmap[0] = 0;
+            idmap[1] = 1;
+        }
+        
     } //end of namespace
 } //end of namespace
 

@@ -32,9 +32,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <MultiRegions/DisContField1D.h>
-#include <MultiRegions/DisContField2D.h>
-#include <MultiRegions/DisContField3D.h>
+#include <MultiRegions/DisContField.h>
 #include <LibUtilities/Python/NekPyConfig.hpp>
 
 using namespace Nektar;
@@ -66,7 +64,5 @@ void export_DisContField_Helper(const char *name)
 
 void export_DisContField()
 {
-    export_DisContField_Helper<DisContField1D, ExpList1D>("DisContField1D");
-    export_DisContField_Helper<DisContField2D, ExpList2D>("DisContField2D");
-    export_DisContField_Helper<DisContField3D, ExpList3D>("DisContField3D");
+    export_DisContField_Helper<DisContField, ExpList>("DisContField");
 }

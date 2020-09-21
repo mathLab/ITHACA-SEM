@@ -4,14 +4,15 @@ Expansion0D.cpp
 Expansion1D.cpp
 Expansion2D.cpp
 Expansion3D.cpp
-QuadExp.cpp
 HexExp.cpp
+IndexMapKey.cpp
 MatrixKey.cpp
 NodalTetExp.cpp
 NodalTriExp.cpp
 PointExp.cpp
 PrismExp.cpp
 PyrExp.cpp
+QuadExp.cpp
 SegExp.cpp
 TetExp.cpp
 TriExp.cpp
@@ -24,8 +25,8 @@ Expansion1D.h
 Expansion2D.h
 Expansion3D.h
 HexExp.h
+IndexMapKey.h
 LinSys.hpp
-#LocalRegions.h
 LocalRegions.hpp
 LocalRegionsDeclspec.h
 MatrixKey.h

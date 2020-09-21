@@ -39,8 +39,8 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
-#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 #include <LibUtilities/BasicUtils/Deprecated.hpp>
+#include <LibUtilities/BasicUtils/RealComparison.hpp>
 
 #include <boost/core/ignore_unused.hpp>
 #include <boost/multi_array.hpp>
@@ -737,9 +737,7 @@ namespace Nektar
     template<typename T>
     inline bool IsEqualImpl(const T& lhs, const T& rhs, std::true_type)
     {
-        T tol = NekConstants::kNekFloatCompFact *
-            std::numeric_limits<T>::epsilon();
-        return std::abs(lhs-rhs) < std::max(std::abs(lhs), std::abs(rhs)) * tol;
+        return LibUtilities::IsRealEqual(lhs, rhs);
     }
 
     template<typename T>

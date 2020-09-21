@@ -99,7 +99,7 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < nel; ++i)
             {
-                cnt += expList[i]->GetNtrace();
+                cnt += expList[i]->GetNtraces();
             }
 
             Array<OneD, LocalRegions::ExpansionSharedPtr> tracemap(cnt);
@@ -112,7 +112,7 @@ namespace Nektar
                 m_elmtToTrace[i] = tracemap + cnt;
                 exp = expList[i];
                 
-                for(j = 0; j < exp->GetNtrace(); ++j)
+                for(j = 0; j < exp->GetNtraces(); ++j)
                 {
                     id = exp->GetGeom()->GetTid(j);
 
@@ -127,7 +127,7 @@ namespace Nektar
                     }
                 }
 
-                cnt += exp->GetNtrace();
+                cnt += exp->GetNtraces();
             }
 
             // Set up boundary mapping
@@ -229,7 +229,7 @@ namespace Nektar
             {
                 exp = expList[i];
                 
-                for(j = 0; j < exp->GetNtrace(); ++j)
+                for(j = 0; j < exp->GetNtraces(); ++j)
                 {
                     // Add trace to boost graph for non-Dirichlet Boundary
                     traceGeom = m_elmtToTrace[i][j]->GetGeom();
@@ -238,7 +238,7 @@ namespace Nektar
 
                     if(dirTrace.count(id) == 0)
                     {
-                        for(k = j+1; k < exp->GetNtrace(); ++k)
+                        for(k = j+1; k < exp->GetNtraces(); ++k)
                         {
                             traceGeom = m_elmtToTrace[i][k]->GetGeom();
                             id1       = traceGeom->GetGlobalID();
@@ -317,7 +317,7 @@ namespace Nektar
             {
                 exp = expList[i];
 
-                for(j = 0; j < exp->GetNtrace(); ++j)
+                for(j = 0; j < exp->GetNtraces(); ++j)
                 {
                     traceGeom = m_elmtToTrace[i][j]->GetGeom();
                     id        = traceGeom->GetGlobalID();
@@ -332,9 +332,9 @@ namespace Nektar
                     }
                     else if (nDim == 2)
                     {
-                        order_e = exp->GetEdgeNcoeffs(j);
+                        order_e = exp->GetTraceNcoeffs(j);
                     
-                        if(exp->GetEorient(j) == StdRegions::eForwards)
+                        if(exp->GetTraceOrient(j) == StdRegions::eForwards)
                         {
                             for(k = 0; k < order_e; ++k)
                             {
@@ -389,7 +389,7 @@ namespace Nektar
                     }
                     else if (nDim == 3)
                     {
-                        order_e = exp->GetFaceNcoeffs(j);
+                        order_e = exp->GetTraceNcoeffs(j);
 
                         std::map<int, int> orientMap;
 
@@ -398,13 +398,13 @@ namespace Nektar
                         Array<OneD, unsigned int> elmMap2 (order_e);
                         Array<OneD,          int> elmSign2(order_e);
 
-                        StdRegions::Orientation fo = exp->GetForient(j);
+                        StdRegions::Orientation fo = exp->GetTraceOrient(j);
 
                         // Construct mapping which will permute global IDs
                         // according to face orientations.
-                        exp->GetFaceToElementMap(j,fo,elmMap1,elmSign1);
-                        exp->GetFaceToElementMap(
-                            j,StdRegions::eDir1FwdDir1_Dir2FwdDir2,elmMap2,elmSign2);
+                        exp->GetTraceToElementMap(j,elmMap1,elmSign1,fo);
+                        exp->GetTraceToElementMap(j,elmMap2,elmSign2,
+                                       StdRegions::eDir1FwdDir1_Dir2FwdDir2);
 
                         for (k = 0; k < elmMap1.size(); ++k)
                         {
@@ -591,24 +591,16 @@ namespace Nektar
                 {
                     maxDof = (1 > maxDof ? 1 : maxDof);
                 }
-                else if (nDim == 2)
+                else
                 {
-                    for (j = 0; j < locExpansion->GetNedges(); ++j)
+                    for (j = 0; j < locExpansion->GetNtraces(); ++j)
                     {
-                        dof    = locExpansion->GetEdgeNcoeffs(j);
-                        maxDof = (dof > maxDof ? dof : maxDof);
-                    }
-                }
-                else if (nDim == 3)
-                {
-                    for (j = 0; j < locExpansion->GetNfaces(); ++j)
-                    {
-                        dof    = locExpansion->GetFaceNcoeffs(j);
+                        dof    = locExpansion->GetTraceNcoeffs(j);
                         maxDof = (dof > maxDof ? dof : maxDof);
                     }
                 }
             }
-            m_comm->AllReduce(maxDof, LibUtilities::ReduceMax);
+            m_comm->GetRowComm()->AllReduce(maxDof, LibUtilities::ReduceMax);
 
             // Now have trace edges Gid position
             cnt = 0;
@@ -634,20 +626,22 @@ namespace Nektar
                 }
                 else if (nDim == 2)
                 {
-                    for(j = 0; j < locExpansion->GetNedges(); ++j)
+                    for(j = 0; j < locExpansion->GetNtraces(); ++j)
                     {
                         LocalRegions::SegExpSharedPtr locSegExp =
                             m_elmtToTrace[i][j]->as<LocalRegions::SegExp>();
 
                         id  = locSegExp->GetGeom()->GetGlobalID();
-                        order_e = locExpansion->GetEdgeNcoeffs(j);
+                        order_e = locExpansion->GetTraceNcoeffs(j);
 
                         map<int,int> orientMap;
                         Array<OneD, unsigned int> map1(order_e), map2(order_e);
                         Array<OneD, int> sign1(order_e), sign2(order_e);
 
-                        locExpansion->GetEdgeToElementMap(j, StdRegions::eForwards, map1, sign1);
-                        locExpansion->GetEdgeToElementMap(j, locExpansion->GetEorient(j), map2, sign2);
+                        locExpansion->GetTraceToElementMap(j, map1, sign1,
+                                                        StdRegions::eForwards);
+                        locExpansion->GetTraceToElementMap(j, map2, sign2,
+                                              locExpansion->GetTraceOrient(j));
 
                         for (k = 0; k < map1.size(); ++k)
                         {
@@ -663,7 +657,8 @@ namespace Nektar
                                 }
                             }
 
-                            ASSERTL2(idx != -1, "Problem with face to element map!");
+                            ASSERTL2(idx != -1, "Problem with face to"
+                                     " element map!");
                             orientMap[k] = idx;
                         }
 
@@ -676,23 +671,25 @@ namespace Nektar
                         cnt += order_e;
                     }
                 }
-                else if (nDim == 3)
+                else if (nDim == 3) //This could likely be combined with nDim == 2
                 {
-                    for(j = 0; j < locExpansion->GetNfaces(); ++j)
+                    for(j = 0; j < locExpansion->GetNtraces(); ++j)
                     {
                         LocalRegions::Expansion2DSharedPtr locFaceExp =
                                 m_elmtToTrace[i][j]
                                            ->as<LocalRegions::Expansion2D>();
 
                         id  = locFaceExp->GetGeom()->GetGlobalID();
-                        order_e = locExpansion->GetFaceNcoeffs(j);
+                        order_e = locExpansion->GetTraceNcoeffs(j);
 
                         map<int,int> orientMap;
                         Array<OneD, unsigned int> map1(order_e), map2(order_e);
                         Array<OneD, int> sign1(order_e), sign2(order_e);
 
-                        locExpansion->GetFaceToElementMap(j, StdRegions::eDir1FwdDir1_Dir2FwdDir2, map1, sign1);
-                        locExpansion->GetFaceToElementMap(j, locExpansion->GetForient(j), map2, sign2);
+                        locExpansion->GetTraceToElementMap(j, map1, sign1,
+                                         StdRegions::eDir1FwdDir1_Dir2FwdDir2);
+                        locExpansion->GetTraceToElementMap(j, map2, sign2,
+                                           locExpansion->GetTraceOrient(j));
 
                         for (k = 0; k < map1.size(); ++k)
                         {
@@ -708,7 +705,8 @@ namespace Nektar
                                 }
                             }
 
-                            ASSERTL2(idx != -1, "Problem with face to element map!");
+                            ASSERTL2(idx != -1, "Problem with face to "
+                                     "element map!");
                             orientMap[k] = idx;
                         }
 
@@ -729,8 +727,8 @@ namespace Nektar
             {
                 tmp[i] = m_globalToUniversalBndMap[i];
             }
-            m_bndGsh = m_gsh = Gs::Init(tmp, m_comm);
-            Gs::Unique(tmp, m_comm);
+            m_bndGsh = m_gsh = Gs::Init(tmp, m_comm->GetRowComm());
+            Gs::Unique(tmp, m_comm->GetRowComm());
             for (i = 0; i < m_globalToUniversalBndMap.size(); ++i)
             {
                 m_globalToUniversalBndMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);

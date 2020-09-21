@@ -25,7 +25,7 @@ IF(NEKTAR_USE_MESHGEN)
         EXTERNALPROJECT_ADD(
             triangle-1.6
             PREFIX ${TPSRC}
-            URL ${TPURL}/triangle.zip
+            URL ${TPURL}/triangle-1.6.zip
             URL_MD5 357cb7107f51f3f89940c47435d4fa49
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}

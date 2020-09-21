@@ -61,9 +61,7 @@ namespace Nektar
 			
             
         protected:
-            std::map<int, NormalVector> m_vertexNormals;
-			
-                        STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                                          const Array<OneD, const NekDouble>& coords,
                                          const Array<OneD, const NekDouble>& physvals);
         private:
@@ -80,12 +78,7 @@ namespace Nektar
                 return 1;
             }
 
-            virtual int v_GetNedges() const
-            {
-                return 0;
-            }
-
-            virtual int v_GetNfaces() const
+            virtual int v_GetNtraces() const
             {
                 return 0;
             }

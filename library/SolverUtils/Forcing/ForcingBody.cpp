@@ -116,7 +116,7 @@ namespace SolverUtils
         }
 
         Array<OneD, Array<OneD, NekDouble> > tmp(pFields.size());
-        for (int i = 0; i < pFields.size(); ++i)
+        for (int i = 0; i < m_NumVariable; ++i)
         {
             tmp[i] = pFields[i]->GetPhys();
         }
@@ -142,7 +142,7 @@ namespace SolverUtils
             std::vector<Array<OneD, const NekDouble>> fielddata = {
                 xc, yc, zc, t};
 
-            for (int i = 0; i < pFields.size(); ++i)
+            for (int i = 0; i < m_NumVariable; ++i)
             {
                 varstr += " " + m_session->GetVariable(i);
                 fielddata.push_back(inarray[i]);

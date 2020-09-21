@@ -869,7 +869,7 @@ NekDouble MMFAdvection::ComputeCirculatingArclength(const NekDouble zlevel,
 {
 
     NekDouble Tol = 0.0001, Maxiter = 1000, N = 100;
-    NekDouble newy, F, dF, y0, tmp;
+    NekDouble newy, F = 0.0, dF = 1.0, y0, tmp;
 
     Array<OneD, NekDouble> xp(N + 1);
     Array<OneD, NekDouble> yp(N + 1);

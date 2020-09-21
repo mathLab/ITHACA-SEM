@@ -87,7 +87,7 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> >
                  &normals =
                     GetLeftAdjacentElementExp()->
-                        GetVertexNormal(GetLeftAdjacentElementVertex());
+                        GetTraceNormal(GetLeftAdjacentElementTrace());
             outarray[0] = Fx[0]*normals[0][0];
         }
 

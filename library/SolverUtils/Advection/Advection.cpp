@@ -118,11 +118,11 @@ void Advection::v_AdvectTraceFlux(
 }
 
 /**
- * @brief Similar with Advection::Advect(): calculate the advection flux 
+ * @brief Similar with Advection::Advect(): calculate the advection flux
  * The difference is in the outarray:
- *  it is the coefficients of basis for Advect_coeff() 
- *  it is the physics on quadrature points for Advect() 
- * 
+ *  it is the coefficients of basis for AdvectCoeffs()
+ *  it is the physics on quadrature points for Advect()
+ *
  * @param   nConvectiveFields   Number of velocity components.
  * @param   pFields             Expansion lists for scalar fields.
  * @param   pAdvVel             Advection velocity.
@@ -130,7 +130,7 @@ void Advection::v_AdvectTraceFlux(
  * @param   pOutarray           Advected scalar data.
  * @param   pTime               Simulation time.
  */
-void Advection::Advect_coeff(
+void Advection::AdvectCoeffs(
     const int                                          nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
     const Array<OneD, Array<OneD, NekDouble> >        &pAdvVel,
@@ -140,8 +140,8 @@ void Advection::Advect_coeff(
     const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
-    v_Advect_coeff(nConvectiveFields, pFields, pAdvVel, pInarray,
-            pOutarray, pTime, pFwd, pBwd);
+    v_AdvectCoeffs(nConvectiveFields, pFields, pAdvVel, pInarray,
+                   pOutarray, pTime, pFwd, pBwd);
 }
 
 /**
@@ -190,7 +190,7 @@ void Advection::v_SetBaseFlow(
             "A baseflow is not appropriate for this advection type.");
 }
 
-void Advection::v_Advect_coeff(
+void Advection::v_AdvectCoeffs(
     const int nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     const Array<OneD, Array<OneD, NekDouble> >        &advVel,
@@ -202,7 +202,7 @@ void Advection::v_Advect_coeff(
 {
     boost::ignore_unused(nConvectiveFields, fields, advVel, inarray, outarray,
                         time, pFwd, pBwd);
-    ASSERTL0(false, "v_Advect_coeff no defined");
+    ASSERTL0(false, "v_AdvectCoeffs not defined");
 }
 }
 }

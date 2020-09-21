@@ -67,16 +67,16 @@ int main(int argc, char *argv[])
     // Print summary of solution details
         flags.set(eUseGlobal, false);
 		
-    const SpatialDomains::ExpansionMap &expansions = graph1D->GetExpansions();
+    const SpatialDomains::ExpansionInfoMap &expansions = graph1D->GetExpansionInfo();
 	
     LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
     
-	cout << "Calculating Derivatives (Homogeneous in yz-plane):"  << endl;
-	cout << "         Ly              : " << ly << endl;
-	cout << "         Lz              : " << lz << endl;
+    cout << "Calculating Derivatives (Homogeneous in yz-plane):"  << endl;
+    cout << "         Ly              : " << ly << endl;
+    cout << "         Lz              : " << lz << endl;
     cout << "         N.modes         : " << bkey0.GetNumModes() << endl;
     cout << "         N.Y homo modes  : " << BkeyY.GetNumModes() << endl;
-	cout << "         N.Z homo modes  : " << BkeyZ.GetNumModes() << endl;
+    cout << "         N.Z homo modes  : " << BkeyZ.GetNumModes() << endl;
     cout << endl;
     //----------------------------------------------
 

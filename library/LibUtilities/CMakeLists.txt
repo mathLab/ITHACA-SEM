@@ -7,6 +7,7 @@ SET(BasicConstHeaders
 
 SET(BasicUtilsHeaders
     ./BasicUtils/ArrayPolicies.hpp
+    ./BasicUtils/CheckedCast.hpp
     ./BasicUtils/ConsistentObjectAccess.hpp
     ./BasicUtils/CompressData.h
     ./BasicUtils/CsvIO.h
@@ -25,8 +26,8 @@ SET(BasicUtilsHeaders
     ./BasicUtils/PtsIO.h
     ./BasicUtils/Timer.h
     ./BasicUtils/RawType.hpp
+    ./BasicUtils/RealComparison.hpp
     ./BasicUtils/SessionReader.h
-    ./BasicUtils/CheckedCast.hpp
     ./BasicUtils/ShapeType.hpp
     ./BasicUtils/SharedArray.hpp
     ./BasicUtils/Thread.h
@@ -427,7 +428,7 @@ IF( NEKTAR_USE_MPI )
             PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} ${MPI_CXX_COMPILE_FLAGS}")
     ENDIF()
 
-    ADD_DEPENDENCIES(LibUtilities gsmpi-1.2.1)
+    ADD_DEPENDENCIES(LibUtilities gsmpi-1.2.1_2)
 
     IF (THIRDPARTY_BUILD_MPI)
         ADD_DEPENDENCIES(LibUtilities openmpi-1.10.3)

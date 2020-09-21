@@ -29,14 +29,14 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // Description: An ExpList which is homogeneous in 2 directions and so
-// uses much of the functionality from a ExpList1D and its daughters
+// uses much of the functionality from a ExpList and its daughters
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <boost/core/ignore_unused.hpp>
 
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
-#include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/ExpList.h>
 
 using namespace std;
 
@@ -46,9 +46,8 @@ namespace Nektar
     {
         // Forward declaration for typedefs
         ExpList3DHomogeneous2D::ExpList3DHomogeneous2D():
-            ExpListHomogeneous2D()
+            ExpListHomogeneous2D(e3DH2D)
         {
-            SetExpType(e3DH2D);
         }
 
         ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(
@@ -60,13 +59,12 @@ namespace Nektar
                        const bool useFFT,
                        const bool dealiasing,
                        const Collections::ImplementationType ImpType):
-            ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
+            ExpListHomogeneous2D(e3DH2D,pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
             boost::ignore_unused(ImpType);
-            SetExpType(e3DH2D);
         }
 
-        // Constructor for ExpList3DHomogeneous2D to act as a Explist1D field
+        // Constructor for ExpList3DHomogeneous2D to act as a Explist field
         ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(
                     const LibUtilities::SessionReaderSharedPtr &pSession,
                     const LibUtilities::BasisKey &HomoBasis_y,
@@ -77,17 +75,15 @@ namespace Nektar
                     const bool dealiasing,
                     const SpatialDomains::MeshGraphSharedPtr &graph1D,
                     const Collections::ImplementationType ImpType):
-            ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
+            ExpListHomogeneous2D(e3DH2D, pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
-            SetExpType(e3DH2D);
-
             int n,j,nel;
             bool False = false;
-            ExpList1DSharedPtr line_zero;
+            ExpListSharedPtr line_zero;
 
             //
-            m_lines[0] = line_zero = MemoryManager<ExpList1D>::
-                AllocateSharedPtr(m_session,graph1D, False,ImpType);
+            m_lines[0] = line_zero = MemoryManager<ExpList>::
+                AllocateSharedPtr(m_session,graph1D, false, "DefaultVar", ImpType);
 
             m_exp = MemoryManager<LocalRegions::ExpansionVector>::
                 AllocateSharedPtr();
@@ -103,7 +99,7 @@ namespace Nektar
 
             for(n = 1; n < (ny*nz); ++n)
             {
-                m_lines[n] = MemoryManager<ExpList1D>::AllocateSharedPtr(*line_zero,False);
+                m_lines[n] = MemoryManager<ExpList>::AllocateSharedPtr(*line_zero,False);
                 for(j = 0; j < nel; ++j)
                 {
                     (*m_exp).push_back((*m_exp)[j]);
@@ -122,16 +118,14 @@ namespace Nektar
                             const bool DeclareLinesSetCoeffPhys):
             ExpListHomogeneous2D(In)
         {
-            SetExpType(e3DH2D);
-
             if(DeclareLinesSetCoeffPhys)
             {
                 bool False = false;
-                ExpList1DSharedPtr zero_line = std::dynamic_pointer_cast<ExpList1D> (In.m_lines[0]);
+                ExpListSharedPtr zero_line = In.m_lines[0];
 
                 for(int n = 0; n < m_lines.size(); ++n)
                 {
-                    m_lines[n] = MemoryManager<ExpList1D>::AllocateSharedPtr(*zero_line,False);
+                    m_lines[n] = MemoryManager<ExpList>::AllocateSharedPtr(*zero_line,False);
                 }
 
                 SetCoeffPhys();
@@ -148,8 +142,6 @@ namespace Nektar
                        const Collections::ImplementationType ImpType):
             ExpListHomogeneous2D(In, eIDs)
         {
-            SetExpType(e3DH2D);
-
             if(DeclareLinesSetCoeffPhys)
             {
                 bool False = false;
@@ -160,16 +152,17 @@ namespace Nektar
                 {
                     eIDsLine.push_back(eIDs[i]);
                 }
-
-                ExpList1DSharedPtr zero_line_old =
-                        std::dynamic_pointer_cast<ExpList1D> (In.m_lines[0]);
-
-                ExpList1DSharedPtr zero_line =
-                    MemoryManager<ExpList1D>::AllocateSharedPtr(*(zero_line_old), eIDsLine, ImpType);
+                
+                ExpListSharedPtr zero_line_old =
+                        std::dynamic_pointer_cast<ExpList> (In.m_lines[0]);
+                
+                ExpListSharedPtr zero_line = 
+                    MemoryManager<ExpList>::AllocateSharedPtr(*(zero_line_old),
+                                                              eIDsLine, ImpType);
 
                 for(int n = 0; n < m_lines.size(); ++n)
                 {
-                    m_lines[n] = MemoryManager<ExpList1D>::AllocateSharedPtr(*zero_line,False);
+                    m_lines[n] = MemoryManager<ExpList>::AllocateSharedPtr(*zero_line,False);
                 }
 
                 SetCoeffPhys();

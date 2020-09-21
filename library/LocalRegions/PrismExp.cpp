@@ -597,7 +597,7 @@ namespace Nektar
             }
         }
 
-        void PrismExp::v_GetFacePhysMap(const int               face,
+        void PrismExp::v_GetTracePhysMap(const int               face,
                                         Array<OneD, int>        &outarray)
         {
             int nquad0 = m_base[0]->GetNumPoints();
@@ -700,8 +700,8 @@ namespace Nektar
         /** \brief  Get the normals along specficied face
          * Get the face normals interplated to a points0 x points 0
          * type distribution
-         **/
-        void PrismExp::v_ComputeFaceNormal(const int face)
+         **/ 
+        void PrismExp::v_ComputeTraceNormal(const int face)
         {
             const SpatialDomains::GeomFactorsSharedPtr &geomFactors =
                 GetGeom()->GetMetricInfo();
@@ -728,8 +728,8 @@ namespace Nektar
             int nqtot;
 
 
-            LibUtilities::BasisKey tobasis0 = DetFaceBasisKey(face,0);
-            LibUtilities::BasisKey tobasis1 = DetFaceBasisKey(face,1);
+            LibUtilities::BasisKey tobasis0 = GetTraceBasisKey(face,0);
+            LibUtilities::BasisKey tobasis1 = GetTraceBasisKey(face,1);
 
             // Number of quadrature points in face expansion.
             int nq_face = tobasis0.GetNumPoints()*tobasis1.GetNumPoints();
@@ -746,10 +746,8 @@ namespace Nektar
 
             size_t nqb = nq_face;
             size_t nbnd= face;
-            m_elmtBndNormDirElmtLen[nbnd] = 
-                    Array<OneD, NekDouble> {nqb, 0.0};
-            Array<OneD, NekDouble>  &length = 
-                    m_elmtBndNormDirElmtLen[nbnd];
+            m_elmtBndNormDirElmtLen[nbnd] = Array<OneD, NekDouble> {nqb, 0.0};
+            Array<OneD, NekDouble> &length = m_elmtBndNormDirElmtLen[nbnd];
 
             // Regular geometry case
             if (type == SpatialDomains::eRegular      ||

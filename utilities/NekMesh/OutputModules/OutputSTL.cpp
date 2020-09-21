@@ -62,11 +62,51 @@ void OutputSTL::Process()
         cout << "Outputstl: Writing file..." << endl;
     }
 
-    ASSERTL0(m_mesh->m_expDim == 3, "3d meshes only");
+    ASSERTL0(m_mesh->m_expDim == 2 || m_mesh->m_expDim == 3,
+             "Only 2D or 3D meshes are supported.");
 
     OpenStream();
 
     m_mshFile << std::scientific << setprecision(8);
+
+    if (m_mesh->m_expDim == 2)
+    {
+        vector<ElementSharedPtr> &el = m_mesh->m_element[2];
+
+        m_mshFile << "solid comp:" << 0 << endl;
+
+        for (int i = 0; i < el.size(); ++i)
+        {
+            vector<NodeSharedPtr> ns = el[i]->GetVertexList();
+
+            Array<OneD, NekDouble> tmp(3, 0.0);
+            tmp[0] = (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_z - ns[0]->m_z) -
+                     (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_y - ns[0]->m_y);
+            tmp[1] = (ns[1]->m_z - ns[0]->m_z) * (ns[2]->m_x - ns[0]->m_x) -
+                     (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_z - ns[0]->m_z);
+            tmp[2] = (ns[1]->m_x - ns[0]->m_x) * (ns[2]->m_y - ns[0]->m_y) -
+                     (ns[1]->m_y - ns[0]->m_y) * (ns[2]->m_x - ns[0]->m_x);
+
+            NekDouble mt = tmp[0] * tmp[0] + tmp[1] * tmp[1] + tmp[2] * tmp[2];
+            mt           = sqrt(mt);
+            tmp[0] /= mt;
+            tmp[1] /= mt;
+            tmp[2] /= mt;
+
+            m_mshFile << "facet normal " << tmp[0] << " " << tmp[1] << " "
+                      << tmp[2] << endl;
+            m_mshFile << "outer loop" << endl;
+            for (int j = 0; j < ns.size(); j++)
+            {
+                m_mshFile << "vertex " << ns[j]->m_x << " " << ns[j]->m_y << " "
+                          << ns[j]->m_z << endl;
+            }
+            m_mshFile << "endloop" << endl << "endfacet" << endl;
+        }
+
+        m_mshFile << "endsolid" << endl;
+        return;
+    }
 
     for (auto &it : m_mesh->m_composite)
     {

@@ -347,7 +347,7 @@ namespace Nektar
         BndConds = m_fields[fieldid]->GetBndConditions();
         BndExp   = m_fields[fieldid]->GetBndCondExpansions();
 
-        StdRegions::StdExpansionSharedPtr elmt;
+        LocalRegions::ExpansionSharedPtr elmt;
         StdRegions::StdExpansionSharedPtr Bc;
 
         int cnt;
@@ -424,7 +424,7 @@ namespace Nektar
             BndExp[i]   = m_fields[m_velocity[i]]->GetBndCondExpansions();
         }
 
-        StdRegions::StdExpansionSharedPtr elmt,Bc;
+        LocalRegions::ExpansionSharedPtr elmt,Bc;
 
         int cnt;
         int elmtid,nq, boundary;
@@ -447,7 +447,7 @@ namespace Nektar
                     elmt     = m_fields[0]->GetExp(elmtid);
                     boundary = m_fieldsBCToTraceID[fldid][cnt];
 
-                    normals = elmt->GetSurfaceNormal(boundary);
+                    normals = elmt->GetTraceNormal(boundary);
 
                     nq = BndExp[0][n]->GetExp(i)->GetTotPoints();
                     Array<OneD, NekDouble> normvel(nq,0.0);

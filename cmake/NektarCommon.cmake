@@ -12,6 +12,14 @@
 # `-llibname` to the linker flags. This avoids the issue of e.g. linking against
 # an outdated system zlib installation.
 #
+# On Windows, it is necessary to link using .lib files which will have been
+# generated based on whether the target library was built as STATIC or SHARED.
+# Where the library has been built as a SHARED library the associated DLLs
+# are used at runtime. The setting of LIBTYPE determines the file names to
+# link against so on Windows setting this to SHARED results in trying to link
+# against .dll files. LIBTYPE is therefore forced to be STATIC on WIN32
+# platforms to ensure linking against the .lib files.
+#
 # Arguments:
 #   - `varname`: variable name containing the third-party library name. On
 #     output will be altered to update the correct path.
@@ -24,7 +32,12 @@ MACRO(THIRDPARTY_LIBRARY varname)
     CMAKE_PARSE_ARGUMENTS(TPLIB "" "DESCRIPTION" "STATIC;SHARED" ${ARGN})
 
     IF(TPLIB_SHARED)
-        SET(LIBTYPE "SHARED")
+        IF(WIN32)
+            # Ensure linking against .lib files on Windows
+            SET(LIBTYPE "STATIC")
+        ELSE()
+            SET(LIBTYPE "SHARED")
+        ENDIF()
         SET(TPLIBS ${TPLIB_SHARED})
     ELSEIF(TPLIB_STATIC)
         SET(LIBTYPE "STATIC")
@@ -268,6 +281,8 @@ MACRO(ADD_NEKPY_LIBRARY name)
     # Python requires a .so extension, even on OS X.
     SET_TARGET_PROPERTIES(_${name} PROPERTIES PREFIX "")
     SET_TARGET_PROPERTIES(_${name} PROPERTIES SUFFIX ".so")
+    SET_TARGET_PROPERTIES(_${name} PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/NekPy/${name})
 
     ADD_DEPENDENCIES(_${name} boost-numpy)
 
@@ -287,7 +302,6 @@ MACRO(ADD_NEKPY_LIBRARY name)
     SET(TMPOUT "${TMPOUT}from ._${name} import *")
 
     FILE(WRITE ${CMAKE_BINARY_DIR}/NekPy/${name}/__init__.py ${TMPOUT})
-    INSTALL(TARGETS _${name} DESTINATION ${CMAKE_BINARY_DIR}/NekPy/${name})
 ENDMACRO()
 
 MACRO(ADD_NEKPY_EXECUTABLE name source)

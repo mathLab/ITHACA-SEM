@@ -4,8 +4,6 @@
 #include <vector>
 
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/ExpList1D.h>
-#include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
@@ -62,7 +60,7 @@ int main(int argc, char *argv[])
         }
         pointstype2d.push_back(ptype2d);
     }
-    graphShPt2d->SetExpansions(field2ddef,pointstype2d);
+    graphShPt2d->SetExpansionInfo(field2ddef,pointstype2d);
     for(i = 0; i < field3ddef.size(); ++i)
     {
         vector<LibUtilities::PointsType> ptype3d;
@@ -72,7 +70,7 @@ int main(int argc, char *argv[])
         }
         pointstype3d.push_back(ptype3d);
     }
-    graphShPt3d->SetExpansions(field3ddef,pointstype3d);
+    graphShPt3d->SetExpansionInfo(field3ddef,pointstype3d);
     bool useFFT = false;
     bool dealiasing = false;
     // Define Expansion
@@ -82,12 +80,13 @@ int main(int argc, char *argv[])
     int nfields3d = field3ddef[0]->m_fields.size();
     //Gen 2d
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp2d(nfields2d);
-    MultiRegions::ExpList2DSharedPtr Exp2D;
-    Exp2D = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vSession2d,graphShPt2d);
+    MultiRegions::ExpListSharedPtr Exp2D;
+    Exp2D = MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr
+        (vSession2d,graphShPt2d);
     Exp2d[0] =  Exp2D;
     for(i = 1; i < nfields2d; ++i)
     {
-        Exp2d[i] = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(*Exp2D);
+        Exp2d[i] = MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr(*Exp2D);
     }
     //Gen 3d
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp3d(nfields3d);
@@ -124,14 +123,14 @@ int main(int argc, char *argv[])
         }
         if (j==nfields2d-1)
         {
-        for(int i = 0; i < field2ddata.size(); ++i)
-                {
+            for(int i = 0; i < field2ddata.size(); ++i)
+            {
                    Exp2d[j]->ExtractDataToCoeffs(
                                                 field2ddef[i],
                                                 field2ddata[i],
                                                 field2ddef[i]->m_fields[j],
                                                 Exp3d[j+1]->GetPlane(k)->UpdateCoeffs());
-                }
+            }
         }
     }
     Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(vSession3d->GetVariables().size());

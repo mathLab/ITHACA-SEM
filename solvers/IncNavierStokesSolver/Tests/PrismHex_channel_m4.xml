@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="3" SPACE="3">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1j1kSgjAQBUdxAcUNcIHLcP9beASP4FeqCdV5P1OpTr9JIpb5zfmM2GT8O+czYqs+vFKf/l1Y4Hvl9B+Uk2PBS6kLe1Ma5fzzpP3Ms/rwVn3uXdYPWvGrcvpvyrl3V4/zQ/fCO+XMvvCuxAf14U/16X+FBf5WTs9HOT2jevBJ93L+A1t4P5oA</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1k9lWwkAQRCNEMIkgiRpcEJBF3MUFXPj///KBvg/cc5iXOlWpqe6Z6STJdrUC24EHe3hD/DCwKU5eKn4iH/k9+cjP5WNfN/BIueRk4vkeJKcQJ+9YdTh/R5x+2U+/7g9eqj9yCn0vpVfinONUeew7C8zkP092F/3X8rP60ql/IR/nuJSfe7wSZ26ulYM+kJ/+b+Sj/2FgR/5RYCr/WH6+30qn/kQ+6k/lZw5m8jO/80Dmgnu8C+QducdFoN/7XvV4pwflkvMoTs6TODnP4uS9BDJnvOtrIPPB/L3Jh74Up/67+mTfR2Al/6d05u5LOnVW0vkf1uK8+7d06v4E1tJ/pTMXf9LJ20jnvv8BSoYM1gAA</EDGE>
+        <FACE>
+            <T COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1zssKQFAUhWEZipIIueVSipRExPu/l4F/T1Y5k69zztqr7TvfiTHCFANM5J5hiDmWP30FVtJnuVrmW8k1Mt/JHj160md7DehKn71vuOKOIx54Sn7CS/5vXPDBWfIvq9UGCQAA</T>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxdkslWAkEQBJERlEFURMWFZVwQZFxwReX//4tLxsHoS7zurqrMrupG4//aCZthoXNWK9wPd5VHfDvsKK9QPHFluKe6hc67urcf9ErFo3MQ9uT3UDrEHYf98Eh61KH+ifLwQ338DlQPv+hQp6N43nMq3bPwXHrsL+RrKP3L8Cq8Vn5f92Ppj+RzovtpWKku+1vVv5HPu5D53CufPObyED6Gs5B30dd5uFQe7ykVV4eLkD50df4kXfqBH/RqxdMn+v0SvobPYRXyT/C3Uh59ZC6870316D861Fkqnjm8S5f/+BHOtGeO+PqUn6/wO+Q/kr/QPfNBfx3S3x/d0//fsNaePlH/L2QuG/mgD+RvASuJES4A</Q>
+        </FACE>
+        <ELEMENT>
+            <H COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxdzLkBgCAAQ1EUkGME5d5/SJtPQdK8JokxZy680aJDL70HA0bZJ8zS3z8vfliwYpP//dNxyH7iwh9lIAGA</H>
+            <R COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxdzzcOhAAMRFFEkMg5ShRIsEvc+19vC/40dvMaa+xxnXcSTDHEDHP0sMASK6xNno8Ntma/wx4DHHA0dyeTpz9X3HBB9flghF/c8UD1UV6MJ15mX31uVO8Hfzij+ijvD4I2BC0A</R>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> F[26,9,1,33] </C>
+            <C ID="1"> F[37,7,31,14] </C>
+            <C ID="2"> F[43,22,38,15] </C>
+            <C ID="3"> F[29,23,4,44] </C>
+            <C ID="4"> F[25,6,0,21,13,18] </C>
+            <C ID="5"> F[42,39,34,30,45,36] </C>
+            <C ID="6"> H[0-1,6-7] </C>
+            <C ID="7"> R[2-5,8-11] </C>
+        </COMPOSITE>
+        <DOMAIN> C[6-7] </DOMAIN>
+    </GEOMETRY>
+    <Metadata>
+        <Provenance>
+            <GitBranch></GitBranch>
+            <GitSHA1>c9a38aec55602a3c84849bfa623049ef9512ae4b</GitSHA1>
+            <Hostname>blackfriars</Hostname>
+            <NektarVersion>5.0.0</NektarVersion>
+            <Timestamp>07-Jul-2020 14:22:11</Timestamp>
+        </Provenance>
+        <NekMeshCommandLine>-m extrude:layers=2 mesh.xml 3D.xml </NekMeshCommandLine>
+    </Metadata>
+    <EXPANSIONS>
+        <E COMPOSITE="C[6-7]" NUMMODES="4" FIELDS="u,v,w,p" TYPE="MODIFIED" />
+    </EXPANSIONS>
+    <CONDITIONS>
+        <SOLVERINFO>
+            <I PROPERTY="SolverType"            VALUE="VelocityCorrectionScheme" />
+            <I PROPERTY="GlobalSysSoln"         VALUE="IterativeStaticCond" />
+            <I PROPERTY="EQTYPE"                VALUE="UnsteadyNavierStokes" />
+            <I PROPERTY="AdvectionForm"         VALUE="Convective" />
+            <I PROPERTY="Projection"            VALUE="Galerkin" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
+        </SOLVERINFO>
+
+        <GLOBALSYSSOLNINFO>
+          <V VAR="u,v,w">
+            <I PROPERTY="GlobalSysSoln"       VALUE="IterativeStaticCond" />
+            <I PROPERTY="Preconditioner"       VALUE="LowEnergyBlock"/>
+            <I PROPERTY="IterativeSolverTolerance"    VALUE="1e-9"/>
+          </V>
+          <V VAR="p">
+            <I PROPERTY="GlobalSysSoln"         VALUE="IterativeStaticCond" />
+            <I PROPERTY="Preconditioner"        VALUE="LowEnergyBlock"/>
+            <I PROPERTY="IterativeSolverTolerance"    VALUE="1e-6"/>
+          </V>
+        </GLOBALSYSSOLNINFO>
+        
+        <PARAMETERS>
+            <P> TimeStep      = 0.001 </P>
+            <P> NumSteps      = 10 </P>
+            <P> IO_CheckSteps = 10    </P>
+            <P> IO_InfoSteps  = 10    </P>
+            <P> Kinvis        = 1   </P>
+        </PARAMETERS>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> v </V>
+            <V ID="2"> w </V>
+            <V ID="3"> p </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[4] </B>  <!-- Inlet -->
+            <B ID="1"> C[5] </B>    <!-- Outlet -->
+            <B ID="2"> C[0] </B>    <!-- Wall -->
+            <B ID="3"> C[1] </B>    <!-- Wall left -->
+            <B ID="4"> C[2] </B>    <!-- Wall -->
+            <B ID="5"> C[3] </B>    <!-- Wall right -->
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="y*(1-y)" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="1">
+                <N VAR="u" VALUE="0" />
+                <N VAR="v" VALUE="0" />
+                <N VAR="w" VALUE="0" />
+                <D VAR="p" VALUE="0" />
+            </REGION>
+            <REGION REF="2">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="0" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="3">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="y*(1-y)" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="4">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="0" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="5">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="y*(1-y)" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="0" />
+            <E VAR="w" VALUE="y*(1-y)" />
+            <E VAR="p" VALUE="-2*Kinvis*(z-1)" />
+        </FUNCTION>
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="0" />
+            <E VAR="w" VALUE="y*(1-y)" />
+            <E VAR="p" VALUE="-2*Kinvis*(z-1)" />
+        </FUNCTION>
+    </CONDITIONS>
+</NEKTAR>

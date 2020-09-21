@@ -112,22 +112,33 @@ namespace Nektar
             }
         }
 
-        NekDouble StdExpansion2D::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
+        NekDouble StdExpansion2D::v_PhysEvaluate(
+            const Array<OneD, const NekDouble> &coords,
+            const Array<OneD, const NekDouble> &physvals)
         {
+            ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol,
+                     "coord[0] < -1");
+            ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol,
+                     "coord[0] >  1");
+            ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol,
+                     "coord[1] < -1");
+            ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol,
+                     "coord[1] >  1");
+
             Array<OneD, NekDouble> coll(2);
-            Array<OneD, DNekMatSharedPtr>  I(2);
-
-            ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol, "coord[0] < -1");
-            ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol, "coord[0] >  1");
-            ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol, "coord[1] < -1");
-            ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol, "coord[1] >  1");
-
             LocCoordToLocCollapsed(coords,coll);
 
-            I[0] = m_base[0]->GetI(coll);
-            I[1] = m_base[1]->GetI(coll+1);
+            const int nq0 = m_base[0]->GetNumPoints();
+            const int nq1 = m_base[1]->GetNumPoints();
 
-            return v_PhysEvaluate(I,physvals);
+            Array<OneD, NekDouble> wsp(nq1);
+            for (int i = 0; i < nq1; ++i)
+            {
+                wsp[i] = StdExpansion::BaryEvaluate<0>(
+                    coll[0], &physvals[0] + i * nq0);
+            }
+
+            return StdExpansion::BaryEvaluate<1>(coll[1], &wsp[0]);
         }
 
         NekDouble StdExpansion2D::v_PhysEvaluate(

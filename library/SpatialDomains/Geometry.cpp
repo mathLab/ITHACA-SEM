@@ -214,8 +214,6 @@ StdRegions::Orientation Geometry::v_GetForient(const int i) const
  */
 int Geometry::v_GetNumEdges() const
 {
-    NEKERROR(ErrorUtil::efatal,
-             "This function is only valid for shape type geometries");
     return 0;
 }
 
@@ -224,8 +222,6 @@ int Geometry::v_GetNumEdges() const
  */
 int Geometry::v_GetNumFaces() const
 {
-    NEKERROR(ErrorUtil::efatal,
-             "This function is only valid for shape type geometries");
     return 0;
 }
 
@@ -296,6 +292,17 @@ int Geometry::v_GetEdgeFaceMap(const int i, const int j) const
     return 0;
 }
 
+/**
+ * @copydoc Geometry::GetDir()
+ */
+int Geometry::v_GetDir(const int i, const int j) const
+{
+    boost::ignore_unused(i, j);
+    NEKERROR(ErrorUtil::efatal,
+             "This function has not been defined for this geometry");
+    return 0;
+}
+    
 /**
  * @copydoc Geometry::GetCoord()
  */
@@ -479,8 +486,9 @@ void Geometry::ClampLocCoords(Array<OneD, NekDouble> &locCoord,
                                   NekDouble tol)
 {
     // Validation checks
-    ASSERTL1(locCoord.size() == GetShapeDim(),
-             "Expects same number of local coordinates as shape dimension.");
+    ASSERTL1(locCoord.size() >= GetShapeDim(),
+             "Expects local coordinates to be same or "
+             "larger than shape dimension.");
 
     // If out of range clamp locCoord to be within [-1,1]^dim
     // since any larger value will be very oscillatory if

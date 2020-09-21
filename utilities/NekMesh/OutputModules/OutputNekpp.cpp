@@ -545,7 +545,6 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
         }
     }
 
-    /*
     if(m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
     {
         //manifold case
@@ -578,7 +577,6 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
             }
         }
     }
-    */
 }
 
 void OutputNekpp::TransferComposites(MeshGraphSharedPtr graph)

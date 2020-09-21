@@ -10,6 +10,7 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
+// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -39,34 +40,29 @@ using namespace std;
 namespace Nektar
 {
 
-    /**
-     * @class PulseWaveFlow
-     *
-     */
-  PulseWaveBoundary::PulseWaveBoundary(
-      Array<OneD, MultiRegions::ExpListSharedPtr> &pVessel, 
-      const LibUtilities::SessionReaderSharedPtr &pSession,
-      PulseWavePressureAreaSharedPtr & pressureArea)
-    : m_vessels(pVessel),
-      m_session(pSession),
-      m_pressureArea(pressureArea)
-    {
-        m_session->LoadParameter("pout", m_pout, 0.0);
-        m_session->LoadParameter("pext", m_pext, 0.0);
-        m_session->LoadParameter("rho", m_rho, 0.5);
-    }
-
-    PulseWaveBoundary::~PulseWaveBoundary()
-    {
-    }
-
-        
-    /**
-     *
-     */
-    BoundaryFactory& GetBoundaryFactory()
-    {
-        static BoundaryFactory instance;
-        return instance;
-    }
+/**
+ * @class PulseWaveFlow
+ *
+ */
+PulseWaveBoundary::PulseWaveBoundary(
+    Array<OneD, MultiRegions::ExpListSharedPtr> &pVessel,
+    const LibUtilities::SessionReaderSharedPtr &pSession,
+    PulseWavePressureAreaSharedPtr &pressureArea)
+    : m_vessels(pVessel), m_session(pSession), m_pressureArea(pressureArea)
+{
+    m_session->LoadParameter("pout", m_pout, 0.0);
+    m_session->LoadParameter("pext", m_pext, 0.0);
+    m_session->LoadParameter("rho", m_rho, 0.5);
 }
+
+PulseWaveBoundary::~PulseWaveBoundary()
+{
+}
+
+BoundaryFactory &GetBoundaryFactory()
+{
+    static BoundaryFactory instance;
+    return instance;
+}
+
+} // namespace Nektar

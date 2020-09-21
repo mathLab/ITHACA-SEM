@@ -133,19 +133,23 @@ namespace Nektar
             //--------------------------
             // Mappings
             //--------------------------
-            STD_REGIONS_EXPORT virtual void v_GetEdgeToElementMap(
+            STD_REGIONS_EXPORT virtual int  v_GetVertexMap(int localVertexId,
+                                                        bool useCoeffPacking = false);
+
+            STD_REGIONS_EXPORT  virtual void v_GetTraceToElementMap(
                 const int                  eid,
-                const Orientation      edgeOrient,
                 Array<OneD, unsigned int>& maparray,
                 Array<OneD,          int>& signarray,
-                int                        P);
-            STD_REGIONS_EXPORT virtual int  v_GetVertexMap(int localVertexId,
-                                                           bool useCoeffPacking = false);
-            STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(
+                Orientation          edgeOrient = eForwards,
+                int P = -1,
+                int Q = -1);
+
+            STD_REGIONS_EXPORT virtual  void v_GetTraceInteriorToElementMap(
                 const int                  eid,
-                const Orientation      edgeOrient,
                 Array<OneD, unsigned int>& maparray,
-                Array<OneD,          int>& signarray);
+                Array<OneD,          int>& signarray,
+                const Orientation          edgeOrient = eForwards);
+
             STD_REGIONS_EXPORT virtual void v_GetInteriorMap(
                 Array<OneD, unsigned int>& outarray);
             STD_REGIONS_EXPORT virtual void v_GetBoundaryMap(

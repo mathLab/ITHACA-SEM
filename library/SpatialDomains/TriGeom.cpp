@@ -267,7 +267,7 @@ void TriGeom::v_FillGeom()
     }
 
     int i, j, k;
-    int nEdgeCoeffs = m_xmap->GetEdgeNcoeffs(0);
+    int nEdgeCoeffs = m_xmap->GetTraceNcoeffs(0);
 
     if (m_curve)
     {
@@ -456,7 +456,7 @@ void TriGeom::v_FillGeom()
     for (i = 0; i < kNedges; i++)
     {
         m_edges[i]->FillGeom();
-        m_xmap->GetEdgeToElementMap(i, m_eorient[i], mapArray, signArray);
+        m_xmap->GetTraceToElementMap(i,  mapArray, signArray, m_eorient[i]);
 
         nEdgeCoeffs = m_edges[i]->GetXmap()->GetNcoeffs();
 
@@ -570,6 +570,13 @@ bool TriGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
     ClampLocCoords(stdCoord, tol);
 
     return false;
+}
+
+int TriGeom::v_GetDir(const int i, const int j) const
+{
+    boost::ignore_unused(j); // required in 3D shapes
+
+    return i == 0 ? 0:1;
 }
 
 void TriGeom::v_Reset(CurveMap &curvedEdges, CurveMap &curvedFaces)

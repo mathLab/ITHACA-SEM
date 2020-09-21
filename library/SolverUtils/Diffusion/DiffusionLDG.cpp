@@ -82,23 +82,23 @@ void DiffusionLDG::v_Diffuse(
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
     std::size_t nCoeffs   = fields[0]->GetNcoeffs();
-    
+
     Array<OneD, Array<OneD, NekDouble> >  tmp{nConvectiveFields};
     for (std::size_t i=0; i < nConvectiveFields; ++i)
     {
         tmp[i] = Array<OneD, NekDouble> {nCoeffs, 0.0};
     }
 
-    DiffusionLDG::v_Diffuse_coeff(nConvectiveFields, fields, inarray, tmp,
+    DiffusionLDG::v_DiffuseCoeffs(nConvectiveFields, fields, inarray, tmp,
                                     pFwd, pBwd);
-    
+
     for (std::size_t i = 0; i < nConvectiveFields; ++i)
     {
         fields[i]->BwdTrans             (tmp[i], outarray[i]);
     }
 }
 
-void DiffusionLDG::v_Diffuse_coeff(
+void DiffusionLDG::v_DiffuseCoeffs(
     const std::size_t                                 nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
@@ -205,7 +205,7 @@ void DiffusionLDG::v_DiffuseVolumeFlux(
     const Array<OneD, Array<OneD, NekDouble>>           &inarray,
     TensorOfArray3D<NekDouble>                          &qfield,
     TensorOfArray3D<NekDouble>                          &viscTensor,
-    Array< OneD, int >                                  &nonZeroIndex) 
+    Array< OneD, int >                                  &nonZeroIndex)
 {
     boost::ignore_unused(fields, nonZeroIndex);
     m_fluxVector(inarray, qfield, viscTensor);

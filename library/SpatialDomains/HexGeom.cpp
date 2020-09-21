@@ -858,24 +858,24 @@ void HexGeom::SetUpXmap()
 
     if (m_forient[0] < 9)
     {
-        tmp1.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(0));
-        tmp1.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(2));
+        tmp1.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(0));
+        tmp1.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(2));
     }
     else
     {
-        tmp1.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(1));
-        tmp1.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(3));
+        tmp1.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(1));
+        tmp1.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(3));
     }
 
     if (m_forient[5] < 9)
     {
-        tmp1.push_back(m_faces[5]->GetXmap()->GetEdgeNcoeffs(0));
-        tmp1.push_back(m_faces[5]->GetXmap()->GetEdgeNcoeffs(2));
+        tmp1.push_back(m_faces[5]->GetXmap()->GetTraceNcoeffs(0));
+        tmp1.push_back(m_faces[5]->GetXmap()->GetTraceNcoeffs(2));
     }
     else
     {
-        tmp1.push_back(m_faces[5]->GetXmap()->GetEdgeNcoeffs(1));
-        tmp1.push_back(m_faces[5]->GetXmap()->GetEdgeNcoeffs(3));
+        tmp1.push_back(m_faces[5]->GetXmap()->GetTraceNcoeffs(1));
+        tmp1.push_back(m_faces[5]->GetXmap()->GetTraceNcoeffs(3));
     }
 
     int order0 = *max_element(tmp1.begin(), tmp1.end());
@@ -884,24 +884,24 @@ void HexGeom::SetUpXmap()
 
     if (m_forient[0] < 9)
     {
-        tmp1.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(1));
-        tmp1.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(3));
+        tmp1.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(1));
+        tmp1.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(3));
     }
     else
     {
-        tmp1.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(0));
-        tmp1.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(2));
+        tmp1.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(0));
+        tmp1.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(2));
     }
 
     if (m_forient[5] < 9)
     {
-        tmp1.push_back(m_faces[5]->GetXmap()->GetEdgeNcoeffs(1));
-        tmp1.push_back(m_faces[5]->GetXmap()->GetEdgeNcoeffs(3));
+        tmp1.push_back(m_faces[5]->GetXmap()->GetTraceNcoeffs(1));
+        tmp1.push_back(m_faces[5]->GetXmap()->GetTraceNcoeffs(3));
     }
     else
     {
-        tmp1.push_back(m_faces[5]->GetXmap()->GetEdgeNcoeffs(0));
-        tmp1.push_back(m_faces[5]->GetXmap()->GetEdgeNcoeffs(2));
+        tmp1.push_back(m_faces[5]->GetXmap()->GetTraceNcoeffs(0));
+        tmp1.push_back(m_faces[5]->GetXmap()->GetTraceNcoeffs(2));
     }
 
     int order1 = *max_element(tmp1.begin(), tmp1.end());
@@ -910,24 +910,24 @@ void HexGeom::SetUpXmap()
 
     if (m_forient[1] < 9)
     {
-        tmp1.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs(1));
-        tmp1.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs(3));
+        tmp1.push_back(m_faces[1]->GetXmap()->GetTraceNcoeffs(1));
+        tmp1.push_back(m_faces[1]->GetXmap()->GetTraceNcoeffs(3));
     }
     else
     {
-        tmp1.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs(0));
-        tmp1.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs(2));
+        tmp1.push_back(m_faces[1]->GetXmap()->GetTraceNcoeffs(0));
+        tmp1.push_back(m_faces[1]->GetXmap()->GetTraceNcoeffs(2));
     }
 
     if (m_forient[3] < 9)
     {
-        tmp1.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs(1));
-        tmp1.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs(3));
+        tmp1.push_back(m_faces[3]->GetXmap()->GetTraceNcoeffs(1));
+        tmp1.push_back(m_faces[3]->GetXmap()->GetTraceNcoeffs(3));
     }
     else
     {
-        tmp1.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs(0));
-        tmp1.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs(2));
+        tmp1.push_back(m_faces[3]->GetXmap()->GetTraceNcoeffs(0));
+        tmp1.push_back(m_faces[3]->GetXmap()->GetTraceNcoeffs(2));
     }
 
     int order2 = *max_element(tmp1.begin(), tmp1.end());

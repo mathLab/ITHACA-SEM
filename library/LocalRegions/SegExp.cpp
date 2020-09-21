@@ -628,13 +628,12 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         {
             int nq = m_base[0]->GetNumPoints();
             Array<OneD, NekDouble > Fn(nq);
-//            cout << "I am segment " << GetGeom()->GetGlobalID() << endl;
-//            cout << "I want edge " << GetLeftAdjacentElementEdge() << endl;
-// @TODO: This routine no longer makes sense as a normal is not unique to an edge
+
+            // @TODO: This routine no longer makes sense as a normal is not unique to an edge
             const Array<OneD, const Array<OneD, NekDouble> >
                  &normals =
                     GetLeftAdjacentElementExp()->
-                        GetEdgeNormal(GetLeftAdjacentElementEdge());
+                        GetTraceNormal(GetLeftAdjacentElementTrace());
             Vmath::Vmul (nq, &Fx[0], 1, &normals[0][0], 1, &Fn[0], 1);
             Vmath::Vvtvp(nq, &Fy[0], 1, &normals[1][0], 1, &Fn[0], 1, &Fn[0], 1);
 
@@ -746,7 +745,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
              Array<OneD, NekDouble>   &outarray)
         {
             size_t nquad = m_base[0]->GetNumPoints();
-            
+
             if (m_base[0]->GetPointsType() != LibUtilities::eGaussGaussLegendre)
             {
                 switch (vertex)
@@ -761,16 +760,15 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             }
             else
             {
-                // ASSERTL0(false, "SegExp::v_AddVertexPhysVals not coded");
                 StdRegions::ConstFactorMap factors;
                 factors[StdRegions::eFactorGaussVertex] = vertex;
-                
+
                 StdRegions::StdMatrixKey key(
                     StdRegions::eInterpGauss,
                     DetShapeType(),*this,factors);
-                
+
                 DNekScalMatSharedPtr mat_gauss = m_matrixManager[key];
-                
+
                 Vmath::Svtvp(nquad,inarray,
                             mat_gauss->GetOwnedMatrix()->GetPtr().get(), 1,
                             &outarray[0], 1, &outarray[0], 1);
@@ -791,16 +789,24 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             outarray[0] = result;
         }
 
+        // Get vertex map from the 1D Phys space.
+        void SegExp::v_GetTracePhysMap(
+            const int vertex,
+            Array<OneD, int> &map)
+        {
+            int     nquad = m_base[0]->GetNumPoints();
+
+            ASSERTL1(vertex == 0 || vertex == 1,
+                     "Vertex value should be 0 or 1");
+
+            map = Array<OneD, int>(1);
+            
+            map[0] = vertex == 0 ? 0: nquad - 1;
+        }
+
         //-----------------------------
         // Helper functions
         //-----------------------------
-
-        void SegExp::v_SetCoeffsToOrientation(
-            Array<OneD, NekDouble> &coeffs,
-            StdRegions::Orientation dir)
-        {
-            v_SetCoeffsToOrientation(dir,coeffs,coeffs);
-        }
 
         void SegExp::v_SetCoeffsToOrientation(
                 StdRegions::Orientation dir,
@@ -936,7 +942,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             }
         }
 
-        void SegExp::v_ComputeVertexNormal(const int vertex)
+        void SegExp::v_ComputeTraceNormal(const int vertex)
         {
             int i;
             const SpatialDomains::GeomFactorsSharedPtr &geomFactors =
@@ -959,10 +965,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
             size_t nqb = nqe;
             size_t nbnd= vertex;
-            m_elmtBndNormDirElmtLen[nbnd] = 
-                    Array<OneD, NekDouble> {nqb, 0.0};
-            Array<OneD, NekDouble>  &length = 
-                    m_elmtBndNormDirElmtLen[nbnd];
+            m_elmtBndNormDirElmtLen[nbnd] = Array<OneD, NekDouble> {nqb, 0.0};
+            Array<OneD, NekDouble> &length = m_elmtBndNormDirElmtLen[nbnd];
 
             // Regular geometry case
             if ((type == SpatialDomains::eRegular) ||

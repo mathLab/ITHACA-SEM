@@ -12,6 +12,7 @@ v5.1.0
 - Add an error filter for the time-evolution of the L2 and Linf errors (!1147)
 - Add cachedId in GetExpIndex and use in Fieldconvert (!1167)
 - Fix bug in PreconditionerLowEnergy (!1161)
+- Fix bug in StdHexExp FillMode (!1192)
 
 **FieldConvert**
 - Refactored time integration code using factory pattern (!1034)

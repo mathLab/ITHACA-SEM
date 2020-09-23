@@ -148,7 +148,7 @@ namespace Nektar
 	void k_means_ITHACA(int no_clusters, Array<OneD, std::set<int> > &clusters, double &CVT_energy);
 	void evaluate_local_clusters(Array<OneD, std::set<int> > optimal_clusters);
         void run_local_ROM_offline(Eigen::MatrixXd collect_f_all);
-        void run_local_ROM_offline_add_transition(Eigen::MatrixXd , Eigen::MatrixXd );
+        void run_local_ROM_offline_add_transition(Eigen::MatrixXd , Eigen::MatrixXd, int);
 	void run_local_ROM_online(std::set<int>, int );
 	void associate_VV_to_clusters(Array<OneD, std::set<int> >);
 
@@ -309,6 +309,7 @@ namespace Nektar
 
 	int max_sparse_poly_approx_dimension;
 	bool use_ANN;
+	bool use_ANN_local;
 	Eigen::MatrixXd train_data_x;
 	Eigen::MatrixXd train_data_y;
 

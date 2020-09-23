@@ -8412,6 +8412,14 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	{
 		use_ANN = 0;
 	}
+	if (m_session->DefinesParameter("use_ANN_local")) // after POD output data for ANN construction in local ROM and then break
+	{
+		use_ANN_local = m_session->GetParameter("use_ANN_local");
+	}
+	else
+	{
+		use_ANN_local = 0;
+	}
 	if (m_session->DefinesParameter("use_non_unique_up_to_two")) // set if Newton or Oseen iteration
 	{
 		use_non_unique_up_to_two = m_session->GetParameter("use_non_unique_up_to_two");
@@ -9296,7 +9304,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		// keep collect_f_all for later to continue regular execution, while a LocROM verification and validation module runs from here first
 		cout << "use_fine_grid_VV " << use_fine_grid_VV << endl;
 		evaluate_local_clusters(optimal_clusters);
-
+		
 	}   // 	if (use_LocROM)
 
 	if (use_sparse_poly)
@@ -9636,7 +9644,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //			local_collect_f_all.col(j) = collect_f_all.col(optimal_clusters[i][j]);
 		}
 		if (use_overlap_p_space)
-			run_local_ROM_offline_add_transition(local_collect_f_all_orig,local_collect_f_all_add);
+			run_local_ROM_offline_add_transition(local_collect_f_all_orig,local_collect_f_all_add, which_single_cluster);
 		else
 			run_local_ROM_offline(local_collect_f_all_orig);
 		run_local_ROM_online(optimal_clusters[i], i);
@@ -9671,10 +9679,13 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 //			local_collect_f_all.col(j) = collect_f_all.col(optimal_clusters[i][j]);
 		}
 		if (use_overlap_p_space)
-			run_local_ROM_offline_add_transition(local_collect_f_all_orig,local_collect_f_all_add);
+			run_local_ROM_offline_add_transition(local_collect_f_all_orig,local_collect_f_all_add, i);
 		else
 			run_local_ROM_offline(local_collect_f_all_orig);
-		run_local_ROM_online(optimal_clusters[i], i);
+		if (!use_ANN_local)
+		{
+			run_local_ROM_online(optimal_clusters[i], i);
+		}
 //		run_local_ROM_online(optimal_clusters_orig[i], i);
 	}
     }
@@ -9768,7 +9779,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
    }
 
 
-    void CoupledLinearNS_TT::run_local_ROM_offline_add_transition(Eigen::MatrixXd collect_f_all_orig, Eigen::MatrixXd collect_f_all_add)
+    void CoupledLinearNS_TT::run_local_ROM_offline_add_transition(Eigen::MatrixXd collect_f_all_orig, Eigen::MatrixXd collect_f_all_add, int no_clust)
    {
 //	Eigen::MatrixXd collect_f_all_orig_mod = Eigen::MatrixXd::Zero(collect_f_all_orig.rows(), collect_f_all_orig.cols() + collect_f_all_add.cols()); 
 //	collect_f_all_orig_mod << collect_f_all_orig, collect_f_all_add;
@@ -9908,6 +9919,50 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	{
 //		cout << "finished gen_phys_base_vecs in " << difftime(timer_2, timer_1) << " seconds" << endl;
 	}
+	
+	if (use_ANN_local)
+	{
+		cout << "encountered use_ANN_local, writing train data and return from run_local_ROM_offline_add_transition for current cluster " << endl;
+		train_data_x = Eigen::MatrixXd::Zero(RBsize, Nmax);
+		train_data_y = Eigen::MatrixXd::Zero(RBsize, Nmax);
+		for (int i = 0; i < Nmax; ++i) // for all original snapshots
+		{
+			// project original snapshot data onto the POD basis
+			Eigen::MatrixXd snapshot_xy_proj = project_onto_basis(snapshot_x_collection[i], snapshot_y_collection[i]);
+			//			cout << "snapshot_xy_proj.rows() " << snapshot_xy_proj.rows() << " snapshot_xy_proj.cols() " << snapshot_xy_proj.cols() << endl;
+			train_data_x.col(i) = snapshot_xy_proj.col(0);
+			train_data_y.col(i) = snapshot_xy_proj.col(1);
+		}
+		// write the training data to *.txt files
+		std::stringstream sstm_l11;
+		sstm_l11 << "trainANN_" << no_clust << ".txt";
+		std::string result_l11 = sstm_l11.str();
+		const char* rr_l11 = result_l11.c_str();
+                 std::ofstream myfileANN (rr_l11);
+		if (myfileANN.is_open())
+		{
+			for (int i = 0; i < RBsize; i++)
+			{
+				for (int j = 0; j < Nmax; j++)
+				{
+					myfileANN << std::setprecision(17) << train_data_x(i,j) << "\t";
+				}
+				myfileANN << "\n";
+			}
+			for (int i = 0; i < RBsize; i++)
+			{
+				for (int j = 0; j < Nmax; j++)
+				{
+					myfileANN << std::setprecision(17) << train_data_y(i,j) << "\t";
+				}
+				myfileANN << "\n";
+			}
+	         myfileANN.close();
+		}
+		else cout << "Unable to open file"; 
+		return;
+	}
+	
 	if (parameter_space_dimension == 1)
 	{
 		gen_proj_adv_terms();

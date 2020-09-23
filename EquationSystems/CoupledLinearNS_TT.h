@@ -189,6 +189,7 @@ namespace Nektar
 	void online_phase();
 	void compute_sparse_poly_approx();
 	void compute_ANN_approx();
+	void compute_ANN_approx_cluster(int);
 	Array<OneD, NekDouble> param_point;
 	Array<OneD, Array<OneD, NekDouble> > general_param_vector;
 	Array<OneD, Array<OneD, NekDouble> > fine_general_param_vector;

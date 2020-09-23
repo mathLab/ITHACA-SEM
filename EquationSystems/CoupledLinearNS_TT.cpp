@@ -7156,7 +7156,133 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	}
 
 
+    void CoupledLinearNS_TT::compute_ANN_approx_cluster(int cluster_no)
+	{
+		ANN_POD_coeffs = Eigen::MatrixXd::Zero(fine_grid_dir0*fine_grid_dir1, RBsize*2);
+		std::stringstream sstm;
+		sstm << "pred_fsg_" << cluster_no << ".txt";
+		std::string predANN_txt = sstm.str();
+	//	std::string predANN_txt = "evaluate/pred_fsg.txt";
+		const char* predANN_txt_t = predANN_txt.c_str();
+		ifstream myfile_predANN_txt_t (predANN_txt_t);
+		std::vector< std::vector<double> > all_double;
+		if (myfile_predANN_txt_t.is_open())
+		{
+			std::string line;
+			std::vector< std::vector<double> > all_double;
+			int counter = 0;
+			while ( getline( myfile_predANN_txt_t, line ) ) 
+			{
+			//	cout << line << endl;
+				std::istringstream is( line );
+				std::vector<double> nn = std::vector<double>( std::istream_iterator<double>(is), std::istream_iterator<double>() );
+			//	cout << "nn.size() "  << nn.size() << endl;
+				for (int i = 0; i < nn.size(); ++i)
+				{
+					//optimal_clusters[counter].insert(nn[i]);
+					//cout << nn[i] << endl;
+					//cout << "counter " << counter << endl;
+					ANN_POD_coeffs(counter,i) = nn[i];
+				}
+				++counter;
+//				      all_integers.push_back( std::vector<int>( std::istream_iterator<int>(is), std::istream_iterator<int>() ) );
+			}
 
+	/*			for (int i = 0; i < no_clusters; ++i)
+				{
+					for (std::set<int>::iterator it=optimal_clusters[i].begin(); it!=optimal_clusters[i].end(); ++it)
+					{
+						myfile_optimal_clustering_txt_t << *it << "\t";
+					}
+					myfile_optimal_clustering_txt_t << endl;
+				} */
+			myfile_predANN_txt_t.close(); 
+		}
+		else cout << "Unable to open file pred_fsg for current cluster"; 
+		// L2 error works on the snapshot_x_collection and snapshot_y_collection
+		// start sweeping 
+		double fine_grid_dir1_index = 0;
+		double fine_grid_dir0_index = 0;
+		Eigen::MatrixXd collected_relative_L2errors = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
+		Eigen::MatrixXd collected_relative_Linferrors = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
+		for (int iter_index = 0; iter_index < fine_grid_dir0*fine_grid_dir1; ++iter_index)
+		{
+			int current_index = iter_index;
+			double current_nu;
+			double w;
+			if (parameter_space_dimension == 1)
+			{
+				current_nu = param_vector[current_index];
+			}
+			else if (parameter_space_dimension == 2)
+			{
+				Array<OneD, NekDouble> current_param = fine_general_param_vector[current_index];
+				w = current_param[0];	
+				current_nu = current_param[1];
+			}		
+			Array<OneD, NekDouble> interpolant_x(snapshot_x_collection[0].num_elements());
+			Array<OneD, NekDouble> interpolant_y(snapshot_y_collection[0].num_elements());
+			for (int i = 0; i < snapshot_x_collection[0].num_elements(); ++i)
+			{
+				interpolant_x[i] = 0.0;
+				interpolant_y[i] = 0.0;
+			}
+			for (int index_interpol_op = 0; index_interpol_op < RBsize; ++index_interpol_op)
+			{
+				for (int i = 0; i < snapshot_x_collection[0].num_elements(); ++i)	
+				{
+					interpolant_x[i] += eigen_phys_basis_x(i, index_interpol_op) * ANN_POD_coeffs(iter_index, index_interpol_op);
+					interpolant_y[i] += eigen_phys_basis_y(i, index_interpol_op) * ANN_POD_coeffs(iter_index, index_interpol_op + RBsize);
+				}
+			}
+			double rel_L2error = L2norm_abs_error_ITHACA(interpolant_x, interpolant_y, snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]) / L2norm_ITHACA(snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]);
+			double rel_Linferror = Linfnorm_abs_error_ITHACA(interpolant_x, interpolant_y, snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]) / Linfnorm_ITHACA(snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]);
+			collected_relative_L2errors(fine_grid_dir0_index, fine_grid_dir1_index) =  rel_L2error;
+			collected_relative_Linferrors(fine_grid_dir0_index, fine_grid_dir1_index) =  rel_Linferror;
+			fine_grid_dir1_index++;
+			if (fine_grid_dir1_index == fine_grid_dir1)
+			{
+				fine_grid_dir1_index = 0;
+				fine_grid_dir0_index++;
+			}
+		}
+		std::stringstream sstm_L2;
+		sstm_L2 << "POD_NN_local_L2_" << cluster_no << ".txt";
+		std::string LocROM_sstm_L2 = sstm_L2.str();
+		const char* outname_VV = LocROM_sstm_L2.c_str();
+		ofstream myfile_VV (outname_VV);
+		if (myfile_VV.is_open())
+		{
+			for (int i0 = 0; i0 < fine_grid_dir0; i0++)
+			{
+				for (int i1 = 0; i1 < fine_grid_dir1; i1++)
+				{
+					myfile_VV << std::setprecision(17) << collected_relative_L2errors(i0,i1) << "\t";
+				}
+				myfile_VV << "\n";
+			}
+			myfile_VV.close();
+		}
+		else cout << "Unable to open file"; 
+		std::stringstream sstm_Linf;
+		sstm_Linf << "POD_NN_local_Linf_" << cluster_no << ".txt";
+		std::string LocROM_sstm_Linf = sstm_Linf.str();
+		const char* outname_VV_Linf = LocROM_sstm_Linf.c_str();
+		ofstream myfile_VV_Linf (outname_VV_Linf);
+		if (myfile_VV_Linf.is_open())
+		{
+			for (int i0 = 0; i0 < fine_grid_dir0; i0++)
+			{
+				for (int i1 = 0; i1 < fine_grid_dir1; i1++)
+				{
+					myfile_VV_Linf << std::setprecision(17) << collected_relative_Linferrors(i0,i1) << "\t";
+				}
+				myfile_VV_Linf<< "\n";
+			}
+			myfile_VV_Linf.close();
+		}
+		else cout << "Unable to open file"; 
+	}
 
 
     void CoupledLinearNS_TT::online_phase()
@@ -9685,6 +9811,10 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		if (!use_ANN_local)
 		{
 			run_local_ROM_online(optimal_clusters[i], i);
+		}
+		else
+		{
+			compute_ANN_approx_cluster(i);
 		}
 //		run_local_ROM_online(optimal_clusters_orig[i], i);
 	}

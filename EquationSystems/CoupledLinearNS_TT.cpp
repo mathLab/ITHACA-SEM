@@ -7160,6 +7160,8 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	{
 		cout << "start CoupledLinearNS_TT::compute_ANN_approx_cluster " << endl;
 		Eigen::MatrixXd local_ANN_POD_coeffs = Eigen::MatrixXd::Zero(fine_grid_dir0*fine_grid_dir1, RBsize*2);
+		cout << "size1 " << fine_grid_dir0*fine_grid_dir1 << endl;
+		cout << "size2 " << RBsize*2 << endl;
 		std::stringstream sstm;
 		sstm << "pred_fsg_" << cluster_no << ".txt";
 		std::string predANN_txt = sstm.str();
@@ -7182,10 +7184,10 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 				{
 					//optimal_clusters[counter].insert(nn[i]);
 					//cout << nn[i] << endl;
-					cout << "counter " << counter << endl;
-					cout << "i " << i << endl;
-					cout << "size1 " << fine_grid_dir0*fine_grid_dir1 << endl;
-					cout << "size2 " << RBsize*2 << endl;
+				//	cout << "counter " << counter << endl;
+				//	cout << "i " << i << endl;
+				//	cout << "size1 " << fine_grid_dir0*fine_grid_dir1 << endl;
+				//	cout << "size2 " << RBsize*2 << endl;
 					local_ANN_POD_coeffs(counter,i) = nn[i];
 				}
 				++counter;

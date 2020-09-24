@@ -10,6 +10,10 @@ v5.1.0
 - Corrected the use of communicator in AssemblyMapDG and AssemblyCommDG which was not using GetRowComm() (!1144)
 - Add interior penalty method to DG framework (!1101)
 - Add an error filter for the time-evolution of the L2 and Linf errors (!1147)
+- Add cachedId in GetExpIndex and use in Fieldconvert (!1167)
+- Fix bug in PreconditionerLowEnergy (!1161)
+
+**FieldConvert**
 - Refactored time integration code using factory pattern (!1034)
 - Fix to preprocessor logic for boost with Visual Studio >= 2015 (!1115)
 - Fix type consistency and real comparison in SharedArray.hpp, replaced
@@ -19,6 +23,7 @@ v5.1.0
 
 **FieldConvert**:
 - Add phifile module to compute shape functions for the SPM solver (!1065)
+- Fix mean and innerProduct modules in 3DH1D cases (!1157)
 
 **CardiacEPSolver**
 - Added additional parameter sets to Fenton-Karma model (!1119)
@@ -28,6 +33,11 @@ v5.1.0
   (!1065)
 - Add new filter AeroForcesSPM to compute aerodynamic forces in immersed
   boundaries (!1065)
+
+**PulseWaveSolver**
+- Added viscoelasticity (!1138)
+- Added empirical and power laws (!1138)
+- Code tidying (!1138)
 
 **Documentation**:
 - Updated Windows source build instructions in user guide (!1152)
@@ -43,6 +53,11 @@ v5.1.0
 - Updated minimum required CMake version to 3.5.1 (!1152)
 - Updated third party Boost version 1.71 (!1152)
 
+v5.0.2
+------
+**CI**
+- Add Debian Bullseye to CI system (!1181)
+
 v5.0.1
 ------
 **Library**
@@ -56,7 +71,7 @@ v5.0.1
 - Fix Collection unit tests (!1160)
 - Fix periodic boundary conditions with HDF5 input file (!1163)
 - Fix DESTDIR issues for MacPorts (!1179)
-
+- Fix Bodyforcing and history point filter bounds issue (!1184)
 **IncNavierStokesSolver**
 - Change the baseflow time in the Adjoint advection (!1133)
 

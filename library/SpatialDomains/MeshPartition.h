@@ -91,8 +91,8 @@ protected:
     // Element in a mesh
     struct GraphVertexProperties
     {
-        int id;             ///< Universal ID of the vertex
-        int partition;      ///< Index of the partition to which it belongs
+        int id = 0;         ///< Universal ID of the vertex
+        int partition = 0;  ///< Index of the partition to which it belongs
         MultiWeight weight; ///< Weightings to this graph vertex
         MultiWeight bndWeight;
         MultiWeight edgeWeight;
@@ -101,7 +101,7 @@ protected:
     // Face/Edge/Vertex between two adjacent elements
     struct GraphEdgeProperties
     {
-        int id;
+        int id = 0;
         std::vector<MeshVertex> vertices;
         std::vector<MeshEdge> edges;
     };

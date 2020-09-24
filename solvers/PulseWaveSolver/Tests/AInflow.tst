@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>A-inflow Riemann Solver, P=5</description>
+    <description>AInflow Inlet Condition, P=5</description>
     <executable>PulseWaveSolver</executable>
-    <parameters>A_inflow.xml</parameters>
+    <parameters>AInflow.xml</parameters>
     <files>
-        <file description="Session File">A_inflow.xml</file>
+        <file description="Session File">AInflow.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

@@ -101,6 +101,10 @@
       <E VAR="beta" DOMAIN="0" VALUE="100" />
     </FUNCTION>
 
+    <FUNCTION NAME="Viscoelasticity">
+        <E VAR="gamma" DOMAIN="0" VALUE="1"/>
+    </FUNCTION NAME="Viscoelasticity">
+
     <FUNCTION NAME="ExactSolution">
       <E VAR="A" DOMAIN="0" VALUE="0" />
       <E VAR="u" DOMAIN="0" VALUE="0" />

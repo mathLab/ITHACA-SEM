@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="1" SPACE="2">
+        <VERTEX>
+            <V ID="0"> 0.0     0.0   0.0 </V> <!-- Thoracic Aorta -->
+            <V ID="1"> 6.0     0.0   0.0 </V>
+            <V ID="2"> 12.0    0.0   0.0 </V>
+            <V ID="3"> 18.0    0.0   0.0 </V>
+            <V ID="4"> 24.137  0.0   0.0 </V>
+        </VERTEX>
+
+        <ELEMENT>
+            <S ID="0"> 0 1 </S>
+            <S ID="1"> 1 2 </S>
+            <S ID="2"> 2 3 </S>
+            <S ID="3"> 3 4 </S>
+        </ELEMENT>
+
+        <COMPOSITE>
+            <C ID="0"> S[0-3] </C>
+            <C ID="1"> V[0] </C>
+            <C ID="2"> V[4] </C>
+        </COMPOSITE>
+
+        <DOMAIN>
+            <D ID="0"> C[0] </D>
+        </DOMAIN>
+    </GEOMETRY>
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="10" FIELDS="A, u" TYPE="MODIFIED" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+        <PARAMETERS>
+            <P> TimeStep       = 1E-4               </P>
+            <P> FinTime        = 15                 </P>
+            <P> NumSteps       = FinTime / TimeStep </P>
+            <P> IO_CheckSteps  = NumSteps / 500     </P>
+            <P> IO_InfoSteps   = 100                </P>
+            <P> T              = 1                  </P>
+            <P> omega          = 2 * PI / T         </P>
+            <P> rho            = 1.060E-03          </P> <!-- Density [kg/cm^3]-->
+            <P> nue            = 0.5                </P> <!-- Poisson's ratio -->
+            <P> pext           = 94.66              </P> <!-- External pressure - can substitute for reference pressure if using different reference area: here it is the diasotlic pressure -->
+            <P> pout           = 0.0                </P> <!-- Outflow pressure for RCR model -->
+            <P> A1             = 4.5239             </P> <!-- Area at diastolic pressure -->
+            <P> A1_0           = 3.0605             </P> <!-- Area at zero pressure -->
+            <P> E1             = 4000               </P> <!-- Elastic modulus -->
+            <P> Varphi1        = 0                  </P> <!-- Viscoelastic modulus set to zero to neglect viscoelasticity. Actual value: Varphi1 = 5 -->
+            <P> h1             = 0.12               </P> <!-- Wall thickness-->
+            <P> R              = 1.23422            </P> <!-- R1 + R2 -->
+            <P> C              = 1.01630            </P>
+        </PARAMETERS>
+
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE"                VALUE="PulseWavePropagation" />
+            <I PROPERTY="Projection"            VALUE="DisContinuous" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="RungeKutta2_ImprovedEuler" />
+            <I PROPERTY="UpwindTypePulse"       VALUE="UpwindPulse" />
+        </SOLVERINFO>
+
+        <VARIABLES>
+            <V ID="0"> A </V>
+            <V ID="1"> u </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">    <!-- Inflow condition -->
+                <D VAR="A" USERDEFINEDTYPE="Q-inflow" VALUE="500 * (0.20617 +
+                    0.37759000 * sin(2  * PI * t / T + 0.596050) +
+                    0.28040000 * sin(4  * PI * t / T - 0.358590) +
+                    0.15337000 * sin(6  * PI * t / T - 1.250900) -
+                    0.04988900 * sin(8  * PI * t / T + 1.392100) +
+                    0.03810700 * sin(10 * PI * t / T - 1.106800) -
+                    0.04169900 * sin(12 * PI * t / T + 1.398500) -
+                    0.02075400 * sin(14 * PI * t / T + 0.729210) +
+                    0.01336700 * sin(16 * PI * t / T - 1.539400) -
+                    0.02198300 * sin(18 * PI * t / T + 0.956170) -
+                    0.01307200 * sin(20 * PI * t / T - 0.022417) +
+                    0.00370300 * sin(22 * PI * t / T - 1.414600) -
+                    0.01397300 * sin(24 * PI * t / T + 0.774160) -
+                    0.01242300 * sin(26 * PI * t / T - 0.465110) +
+                    0.00400980 * sin(28 * PI * t / T + 0.951450) -
+                    0.00597040 * sin(30 * PI * t / T + 0.863690) -
+                    0.00734390 * sin(32 * PI * t / T - 0.647690) +
+                    0.00370060 * sin(34 * PI * t / T + 0.746630) -
+                    0.00320690 * sin(36 * PI * t / T + 0.859260) -
+                    0.00481710 * sin(38 * PI * t / T - 1.030600) +
+                    0.00404030 * sin(40 * PI * t / T + 0.280090) -
+                    0.00324090 * sin(42 * PI * t / T + 1.202000) -
+                    0.00325170 * sin(44 * PI * t / T - 0.933160) +
+                    0.00291120 * sin(46 * PI * t / T + 0.214050) -
+                    0.00227080 * sin(48 * PI * t / T + 1.186900) -
+                    0.00215660 * sin(50 * PI * t / T - 1.157400) +
+                    0.00255110 * sin(52 * PI * t / T - 0.129150) -
+                    0.00244480 * sin(54 * PI * t / T + 1.118500) -
+                    0.00190320 * sin(56 * PI * t / T - 0.992440) +
+                    0.00194760 * sin(58 * PI * t / T - 0.059885) -
+                    0.00194770 * sin(60 * PI * t / T + 1.165500) -
+                    0.00145450 * sin(62 * PI * t / T - 0.858290) +
+                    0.00139790 * sin(64 * PI * t / T + 0.042912) -
+                    0.00143050 * sin(66 * PI * t / T + 1.243900) -
+                    0.00107750 * sin(68 * PI * t / T - 0.794640) +
+                    0.00103680 * sin(70 * PI * t / T - 0.004306) -
+                    0.00121620 * sin(72 * PI * t / T + 1.211000) -
+                    0.00095707 * sin(74 * PI * t / T - 0.662030) +
+                    0.00077733 * sin(76 * PI * t / T + 0.256420) -
+                    0.00092407 * sin(78 * PI * t / T + 1.395400) -
+                    0.00079585 * sin(80 * PI * t / T - 0.499730))" />
+                <D VAR="u" USERDEFINEDTYPE="Q-inflow" VALUE="1.0" />
+            </REGION>
+
+            <REGION REF="1">
+                <D VAR="A" USERDEFINEDTYPE="RCR-terminal" VALUE="R" />
+                <D VAR="u" USERDEFINEDTYPE="RCR-terminal" VALUE="C" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="A" DOMAIN="0" VALUE="A1_0" />
+            <E VAR="u" DOMAIN="0" VALUE="0.0"  />
+        </FUNCTION>
+
+        <FUNCTION NAME="A_0">
+            <E VAR="A_0" DOMAIN="0" VALUE="A1" />
+        </FUNCTION>
+
+        <FUNCTION NAME="MaterialProperties">
+            <E VAR="beta" DOMAIN="0" VALUE="(4 / 3) * sqrt(PI) * E1 * h1 / A1" />
+        </FUNCTION>
+
+        <FUNCTION NAME="Viscoelasticity">
+            <E VAR="gamma" DOMAIN="0" VALUE="(2 / 3) * sqrt(PI) * Varphi1 * h1 / A1" />
+        </FUNCTION>
+    </CONDITIONS>
+
+</NEKTAR>

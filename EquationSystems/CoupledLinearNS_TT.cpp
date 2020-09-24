@@ -7306,6 +7306,11 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		compute_ANN_approx();
 		return;
 	}
+	if (use_ANN_local)
+	{
+		//compute_ANN_approx();
+		return;
+	}
 
 	Eigen::MatrixXd mat_compare = Eigen::MatrixXd::Zero(f_bnd_dbc_full_size.rows(), 3);  // is of size M_truth_size
 	// start sweeping 
@@ -9446,6 +9451,11 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 		return ;
 	}
 
+	if (use_ANN_local)
+	{
+		cout << "encountered use_ANN_local, return from offline_phase" << endl;
+		return ;
+	}
 
 	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_all(collect_f_all, Eigen::ComputeThinU);
 //	cout << "svd_collect_f_all.singularValues() " << svd_collect_f_all.singularValues() << endl << endl;

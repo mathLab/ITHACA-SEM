@@ -40,8 +40,15 @@ IF (NEKTAR_BUILD_DOC)
     INSTALL(DIRECTORY ${PROJECT_BINARY_DIR}/docs/doxygen/html/
         DESTINATION ${NEKTAR_DOC_DIR}/doxygen)
 
+    IF(DOXYGEN_DOT_EXECUTABLE)
+        MESSAGE(STATUS "Doxygen dot executable found. Enabling graph generation in docs...")
+        SET(DOXYGEN_DOT_AVAILABLE "YES")
+    ELSE()
+        MESSAGE(STATUS "Doxygen dot executable NOT found. Disabling graph generation in docs...")
+        SET(DOXYGEN_DOT_AVAILABLE "NO")
+    ENDIF()
     CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/docs/doxygen/Doxyfile.in
-                   ${PROJECT_BINARY_DIR}/docs/doxygen/Doxyfile @ONLY IMMEDIATE)
+                   ${PROJECT_BINARY_DIR}/docs/doxygen/Doxyfile @ONLY)
 
     ADD_CUSTOM_TARGET(doc
         COMMAND ${CMAKE_COMMAND} -E copy

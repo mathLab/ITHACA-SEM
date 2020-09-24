@@ -1,11 +1,8 @@
 # Don't use macro -- this way we can just link against NekMesh and
 # LocalRegions.
-ADD_UTILITIES_EXECUTABLE(NekMesh-bin COMPONENT nekmesh
+ADD_UTILITIES_EXECUTABLE(NekMesh COMPONENT nekmesh
     SOURCES NekMesh.cpp
-    DEPENDS NekMesh)
-
-SET_TARGET_PROPERTIES(NekMesh-bin
-    PROPERTIES OUTPUT_NAME NekMesh)
+    DEPENDS libNekMesh)
 
 # Nektar++
 ADD_NEKTAR_TEST(Nektar++/bl_quad)

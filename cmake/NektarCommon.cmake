@@ -274,7 +274,7 @@ ENDMACRO(ADD_NEKTAR_TEST)
 # Adds a new NekPy library with the given sources.
 #
 MACRO(ADD_NEKPY_LIBRARY name)
-    CMAKE_PARSE_ARGUMENTS(NEKPY "" "DEPENDS" "SOURCES" ${ARGN})
+    CMAKE_PARSE_ARGUMENTS(NEKPY "" "DEPENDS;LIBDEPENDS" "SOURCES" ${ARGN})
 
     # Create library.
     ADD_LIBRARY(_${name} SHARED ${NEKPY_SOURCES})
@@ -292,8 +292,13 @@ MACRO(ADD_NEKPY_LIBRARY name)
         ${Boost_SYSTEM_LIBRARY}
         ${BOOST_PYTHON_LIB}
         ${BOOST_NUMPY_LIB}
-        ${PYTHON_LIBRARIES}
-        ${name})
+        ${PYTHON_LIBRARIES})
+
+    IF (NEKPY_LIBDEPENDS)
+        TARGET_LINK_LIBRARIES(_${name} ${NEKPY_LIBDEPENDS})
+    ELSE()
+        TARGET_LINK_LIBRARIES(_${name} ${name})
+    ENDIF()
 
     # Install __init__.py files.
     SET(TMPOUT "")

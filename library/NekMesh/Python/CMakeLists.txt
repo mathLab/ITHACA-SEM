@@ -1,4 +1,4 @@
-ADD_NEKPY_LIBRARY(NekMesh DEPENDS LocalRegions SOURCES
+ADD_NEKPY_LIBRARY(NekMesh DEPENDS LocalRegions LIBDEPENDS libNekMesh SOURCES
     NekMesh.cpp
     Element.cpp
     Mesh.cpp

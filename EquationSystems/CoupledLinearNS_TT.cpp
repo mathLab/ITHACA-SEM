@@ -7158,7 +7158,8 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
     void CoupledLinearNS_TT::compute_ANN_approx_cluster(int cluster_no)
 	{
-		ANN_POD_coeffs = Eigen::MatrixXd::Zero(fine_grid_dir0*fine_grid_dir1, RBsize*2);
+		cout << "start CoupledLinearNS_TT::compute_ANN_approx_cluster " << endl;
+		Eigen::MatrixXd local_ANN_POD_coeffs = Eigen::MatrixXd::Zero(fine_grid_dir0*fine_grid_dir1, RBsize*2);
 		std::stringstream sstm;
 		sstm << "pred_fsg_" << cluster_no << ".txt";
 		std::string predANN_txt = sstm.str();
@@ -7182,7 +7183,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 					//optimal_clusters[counter].insert(nn[i]);
 					//cout << nn[i] << endl;
 					//cout << "counter " << counter << endl;
-					ANN_POD_coeffs(counter,i) = nn[i];
+					local_ANN_POD_coeffs(counter,i) = nn[i];
 				}
 				++counter;
 //				      all_integers.push_back( std::vector<int>( std::istream_iterator<int>(is), std::istream_iterator<int>() ) );
@@ -7199,6 +7200,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			myfile_predANN_txt_t.close(); 
 		}
 		else cout << "Unable to open file pred_fsg for current cluster"; 
+		cout << "prediction loaded " << endl;
 		// L2 error works on the snapshot_x_collection and snapshot_y_collection
 		// start sweeping 
 		double fine_grid_dir1_index = 0;
@@ -7231,8 +7233,8 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			{
 				for (int i = 0; i < snapshot_x_collection[0].num_elements(); ++i)	
 				{
-					interpolant_x[i] += eigen_phys_basis_x(i, index_interpol_op) * ANN_POD_coeffs(iter_index, index_interpol_op);
-					interpolant_y[i] += eigen_phys_basis_y(i, index_interpol_op) * ANN_POD_coeffs(iter_index, index_interpol_op + RBsize);
+					interpolant_x[i] += eigen_phys_basis_x(i, index_interpol_op) * local_ANN_POD_coeffs(iter_index, index_interpol_op);
+					interpolant_y[i] += eigen_phys_basis_y(i, index_interpol_op) * local_ANN_POD_coeffs(iter_index, index_interpol_op + RBsize);
 				}
 			}
 			double rel_L2error = L2norm_abs_error_ITHACA(interpolant_x, interpolant_y, snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]) / L2norm_ITHACA(snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]);
@@ -10090,6 +10092,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	         myfileANN.close();
 		}
 		else cout << "Unable to open file"; 
+		cout << "finished writing train data" << endl;
 		return;
 	}
 	

@@ -58,7 +58,8 @@ namespace Nektar
         {
             public:
                 friend class MemoryManager<NekNonlinSys>;
-                LIB_UTILITIES_EXPORT static NekNonlinSysSharedPtr CreateInstance(
+                LIB_UTILITIES_EXPORT static NekNonlinSysSharedPtr CreateInstance
+                (
                     const LibUtilities::SessionReaderSharedPtr  &pSession,
                     const LibUtilities::CommSharedPtr           &vComm,
                     const int                                   nDimen)
@@ -73,23 +74,25 @@ namespace Nektar
                     const int                                   nDimen);
                 LIB_UTILITIES_EXPORT ~NekNonlinSys();
 
-                LIB_UTILITIES_EXPORT const Array<OneD, const NekDouble> & GetRefSolution() const
+                LIB_UTILITIES_EXPORT const Array<OneD, const NekDouble> 
+                &GetRefSolution() const
                 {
                     return m_Solution;
                 }
 
-                LIB_UTILITIES_EXPORT const Array<OneD, const NekDouble> & GetRefResidual() const
+                LIB_UTILITIES_EXPORT const Array<OneD, const NekDouble> 
+                &GetRefResidual() const
                 {
                     return m_Residual;
                 }
                 
             protected:
                 /// maximum iterations
-                int                                         m_maxiter;
+                int                                       m_maxiter;
                 /// Tolerance of iterative solver.
-                NekDouble                                   m_tolerance;
+                NekDouble                                 m_tolerance;
 
-                int                                         m_totalIterations = 0;
+                int                                       m_totalIterations = 0;
 
                 Array<OneD, NekDouble>  m_Solution;
                 Array<OneD, NekDouble>  m_Residual;

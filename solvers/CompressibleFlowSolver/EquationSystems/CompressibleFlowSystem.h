@@ -89,12 +89,12 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > &out);
         void DoOdeRhs_coeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                Array<OneD,       Array<OneD, NekDouble> > &outarray,
+                Array<OneD,       Array<OneD, NekDouble> >   &outarray,
             const NekDouble                                   time);
         
         void DoAdvection_coeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                Array<OneD,       Array<OneD, NekDouble> > &outarray,
+                Array<OneD,       Array<OneD, NekDouble> >   &outarray,
             const NekDouble                                   time,
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
@@ -157,11 +157,11 @@ namespace Nektar
         NekDouble                           m_BndEvaluateTime;
         NekDouble                           m_TimeIntegLambda;
         NekDouble                           m_JFEps;
-        NekDouble                           m_inArrayNorm=-1.0;
+        NekDouble                           m_inArrayNorm = -1.0;
         NekDouble                           m_NewtonAbsoluteIteTol;
-        int                                 m_TotNewtonIts=0;
-        int                                 m_TotImpStages=0;
-        int                                 m_StagesPerStep=0;
+        int                                 m_TotNewtonIts = 0;
+        int                                 m_TotImpStages = 0;
+        int                                 m_StagesPerStep = 0;
         Array<OneD, NekDouble>              m_magnitdEstimat;
 
         LibUtilities::NekNonlinSysSharedPtr         m_nonlinsol;
@@ -206,7 +206,7 @@ namespace Nektar
         void MatrixMultiply_MatrixFree_coeff(
             const  Array<OneD, NekDouble>                       &inarray,
             Array<OneD, NekDouble >                             &out,
-            const bool                                          &flag =false);
+            const bool                                          &flag = false);
 
         void GetFluxVector(
             const Array<OneD, Array<OneD, NekDouble> >       &physfield,

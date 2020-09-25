@@ -66,16 +66,18 @@ class LinSysDemo
             std::string LinIteratSovlerType = "FixedpointJacobi";
             if(pSession->DefinesSolverInfo("LinIteratSovler"))
             {
-                LinIteratSovlerType = pSession->GetSolverInfo("LinIteratSovler");
+              LinIteratSovlerType = pSession->GetSolverInfo("LinIteratSovler");
             }
             
-            ASSERTL0(LibUtilities::GetNekLinSysIteratFactory().ModuleExists(LinIteratSovlerType),
-                    "NekLinSysIterat '" + LinIteratSovlerType + "' is not defined.\n");
+            ASSERTL0(LibUtilities::GetNekLinSysIteratFactory().
+            ModuleExists(LinIteratSovlerType),
+            "NekLinSysIterat '" + LinIteratSovlerType + "' is not defined.\n");
             m_linsol = LibUtilities::GetNekLinSysIteratFactory().CreateInstance(
-                                LinIteratSovlerType, m_session,m_comm,m_matDim);
+                            LinIteratSovlerType, m_session, m_comm, m_matDim);
 
             m_LinSysOprtors.DefineNonlinLinSysLhsEval(&LinSysDemo::DoLhs, this);
-            m_LinSysOprtors.DefineNonlinLinFixPointIte(&LinSysDemo::DoFixedPoint, this);
+            m_LinSysOprtors.DefineNonlinLinFixPointIte(&LinSysDemo::
+            DoFixedPoint, this);
             m_linsol->setSysOperators(m_LinSysOprtors);
             UniqueMap();
             m_linsol->setUniversalUniqueMap(m_map);
@@ -87,29 +89,32 @@ class LinSysDemo
         void DoSolve()
         {
             // m_linsol->setRhsMagnitude(m_rhs_magnitude);
-            Array<OneD, NekDouble> pOutput(m_matDim,0.0);
+            Array<OneD, NekDouble> pOutput(m_matDim, 0.0);
 
-            int ntmpIts =  m_linsol->SolveSystem(m_matDim,m_SysRhs, pOutput,0,1.0E-9);
+            int ntmpIts = m_linsol->SolveSystem(m_matDim, m_SysRhs,
+                                                pOutput, 0,1.0E-9);
             boost::ignore_unused(ntmpIts);
 
             int ndigits     = 9;  // the number of sigificant digits
             int nothers     = 10; // extra width to place -, E, and power
-            int nwidthcolm  = nothers+ndigits-1; // the second value determines the number of sigificant digits
-            cout    << " ntmpIts= "<<ntmpIts <<endl
-                    <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1);
+            int nwidthcolm  = nothers+ndigits - 1; // the second value determines the number of sigificant digits
+            cout << " ntmpIts= "<<ntmpIts << endl
+                 <<std::scientific<<std::setw(nwidthcolm)<<
+                   std::setprecision(ndigits-1);
 
             string vars = "uvwx";
-            for(int i=0;i<m_matDim;i++)
+            for (int i = 0;i < m_matDim; ++i)
             {
-                cout << "L 2 error (variable " << vars[i] << ") : " << pOutput[i]
-                    << endl;
+                cout << "L 2 error (variable " << vars[i] << ") : " <<
+                        pOutput[i] << endl;
             }
         }
 
         void AllocateInitMatrix()
         {
             m_matDim = 4; 
-            m_matrix = MemoryManager<DNekMat>::AllocateSharedPtr(m_matDim,m_matDim,0.0);
+            m_matrix = MemoryManager<DNekMat>::AllocateSharedPtr
+                                            (m_matDim, m_matDim, 0.0);
             m_matDat = m_matrix->GetPtr();
             m_matDat[0]  = 10.0;
             m_matDat[1]  = -1.0;
@@ -128,7 +133,7 @@ class LinSysDemo
             m_matDat[14] = -1.0;
             m_matDat[15] =  8.0;
 
-            m_SysRhs = Array<OneD, NekDouble>(m_matDim) ;
+            m_SysRhs = Array<OneD, NekDouble>(m_matDim);
             m_SysRhs[0]  =   6.0;
             m_SysRhs[1]  =  25.0;
             m_SysRhs[2]  = -11.0;
@@ -144,17 +149,17 @@ class LinSysDemo
             boost::ignore_unused(flag);
 
             int ntmp = inarray.size();
-            ASSERTL0(m_matDim==ntmp,"m_matDim==ntmp not true");
-            NekVector<NekDouble> vecInn (m_matDim,inarray, eWrapper);
-            NekVector<NekDouble> vecOut (m_matDim,outarray, eWrapper);
-            vecOut = (*m_matrix)*vecInn;
+            ASSERTL0(m_matDim == ntmp, "m_matDim == ntmp not true");
+            NekVector<NekDouble> vecInn (m_matDim, inarray, eWrapper);
+            NekVector<NekDouble> vecOut (m_matDim, outarray, eWrapper);
+            vecOut = (*m_matrix) * vecInn;
 
-            Vmath::Vsub(m_matDim, rhs,1,outarray,1, outarray,1);
-            for(int i=0;i<m_matDim;i++)
+            Vmath::Vsub(m_matDim, rhs, 1, outarray, 1, outarray, 1);
+            for (int i = 0; i < m_matDim; ++i)
             {
-                outarray[i] = outarray[i]/(*m_matrix)(i,i);
+                outarray[i] = outarray[i] / (*m_matrix)(i,i);
             }
-            Vmath::Vadd(m_matDim, inarray,1,outarray,1, outarray,1);
+            Vmath::Vadd(m_matDim, inarray, 1, outarray, 1, outarray, 1);
 
         }
 
@@ -165,15 +170,15 @@ class LinSysDemo
         {
             boost::ignore_unused(flag);
             int ntmp = inarray.size();
-            ASSERTL0(m_matDim==ntmp,"m_matDim==ntmp not true");
-            NekVector<NekDouble> vecInn (m_matDim,inarray, eWrapper);
-            NekVector<NekDouble> vecOut (m_matDim,outarray, eWrapper);
-            vecOut = (*m_matrix)*vecInn;
+            ASSERTL0(m_matDim == ntmp,"m_matDim == ntmp not true");
+            NekVector<NekDouble> vecInn (m_matDim, inarray, eWrapper);
+            NekVector<NekDouble> vecOut (m_matDim, outarray, eWrapper);
+            vecOut = (*m_matrix) * vecInn;
         }
 
         void UniqueMap()
         {
-            m_map = Array<OneD, int>(m_matDim,1);
+            m_map = Array<OneD, int>(m_matDim, 1);
         }
 
     protected:

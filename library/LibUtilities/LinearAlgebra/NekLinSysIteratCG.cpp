@@ -63,7 +63,7 @@ namespace Nektar
             variables[0] =  pSession->GetVariable(0);
             string variable = variables[0];
 
-            if(pSession->DefinesGlobalSysSolnInfo(variable,"SuccessiveRHS"))
+            if(pSession->DefinesGlobalSysSolnInfo(variable, "SuccessiveRHS"))
             {
                 m_successiveRHS = boost::lexical_cast<int>(
                         pSession->GetGlobalSysSolnInfo(variable,
@@ -72,7 +72,7 @@ namespace Nektar
             else
             {
                 pSession->LoadParameter("SuccessiveRHS",
-                                        m_successiveRHS,0);
+                                        m_successiveRHS, 0);
             }
 
             int successiveRHS;
@@ -111,7 +111,7 @@ namespace Nektar
         {
             boost::ignore_unused(tol);
 
-            m_tolerance = max(tol,1.0E-16);
+            m_tolerance = max(tol, 1.0E-16);
             m_prec_factor = factor;
             if (m_useProjection)
             {
@@ -155,7 +155,8 @@ namespace Nektar
             {
                 // Create NekVector wrappers for linear algebra operations
                 NekVector<NekDouble> b     (nNonDir, pInput  + nDir, eWrapper);
-                NekVector<NekDouble> x     (nNonDir, tmp = pOutput + nDir, eWrapper);
+                NekVector<NekDouble> x     (nNonDir, tmp = pOutput + nDir,
+                                            eWrapper);
 
                 // check the input vector (rhs) is not zero
 
@@ -168,7 +169,7 @@ namespace Nektar
 
                 if (rhsNorm < NekConstants::kNekZeroTol)
                 {
-                    Array<OneD, NekDouble> tmp = pOutput+nDir;
+                    Array<OneD, NekDouble> tmp = pOutput + nDir;
                     Vmath::Zero(nNonDir, tmp, 1);
                     return;
                 }
@@ -179,18 +180,20 @@ namespace Nektar
                 Array<OneD, NekDouble> tmpAx_s    (nGlobal, 0.0);
                 Array<OneD, NekDouble> tmpx_s     (nGlobal, 0.0);
 
-                NekVector<NekDouble> pb    (nNonDir, tmp = pb_s    + nDir, eWrapper);
-                NekVector<NekDouble> px    (nNonDir, tmp = px_s    + nDir, eWrapper);
-                NekVector<NekDouble> tmpAx (nNonDir, tmp = tmpAx_s + nDir, eWrapper);
-                NekVector<NekDouble> tmpx  (nNonDir, tmp = tmpx_s  + nDir, eWrapper);
+                NekVector<NekDouble> pb(nNonDir, tmp = pb_s + nDir, eWrapper);
+                NekVector<NekDouble> px(nNonDir, tmp = px_s + nDir, eWrapper);
+                NekVector<NekDouble> tmpAx(nNonDir, tmp = tmpAx_s + nDir, 
+                                           eWrapper);
+                NekVector<NekDouble> tmpx(nNonDir, tmp = tmpx_s  + nDir,
+                                     eWrapper);
 
 
                 // notation follows the paper cited:
                 // \alpha_i = \tilda{x_i}^T b^n
                 // projected x, px = \sum \alpha_i \tilda{x_i}
 
-                Array<OneD, NekDouble> alpha     (m_prevLinSol.size(), 0.0);
-                for (int i = 0; i < m_prevLinSol.size(); i++)
+                Array<OneD, NekDouble> alpha(m_prevLinSol.size(), 0.0);
+                for (int i = 0; i < m_prevLinSol.size(); ++i)
                 {
                     alpha[i] = Vmath::Dot2(nNonDir,
                                            m_prevLinSol[i],
@@ -199,14 +202,14 @@ namespace Nektar
                 }
                 m_Comm->AllReduce(alpha, Nektar::LibUtilities::ReduceSum);
 
-                for (int i = 0; i < m_prevLinSol.size(); i++)
+                for (int i = 0; i < m_prevLinSol.size(); ++i)
                 {
                     if (alpha[i] < NekConstants::kNekZeroTol)
                     {
                         continue;
                     }
 
-                    NekVector<NekDouble> xi (nNonDir, m_prevLinSol[i], eWrapper);
+                    NekVector<NekDouble> xi(nNonDir, m_prevLinSol[i], eWrapper);
                     px += alpha[i] * xi;
                 }
 
@@ -238,15 +241,15 @@ namespace Nektar
          * A-norm(x) := sqrt( < x, Ax > )
          */
         NekDouble NekLinSysIteratCG::CalculateAnorm(
-                                                        const int nGlobal,
-                                                        const Array<OneD,const NekDouble> &in,
-                                                        const int nDir)
+                                        const int nGlobal,
+                                        const Array<OneD,const NekDouble> &in,
+                                        const int nDir)
         {
             // Get vector sizes
             int nNonDir = nGlobal - nDir;
 
             // Allocate array storage
-            Array<OneD, NekDouble> tmpAx_s    (nGlobal, 0.0);
+            Array<OneD, NekDouble> tmpAx_s(nGlobal, 0.0);
 
             m_operator.DoNonlinLinSysLhsEval(in, tmpAx_s);
 
@@ -263,9 +266,9 @@ namespace Nektar
          * Performs normalisation of input vector wrt A-norm.
          */
         void NekLinSysIteratCG::UpdateKnownSolutions(
-                                                         const int nGlobal,
-                                                         const Array<OneD,const NekDouble> &newX,
-                                                         const int nDir)
+                                        const int nGlobal,
+                                        const Array<OneD,const NekDouble> &newX,
+                                        const int nDir)
         {
             // Get vector sizes
             int nNonDir = nGlobal - nDir;
@@ -288,8 +291,8 @@ namespace Nektar
             Array<OneD, NekDouble> tmp1, tmp2;
 
             // Create NekVector wrappers for linear algebra operations
-            NekVector<NekDouble> px           (nNonDir, tmp1 = px_s    + nDir, eWrapper);
-            NekVector<NekDouble> tmpAx        (nNonDir, tmp2 = tmpAx_s + nDir, eWrapper);
+            NekVector<NekDouble>px   (nNonDir, tmp1 = px_s    + nDir, eWrapper);
+            NekVector<NekDouble>tmpAx(nNonDir, tmp2 = tmpAx_s + nDir, eWrapper);
 
 
             // calculating \tilda{x} - sum \alpha_i\tilda{x}_i
@@ -326,7 +329,8 @@ namespace Nektar
 
 
             // Some solutions generated by CG are identical zeros, see
-            // solutions generated for Test_Tet_equitri.xml (IncNavierStokesSolver).
+            // solutions generated for 
+            // Test_Tet_equitri.xml (IncNavierStokesSolver).
             // Not going to store identically zero solutions.
 
             NekDouble anorm = CalculateAnorm(nGlobal, px_s, nDir);
@@ -336,7 +340,8 @@ namespace Nektar
             }
 
             // normalisation of new solution
-            Vmath::Smul(nNonDir, 1.0/anorm, px_s.get() + nDir, 1, px_s.get() + nDir, 1);
+            Vmath::Smul(nNonDir, 1.0/anorm, 
+                        px_s.get() + nDir, 1, px_s.get() + nDir, 1);
 
             // updating storage with non-Dirichlet-dof part of new solution vector
             m_prevLinSol.push_back(px_s + nDir);

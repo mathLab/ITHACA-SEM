@@ -63,7 +63,7 @@ namespace Nektar
             m_maxhesband        =   30;
             // m_maxiter           =   60;
             std::vector<std::string>  variables(1);
-            variables[0] =  pSession->GetVariable(0);
+            variables[0] = pSession->GetVariable(0);
             string variable = variables[0];
 
             pSession->MatchSolverInfo(
@@ -84,8 +84,8 @@ namespace Nektar
                                         m_maxstorage,
                                         30);
             }
-            if(pSession->DefinesGlobalSysSolnInfo(variable , 
-                                                "MaxHesband"))
+            if(pSession->DefinesGlobalSysSolnInfo(variable, 
+                                                  "MaxHesband"))
             {
                 m_maxhesband = boost::lexical_cast<int>(
                         pSession->GetGlobalSysSolnInfo(variable,
@@ -95,16 +95,16 @@ namespace Nektar
             {
                 pSession->LoadParameter("MaxHesband",
                                         m_maxhesband,
-                                        m_maxstorage+1);
+                                        m_maxstorage + 1);
             }
 
-            m_maxrestart = ceil(NekDouble(m_maxiter)/NekDouble(m_maxstorage));
-            m_maxstorage = min(m_maxiter,m_maxstorage);
+            m_maxrestart = ceil(NekDouble(m_maxiter) / NekDouble(m_maxstorage));
+            m_maxstorage = min(m_maxiter, m_maxstorage);
 
             int flaguseCentralDifference = 0;
             pSession->LoadParameter("flaguseCentralDifference",
-                                        flaguseCentralDifference,
-                                        0);
+                                     flaguseCentralDifference,
+                                     0);
             
             switch (flaguseCentralDifference)
             {
@@ -148,7 +148,7 @@ namespace Nektar
         {
             boost::ignore_unused(tol);
 
-            m_tolerance = max(tol,1.0E-16);
+            m_tolerance = max(tol, 1.0E-16);
             m_prec_factor = factor;
             int niterations = DoGMRES(nGlobal, pInput, pOutput, nDir);
 
@@ -615,7 +615,7 @@ namespace Nektar
             // They usually equal to the beginning position and ending position of Hessenburg matrix
             // But sometimes starttem will change, like if it is initial 0 and becomes nonzero because previous Givens rotation
             // See Yu Pan's User Guide
-            for(int i = starttem; i < idtem; ++i)
+            for (int i = starttem; i < idtem; ++i)
             {
                 temp_dbl = c[i] * hsingle[i] - s[i] * hsingle[i + 1];
                 hsingle[i + 1] = s[i] * hsingle[i] + c[i] * hsingle[i + 1];
@@ -641,7 +641,8 @@ namespace Nektar
                 s[idtem] = temp_dbl * c[idtem];
             }
 
-            hsingle[idtem] = c[idtem] * hsingle[idtem] - s[idtem] * hsingle[endtem];
+            hsingle[idtem] = c[idtem] * hsingle[idtem] -
+                             s[idtem] * hsingle[endtem];
             hsingle[endtem] = 0.0;
 
             temp_dbl = c[idtem] * eta[idtem] - s[idtem] * eta[endtem];

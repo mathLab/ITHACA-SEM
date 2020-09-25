@@ -127,8 +127,10 @@ namespace Nektar
         else
         {   
             m_ode.DefineOdeRhs    (&CompressibleFlowSystem::DoOdeRhs, this);
-            m_ode.DefineProjection(&CompressibleFlowSystem::DoOdeProjection, this);
-            m_ode.DefineImplicitSolve(&CompressibleFlowSystem::DoImplicitSolve_phy2coeff, this);
+            m_ode.DefineProjection(&CompressibleFlowSystem::
+                                   DoOdeProjection, this);
+            m_ode.DefineImplicitSolve(&CompressibleFlowSystem::
+                                      DoImplicitSolve_phy2coeff, this);
 
             InitialiseNonlinSysSolver();
         }
@@ -142,19 +144,23 @@ namespace Nektar
     void CompressibleFlowSystem::InitialiseNonlinSysSolver()
     {
         std::string SovlerType = "Newton";
-        if(m_session->DefinesSolverInfo("NonlinIteratSovler"))
+        if (m_session->DefinesSolverInfo("NonlinIteratSovler"))
         {
             SovlerType = m_session->GetSolverInfo("NonlinIteratSovler");
         }
-        ASSERTL0(LibUtilities::GetNekNonlinSysFactory().ModuleExists(SovlerType),
+        ASSERTL0(LibUtilities::GetNekNonlinSysFactory().
+                 ModuleExists(SovlerType),
                 "NekNonlinSys '" + SovlerType + "' is not defined.\n");
-        LibUtilities::CommSharedPtr v_Comm  = m_fields[0]->GetComm()->GetRowComm();
-        int ntotal = m_fields[0]->GetNcoeffs()*m_fields.size();
+        LibUtilities::CommSharedPtr v_Comm  = 
+                                    m_fields[0]->GetComm()->GetRowComm();
+        int ntotal = m_fields[0]->GetNcoeffs() * m_fields.size();
         m_nonlinsol = LibUtilities::GetNekNonlinSysFactory().CreateInstance(
-                            SovlerType, m_session,v_Comm,ntotal);
+                            SovlerType, m_session, v_Comm,ntotal);
 
-        m_LinSysOprtors.DefineNonlinLinSysRhsEval(&CompressibleFlowSystem::NonlinSysEvaluator1D, this);
-        m_LinSysOprtors.DefineNonlinLinSysLhsEval(&CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff, this);
+        m_LinSysOprtors.DefineNonlinLinSysRhsEval(&CompressibleFlowSystem
+                                                  ::NonlinSysEvaluator1D, this);
+        m_LinSysOprtors.DefineNonlinLinSysLhsEval(&CompressibleFlowSystem::
+                                         MatrixMultiply_MatrixFree_coeff, this);
         m_nonlinsol->setSysOperators(m_LinSysOprtors);
     }
 
@@ -197,7 +203,8 @@ namespace Nektar
                     "Local time stepping requires CFL parameter.");
         }
         m_session->LoadParameter ("JFEps", m_JFEps, 5.0E-8);
-        m_session->LoadParameter("NewtonAbsoluteIteTol",        m_NewtonAbsoluteIteTol  ,    1.0E-12);
+        m_session->LoadParameter("NewtonAbsoluteIteTol", 
+                                 m_NewtonAbsoluteIteTol, 1.0E-12);
     }
 
     /**
@@ -404,42 +411,46 @@ namespace Nektar
         boost::ignore_unused(flag);
         unsigned int nvariables     = m_fields.size();
         unsigned int npoints        = m_fields[0]->GetNcoeffs();
-        Array<OneD, Array<OneD, NekDouble> > in2D(nvariables),out2D(nvariables);
-        for(int i = 0; i < nvariables; i++)
+        Array<OneD, Array<OneD, NekDouble> > in2D(nvariables),
+                                             out2D(nvariables);
+        for (int i = 0; i < nvariables; ++i)
         {
-            int offset = i*npoints;
-            in2D[i]     =  inarray + offset;
-            out2D[i]    =  out + offset;
+            int offset = i * npoints;
+            in2D[i]    = inarray + offset;
+            out2D[i]   = out + offset;
         }
-        NonlinSysEvaluator_coeff(in2D,out2D);
+        NonlinSysEvaluator_coeff(in2D, out2D);
     }
 
     void CompressibleFlowSystem::NonlinSysEvaluator_coeff(
         Array<OneD, Array<OneD, NekDouble> > &inarray,
         Array<OneD, Array<OneD, NekDouble> > &out)
     {
-        const Array<OneD, const NekDouble> refsol = m_nonlinsol->GetRefSolution();
+        const Array<OneD, const NekDouble> refsol 
+                                = m_nonlinsol->GetRefSolution();
         //inforc = m_TimeIntegForce;
         unsigned int nvariable  = inarray.size();
-        unsigned int ncoeffs    = inarray[nvariable-1].size();
+        unsigned int ncoeffs    = inarray[nvariable - 1].size();
         unsigned int npoints    = m_fields[0]->GetNpoints();
 
         Array<OneD, Array<OneD, NekDouble> > inpnts(nvariable);
 
-        for(int i = 0; i < nvariable; i++)
+        for (int i = 0; i < nvariable; ++i)
         {
-            inpnts[i]   =   Array<OneD, NekDouble>(npoints,0.0);
+            inpnts[i]   =   Array<OneD, NekDouble>(npoints, 0.0);
             m_fields[i]->BwdTrans(inarray[i], inpnts[i]);
         }
 
-        DoOdeProjection(inpnts,inpnts,m_BndEvaluateTime);
-        DoOdeRhs_coeff(inpnts,out,m_BndEvaluateTime);
+        DoOdeProjection(inpnts, inpnts, m_BndEvaluateTime);
+        DoOdeRhs_coeff(inpnts, out, m_BndEvaluateTime);
 
-        for (int i = 0; i < nvariable; i++)
+        for (int i = 0; i < nvariable; ++i)
         {
-            int noffset = i*ncoeffs;
-            Vmath::Svtvp(ncoeffs,m_TimeIntegLambda,out[i],1,refsol+noffset,1,out[i],1);
-            Vmath::Vsub(ncoeffs,inarray[i],1,out[i],1,out[i],1);
+            int noffset = i * ncoeffs;
+            Vmath::Svtvp(ncoeffs, m_TimeIntegLambda, out[i], 1,
+                         refsol + noffset, 1, out[i], 1);
+            Vmath::Vsub(ncoeffs, inarray[i], 1,
+                        out[i], 1, out[i], 1);
         }
         return;
     }
@@ -517,7 +528,7 @@ namespace Nektar
             NekDouble fac;
             Array<OneD, NekDouble> tmp;
 
-            Array<OneD, NekDouble> tstep (nElements, 0.0);
+            Array<OneD, NekDouble> tstep(nElements, 0.0);
             GetElmtTimeStep(inarray, tstep);
 
             // Loop over elements
@@ -529,7 +540,7 @@ namespace Nektar
                 for(int i = 0; i < nvariables; ++i)
                 {
                     Vmath::Smul(nq, fac, outarray[i] + offset, 1,
-                                         tmp = outarray[i] + offset, 1);
+                                tmp = outarray[i] + offset, 1);
                 }
             }
         }
@@ -549,7 +560,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
 
         m_advObject->AdvectCoeffs(nvariables, m_fields, advVel, inarray,
-                            outarray, time, pFwd, pBwd);
+                                  outarray, time, pFwd, pBwd);
     }
 
     /**
@@ -566,33 +577,33 @@ namespace Nektar
     }
 
     void CompressibleFlowSystem::DoImplicitSolve_phy2coeff(
-                                                 const Array<OneD, const Array<OneD, NekDouble> >&inpnts,
-                                                       Array<OneD,       Array<OneD, NekDouble> >&outpnt,
-                                                 const NekDouble time,
-                                                 const NekDouble lambda)
+                        const Array<OneD, const Array<OneD, NekDouble> >&inpnts,
+                        Array<OneD,       Array<OneD, NekDouble> >      &outpnt,
+                                          const NekDouble                  time,
+                                          const NekDouble                lambda)
     {
         unsigned int nvariables  = inpnts.size();
         unsigned int ncoeffs     = m_fields[0]->GetNcoeffs();
-        unsigned int ntotal      = nvariables*ncoeffs;
+        unsigned int ntotal      = nvariables * ncoeffs;
 
         Array<OneD, NekDouble>  inarray(ntotal);
         Array<OneD, NekDouble>  out(ntotal);
         Array<OneD, NekDouble>  tmpArray;
 
-        for(int i = 0; i < nvariables; i++)
+        for (int i = 0; i < nvariables; ++i)
         {
-            int noffset = i*ncoeffs;
-            tmpArray = inarray+noffset;
-            m_fields[i]->FwdTrans(inpnts[i],tmpArray);
+            int noffset = i * ncoeffs;
+            tmpArray = inarray + noffset;
+            m_fields[i]->FwdTrans(inpnts[i], tmpArray);
         }
 
-        DoImplicitSolve_coeff(inpnts,inarray,out,time,lambda);
+        DoImplicitSolve_coeff(inpnts, inarray, out, time, lambda);
 
-        for(int i = 0; i < nvariables; i++)
+        for (int i = 0; i < nvariables; ++i)
         {
-            int noffset = i*ncoeffs;
-            tmpArray = out+noffset;
-            m_fields[i]->BwdTrans(tmpArray,outpnt[i]);
+            int noffset = i * ncoeffs;
+            tmpArray = out + noffset;
+            m_fields[i]->BwdTrans(tmpArray, outpnt[i]);
         }
     }
 
@@ -608,13 +619,15 @@ namespace Nektar
         m_BndEvaluateTime               = time;
         unsigned int ntotal             = inarray.size();
 
-        if(m_inArrayNorm<0.0)
+        if (m_inArrayNorm < 0.0)
         {
             CalcRefValues(inarray);
         }
         
-        NekDouble tol2 = m_inArrayNorm*m_NewtonAbsoluteIteTol*m_NewtonAbsoluteIteTol;
-        m_TotNewtonIts +=  m_nonlinsol->SolveSystem(ntotal,inarray, out,0,tol2);
+        NekDouble tol2 = m_inArrayNorm
+                        *m_NewtonAbsoluteIteTol * m_NewtonAbsoluteIteTol;
+        m_TotNewtonIts +=  m_nonlinsol->SolveSystem(ntotal,inarray,
+                                                    out, 0, tol2);
         
         m_TotImpStages++;
         m_StagesPerStep++;
@@ -629,91 +642,97 @@ namespace Nektar
 
         unsigned int ntotalGlobal       = ntotal;
         m_comm->AllReduce(ntotalGlobal, Nektar::LibUtilities::ReduceSum);
-        unsigned int ntotalDOF          = ntotalGlobal/nvariables;
-        NekDouble ototalDOF             = 1.0/ntotalDOF;
+        unsigned int ntotalDOF          = ntotalGlobal / nvariables;
+        NekDouble ototalDOF             = 1.0 / ntotalDOF;
 
         m_inArrayNorm = 0.0;
-        m_magnitdEstimat = Array<OneD, NekDouble>  (nvariables,0.0);
+        m_magnitdEstimat = Array<OneD, NekDouble>  (nvariables, 0.0);
 
-        for(int i = 0; i < nvariables; i++)
+        for (int i = 0; i < nvariables; ++i)
         {
-            int offset = i*npoints;
-            m_magnitdEstimat[i] = Vmath::Dot(npoints,inarray+offset,inarray+offset);
+            int offset = i * npoints;
+            m_magnitdEstimat[i] = Vmath::Dot(npoints, inarray + offset,
+                                            inarray + offset);
         }
         m_comm->AllReduce(m_magnitdEstimat, Nektar::LibUtilities::ReduceSum);
 
-        for(int i = 0; i < nvariables; i++)
+        for (int i = 0; i < nvariables; ++i)
         {
             m_inArrayNorm += m_magnitdEstimat[i];
         }
 
-        for(int i = 2; i < nvariables-1; i++)
+        for (int i = 2; i < nvariables - 1; ++i)
         {
             m_magnitdEstimat[1]   +=   m_magnitdEstimat[i] ;
         }
-        for(int i = 2; i < nvariables-1; i++)
+        for(int i = 2; i < nvariables - 1; ++i)
         {
             m_magnitdEstimat[i]   =   m_magnitdEstimat[1] ;
         }
 
-        for(int i = 0; i < nvariables; i++)
+        for (int i = 0; i < nvariables; ++i)
         {
-            m_magnitdEstimat[i] = sqrt(m_magnitdEstimat[i]*ototalDOF);
+            m_magnitdEstimat[i] = sqrt(m_magnitdEstimat[i] * ototalDOF);
         }
         bool l_verbose      = m_session->DefinesCmdLineArgument("verbose");
-        if(0==m_session->GetComm()->GetRank()&&l_verbose)
+        if (0 == m_session->GetComm()->GetRank() && l_verbose)
         {
-            for(int i = 0; i < nvariables; i++)
+            for (int i = 0; i < nvariables; ++i)
             {
-                cout << "m_magnitdEstimat["<<i<<"]    = "<<m_magnitdEstimat[i]<<endl;
+                cout << "m_magnitdEstimat[" << i << "]    = "
+                     << m_magnitdEstimat[i] << endl;
             }
-            cout << "m_inArrayNorm    = "<<m_inArrayNorm<<endl;
+            cout << "m_inArrayNorm    = " << m_inArrayNorm << endl;
         }
     }
 
     void CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff(
-            const  Array<OneD, NekDouble>                       &inarray,
-            Array<OneD, NekDouble >                             &out,
-            const bool                                          &flag)
+            const Array<OneD, NekDouble>                       &inarray,
+            Array <OneD, NekDouble >                           &out,
+            const bool                                         &flag)
     {
         boost::ignore_unused(flag);
-        const Array<OneD, const NekDouble> refsol = m_nonlinsol->GetRefSolution();
-        const Array<OneD, const NekDouble> refres = m_nonlinsol->GetRefResidual();
+        const Array<OneD, const NekDouble> refsol 
+                                         = m_nonlinsol->GetRefSolution();
+        const Array<OneD, const NekDouble> refres 
+                                         = m_nonlinsol->GetRefResidual();
         NekDouble eps = m_JFEps;
-        NekDouble magnitdEstimatMax =0.0;
-        for(int i = 0; i < m_magnitdEstimat.size(); i++)
+        NekDouble magnitdEstimatMax = 0.0;
+        for (int i = 0; i < m_magnitdEstimat.size(); ++i)
         {
-            magnitdEstimatMax = max(magnitdEstimatMax,m_magnitdEstimat[i]);
+            magnitdEstimatMax = max(magnitdEstimatMax, m_magnitdEstimat[i]);
         }
         eps *= magnitdEstimatMax;
-        NekDouble oeps = 1.0/eps;
+        NekDouble oeps = 1.0 / eps;
         unsigned int nvariables = m_fields.size();
         unsigned int ntotal     = inarray.size();
-        unsigned int npoints    = ntotal/nvariables;
+        unsigned int npoints    = ntotal / nvariables;
         Array<OneD, NekDouble > tmp;
         Array<OneD,       Array<OneD, NekDouble> > solplus(nvariables);
         Array<OneD,       Array<OneD, NekDouble> > resplus(nvariables);
-        for(int i = 0; i < nvariables; i++)
+        for (int i = 0; i < nvariables; ++i)
         {
-            solplus[i] =  Array<OneD, NekDouble>(npoints,0.0);
-            resplus[i] =  Array<OneD, NekDouble>(npoints,0.0);
+            solplus[i] =  Array<OneD, NekDouble>(npoints, 0.0);
+            resplus[i] =  Array<OneD, NekDouble>(npoints, 0.0);
         }
 
-        for (int i = 0; i < nvariables; i++)
+        for (int i = 0; i < nvariables; ++i)
         {
             int noffset = i*npoints;
             tmp = inarray + noffset;
-            Vmath::Svtvp(npoints,eps,tmp,1,refsol+noffset,1,solplus[i],1);
+            Vmath::Svtvp(npoints, eps, tmp, 1, 
+                         refsol + noffset,1, solplus[i], 1);
         }
         
         NonlinSysEvaluator_coeff(solplus,resplus);
 
-        for (int i = 0; i < nvariables; i++)
+        for (int i = 0; i < nvariables; ++i)
         {
-            int noffset = i*npoints;
+            int noffset = i * npoints;
             tmp = out + noffset;
-            Vmath::Vsub(npoints,&resplus[i][0],1,&refres[0]+noffset,1,&tmp[0],1);
-            Vmath::Smul(npoints, oeps ,&tmp[0],1,&tmp[0],1);
+            Vmath::Vsub(npoints, &resplus[i][0], 1, 
+                       &refres[0] + noffset, 1, &tmp[0],1);
+            Vmath::Smul(npoints, oeps, &tmp[0], 1, &tmp[0], 1);
         }
        
         return;

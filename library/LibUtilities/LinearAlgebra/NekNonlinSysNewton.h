@@ -59,7 +59,8 @@ namespace Nektar
                     const int                                   nDimen)
                 {
                     NekNonlinSysSharedPtr p = MemoryManager<
-                        NekNonlinSysNewton>::AllocateSharedPtr(pSession, vComm, nDimen);
+                        NekNonlinSysNewton>::AllocateSharedPtr(pSession, vComm, 
+                                                               nDimen);
                     p->InitObject();
                     return p;
                 }
@@ -73,15 +74,15 @@ namespace Nektar
             
             protected:
 
-                NekLinSysIteratSharedPtr                    m_linsol;
+                NekLinSysIteratSharedPtr              m_linsol;
 
-                NekDouble                                   m_NonlinIteTolRelativeL2;
+                NekDouble                             m_NonlinIteTolRelativeL2;
                 // NekDouble                                   m_NonlinIteTolRelativeL8;
-                NekDouble                                   m_NonlinIteTolLinRelatTol;
-                NekDouble                                   m_SysResNorm0;
-                NekDouble                                   m_SysResNorm;
+                NekDouble                             m_NonlinIteTolLinRelatTol;
+                NekDouble                             m_SysResNorm0;
+                NekDouble                             m_SysResNorm;
 
-                std::string                                 m_LinIteratSovlerType;
+                std::string                           m_LinIteratSovlerType;
 
                 virtual void v_InitObject();
 

@@ -182,8 +182,9 @@ namespace Nektar
             default:
                 {
                     return false;
-                    WARNINGL0(false,"Optimisation suite not set up for this type"
-                                   " of matrix, false is used");
+                    WARNINGL0(false,
+                    "Optimisation suite not set up for this type"
+                    " of matrix, false is used");
                 }
             }
             return m_doGlobalMatOp[type];
@@ -239,8 +240,9 @@ namespace Nektar
             default:
                 {
                     return m_doBlockMatOp_false;
-                    WARNINGL0(false,"Optimisation suite not set up for this type"
-                                   " of matrix, false is used");
+                    WARNINGL0(false,
+                              "Optimisation suite not set up for this type"
+                              " of matrix, false is used");
                 }
             }
 

@@ -47,7 +47,7 @@ namespace Nektar
 
         typedef std::shared_ptr<NekLinSysIteratCG> NekLinSysIteratCGSharedPtr;
         
-        class  NekLinSysIteratCG : public NekLinSysIterat
+        class  NekLinSysIteratCG: public NekLinSysIterat
         {
         public:
 
@@ -70,7 +70,7 @@ namespace Nektar
                 const int                                   nDimen)
             {
                 NekLinSysIteratCGSharedPtr p = MemoryManager<
-                    NekLinSysIteratCG>::AllocateSharedPtr(pSession, vComm, nDimen);
+                NekLinSysIteratCG>::AllocateSharedPtr(pSession, vComm, nDimen);
                 p->InitObject();
                 return p;
             }
@@ -99,7 +99,7 @@ namespace Nektar
             virtual int v_SolveSystem(
                 const int                           nGlobal,
                 const Array<OneD, const NekDouble>  &pInput,
-                Array<OneD,      NekDouble>         &pOutput,
+                Array <OneD,      NekDouble>        &pOutput,
                 const int                           nDir,
                 const NekDouble                     tol    ,
                 const NekDouble                     factor );
@@ -109,8 +109,8 @@ namespace Nektar
             /// A-conjugate projection technique
             void DoAconjugateProjection(
                     const int pNumRows,
-                    const Array<OneD,const NekDouble> &pInput,
-                          Array<OneD,      NekDouble> &pOutput,
+                    const Array<OneD, const NekDouble> &pInput,
+                          Array<OneD,       NekDouble> &pOutput,
                     const int pNumDir);
 
             /// Actual iterative solve

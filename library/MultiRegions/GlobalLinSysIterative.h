@@ -93,9 +93,10 @@ namespace Nektar
             /// Total counter of previous solutions
             int m_numPrevSols;
 
-            LibUtilities::NonlinLinSysOperators                       m_LinSysOprtors;
+            LibUtilities::NonlinLinSysOperators                 m_LinSysOprtors;
 
-            LibUtilities::NekLinSysIteratSharedPtr                    m_linsol = LibUtilities::NullNekLinSysIteratSharedPtr;
+            LibUtilities::NekLinSysIteratSharedPtr    
+                          m_linsol = LibUtilities::NullNekLinSysIteratSharedPtr;
 
             static std::string IteratSolverlookupIds[];
             static std::string IteratSolverdef;

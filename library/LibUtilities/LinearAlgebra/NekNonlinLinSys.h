@@ -55,8 +55,11 @@ namespace Nektar
                 typedef const Array<OneD, NekDouble> InArrayType;
                 typedef       Array<OneD, NekDouble> OutArrayType;
                 
-                typedef std::function< void (InArrayType&, OutArrayType&, const bool&) >                      FunctorType1;
-                typedef std::function< void (InArrayType&, InArrayType&, OutArrayType&, const bool&) >        FunctorType2;
+                typedef std::function< void (InArrayType&, OutArrayType&, 
+                                             const bool&)> FunctorType1;
+                typedef std::function< void (InArrayType&, InArrayType&, 
+                                             OutArrayType&, const bool&)>
+                                             FunctorType2;
                 typedef Array<OneD, FunctorType1> FunctorType1Array;
                 typedef Array<OneD, FunctorType2> FunctorType2Array;
                 static const int nfunctor1 = 3;
@@ -81,28 +84,36 @@ namespace Nektar
                     }
                 }
                 template<typename FuncPointerT, typename ObjectPointerT> 
-                    void DefineNonlinLinSysRhsEval(FuncPointerT func, ObjectPointerT obj)
+                    void DefineNonlinLinSysRhsEval(FuncPointerT func, 
+                                                   ObjectPointerT obj)
                 {
                     m_functors1[0] =  std::bind(
-                        func, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+                        func, obj, std::placeholders::_1, std::placeholders::_2, 
+                        std::placeholders::_3);
                 }
                 template<typename FuncPointerT, typename ObjectPointerT> 
-                    void DefineNonlinLinSysLhsEval(FuncPointerT func, ObjectPointerT obj)
+                    void DefineNonlinLinSysLhsEval(FuncPointerT func, 
+                         ObjectPointerT obj)
                 {
                     m_functors1[1] =  std::bind(
-                        func, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+                        func, obj, std::placeholders::_1, std::placeholders::_2,
+                        std::placeholders::_3);
                 }
                 template<typename FuncPointerT, typename ObjectPointerT> 
-                    void DefineNonlinLinPrecond(FuncPointerT func, ObjectPointerT obj)
+                    void DefineNonlinLinPrecond(FuncPointerT func, 
+                        ObjectPointerT obj)
                 {
                     m_functors1[2] =  std::bind(
-                        func, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+                        func, obj, std::placeholders::_1, std::placeholders::_2, 
+                        std::placeholders::_3);
                 }
                 template<typename FuncPointerT, typename ObjectPointerT> 
-                    void DefineNonlinLinFixPointIte(FuncPointerT func, ObjectPointerT obj)
+                    void DefineNonlinLinFixPointIte(FuncPointerT func, 
+                        ObjectPointerT obj)
                 {
                     m_functors2[0] =  std::bind(
-                        func, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+                        func, obj, std::placeholders::_1, std::placeholders::_2,
+                        std::placeholders::_3, std::placeholders::_4);
                 }
                 
                 inline void DoNonlinLinSysRhsEval(

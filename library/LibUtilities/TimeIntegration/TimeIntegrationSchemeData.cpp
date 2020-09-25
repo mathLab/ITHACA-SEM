@@ -587,8 +587,8 @@ TimeIntegrationSchemeData::TimeIntegrate( const NekDouble deltaT,
 
                 for (int k = 0; k < m_nvars; k++)
                 {
-                    Vmath::Vsub(m_npoints, m_Y[k], 1, m_tmp[k], 1, m_F[stage][k],
-                                1);
+                    Vmath::Vsub(m_npoints, m_Y[k], 1, m_tmp[k], 1,
+                                m_F[stage][k], 1);
                     Vmath::Smul(m_npoints, 1.0 / (A(stage, stage) * deltaT),
                                 m_F[stage][k], 1, m_F[stage][k], 1);
                 }

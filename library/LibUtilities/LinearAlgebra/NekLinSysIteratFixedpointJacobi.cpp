@@ -82,20 +82,20 @@ namespace Nektar
             const NekDouble                     tol,
             const NekDouble                     factor)
         {
-            boost::ignore_unused(tol,nDir);
+            boost::ignore_unused(tol, nDir);
 
             int niterations = 0;
-            m_tolerance = max(tol,1.0E-16);
-            m_prec_factor = factor;
+            m_tolerance     = max(tol, 1.0E-16);
+            m_prec_factor   = factor;
 
             Array<OneD, NekDouble> pSol0 (nGlobal);
-            Vmath::Vcopy(nGlobal, pSolution,1,pSol0,1);
-            for(int i=0;i<m_maxiter;i++)
+            Vmath::Vcopy(nGlobal, pSolution, 1, pSol0, 1);
+            for (int i = 0; i < m_maxiter; ++i)
             {
                 m_operator.DoNonlinLinFixPointIte(pRhs, pSol0, pSolution);
-                Vmath::Vsub(nGlobal, pSolution,1,pSol0,1,pSol0,1 );
-                m_converged = ConvergenceCheck(i,pSol0,m_tolerance);
-                Vmath::Vcopy(nGlobal, pSolution,1,pSol0,1);
+                Vmath::Vsub(nGlobal, pSolution, 1, pSol0, 1, pSol0, 1);
+                m_converged = ConvergenceCheck(i, pSol0, m_tolerance);
+                Vmath::Vcopy(nGlobal, pSolution,1, pSol0, 1);
                 niterations++;
             }
 

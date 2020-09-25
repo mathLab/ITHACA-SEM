@@ -68,10 +68,11 @@ class LinSysDemo
             // {
             //     SovlerType = pSession->GetSolverInfo("NonlinIteratSovler");
             // }
-            ASSERTL0(LibUtilities::GetNekNonlinSysFactory().ModuleExists(SovlerType),
-                    "NekNonlinSys '" + SovlerType + "' is not defined.\n");
+            ASSERTL0(LibUtilities::GetNekNonlinSysFactory().
+                     ModuleExists(SovlerType),
+                     "NekNonlinSys '" + SovlerType + "' is not defined.\n");
             m_nonlinsol = LibUtilities::GetNekNonlinSysFactory().CreateInstance(
-                                SovlerType, m_session,m_comm,m_matDim);
+                                SovlerType, m_session,m_comm, m_matDim);
 
             m_LinSysOprtors.DefineNonlinLinSysRhsEval(&LinSysDemo::DoRhs, this);
             m_LinSysOprtors.DefineNonlinLinSysLhsEval(&LinSysDemo::DoLhs, this);
@@ -83,21 +84,23 @@ class LinSysDemo
 
         void DoSolve()
         {
-            Array<OneD, NekDouble> pOutput(m_matDim,0.9);
+            Array<OneD, NekDouble> pOutput(m_matDim, 0.9);
 
-            int ntmpIts =  m_nonlinsol->SolveSystem(m_matDim,pOutput, pOutput,0,1.0E-9);
+            int ntmpIts =  m_nonlinsol->SolveSystem(m_matDim, pOutput, 
+                                                    pOutput, 0, 1.0E-9);
 
             int ndigits     = 9;  // the number of sigificant digits
             int nothers     = 10; // extra width to place -, E, and power
-            int nwidthcolm  = nothers+ndigits-1; // the second value determines the number of sigificant digits
-            cout    << " ntmpIts= "<<ntmpIts <<endl
-                    <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1);
+            int nwidthcolm  = nothers+ndigits - 1; // the second value determines the number of sigificant digits
+            cout    << "ntmpIts = " << ntmpIts << endl
+                    << std::scientific << std::setw(nwidthcolm) <<
+                       std::setprecision(ndigits - 1);
 
             string vars = "uvwx";
-            for(int i=0;i<m_matDim;i++)
+            for (int i = 0;i < m_matDim; ++i)
             {
-                cout << "L 2 error (variable " << vars[i] << ") : " << pOutput[i]
-                    << endl;
+                cout << "L 2 error (variable " << vars[i] << ") : " <<
+                         pOutput[i] << endl;
             }
         }
 
@@ -112,16 +115,17 @@ class LinSysDemo
                     const  bool     &flag = false)
         {
             boost::ignore_unused(flag);
-            const Array<OneD, const NekDouble> refsol = m_nonlinsol->GetRefSolution();
+            const Array<OneD, const NekDouble> refsol = 
+                                               m_nonlinsol->GetRefSolution();
 
             NekDouble x = refsol[0];
             NekDouble y = refsol[1];
 
-            NekDouble f1= 3.0*x*x*inarray[0]+inarray[1];
-            NekDouble f2= 3.0*y*y*inarray[1]-inarray[0];
+            NekDouble f1 = 3.0 * x * x * inarray[0] + inarray[1];
+            NekDouble f2 = 3.0 * y * y * inarray[1] - inarray[0];
 
-            outarray[0] =   f1;
-            outarray[1] =   f2;
+            outarray[0] =  f1;
+            outarray[1] =  f2;
         }
 
         void DoRhs(
@@ -131,13 +135,13 @@ class LinSysDemo
         {
             boost::ignore_unused(flag);
             int ntmp = inarray.size();
-            ASSERTL0(m_matDim==ntmp,"m_matDim==ntmp not true");
+            ASSERTL0(m_matDim == ntmp, "m_matDim == ntmp not true");
             NekDouble x = inarray[0];
             NekDouble y = inarray[1];
-            NekDouble f1= x*x*x+y-1.0;
-            NekDouble f2= -x+y*y*y+1.0;
-            outarray[0] =   f1;
-            outarray[1] =   f2;
+            NekDouble f1 = x * x * x + y - 1.0;
+            NekDouble f2 = -x + y * y * y + 1.0;
+            outarray[0]  = f1;
+            outarray[1]  = f2;
         }
 
     protected:
@@ -161,7 +165,7 @@ int main(int argc, char *argv[])
     session->InitSession();
     // graph = SpatialDomains::MeshGraph::Read(session);
 
-    LinSysDemo linsys(session,session->GetComm());
+    LinSysDemo linsys(session, session->GetComm());
 
     linsys.DoSolve();
 

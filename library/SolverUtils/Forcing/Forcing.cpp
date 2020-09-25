@@ -201,7 +201,7 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const NekDouble &time)
         {
-            boost::ignore_unused(fields,inarray,outarray,time);
+            boost::ignore_unused(fields, inarray, outarray, time);
             ASSERTL0(false, "v_Apply_coeff not defined");
         }
     }

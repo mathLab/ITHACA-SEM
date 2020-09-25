@@ -43,7 +43,8 @@ namespace Nektar
         std::string GlobalLinSysIterative::IteratSolverlookupIds[2] =
         {
             LibUtilities::SessionReader::RegisterEnumValue(
-                "LinIteratSovler", "ConjugateGradient", MultiRegions::eConjugateGradient),
+                "LinIteratSovler", "ConjugateGradient", MultiRegions::
+                eConjugateGradient),
             LibUtilities::SessionReader::RegisterEnumValue(
                 "LinIteratSovler", "GMRES", MultiRegions::eGMRES),
         };
@@ -107,8 +108,10 @@ namespace Nektar
         {
             if(LibUtilities::NullNekLinSysIteratSharedPtr==m_linsol)
             {
-                LibUtilities::CommSharedPtr v_Comm = m_expList.lock()->GetComm()->GetRowComm();
-                LibUtilities::SessionReaderSharedPtr pSession = m_expList.lock()->GetSession();
+                LibUtilities::CommSharedPtr v_Comm = 
+                m_expList.lock()->GetComm()->GetRowComm();
+                LibUtilities::SessionReaderSharedPtr pSession =
+                m_expList.lock()->GetSession();
 
                 std::vector<std::string>  variables(1);
                 variables[0] =  pSession->GetVariable(0);
@@ -118,24 +121,31 @@ namespace Nektar
                 if(pSession->DefinesGlobalSysSolnInfo(variable,
                                                     "LinIteratSovler"))
                 {
-                    LinIteratSovlerType = pSession->GetGlobalSysSolnInfo(variable,"LinIteratSovler");
+                    LinIteratSovlerType = pSession->GetGlobalSysSolnInfo(
+                                          variable,"LinIteratSovler");
                 }
                 else
                 {
-                    if(pSession->DefinesSolverInfo("LinIteratSovler"))
+                    if (pSession->DefinesSolverInfo("LinIteratSovler"))
                     {
-                        LinIteratSovlerType = pSession->GetSolverInfo("LinIteratSovler");
+                        LinIteratSovlerType = pSession->GetSolverInfo(
+                        "LinIteratSovler");
                     }
                 }
                 
                 // Check such a module exists for this equation.
-                ASSERTL0(LibUtilities::GetNekLinSysIteratFactory().ModuleExists(LinIteratSovlerType),
-                        "NekLinSysIterat '" + LinIteratSovlerType + "' is not defined.\n");
-                m_linsol = LibUtilities::GetNekLinSysIteratFactory().CreateInstance(
-                                    LinIteratSovlerType, pSession,v_Comm,nGlobal-nDir);
+                ASSERTL0(LibUtilities::GetNekLinSysIteratFactory().
+                ModuleExists(LinIteratSovlerType),
+                        "NekLinSysIterat '" + LinIteratSovlerType + 
+                        "' is not defined.\n");
+                m_linsol = LibUtilities::GetNekLinSysIteratFactory().
+                           CreateInstance(LinIteratSovlerType, pSession,
+                                          v_Comm, nGlobal - nDir);
 
-                m_LinSysOprtors.DefineNonlinLinSysLhsEval(&GlobalLinSysIterative::DoMatrixMultiplyFlag, this);
-                m_LinSysOprtors.DefineNonlinLinPrecond(&GlobalLinSysIterative::DoPreconditionerFlag, this);
+                m_LinSysOprtors.DefineNonlinLinSysLhsEval(
+                &GlobalLinSysIterative::DoMatrixMultiplyFlag, this);
+                m_LinSysOprtors.DefineNonlinLinPrecond(
+                &GlobalLinSysIterative::DoPreconditionerFlag, this);
                 m_linsol->setSysOperators(m_LinSysOprtors);
                 v_UniqueMap();
                 m_linsol->setUniversalUniqueMap(m_map);
@@ -148,7 +158,8 @@ namespace Nektar
             }
 
             m_linsol->setRhsMagnitude(m_rhs_magnitude);
-            int ntmpGMRESIts =  m_linsol->SolveSystem(nGlobal,pInput, pOutput,nDir,m_tolerance);
+            int ntmpGMRESIts = m_linsol->SolveSystem(
+            nGlobal, pInput, pOutput, nDir, m_tolerance);
             boost::ignore_unused(ntmpGMRESIts);
         }
         void GlobalLinSysIterative::Set_Rhs_Magnitude(

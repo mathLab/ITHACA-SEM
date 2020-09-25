@@ -55,8 +55,8 @@ namespace Nektar
 
         /// Constructor for full direct matrix solve.
         NekLinSysIterat::NekLinSysIterat(
-            const LibUtilities::SessionReaderSharedPtr  &pSession,
-            const LibUtilities::CommSharedPtr           &vComm,
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const LibUtilities::CommSharedPtr          &vComm,
             const int                                   nDimen)
             : NekNonlinLinSys(pSession,vComm, nDimen)
         {
@@ -64,21 +64,21 @@ namespace Nektar
             variables[0] =  pSession->GetVariable(0);
             string variable = variables[0];
 
-            if(pSession->DefinesGlobalSysSolnInfo(variable,
-                                              "LinIteratSolverTolerance"))
+            if (pSession->DefinesGlobalSysSolnInfo(variable,
+                                    "LinIteratSolverTolerance"))
             {
                 m_tolerance = boost::lexical_cast<NekDouble>(
                         pSession->GetGlobalSysSolnInfo(variable,
-                                "LinIteratSolverTolerance").c_str());
+                        "LinIteratSolverTolerance").c_str());
             }
             else
             {
-                pSession->LoadParameter("LinIteratSolverTolerance",
+               pSession->LoadParameter("LinIteratSolverTolerance",
                                         m_tolerance,
                                         NekConstants::kNekIterativeTol);
             }
 
-            if(pSession->DefinesGlobalSysSolnInfo(variable,
+            if (pSession->DefinesGlobalSysSolnInfo(variable,
                                                   "MaxIterations"))
             {
                 m_maxiter = boost::lexical_cast<int>(
@@ -103,19 +103,20 @@ namespace Nektar
         {
         }
 
-        void NekLinSysIterat::setUniversalUniqueMap(Array<OneD, int> &map)
+        void NekLinSysIterat::setUniversalUniqueMap(
+                                           Array<OneD, int> &map)
         {
             int nmap = map.size();
-            if(m_map.size()!=nmap)
+            if(m_map.size() != nmap)
             {
-                m_map   =   Array<OneD, int>(nmap,0);
+                m_map   =   Array<OneD, int>(nmap, 0);
             }
-            Vmath::Vcopy(nmap,map,1,m_map,1);
+            Vmath::Vcopy(nmap, map, 1, m_map, 1);
         }
 
         void NekLinSysIterat::setUniversalUniqueMap()
         {
-            m_map   =   Array<OneD, int>(m_SysDimen,1);
+            m_map   =   Array<OneD, int>(m_SysDimen, 1);
         }
 
         void  NekLinSysIterat::Set_Rhs_Magnitude(

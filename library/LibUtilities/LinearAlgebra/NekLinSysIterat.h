@@ -50,10 +50,11 @@ namespace Nektar
         typedef LibUtilities::NekFactory<
             std::string,
             NekLinSysIterat,
-            const LibUtilities::SessionReaderSharedPtr  &,
-            const LibUtilities::CommSharedPtr           &,
-            const int                                    > NekLinSysIteratFactory;
-        LIB_UTILITIES_EXPORT NekLinSysIteratFactory& GetNekLinSysIteratFactory();
+            const LibUtilities::SessionReaderSharedPtr &,
+            const LibUtilities::CommSharedPtr          &,
+            const int                                  > NekLinSysIteratFactory;
+            LIB_UTILITIES_EXPORT NekLinSysIteratFactory 
+            &GetNekLinSysIteratFactory();
         
         class  NekLinSysIterat : public NekNonlinLinSys
         {
@@ -77,7 +78,7 @@ namespace Nektar
                 const int                                   nDimen)
             {
                 NekLinSysIteratSharedPtr p = MemoryManager<
-                    NekLinSysIterat>::AllocateSharedPtr(pSession, vComm,nDimen);
+                NekLinSysIterat>::AllocateSharedPtr(pSession, vComm, nDimen);
                 return p;
             }
             LIB_UTILITIES_EXPORT NekLinSysIterat(
@@ -86,18 +87,19 @@ namespace Nektar
                 const int                                   nDimen);
             LIB_UTILITIES_EXPORT ~NekLinSysIterat();
             
-            LIB_UTILITIES_EXPORT void setUniversalUniqueMap(Array<OneD, int> &map);
+            LIB_UTILITIES_EXPORT void setUniversalUniqueMap(
+                                      Array<OneD, int> &map);
             LIB_UTILITIES_EXPORT void setRhsMagnitude(const NekDouble mag)
             {
                 m_rhs_magnitude = mag;
             }
         protected:
-                        /// Global to universal unique map
+            /// Global to universal unique map
             Array<OneD, int>                            m_map;
 
             /// dot product of rhs to normalise stopping criterion
-            NekDouble                                   m_rhs_magnitude = NekConstants::kNekUnsetDouble;
-                        /// maximum iterations
+            NekDouble m_rhs_magnitude = NekConstants::kNekUnsetDouble;
+            /// maximum iterations
             int                                         m_maxiter;
             /// Tolerance of iterative solver.
             NekDouble                                   m_tolerance;

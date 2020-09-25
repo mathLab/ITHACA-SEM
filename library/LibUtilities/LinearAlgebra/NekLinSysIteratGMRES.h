@@ -67,7 +67,8 @@ namespace Nektar
                 const int                                   nDimen)
             {
                 NekLinSysIteratSharedPtr p = MemoryManager<
-                    NekLinSysIteratGMRES>::AllocateSharedPtr(pSession, vComm, nDimen);
+                    NekLinSysIteratGMRES>::AllocateSharedPtr(pSession,
+                                                             vComm, nDimen);
                 p->InitObject();
                 return p;
             }
@@ -86,27 +87,27 @@ namespace Nektar
         
         protected:
             /// maximum gmres restart iteration
-            int                                         m_maxrestart;
+            int                                    m_maxrestart;
             /// maximum gmres search directions for one restart(determines the max storage usage)
-            int                                         m_maxstorage;
+            int                                    m_maxstorage;
             /// maximum bandwidth of Hessenburg matrix if use truncted Gmres(m)
-            int                                         m_maxhesband;
+            int                                    m_maxhesband;
+            
+            bool                                   m_flag_LeftPrecond   = false;
+            bool                                   m_flag_RightPrecond  = true;
 
-            bool                                        m_flag_LeftPrecond   = false;
-            bool                                        m_flag_RightPrecond  = true;
-
-            bool                                        m_DifferenceFlag0  = false;
-            bool                                        m_DifferenceFlag1  = false;
+            bool                                   m_DifferenceFlag0  = false;
+            bool                                   m_DifferenceFlag1  = false;
 
             virtual void v_InitObject();
 
             virtual int v_SolveSystem(
-                const int                           nGlobal,
-                const Array<OneD, const NekDouble>  &pInput,
-                Array<OneD,      NekDouble>         &pOutput,
-                const int                           nDir,
-                const NekDouble                     tol    ,
-                const NekDouble                     factor );
+                const int                          nGlobal,
+                const Array<OneD, const NekDouble> &pInput,
+                Array<OneD,      NekDouble>        &pOutput,
+                const int                          nDir,
+                const NekDouble                    tol    ,
+                const NekDouble                    factor);
             
         private:
             

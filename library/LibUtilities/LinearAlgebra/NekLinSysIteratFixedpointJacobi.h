@@ -44,9 +44,10 @@ namespace Nektar
         /// A global linear system.
         class  NekLinSysIteratFixedpointJacobi;
 
-        typedef std::shared_ptr<NekLinSysIteratFixedpointJacobi> NekLinSysIteratFixedpointJacobiSharedPtr;
+        typedef std::shared_ptr<NekLinSysIteratFixedpointJacobi> 
+                    NekLinSysIteratFixedpointJacobiSharedPtr;
         
-        class  NekLinSysIteratFixedpointJacobi : public NekLinSysIterat
+        class  NekLinSysIteratFixedpointJacobi: public NekLinSysIterat
         {
         public:
 
@@ -69,7 +70,8 @@ namespace Nektar
                 const int                                   nDimen)
             {
                 NekLinSysIteratFixedpointJacobiSharedPtr p = MemoryManager<
-                    NekLinSysIteratFixedpointJacobi>::AllocateSharedPtr(pSession, vComm, nDimen);
+                    NekLinSysIteratFixedpointJacobi>::AllocateSharedPtr(
+                    pSession, vComm, nDimen);
                 p->InitObject();
                 return p;
             }
@@ -91,7 +93,7 @@ namespace Nektar
                 Array<OneD,      NekDouble>         &pOutput,
                 const int                           nDir,
                 const NekDouble                     tol    ,
-                const NekDouble                     factor );
+                const NekDouble                     factor);
         private:
             
         };

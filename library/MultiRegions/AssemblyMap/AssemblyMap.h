@@ -402,7 +402,8 @@ namespace Nektar
             /// Type type of preconditioner to use in iterative solver.
             PreconditionerType m_preconType;
 
-            /// Type type of linear system iterater method to use in iterative solver.
+            /// Type type of linear system iterater method to use 
+            ///in iterative solver.
             LinIteratSovler m_LinIteratSovler;
 
             /// Maximum iterations for iterative solver

@@ -86,7 +86,7 @@ namespace Nektar
             NekDouble   SysResNorm = Vmath::Dot(ntotal,Residual,Residual);
             m_Comm->AllReduce(SysResNorm, Nektar::LibUtilities::ReduceSum);
 
-            if (SysResNorm<tol)
+            if (SysResNorm < tol)
             {
                 converged = true;
             }

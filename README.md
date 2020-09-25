@@ -1,5 +1,5 @@
-Nektar++
-========
+Nektar++ and ROM
+================
 Nektar++ is an open-source software framework designed to support the
 development of high-performance scalable solvers for partial differential
 equations (PDEs) using the spectral/hp element method.

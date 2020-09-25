@@ -8,7 +8,7 @@
     </files>
     <metrics>
         <metric type="regex" id="0">
-            <regex>Worst at end: (-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)</regex>
+            <regex>^.*Worst at end\s*: (-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)</regex>
             <matches>
                 <match>
                     <field id="0" tolerance="2e-2">6.663593e-01</field>

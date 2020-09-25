@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File NekPyConfig.hpp
+// File: NekPyConfig.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -28,11 +28,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
+// Description: NekPy configuration to include boost headers and define
+// commonly-used macros.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <boost/version.hpp>
+#include <memory>
+
+// Boost 1.62 and earlier don't have native support for std::shared_ptr. This
+// includes various patches that are pulled from the git changeset 97e4b34a15
+// from the main boost.python github repository, which is where fixes were
+// added to include std::shared_ptr support.
+#if BOOST_VERSION < 106300
+#include "ShPtrFixes.hpp"
+#endif
 
 #ifdef BOOST_HAS_NUMPY
 
@@ -100,13 +110,3 @@ namespace np = boost::numpy;
                              PyUnicode_FromString(DOCSTRING));     \
     }
 #endif
-
-// Boost 1.62 and earlier don't have native support for std::shared_ptr.
-#if BOOST_VERSION < 106300
-#define NEKPY_SHPTR_FIX(SOURCE,TARGET)                             \
-    py::implicitly_convertible<std::shared_ptr<SOURCE>,            \
-                               std::shared_ptr<TARGET>>();
-#else
-#define NEKPY_SHPTR_FIX(SOURCE,TARGET)
-#endif
-

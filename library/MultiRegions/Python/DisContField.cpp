@@ -57,9 +57,6 @@ void export_DisContField_Helper(const char *name)
                  py::default_call_policies(),
                  (py::arg("session"), py::arg("graph"), py::arg("var"),
                   py::arg("setupDG") = true)));
-
-    NEKPY_SHPTR_FIX(T, ExpList);
-    NEKPY_SHPTR_FIX(T, S);
 }
 
 void export_DisContField()

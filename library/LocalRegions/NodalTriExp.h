@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 
 #ifndef NODALTRIEXP_H
 #define NODALTRIEXP_H
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <StdRegions/StdNodalTriExp.h>
 #include <SpatialDomains/TriGeom.h>
@@ -252,6 +253,7 @@ namespace Nektar
                                      Array<OneD, NekDouble> &out_d1,
                                      Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
             {
+                boost::ignore_unused(out_d2);
                 PhysDeriv(inarray, out_d0, out_d1);
             }
 
@@ -327,6 +329,7 @@ namespace Nektar
                                                   Array<OneD, NekDouble> &outarray,
                                                   bool multiplybyweights = true)
             {
+                boost::ignore_unused(multiplybyweights);
                 IProductWRTBase_SumFac(inarray,outarray);
             }            
             
@@ -379,7 +382,7 @@ namespace Nektar
                 HelmholtzMatrixOp(inarray,outarray,mkey);
             }  
             
-            void v_ComputeEdgeNormal(const int edge);
+            void v_ComputeTraceNormal(const int edge);
         };
     
         typedef std::shared_ptr<NodalTriExp> NodalTriExpSharedPtr;

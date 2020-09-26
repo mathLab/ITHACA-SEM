@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -39,23 +38,28 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <SpatialDomains/MeshPartition.h>
 
+#ifdef NEKTAR_USE_MPI
+#include <ptscotch.h>
+#else
 #include <scotch.h>
+#endif
 
 namespace Nektar
 {
 namespace SpatialDomains
 {
-
     class MeshPartitionScotch : public MeshPartition
     {
         public:
             /// Creates an instance of this class
             static MeshPartitionSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr session,
-                const MeshGraphSharedPtr meshGraph)
+                int                                        meshDim,
+                std::map<int, MeshEntity>                  element,
+                CompositeDescriptor                        compMap)
             {
                 return MemoryManager<MeshPartitionScotch>
-                    ::AllocateSharedPtr(session, meshGraph);
+                    ::AllocateSharedPtr(session, meshDim, element, compMap);
             }
 
             /// Name of class
@@ -64,7 +68,9 @@ namespace SpatialDomains
 
             MeshPartitionScotch(
                 const LibUtilities::SessionReaderSharedPtr session,
-                const MeshGraphSharedPtr meshGraph);
+                int                                        meshDim,
+                std::map<int, MeshEntity>                  element,
+                CompositeDescriptor                        compMap);
             virtual ~MeshPartitionScotch();
 
         private:
@@ -89,7 +95,6 @@ namespace SpatialDomains
                     const SCOTCH_Num * const    wgtflag,
                     const SCOTCH_Num * const    numflag,
                     const SCOTCH_Num * const    nparts,
-                    const SCOTCH_Num * const    options,
                     SCOTCH_Num * const          volume,
                     SCOTCH_Num * const          part);
 

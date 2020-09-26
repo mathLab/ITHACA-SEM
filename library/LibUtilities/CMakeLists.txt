@@ -7,6 +7,7 @@ SET(BasicConstHeaders
 
 SET(BasicUtilsHeaders
     ./BasicUtils/ArrayPolicies.hpp
+    ./BasicUtils/CheckedCast.hpp
     ./BasicUtils/ConsistentObjectAccess.hpp
     ./BasicUtils/CompressData.h
     ./BasicUtils/CsvIO.h
@@ -15,16 +16,17 @@ SET(BasicUtilsHeaders
     ./BasicUtils/FieldIOXml.h
     ./BasicUtils/FileSystem.h
     ./BasicUtils/ErrorUtil.hpp
+    ./BasicUtils/Interpolator.h
     ./BasicUtils/HashUtils.hpp
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
-    ./BasicUtils/OperatorGenerators.hpp
     ./BasicUtils/ParseUtils.h
     ./BasicUtils/Progressbar.hpp
     ./BasicUtils/PtsField.h
     ./BasicUtils/PtsIO.h
     ./BasicUtils/Timer.h
     ./BasicUtils/RawType.hpp
+    ./BasicUtils/RealComparison.hpp
     ./BasicUtils/SessionReader.h
     ./BasicUtils/ShapeType.hpp
     ./BasicUtils/SharedArray.hpp
@@ -38,13 +40,14 @@ SET(BasicUtilsHeaders
 )
 
 SET(BasicUtilsSources
-    ./BasicUtils/ArrayEqualityComparison.cpp
     ./BasicUtils/CompressData.cpp
     ./BasicUtils/CsvIO.cpp
     ./BasicUtils/Equation.cpp
+    ./BasicUtils/ErrorUtil.cpp
     ./BasicUtils/FieldIO.cpp
     ./BasicUtils/FieldIOXml.cpp
     ./BasicUtils/FileSystem.cpp
+    ./BasicUtils/Interpolator.cpp
     ./BasicUtils/ParseUtils.cpp
     ./BasicUtils/PtsField.cpp
     ./BasicUtils/PtsIO.cpp
@@ -89,6 +92,13 @@ IF(NEKTAR_USE_MPI)
     SET(CommunicationSources ${CommunicationSources}
         ./Communication/CommMpi.cpp)
 ENDIF(NEKTAR_USE_MPI)
+
+IF ( NEKTAR_USE_CWIPI )
+    SET(CommunicationHeaders ${CommunicationHeaders}
+        ./Communication/CommCwipi.h)
+    SET(CommunicationSources ${CommunicationSources}
+        ./Communication/CommCwipi.cpp)
+ENDIF ()
 
 SET(FFTHeaders
        ./FFT/NektarFFT.h
@@ -169,11 +179,11 @@ SET(FoundationSources
 )
 
 SET(InterpreterHeaders
-      ./Interpreter/AnalyticExpressionEvaluator.hpp
+    ./Interpreter/Interpreter.h
 )
 
 SET(InterpreterSources
-        ./Interpreter/AnalyticExpressionEvaluator.cpp
+    ./Interpreter/Interpreter.cpp
 )
 
 SET(KernelHeaders
@@ -215,7 +225,6 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/SparseMatrix.hpp
     ./LinearAlgebra/SparseMatrixFwd.hpp
     ./LinearAlgebra/SparseUtils.hpp
-    ./LinearAlgebra/NekLinSysIterative.h
 )
 
 SET(LinearAlgebraSources
@@ -253,14 +262,29 @@ SET(PolylibSources
 )
 
 SET(TimeIntegrationHeaders
+        ./TimeIntegration/AdamsBashforthTimeIntegrationSchemes.h
+        ./TimeIntegration/AdamsMoultonTimeIntegrationSchemes.h
+        ./TimeIntegration/BDFImplicitTimeIntegrationSchemes.h
+        ./TimeIntegration/EulerTimeIntegrationSchemes.h
+        ./TimeIntegration/CNABTimeIntegrationScheme.h
+        ./TimeIntegration/DIRKTimeIntegrationSchemes.h
+        ./TimeIntegration/IMEXGearTimeIntegrationScheme.h
+        ./TimeIntegration/IMEXTimeIntegrationSchemes.h
+        ./TimeIntegration/IMEXdirkTimeIntegrationSchemes.h
+        ./TimeIntegration/MCNABTimeIntegrationScheme.h
+        ./TimeIntegration/RungeKuttaTimeIntegrationSchemes.h
         ./TimeIntegration/TimeIntegrationScheme.h
-        ./TimeIntegration/TimeIntegrationWrapper.h
+        ./TimeIntegration/TimeIntegrationSchemeData.h
+        ./TimeIntegration/TimeIntegrationSolution.h
 )
 
 SET(TimeIntegrationSources
+        ./TimeIntegration/SchemeInitializer.cpp
         ./TimeIntegration/TimeIntegrationScheme.cpp
-        ./TimeIntegration/TimeIntegrationWrapper.cpp
+        ./TimeIntegration/TimeIntegrationSchemeData.cpp
+        ./TimeIntegration/TimeIntegrationSolution.cpp
 )
+
 
 SET(BaseHeaders
     LibUtilitiesDeclspec.h
@@ -346,6 +370,12 @@ ADD_DEPENDENCIES(LibUtilities boost tinyxml-2.6.2 zlib-1.2.7)
 
 ### Libraries needed specifically by LibUtilities ###
 
+# CWIPI
+IF ( NEKTAR_USE_CWIPI )
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${CWIPI_LIBRARY} ${CWIPI_LIBRARY_FVMC} ${CWIPI_LIBRARY_BFTC})
+    ADD_DEPENDENCIES(LibUtilities cwipi-0.8.2)
+ENDIF ()
+
 # FFTW
 IF( NEKTAR_USE_FFTW )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${FFTW_LIBRARY})
@@ -367,7 +397,7 @@ TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
-    debug ${ZLIB_LIBRARY_DEBUG} optimized ${ZLIB_LIBRARY_RELEASE}
+    optimized ${ZLIB_LIBRARIES} debug ${ZLIB_LIBRARIES_DEBUG}
 )
 
 # TinyXML
@@ -387,7 +417,7 @@ IF( NEKTAR_USE_MPI )
             PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} ${MPI_CXX_COMPILE_FLAGS}")
     ENDIF()
 
-    ADD_DEPENDENCIES(LibUtilities gsmpi-1.2.1)
+    ADD_DEPENDENCIES(LibUtilities gsmpi-1.2.1_2)
 
     IF (THIRDPARTY_BUILD_MPI)
         ADD_DEPENDENCIES(LibUtilities openmpi-1.10.3)
@@ -395,33 +425,9 @@ IF( NEKTAR_USE_MPI )
 ENDIF( NEKTAR_USE_MPI )
 
 # Lapack and Blas
-IF( NEKTAR_USE_MKL AND MKL_FOUND )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${MKL} )
-    SET_TARGET_PROPERTIES(LibUtilities
-        PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} -DMKL_ILP64")
-ENDIF( NEKTAR_USE_MKL AND MKL_FOUND )
-
-IF( NEKTAR_USE_ACML AND ACML_FOUND )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${ACML_TARGET_LINK_LIBRARIES}  )
-ENDIF( NEKTAR_USE_ACML AND ACML_FOUND )
-
-IF( NEKTAR_USE_ACCELERATE_FRAMEWORK )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${ACCELERATE_FRAMEWORK_LINK_FLAGS})
-ENDIF ( NEKTAR_USE_ACCELERATE_FRAMEWORK )
-
-IF( NEKTAR_USE_WIN32_LAPACK )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${WIN32_LAPACK} ${WIN32_BLAS})
-    INSTALL(FILES ${WIN32_LAPACK_DLL} ${WIN32_BLAS_DLL}
-            DESTINATION ${NEKTAR_BIN_DIR})
-ENDIF( NEKTAR_USE_WIN32_LAPACK )
-
-IF( NEKTAR_USE_OPENBLAS AND OPENBLAS_FOUND )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${OPENBLAS})
-ENDIF( NEKTAR_USE_OPENBLAS AND OPENBLAS_FOUND )
-
-IF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${NATIVE_LAPACK} ${NATIVE_BLAS})
-ENDIF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
+IF(NOT BLAS_LAPACK_BUILTIN)
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${BLAS_LAPACK})
+ENDIF()
 
 IF(THIRDPARTY_BUILD_BLAS_LAPACK)
     ADD_DEPENDENCIES(LibUtilities lapack-3.7.0)
@@ -430,8 +436,12 @@ ENDIF()
 IF( NEKTAR_USE_PETSC )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${PETSC_LIBRARIES})
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${CMAKE_DL_LIBS})
-    ADD_DEPENDENCIES(LibUtilities petsc-3.7.7)
+    ADD_DEPENDENCIES(LibUtilities petsc-3.11.4)
 ENDIF( NEKTAR_USE_PETSC )
+
+IF (NEKTAR_BUILD_PYTHON)
+    SUBDIRS(Python)
+ENDIF()
 
 # HDF5
 IF( NEKTAR_USE_HDF5 )

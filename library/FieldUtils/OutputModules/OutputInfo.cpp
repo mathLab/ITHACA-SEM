@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,11 +36,13 @@
 #include <string>
 using namespace std;
 
-#include "OutputInfo.h"
+#include <boost/core/ignore_unused.hpp>
+#include <boost/format.hpp>
 
 #include <LibUtilities/BasicUtils/FieldIOXml.h>
 #include <SpatialDomains/MeshPartition.h>
-#include <boost/format.hpp>
+
+#include "OutputInfo.h"
 
 namespace Nektar
 {
@@ -55,7 +56,9 @@ ModuleKey OutputInfo::m_className =
 
 OutputInfo::OutputInfo(FieldSharedPtr f) : OutputModule(f)
 {
-    m_config["nparts"] = ConfigOption(false, "NotSet", "Number of partitions over which to create the info file");
+    m_config["nparts"] = ConfigOption(
+        false, "NotSet",
+        "Number of partitions over which to create the info file");
 }
 
 OutputInfo::~OutputInfo()
@@ -64,96 +67,63 @@ OutputInfo::~OutputInfo()
 
 void OutputInfo::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
-    int i;
 
     // partition mesh
     ASSERTL0(m_config["nparts"].as<string>().compare("NotSet") != 0,
              "Need to specify nparts for info output");
     int nparts = m_config["nparts"].as<int>();
 
-    LibUtilities::CommSharedPtr vComm = std::shared_ptr<FieldConvertComm>(
-        new FieldConvertComm(0, NULL, nparts, 0));
-    vComm->SplitComm(1, nparts);
-
-    // define new session with pseudo parallel communicator
-    string xml_ending    = "xml";
-    string xml_gz_ending = "xml.gz";
-
-    std::vector<std::string> files;
-    // load .xml ending
-    for (int i = 0; i < m_f->m_inputfiles[xml_ending].size(); ++i)
-    {
-        files.push_back(m_f->m_inputfiles[xml_ending][i]);
-    }
-
-    // load any .xml.gz endings
-    for (int j = 0; j < m_f->m_inputfiles[xml_gz_ending].size(); ++j)
-    {
-        files.push_back(m_f->m_inputfiles[xml_gz_ending][j]);
-    }
-
-    LibUtilities::SessionReaderSharedPtr vSession =
-        std::shared_ptr<LibUtilities::SessionReader>(
-            new LibUtilities::SessionReader(0, 0, files, vComm));
-    vSession->InitSession();
-
-    // Default partitioner to use is Metis. Use Scotch as default
-    // if it is installed. Override default with command-line flags
-    // if they are set.
-    string vPartitionerName = "Metis";
-    if (SpatialDomains::GetMeshPartitionFactory().ModuleExists("Scotch"))
-    {
-        vPartitionerName = "Scotch";
-    }
-    if (vSession->DefinesCmdLineArgument("use-metis"))
-    {
-        vPartitionerName = "Metis";
-    }
-    if (vSession->DefinesCmdLineArgument("use-scotch"))
-    {
-        vPartitionerName = "Scotch";
-    }
-
-    // Construct MeshGraph to read geometry.
-    SpatialDomains::MeshGraphSharedPtr mesh =
-        SpatialDomains::GetMeshGraphFactory().CreateInstance(
-            vSession->GetGeometryType());
-
-    SpatialDomains::MeshPartitionSharedPtr vMeshPartition =
-        SpatialDomains::GetMeshPartitionFactory().CreateInstance(
-            vPartitionerName, vSession, mesh);
-    mesh->ReadGeometry(SpatialDomains::NullDomainRangeShPtr, false);
-
-    vMeshPartition->PartitionMesh(nparts, true);
-
-    // get hold of local partition ids
-    std::vector<std::vector<unsigned int> > ElementIDs(nparts);
-
-    // Populate the list of element ID lists from all processes
-    for (i = 0; i < nparts; ++i)
-    {
-        std::vector<unsigned int> tmp;
-        vMeshPartition->GetElementIDs(i, tmp);
-        ElementIDs[i] = tmp;
-    }
-
-    // Set up output names
-    std::vector<std::string> filenames;
-    for (int i = 0; i < nparts; ++i)
-    {
-        boost::format pad("P%1$07d.fld");
-        pad % i;
-        filenames.push_back(pad.str());
-    }
-
-    // Write the output file
+    // Input/output file
     LibUtilities::CommSharedPtr c = m_f->m_comm;
     std::shared_ptr<LibUtilities::FieldIOXml> fldXml =
         std::static_pointer_cast<LibUtilities::FieldIOXml>(
             LibUtilities::GetFieldIOFactory().CreateInstance("Xml", c, true));
-    fldXml->WriteMultiFldFileIDs(filename, filenames, ElementIDs);
+
+    // open file and setup meta data.
+    fs::path pinfilename(filename);
+    std::vector<std::string> filenames;
+    std::vector<std::vector<unsigned int> > ElementIDs;
+
+    for (int p = 0; p < nparts; ++p)
+    {
+        boost::format pad("P%1$07d.%2$s");
+        pad % p % "fld";
+        std::string s = pad.str();
+
+        fs::path fullpath              = pinfilename / s;
+        string fname                   = LibUtilities::PortablePath(fullpath);
+        LibUtilities::DataSourceSharedPtr dataSource =
+            LibUtilities::XmlDataSource::create(fname);
+
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> fielddefs;
+        std::vector<unsigned int>              PartElmtIDs;
+
+        // read in header of partition if it exists
+        fldXml->ImportFieldDefs(dataSource,fielddefs,false);
+
+        // create ElmenetIDs list then use
+        for(int i = 0; i < fielddefs.size(); ++i)
+        {
+            for(int j = 0; j < fielddefs[i]->m_elementIDs.size(); ++j)
+            {
+                PartElmtIDs.push_back(fielddefs[i]->m_elementIDs[j]);
+            }
+        }
+
+        ElementIDs.push_back(PartElmtIDs);
+        filenames.push_back(s);
+    }
+
+    // Write the Info.xml file
+    string infofile =
+        LibUtilities::PortablePath(pinfilename / fs::path("Info.xml"));
+
+    fldXml->WriteMultiFldFileIDs(infofile,filenames, ElementIDs);
 }
+
 }
 }

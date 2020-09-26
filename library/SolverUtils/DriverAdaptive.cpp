@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -114,7 +113,7 @@ void DriverAdaptive::v_Execute(ostream &out)
     if (isHomogeneous1D)
     {
         nExp    = m_equ[0]->UpdateFields()[0]->GetPlane(0)->GetExpSize();
-        nPlanes = m_equ[0]->UpdateFields()[0]->GetZIDs().num_elements();
+        nPlanes = m_equ[0]->UpdateFields()[0]->GetZIDs().size();
     }
     else
     {
@@ -123,7 +122,7 @@ void DriverAdaptive::v_Execute(ostream &out)
     }
     int  expdim   = m_equ[0]->UpdateFields()[0]->GetGraph()->GetMeshDimension();
 
-    int       nFields  = m_equ[0]->UpdateFields().num_elements();
+    int       nFields  = m_equ[0]->UpdateFields().size();
     int       numSteps = m_session->GetParameter("NumSteps");
     NekDouble period   = m_session->GetParameter("TimeStep") * numSteps;
 
@@ -350,7 +349,7 @@ void DriverAdaptive::v_Execute(ostream &out)
 
         // Write new expansion section to the session reader and re-read graph.
         ReplaceExpansion(fields, deltaP);
-        m_graph->ReadExpansions();
+        m_graph->ReadExpansionInfo();
 
         // Reset GlobalLinSys Manager to avoid using too much memory
         //
@@ -417,9 +416,6 @@ void DriverAdaptive::v_Execute(ostream &out)
     // The specific format of the error output is essential for the
     // regression tests to work.
 
-    int ndigits=6;
-    int nothers= 8;
-    int nwidthcolm=nothers+ndigits-1; // the second value determines the number of sigificant digits
     // Evaluate L2 Error
     for (int i = 0; i < m_equ[0]->GetNvariables(); ++i)
     {
@@ -434,13 +430,9 @@ void DriverAdaptive::v_Execute(ostream &out)
         if (m_comm->GetRank() == 0)
         {
             out << "L 2 error (variable " << m_equ[0]->GetVariable(i)
-                << ") : " ;
-            out <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
-                << vL2Error << endl;
+                << ") : " << vL2Error << endl;
             out << "L inf error (variable " << m_equ[0]->GetVariable(i)
-                << ") : " ;
-            out <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
-                << vLinfError << endl;
+                << ") : " << vLinfError << endl;
         }
     }
 }
@@ -475,7 +467,7 @@ void DriverAdaptive::ReplaceExpansion(
     // Add variables to field definition
     for (int i = 0; i < fielddefs.size(); ++i)
     {
-        for (int j = 0; j < fields.num_elements(); ++j)
+        for (int j = 0; j < fields.size(); ++j)
         {
             fielddefs[i]->m_fields.push_back(m_session->GetVariable(j));
         }

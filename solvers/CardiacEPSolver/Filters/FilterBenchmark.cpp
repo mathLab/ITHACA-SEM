@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -59,22 +58,23 @@ std::string FilterBenchmark::className =
  * @param       pParams     Parameters of filter
  */
 FilterBenchmark::FilterBenchmark(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
         const ParamMap &pParams)
-    : Filter(pSession)
+    : Filter(pSession, pEquation)
 {
     // ThresholdValue
     auto it = pParams.find("ThresholdValue");
     ASSERTL0(it != pParams.end(), "Missing parameter 'ThresholdValue'.");
     LibUtilities::Equation equ1(
-        m_session->GetExpressionEvaluator(), it->second);
+        m_session->GetInterpreter(), it->second);
     m_thresholdValue = floor(equ1.Evaluate());
 
     // InitialValue
     it = pParams.find("InitialValue");
     ASSERTL0(it != pParams.end(), "Missing parameter 'InitialValue'.");
     LibUtilities::Equation equ2(
-        m_session->GetExpressionEvaluator(), it->second);
+        m_session->GetInterpreter(), it->second);
     m_initialValue = floor(equ2.Evaluate());
 
     // OutputFile
@@ -87,8 +87,7 @@ FilterBenchmark::FilterBenchmark(
     it = pParams.find("StartTime");
     if (it != pParams.end())
     {
-        LibUtilities::Equation equ(
-            m_session->GetExpressionEvaluator(), it->second);
+        LibUtilities::Equation equ(m_session->GetInterpreter(), it->second);
         m_startTime = floor(equ.Evaluate());
     }
 

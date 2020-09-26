@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Forcing/ForcingProgrammatic.h>
 
 namespace Nektar
@@ -46,8 +47,9 @@ namespace SolverUtils
                                                         "Programmatic Forcing");
 
     ForcingProgrammatic::ForcingProgrammatic(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : Forcing(pSession)
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::weak_ptr<EquationSystem>      &pEquation)
+        : Forcing(pSession, pEquation)
     {
     }
 
@@ -61,6 +63,8 @@ namespace SolverUtils
             const unsigned int& pNumForcingFields,
             const TiXmlElement* pForce)
     {
+        boost::ignore_unused(pForce);
+
         m_NumVariable = pNumForcingFields;
         int nq         = pFields[0]->GetTotPoints();
 
@@ -77,9 +81,11 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> > &outarray,
             const NekDouble &time)
     {
+        boost::ignore_unused(fields, inarray, time);
+
         for (int i = 0; i < m_NumVariable; i++)
         {
-            Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
+            Vmath::Vadd(outarray[i].size(), outarray[i], 1,
                         m_Forcing[i], 1, outarray[i], 1);
         }
     }

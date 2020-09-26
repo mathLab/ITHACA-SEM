@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -30,12 +29,14 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // Description: An ExpList which is homogeneous in 2 directions and so
-// uses much of the functionality from a ExpList1D and its daughters
+// uses much of the functionality from a ExpList and its daughters
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
-#include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/ExpList.h>
 
 using namespace std;
 
@@ -45,9 +46,8 @@ namespace Nektar
     {
         // Forward declaration for typedefs
         ExpList3DHomogeneous2D::ExpList3DHomogeneous2D():
-            ExpListHomogeneous2D()
+            ExpListHomogeneous2D(e3DH2D)
         {
-            SetExpType(e3DH2D);
         }
 
         ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(
@@ -59,12 +59,12 @@ namespace Nektar
                        const bool useFFT,
                        const bool dealiasing,
                        const Collections::ImplementationType ImpType):
-            ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
+            ExpListHomogeneous2D(e3DH2D,pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
-            SetExpType(e3DH2D);
+            boost::ignore_unused(ImpType);
         }
 
-        // Constructor for ExpList3DHomogeneous2D to act as a Explist1D field
+        // Constructor for ExpList3DHomogeneous2D to act as a Explist field
         ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(
                     const LibUtilities::SessionReaderSharedPtr &pSession,
                     const LibUtilities::BasisKey &HomoBasis_y,
@@ -75,17 +75,15 @@ namespace Nektar
                     const bool dealiasing,
                     const SpatialDomains::MeshGraphSharedPtr &graph1D,
                     const Collections::ImplementationType ImpType):
-            ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
+            ExpListHomogeneous2D(e3DH2D, pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
-            SetExpType(e3DH2D);
-
             int n,j,nel;
             bool False = false;
-            ExpList1DSharedPtr line_zero;
+            ExpListSharedPtr line_zero;
 
             //
-            m_lines[0] = line_zero = MemoryManager<ExpList1D>::
-                AllocateSharedPtr(m_session,graph1D, False,ImpType);
+            m_lines[0] = line_zero = MemoryManager<ExpList>::
+                AllocateSharedPtr(m_session,graph1D, false, "DefaultVar", ImpType);
 
             m_exp = MemoryManager<LocalRegions::ExpansionVector>::
                 AllocateSharedPtr();
@@ -95,23 +93,18 @@ namespace Nektar
             {
                 (*m_exp).push_back(m_lines[0]->GetExp(j));
             }
-			
+
             int ny = m_homogeneousBasis_y->GetNumPoints();
             int nz = m_homogeneousBasis_z->GetNumPoints();
-            
+
             for(n = 1; n < (ny*nz); ++n)
             {
-                m_lines[n] = MemoryManager<ExpList1D>::AllocateSharedPtr(*line_zero,False);
+                m_lines[n] = MemoryManager<ExpList>::AllocateSharedPtr(*line_zero,False);
                 for(j = 0; j < nel; ++j)
                 {
                     (*m_exp).push_back((*m_exp)[j]);
                 }
             }
-
-            // Setup Default optimisation information.
-            nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
 
             SetCoeffPhys();
         }
@@ -125,24 +118,22 @@ namespace Nektar
                             const bool DeclareLinesSetCoeffPhys):
             ExpListHomogeneous2D(In)
         {
-            SetExpType(e3DH2D);
-
             if(DeclareLinesSetCoeffPhys)
             {
                 bool False = false;
-                ExpList1DSharedPtr zero_line = std::dynamic_pointer_cast<ExpList1D> (In.m_lines[0]);
+                ExpListSharedPtr zero_line = In.m_lines[0];
 
-                for(int n = 0; n < m_lines.num_elements(); ++n)
+                for(int n = 0; n < m_lines.size(); ++n)
                 {
-                    m_lines[n] = MemoryManager<ExpList1D>::AllocateSharedPtr(*zero_line,False);
+                    m_lines[n] = MemoryManager<ExpList>::AllocateSharedPtr(*zero_line,False);
                 }
 
                 SetCoeffPhys();
             }
         }
-        
+
         /**
-         * 
+         *
          */
         ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(
                        const ExpList3DHomogeneous2D &In,
@@ -151,28 +142,27 @@ namespace Nektar
                        const Collections::ImplementationType ImpType):
             ExpListHomogeneous2D(In, eIDs)
         {
-            SetExpType(e3DH2D);
-
             if(DeclareLinesSetCoeffPhys)
             {
                 bool False = false;
                 std::vector<unsigned int> eIDsLine;
-                int nel = eIDs.size()/m_lines.num_elements();
-                
+                int nel = eIDs.size()/m_lines.size();
+
                 for (int i = 0; i < nel; ++i)
                 {
                     eIDsLine.push_back(eIDs[i]);
                 }
                 
-                ExpList1DSharedPtr zero_line_old =
-                        std::dynamic_pointer_cast<ExpList1D> (In.m_lines[0]);
+                ExpListSharedPtr zero_line_old =
+                        std::dynamic_pointer_cast<ExpList> (In.m_lines[0]);
                 
-                ExpList1DSharedPtr zero_line = 
-                    MemoryManager<ExpList1D>::AllocateSharedPtr(*(zero_line_old), eIDsLine, ImpType);
+                ExpListSharedPtr zero_line = 
+                    MemoryManager<ExpList>::AllocateSharedPtr(*(zero_line_old),
+                                                              eIDsLine, ImpType);
 
-                for(int n = 0; n < m_lines.num_elements(); ++n)
+                for(int n = 0; n < m_lines.size(); ++n)
                 {
-                    m_lines[n] = MemoryManager<ExpList1D>::AllocateSharedPtr(*zero_line,False);
+                    m_lines[n] = MemoryManager<ExpList>::AllocateSharedPtr(*zero_line,False);
                 }
 
                 SetCoeffPhys();
@@ -192,7 +182,7 @@ namespace Nektar
             int ncoeffs_per_line = m_lines[0]->GetNcoeffs();
             int npoints_per_line = m_lines[0]->GetTotPoints();
 
-            int nyzlines = m_lines.num_elements();
+            int nyzlines = m_lines.size();
 
             // Set total coefficients and points
             m_ncoeffs = ncoeffs_per_line*nyzlines;
@@ -228,25 +218,25 @@ namespace Nektar
             Array<OneD, NekDouble> tmp_xc;
 			int nylines = m_homogeneousBasis_y->GetNumPoints();
 			int nzlines = m_homogeneousBasis_z->GetNumPoints();
-            
+
 			int npoints  = GetTotPoints(eid);
 
 			// Fill x-y-z-direction
             Array<OneD, const NekDouble> pts_y =  m_homogeneousBasis_y->GetZ();
 			Array<OneD, const NekDouble> pts_z =  m_homogeneousBasis_z->GetZ();
-            
+
 			Array<OneD, NekDouble> x(npoints);
 			Array<OneD, NekDouble> y(nylines);
 			Array<OneD, NekDouble> z(nzlines);
 
             Vmath::Smul(nylines,m_lhom_y/2.0,pts_y,1,y,1);
             Vmath::Sadd(nylines,m_lhom_y/2.0,y,1,y,1);
-			
+
 			Vmath::Smul(nzlines,m_lhom_z/2.0,pts_z,1,z,1);
             Vmath::Sadd(nzlines,m_lhom_z/2.0,z,1,z,1);
-			
+
 			(*m_exp)[eid]->GetCoords(x);
-			
+
 
             for(m = 0; m < nzlines; ++m)
             {
@@ -296,12 +286,12 @@ namespace Nektar
             Array<OneD, NekDouble> x(npoints);
 			Array<OneD, NekDouble> y(nylines);
 			Array<OneD, NekDouble> z(nzlines);
-			
+
 			m_lines[0]->GetCoords(x);
-			
+
             Vmath::Smul(nylines,m_lhom_y/2.0,pts_y,1,y,1);
             Vmath::Sadd(nylines,m_lhom_y/2.0,y,1,y,1);
-			
+
 			Vmath::Smul(nzlines,m_lhom_z/2.0,pts_z,1,z,1);
             Vmath::Sadd(nzlines,m_lhom_z/2.0,z,1,z,1);
 
@@ -439,10 +429,10 @@ namespace Nektar
             NekDouble errL2,err = 0.0;
             Array<OneD, const NekDouble> w_y = m_homogeneousBasis_y->GetW();
             Array<OneD, const NekDouble> w_z = m_homogeneousBasis_z->GetW();
-            
+
             int nylines = m_homogeneousBasis_y->GetNumPoints();
             int nzlines = m_homogeneousBasis_z->GetNumPoints();
-            
+
             for(int m = 0; m < nzlines; ++m)
             {
                 for(int n = 0; n < nylines; ++n)
@@ -452,7 +442,7 @@ namespace Nektar
                     err  += errL2*errL2*w_y[n]*m_lhom_y*0.5*w_z[m]*m_lhom_z*0.5;
                 }
             }
-            
+
             return sqrt(err);
         }
     } //end of namespace

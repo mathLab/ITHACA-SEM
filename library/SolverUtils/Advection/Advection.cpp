@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Abstract base class for advection.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <SolverUtils/Advection/Advection.h>
 
@@ -146,7 +147,7 @@ void Advection::AddTraceJacToMat(
         TraceJacConsSign[i] =   Array<OneD, DataType>(nTracePnts,1.0);
     }
 
-    if(0==TracePntJacGrad.num_elements())
+    if(0==TracePntJacGrad.size())
     {
         TracePntJacGradflag = false;
     }
@@ -182,7 +183,7 @@ void Advection::AddTraceJacToMat(
                 for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                 {
                     nElmtCoef          = (*fieldExp)[nelmt]->GetNcoeffs();
-                    if(SymmMatData.num_elements()<nElmtCoef)
+                    if(SymmMatData.size()<nElmtCoef)
                     {
                         SymmMatData = Array<OneD, NekDouble> (nElmtCoef*nElmtCoef);
                     }
@@ -208,12 +209,12 @@ void Advection::AddTraceJacToMat(
                 tmp2Add         = ElmtJacCoef[nelmt];
                 MatData0        = gmtxarray[m][n]->GetBlock(nelmt,nelmt)->GetPtr();
                 MatData1        = tmp2Add->GetPtr();
-                for(int i=0;i<MatData0.num_elements();i++)
+                for(int i=0;i<MatData0.size();i++)
                 {
                     MatData0[i] += DataType(MatData1[i]);
                 }
 
-                // Vmath::Vadd(MatData0.num_elements(),MatData0,1,MatData1,1,MatData0,1);
+                // Vmath::Vadd(MatData0.size(),MatData0,1,MatData1,1,MatData0,1);
                 // (*tmpGmtx)      = (*tmpGmtx)  +   (*tmp2Add);
             }
         }
@@ -252,7 +253,7 @@ void Advection::CalcJacobTraceInteg(
     MultiRegions::ExpListSharedPtr tracelist = pFields[0]->GetTrace();
     std::shared_ptr<LocalRegions::ExpansionVector> traceExp= tracelist->GetExp();
     int ntotTrac            = (*traceExp).size();
-    int nTracPnt,nTracCoef,noffset,pntoffset;
+    int nTracPnt,noffset,pntoffset;
 
     Array<OneD, int > tracepnts(ntotTrac);
     Array<OneD, Array<OneD, NekDouble> > JacFwd(ntotTrac);
@@ -287,23 +288,23 @@ void Advection::CalcJacobTraceInteg(
     tracelist->GetDiagMatIpwrtBase(JacBwd,TraceJacBwd);
 }
 
-// Check if the function is supported
-// To notice, the const pFwd and pBwd are not initialized, need to be
-// initialized in children class
+
 void Advection::v_AdvectVolumeFlux(
     const int nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
     const Array<OneD, Array<OneD, NekDouble>>         &pAdvVel,
     const Array<OneD, Array<OneD, NekDouble>>         &pInarray,
-    Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &pVolumeFlux,
+    TensorOfArray3D<NekDouble>                        &pVolumeFlux,
     const NekDouble                                   &pTime)
 {
+    boost::ignore_unused(nConvectiveFields, pFields, pAdvVel, pInarray,
+                        pVolumeFlux, pTime);
     ASSERTL0(false, "Not defined for AdvectVolumeFlux.");
 }
 
-// Check if the function is supported
-// To notice, the const pFwd and pBwd are not initialized, need to be
-// initialized in children class
+/**
+ * @brief calculate the advection flux in the cell the trace  integration
+ */
 void Advection::v_AdvectTraceFlux(
     const int nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
@@ -314,10 +315,17 @@ void Advection::v_AdvectTraceFlux(
     const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
     const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
 {
+    boost::ignore_unused(nConvectiveFields, pFields, pAdvVel, pInarray,
+                        pTraceFlux, pTime, pFwd, pBwd);
     ASSERTL0(false, "Not defined for AdvectTraceFlux.");
 }
 
 /**
+ * @brief Similar with Advection::Advect(): calculate the advection flux
+ * The difference is in the outarray:
+ *  it is the coefficients of basis for AdvectCoeffs()
+ *  it is the physics on quadrature points for Advect()
+ *
  * @param   nConvectiveFields   Number of velocity components.
  * @param   pFields             Expansion lists for scalar fields.
  * @param   pAdvVel             Advection velocity.
@@ -325,7 +333,7 @@ void Advection::v_AdvectTraceFlux(
  * @param   pOutarray           Advected scalar data.
  * @param   pTime               Simulation time.
  */
-void Advection::Advect_coeff(
+void Advection::AdvectCoeffs(
     const int                                          nConvectiveFields,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
     const Array<OneD, Array<OneD, NekDouble> >        &pAdvVel,
@@ -335,8 +343,8 @@ void Advection::Advect_coeff(
     const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
     const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
 {
-    v_Advect_coeff(nConvectiveFields, pFields, pAdvVel, pInarray,
-            pOutarray, pTime, pFwd, pBwd);
+    v_AdvectCoeffs(nConvectiveFields, pFields, pAdvVel, pInarray,
+                   pOutarray, pTime, pFwd, pBwd);
 }
 
 /**
@@ -366,37 +374,41 @@ void Advection::v_InitObject(
         }
         else
         {
-            ASSERTL0(false, "Only 1D homogeneous dimension supported.");
+            NEKERROR(ErrorUtil::efatal,
+                     "Only 1D homogeneous dimension supported.");
         }
     }
 }
+
 
 /**
  *
  */
 void Advection::v_SetBaseFlow(
-        const Array<OneD, Array<OneD, NekDouble> >    &inarray,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields)
 {
-    ASSERTL0(false,
+    boost::ignore_unused(inarray, fields);
+    NEKERROR(ErrorUtil::efatal,
             "A baseflow is not appropriate for this advection type.");
 }
 
-void Advection::v_Advect_coeff(
-        const int nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-              Array<OneD, Array<OneD, NekDouble> >        &outarray,
-        const NekDouble                                   &time,
-        const Array<OneD, Array<OneD, NekDouble> > &pFwd,
-        const Array<OneD, Array<OneD, NekDouble> > &pBwd)
-        {
-            ASSERTL0(false, "v_Advect_coeff no defined");
-        }
+void Advection::v_AdvectCoeffs(
+    const int nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+    const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+    Array<OneD, Array<OneD, NekDouble> >              &outarray,
+    const NekDouble                                   &time,
+    const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+    const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
+{
+    boost::ignore_unused(nConvectiveFields, fields, advVel, inarray, outarray,
+                        time, pFwd, pBwd);
+    ASSERTL0(false, "v_AdvectCoeffs not defined");
+}
 
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-    void Advection::v_NumCalRiemFluxJac( 
+void Advection::v_NumCalRiemFluxJac( 
         const int                                          nConvectiveFields,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
         const Array<OneD, Array<OneD, NekDouble> >        &AdvVel,
@@ -405,28 +417,32 @@ void Advection::v_Advect_coeff(
         const Array<OneD, Array<OneD, NekDouble> >        &pBwd,
         DNekBlkMatSharedPtr &FJac,
         DNekBlkMatSharedPtr &BJac)
-        {
-            ASSERTL0(false, "v_NumCalRiemFluxJac no defined");
-        }
+{
+    boost::ignore_unused(nConvectiveFields, fields, AdvVel, inarray,  pFwd, pBwd,
+                         FJac,BJac);
+    ASSERTL0(false, "v_NumCalRiemFluxJac no defined");
+}
 
-    void Advection::v_AddVolumJacToMat( 
-        const Array<OneD, MultiRegions::ExpListSharedPtr>                       &pFields,
-        const int                                                               &nConvectiveFields,
-        const Array<OneD, const Array<OneD,  Array<OneD, 
-              Array<OneD,  Array<OneD,  NekDouble> > > > >                      &ElmtJacArray,
-        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >                          &gmtxarray)
-    {
-        ASSERTL0(false,"v_AddVolumJacToMat NOT SPECIFIED");
-        return;
-    }
+void Advection::v_AddVolumJacToMat( 
+        const Array<OneD, MultiRegions::ExpListSharedPtr>     &pFields,
+        const int                                             &nConvectiveFields,
+        const Array<OneD, const Array<OneD,  Array<OneD,
+        Array<OneD,  Array<OneD,  NekDouble> > > > >          &ElmtJacArray,
+        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >        &gmtxarray)
+{
+    boost::ignore_unused(pFields,nConvectiveFields, ElmtJacArray,gmtxarray);
+    ASSERTL0(false,"v_AddVolumJacToMat NOT SPECIFIED");
+    return;
+}
 
-    void Advection::v_AddVolumJacToMat( 
-        const Array<OneD, MultiRegions::ExpListSharedPtr>                       &pFields,
-        const int                                                               &nConvectiveFields,
-        const Array<OneD, const Array<OneD,  Array<OneD, 
-              Array<OneD,  Array<OneD,  NekDouble> > > > >                      &ElmtJacArray,
-        Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >                          &gmtxarray)
+void Advection::v_AddVolumJacToMat( 
+        const Array<OneD, MultiRegions::ExpListSharedPtr>     &pFields,
+        const int                                             &nConvectiveFields,
+        const Array<OneD, const Array<OneD,  Array<OneD,
+        Array<OneD,  Array<OneD,  NekDouble> > > > >          &ElmtJacArray,
+        Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >        &gmtxarray)
     {
+        boost::ignore_unused(pFields,nConvectiveFields,ElmtJacArray,gmtxarray);
         ASSERTL0(false,"v_AddVolumJacToMat NOT SPECIFIED");
         return;
     }
@@ -441,6 +457,7 @@ void Advection::v_Advect_coeff(
         DNekBlkMatSharedPtr &FJac,
         DNekBlkMatSharedPtr &BJac)
     {
+        boost::ignore_unused(AdvVel);
         // int nPointsTot      = fields[0]->GetTotPoints();
         // int nCoeffs         = fields[0]->GetNcoeffs();
         int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
@@ -477,12 +494,12 @@ void Advection::v_Advect_coeff(
 
     void Advection::Cout1DArrayBlkMat(Array<OneD, DNekBlkMatSharedPtr> &gmtxarray,const unsigned int nwidthcolm)
     {
-        int nvar1 = gmtxarray.num_elements();
+        int nvar1 = gmtxarray.size();
 
         
         for(int i = 0; i < nvar1; i++)
         {
-            cout<<endl<<"£$£$£$£$£$£$££$£$£$$$£$££$$£$££$£$$££££$$£$£$£$£$£$£$££$£$$"<<endl<< "Cout2DArrayBlkMat i= "<<i<<endl;
+            std::cout<<std::endl<<"£$£$£$£$£$£$££$£$£$$$£$££$$£$££$£$$££££$$£$£$£$£$£$£$££$£$$"<<std::endl<< "Cout2DArrayBlkMat i= "<<i<<std::endl;
             CoutBlkMat(gmtxarray[i],nwidthcolm);
         }
     }
@@ -490,15 +507,14 @@ void Advection::v_Advect_coeff(
     
     void Advection::Cout2DArrayBlkMat(Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,const unsigned int nwidthcolm)
     {
-        int nvar1 = gmtxarray.num_elements();
-        int nvar2 = gmtxarray[0].num_elements();
+        int nvar1 = gmtxarray.size();
+        int nvar2 = gmtxarray[0].size();
 
-        
         for(int i = 0; i < nvar1; i++)
         {
             for(int j = 0; j < nvar2; j++)
             {
-                cout<<endl<<"£$£$£$£$£$£$££$£$£$$$£$££$$£$££$£$$££££$$£$£$£$£$£$£$££$£$$"<<endl<< "Cout2DArrayBlkMat i= "<<i<<" j=  "<<j<<endl;
+                std::cout<<std::endl<<"£$£$£$£$£$£$££$£$£$$$£$££$$£$££$£$$££££$$£$£$£$£$£$£$££$£$$"<<std::endl<< "Cout2DArrayBlkMat i= "<<i<<" j=  "<<j<<std::endl;
                 CoutBlkMat(gmtxarray[i][j],nwidthcolm);
             }
         }
@@ -512,7 +528,7 @@ void Advection::v_Advect_coeff(
         Array<OneD, unsigned int> colSizes;
         gmtx->GetBlockSizes(rowSizes,colSizes);
 
-        int nelmts  = rowSizes.num_elements();
+        int nelmts  = rowSizes.size();
         
         // int noffset = 0;
         for(int i = 0; i < nelmts; ++i)
@@ -526,27 +542,27 @@ void Advection::v_Advect_coeff(
 
     void Advection::Cout1DArrayStdMat(Array<OneD, DNekMatSharedPtr> &gmtxarray,const unsigned int nwidthcolm)
     {
-        int nvar1 = gmtxarray.num_elements();
+        int nvar1 = gmtxarray.size();
 
         
         for(int i = 0; i < nvar1; i++)
         {
-            cout<<endl<<"£$£$£$£$£$£$££$£$£$$$£$££$$£$££$£$$££££$$£$£$£$£$£$£$££$£$$"<<endl<< "Cout2DArrayBlkMat i= "<<i<<endl;
+            std::cout<<std::endl<<"£$£$£$£$£$£$££$£$£$$$£$££$$£$££$£$$££££$$£$£$£$£$£$£$££$£$$"<<std::endl<< "Cout2DArrayBlkMat i= "<<i<<std::endl;
             CoutStandardMat(gmtxarray[i],nwidthcolm);
         }
     }
 
     void Advection::Cout2DArrayStdMat(Array<OneD, Array<OneD, DNekMatSharedPtr> > &gmtxarray,const unsigned int nwidthcolm)
     {
-        int nvar1 = gmtxarray.num_elements();
-        int nvar2 = gmtxarray[0].num_elements();
+        int nvar1 = gmtxarray.size();
+        int nvar2 = gmtxarray[0].size();
 
         
         for(int i = 0; i < nvar1; i++)
         {
             for(int j = 0; j < nvar2; j++)
             {
-                cout<<endl<<"£$£$£$£$£$£$££$£$£$$$£$££$$£$££$£$$££££$$£$£$£$£$£$£$££$£$$"<<endl<< "Cout2DArrayBlkMat i= "<<i<<" j=  "<<j<<endl;
+                std::cout<<std::endl<<"£$£$£$£$£$£$££$£$£$$$£$££$$£$££$£$$££££$$£$£$£$£$£$£$££$£$$"<<std::endl<< "Cout2DArrayBlkMat i= "<<i<<" j=  "<<j<<std::endl;
                 CoutStandardMat(gmtxarray[i][j],nwidthcolm);
             }
         }
@@ -562,7 +578,7 @@ void Advection::v_Advect_coeff(
         {
             std::cout   <<"   COL="<<std::setw(nwidthcolm-7)<<k;
         }
-        std::cout   << endl;
+        std::cout   << std::endl;
 
         for(int j = 0; j < nrows; j++)
         {
@@ -572,11 +588,9 @@ void Advection::v_Advect_coeff(
                 tmp =   (*loc_matNvar)(j,k);
                 std::cout   <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8)<<tmp;
             }
-            std::cout   << endl;
+            std::cout   << std::endl;
         }
     }
-
-#endif
 
 }
 }

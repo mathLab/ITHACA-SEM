@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: No-slip wall boundary condition
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include "WallViscousBC.h"
 
@@ -66,8 +67,10 @@ void WallViscousBC::v_Apply(
         Array<OneD, Array<OneD, NekDouble> >               &physarray,
         const NekDouble                                    &time)
 {
+    boost::ignore_unused(time);
+
     int i;
-    int nVariables = physarray.num_elements();
+    int nVariables = physarray.size();
 
     const Array<OneD, const int> &traceBndMap
         = m_fields[0]->GetTraceBndMap();
@@ -83,10 +86,17 @@ void WallViscousBC::v_Apply(
     {
         nBCEdgePts = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
             GetExp(e)->GetTotPoints();
-        id1  = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
+        id1 = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
             GetPhys_Offset(e);
         id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[m_offset+e]);
 
+        // Boundary condition for epsilon term.
+        if (nVariables == m_spacedim+3)
+        {
+            Vmath::Zero(nBCEdgePts, &Fwd[nVariables-1][id2], 1);
+        }
+
+        // V = - Vin
         for (i = 0; i < m_spacedim; i++)
         {
             Vmath::Neg(nBCEdgePts, &Fwd[i+1][id2], 1);
@@ -101,4 +111,5 @@ void WallViscousBC::v_Apply(
         }
     }
 }
+
 }

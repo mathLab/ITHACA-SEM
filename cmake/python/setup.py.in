@@ -1,0 +1,15 @@
+from distutils.core import setup
+
+libs = ['LibUtilities', 'StdRegions', 'SpatialDomains', 'LocalRegions', 'MultiRegions']
+
+setup(name='NekPy',
+      version='${NEKTAR_VERSION}',
+      description='Python wrappers for Nektar++',
+      license='MIT',
+      author='David Moxey',
+      author_email='D.Moxey@exeter.ac.uk',
+      url='https://www.nektar.info/',
+      package_dir={ '': '${CMAKE_BINARY_DIR}' },
+      packages=[ 'NekPy' ] + [ 'NekPy.%s' % l for l in libs ],
+      package_data={ 'NekPy.%s' % l : ['_%s.so' % l] for l in libs }
+)

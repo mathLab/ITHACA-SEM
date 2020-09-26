@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -57,7 +56,6 @@ namespace Nektar
         typedef std::function<
             NekDouble ()> RSParamFuncType;
             
-#define DEMO_IMPLICITSOLVER_JFNK_COEFF
 
         class RiemannSolver
         {
@@ -140,14 +138,12 @@ namespace Nektar
 
             int m_spacedim;
 
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
             SOLVER_UTILS_EXPORT void CalcFluxJacobian(
             const int                                         nDim,
             const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
             const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                   DNekBlkMatSharedPtr                        &FJac,
                   DNekBlkMatSharedPtr                        &BJac);
-#endif
 
         protected:
             /// Indicates whether the Riemann solver requires a rotation to be
@@ -170,6 +166,9 @@ namespace Nektar
 
             SOLVER_UTILS_EXPORT RiemannSolver(
                 const LibUtilities::SessionReaderSharedPtr& pSession);
+
+            SOLVER_UTILS_EXPORT virtual ~RiemannSolver()
+            {};
 
             virtual void v_Solve(
                 const int                                         nDim,
@@ -199,8 +198,6 @@ namespace Nektar
             SOLVER_UTILS_EXPORT bool CheckAuxScal (std::string name);
             SOLVER_UTILS_EXPORT bool CheckAuxVec  (std::string name);
 
-
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
             virtual void v_CalcFluxJacobian(
             const int                                         nDim,
             const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
@@ -208,7 +205,6 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &normals,
                   DNekBlkMatSharedPtr                        &FJac,
                   DNekBlkMatSharedPtr                        &BJac);
-#endif
 
         };
 

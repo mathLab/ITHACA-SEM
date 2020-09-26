@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -110,13 +109,7 @@ namespace Nektar
             /// shapes within the space dimension, indicating if
             /// different matrices should be evaluated using a block
             /// matrix
-            Array<OneD, Array<OneD,bool> > m_doBlockMatOp;
-            /// Array to return if the  optimize parameters are 
-            /// not defined for the specific matrix type
-            /// always false
-            /// if DoBlockMatOp returns array not array& , this 
-            /// parameter can be local instead of a class member
-            Array<OneD,bool>  m_doBlockMatOp_false; 
+            Array<OneD, Array<OneD,bool> > m_doBlockMatOp; 
 
             /// A list ExpansionTypes indicating the order in which
             /// shapes are listed to call the appropriate key for the
@@ -182,9 +175,8 @@ namespace Nektar
                 break;
             default:
                 {
-                    return false;
-                    WARNINGL0(false,"Optimisation suite not set up for this type"
-                                   " of matrix, false is used");
+                    ASSERTL0(false,"Optimisation suite not set up for this type"
+                                   " of matrix");
                 }
             }
             return m_doGlobalMatOp[type];
@@ -239,9 +231,8 @@ namespace Nektar
                 break;
             default:
                 {
-                    return m_doBlockMatOp_false;
-                    WARNINGL0(false,"Optimisation suite not set up for this type"
-                                   " of matrix, false is used");
+                    ASSERTL0(false,"Optimisation suite not set up for this type"
+                                   " of matrix");
                 }
             }
 

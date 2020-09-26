@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -167,25 +166,21 @@ namespace Nektar
                         const int edge,
                         const Array<OneD, const NekDouble> &inarray,
                               Array<OneD,       NekDouble> &outarray);
-            LOCAL_REGIONS_EXPORT virtual void v_GetEdgePhysVals(
-                        const int edge,
-                        const StdRegions::StdExpansionSharedPtr &EdgeExp,
-                        const Array<OneD, const NekDouble> &inarray,
-                              Array<OneD,       NekDouble> &outarray);
             LOCAL_REGIONS_EXPORT virtual void v_GetTracePhysVals(
                         const int edge,
                         const StdRegions::StdExpansionSharedPtr &EdgeExp,
                         const Array<OneD, const NekDouble> &inarray,
                         Array<OneD,       NekDouble> &outarray,
                         StdRegions::Orientation  orient);
+
             LOCAL_REGIONS_EXPORT virtual void v_GetEdgeInterpVals(
                         const int edge,
                         const Array<OneD, const NekDouble> &inarray,
                         Array<OneD, NekDouble>      &outarray);
-            LOCAL_REGIONS_EXPORT virtual void v_GetEdgeQFactors(
+            LOCAL_REGIONS_EXPORT virtual void v_GetTraceQFactors(
                         const int edge,
                         Array<OneD, NekDouble> &outarray);
-            LOCAL_REGIONS_EXPORT virtual void v_ComputeEdgeNormal(
+            LOCAL_REGIONS_EXPORT virtual void v_ComputeTraceNormal(
                         const int edge);
 
 
@@ -202,12 +197,12 @@ namespace Nektar
                         NekDouble * coeffs,
                         std::vector<LibUtilities::BasisType> &fromType);
             LOCAL_REGIONS_EXPORT virtual
-                StdRegions::Orientation v_GetEorient(int edge);
+                StdRegions::Orientation v_GetTraceOrient(int edge);
             LOCAL_REGIONS_EXPORT virtual const
                 LibUtilities::BasisSharedPtr& v_GetBasis(int dir) const;
             LOCAL_REGIONS_EXPORT virtual int v_GetNumPoints(
                 const int dir) const;
-            LOCAL_REGIONS_EXPORT virtual void v_GetEdgePhysMap(
+            LOCAL_REGIONS_EXPORT virtual void v_GetTracePhysMap(
                 const int                edge,
                 Array<OneD, int>        &outarray);
 

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -72,47 +71,30 @@ namespace Nektar
                           Array<OneD,       NekDouble>& outarray);
 
         protected:
-            std::map<int, NormalVector> m_vertexNormals;
-            
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                     const Array<OneD, const NekDouble>& coords,
-                    const Array<OneD, const NekDouble>& physvals);
+                    const Array<OneD, const NekDouble>& physvals) override;
 
         private:
 
             // Virtual Functions ----------------------------------------
 
-            virtual int v_GetCoordim(void)
+            virtual int v_GetCoordim(void) override
             {
                 return 1;
             }
 
-            virtual int v_GetShapeDimension() const
+            virtual int v_GetShapeDimension() const final
             {
                 return 1;
             }
-
-            virtual int v_GetNedges() const
-            {
-                return 0;
-            }
-
-            virtual int v_GetNfaces() const
-            {
-                return 0;
-            }
-
-            STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const int vertex);
-            STD_REGIONS_EXPORT const NormalVector & v_GetSurfaceNormal(
-                    const int id) const;
-
-            STD_REGIONS_EXPORT const NormalVector & v_GetVertexNormal(const int vertex) const;
 
             inline virtual void v_MultplyStdDerivBase0(
                 const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray,
-                Array<OneD, NekDouble> &wsp)
+                Array<OneD, NekDouble> &wsp) override
             {
+                boost::ignore_unused(wsp);
                 IProductWRTBase(m_base[0]->GetDbdata(),inarray,outarray,1);
             }
         };

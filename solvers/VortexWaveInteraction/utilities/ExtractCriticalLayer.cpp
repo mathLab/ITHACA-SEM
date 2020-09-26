@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -37,7 +36,6 @@
 #include <cstdlib>
 
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/ExpList2D.h>
 
 using namespace std;
 using namespace Nektar;
@@ -70,7 +68,7 @@ int main(int argc, char *argv[])
     // Define Streak Expansion   
     MultiRegions::ExpListSharedPtr streak;   
 
-    streak = MemoryManager<MultiRegions::ExpList2D>
+    streak = MemoryManager<MultiRegions::ExpList>
         ::AllocateSharedPtr(vSession,graphShPt);
     //---------------------------------------------------------------
 

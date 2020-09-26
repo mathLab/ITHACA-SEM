@@ -3,7 +3,7 @@
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <MultiRegions/ContField1D.h>
+#include <MultiRegions/ContField.h>
 #include <SpatialDomains/MeshGraph.h>
 
 using namespace std;
@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-    MultiRegions::ContField1DSharedPtr Exp,Sol;
+    MultiRegions::ContFieldSharedPtr Exp,Sol;
 
     int     i,j;
     int     order, nq;
@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Print summary of solution details
-    const SpatialDomains::ExpansionMap &expansions = graph1D->GetExpansions();
+    const SpatialDomains::ExpansionInfoMap &expansions = graph1D->GetExpansionInfos();
     LibUtilities::BasisKey bkey0
                             = expansions.begin()->second->m_basisKeyVector[0];
     int nmodes = bkey0.GetNumModes(); 
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Define Expansion
-    Exp = MemoryManager<MultiRegions::ContField1D>
+    Exp = MemoryManager<MultiRegions::ContField>
                 ::AllocateSharedPtr(vSession,graph1D,vSession->GetVariable(0));
     //----------------------------------------------
 
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Setup Temporary expansion and put in solution
-    Sol = MemoryManager<MultiRegions::ContField1D>
+    Sol = MemoryManager<MultiRegions::ContField>
                                 ::AllocateSharedPtr(*Exp);
     Sol->SetPhys(sol);
     //----------------------------------------------

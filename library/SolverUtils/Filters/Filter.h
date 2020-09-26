@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -39,7 +38,7 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/ExpList.h>
-// #include <SolverUtils/EquationSystem.h>
+#include <SolverUtils/EquationSystem.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
 namespace Nektar
@@ -47,7 +46,8 @@ namespace Nektar
 namespace SolverUtils
 {
 class Filter;
-
+class EquationSystem;
+    
 /// A shared pointer to a Driver object
 typedef std::shared_ptr<Filter> FilterSharedPtr;
 
@@ -56,54 +56,20 @@ typedef std::shared_ptr<Filter> FilterSharedPtr;
 typedef LibUtilities::NekFactory<
     std::string, Filter,
     const LibUtilities::SessionReaderSharedPtr&,
+    const std::weak_ptr<EquationSystem>&,
     const std::map<std::string, std::string>&
     > FilterFactory;
+
 SOLVER_UTILS_EXPORT FilterFactory& GetFilterFactory();
 
-    class FilterOperators
-    {
-    public:
-
-        typedef std::vector<Array<OneD, NekDouble> > fieldvectorType;
-        typedef std::vector<std::string>             varblvectorType;
-
-        
-        typedef std::function< void (fieldvectorType&, varblvectorType&, const bool&) >                                   FunctorType1;
-        typedef const FunctorType1& ConstFunctorType1Ref;
-        typedef Array<OneD, FunctorType1> FunctorType1Array;
-        
-        FilterOperators(void)
-        {
-        }
-        FilterOperators(FilterOperators &in)
-        {
-             m_functors = in.m_functors;
-        }
-        template<typename FuncPointerT, typename ObjectPointerT> 
-            void DefineExtraFldOutput(FuncPointerT func, ObjectPointerT obj)
-        {
-            m_functors =  std::bind(
-                func, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-        }
-        inline void ExtraFldOutput(fieldvectorType      &fields, 
-                                   varblvectorType      &variables,
-                                        const  bool      &flag = false) const
-        {
-            ASSERTL1(m_functors,"DoLinSysRhs should be defined for this time integration scheme");
-            m_functors(fields,variables,flag);
-        }
-
-    protected:
-        FunctorType1 m_functors;
-    private:
-    };
-
+    
 class Filter
 {
 public:
     typedef std::map<std::string, std::string> ParamMap;
     SOLVER_UTILS_EXPORT Filter(
-            const LibUtilities::SessionReaderSharedPtr& pSession);
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::weak_ptr<EquationSystem>      &pEquation);
     SOLVER_UTILS_EXPORT virtual ~Filter();
 
     SOLVER_UTILS_EXPORT inline void Initialise(
@@ -117,15 +83,9 @@ public:
             const NekDouble &time);
     SOLVER_UTILS_EXPORT inline bool IsTimeDependent();
 
-    inline void setFilterOperators(FilterOperators &in)
-    {
-    	m_oprtor = FilterOperators(in);
-    }
-
 protected:
-    LibUtilities::SessionReaderSharedPtr m_session;
-
-	FilterOperators                             m_oprtor;
+    LibUtilities::SessionReaderSharedPtr  m_session;
+    const std::weak_ptr<EquationSystem>   m_equ;
 
     virtual void v_Initialise(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,

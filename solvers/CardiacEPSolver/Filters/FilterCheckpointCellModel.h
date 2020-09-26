@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -49,12 +48,13 @@ public:
 
     /// Creates an instance of this class
     static SolverUtils::FilterSharedPtr create(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
-        const ParamMap &pParams) {
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
+        const ParamMap &pParams)
+    {
         SolverUtils::FilterSharedPtr p
                         = MemoryManager<FilterCheckpointCellModel>
-                                ::AllocateSharedPtr(pSession, pParams);
-        //p->InitObject();
+                            ::AllocateSharedPtr(pSession, pEquation, pParams);
         return p;
     }
 
@@ -62,7 +62,8 @@ public:
     static std::string className;
 
     FilterCheckpointCellModel(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
         const ParamMap &pParams);
     ~FilterCheckpointCellModel();
 

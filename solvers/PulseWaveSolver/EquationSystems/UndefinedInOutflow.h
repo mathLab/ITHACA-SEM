@@ -35,49 +35,52 @@
 #ifndef NEKTAR_UNDEFINEDINOUTFLOW_H
 #define NEKTAR_UNDEFINEDINOUTFLOW_H
 
-#include <string>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <PulseWaveSolver/EquationSystems/PulseWaveBoundary.h>
+#include <string>
 
 namespace Nektar
 {
-    // Forward declarations
-    class UndefinedInOutflow;
 
-    /// Pointer to a PulseWaveOutflow object.
-    typedef std::shared_ptr<UndefinedInOutflow> UndefinedInOutflowSharedPtr;
-    
-    /// A global linear system.
-    class UndefinedInOutflow : public PulseWaveBoundary
-    {
+// Forward declarations
+class UndefinedInOutflow;
+
+// Pointer to a PulseWaveOutflow object.
+typedef std::shared_ptr<UndefinedInOutflow> UndefinedInOutflowSharedPtr;
+
+// A global linear system.
+class UndefinedInOutflow : public PulseWaveBoundary
+{
     public:
         /// Creates an instance of this class
-      static PulseWaveBoundarySharedPtr create(Array<OneD, MultiRegions::ExpListSharedPtr>& pVessel, 
-                                               const LibUtilities::SessionReaderSharedPtr& pSession,
-                                               PulseWavePressureAreaSharedPtr& pressureArea)
+        static PulseWaveBoundarySharedPtr
+        create(Array<OneD, MultiRegions::ExpListSharedPtr> &pVessel,
+               const LibUtilities::SessionReaderSharedPtr &pSession,
+               PulseWavePressureAreaSharedPtr &pressureArea)
         {
-            return MemoryManager<UndefinedInOutflow>::AllocateSharedPtr(pVessel,pSession,pressureArea);
+            return MemoryManager<UndefinedInOutflow>::AllocateSharedPtr(
+              pVessel, pSession, pressureArea);
         }
 
         /// Name of class
         static std::string className;
-        
-        UndefinedInOutflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
+
+        UndefinedInOutflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel,
                            const LibUtilities::SessionReaderSharedPtr pSession,
-                           PulseWavePressureAreaSharedPtr pressureArea); 
+                          PulseWavePressureAreaSharedPtr pressureArea);
 
         virtual ~UndefinedInOutflow();
-    protected:
-        virtual void v_DoBoundary(
-            const Array<OneD,const Array<OneD, NekDouble> > &inarray,
-            Array<OneD, Array<OneD, NekDouble> > &A_0,
-            Array<OneD, Array<OneD, NekDouble> > &beta,
-            const NekDouble time,
-            int omega,int offset,int n);
-        
-    private:
 
-    };
-}
+    protected:
+        virtual void
+        v_DoBoundary(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                     Array<OneD, Array<OneD, NekDouble> > &A_0,
+                     Array<OneD, Array<OneD, NekDouble> > &beta,
+                     Array<OneD, Array<OneD, NekDouble> > &alpha,
+                     const NekDouble time, int omega, int offset, int n);
+
+    private:
+};
+} // namespace Nektar
 
 #endif

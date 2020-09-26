@@ -4,7 +4,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <MultiRegions/ContField1D.h>
+#include <MultiRegions/ContField.h>
 #include <SpatialDomains/MeshGraph.h>
 
 using namespace std;
@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
     LibUtilities::CommSharedPtr vComm = vSession->GetComm();
-    MultiRegions::ContField1DSharedPtr Exp,Fce;
+    MultiRegions::ContFieldSharedPtr Exp,Fce;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         //----------------------------------------------
         // Print summary of solution details
         factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
-        const SpatialDomains::ExpansionMap &expansions = graph1D->GetExpansions();
+        const SpatialDomains::ExpansionInfoMap &expansions = graph1D->GetExpansionInfo();
         LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
 
         if (vComm->GetRank() ==0)
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Define Expansion
-        Exp = MemoryManager<MultiRegions::ContField1D>::
+        Exp = MemoryManager<MultiRegions::ContField>::
             AllocateSharedPtr(vSession,graph1D,vSession->GetVariable(0));
         //----------------------------------------------
 
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Setup expansion containing the  forcing function
-        Fce = MemoryManager<MultiRegions::ContField1D>::AllocateSharedPtr(*Exp);
+        Fce = MemoryManager<MultiRegions::ContField>::AllocateSharedPtr(*Exp);
         Fce->SetPhys(fce);
         //----------------------------------------------
 
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
         //Helmholtz solution taking physical forcing after setting
         //initial condition to zero
         Vmath::Zero(Exp->GetNcoeffs(),Exp->UpdateCoeffs(),1);
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), NullFlagList, factors);
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), factors);
         //----------------------------------------------
 
         //----------------------------------------------

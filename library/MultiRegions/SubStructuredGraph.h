@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -81,6 +80,10 @@ namespace Nektar
                 const unsigned int bndPatch,
                 const NekDouble    sign);
 
+            void SetNewLevelMap(Array<OneD, const unsigned int> numLocalBndCondPerPatch,
+                                Array<OneD, const unsigned int> numLocalIntCondPerPatch);
+
+
             inline Array<OneD, const int> GetPatchId() const 
             {
                 return m_patchId;
@@ -89,6 +92,11 @@ namespace Nektar
             inline Array<OneD, const int>  GetDofId() const
             {
                 return m_dofId;
+            }
+            
+            inline Array<OneD, const int>  GetNewLevelMap() const
+            {
+                return m_newLevelMap;
             }
             
             inline Array<OneD, const unsigned int> IsBndDof() const
@@ -104,6 +112,7 @@ namespace Nektar
         protected:
             Array<OneD, int>          m_patchId;
             Array<OneD, int>          m_dofId;
+            Array<OneD, int>          m_newLevelMap;
             Array<OneD, unsigned int> m_bndPatch; 
             Array<OneD, NekDouble>    m_sign; 
         };
@@ -167,39 +176,25 @@ namespace Nektar
                 std::vector<SubGraphSharedPtr>& leaves) const;
             MULTI_REGIONS_EXPORT int  CutLeaves();
             MULTI_REGIONS_EXPORT int  CutEmptyLeaves();
-            MULTI_REGIONS_EXPORT inline int GetNdaughterGraphs() const;
+            MULTI_REGIONS_EXPORT inline int GetNdaughterGraphs() const
+            {
+                return m_daughterGraphs.size();
+            }
 
             inline const SubGraphSharedPtr GetBndDofsGraph() const
             {
                 return m_BndDofs;
             }
 
-            inline void SetLeftDaughterGraph(
-                MultiLevelBisectedGraphSharedPtr graph)
+            inline
+            std::vector<MultiLevelBisectedGraphSharedPtr> &GetDaughterGraphs()
             {
-                m_leftDaughterGraph = graph;
-            }
-
-            inline void SetRightDaughterGraph(
-                MultiLevelBisectedGraphSharedPtr graph)
-            {
-                m_rightDaughterGraph = graph;
-            }
-
-            inline MultiLevelBisectedGraphSharedPtr GetLeftDaughterGraph()
-            {
-                return m_leftDaughterGraph;
-            }
-
-            inline MultiLevelBisectedGraphSharedPtr GetRightDaughterGraph()
-            {
-                return m_rightDaughterGraph;
+                return m_daughterGraphs;
             }
 
         protected:
-            SubGraphSharedPtr                m_BndDofs;
-            MultiLevelBisectedGraphSharedPtr m_leftDaughterGraph;
-            MultiLevelBisectedGraphSharedPtr m_rightDaughterGraph;
+            SubGraphSharedPtr                             m_BndDofs;
+            std::vector<MultiLevelBisectedGraphSharedPtr> m_daughterGraphs;
         };
 
 

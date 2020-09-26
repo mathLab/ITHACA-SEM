@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -34,6 +33,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <NekMeshUtils/CADSystem/OCE/CADSurfOCE.h>
+#include <NekMeshUtils/CADSystem/OCE/TransfiniteSurface.h>
+#include <GeomAPI_ProjectPointOnSurf.hxx>
 
 using namespace std;
 
@@ -49,7 +50,13 @@ void CADSurfOCE::Initialise(int i, TopoDS_Shape in)
 {
     m_s = BRep_Tool::Surface(TopoDS::Face(in));
 
-    if (in.Orientation() == 1)
+    // Test to see if this surface is a transfinite surface, since some OCC
+    // functions will not work on our custom type.
+    Handle(Geom_TransfiniteSurface) tf = Handle(Geom_TransfiniteSurface)::
+        DownCast(m_s);
+    m_isTransfiniteSurf = !tf.IsNull();
+
+    if (in.Orientation() == TopAbs_REVERSED)
     {
         m_orientation = CADOrientation::eBackwards;
     }
@@ -70,6 +77,15 @@ void CADSurfOCE::Initialise(int i, TopoDS_Shape in)
 Array<OneD, NekDouble> CADSurfOCE::GetBounds()
 {
     return m_bounds;
+}
+
+void CADSurfOCE::GetBounds(NekDouble &umin, NekDouble &umax, NekDouble &vmin,
+                           NekDouble &vmax)
+{
+    umin = m_bounds[0];
+    umax = m_bounds[1];
+    vmin = m_bounds[2];
+    vmax = m_bounds[3];
 }
 
 bool CADSurfOCE::IsPlanar()
@@ -93,6 +109,12 @@ Array<OneD, NekDouble> CADSurfOCE::BoundingBox()
     B.Enlarge(e);
     Array<OneD, NekDouble> ret(6);
     B.Get(ret[0], ret[1], ret[2], ret[3], ret[4], ret[5]);
+    ret[0] /= 1000.0;
+    ret[1] /= 1000.0;
+    ret[2] /= 1000.0;
+    ret[3] /= 1000.0;
+    ret[4] /= 1000.0;
+    ret[5] /= 1000.0;
     return ret;
 }
 
@@ -102,25 +124,38 @@ Array<OneD, NekDouble> CADSurfOCE::locuv(Array<OneD, NekDouble> p,
     gp_Pnt loc(p[0] * 1000.0, p[1] * 1000.0, p[2] * 1000.0);
     Array<OneD, NekDouble> uv(2);
 
-    gp_Pnt2d p2 = m_sas->ValueOfUV(loc, Precision::Confusion());
-
-    TopAbs_State s = m_2Dclass->Perform(p2);
-
-    if (s == TopAbs_OUT)
+    if (!m_isTransfiniteSurf)
     {
-        BRepBuilderAPI_MakeVertex v(loc);
-        BRepExtrema_DistShapeShape dss(
-            BRepTools::OuterWire(TopoDS::Face(m_shape)), v.Shape());
-        dss.Perform();
-        gp_Pnt np = dss.PointOnShape1(1);
-        p2        = m_sas->ValueOfUV(np, Precision::Confusion());
+        gp_Pnt2d p2 = m_sas->ValueOfUV(loc, Precision::Confusion());
+
+        TopAbs_State s = m_2Dclass->Perform(p2);
+
+        if (s == TopAbs_OUT)
+        {
+            BRepBuilderAPI_MakeVertex v(loc);
+            BRepExtrema_DistShapeShape dss(
+                BRepTools::OuterWire(TopoDS::Face(m_shape)), v.Shape());
+            dss.Perform();
+            gp_Pnt np = dss.PointOnShape1(1);
+            p2        = m_sas->ValueOfUV(np, Precision::Confusion());
+        }
+
+        uv[0] = p2.X();
+        uv[1] = p2.Y();
+
+        gp_Pnt p3 = m_sas->Value(p2);
+
+        dist = p3.Distance(loc) / 1000.0;
     }
-
-    uv[0]     = p2.X();
-    uv[1]     = p2.Y();
-    gp_Pnt p3 = m_sas->Value(p2);
-
-    dist = p3.Distance(loc) / 1000.0;
+    else
+    {
+        Array<OneD, NekDouble> out(3);
+        GeomAPI_ProjectPointOnSurf proj(loc, m_s, Precision::Confusion());
+        proj.Perform(loc);
+        ASSERTL1(proj.NbPoints() > 0, "Unable to find a projection!");
+        proj.LowerDistanceParameters(uv[0], uv[1]);
+        dist = proj.LowerDistance();
+    }
 
     return uv;
 }
@@ -133,6 +168,11 @@ NekDouble CADSurfOCE::Curvature(Array<OneD, NekDouble> uv)
 
     GeomLProp_SLProps d(m_s, 2, Precision::Confusion());
     d.SetParameters(uv[0], uv[1]);
+
+    if (!d.IsCurvatureDefined())
+    {
+        return -1.0;
+    }
 
     return d.MaxCurvature() * 1000.0;
 }
@@ -149,6 +189,19 @@ Array<OneD, NekDouble> CADSurfOCE::P(Array<OneD, NekDouble> uv)
     location[1] = loc.Y() / 1000.0;
     location[2] = loc.Z() / 1000.0;
     return location;
+}
+
+void CADSurfOCE::P(Array<OneD, NekDouble> uv, NekDouble &x, NekDouble &y,
+                   NekDouble &z)
+{
+#if defined(NEKTAR_DEBUG)
+    Test(uv);
+#endif
+
+    gp_Pnt loc = m_s->Value(uv[0], uv[1]);
+    x          = loc.X() / 1000.0;
+    y          = loc.Y() / 1000.0;
+    z          = loc.Z() / 1000.0;
 }
 
 Array<OneD, NekDouble> CADSurfOCE::N(Array<OneD, NekDouble> uv)
@@ -285,7 +338,10 @@ void CADSurfOCE::Test(Array<OneD, NekDouble> uv)
     }
 
     error << " On Surface: " << GetId();
-    ASSERTL1(passed, "Warning: " + error.str());
+    WARNINGL1(passed, "Warning: " + error.str());
+    (void)passed; // suppress warning
 }
+
+
 } // namespace NekMeshUtils
 } // namespace Nektar

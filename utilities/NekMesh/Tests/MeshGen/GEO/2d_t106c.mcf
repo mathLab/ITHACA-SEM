@@ -1,0 +1,22 @@
+<NEKTAR>
+    <MESHING>
+
+        <INFORMATION>
+            <I PROPERTY="CADFile" VALUE="2d_t106c.geo" />
+            <I PROPERTY="MeshType" VALUE="2D" />
+        </INFORMATION>
+
+        <PARAMETERS>
+            <P PARAM="MinDelta" VALUE="0.0005"    />
+            <P PARAM="MaxDelta" VALUE="0.1"     />
+            <P PARAM="EPS"      VALUE="0.01"     />
+
+            <P PARAM="Order"    VALUE="4"       />
+
+        </PARAMETERS>
+
+        <BOOLPARAMETERS>
+        </BOOLPARAMETERS>
+
+    </MESHING>
+</NEKTAR>

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/RiemannSolvers/UpwindSolver.h>
 
 namespace Nektar
@@ -41,25 +42,25 @@ namespace Nektar
     {
         std::string UpwindSolver::solverName = GetRiemannSolverFactory().
             RegisterCreatorFunction("Upwind", UpwindSolver::create, "Upwind solver");
-        
+
         /**
          * @class UpwindSolver
-         * 
+         *
          * @brief Upwind scheme Riemann solver.
-         * 
+         *
          * The upwind solver determines the flux based upon an advection
          * velocity \f$\mathbf{V}\f$ and trace normal \f$\mathbf{n}\f$. In
          * particular, the flux for each component of the velocity field is
          * deterined by:
-         * 
+         *
          * \f[ \mathbf{f}(u^+,u^-) = \begin{cases} \mathbf{V}u^+, &
          * \mathbf{V}\cdot\mathbf{n} \geq 0,\\ \mathbf{V}u^-, &
          * \mathbf{V}\cdot\mathbf{n} < 0.\end{cases} \f]
-         * 
+         *
          * Here the superscript + and - denotes forwards and backwards spaces
          * respectively.
          */
-        
+
         /**
          * @brief Default constructor.
          */
@@ -68,16 +69,16 @@ namespace Nektar
             : RiemannSolver(pSession)
         {
         }
-        
+
         /**
          * @brief Implementation of the upwind solver.
-         * 
+         *
          * The upwind solver assumes that a scalar field Vn is defined, which
          * corresponds with the dot product \f$\mathbf{V}\cdot\mathbf{n}\f$,
          * where \f$\mathbf{V}\f$ is the advection velocity and \f$\mathbf{n}\f$
          * defines the normal of a vertex, edge or face at each quadrature point
          * of the trace space.
-         * 
+         *
          * @param Fwd   Forwards trace space.
          * @param Bwd   Backwards trace space.
          * @param flux  Resulting flux.
@@ -88,78 +89,20 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                   Array<OneD,       Array<OneD, NekDouble> > &flux)
         {
+            boost::ignore_unused(nDim);
+
             ASSERTL1(CheckScalars("Vn"), "Vn not defined.");
             const Array<OneD, NekDouble> &traceVel = m_scalars["Vn"]();
-            
-            for (int j = 0; j < traceVel.num_elements(); ++j)
+
+            for (int j = 0; j < traceVel.size(); ++j)
             {
-                const Array<OneD, const Array<OneD, NekDouble> > &tmp = 
+                const Array<OneD, const Array<OneD, NekDouble> > &tmp =
                     traceVel[j] >= 0 ? Fwd : Bwd;
-                for (int i = 0; i < Fwd.num_elements(); ++i)
+                for (int i = 0; i < Fwd.size(); ++i)
                 {
                     flux[i][j] = traceVel[j]*tmp[i][j];
                 }
             }
         }
-
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-        void UpwindSolver::v_CalcFluxJacobian(
-            const int                                         nDim,
-            const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
-            const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-            const Array<OneD, const Array<OneD, NekDouble> > &normals,
-                  DNekBlkMatSharedPtr                        &FJac,
-                  DNekBlkMatSharedPtr                        &BJac)
-        {
-            ASSERTL1(CheckScalars("Vn"), "Vn not defined.");
-            const Array<OneD, NekDouble> &traceVel = m_scalars["Vn"]();
-            
-            DNekMatSharedPtr                        tmpMat;
-
-            int nvariables  = Fwd.num_elements();
-
-            for (int i = 0; i < Fwd[0].num_elements(); ++i)
-            {
-                DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
-                    ::AllocateSharedPtr(nvariables, nvariables);
-                DNekMatSharedPtr PointBJac = MemoryManager<DNekMat>
-                    ::AllocateSharedPtr(nvariables, nvariables);
-                FJac->SetBlock(i, i, PointFJac);
-                BJac->SetBlock(i, i, PointBJac);
-            }
-
-            
-            for (int j = 0; j < traceVel.num_elements(); ++j)
-            {
-                
-                if (traceVel[j] >= 0) 
-                {
-                    for (int i = 0; i < nvariables; ++i)
-                    {
-                        tmpMat = FJac->GetBlock(j,j);
-                        (*tmpMat)(i,i) = Fwd[i][j];
-                    }
-                    for (int i = 0; i < nvariables; ++i)
-                    {
-                        tmpMat = BJac->GetBlock(j,j);
-                        (*tmpMat)(i,i) = 0.0;
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < nvariables; ++i)
-                    {
-                        tmpMat = FJac->GetBlock(j,j);
-                        (*tmpMat)(i,i) = 0.0;
-                    }
-                    for (int i = 0; i < nvariables; ++i)
-                    {
-                        tmpMat = BJac->GetBlock(j,j);
-                        (*tmpMat)(i,i) = Bwd[i][j];
-                    }
-                }
-            }
-        }
-#endif
     }
 }

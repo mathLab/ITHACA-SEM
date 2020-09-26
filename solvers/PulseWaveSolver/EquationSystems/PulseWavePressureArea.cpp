@@ -35,34 +35,27 @@
 
 #include <PulseWaveSolver/EquationSystems/PulseWavePressureArea.h>
 
-using namespace std;
-
 namespace Nektar
 {
 
-    /**
-     * @class PulseWavePressureArea
-     *
-     */
-  PulseWavePressureArea::PulseWavePressureArea(
-      Array<OneD, MultiRegions::ExpListSharedPtr> &pVessel, 
-      const LibUtilities::SessionReaderSharedPtr &pSession)
-    : m_vessels(pVessel),
-      m_session(pSession)
-    {
-    }
-
-    PulseWavePressureArea::~PulseWavePressureArea()
-    {
-    }
-
-        
-    /**
-     *
-     */
-    PressureAreaFactory& GetPressureAreaFactory()
-    {
-        static PressureAreaFactory instance;
-        return instance;
-    }
+PulseWavePressureArea::PulseWavePressureArea(
+    Array<OneD, MultiRegions::ExpListSharedPtr> &pVessel,
+    const LibUtilities::SessionReaderSharedPtr &pSession)
+    : m_vessels(pVessel), m_session(pSession)
+{
+    m_session->LoadParameter("pext", m_PExt, 0);
+    m_session->LoadParameter("rho", m_rho, 0.5);
 }
+
+PulseWavePressureArea::~PulseWavePressureArea()
+{
+}
+
+
+PressureAreaFactory &GetPressureAreaFactory()
+{
+    static PressureAreaFactory instance;
+    return instance;
+}
+
+} // namespace Nektar

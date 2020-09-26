@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -51,11 +50,12 @@ public:
     /// Creates an instance of this class
     static FilterSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const std::map<std::string, std::string> &pParams)
+        const std::weak_ptr<EquationSystem>      &pEquation,
+        const std::map<std::string, std::string>   &pParams)
     {
         FilterSharedPtr p =
             MemoryManager<FilterMovingAverage>::AllocateSharedPtr(pSession,
-                                                                  pParams);
+                                                            pEquation, pParams);
         return p;
     }
 
@@ -64,19 +64,15 @@ public:
 
     SOLVER_UTILS_EXPORT FilterMovingAverage(
         const LibUtilities::SessionReaderSharedPtr &pSession,
+        const std::weak_ptr<EquationSystem>      &pEquation,
         const ParamMap &pParams);
     SOLVER_UTILS_EXPORT virtual ~FilterMovingAverage();
 
 protected:
     virtual void v_ProcessSample(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+              std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
         const NekDouble &time);
-    virtual void v_PrepareOutput(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-        const NekDouble &time)
-    {
-        // Do nothing
-    }
     virtual std::string v_GetFileSuffix()
     {
         return "_movAvg";

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -83,7 +82,7 @@ namespace Nektar
         }
 
         // Use nodal projection if only triangles
-        if (s.size() == 1 && (s.count(LibUtilities::eTriangle) == 1 || 
+        if (s.size() == 1 && (s.count(LibUtilities::eTriangle) == 1 ||
                               s.count(LibUtilities::eTetrahedron) == 1))
         {
             // This is disabled for now as it causes problems at high order.
@@ -126,7 +125,7 @@ namespace Nektar
     void CellModel::Initialise()
     {
         ASSERTL1(m_nvar > 0, "Cell model must have at least 1 variable.");
-        
+
         m_cellSol = Array<OneD, Array<OneD, NekDouble> >(m_nvar);
         m_wsp = Array<OneD, Array<OneD, NekDouble> >(m_nvar);
         for (unsigned int i = 0; i < m_nvar; ++i)
@@ -165,14 +164,14 @@ namespace Nektar
     {
         int phys_offset = 0;
         int coef_offset = 0;
-        int nvar = inarray.num_elements();
+        int nvar = inarray.size();
         Array<OneD, NekDouble> tmp;
 
         // ---------------------------
         // Check nodal temp array set up
         if (m_useNodal)
         {
-            if (!m_nodalTmp.num_elements())
+            if (!m_nodalTmp.size())
             {
                 m_nodalTmp = Array<OneD, Array<OneD, NekDouble> >(nvar);
                 for (unsigned int k = 0; k < nvar; ++k)
@@ -326,7 +325,7 @@ namespace Nektar
     {
         const bool root = (m_session->GetComm()->GetRank() == 0);
         const std::string fncName = "CellModelInitialConditions";
-        const int nvar = m_cellSol[0].num_elements();
+        const int nvar = m_cellSol[0].size();
         std::string varName;
         Array<OneD, NekDouble> coeffs(m_field->GetNcoeffs());
         Array<OneD, NekDouble> tmp;
@@ -360,7 +359,7 @@ namespace Nektar
         std::map<std::string, FDef>  FieldDef;
         std::map<std::string, FData> FieldData;
         LibUtilities::FieldMetaDataMap fieldMetaDataMap;
-	
+
         for (auto &setIt : filelist)
         {
             if (root)
@@ -385,7 +384,7 @@ namespace Nektar
         // Load each cell model variable
         // j=0 and j=1 are for transmembrane or intra/extra-cellular volt.
         Vmath::Zero(m_nq, m_cellSol[0], 1);
-        for(j = 1; j < m_cellSol.num_elements(); ++j)
+        for(j = 1; j < m_cellSol.size(); ++j)
         {
             // Get the name of the jth variable
             varName = GetCellVarName(j);

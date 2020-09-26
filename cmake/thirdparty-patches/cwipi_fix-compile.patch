@@ -1,0 +1,36 @@
+diff -ur src/coupling.cxx src/coupling.cxx
+--- src/coupling.cxx	2014-12-10 16:16:36.000000000 +0100
++++ src/coupling.cxx	2018-04-18 10:02:35.907208312 +0200
+@@ -1221,7 +1221,7 @@
+ #ifdef NAN
+       if (receivingField != NULL && nInteriorList > 0) {
+         const int idx = 0;
+-        if (isnan(receivingField[idx]))
++        if (std::isnan(receivingField[idx]))
+           status = CWIPI_EXCHANGE_BAD_RECEIVING;
+       }
+ #endif
+diff -ur src/cwipi_cf.cxx src/cwipi_cf.cxx
+--- src/cwipi_cf.cxx	2014-12-10 16:16:36.000000000 +0100
++++ src/cwipi_cf.cxx	2018-04-18 10:03:02.423007880 +0200
+@@ -234,7 +234,7 @@
+   char *application_name_c = _cwipi_fortran_to_c_string(application_name_f,
+                                                             *l_application_name);
+ 
+-  bftc_printf("\ncwipi "CWIPI_VERSION" initializing\n");
++  bftc_printf("\ncwipi " CWIPI_VERSION " initializing\n");
+   bftc_printf("------------------------\n\n");
+ 
+   cwipi::ApplicationPropertiesDataBase & properties =
+diff -ur src/cwipi.cxx src/cwipi.cxx
+--- src/cwipi.cxx	2014-12-10 16:16:36.000000000 +0100
++++ src/cwipi.cxx	2018-04-18 10:02:50.031101550 +0200
+@@ -134,7 +134,7 @@
+   cwipi::ApplicationPropertiesDataBase & properties =
+     cwipi::ApplicationPropertiesDataBase::getInstance();
+ 
+-  bftc_printf("\ncwipi "CWIPI_VERSION" initializing\n");
++  bftc_printf("\ncwipi " CWIPI_VERSION " initializing\n");
+   bftc_printf("------------------------\n\n");
+ 
+   *application_comm = properties.init(application_name,

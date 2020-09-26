@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -104,7 +103,7 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
     ASSERTL0(!(m_f->m_numHomogeneousDir),
             "Homogeneous expansions not supported");
 
-    for (i = cnt = 0; i < BndExp.num_elements(); ++i)
+    for (i = cnt = 0; i < BndExp.size(); ++i)
     {
         if (i != surf)
         {
@@ -114,9 +113,9 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
 
         for (j = 0; j < BndExp[i]->GetExpSize(); ++j, ++cnt)
         {
-            int elmtNum  = BoundarytoElmtID[cnt];
-            int facetNum = BoundarytoTraceID[cnt];
-            int oppositeNum;
+            int elmtNum     = BoundarytoElmtID[cnt];
+            int facetNum    = BoundarytoTraceID[cnt];
+            int oppositeNum = 0;
 
             // Get boundary and element expansions.
             LocalRegions::ExpansionSharedPtr bndElmt = BndExp[i]->GetExp(j);
@@ -204,12 +203,12 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
                 {
                     case 2:
                     {
-                        elmt->GetEdgePhysVals(facetNum, bndElmt, x[k], face1);
-                        elmt->GetEdgePhysVals(oppositeNum, bndElmt, x[k],
+                        elmt->GetTracePhysVals(facetNum, bndElmt, x[k], face1);
+                        elmt->GetTracePhysVals(oppositeNum, bndElmt, x[k],
                                               face2);
                         // Consider edge orientation
-                        if (elmt->GetEorient(facetNum) ==
-                            elmt->GetEorient(oppositeNum))
+                        if (elmt->GetTraceOrient(facetNum) ==
+                            elmt->GetTraceOrient(oppositeNum))
                         {
                             Vmath::Reverse(nqBnd, face2, 1, face2, 1);
                         }
@@ -219,10 +218,10 @@ void ProcessSurfDistance::Process(po::variables_map &vm)
                     {
                         // Use orientation from the surface for both faces
                         StdRegions::Orientation orientation =
-                            elmt->GetForient(facetNum);
-                        elmt->GetFacePhysVals(facetNum, bndElmt, x[k], face1,
+                            elmt->GetTraceOrient(facetNum);
+                        elmt->GetTracePhysVals(facetNum, bndElmt, x[k], face1,
                                               orientation);
-                        elmt->GetFacePhysVals(oppositeNum, bndElmt, x[k], face2,
+                        elmt->GetTracePhysVals(oppositeNum, bndElmt, x[k], face2,
                                               orientation);
                     }
                     break;

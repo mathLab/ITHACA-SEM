@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -70,19 +69,6 @@ void ProcessWSS::Process(po::variables_map &vm)
     int expdim  = m_f->m_graph->GetSpaceDimension();
     m_spacedim  = expdim + m_f->m_numHomogeneousDir;
 
-    if (m_spacedim == 2)
-    {
-        m_f->m_variables.push_back("Shear_x");
-        m_f->m_variables.push_back("Shear_y");
-        m_f->m_variables.push_back("Shear_mag");
-    }
-    else
-    {
-        m_f->m_variables.push_back("Shear_x");
-        m_f->m_variables.push_back("Shear_y");
-        m_f->m_variables.push_back("Shear_z");
-        m_f->m_variables.push_back("Shear_mag");
-    }
 
     if (m_f->m_exp[0]->GetNumElmts() == 0)
     {
@@ -94,10 +80,6 @@ void ProcessWSS::Process(po::variables_map &vm)
         ASSERTL0(false, "Error: wss for a 1D problem cannot "
                         "be computed");
     }
-
-    // Load viscosity coefficients
-    NekDouble kinvis, lambda;
-    GetViscosity( kinvis, lambda);
 
     // Declare arrays
     int nshear    = m_spacedim + 1;
@@ -112,11 +94,14 @@ void ProcessWSS::Process(po::variables_map &vm)
     Array<OneD, MultiRegions::ExpListSharedPtr> BndExp(nshear);
     Array<OneD, MultiRegions::ExpListSharedPtr> BndElmtExp(nfields);
 
-    // Resize m_exp
-    m_f->m_exp.resize(nfields + nshear);
-    for (i = 0; i < nshear; ++i)
+    // will resuse nfields expansions to write shear components.
+    if(nshear > nfields)
     {
-        m_f->m_exp[nfields + i] = m_f->AppendExpList(m_f->m_numHomogeneousDir);
+        m_f->m_exp.resize(nshear);
+        for (i = nfields; i < nshear; ++i)
+        {
+            m_f->m_exp[nfields + i] = m_f->AppendExpList(m_f->m_numHomogeneousDir);
+        }
     }
 
     // Create map of boundary ids for partitioned domains
@@ -141,8 +126,7 @@ void ProcessWSS::Process(po::variables_map &vm)
             // bnd
             for (i = 0; i < nshear; i++)
             {
-                BndExp[i] =
-                    m_f->m_exp[nfields + i]->UpdateBndCondExpansion(bnd);
+                BndExp[i] = m_f->m_exp[i]->UpdateBndCondExpansion(bnd);
             }
             for (i = 0; i < nfields; i++)
             {
@@ -153,10 +137,9 @@ void ProcessWSS::Process(po::variables_map &vm)
             int nqb = BndExp[0]->GetTotPoints();
             int nqe = BndElmtExp[0]->GetTotPoints();
 
-            // Initialise local arrays for the velocity gradients, and stress
-            // components
-            // size of total number of quadrature points for elements in this
-            // bnd
+            // Initialise local arrays for the velocity gradients, and
+            // stress components size of total number of quadrature
+            // points for elements in this bnd
             for (i = 0; i < ngrad; ++i)
             {
                 grad[i] = Array<OneD, NekDouble>(nqe);
@@ -183,6 +166,11 @@ void ProcessWSS::Process(po::variables_map &vm)
             // Extract Velocities
             GetVelocity( BndElmtExp, velocity);
 
+            // Extract viscosity coefficients
+            NekDouble lambda;
+            Array<OneD, NekDouble> mu(nqe, 0.0);
+            GetViscosity( BndElmtExp, mu, lambda);
+
             // Compute gradients
             for (i = 0; i < m_spacedim; ++i)
             {
@@ -204,7 +192,8 @@ void ProcessWSS::Process(po::variables_map &vm)
             }
 
             // Velocity divergence scaled by lambda * mu
-            Vmath::Smul(nqe, lambda*kinvis, div, 1, div, 1);
+            Vmath::Smul(nqe, lambda, div, 1, div, 1);
+            Vmath::Vmul(nqe, mu, 1, div, 1, div, 1);
 
             // Compute stress component terms
             //    tau_ij = mu*(u_i,j + u_j,i) + mu*lambda*delta_ij*div(u)
@@ -216,7 +205,7 @@ void ProcessWSS::Process(po::variables_map &vm)
                                      grad[j * m_spacedim + i], 1,
                                      stress[i * m_spacedim + j], 1);
 
-                    Vmath::Smul(nqe, kinvis,
+                    Vmath::Vmul(nqe, mu, 1,
                                      stress[i * m_spacedim + j], 1,
                                      stress[i * m_spacedim + j], 1);
 
@@ -292,22 +281,114 @@ void ProcessWSS::Process(po::variables_map &vm)
                                          BndExp[nshear - 1]->UpdateCoeffs());
         }
     }
+
+    if (m_spacedim == 2)
+    {
+        m_f->m_variables[0] = "Shear_x";
+        m_f->m_variables[1] = "Shear_y";
+        m_f->m_variables[2] = "Shear_mag";
+    }
+    else
+    {
+        m_f->m_variables[0] = "Shear_x";
+        m_f->m_variables[1] = "Shear_y";
+        m_f->m_variables[2] = "Shear_z";
+        m_f->m_variables[3] = "Shear_mag";
+    }
 }
 
-void ProcessWSS::GetViscosity(NekDouble &kinvis, NekDouble &lambda)
+void ProcessWSS::GetViscosity(
+        const Array<OneD, MultiRegions::ExpListSharedPtr> exp,
+              Array<OneD, NekDouble> &mu,
+              NekDouble &lambda)
 {
+    NekDouble m_mu;
+    int npoints = exp[0]->GetNpoints();
+
     if(boost::iequals(m_f->m_variables[0], "u"))
     {
         // IncNavierStokesSolver
-        kinvis = m_f->m_session->GetParameter("Kinvis");
+        m_mu = m_f->m_session->GetParameter("Kinvis");
+        Vmath::Fill(npoints, m_mu, mu, 1);
         lambda = 0;
     }
     else if(boost::iequals(m_f->m_variables[0], "rho") &&
             boost::iequals(m_f->m_variables[1], "rhou"))
     {
         // CompressibleFlowSolver
-        m_f->m_session->LoadParameter ("mu",     kinvis, 1.78e-05);
+        std::string m_ViscosityType;
+        m_f->m_session->LoadParameter ("mu",     m_mu, 1.78e-05);
         m_f->m_session->LoadParameter ("lambda", lambda, -2.0/3.0);
+        m_f->m_session->LoadSolverInfo("ViscosityType", m_ViscosityType
+                                      , "Constant");
+
+        if (m_ViscosityType == "Variable")
+        {
+            // Check equation of state
+            std::string eosType;
+            bool m_idealGas;
+            m_f->m_session->LoadSolverInfo("EquationOfState", eosType,
+                "IdealGas");
+            m_idealGas = boost::iequals(eosType,"IdealGas");
+            ASSERTL0(m_idealGas,
+                "Only IdealGas EOS implemented for Variable ViscosityType");
+
+            // Get relevant parameters
+            NekDouble  m_gamma;
+            NekDouble  m_pInf;
+            NekDouble  m_rhoInf;
+            NekDouble  m_gasConstant;
+            NekDouble  cv_inv;
+            m_f->m_session->LoadParameter("Gamma", m_gamma, 1.4);
+            m_f->m_session->LoadParameter("pInf", m_pInf, 101325);
+            m_f->m_session->LoadParameter("rhoInf", m_rhoInf, 1.225);
+            m_f->m_session->LoadParameter("GasConstant", m_gasConstant
+                                         , 287.058);
+
+            // Get temperature from flowfield
+            cv_inv = (m_gamma - 1.0) / m_gasConstant;
+            // e = 1/rho ( E - 1/2 ( rhou^2/rho + ... ) )
+            Array<OneD, NekDouble> tmp(npoints, 0.0);
+            Array<OneD, NekDouble> energy(npoints, 0.0);
+            Array<OneD, NekDouble> temperature(npoints, 0.0);
+            Vmath::Vcopy(npoints, exp[m_spacedim+1]->GetPhys(), 1, energy, 1);
+            for (int i = 0; i < m_spacedim; i++)
+            {
+                // rhou^2
+                Vmath::Vmul(npoints, exp[i + 1]->GetPhys(), 1
+                           , exp[i + 1]->GetPhys(), 1, tmp, 1);
+                // rhou^2/rho
+                Vmath::Vdiv(npoints, tmp, 1, exp[0]->GetPhys(), 1, tmp, 1);
+                // 0.5 rhou^2/rho
+                Vmath::Smul(npoints, 0.5, tmp, 1, tmp, 1);
+                // E - 0.5 rhou^2/rho - ...
+                Vmath::Vsub(npoints, energy, 1, tmp, 1, energy, 1);
+            }
+            // rhoe/rho
+            Vmath::Vdiv(npoints, energy, 1, exp[0]->GetPhys(), 1, energy, 1);
+            // T = e/Cv
+            Vmath::Smul(npoints, cv_inv, energy, 1, temperature, 1 );
+
+            // Variable viscosity through the Sutherland's law
+            //
+            // WARNING, if this routine is modified the same must be done in the
+            // CompressibleFlowSolver function in VariableConverter.cpp
+            // (this class should be restructured).
+
+            const NekDouble C = .38175;
+            NekDouble mu_star = m_mu;
+            NekDouble T_star  = m_pInf / (m_rhoInf * m_gasConstant);
+            NekDouble ratio;
+            for (int i = 0; i < npoints; ++i)
+            {
+                ratio = temperature[i] / T_star;
+                mu[i] = mu_star * ratio * sqrt(ratio) * (1 + C) / (ratio + C);
+            }
+        }
+        else
+        {
+            Vmath::Fill(npoints, m_mu, mu, 1);
+        }
     }
     else
     {

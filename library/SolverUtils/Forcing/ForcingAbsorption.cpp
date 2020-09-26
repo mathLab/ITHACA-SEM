@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Forcing/ForcingAbsorption.h>
 
 #include <LibUtilities/BasicUtils/Equation.h>
@@ -51,9 +52,11 @@ namespace SolverUtils
                                                         ForcingAbsorption::create,
                                                         "Forcing Absorption");
 
-    ForcingAbsorption::ForcingAbsorption(const LibUtilities::SessionReaderSharedPtr& pSession)
-            : Forcing(pSession),
-              m_hasRefFlow(false),	
+    ForcingAbsorption::ForcingAbsorption(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::weak_ptr<EquationSystem>      &pEquation)
+            : Forcing(pSession, pEquation),
+              m_hasRefFlow(false),
               m_hasRefFlowTime(false)
     {
     }
@@ -225,13 +228,14 @@ namespace SolverUtils
         }
     }
 
+
     void ForcingAbsorption::v_Apply(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> > &inarray,
             Array<OneD, Array<OneD, NekDouble> > &outarray,
             const NekDouble &time)
     {
-        int nq = m_Forcing[0].num_elements();
+        int nq = m_Forcing[0].size();
         CalculateForcing(fields,inarray,time);
         for (int i = 0; i < m_NumVariable; i++)
         {
@@ -246,8 +250,7 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> > &outarray,
             const NekDouble &time)
     {
-        int nq = m_Forcing[0].num_elements();
-        int ncoeff = outarray[m_NumVariable-1].num_elements();
+        int ncoeff = outarray[m_NumVariable-1].size();
         Array<OneD, NekDouble> tmp(ncoeff, 0.0);
         CalculateForcing(fields,inarray,time);
 
@@ -264,7 +267,8 @@ namespace SolverUtils
             const Array<OneD, Array<OneD, NekDouble> > &inarray,
             const NekDouble &time)
     {
-        int nq = m_Forcing[0].num_elements();
+        boost::ignore_unused(fields);
+        int nq = m_Forcing[0].size();
        
         std::string s_FieldStr;
         Array<OneD, NekDouble> TimeScale(1);
@@ -302,6 +306,6 @@ namespace SolverUtils
             }
         }
     }
-        
+
 }
 }

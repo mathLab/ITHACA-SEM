@@ -44,68 +44,65 @@
 
 namespace Nektar
 {
-    class PulseWaveBoundary;
-    typedef std::shared_ptr<PulseWaveBoundary>  PulseWaveBoundarySharedPtr;
-    
-    static PulseWaveBoundarySharedPtr NullPulseWaveBoundarySharedPtr;
 
-    typedef LibUtilities::NekFactory< std::string, 
-        PulseWaveBoundary, 
-        Array<OneD, MultiRegions::ExpListSharedPtr>&, 
-        const LibUtilities::SessionReaderSharedPtr&, 
-        PulseWavePressureAreaSharedPtr& > BoundaryFactory;
-    BoundaryFactory& GetBoundaryFactory();
-    
-    class PulseWaveBoundary
-    {
+class PulseWaveBoundary;
+
+typedef std::shared_ptr<PulseWaveBoundary> PulseWaveBoundarySharedPtr;
+
+static PulseWaveBoundarySharedPtr NullPulseWaveBoundarySharedPtr;
+
+typedef LibUtilities::NekFactory<std::string, PulseWaveBoundary,
+                                  Array<OneD, MultiRegions::ExpListSharedPtr> &,
+                                   const LibUtilities::SessionReaderSharedPtr &,
+                              PulseWavePressureAreaSharedPtr &> BoundaryFactory;
+
+BoundaryFactory &GetBoundaryFactory();
+
+class PulseWaveBoundary
+{
     public:
         PulseWaveBoundary(Array<OneD, MultiRegions::ExpListSharedPtr> &pVessel,
                           const LibUtilities::SessionReaderSharedPtr &pSession,
-                          PulseWavePressureAreaSharedPtr & pressureArea);
+                          PulseWavePressureAreaSharedPtr &pressureArea);
 
         virtual ~PulseWaveBoundary();
 
-        inline void DoBoundary(
-            const Array<OneD,const Array<OneD, NekDouble> > &inarray,
-            Array<OneD, Array<OneD, NekDouble> > &A_0,
-            Array<OneD, Array<OneD, NekDouble> > &beta,
-            const NekDouble time, 
-            int omega, int offset,int n);
+        inline void DoBoundary(const Array<OneD,
+                                        const Array<OneD, NekDouble> > &inarray,
+                                      Array<OneD, Array<OneD, NekDouble> > &A_0,
+                                     Array<OneD, Array<OneD, NekDouble> > &beta,
+                                    Array<OneD, Array<OneD, NekDouble> > &alpha,
+                            const NekDouble time, int omega, int offset, int n);
 
     protected:
-        virtual void v_DoBoundary(
-            const Array<OneD,const Array<OneD, NekDouble> > &inarray,
-            Array<OneD, Array<OneD, NekDouble> > &A_0,
-            Array<OneD, Array<OneD, NekDouble> > &beta,
-            const NekDouble time,
-            int omega,int offset,int n) = 0;
+        virtual void v_DoBoundary(const Array<OneD,
+                                        const Array<OneD, NekDouble> > &inarray,
+                                      Array<OneD, Array<OneD, NekDouble> > &A_0,
+                                     Array<OneD, Array<OneD, NekDouble> > &beta,
+                                    Array<OneD, Array<OneD, NekDouble> > &alpha,
+                        const NekDouble time, int omega, int offset, int n) = 0;
 
         Array<OneD, MultiRegions::ExpListSharedPtr> m_vessels;
-	LibUtilities::SessionReaderSharedPtr m_session;
+        LibUtilities::SessionReaderSharedPtr m_session;
         PulseWavePressureAreaSharedPtr m_pressureArea;
 
         NekDouble m_pext;
         NekDouble m_pout;
         NekDouble m_rho;
 
-
     private:
-    };
+};
 
-    /**
-     *
-     */
-    inline void PulseWaveBoundary::DoBoundary(
-        const Array<OneD,const Array<OneD, NekDouble> > &inarray,
-        Array<OneD, Array<OneD, NekDouble> > &A_0,
-        Array<OneD, Array<OneD, NekDouble> > &beta,
-        const NekDouble time,
-        int omega,int offset,int n)
-    {
-        v_DoBoundary(inarray,A_0,beta,time,omega,offset,n);
-    }
-
-
-
+void PulseWaveBoundary::DoBoundary(
+                      const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                                      Array<OneD, Array<OneD, NekDouble> > &A_0,
+                                     Array<OneD, Array<OneD, NekDouble> > &beta,
+                                    Array<OneD, Array<OneD, NekDouble> > &alpha,
+                             const NekDouble time, int omega, int offset, int n)
+{
+    v_DoBoundary(inarray, A_0, beta, alpha, time, omega, offset, n);
 }
+
+} // namespace Nektar
+
 #endif

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -100,7 +99,7 @@ namespace Nektar
             StdRegions::VarCoeffMap     m_varCoeffs;
 
             /// Pointer to the local to global mapping.
-            AssemblyMapSharedPtr m_locToGloMap;
+            std::weak_ptr<AssemblyMap>  m_locToGloMap;
 
         private:
 
@@ -110,7 +109,7 @@ namespace Nektar
         MULTI_REGIONS_EXPORT std::ostream& operator<<(std::ostream& os, const GlobalMatrixKey& rhs);
 
         /// A pointer to a GlobalMatrixKey.
-        typedef  boost::shared_ptr<GlobalMatrixKey> GlobalMatrixKeySharedPtr;
+        typedef std::shared_ptr<GlobalMatrixKey> GlobalMatrixKeySharedPtr;
 
         inline StdRegions::MatrixType
                         GlobalMatrixKey::GetMatrixType() const
@@ -126,7 +125,7 @@ namespace Nektar
 
         inline bool GlobalMatrixKey::LocToGloMapIsDefined(void) const
         {
-            if( m_locToGloMap.get() == 0) //NullAssemblyMapSharedPtr)
+            if( m_locToGloMap.lock().get() == 0) //NullAssemblyMapSharedPtr)
             {
                 return false;
             }
@@ -167,7 +166,6 @@ namespace Nektar
         {
             return m_varCoeffs;
         }
-    }
-}
-
+    } //end of namespace
+} //end of namespace
 #endif

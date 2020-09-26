@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -62,7 +61,6 @@ CFSBndCond::CFSBndCond(const LibUtilities::SessionReaderSharedPtr& pSession,
     m_session->LoadParameter("Gamma", m_gamma, 1.4);
     m_session->LoadParameter("rhoInf", m_rhoInf, 1.225);
     m_session->LoadParameter("pInf", m_pInf, 101325);
-    m_session->LoadParameter("pOut", m_pOut, m_pInf);
     m_session->LoadParameter("uInf", m_velInf[0], 0.1);
     if (m_spacedim >= 2)
     {
@@ -96,90 +94,19 @@ void CFSBndCond::Apply(
 }
 
 /**
- * @ brief apply boundaryconditions for flow field derivatives
- * Currently only the ExtrapOrder0BC are used for all boundaries 
- * according to Cheng, Yang, Liu, JCP 327 (2016)484-502
- * @param   bcRegion      id of the boundary region
- * @param   cnt           
- * @param   Fwd    
- * @param   physarray
- * @param   time
- */
-void CFSBndCond::ApplyDeriv(
-        const Array<OneD, const Array<OneD, NekDouble> >                    &Fwd,
-        const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
-        const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &DervFwd,
-        const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
-        NekDouble                                                           time)
-{
-    v_ApplyDeriv(Fwd, physarray, DervFwd, dervarray, time);
-}
-
-void CFSBndCond::v_ApplyDeriv(
-        const Array<OneD, const Array<OneD, NekDouble> >                    &Fwd,
-        const Array<OneD, const Array<OneD, NekDouble> >                    &physarray,
-        const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &DervFwd,
-        const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &dervarray,
-        NekDouble                                                           time)
-{
-    int i, j;
-    int e, pnt;
-    int id1, id2, nBCEdgePts;
-    int nVariables = physarray.num_elements();
-    int nDimensions = m_spacedim;
-
-    const Array<OneD, const int> &traceBndMap
-        = m_fields[0]->GetTraceBndMap();
-
-    int eMax;
-
-    eMax = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->GetExpSize();
-
-    // Loop on m_bcRegions
-    for (e = 0; e < eMax; ++e)
-    {
-        nBCEdgePts = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
-            GetExp(e)->GetTotPoints();
-        id1 = m_fields[0]->GetBndCondExpansions()[m_bcRegion]->
-            GetPhys_Offset(e) ;
-        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[m_offset+e]);
-
-        // Loop on points of m_bcRegion 'e'
-        for (i = 0; i < nBCEdgePts; i++)
-        {
-            pnt = id2+i;
-
-            // Setting up bcs for density and velocities
-            for (int nd = 0; nd <nDimensions; ++nd)
-            {
-                for (j = 0; j <=nDimensions; ++j)
-                {
-                    (m_fields[j]->GetDerivBndCondExpansions()[m_bcRegion][nd]->
-                    UpdatePhys())[id1+i] = DervFwd[nd][j][pnt];
-                }
-
-                // Setting up bcs for energy
-                (m_fields[nVariables-1]->GetDerivBndCondExpansions()[m_bcRegion][nd]->
-                    UpdatePhys())[id1+i] = DervFwd[nd][nVariables-1][pnt];
-
-            }
-        }
-    }
-}
-
-/**
  * @ brief Newly added bc should specify this virtual function
- * if the Bwd/value in m_bndCondExpansions is the target value like Direchlet bc weight should be 1.0.
+ * if the Bwd/value in m_bndCondExpansions is the target value like Direchlet 
+ * bc weight should be 1.0.
  * if some average Fwd and Bwd/value in m_bndCondExpansions 
  * is the target value like WallViscousBC weight should be 0.5.
  */
 void CFSBndCond::v_ApplyBwdWeight()
 {
-    NekDouble   weight  =   m_diffusionAveWeight;
-    int nVariables = m_fields.num_elements();
-    for(int i=0;i<nVariables;i++)
+    NekDouble weight = m_diffusionAveWeight;
+    size_t nVariables = m_fields.size();
+    for (int i=0;i < nVariables; ++i)
     {
-        m_fields[i]->SetBndCondBwdWeight(m_bcRegion,weight);
+        m_fields[i]->SetBndCondBwdWeight(m_bcRegion, weight);
     }
 }
 

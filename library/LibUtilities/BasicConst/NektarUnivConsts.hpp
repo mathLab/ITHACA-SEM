@@ -10,7 +10,6 @@
 // University of Utah (USA) and Department of Aeronautics, Imperial
 // College London (UK).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -58,6 +57,9 @@ namespace Nektar
         // Tolerances for mesh generation and CAD handling
         static const NekDouble GeomTol = 1E-2;
         static const NekDouble CoinTol = 1E-6;
+
+        // Factor for tolerance for floating point comparison
+        static const unsigned int kNekFloatCompFact = 4;
     }
 } //end of namespace
 

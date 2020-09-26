@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -36,10 +35,12 @@
 #include <string>
 using namespace std;
 
-#include "ProcessFieldFromString.h"
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+#include "ProcessFieldFromString.h"
 
 namespace Nektar
 {
@@ -71,6 +72,8 @@ ProcessFieldFromString::~ProcessFieldFromString(void)
 
 void ProcessFieldFromString::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     // Check if required parameter fieldstr was provided
     ASSERTL0(m_config["fieldstr"].m_beenSet, "fieldstr must be specified");
 
@@ -139,7 +142,7 @@ void ProcessFieldFromString::Process(po::variables_map &vm)
     }
 
     // Create new function
-    LibUtilities::AnalyticExpressionEvaluator strEval;
+    LibUtilities::Interpreter strEval;
     int exprId      = -1;
     string fieldstr = m_config["fieldstr"].as<string>();
     exprId          = strEval.DefineFunction(varstr.c_str(), fieldstr);

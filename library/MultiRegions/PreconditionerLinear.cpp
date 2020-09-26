@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -45,7 +44,7 @@
 #endif
 
 #include <LocalRegions/MatrixKey.h>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 
@@ -62,7 +61,7 @@ namespace Nektar
                     "FullLinearSpace",
                     PreconditionerLinear::create,
                     "Full Linear space inverse Preconditioning");
- 
+
         std::string PreconditionerLinear::solveType =
             LibUtilities::SessionReader::RegisterDefaultSolverInfo(
                 "LinearPreconSolver",
@@ -81,24 +80,24 @@ namespace Nektar
         /**
          * @class PreconditionerLinear
          *
-         * This class implements preconditioning for the conjugate 
+         * This class implements preconditioning for the conjugate
 	 * gradient matrix solver.
 	 */
-        
+
         PreconditionerLinear::PreconditionerLinear(
             const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
             : Preconditioner(plinsys, pLocToGloMap)
         {
         }
-        
+
         void PreconditionerLinear::v_InitObject()
         {
         }
 
         void PreconditionerLinear::v_BuildPreconditioner()
         {
-            GlobalSysSolnType sType  = m_locToGloMap->GetGlobalSysSolnType();
+            GlobalSysSolnType sType  = m_locToGloMap.lock()->GetGlobalSysSolnType();
             ASSERTL0(sType == eIterativeStaticCond || sType == ePETScStaticCond,
                      "This type of preconditioning is not implemented "
                      "for this solver");
@@ -118,9 +117,11 @@ namespace Nektar
                 {
                     linSolveType = ePETScFullMatrix;
 #ifndef NEKTAR_USING_PETSC
-                    ASSERTL0(false, "Nektar++ has not been compiled with "
-                                    "PETSc support.");
+                    NEKERROR(ErrorUtil::efatal,
+                             "Nektar++ has not been compiled with "
+                             "PETSc support.");
 #endif
+                    break;
                 }
                 case eLinearPreconXxt:
                 default:
@@ -130,7 +131,7 @@ namespace Nektar
                 }
             }
 
-            m_vertLocToGloMap = m_locToGloMap->LinearSpaceMap(*expList, linSolveType);
+            m_vertLocToGloMap = m_locToGloMap.lock()->LinearSpaceMap(*expList, linSolveType);
 
             // Generate linear solve system.
             StdRegions::MatrixType mType =
@@ -181,7 +182,7 @@ namespace Nektar
             const Array<OneD, NekDouble>& pNonVertOutput,
             Array<OneD, NekDouble>& pVertForce)
             {
-            GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
+            GlobalSysSolnType solvertype=m_locToGloMap.lock()->GetGlobalSysSolnType();
             switch(solvertype)
             {
                 case MultiRegions::eIterativeStaticCond:
@@ -195,10 +196,10 @@ namespace Nektar
 
                     // Global to local for linear solver (different from above)
                     Array<OneD, int> LocToGlo = m_vertLocToGloMap->GetLocalToGlobalMap();
-                    
+
                     // number of Dir coeffs in from full problem
-                    int nDirFull = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-                    
+                    int nDirFull = m_locToGloMap.lock()->GetNumGlobalDirBndCoeffs();
+
                     Array<OneD,NekDouble> In(nglo,0.0);
                     Array<OneD,NekDouble> Out(nglo,0.0);
 
@@ -211,29 +212,29 @@ namespace Nektar
                             In[LocToGlo[i]] = pInput[val-nDirFull];
                         }
                     }
-                    
-                    // Do solve without enforcing any boundary conditions. 
+
+                    // Do solve without enforcing any boundary conditions.
                     m_vertLinsys->SolveLinearSystem(
                         m_vertLocToGloMap->GetNumGlobalCoeffs(),
                         In,Out,m_vertLocToGloMap,
                         m_vertLocToGloMap->GetNumGlobalDirBndCoeffs());
-                    
-                    
+
+
                     if(pNonVertOutput != NullNekDouble1DArray)
                     {
-                        ASSERTL1(pNonVertOutput.num_elements() >= pOutput.num_elements(),"Non Vert output is not of sufficient length");
-                        Vmath::Vcopy(pOutput.num_elements(),pNonVertOutput,1,pOutput,1);
+                        ASSERTL1(pNonVertOutput.size() >= pOutput.size(),"Non Vert output is not of sufficient length");
+                        Vmath::Vcopy(pOutput.size(),pNonVertOutput,1,pOutput,1);
                     }
                     else
                     {
                         //Copy input to output as a unit preconditioner on
                         //any other value
-                        Vmath::Vcopy(pInput.num_elements(),pInput,1,pOutput,1);
+                        Vmath::Vcopy(pInput.size(),pInput,1,pOutput,1);
                     }
-                    
+
                     if(pVertForce != NullNekDouble1DArray)
                     {
-                        Vmath::Zero(pVertForce.num_elements(),pVertForce,1);
+                        Vmath::Zero(pVertForce.size(),pVertForce,1);
                         // Scatter back soln from linear solve
                         for(i = 0; i < nloc; ++i)
                         {

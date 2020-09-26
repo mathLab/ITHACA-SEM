@@ -43,45 +43,154 @@
 
 namespace Nektar
 {
-    class PulseWavePressureArea;
-    typedef std::shared_ptr<PulseWavePressureArea>  PulseWavePressureAreaSharedPtr;
-    
-    static PulseWavePressureAreaSharedPtr NullPulseWavePressureAreaSharedPtr;
 
-    typedef LibUtilities::NekFactory< std::string, 
-        PulseWavePressureArea, 
-        Array<OneD, MultiRegions::ExpListSharedPtr>&, 
-        const LibUtilities::SessionReaderSharedPtr& > PressureAreaFactory;
-    PressureAreaFactory& GetPressureAreaFactory();
-    
-    class PulseWavePressureArea
-    {
+class PulseWavePressureArea;
+
+typedef std::shared_ptr<PulseWavePressureArea> PulseWavePressureAreaSharedPtr;
+
+static PulseWavePressureAreaSharedPtr NullPulseWavePressureAreaSharedPtr;
+
+typedef LibUtilities::NekFactory<std::string, PulseWavePressureArea,
+                                  Array<OneD, MultiRegions::ExpListSharedPtr> &,
+                                  const LibUtilities::SessionReaderSharedPtr &>
+    PressureAreaFactory;
+PressureAreaFactory &GetPressureAreaFactory();
+
+class PulseWavePressureArea
+{
     public:
-        PulseWavePressureArea(Array<OneD, MultiRegions::ExpListSharedPtr> &pVessel,
-                          const LibUtilities::SessionReaderSharedPtr &pSession);
+        PulseWavePressureArea(Array<OneD, MultiRegions::ExpListSharedPtr>
+                &pVessel, const LibUtilities::SessionReaderSharedPtr &pSession);
 
         virtual ~PulseWavePressureArea();
 
-        inline void DoPressure();
+        inline void GetPressure(NekDouble &P, const NekDouble &beta,
+                const NekDouble &A, const NekDouble &A0, const NekDouble &dAUdx,
+                      const NekDouble &gamma = 0, const NekDouble &alpha = 0.5);
+
+        inline void GetC(NekDouble &c, const NekDouble &beta, const NekDouble &A,
+                             const NekDouble &A0, const NekDouble &alpha = 0.5);
+
+        inline void GetW1(NekDouble &W1, const NekDouble &u,
+                 const NekDouble &beta, const NekDouble &A, const NekDouble &A0,
+                                                  const NekDouble &alpha = 0.5);
+
+        inline void GetW2(NekDouble &W2, const NekDouble &u,
+                 const NekDouble &beta, const NekDouble &A, const NekDouble &A0,
+                                                  const NekDouble &alpha = 0.5);
+
+        inline void GetAFromChars(NekDouble &A, const NekDouble &W1,
+                const NekDouble &W2, const NekDouble &beta, const NekDouble &A0,
+                                                  const NekDouble &alpha = 0.5);
+
+        inline void GetUFromChars(NekDouble &u, const NekDouble &W1,
+                                                           const NekDouble &W2);
+
+        inline void GetCharIntegral(NekDouble &I, const NekDouble &beta,
+         const NekDouble &A, const NekDouble &A0, const NekDouble &alpha = 0.5);
+
+        inline void GetJacobianInverse(NekMatrix<NekDouble> &invJ,
+             const Array<OneD, NekDouble> &Au, const Array<OneD, NekDouble> &uu,
+           const Array<OneD, NekDouble> &beta, const Array<OneD, NekDouble> &A0,
+                  const Array<OneD, NekDouble> &alpha, const std::string &type);
 
     protected:
-        virtual void v_DoPressure()=0;
+        virtual void v_GetPressure(NekDouble &P, const NekDouble &beta,
+                const NekDouble &A, const NekDouble &A0, const NekDouble &dAUdx,
+                  const NekDouble &gamma = 0, const NekDouble &alpha = 0.5) = 0;
+
+        virtual void v_GetC(NekDouble &c, const NekDouble &beta,
+                                        const NekDouble &A, const NekDouble &A0,
+                                              const NekDouble &alpha = 0.5) = 0;
+
+        virtual void v_GetW1(NekDouble &W1, const NekDouble &u,
+                 const NekDouble &beta, const NekDouble &A, const NekDouble &A0,
+                                              const NekDouble &alpha = 0.5) = 0;
+
+        virtual void v_GetW2(NekDouble &W2, const NekDouble &u,
+                 const NekDouble &beta, const NekDouble &A, const NekDouble &A0,
+                                              const NekDouble &alpha = 0.5) = 0;
+
+        virtual void v_GetAFromChars(NekDouble &A, const NekDouble &W1,
+                const NekDouble &W2, const NekDouble &beta, const NekDouble &A0,
+                                              const NekDouble &alpha = 0.5) = 0;
+
+        virtual void v_GetUFromChars(NekDouble &u, const NekDouble &W1,
+                                                       const NekDouble &W2) = 0;
+
+        virtual void v_GetCharIntegral(NekDouble &I, const NekDouble &beta,
+                                        const NekDouble &A, const NekDouble &A0,
+                                              const NekDouble &alpha = 0.5) = 0;
+
+        virtual void v_GetJacobianInverse(NekMatrix<NekDouble> &invJ,
+             const Array<OneD, NekDouble> &Au, const Array<OneD, NekDouble> &uu,
+           const Array<OneD, NekDouble> &beta, const Array<OneD, NekDouble> &A0,
+              const Array<OneD, NekDouble> &alpha, const std::string &type) = 0;
 
         Array<OneD, MultiRegions::ExpListSharedPtr> m_vessels;
-	LibUtilities::SessionReaderSharedPtr m_session;
+        LibUtilities::SessionReaderSharedPtr m_session;
+
+        NekDouble m_PExt;
+        NekDouble m_rho;
 
     private:
-    };
+};
 
-    /**
-     *
-     */
-    inline void PulseWavePressureArea::DoPressure()
-    {
-        v_DoPressure();
-    }
-
-
-
+inline void PulseWavePressureArea::GetPressure(NekDouble &P,
+                 const NekDouble &beta, const NekDouble &A, const NekDouble &A0,
+         const NekDouble &dAUdx, const NekDouble &gamma, const NekDouble &alpha)
+{
+    v_GetPressure(P, beta, A, A0, dAUdx, gamma, alpha);
 }
+
+inline void PulseWavePressureArea::GetC(NekDouble &c, const NekDouble &beta,
+                const NekDouble &A, const NekDouble &A0, const NekDouble &alpha)
+{
+    v_GetC(c, beta, A, A0, alpha);
+}
+
+inline void PulseWavePressureArea::GetW1(NekDouble &W1, const NekDouble &u,
+                 const NekDouble &beta, const NekDouble &A, const NekDouble &A0,
+                                                         const NekDouble &alpha)
+{
+    v_GetW1(W1, u, beta, A, A0, alpha);
+}
+
+inline void PulseWavePressureArea::GetW2(NekDouble &W2, const NekDouble &u,
+                 const NekDouble &beta, const NekDouble &A, const NekDouble &A0,
+                                                         const NekDouble &alpha)
+{
+    v_GetW2(W2, u, beta, A, A0, alpha);
+}
+
+inline void PulseWavePressureArea::GetAFromChars(NekDouble &A,
+                                       const NekDouble &W1, const NekDouble &W2,
+             const NekDouble &beta, const NekDouble &A0, const NekDouble &alpha)
+{
+    v_GetAFromChars(A, W1, W2, beta, A0, alpha);
+}
+
+inline void PulseWavePressureArea::GetUFromChars(NekDouble &u,
+                                       const NekDouble &W1, const NekDouble &W2)
+{
+    v_GetUFromChars(u, W1, W2);
+}
+
+inline void PulseWavePressureArea::GetCharIntegral(NekDouble &I,
+                 const NekDouble &beta, const NekDouble &A, const NekDouble &A0,
+                                                         const NekDouble &alpha)
+{
+    v_GetCharIntegral(I, beta, A, A0, alpha);
+}
+
+inline void PulseWavePressureArea::GetJacobianInverse(
+                                                     NekMatrix<NekDouble> &invJ,
+             const Array<OneD, NekDouble> &Au, const Array<OneD, NekDouble> &uu,
+           const Array<OneD, NekDouble> &beta, const Array<OneD, NekDouble> &A0,
+                   const Array<OneD, NekDouble> &alpha, const std::string &type)
+{
+    v_GetJacobianInverse(invJ, Au, uu, beta, A0, alpha, type);
+}
+
+} // namespace Nektar
 #endif

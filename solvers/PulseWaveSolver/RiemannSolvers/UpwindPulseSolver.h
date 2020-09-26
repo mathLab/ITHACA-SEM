@@ -37,6 +37,8 @@
 #define NEKTAR_SOLVERS_PULSEWAVESOLVER_RIEMANNSOLVER_UPWINDPULSE
 
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+#include <PulseWaveSolver/EquationSystems/PulseWaveSystem.h>
+#include <PulseWaveSolver/EquationSystems/PulseWavePressureArea.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -56,6 +58,11 @@ public:
 protected:
     UpwindPulseSolver(const LibUtilities::SessionReaderSharedPtr& pSession);
 
+    LibUtilities::SessionReaderSharedPtr            m_session;
+    int                                             m_nVariables;
+    Array<OneD, MultiRegions::ExpListSharedPtr>     m_vessels;
+    PulseWavePressureAreaSharedPtr                  m_pressureArea;
+
     virtual void v_Solve(const int nDim,
                          const Array<OneD, const Array<OneD, NekDouble>> &Fwd,
                          const Array<OneD, const Array<OneD, NekDouble>> &Bwd,
@@ -63,7 +70,7 @@ protected:
 
     void RiemannSolverUpwind(NekDouble AL, NekDouble uL, NekDouble AR,
                              NekDouble uR, NekDouble &Aflux, NekDouble &uflux,
-                             NekDouble A_0, NekDouble beta, NekDouble n);
+                             NekDouble A0, NekDouble beta, NekDouble n, NekDouble alpha = 0.5);
 };
 }
 

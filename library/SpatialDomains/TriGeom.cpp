@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -84,6 +83,7 @@ TriGeom::TriGeom(const int id,
 }
 
 TriGeom::TriGeom(const TriGeom &in)
+    : Geometry2D(in)
 {
     // From Geometry
     m_shapeType = in.m_shapeType;
@@ -116,49 +116,74 @@ NekDouble TriGeom::v_GetCoord(const int i,
 }
 
 StdRegions::Orientation TriGeom::GetFaceOrientation(const TriGeom &face1,
-                                                    const TriGeom &face2)
+                              const TriGeom &face2, bool doRot, int dir,
+                              NekDouble angle, NekDouble tol)
 {
-    return GetFaceOrientation(face1.m_verts, face2.m_verts);
+    return GetFaceOrientation(face1.m_verts, face2.m_verts,
+                              doRot, dir, angle, tol);
 }
 
 StdRegions::Orientation TriGeom::GetFaceOrientation(
-    const PointGeomVector &face1, const PointGeomVector &face2)
+              const PointGeomVector &face1, const PointGeomVector &face2,
+              bool doRot, int dir, NekDouble angle, NekDouble tol)
 {
     int i, j, vmap[3] = {-1, -1, -1};
-    NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
 
-    // For periodic faces, we calculate the vector between the centre
-    // points of the two faces. (For connected faces this will be
-    // zero). We can then use this to determine alignment later in the
-    // algorithm.
-    for (i = 0; i < 3; ++i)
+    if(doRot)
     {
-        cx += (*face2[i])(0) - (*face1[i])(0);
-        cy += (*face2[i])(1) - (*face1[i])(1);
-        cz += (*face2[i])(2) - (*face1[i])(2);
-    }
-    cx /= 3;
-    cy /= 3;
-    cz /= 3;
+        PointGeom rotPt;
 
-    // Now construct a mapping which takes us from the vertices of one
-    // face to the other. That is, vertex j of face2 corresponds to
-    // vertex vmap[j] of face1.
-    for (i = 0; i < 3; ++i)
-    {
-        x = (*face1[i])(0);
-        y = (*face1[i])(1);
-        z = (*face1[i])(2);
-        for (j = 0; j < 3; ++j)
+        for (i = 0; i < 3; ++i)
         {
-            x1 = (*face2[j])(0) - cx;
-            y1 = (*face2[j])(1) - cy;
-            z1 = (*face2[j])(2) - cz;
-            if (sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) +
-                     (z1 - z) * (z1 - z)) < 1e-8)
+            rotPt.Rotate((*face1[i]), dir, angle);
+            for (j = 0; j < 3; ++j)
             {
-                vmap[j] = i;
+                if (rotPt.dist(*face2[j]) < tol)
+                {
+                    vmap[j] = i;
+                    break;
+                }
+            }
+        }
+    }
+    else
+    {
+
+        NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
+
+        // For periodic faces, we calculate the vector between the centre
+        // points of the two faces. (For connected faces this will be
+        // zero). We can then use this to determine alignment later in the
+        // algorithm.
+        for (i = 0; i < 3; ++i)
+        {
+            cx += (*face2[i])(0) - (*face1[i])(0);
+            cy += (*face2[i])(1) - (*face1[i])(1);
+            cz += (*face2[i])(2) - (*face1[i])(2);
+        }
+        cx /= 3;
+        cy /= 3;
+        cz /= 3;
+
+        // Now construct a mapping which takes us from the vertices of one
+        // face to the other. That is, vertex j of face2 corresponds to
+        // vertex vmap[j] of face1.
+        for (i = 0; i < 3; ++i)
+        {
+            x = (*face1[i])(0);
+            y = (*face1[i])(1);
+            z = (*face1[i])(2);
+            for (j = 0; j < 3; ++j)
+            {
+                x1 = (*face2[j])(0) - cx;
+                y1 = (*face2[j])(1) - cy;
+                z1 = (*face2[j])(2) - cz;
+                if (sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) +
+                         (z1 - z) * (z1 - z)) < 1e-8)
+                {
+                    vmap[j] = i;
                 break;
+                }
             }
         }
     }
@@ -167,30 +192,30 @@ StdRegions::Orientation TriGeom::GetFaceOrientation(
     {
         switch (vmap[0])
         {
-            case 0:
-                return StdRegions::eDir1FwdDir1_Dir2FwdDir2;
-                break;
-            case 1:
-                return StdRegions::eDir1FwdDir2_Dir2BwdDir1;
-                break;
-            case 2:
-                return StdRegions::eDir1BwdDir1_Dir2BwdDir2;
-                break;
+        case 0:
+            return StdRegions::eDir1FwdDir1_Dir2FwdDir2;
+            break;
+        case 1:
+            return StdRegions::eDir1FwdDir2_Dir2BwdDir1;
+            break;
+        case 2:
+            return StdRegions::eDir1BwdDir1_Dir2BwdDir2;
+            break;
         }
     }
     else
     {
         switch (vmap[0])
         {
-            case 0:
-                return StdRegions::eDir1FwdDir2_Dir2FwdDir1;
-                break;
-            case 1:
-                return StdRegions::eDir1BwdDir1_Dir2FwdDir2;
-                break;
-            case 2:
-                return StdRegions::eDir1BwdDir2_Dir2BwdDir1;
-                break;
+        case 0:
+            return StdRegions::eDir1FwdDir2_Dir2FwdDir1;
+            break;
+        case 1:
+            return StdRegions::eDir1BwdDir1_Dir2FwdDir2;
+            break;
+        case 2:
+            return StdRegions::eDir1BwdDir2_Dir2BwdDir1;
+            break;
         }
     }
 
@@ -242,7 +267,7 @@ void TriGeom::v_FillGeom()
     }
 
     int i, j, k;
-    int nEdgeCoeffs = m_xmap->GetEdgeNcoeffs(0);
+    int nEdgeCoeffs = m_xmap->GetTraceNcoeffs(0);
 
     if (m_curve)
     {
@@ -294,7 +319,17 @@ void TriGeom::v_FillGeom()
                 const int offset = 3 + i * (nEdgePts - 2);
                 NekDouble maxDist = 0.0;
 
-                if (m_eorient[i] == StdRegions::eForwards)
+                // Account for different ordering of nodal coordinates
+                // vs. Cartesian ordering of element.
+                StdRegions::Orientation orient = m_eorient[i];
+
+                if (i == 2)
+                {
+                    orient = orient == StdRegions::eForwards ?
+                        StdRegions::eBackwards : StdRegions::eForwards;
+                }
+
+                if (orient == StdRegions::eForwards)
                 {
                     for (j = 0; j < nEdgePts - 2; ++j)
                     {
@@ -421,7 +456,7 @@ void TriGeom::v_FillGeom()
     for (i = 0; i < kNedges; i++)
     {
         m_edges[i]->FillGeom();
-        m_xmap->GetEdgeToElementMap(i, m_eorient[i], mapArray, signArray);
+        m_xmap->GetTraceToElementMap(i,  mapArray, signArray, m_eorient[i]);
 
         nEdgeCoeffs = m_edges[i]->GetXmap()->GetNcoeffs();
 
@@ -496,8 +531,8 @@ NekDouble TriGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
 
         int min_i = Vmath::Imin(npts, tmpx, 1);
 
-        Lcoords[0] = za[min_i % za.num_elements()];
-        Lcoords[1] = zb[min_i / za.num_elements()];
+        Lcoords[0] = za[min_i % za.size()];
+        Lcoords[1] = zb[min_i / za.size()];
 
         // recover cartesian coordinate from collapsed coordinate.
         Lcoords[0] = (1.0 + Lcoords[0]) * (1.0 - Lcoords[1]) / 2 - 1.0;
@@ -513,16 +548,35 @@ bool TriGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                               NekDouble tol,
                               NekDouble &resid)
 {
-    ASSERTL1(gloCoord.num_elements() >= 2,
-             "Two dimensional geometry expects at least two coordinates.");
+    //Rough check if within twice min/max point
+    if (GetMetricInfo()->GetGtype() != eRegular)
+    {
+        if (!MinMaxCheck(gloCoord))
+        {
+            return false;
+        }
+    }
 
+    // Convert to the local (eta) coordinates.
     resid = GetLocCoords(gloCoord, stdCoord);
+
     if (stdCoord[0] >= -(1 + tol) && stdCoord[1] >= -(1 + tol) &&
         stdCoord[0] + stdCoord[1] <= tol)
     {
         return true;
     }
+
+    //Clamp local coords
+    ClampLocCoords(stdCoord, tol);
+
     return false;
+}
+
+int TriGeom::v_GetDir(const int i, const int j) const
+{
+    boost::ignore_unused(j); // required in 3D shapes
+
+    return i == 0 ? 0:1;
 }
 
 void TriGeom::v_Reset(CurveMap &curvedEdges, CurveMap &curvedFaces)

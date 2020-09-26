@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -125,17 +124,17 @@ namespace Nektar
                 const DNekScalBlkMatSharedPtr         pInvD,
                 const std::shared_ptr<AssemblyMap>   &locToGloMap);
 
-            virtual DNekScalBlkMatSharedPtr v_PreSolve(
-                int                     scLevel,
-                NekVector<NekDouble>   &F_GlobBnd);
+            void v_PreSolve(int scLevel,
+                            Array<OneD, NekDouble>  &F_bnd);
             virtual void v_BasisFwdTransform(
-                Array<OneD, NekDouble>& pInOut,
-                int                     offset);
-            virtual void v_BasisBwdTransform(
                 Array<OneD, NekDouble>& pInOut);
+            virtual void v_CoeffsBwdTransform(
+                Array<OneD, NekDouble>& pInOut);
+            virtual void v_CoeffsFwdTransform(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
 
         private:
-            DNekScalBlkMatSharedPtr                  m_S1Blk;
             /// Dense storage for block Schur complement matrix
             std::vector<double>                      m_storage;
             /// Vector of pointers to local matrix data

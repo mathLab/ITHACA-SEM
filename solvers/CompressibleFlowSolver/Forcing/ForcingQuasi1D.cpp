@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <CompressibleFlowSolver/Forcing/ForcingQuasi1D.h>
 
 using namespace std;
@@ -45,8 +46,9 @@ std::string ForcingQuasi1D::className = SolverUtils::GetForcingFactory().
                                     "Quasi-1D nozzle Forcing");
 
 ForcingQuasi1D::ForcingQuasi1D(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-    : Forcing(pSession)
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const std::weak_ptr<SolverUtils::EquationSystem> &pEquation)
+    : Forcing(pSession, pEquation)
 {
 }
 
@@ -125,6 +127,8 @@ void ForcingQuasi1D::v_Apply(
               Array<OneD, Array<OneD, NekDouble> >&         outarray,
         const NekDouble&                                    time)
 {
+    boost::ignore_unused(time);
+
     int nPoints = pFields[0]->GetTotPoints();
 
     // Get (E+p)

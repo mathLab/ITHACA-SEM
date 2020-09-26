@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -392,9 +391,10 @@ namespace Nektar
 
         /**
          * @param   keyTgt      Target point distributions.
-         * FOR 1D: Jac =(partial x/ partial xi); factor = Jac =(partial xi/ partial x)
          * @returns             Derivative factors evaluated at the target
          *                      point distributions.
+         * A 1D example: /f$ Jac =(\partial x/ \partial \xi) /f$ ; 
+         *               /f$ factor = 1/Jac = (\partial \xi/ \partial x) /f$ 
          */
         Array<TwoD, NekDouble> GeomFactors::ComputeDerivFactors(
                 const LibUtilities::PointsKeyVector& keyTgt) const
@@ -472,6 +472,134 @@ namespace Nektar
             }
 
             return factors;
+        }
+
+        void GeomFactors::ComputeMovingFrames(
+            const LibUtilities::PointsKeyVector& keyTgt,
+            const SpatialDomains::GeomMMF MMFdir,
+            const Array<OneD, const NekDouble> &factors,
+                  Array<OneD, Array<OneD, NekDouble> > &movingframes)
+        {
+            ASSERTL1(keyTgt.size() == m_expDim,
+                     "Dimension of target point distribution does not match "
+                     "expansion dimension.");
+
+            int i = 0, k = 0;
+            int ptsTgt   = 1;
+            int nq = 1;
+
+            for (i = 0; i < m_expDim; ++i)
+            {
+                nq   *= keyTgt[i].GetNumPoints();
+            }
+
+            if (m_type == eDeformed)
+            {
+                // Allocate storage and compute number of points
+                for (i = 0; i < m_expDim; ++i)
+                {
+                    ptsTgt   *= keyTgt[i].GetNumPoints();
+                }
+            }
+
+            // Get derivative at geometry points
+            DerivStorage deriv = ComputeDeriv(keyTgt);
+
+            // number of moving frames is requited to be 3, even for surfaces
+            int MFdim = 3;
+
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > MFtmp(MFdim);
+
+            // Compute g_{ij} as t_i \cdot t_j and store in tmp
+            for (i = 0; i < MFdim; ++i)
+            {
+                MFtmp[i] = Array<OneD, Array<OneD, NekDouble> >(m_coordDim);
+                for (k = 0; k < m_coordDim; ++k)
+                {
+                    MFtmp[i][k] = Array<OneD, NekDouble>(nq);
+                }
+            }
+
+            // Compute g_{ij} as t_i \cdot t_j and store in tmp
+            for (i = 0; i < MFdim-1; ++i)
+            {
+                for (k = 0; k < m_coordDim; ++k)
+                {
+                    if (m_type == eDeformed)
+                    {
+                        Vmath::Vcopy(ptsTgt, &deriv[i][k][0], 1,
+                                             &MFtmp[i][k][0], 1);
+                    }
+                    else
+                    {
+                        Vmath::Fill(nq, deriv[i][k][0], MFtmp[i][k], 1);
+                    }
+                }
+            }
+
+            // Direction of MF1 is preserved: MF2 is considered in the same
+            // tangent plane as MF1. MF3 is computed by cross product of MF1
+            // and MF2. MF2 is consequently computed as the cross product of
+            // MF3 and MF1.
+            Array<OneD, Array<OneD,NekDouble> > PrincipleDir(m_coordDim);
+            for (int k=0; k<m_coordDim; k++)
+            {
+                PrincipleDir[k] = Array<OneD, NekDouble>(nq);
+            }
+
+            if( !(MMFdir == eLOCAL) )
+            {
+                ComputePrincipleDirection(keyTgt, MMFdir,
+                                          factors, PrincipleDir);
+            }
+
+            // MF3 = MF1 \times MF2
+            VectorCrossProd(MFtmp[0], MFtmp[1], MFtmp[2]);
+
+            // Normalizing MF3
+            VectorNormalise(MFtmp[2]);
+
+            if ( !(MMFdir == eLOCAL) )
+            {
+                Array<OneD, NekDouble> temp(nq, 0.0);
+
+                // Reorient MF1 along the PrincipleDir
+                for (i = 0; i < m_coordDim; ++i)
+                {
+                    Vmath::Vvtvp(nq, MFtmp[2][i],     1,
+                                     PrincipleDir[i], 1,
+                                     temp,            1,
+                                     temp,            1);
+                }
+                Vmath::Neg(nq, temp, 1);
+
+                // u2 = v2 - < u1 , v2 > ( u1 / < u1, u1 > )
+                for (i = 0; i < m_coordDim; ++i)
+                {
+                    Vmath::Vvtvp(nq, temp,            1,
+                                     MFtmp[2][i],     1,
+                                     PrincipleDir[i], 1,
+                                     MFtmp[0][i],     1);
+                }
+            }
+
+            // Normalizing MF1
+            VectorNormalise(MFtmp[0]);
+
+            // MF2 = MF3 \times MF1
+            VectorCrossProd(MFtmp[2], MFtmp[0], MFtmp[1]);
+
+            // Normalizing MF2
+            VectorNormalise(MFtmp[1]);
+
+            for (i = 0; i < MFdim; ++i)
+            {
+                for (k = 0; k < m_coordDim; ++k)
+                {
+                    Vmath::Vcopy(nq, &MFtmp[i][k][0],                  1,
+                                     &movingframes[i*m_coordDim+k][0], 1);
+                }
+            }
         }
 
 
@@ -591,11 +719,11 @@ namespace Nektar
                     const Array<TwoD, const NekDouble>& src,
                     Array<TwoD, NekDouble>& tgt) const
         {
-            ASSERTL1(src.num_elements() == tgt.num_elements(),
+            ASSERTL1(src.size() == tgt.size(),
                      "Source matrix is of different size to destination"
                      "matrix for computing adjoint.");
 
-            int n = src[0].num_elements();
+            int n = src[0].size();
             switch (m_expDim)
             {
                 case 1:
@@ -630,5 +758,247 @@ namespace Nektar
                 }
             }
         }
-    }; //end of namespace
-}; //end of namespace
+
+
+        /**
+         *
+         */
+        void GeomFactors::ComputePrincipleDirection(
+            const LibUtilities::PointsKeyVector& keyTgt,
+            const SpatialDomains::GeomMMF MMFdir,
+            const Array<OneD, const NekDouble> &factors,
+                  Array<OneD, Array<OneD,NekDouble> > &output)
+        {
+            int nq = output[0].size();
+
+            output = Array<OneD,Array<OneD,NekDouble> >(m_coordDim);
+            for (int i = 0; i < m_coordDim; ++i)
+            {
+                output[i] = Array<OneD, NekDouble> (nq, 0.0);
+            }
+
+            // Construction of Connection
+            switch(MMFdir)
+            {
+                // projection to x-axis
+                case eTangentX:
+                {
+                    Vmath::Fill(nq, 1.0, output[0], 1);
+                    break;
+                }
+                case eTangentY:
+                {
+                    Vmath::Fill(nq, 1.0, output[1], 1);
+                    break;
+                }
+                case eTangentXY:
+                {
+                    Vmath::Fill(nq, sqrt(2.0), output[0], 1);
+                    Vmath::Fill(nq, sqrt(2.0), output[1], 1);
+                    break;
+                }
+                case eTangentZ:
+                {
+                    Vmath::Fill(nq, 1.0, output[2], 1);
+                    break;
+                }
+                case eTangentCircular:
+                {
+                    // Tangent direction depends on spatial location.
+                    Array<OneD, Array<OneD, NekDouble> > x(m_coordDim);
+                    for (int k = 0; k < m_coordDim; k++)
+                    {
+                        x[k] = Array<OneD, NekDouble>(nq);
+                    }
+
+                    // m_coords are StdExpansions which store the mapping
+                    // between the std element and the local element. Bwd
+                    // transforming the std element minimum basis gives a
+                    // minimum physical basis for geometry. Need to then
+                    // interpolate this up to the quadrature basis.
+                    int nqtot_map = 1;
+                    LibUtilities::PointsKeyVector map_points(m_expDim);
+                    for (int i = 0; i < m_expDim; ++i)
+                    {
+                        map_points[i]  = m_xmap->GetBasis(i)->GetPointsKey();
+                        nqtot_map     *= map_points[i].GetNumPoints();
+                    }
+                    Array<OneD, NekDouble> tmp(nqtot_map);
+                    for (int k = 0; k < m_coordDim; k++)
+                    {
+                        m_xmap->BwdTrans(m_coords[k], tmp);
+                        Interp(map_points, tmp, keyTgt, x[k]);
+                    }
+
+                    // circular around the center of the domain
+                    NekDouble radius, xc=0.0, yc=0.0, xdis, ydis;
+                    NekDouble la, lb;
+
+                    ASSERTL1(factors.size() >= 4,
+                             "factors is too short.");
+
+                    la = factors[0];
+                    lb = factors[1];
+                    xc = factors[2];
+                    yc = factors[3];
+
+                    for (int i = 0; i < nq; i++)
+                    {
+                        xdis = x[0][i]-xc;
+                        ydis = x[1][i]-yc;
+                        radius = sqrt(xdis*xdis/la/la+ydis*ydis/lb/lb);
+                        output[0][i] = ydis/radius;
+                        output[1][i] = -1.0*xdis/radius;
+                    }
+                    break;
+                }
+                case eTangentIrregular:
+                {
+                    // Tangent direction depends on spatial location.
+                    Array<OneD, Array<OneD, NekDouble> > x(m_coordDim);
+                    for (int k = 0; k < m_coordDim; k++)
+                    {
+                        x[k] = Array<OneD, NekDouble>(nq);
+                    }
+
+                    int nqtot_map = 1;
+                    LibUtilities::PointsKeyVector map_points(m_expDim);
+                    for (int i = 0; i < m_expDim; ++i)
+                    {
+                        map_points[i]  = m_xmap->GetBasis(i)->GetPointsKey();
+                        nqtot_map     *= map_points[i].GetNumPoints();
+                    }
+                    Array<OneD, NekDouble> tmp(nqtot_map);
+                    for (int k = 0; k < m_coordDim; k++)
+                    {
+                        m_xmap->BwdTrans(m_coords[k], tmp);
+                        Interp(map_points, tmp, keyTgt, x[k]);
+                    }
+
+                    // circular around the center of the domain
+                    NekDouble xtan, ytan, mag;
+                    for (int i = 0; i < nq; i++)
+                    {
+                        xtan = -1.0*(x[1][i]*x[1][i]*x[1][i] + x[1][i]);
+                        ytan = 2.0*x[0][i];
+                        mag  = sqrt(xtan*xtan + ytan*ytan);
+                        output[0][i] = xtan/mag;
+                        output[1][i] = ytan/mag;
+                    }
+                    break;
+                }
+                case eTangentNonconvex:
+                {
+                    // Tangent direction depends on spatial location.
+                    Array<OneD, Array<OneD, NekDouble> > x(m_coordDim);
+                    for (int k = 0; k < m_coordDim; k++)
+                    {
+                        x[k] = Array<OneD, NekDouble>(nq);
+                    }
+
+                    int nqtot_map = 1;
+                    LibUtilities::PointsKeyVector map_points(m_expDim);
+                    for (int i = 0; i < m_expDim; ++i)
+                    {
+                        map_points[i]  = m_xmap->GetBasis(i)->GetPointsKey();
+                        nqtot_map     *= map_points[i].GetNumPoints();
+                    }
+                    Array<OneD, NekDouble> tmp(nqtot_map);
+                    for (int k = 0; k < m_coordDim; k++)
+                    {
+                        m_xmap->BwdTrans(m_coords[k], tmp);
+                        Interp(map_points, tmp, keyTgt, x[k]);
+                    }
+
+                    // circular around the center of the domain
+                    NekDouble xtan, ytan, mag;
+                    for (int i = 0; i < nq; i++)
+                    {
+                        xtan = -2.0*x[1][i]*x[1][i]*x[1][i] + x[1][i];
+                        ytan = sqrt(3.0)*x[0][i];
+                        mag  = sqrt(xtan*xtan + ytan*ytan);
+                        output[0][i] = xtan/mag;
+                        output[1][i] = ytan/mag;
+                    }
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
+        }
+
+
+        /**
+         *
+         */
+        void GeomFactors::VectorNormalise(
+            Array<OneD, Array<OneD, NekDouble> > &array)
+        {
+            int ndim = array.size();
+            ASSERTL0(ndim > 0, "Number of components must be > 0.");
+            for (int i = 1; i < ndim; ++i)
+            {
+                ASSERTL0(array[i].size() == array[0].size(),
+                         "Array size mismatch in coordinates.");
+            }
+
+            int nq        = array[0].size();
+            Array<OneD, NekDouble> norm (nq, 0.0);
+
+            // Compute the norm of each vector.
+            for (int i = 0; i < ndim; ++i)
+            {
+                Vmath::Vvtvp(nq, array[i],  1,
+                                 array[i],  1,
+                                 norm,      1,
+                                 norm,      1);
+            }
+
+            Vmath::Vsqrt(nq, norm, 1, norm, 1);
+
+            // Normalise the vectors by the norm
+            for (int i = 0; i < ndim; ++i)
+            {
+                Vmath::Vdiv(nq, array[i], 1, norm, 1, array[i], 1);
+            }
+        }
+
+
+        /**
+         * @brief Computes the vector cross-product in 3D of \a v1 and \a v2,
+         * storing the result in \a v3.
+         *
+         * @param   v1          First input vector.
+         * @param   v2          Second input vector.
+         * @param   v3          Output vector computed to be orthogonal to
+         *                      both \a v1 and \a v2.
+         */
+        void GeomFactors::VectorCrossProd(
+            const Array<OneD, const Array<OneD, NekDouble> > &v1,
+            const Array<OneD, const Array<OneD, NekDouble> > &v2,
+                  Array<OneD,       Array<OneD, NekDouble> > &v3)
+        {
+            ASSERTL0(v1.size() == 3,
+                     "Input 1 has dimension not equal to 3.");
+            ASSERTL0(v2.size() == 3,
+                     "Input 2 has dimension not equal to 3.");
+            ASSERTL0(v3.size() == 3,
+                     "Output vector has dimension not equal to 3.");
+
+            int nq = v1[0].size();
+            Array<OneD, NekDouble> temp(nq);
+
+            Vmath::Vmul (nq, v1[2], 1, v2[1], 1, temp, 1);
+            Vmath::Vvtvm(nq, v1[1], 1, v2[2], 1, temp, 1, v3[0], 1);
+
+            Vmath::Vmul (nq, v1[0], 1, v2[2], 1, temp, 1);
+            Vmath::Vvtvm(nq, v1[2], 1, v2[0], 1, temp, 1, v3[1], 1);
+
+            Vmath::Vmul (nq, v1[1], 1, v2[0], 1, temp, 1);
+            Vmath::Vvtvm(nq, v1[0], 1, v2[1], 1, temp, 1, v3[2], 1);
+        }
+
+    } //end of namespace
+} //end of namespace

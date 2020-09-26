@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -88,7 +87,7 @@ void ProcessCreateExp::Process(po::variables_map &vm)
             m_f->m_numHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
 
             // Set up Expansion information to use mode order from field
-            m_f->m_graph->SetExpansions(m_f->m_fielddef);
+            m_f->m_graph->SetExpansionInfo(m_f->m_fielddef);
         }
         else
         {
@@ -142,7 +141,7 @@ void ProcessCreateExp::Process(po::variables_map &vm)
         if (vm.count("output-points"))
         {
             int nPointsNew = vm["output-points"].as<int>();
-            m_f->m_graph->SetExpansionsToPointOrder(nPointsNew);
+            m_f->m_graph->SetExpansionInfoToPointOrder(nPointsNew);
         }
 
         if (m_f->m_verbose)

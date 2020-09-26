@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -41,7 +40,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <MultiRegions/ExpList3D.h>
+#include <MultiRegions/ExpList.h>
 #include <Collections/Collection.h>
 #include <SpatialDomains/MeshGraph.h>
 
@@ -54,11 +53,10 @@ MultiRegions::ExpListSharedPtr SetupExpList(
     SpatialDomains::MeshGraphSharedPtr   graph,
     Collections::ImplementationType      impType)
 {
-    graph->SetExpansionsToPolyOrder(N);
+    graph->SetExpansionInfoToNumModes(N);
 
     MultiRegions::ExpListSharedPtr expList =
-        MemoryManager<MultiRegions::ExpList3D>::AllocateSharedPtr(
-            session, graph);
+        MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr(session, graph);
 
     expList->CreateCollections(impType);
 

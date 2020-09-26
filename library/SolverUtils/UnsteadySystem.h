@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,216 +35,216 @@
 #ifndef NEKTAR_SOLVERUTILS_UNSTEADYSYSTEM_H
 #define NEKTAR_SOLVERUTILS_UNSTEADYSYSTEM_H
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
 #include <SolverUtils/EquationSystem.h>
 #include <SolverUtils/Filters/Filter.h>
 
 namespace Nektar
 {
-    namespace SolverUtils
-    {
-        /// Base class for unsteady solvers.
-        class UnsteadySystem : public EquationSystem
-        {
-        public:
-            /// Destructor
-            SOLVER_UTILS_EXPORT virtual ~UnsteadySystem();
+namespace SolverUtils
+{
+/// Base class for unsteady solvers.
+class UnsteadySystem : public EquationSystem
+{
+public:
+    /// Destructor
+    SOLVER_UTILS_EXPORT virtual ~UnsteadySystem();
 
-            /// Calculate the larger time-step mantaining the problem stable.
-            SOLVER_UTILS_EXPORT NekDouble GetTimeStep(
-                const Array<OneD, const Array<OneD, NekDouble> > &inarray);
+    /// Calculate the larger time-step mantaining the problem stable.
+    SOLVER_UTILS_EXPORT NekDouble
+    GetTimeStep(const Array<OneD, const Array<OneD, NekDouble>> &inarray);
 
-            SOLVER_UTILS_EXPORT void SteadyStateResidual(
+    SOLVER_UTILS_EXPORT void SteadyStateResidual(
                 int                         step, 
                 Array<OneD, NekDouble>      &L2)
-            {
-                v_SteadyStateResidual(step,L2);
-            }
+    {
+        v_SteadyStateResidual(step,L2);
+    }
 
-            /// CFL safety factor (comprise between 0 to 1)(may be larger than 1 for implicit solvers).
-            NekDouble m_cflSafetyFactor;
-            NekDouble m_cflNonAcoustic;
-            /// CFL growth rate
-            NekDouble m_CFLGrowth;
-            /// maximun cfl in cfl growth
-            NekDouble m_CFLEnd;
+    /// CFL safety factor (comprise between 0 to 1).
+    NekDouble m_cflSafetyFactor;
+    NekDouble m_cflNonAcoustic;
+    /// CFL growth rate
+    NekDouble m_CFLGrowth;
+    /// maximun cfl in cfl growth
+    NekDouble m_CFLEnd;
 
+protected:
+    /// Number of time steps between outputting status information.
+    int m_infosteps;
+    /// Number of steps between checks for abort conditions.
+    int m_abortSteps;
+    /// Number of time steps between outputting filters information.
+    int m_filtersInfosteps;
+    int m_nanSteps;
+    /// Wrapper to the time integration scheme
+    LibUtilities::TimeIntegrationSchemeSharedPtr    m_intScheme;
+    /// The time integration scheme operators to use.
+    LibUtilities::TimeIntegrationSchemeOperators    m_ode;
+    ///
+    LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr  m_intSoln;
+    ///
+    NekDouble m_epsilon;
+    /// Indicates if explicit or implicit treatment of diffusion is used.
+    bool m_explicitDiffusion;
+    /// Indicates if explicit or implicit treatment of advection is used.
+    bool m_explicitAdvection;
+    /// Indicates if explicit or implicit treatment of reaction is used.
+    bool m_explicitReaction;
+    /// Flag to determine if simulation should start in homogeneous
+    /// forward transformed state.
+    bool m_homoInitialFwd;
 
-        protected:
-            /// Number of time steps between outputting status information.
-            int                                             m_infosteps;
+    /// Tolerance to which steady state should be evaluated at
+    NekDouble m_steadyStateTol;
+    /// Check for steady state at step interval
+    int m_steadyStateSteps;
+    NekDouble m_steadyStateRes   = 1.0;
+    NekDouble m_steadyStateRes0  = 1.0;
 
-            int                                             m_nanSteps;
-            /// Wrapper to the time integration scheme
-            LibUtilities::TimeIntegrationWrapperSharedPtr   m_intScheme;
-            /// The time integration scheme operators to use.
-            LibUtilities::TimeIntegrationSchemeOperators    m_ode;
-            ///
-            LibUtilities::TimeIntegrationSolutionSharedPtr  m_intSoln;
-            ///
-            NekDouble                                       m_epsilon;
-            /// Indicates if explicit or implicit treatment of diffusion is used.
-            bool                                            m_explicitDiffusion;
-            /// Indicates if explicit or implicit treatment of advection is used.
-            bool                                            m_explicitAdvection;
-            /// Indicates if explicit or implicit treatment of reaction is used.
-            bool                                            m_explicitReaction;
-            /// Flag to determine if simulation should start in homogeneous
-            /// forward transformed state.
-            bool                                            m_homoInitialFwd;
+    /// Storage for previous solution for steady-state check
+    Array<OneD, Array<OneD, NekDouble>> m_previousSolution;
+    // Steady-state residual file
+    std::ofstream m_errFile;
 
-            /// Tolerance to which steady state should be evaluated at
-            NekDouble                                       m_steadyStateTol;
-            /// Check for steady state at step interval
-            int                                             m_steadyStateSteps;
+    std::vector<int> m_intVariables;
 
-            NekDouble                                       m_steadyStateRes    =1.0;
-            NekDouble                                       m_steadyStateRes0   =1.0;
+    std::vector<std::pair<std::string, FilterSharedPtr>> m_filters;
 
-            /// Storage for previous solution for steady-state check
-            Array<OneD, Array<OneD, NekDouble> >            m_previousSolution;
-            // Steady-state residual file
-            std::ofstream                                   m_errFile;
+    /// Number of time steps between outputting status information.
+    NekDouble m_filterTimeWarning;
 
-            std::vector<int>                                m_intVariables;
+    /// coefff of spacial derivatives(rhs or m_F in GLM) in calculating the residual of the whole equation(used in unsteady time integrations)
+    NekDouble                                       m_TimeIntegLambda=0.0;
 
-            std::vector<FilterSharedPtr>                    m_filters;
+    NekDouble                                       m_TimeIntegLambdaPrcMat=0.0;
 
-            /// at which time to evaluate the boundary conditions(used in unsteady time integrations)
-            NekDouble                                       m_BndEvaluateTime;
+    NekDouble                                       m_Res0PreviousStep=-1.0;
+    
+    ///Solution of The kth iteration in the Newton method(Nonlinear iteration)
+    Array<OneD,       Array<OneD, NekDouble> >      m_TimeIntegtSol_k;
+    
+    /// Solution at time step n(input valure from timeintegration)
+    Array<OneD,       Array<OneD, NekDouble> >      m_TimeIntegtSol_n;
+    /// Residual of the nonlinear system at the kth iteration in the Newton method(Nonlinear iteration)
+    /// also the b of linearsys(Ax=b) stored to compute Jacobian_
+    Array<OneD,       Array<OneD, NekDouble> >      m_SysEquatResid_k;
+    
+    Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >  m_PrecMatVars;
+    
+    Array<OneD, Array<OneD, NekDouble> >            m_PrecMatVarsOffDiag;
+    
+    DNekBlkMatSharedPtr                             m_PrecMat;
+    Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >  m_PrecMatVarsSingle;
+    SNekBlkMatSharedPtr                             m_PrecMatSingle;
+    
+    bool                                            m_flagPrecMatVarsSingle;
+    bool                                            m_flagPrecondCacheOptmis;
+    bool                                            m_flagImplItsStatistcs;
+    
+    Array<OneD, DNekBlkMatSharedPtr >               m_TraceJac;
+    Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekDouble >>>>  m_TraceJacArray;
+    
+    Array<OneD, DNekBlkMatSharedPtr >               m_TraceJacDeriv;
+    Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekDouble >>>>  m_TraceJacDerivArray;
+    
+    Array<OneD,       Array<OneD, NekDouble> >      m_TraceJacDerivSign;
+    
+    Array<OneD, SNekBlkMatSharedPtr >               m_TraceJacSingle;
+    Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekSingle >>>>  m_TraceJacArraySingle;
+    
+    Array<OneD, SNekBlkMatSharedPtr >               m_TraceJacDerivSingle;
+    Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekSingle >>>>  m_TraceJacDerivArraySingle;
+    
+    Array<OneD,       Array<OneD, NekSingle> >      m_TraceJacDerivSignSingle;
+    
+    Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekSingle >>>>>  m_TraceIPSymJacArraySingle;
+    Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekDouble >>>>>  m_TraceIPSymJacArray;
+    
+    /// estimate the magnitude of each conserved varibles
+    Array<OneD, NekDouble>                          m_magnitdEstimat;
+    
+    /// local time step(notice only for jfnk other see m_cflSafetyFactor)
+    Array<OneD, NekDouble>                          m_locTimeStep;
+    
+    NekDouble   m_inArrayNorm=-1.0;
+    
+    bool m_CalcuPrecMatFlag     = true;
+    
+    int m_CalcuPrecMatCounter  = std::numeric_limits<int>::max();
 
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-            /// coefff of spacial derivatives(rhs or m_F in GLM) in calculating the residual of the whole equation(used in unsteady time integrations)
-            NekDouble                                       m_TimeIntegLambda=0.0;
+    int m_TotLinItePerStep=0;
+    int m_StagesPerStep=1;
+    
+    int m_maxLinItePerNewton;
+    
+    int m_TotNewtonIts  =0;
+    int m_TotGMRESIts   =0;
+    int m_TotOdeRHS     =0;
+    int m_TotImpStages  =0;
+    
+    /// flag to update artificial viscosity
+    bool m_calcuPhysicalAV = true;
+    
+    
+    /// Initialises UnsteadySystem class members.
+    SOLVER_UTILS_EXPORT UnsteadySystem(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const SpatialDomains::MeshGraphSharedPtr &pGraph);
+    
+    /// Init object for UnsteadySystem class.
+    SOLVER_UTILS_EXPORT virtual void v_InitObject();
 
-            NekDouble                                       m_TimeIntegLambdaPrcMat=0.0;
+    /// Get the maximum timestep estimator for cfl control.
+    SOLVER_UTILS_EXPORT NekDouble MaxTimeStepEstimator();
 
-            NekDouble                                       m_Res0PreviousStep=-1.0;
+    /// Solves an unsteady problem.
+    SOLVER_UTILS_EXPORT virtual void v_DoSolve();
 
-            ///Solution of The kth iteration in the Newton method(Nonlinear iteration)
-            Array<OneD,       Array<OneD, NekDouble> >      m_TimeIntegtSol_k;
+    /// Sets up initial conditions.
+    SOLVER_UTILS_EXPORT virtual void v_DoInitialise();
 
-            /// Solution at time step n(input valure from timeintegration)
-            Array<OneD,       Array<OneD, NekDouble> >      m_TimeIntegtSol_n;
-            /// Residual of the nonlinear system at the kth iteration in the Newton method(Nonlinear iteration)
-            /// also the b of linearsys(Ax=b) stored to compute Jacobian_
-            Array<OneD,       Array<OneD, NekDouble> >      m_SysEquatResid_k;
+    /// Print a summary of time stepping parameters.
+    SOLVER_UTILS_EXPORT virtual void v_GenerateSummary(SummaryList &s);
 
-            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >  m_PrecMatVars;
+    /// Print the solution at each solution point in a txt file
+    SOLVER_UTILS_EXPORT virtual void v_AppendOutput1D(
+        Array<OneD, Array<OneD, NekDouble>> &solution1D);
 
-            Array<OneD, Array<OneD, NekDouble> >            m_PrecMatVarsOffDiag;
+    SOLVER_UTILS_EXPORT virtual NekDouble v_GetTimeStep(
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray);
 
-            DNekBlkMatSharedPtr                             m_PrecMat;
-            Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >  m_PrecMatVarsSingle;
-            SNekBlkMatSharedPtr                             m_PrecMatSingle;
+    SOLVER_UTILS_EXPORT virtual bool v_PreIntegrate(int step);
+    SOLVER_UTILS_EXPORT virtual bool v_PostIntegrate(int step);
 
-            bool                                            m_flagPrecMatVarsSingle;
-            bool                                            m_flagPrecondCacheOptmis;
-            bool                                            m_flagImplItsStatistcs;
+    SOLVER_UTILS_EXPORT virtual bool v_RequireFwdTrans()
+    {
+        return true;
+    }
 
-            Array<OneD, DNekBlkMatSharedPtr >               m_TraceJac;
-            Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekDouble >>>>  m_TraceJacArray;
-
-            Array<OneD, DNekBlkMatSharedPtr >               m_TraceJacDeriv;
-            Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekDouble >>>>  m_TraceJacDerivArray;
-
-            Array<OneD,       Array<OneD, NekDouble> >      m_TraceJacDerivSign;
-
-            Array<OneD, SNekBlkMatSharedPtr >               m_TraceJacSingle;
-            Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekSingle >>>>  m_TraceJacArraySingle;
-
-            Array<OneD, SNekBlkMatSharedPtr >               m_TraceJacDerivSingle;
-            Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekSingle >>>>  m_TraceJacDerivArraySingle;
-
-            Array<OneD,       Array<OneD, NekSingle> >      m_TraceJacDerivSignSingle;
-            
-            Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekSingle >>>>>  m_TraceIPSymJacArraySingle;
-            Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekDouble >>>>>  m_TraceIPSymJacArray;
-
-            /// estimate the magnitude of each conserved varibles
-            Array<OneD, NekDouble>                          m_magnitdEstimat;
-
-            /// local time step(notice only for jfnk other see m_cflSafetyFactor)
-            Array<OneD, NekDouble>                          m_locTimeStep;
-
-            NekDouble   m_inArrayNorm=-1.0;
-
-            bool m_CalcuPrecMatFlag     = true;
-
-            int m_CalcuPrecMatCounter  = std::numeric_limits<int>::max();
-
-            int m_TotLinItePerStep=0;
-            int m_StagesPerStep=1;
-
-            int m_maxLinItePerNewton;
-
-            int m_TotNewtonIts  =0;
-            int m_TotGMRESIts   =0;
-            int m_TotOdeRHS     =0;
-            int m_TotImpStages  =0;
-
-            /// flag to update artificial viscosity
-            bool m_calcuPhysicalAV = true;
-
-#endif
-            /// Initialises UnsteadySystem class members.
-            SOLVER_UTILS_EXPORT UnsteadySystem(
-                const LibUtilities::SessionReaderSharedPtr& pSession,
-                const SpatialDomains::MeshGraphSharedPtr& pGraph);
-
-            /// Init object for UnsteadySystem class.
-            SOLVER_UTILS_EXPORT virtual void v_InitObject();
-
-            /// Get the maximum timestep estimator for cfl control.
-            SOLVER_UTILS_EXPORT NekDouble MaxTimeStepEstimator();
-
-            /// Solves an unsteady problem.
-            SOLVER_UTILS_EXPORT virtual void v_DoSolve();
-
-            /// Sets up initial conditions.
-            SOLVER_UTILS_EXPORT virtual void v_DoInitialise();
-
-            /// Print a summary of time stepping parameters.
-            SOLVER_UTILS_EXPORT virtual void v_GenerateSummary(SummaryList& s);
-
-            /// Print the solution at each solution point in a txt file
-            SOLVER_UTILS_EXPORT virtual void v_AppendOutput1D(
-                Array<OneD, Array<OneD, NekDouble> > &solution1D);
-
-            SOLVER_UTILS_EXPORT virtual NekDouble v_GetTimeStep(
-                const Array<OneD, const Array<OneD, NekDouble> > &inarray);
-
-            SOLVER_UTILS_EXPORT virtual bool v_PreIntegrate(int step);
-            SOLVER_UTILS_EXPORT virtual bool v_PostIntegrate(int step);
-
-            SOLVER_UTILS_EXPORT virtual bool v_RequireFwdTrans()
-            {
-                return true;
-            }
-
-            SOLVER_UTILS_EXPORT virtual void v_SteadyStateResidual(
+    SOLVER_UTILS_EXPORT virtual void v_SteadyStateResidual(
                 int                         step, 
                 Array<OneD, NekDouble>      &L2);
 
-            SOLVER_UTILS_EXPORT void CheckForRestartTime(NekDouble &time, int &nchk);
+    
+    SOLVER_UTILS_EXPORT void CheckForRestartTime(NekDouble &time, int &nchk);
 
-            /// \brief Evaluate the SVV diffusion coefficient
-            /// according to Moura's paper where it should
-            /// proportional to h time velocity
-            SOLVER_UTILS_EXPORT void SVVVarDiffCoeff(const Array<OneD, Array<OneD, NekDouble> >
-                                                     vel,
-                                                     StdRegions::VarCoeffMap &varCoeffMap);
+    /// \brief Evaluate the SVV diffusion coefficient
+    /// according to Moura's paper where it should
+    /// proportional to h time velocity
+    SOLVER_UTILS_EXPORT void SVVVarDiffCoeff(
+        const Array<OneD, Array<OneD, NekDouble>> vel,
+        StdRegions::VarCoeffMap &varCoeffMap);
 
+private:
+    void InitializeSteadyState();
 
-        private:
+    bool CheckSteadyState(int step);
+    bool CheckSteadyState(int step, NekDouble totCPUTime);
+};
 
-            void InitializeSteadyState();
-
-            bool CheckSteadyState(int step);
-            bool CheckSteadyState(int step, NekDouble totCPUTime);
-        };
-
-    }
-}
+} // namespace SolverUtils
+} // namespace Nektar
 
 #endif

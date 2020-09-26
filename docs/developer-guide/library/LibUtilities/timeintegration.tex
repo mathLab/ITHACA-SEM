@@ -1,0 +1,936 @@
+%
+\section{Time Integration}
+
+This directory consists of the following files:
+
+
+\begin{center}
+\begin{tabular}{|c | c | } \hline
+TimeIntegrationScheme.h & TimeIntegrationScheme.cpp	\\ \hline 
+TimeIntegrationWrapper.h & TimeIntegrationWrapper.cpp \\ \hline
+\end{tabular}
+\end{center}
+
+The original time-stepping classes (found in TimeIntegrationScheme)
+where implemented by Vos et al. \cite{Vostime} and a detailed
+explanation of the mathematics and computer science concepts are
+provided there.  After the original implementation, Cantwell et
+al. extended Vos' original work by adding the time-stepping routines
+into a factory pattern (found in TimeIntegrationWrapper).
+
+\subsection{General Linear Methods}
+General linear methods (GLMs) can be considered as the generalization of a broad
+range of different numerical methods for ordinary differential equations.  They
+were introduced by Butcher and they provide a unified formulation for
+traditional methods such as the Runge-Kutta methods and the linear multi-step
+methods such as Adams-Bashforth.  
+From an implementation point of view, this means that all these
+numerical methods can be abstracted in a similar way. As this allows a high
+level of generality, it is chosen in {\nek} to cast all time integration
+schemes in the framework of general linear methods.
+
+For background information about general linear methods, please consult
+\cite{Bu06}.
+
+\subsection{Introduction}
+The standard initial value problem can written in the form
+\begin{align*}
+\frac{d\boldsymbol{y}}{dt} = \boldsymbol{f}(t,\boldsymbol{y}),\quad
+\boldsymbol{y}(t_0)=\boldsymbol{y}_0
+\end{align*}
+where $\boldsymbol{y}$ is a vector containing the variable (or an
+array of array containing the variables).
+
+In the formulation of general linear methods, it is more convenient to consider
+the ODE in autonomous form, i.e.
+\begin{align*}
+\frac{d\boldsymbol{\hat{y}}}{dt}=\boldsymbol{\hat{f}}(\boldsymbol{\hat{y}}),\quad
+\boldsymbol{\hat{y}}(t_0)= \boldsymbol{\hat{y}}_0.
+\end{align*}
+
+\subsection{Formulation}
+Suppose the governing differential equation is given in autonomous form, the
+$n^{th}$ step of the GLM comprising
+\begin{itemize}
+\item $r$ steps (as in a multi-step method)
+\item $s$ stages (as in a Runge-Kutta method)
+\end{itemize}
+is formulated as:
+\begin{align*}
+\boldsymbol{Y}_i &= \Delta
+t\sum_{j=0}^{s-1}a_{ij}\boldsymbol{F}_j+\sum_{j=0}^{r-1}u_{ij}\boldsymbol{\hat{y}}_{j}^{[n-1]},
+\qquad i=0,1,\ldots,s-1 \\
+\boldsymbol{\hat{y}}_{i}^{[n]}&=\Delta
+t\sum_{j=0}^{s-1}b_{ij}\boldsymbol{F}_j+\sum_{j=0}^{r-1}v_{ij}
+\boldsymbol{\hat{y}}_{j}^{[n-1]}, \qquad i=0,1,\ldots,r-1
+\end{align*}
+where $\boldsymbol{Y}_i$ are referred to as the stage values and
+$\boldsymbol{F}_j$ as the stage derivatives. Both quantities are
+related by the differential equation:
+\begin{align*}
+\boldsymbol{F}_i = \boldsymbol{\hat{f}}(\boldsymbol{Y}_i).
+\end{align*}
+
+The matrices $A=[a_{ij}]$, $U=[u_{ij}]$,
+$B=[b_{ij}]$, $V=[v_{ij}]$ are characteristic of a
+specific method. Each scheme can then be uniquely defined by a partitioned
+$(s+r)\times(s+r)$ matrix
+\begin{align*}
+\left[
+\begin{array}{cc}
+  A & U\\
+  B & V \end{array}\right]
+\end{align*}
+
+
+\subsection{Matrix notation}
+Adopting the notation:
+\begin{align*}
+\boldsymbol{\hat{y}}^{[n-1]}= \left[\begin{array}{c}
+\boldsymbol{\hat{y}}^{[n-1]}_0\\
+\boldsymbol{\hat{y}}^{[n-1]}_1\\
+\vdots\\
+\boldsymbol{\hat{y}}^{[n-1]}_{r-1}
+\end{array}\right],\quad \boldsymbol{\hat{y}}^{[n]}= \left[\begin{array}{c}
+\boldsymbol{\hat{y}}^{[n]}_0\\
+\boldsymbol{\hat{y}}^{[n]}_1\\
+\vdots\\
+\boldsymbol{\hat{y}}^{[n]}_{r-1}
+\end{array}\right],\quad \boldsymbol{Y}= \left[\begin{array}{c}
+\boldsymbol{Y}_0\\
+\boldsymbol{Y}_1\\
+\vdots\\
+\boldsymbol{Y}_{s-1}
+\end{array}\right],\quad \boldsymbol{F}= \left[\begin{array}{c}
+\boldsymbol{F}_0\\
+\boldsymbol{F}_1\\
+\vdots\\
+\boldsymbol{F}_{s-1}
+\end{array}\right]\quad
+\end{align*}
+the general linear method can be written more compactly in the following form:
+\begin{align*}
+\left[ \begin{array}{c} \boldsymbol{Y}\\
+\boldsymbol{\hat{y}}^{[n]}
+\end{array}\right] = \left[ \begin{array}{cc} A\otimes I_N & U\otimes I_N \\
+B\otimes I_N & V\otimes I_N \end{array}\right] \left[ \begin{array}{c} \Delta
+t\boldsymbol{F}\\
+\boldsymbol{\hat{y}}^{[n-1]}
+\end{array}\right]
+\end{align*}
+where $I_N$ is the identity matrix of dimension $N\times N$.
+
+
+\subsection{General Linear Methods in Nektar++}
+Although the GLM is essentially presented for ODE's in its autonomous form, in
+Nektar++ it will be used to solve ODE's formulated in non-autonomous form.
+Given the ODE,
+\begin{align*}
+\frac{d\boldsymbol{y}}{dt}=\boldsymbol{f}(t,\boldsymbol{y}),\quad
+\boldsymbol{y}(t_0)=\boldsymbol{y}_0
+\end{align*}
+a single step of GLM can then be evaluated in the following way:
+\begin{itemize}
+\item \textbf{input}
+
+$\boldsymbol{y}^{[n-1]}$, \emph{i.e.} the $r$
+    subvectors comprising $\boldsymbol{y}^{[n-1]}_i$ -
+    $t^{[n-1]}$, \emph{i.e.} the equivalent of
+    $\boldsymbol{y}^{[n-1]}$ for the time variable $t$.
+
+\item \textbf{step 1}: The stage values $\boldsymbol{Y}_i$,
+$\boldsymbol{T}_i$ and the stage derivatives
+$\boldsymbol{F}_i$ are calculated through the relations:
+\begin{enumerate}
+\item $\boldsymbol{Y}_i = \Delta
+    t\sum_{j=0}^{s-1}a_{ij}\boldsymbol{F}_j+\sum_{j=0}^{r-1}u_{ij}\boldsymbol{y}_{j}^{[n-1]},
+    \qquad i=0,1,\ldots,s-1$
+\item $T_i\ =\ \Delta
+    t\sum_{j=0}^{s-1}a_{ij}+\sum_{j=0}^{r-1}u_{ij}t_{j}^{[n-1]}, \qquad
+    i=0,1,\ldots,s-1$
+\item $\boldsymbol{F}_i\ =\
+    f(T_i,\boldsymbol{Y}_i), \qquad i=0,1,\ldots,s-1$
+\end{enumerate}
+
+\item \textbf{step 2}: The approximation at the new time level
+$\boldsymbol{y}^{[n]}$ is calculated as a linear combination of the
+stage derivatives $\boldsymbol{F}_i$ and the input vector
+$\boldsymbol{y}^{[n-1]}$. In addition, the time vector
+$t^{[n]}$ is also updated
+
+\begin{enumerate}
+\item $\boldsymbol{y}_{i}^{[n]} = \Delta
+    t\sum_{j=0}^{s-1}b_{ij}\boldsymbol{F}_j+\sum_{j=0}^{r-1}v_{ij}\boldsymbol{y}_{j}^{[n-1]},
+    \qquad i=0,1,\ldots,r-1$
+\item $t_{i}^{[n]}\ =\ \Delta
+    t\sum_{j=0}^{s-1}b_{ij}+\sum_{j=0}^{r-1}v_{ij}t_{j}^{[n-1]}, \qquad
+    i=0,1,\ldots,r-1$
+\end{enumerate}
+
+\item \textbf{output}
+\begin{enumerate}
+\item $\boldsymbol{y}^{[n]}$, i.e. the $r$ subvectors
+    comprising $\boldsymbol{y}^{[n]}_i$.
+    $\boldsymbol{y}^{[n]}_0$ corresponds to the actual approximation
+    at the new time level.
+\item $t^{[n]}$ where $t^{[n]}_0$ is equal to the new time
+    level $t+\Delta t$.
+\end{enumerate}
+\end{itemize}
+
+For a detailed description of the formulation and a deeper insight of the
+numerical method see \cite{Vostime}.
+
+
+\subsection{Types of time Integration Schemes}
+Nektar++ contains various classes and methods which implement the concept of
+GLMs. This toolbox is capable of numerically solving the generalised ODE using a
+broad range of different time-stepping methods. We distinguish the following
+types of general linear methods:
+\begin{itemize}
+\item \textbf{Formally Explicit Methods}: These types of methods are
+considered explicit from an ODE point of view. They are characterised by a lower
+  triangular coefficient matrix $A$, ''i.e.'' $a_{ij} = 0$
+  for $j\geq i$. To avoid confusion, we make a further distinction:
+  \begin{itemize}
+    \item \textbf{direct explicit method}: Only forward operators are required.
+    \item \textbf{indirect explicit method}: The inverse operator is required.
+  \end{itemize}
+  \item \textbf{Diagonally Implicit Methods}: Compared to explicit methods,
+  the coefficient matrix $A$ has now non-zero entries on the diagonal.
+  This means that each stage value depend on the stage derivative at the same
+  stage, requiring an implicit step. However, the calculation of the different
+  stage values is still uncoupled. Best known are the DIRK schemes.
+  \item \textbf{IMEX schemes}: These schemes support the concept of being able
+  to split right hand forcing term into an explicit and implicit component. This is
+  useful in advection diffusion type problems where the advection is handled
+  explicitly and the diffusion is handled implicit.
+  \item \textbf{Fully Implicit Methods Methods}: The coefficient matrix has a
+  non-zero upper triangular part. The calculation of all stages values is fully coupled.
+\end{itemize}
+
+The aim in {\nek} is to fully support the first three types of GLMs.
+Fully implicit methods are currently not implemented.
+
+\subsection{Usage}
+The goal of abstracting the concept of general linear methods is to provide
+users with a single interface for time-stepping, independent of the chosen
+method. The classes tree allows the user to numerically integrate ODE's using
+high-order complex schemes, as if it was done using the Forward-Euler method.
+Switching between time-stepping schemes is as easy as changing a parameter in an
+input file.
+
+In the already implemented solvers the time-integration schemes have been set up
+according to the nature of the equations.
+For example the incompressible Navier-Stokes equations solver allows the use of
+three different Implicit-Explicit time-schemes if solving the equations with a
+splitting-scheme.
+This is because this kind of scheme has an explicit and an implicit operator
+that combined solve the ODE's system.
+
+Once aware of the problem's nature and implementation, the user can easily
+switch between some (depending on the problem) of the following
+time-integration schemes:
+
+\begin{center}
+\footnotesize
+\begin{tabular}{p{4cm}p{10cm}}
+\toprule
+AdamsBashforthOrder1 & Adams-Bashforth Forward multi-step scheme of order 1\\
+AdamsBashforthOrder2 & Adams-Bashforth Forward multi-step scheme of order 2\\
+AdamsBashforthOrder3 & Adams-Bashforth Forward multi-step scheme of order 3\\
+AdamsBashforthOrder4 & Adams-Bashforth Forward multi-step scheme of order 4\\
+AdamsMoultonOrder1   & Adams-Moulton Forward multi-step scheme of order 1\\
+AdamsMoultonOrder2   & Adams-Moulton Forward multi-step scheme of order 2\\
+AdamsMoultonOrder3   & Adams-Moulton Forward multi-step scheme of order 3\\
+AdamsMoultonOrder4   & Adams-Moulton Forward multi-step scheme of order 4\\
+BDFImplicitOrder1    & BDF multi-step scheme of order 1 (implicit)\\
+BDFImplicitOrder2    & BDF multi-step scheme of order 2 (implicit)\\
+ClassicalRungeKutta4 & Runge-Kutta multi-stage scheme 4th order explicit (old name)\\
+RungeKutta4          & Runge-Kutta multi-stage scheme 4th order explicit (new name for ClassicalRungeKutta4)\\
+RungeKutta3\_SSP     & Nonlinear SSP RungeKutta3 explicit\\
+RungeKutta2\_ImprovedEuler & Improved RungeKutta2 explicit (old name meaning Heun's method)\\
+RungeKutta2\_SSP     & Nonlinear SSP RungeKutta2 explicit (surrogate for RungeKutta2\_ImprovedEuler)\\
+RungeKutta2          & Classical RungeKutta2 method (new name for Midpoint)\\
+Midpoint             & Midpoint method (old name)\\
+ForwardEuler         & Forward-Euler scheme\\
+BackwardEuler        & Backward Euler scheme\\
+IMEXOrder1           & IMEX 1st order scheme using Euler Backwards Euler
+                       Forwards \\
+IMEXOrder2           & IMEX 2nd order scheme using Backward Different Formula \&
+                       Extrapolation\\
+IMEXOrder3           & IMEX 3rd order scheme using Backward Different Formula \&
+                       Extrapolation\\
+IMEXOrder4           & IMEX 4rd order scheme using Backward Different Formula \&
+                       Extrapolation\\
+DIRKOrder2           & Diagonally Implicit Runge-Kutta scheme of order 2\\
+DIRKOrder3           & Diagonally Implicit Runge-Kutta scheme of order 3\\
+CNAB                 & Crank-Nicolson-Adams-Bashforth Order 2 (CNAB)\\
+IMEXGear             & IMEX Gear Order 2\\
+MCNAB                & Modified Crank-Nicolson-Adams-Bashforth Order 2 (MCNAB)\\
+IMEXdirk\_1\_1\_1    & Forward-Backward Euler, first order IMEX DIRK(1,1,1)\\
+IMEXdirk\_1\_2\_1    & Forward-Backward Euler, first order IMEX DIRK(1,2,1)\\
+IMEXdirk\_1\_2\_2    & Implicit-Explicit Midpoint, second order IMEX DIRK(1,2,2)\\
+IMEXdirk\_2\_2\_2    & L-stable, two stage, second order IMEX DIRK(2,2,2)\\
+IMEXdirk\_2\_3\_2    & L-stable, two stage, second order IMEX DIRK(2,3,2)\\
+IMEXdirk\_2\_3\_3    & L-stable, two stage, third order IMEX DIRK(2,3,3)\\
+IMEXdirk\_3\_4\_3    & L-stable, three stage, third order IMEX DIRK(3,4,3)\\
+IMEXdirk\_4\_4\_3    & L-stable, four stage, third order IMEX DIRK(4,4,3)\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+{\nek} input file for your problem will ask you just the string corresponding
+the time-stepping scheme you want to use (between quotation marks in the
+previous list), and few parameters to define your integration in time (time-step
+and number of steps or final time). For example:\\
+\begin{lstlisting}[style=XMLStyle]
+<SOLVERINFO>
+   <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
+   <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
+   <I PROPERTY="AdvectionForm" VALUE="Convective" /> 
+   <I PROPERTY="Projection" VALUE="Galerkin" /> 
+   <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
+ </SOLVERINFO>
+ 
+ <PARAMETERS>
+   <P> TimeStep = 0.001     </P> 
+   <P> NumSteps = 1000      </P> 
+   <P> Kinvis = 1           </P>
+</PARAMETERS>
+\end{lstlisting}
+
+
+\subsection{Implementation of a time-dependent problem}
+In order to implement a new solver which takes advantage of the time-integration
+class in {\nek}, two main ingredients are required:
+\begin{itemize}
+\item A main files in which the time-integration of you ODE's system is
+initialized and performed.
+\item A class representing the spatial discretization of your problem, which
+reduces your system of PDE's to a system of ODE's.
+\end{itemize}
+
+Your pseudo-main file, where you actually loop over the time steps, will look
+like
+\begin{lstlisting}[style=C++Style]
+NekDouble timestep    = 0.1; 
+NekDouble time        = 0.0; 
+int NumSteps          = 1000;
+
+YourClass solver(Input);
+    
+LibUtilities::TimeIntegrationMethod  TIME_SCHEME;
+LibUtilities::TimeIntegrationSchemeOperators ODE;
+
+ODE.DefineOdeRhs(&YourClass::YourExplicitOperatorFunction,solver);
+ODE.DefineProjection(&YourClass::YourProjectionFunction,solver);
+ODE.DefineImplicitSolve(&YourClass::YourImplicitOperatorFunction,solver);
+    
+Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> IntScheme;
+    
+LibUtilities::TimeIntegrationSolutionSharedPtr ode_solution;
+    
+Array<OneD, Array<OneD, NekDouble> > U;
+
+TIME_SCHEME = LibUtilities::eForwardEuler; 
+int numMultiSteps=1; 
+IntScheme = Array<OneD,LibUtilities::TimeIntegrationSchemeSharedPtr>(numMultiSteps); 
+LibUtilities::TimeIntegrationSchemeKey IntKey(TIME_SCHEME); 
+IntScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey]; 
+ode_solution = IntScheme[0]->InitializeScheme(timestep,U,time,ODE);
+
+for(int n = 0; n < NumSteps; ++n) {
+    U = IntScheme[0]->TimeIntegrate(timestep,ode_solution,ODE);
+}
+\end{lstlisting}
+
+We can distinguish three different sections in the code above
+
+\subsubsection{Definitions} 
+\begin{lstlisting}[style=C++Style]
+NekDouble timestep    = 0.1; 
+NekDouble time        = 0.0;
+int NumSteps          = 1000;
+
+YourClass equation(Input);
+    
+LibUtilities::TimeIntegrationMethod  TIME_SCHEME;
+LibUtilities::TimeIntegrationSchemeOperators ODE;
+
+ODE.DefineOdeRhs(&YourClass::YourExplicitOperatorFunction,equation);
+ODE.DefineProjection(&YourClass::YourProjectionFunction, equation);
+ODE.DefineImplicitSolve(&YourClass::YourImplicitOperatorFunction, equation);
+\end{lstlisting}
+In this section you define the basic parameters (like time-step, initial time,
+etc.) and the time-integration objects.
+The operators are not all required, it depends on the nature of your problem and
+on the type of time integration schemes you want to use. In this case, the
+problem has been set up to work just with Forward-Euler, then for sure you will
+not need the implicit operator.
+An object named \texttt{equation} has been initialized, is an object of type
+\texttt{YourClass}, where your spatial discretization and the functions which
+actually represent your operators are implemented. An example of this class will
+be shown later in this page.
+
+\subsubsection{Initialisations}
+\begin{lstlisting}[style=C++Style]
+Array<OneD,LibUtilities::TimeIntegrationSchemeSharedPtr> IntScheme;
+    
+LibUtilities::TimeIntegrationSolutionSharedPtr ode_solution;
+    
+Array<OneD, Array<OneD, NekDouble> > U;
+
+TIME_SCHEME = LibUtilities::eForwardEuler; 
+int numMultiSteps=1; 
+IntScheme = Array<OneD,LibUtilities::TimeIntegrationSchemeSharedPtr>(numMultiSteps); 
+LibUtilities::TimeIntegrationSchemeKey IntKey(TIME_SCHEME); 
+IntScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
+ode_solution = IntScheme[0]->InitializeScheme(timestep,U,time,ODE);
+\end{lstlisting}
+The second part consists in the scheme initialization. In this example we set up
+just Forward-Euler, but we can set up more then one time-integration scheme and
+quickly switch between them from the input file.
+Forward-Euler does not require any other scheme for the start-up procedure. High
+order multi-step schemes may need lower-order schemes for the start up.
+
+\subsubsection{Integration}
+\begin{lstlisting}[style=C++Style]
+for(int n = 0; n < NumSteps; ++n) {
+    U = IntScheme[0]->TimeIntegrate(timestep,ode_solution,ODE);
+}
+\end{lstlisting}
+The last step is the typical time-loop, where you iterate in time to get
+your new solution at each time-level.
+The solution at time $t^{n+1}$ is stored into vector \texttt{U} (you need
+to properly initialize this vector).
+\texttt{U} is an Array of Arrays, where the first dimension corresponds to
+the number of variables (eg. u,v,w) and the second dimension corresponds to the
+variables size (e.g. the number of modes or the number of physical points).
+
+The variable \texttt{ODE} is an object which contains the methods. A class
+representing a PDE equation (or a system of equations) must have a series of
+functions representing the implicit/explicit part of the method, which
+represents the reduction of the PDE's to a system of ODE's.
+The spatial discretization and the definition of this method should be
+implemented in \texttt{YourClass}.
+\texttt{\&YourClass::YourExplicitOperatorFunction} is a functor, i.e. a pointer
+to a function where the method is implemented. \texttt{equation} is a pointer
+to the object, i.e. the class, where the function/method is implemented.
+Here a pseudo-example of the .h file of your hypothetical class representing the
+set of equations.
+The implementation of the functions is meant to be in the related .cpp file.
+
+\begin{lstlisting}[style=C++Style]
+class YourCalss
+{ 
+public:
+    YourClass(INPUT);
+    
+    ~YourClass(void);
+
+    void YourExplicitOperatorFunction(
+        const Array<OneD, Array<OneD, NekDouble> > & inarray,
+              Array<OneD, Array<OneD, NekDouble> > & outarray,
+        const NekDouble time);
+
+    void YourProjectionFunction(
+        const Array<OneD, Array<OneD, NekDouble> > & inarray,
+              Array<OneD, Array<OneD, NekDouble> > & outarray, const
+              NekDouble time);
+
+    void YourImplicitOperatorFunction(
+        const Array<OneD, Array<OneD, NekDouble> > & inarray,
+              Array<OneD, Array<OneD, NekDouble> > & outarray, const
+              NekDouble time,
+        const NekDouble lambda);
+    
+    void InternalMethod1(...);
+
+    NekDouble internalvariale1;
+
+protected:
+    ...
+
+private:
+    ...
+};
+\end{lstlisting}
+
+ 
+\subsection{Strongly imposed essential boundary conditions}
+Dirichlet boundary conditions can be strongly imposed by lifting the known
+Dirichlet solution.
+This is equivalent to decompose the approximate solution $y$ into an
+known part, $y^{\mathcal{D}}$, which satisfies the Dirichlet boundary
+conditions, and an unknown part, $y^{\mathcal{H}}$, which is zero on
+the Dirichlet boundaries, i.e.
+\begin{align*}
+y = y^{\mathcal{D}} + y^{\mathcal{H}}
+\end{align*}
+
+In a Finite Element discretisation, this corresponds to splitting the solution
+vector of coefficients $\boldsymbol{y}$ into the known Dirichlet
+degrees of freedom $\boldsymbol{y}^{\mathcal{D}}$ and the unknown
+homogeneous degrees of freedom $\boldsymbol{y}^{\mathcal{H}}$.
+Ordering the known coefficients first, this corresponds to:
+\begin{align*}
+\boldsymbol{y} = \left[ \begin{array}{c}
+\boldsymbol{y}^{\mathcal{D}} \\
+\boldsymbol{y}^{\mathcal{H}} \end{array} \right]
+\end{align*}
+
+The generalised formulation of the general linear method (i.e. the introduction
+of a left hand side operator) allows for an easier treatment of these types of
+boundary conditions. To better appreciate this, consider the equation for the
+stage values for an explicit general linear method where both the left and right
+hand side operator are linear operators, i.e. they can be represented by a
+matrix.
+\begin{align*}
+\boldsymbol{M}\boldsymbol{Y}_i = \Delta
+t\sum_{j=0}^{i-1}a_{ij}\boldsymbol{L}\boldsymbol{Y}_j+\sum_{j=0}^{r-1}u_{ij}\boldsymbol{y}_{j}^{[n-1]},
+\qquad i=0,1,\ldots,s-1
+\end{align*}
+
+In case of a lifted known solution, this can be written as:
+\begin{align*}
+\left[ \begin{array}{cc}
+\boldsymbol{M}^{\mathcal{DD}} & \boldsymbol{M}^{\mathcal{DH}} \\
+\boldsymbol{M}^{\mathcal{HD}} & \boldsymbol{M}^{\mathcal{HH}} \end{array} \right]
+\left[ \begin{array}{c}
+\boldsymbol{Y}^{\mathcal{D}}_i \\
+\boldsymbol{Y}^{\mathcal{H}}_i \end{array} \right]
+= \Delta t\sum_{j=0}^{i-1}a_{ij}
+\left[ \begin{array}{cc}
+\boldsymbol{L}^{\mathcal{DD}} & \boldsymbol{L}^{\mathcal{DH}} \\
+\boldsymbol{L}^{\mathcal{HD}} & \boldsymbol{L}^{\mathcal{HH}} \end{array} \right]
+\left[ \begin{array}{c}
+\boldsymbol{Y}^{\mathcal{D}}_j \\
+\boldsymbol{Y}^{\mathcal{H}}_j \end{array} \right]
++\sum_{j=0}^{r-1}u_{ij}
+\left[ \begin{array}{c}
+\boldsymbol{y}^{\mathcal{D}[n-1]}_j \\
+\boldsymbol{y}^{\mathcal{H}[n-1]}_j \end{array} \right],\\
+\qquad i=0,1,\ldots,s-1
+\end{align*}
+ 
+In order to calculate the stage values correctly, the explicit operator
+should now be implemented to do the following:
+\begin{align*}
+\left[ \begin{array}{c}
+\boldsymbol{b}^{\mathcal{D}} \\
+\boldsymbol{b}^{\mathcal{H}} \end{array} \right]
+=
+\left[ \begin{array}{cc}
+\boldsymbol{L}^{\mathcal{DD}} & \boldsymbol{L}^{\mathcal{DH}} \\
+\boldsymbol{L}^{\mathcal{HD}} & \boldsymbol{L}^{\mathcal{HH}} \end{array} \right]
+\left[ \begin{array}{c}
+\boldsymbol{y}^{\mathcal{D}} \\
+\boldsymbol{y}^{\mathcal{H}} \end{array} \right]
+\end{align*}
+    
+Note that only the homogeneous part $\boldsymbol{b}^{\mathcal{H}}$ will be used
+to calculate the stage values. This means essentially that only the bottom part
+of the operation above, i.e.
+$\boldsymbol{L}^{\mathcal{HD}}\boldsymbol{y}^{\mathcal{D}} +
+\boldsymbol{L}^{\mathcal{HH}}\boldsymbol{y}^{\mathcal{H}}$ is required. However,
+sometimes it might be more convenient to use/implement routines for the explicit
+operator that also calculate $\boldsymbol{b}^{\mathcal{D}}$.\\
+ 
+An implicit method should solve the system:
+\begin{align*}
+\left(\left[ \begin{array}{cc}
+\boldsymbol{M}^{\mathcal{DD}} & \boldsymbol{M}^{\mathcal{DH}} \\
+\boldsymbol{M}^{\mathcal{HD}} & \boldsymbol{M}^{\mathcal{HH}} \end{array} \right]
+- \lambda \left[ \begin{array}{cc}
+\boldsymbol{L}^{\mathcal{DD}} & \boldsymbol{L}^{\mathcal{DH}} \\
+\boldsymbol{L}^{\mathcal{HD}} & \boldsymbol{L}^{\mathcal{HH}} \end{array} \right]\right)
+\left[ \begin{array}{c}
+\boldsymbol{y}^{\mathcal{D}} \\
+\boldsymbol{y}^{\mathcal{H}} \end{array} \right]
+=
+\left[ \begin{array}{cc}
+\boldsymbol{H}^{\mathcal{DD}} & \boldsymbol{H}^{\mathcal{DH}} \\
+\boldsymbol{H}^{\mathcal{HD}} & \boldsymbol{H}^{\mathcal{HH}} \end{array} \right]
+\left[ \begin{array}{c}
+\boldsymbol{y}^{\mathcal{D}} \\
+\boldsymbol{y}^{\mathcal{H}} \end{array} \right]
+=
+\left[ \begin{array}{c}
+\boldsymbol{b}^{\mathcal{D}} \\
+\boldsymbol{b}^{\mathcal{H}} \end{array} \right]
+\end{align*}
+    
+for the unknown vector $\boldsymbol{y}$. This can be done in three steps:
+\begin{itemize}
+\item Set the known solution $\boldsymbol{y}^{\mathcal{D}}$
+\item Calculate the modified right hand side term
+ $\boldsymbol{b}^{\mathcal{H}} -
+ \boldsymbol{H}^{\mathcal{HD}}\boldsymbol{y}^{\mathcal{D}}$
+\item Solve the system below for the unknown
+ $\boldsymbol{y}^{\mathcal{H}}$, i.e.
+ $\boldsymbol{H}^{\mathcal{HH}}\boldsymbol{y}^{\mathcal{H}} =
+ \boldsymbol{b}^{\mathcal{H}} -
+ \boldsymbol{H}^{\mathcal{HD}}\boldsymbol{y}^{\mathcal{D}}$
+\end{itemize}
+
+\subsection{How to add a new time-stepping method}
+
+To add a new time integration scheme, follow the steps below:
+\begin{itemize}
+\item Choose a name for the method and add it to the
+\texttt{TimeIntegrationMethod} enum list.
+\item Populate the switch statement in the \texttt{TimeIntegrationScheme}
+constructor with the coefficients of the new method.
+\item Use ( or modify) the function \texttt{InitializeScheme} to select (or
+implement) a proper initialisation strategy for the method.
+\item Add documentation for the method (especially indicating what the auxiliary
+ parameters of the input and output vectors of the multi-step method represent)
+\end{itemize}
+
+\subsection{Examples of already implemented time stepping schemes}
+
+Here we show some examples time-stepping schemes implemented in {\nek}, to give an idea of what is required
+to add one of them.
+
+\subsubsection{Forward Euler}
+\begin{align*}
+\left[\begin{array}{c|c}
+A & U \\
+\hline
+B & V
+\end{array}\right] =
+\left[\begin{array}{c|c}
+0 & 1 \\
+\hline
+1 & 1
+\end{array}\right],\qquad
+\boldsymbol{y}^{[n]}=
+\left[\begin{array}{c}
+\boldsymbol{y}^{[n]}_0
+\end{array}\right]=
+\left[\begin{array}{c}
+\boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)
+\end{array}\right]
+\end{align*}
+
+\subsubsection{Backward Euler}
+\begin{align*}
+\left[\begin{array}{c|c}
+A & U \\
+\hline
+ B & V
+\end{array}\right] =
+\left[\begin{array}{c|c}
+1 & 1 \\
+\hline
+1 & 1
+\end{array}\right],\qquad
+\boldsymbol{y}^{[n]}=
+\left[\begin{array}{c}
+\boldsymbol{y}^{[n]}_0
+\end{array}\right]=
+\left[\begin{array}{c}
+\boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)
+\end{array}\right]
+\end{align*}
+
+\subsubsection{2$^{nd}$ order Adams-Bashforth}
+\begin{align*}
+\left[\begin{array}{c|c}
+A & U \\
+\hline
+B & V
+\end{array}\right] =
+\left[\begin{array}{c|cc}
+0 & 1 & 0 \\
+\hline
+\frac{3}{2} & 1 & \frac{-1}{2}  \\
+1 & 0 & 0
+\end{array}\right],\qquad
+\boldsymbol{y}^{[n]}=
+\left[\begin{array}{c}
+\boldsymbol{y}^{[n]}_0\\
+\boldsymbol{y}^{[n]}_1\\
+\end{array}\right]=
+\left[\begin{array}{c}
+\boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)\\
+\Delta t \boldsymbol{l}(t^{n-1},\boldsymbol{y}^{n-1})
+\end{array}\right]
+\end{align*}
+
+\subsubsection{1$^{st}$ order IMEX Euler-Backward/ Euler-Forward}
+\begin{align*}
+\left[ \begin{array}{cc|c}
+A^{\mathrm{IM}} & A^{\mathrm{EM}} & U \\
+\hline
+B^{\mathrm{IM}} & B^{\mathrm{EM}} & V
+\end{array} \right ] =
+\left[\begin{array}{cc|c}
+\left [ \begin{array}{c} 1 \end{array} \right ] & \left [ \begin{array}{c} 0 \end{array} \right ] &
+\left [ \begin{array}{cc} 1 & 1 \end{array} \right ] \\
+\hline
+\left [ \begin{array}{c} 1 \\ 0 \end{array} \right ] & \left [ \begin{array}{c} 0 \\ 1 \end{array} \right ]&
+\left [ \begin{array}{cc} 1 & 1 \\ 0 & 0 \end{array} \right ]
+\end{array}\right] \quad \mathrm{with}\quad
+\boldsymbol{y}^{[n]}=
+\left[\begin{array}{c}
+\boldsymbol{y}^{[n]}_0\\
+\boldsymbol{y}^{[n]}_1
+\end{array}\right]=
+\left[\begin{array}{c}
+\boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)\\
+\Delta t \boldsymbol{l}\left ( t^n, \boldsymbol{y}^{n}\right)
+\end{array}\right]
+\end{align*}
+
+\subsubsection{2$^{nd}$ order IMEX Backward Different Formula \& Extrapolation}
+\begin{align*}
+\left[ \begin{array}{cc|c}
+A^{\mathrm{IM}} & A^{\mathrm{EM}} & U \\
+\hline
+B^{\mathrm{IM}} & B^{\mathrm{EM}} & V
+\end{array} \right ] =
+\left[\begin{array}{cc|c}
+\left [ \begin{array}{c} \frac{2}{3} \end{array} \right ] & \left [ \begin{array}{c} 0 \end{array} \right ] &
+\left [ \begin{array}{cccc} \frac{4}{3} & -\frac{1}{3} & \frac{4}{3} &  -\frac{2}{3} \end{array} \right ] \\
+\hline
+\left [ \begin{array}{c} \frac{2}{3} \\ 0 \\ 0 \\ 0 \end{array} \right ] & \left [ \begin{array}{c} 0 \\0 \\ 1 \\ 0 \end{array} \right ]&
+\left [ \begin{array}{cccc} \frac{4}{3} & -\frac{1}{3} & \frac{4}{3} & -\frac{2}{3} \\ 1 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0\\ 0 & 0 & 1 & 0 \end{array} \right ]
+\end{array}\right]
+\end{align*}
+with
+\begin{align*}
+\boldsymbol{y}^{[n]}=
+\left[\begin{array}{c}
+\boldsymbol{y}^{[n]}_0\\
+\boldsymbol{y}^{[n]}_1 \\
+\boldsymbol{y}^{[n]}_2 \\
+\boldsymbol{y}^{[n]}_3
+\end{array}\right]=
+\left[\begin{array}{l}
+\boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)\\
+\boldsymbol{m}\left(t^{n-1},\boldsymbol{y}^{n-1}\right)\\
+\Delta t \boldsymbol{l}\left ( t^n, \boldsymbol{y}^{n}\right)\\
+\Delta t \boldsymbol{l}\left ( t^{n-1}, \boldsymbol{y}^{n-1}\right)
+\end{array}\right]
+\end{align*}
+
+\begin{notebox}
+The first two rows are normalised so the coefficient on
+$\boldsymbol{y}_n^{[n+1]}$ is one. In the standard formulation it is $3/2$.
+\end{notebox}
+
+\subsubsection{3rdorder IMEX Backward Different Formula \& Extrapolation}
+\begin{align*}
+  \left[ \begin{array}{cc|c}
+  A^{\mathrm{IM}} & A^{\mathrm{EM}} & U \\
+  \hline
+  B^{\mathrm{IM}} & B^{\mathrm{EM}} & V
+  \end{array} \right ] =
+  \left[\begin{array}{cc|c}
+   \left [ \begin{array}{c} \frac{6}{11} \end{array} \right ] & \left [ \begin{array}{c} 0 \end{array} \right ] &
+   \left [ \begin{array}{cccccc} \frac{18}{11} & -\frac{9}{11} & \frac{2}{11} & \frac{18}{11} &  -\frac{18}{11} & \frac{6}{11} \end{array} \right ] \\
+  \hline
+   \left [ \begin{array}{c} \frac{6}{11}\\ 0 \\ 0 \\ 0 \\0 \\0 \end{array} \right ] & \left [ \begin{array}{c} 0 \\0 \\ 0 \\ 1 \\ 0 \\ 0 \end{array} \right ]&
+   \left [ \begin{array}{cccccc} \frac{18}{11} & -\frac{9}{11} & \frac{2}{11} & \frac{18}{11} & -\frac{18}{11} & \frac{6}{11} \\ 1 & 0 & 0 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 & 0 & 0\\ 0 & 0 & 0 & 1 & 0 & 0 \\ 0 & 0 &  0 & 0 & 1 & 0 \end{array} \right ]
+  \end{array}\right]
+\end{align*}
+with
+\begin{align*}
+  \boldsymbol{y}^{[n]}=
+  \left[\begin{array}{l}
+  \boldsymbol{y}^{[n]}_0 \\
+  \boldsymbol{y}^{[n]}_1 \\
+  \boldsymbol{y}^{[n]}_2 \\
+  \boldsymbol{y}^{[n]}_3 \\
+  \boldsymbol{y}^{[n]}_4 \\
+  \boldsymbol{y}^{[n]}_5
+  \end{array}\right]=
+  \left[\begin{array}{l}
+  \boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)\\
+  \boldsymbol{m}\left(t^{n-1},\boldsymbol{y}^{n-1}\right)\\
+  \boldsymbol{m}\left(t^{n-2},\boldsymbol{y}^{n-2}\right)\\
+  \Delta t \boldsymbol{l}\left ( t^n, \boldsymbol{y}^{n}\right)\\
+  \Delta t \boldsymbol{l}\left ( t^{n-1}, \boldsymbol{y}^{n-1}\right)\\
+  \Delta t \boldsymbol{l}\left ( t^{n-2}, \boldsymbol{y}^{n-2}\right)
+  \end{array}\right]
+\end{align*}
+
+\begin{notebox}
+The first two rows are normalised so the coefficient on
+$\boldsymbol{y}_n^{[n+1]}$ is one. In the standard formulation it is $11/6$.
+\end{notebox}
+
+\subsubsection{2$^{nd}$ order Adams-Moulton}
+\begin{align*}
+  \left[\begin{array}{c|c}
+  A & U \\
+  \hline
+  B & V
+  \end{array}\right] =
+  \left[\begin{array}{c|cc}
+  \frac{1}{2} & 1 & \frac{1}{2} \\
+  \hline
+  \frac{1}{2} & 1 & \frac{1}{2} \\
+  1 & 0 & 0
+  \end{array}\right],\qquad
+  \boldsymbol{y}^{[n]}=
+  \left[\begin{array}{c}
+  \boldsymbol{y}^{[n]}_0\\
+  \boldsymbol{y}^{[n]}_1\\
+  \end{array}\right]=
+  \left[\begin{array}{c}
+  \boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)\\
+  \Delta t \boldsymbol{l}(t^{n},\boldsymbol{y}^{n})
+  \end{array}\right]
+\end{align*}
+
+\subsubsection{Midpoint Method}
+\begin{align*}
+  \left[\begin{array}{c|c}
+  A & U \\
+  \hline
+  B & V
+  \end{array}\right] =
+  \left[\begin{array}{cc|c}
+  0 & 0 & 1 \\
+  \frac{1}{2} & 0 & 1 \\
+  \hline
+  0 & 1 & 1
+  \end{array}\right],\qquad
+  \boldsymbol{y}^{[n]}=
+  \left[\begin{array}{c}
+  \boldsymbol{y}^{[n]}_0
+  \end{array}\right]=
+  \left[\begin{array}{c}
+  \boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)
+  \end{array}\right]
+\end{align*}
+
+\subsubsection{RK4: the standard fourth-order Runge-Kutta scheme}
+\begin{align*}
+  \left[\begin{array}{c|c}
+  A & U \\
+  \hline
+  B & V
+  \end{array}\right] =
+  \left[\begin{array}{cccc|c}
+  0 & 0 & 0 & 0 & 1 \\
+  \frac{1}{2} & 0 & 0 & 0 & 1 \\
+  0 & \frac{1}{2} & 0 & 0 & 1 \\
+  0 & 0 & 1 & 0 & 1 \\
+  \hline
+  \frac{1}{6} & \frac{1}{3} & \frac{1}{3} & \frac{1}{6} & 1
+  \end{array}\right],\qquad
+  \boldsymbol{y}^{[n]}=
+  \left[\begin{array}{c}
+  \boldsymbol{y}^{[n]}_0
+  \end{array}\right]=
+  \left[\begin{array}{c}
+  \boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)
+  \end{array}\right]
+\end{align*}
+
+\subsubsection{2$^{nd}$ order Diagonally Implicit Runge-Kutta (DIRK)}
+\begin{align*}
+  \left[\begin{array}{c|c}
+  A & U \\
+  \hline
+  B & V
+  \end{array}\right] =
+  \left[\begin{array}{cc|c}
+  \lambda & 0 & 1 \\
+  \left(1-\lambda\right) & \lambda & 1 \\
+  \hline
+  \left(1-\lambda\right) & \lambda & 1
+  \end{array}\right]\quad \mathrm{with}\quad \lambda=\frac{2-\sqrt{2}}{2},\qquad
+  \boldsymbol{y}^{[n]}=
+  \left[\begin{array}{c}
+  \boldsymbol{y}^{[n]}_0
+  \end{array}\right]=
+  \left[\begin{array}{c}
+  \boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)
+  \end{array}\right]
+\end{align*}
+
+\subsubsection{3$^{rd}$ order Diagonally Implicit Runge-Kutta (DIRK)}
+\begin{align*}
+  \left[\begin{array}{c|c}
+  A & U \\
+  \hline
+  B & V
+  \end{array}\right] =
+  \left[\begin{array}{ccc|c}
+  \lambda & 0 & 0 & 1 \\
+  \frac{1}{2}\left(1-\lambda\right) & \lambda & 0 & 1 \\
+  \frac{1}{4}\left(-6\lambda^2+16\lambda-1\right) & \frac{1}{4}\left(6\lambda^2-20\lambda+5\right) & \lambda & 1 \\
+  \hline
+  \frac{1}{4}\left(-6\lambda^2+16\lambda-1\right) & \frac{1}{4}\left(6\lambda^2-20\lambda+5\right) & \lambda & 1
+  \end{array}\right]
+\end{align*}
+with
+\begin{align*}
+  \lambda=0.4358665215,\qquad
+  \boldsymbol{y}^{[n]}=
+  \left[\begin{array}{c}
+  \boldsymbol{y}^{[n]}_0
+  \end{array}\right]=
+  \left[\begin{array}{c}
+  \boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)
+  \end{array}\right]
+\end{align*}
+
+\subsubsection{3$^{rd}$ order L-stable, three stage IMEX DIRK(3,4,3)}
+\tiny
+\begin{align*}
+  &\left[\begin{array}{cc|c}
+  A^{\mathrm{IM}} & A^{\mathrm{EM}} & U \\
+  \hline
+  B^{\mathrm{IM}} & B^{\mathrm{EM}} & V
+  \end{array}\right] =\\
+  &\left[\begin{array}{cc|c}
+  \left[\begin{array}{cccc}
+  0 & 0 & 0 & 0 \\
+  0 & \lambda & 0 & 0 \\
+  0 & \frac{1}{2}\left(1-\lambda\right) & \lambda & 0 \\
+  0 & \frac{1}{4}\left(-6\lambda^2+16\lambda-1\right) & \frac{1}{4}\left(6\lambda^2-20\lambda+5\right) & \lambda
+  \end{array}\right] &
+  \left[\begin{array}{cccc}
+  0 & 0 & 0 & 0 \\
+  \lambda & 0 & 0 & 0 \\
+  0.3212788860 & 0.3966543747 & 0 & 0 \\
+  -0.105858296 & 0.5529291479 & 0.5529291479 & 0
+  \end{array}\right] &
+  \left[\begin{array}{c}
+  1\\
+  1\\
+  1\\
+  1
+  \end{array}\right] \\
+  \hline
+  \left[\begin{array}{cccc}
+  0 & \frac{1}{4}\left(-6\lambda^2+16\lambda-1\right) & \frac{1}{4}\left(6\lambda^2-20\lambda+5\right) & \lambda
+  \end{array}\right] &
+  \left[\begin{array}{cccc}
+  0 & \frac{1}{4}\left(-6\lambda^2+16\lambda-1\right) & \frac{1}{4}\left(6\lambda^2-20\lambda+5\right) & \lambda
+  \end{array}\right] &
+  \left[\begin{array}{c}
+  1
+  \end{array}\right]
+  \end{array}\right]
+\end{align*}
+\normalsize
+with
+\begin{align*}
+  \lambda=0.4358665215,\qquad
+  \boldsymbol{y}^{[n]}=
+  \left[\begin{array}{c}
+  \boldsymbol{y}^{[n]}_0
+  \end{array}\right]=
+  \left[\begin{array}{c}
+  \boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)
+  \end{array}\right]
+\end{align*}
+
+

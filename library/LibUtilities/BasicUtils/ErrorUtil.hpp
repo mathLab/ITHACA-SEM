@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -37,8 +36,10 @@
 
 #include <iostream>
 #include <stdexcept>
-#include <boost/lexical_cast.hpp>
-#include <boost/optional.hpp>
+#include <string>
+
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
 #if defined(NEKTAR_USE_MPI)
@@ -49,51 +50,69 @@
 #include <execinfo.h>
 #endif
 
-namespace ErrorUtil
+namespace Nektar
 {
-    static boost::optional<std::ostream&> outStream;
 
-    inline static void SetErrorStream(std::ostream& o)
+class ErrorUtil
+{
+public:
+    class NekError : public std::runtime_error
     {
-        outStream = o;
-    }
-    
-    inline static bool HasCustomErrorStream()
-    {
-        return outStream ? true : false;
-    }
+    public:
+        NekError(const std::string& message) : std::runtime_error(message)
+        {
+        }
+    };
 
     enum ErrType
     {
         efatal,
         ewarning
-    }; 
-
-    class NekError : public std::runtime_error
-    {
-    public:
-        NekError(const std::string& message) : std::runtime_error(message) {}
     };
-        
-    inline static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level, bool DoComm = false)
-    {
-        // The user of outStream is primarily for the unit tests.
-        // The unit tests often generate errors on purpose to make sure
-        // invalid usage is flagged appropriately.  Printing the error
-        // messages to cerr made the unit test output hard to parse.
 
-        std::string baseMsg = std::string("Level ") +
-            boost::lexical_cast<std::string>(level) +
-            std::string(" assertion violation\n") +
+    inline static void SetErrorStream(std::ostream& o)
+    {
+        m_outStream = &o;
+    }
+
+    inline static void SetPrintBacktrace(bool b)
+    {
+        m_printBacktrace = b;
+    }
+
+    inline static bool HasCustomErrorStream()
+    {
+        return m_outStream != &std::cerr;
+    }
+
+    inline static void Error(ErrType       type,
+                             const char   *routine,
+                             int           lineNumber,
+                             const char   *msg,
+                             unsigned int  level,
+                             bool          DoComm = false)
+    {
+        boost::ignore_unused(DoComm);
+
+        // The user of outStream is primarily for the unit tests.  The unit
+        // tests often generate errors on purpose to make sure invalid usage is
+        // flagged appropriately.  Printing the error messages to cerr made the
+        // unit test output hard to parse.
+
+        std::string baseMsg = "Level " + std::to_string(level) +
+            " assertion violation\n";
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
-            std::string("Where   : ") + boost::lexical_cast<std::string>(routine) +  std::string("[") +  boost::lexical_cast<std::string>(lineNumber) +  std::string("]\n") + std::string("Message : ") +
+        baseMsg += "Where   : " + std::string(routine) + "[" +
+            std::to_string(lineNumber) + "]\nMessage : ";
+#else
+        boost::ignore_unused(routine, lineNumber);
 #endif
-            msg;
+        baseMsg += std::string(msg);
 
         // Default rank is zero. If MPI used and initialised, populate with
         // the correct rank. Messages are only printed on rank zero.
         int rank = 0;
-#if defined(NEKTAR_USE_MPI)
+#if defined(NEKTAR_USE_MPI) && !defined(NEKTAR_USE_CWIPI)
         int flag = 0;
         if(DoComm)
         {
@@ -103,23 +122,28 @@ namespace ErrorUtil
                 MPI_Comm_rank(MPI_COMM_WORLD,&rank);
             }
         }
+#else
+        boost::ignore_unused(DoComm);
 #endif
 
         std::string btMessage("");
 #if defined(NEKTAR_FULLDEBUG)
 #ifndef _WIN32
-        void *btArray[40];
-        int btSize;
-        char **btStrings;
-
-        btSize = backtrace(btArray, 40);
-        btStrings = backtrace_symbols(btArray, btSize);
-
-        for (int i = 0 ; i < btSize ; ++i)
+        if (m_printBacktrace)
         {
-            btMessage +=  std::string(btStrings[i]) + "\n";
+            void *btArray[40];
+            int btSize;
+            char **btStrings;
+
+            btSize = backtrace(btArray, 40);
+            btStrings = backtrace_symbols(btArray, btSize);
+
+            for (int i = 0 ; i < btSize ; ++i)
+            {
+                btMessage +=  std::string(btStrings[i]) + "\n";
+            }
+            free(btStrings);
         }
-        free(btStrings);
 #endif
 #endif
 
@@ -128,19 +152,14 @@ namespace ErrorUtil
         case efatal:
             if (!rank)
             {
-                if (outStream)
+                if (m_printBacktrace)
                 {
-                    (*outStream) << btMessage;
-                    (*outStream) << "Fatal   : " << baseMsg << std::endl;
+                    (*m_outStream) << btMessage;
                 }
-                else
-                {
-                    std::cerr << btMessage;
-                    std::cerr << std::endl << "Fatal   : " << baseMsg
-                              << std::endl;
-                }
+                (*m_outStream) << "Fatal   : " << baseMsg << std::endl;
             }
-#if defined(NEKTAR_USE_MPI)
+
+#if defined(NEKTAR_USE_MPI) && !defined(NEKTAR_USE_CWIPI)
             if(DoComm)
             {
                 if (flag)
@@ -154,20 +173,15 @@ namespace ErrorUtil
         case ewarning:
             if (!rank)
             {
-                if (outStream)
+                if (m_printBacktrace)
                 {
-                    (*outStream) << btMessage;
-                    (*outStream) << "Warning: " << baseMsg << std::endl;
+                    (*m_outStream) << btMessage;
                 }
-                else
-                {
-                    std::cerr << btMessage;
-                    std::cerr << "Warning: " << baseMsg << std::endl;
-                }
+                (*m_outStream) << "Warning : " << baseMsg << std::endl;
             }
             break;
         default:
-            std::cerr << "Unknown warning type: " << baseMsg << std::endl;
+            (*m_outStream) << "Unknown warning type: " << baseMsg << std::endl;
         }
     }
 
@@ -180,7 +194,11 @@ namespace ErrorUtil
     {
         Error(type, routine, lineNumber, msg, 0);
     }
-} // end of namespace
+
+private:
+    LIB_UTILITIES_EXPORT static std::ostream *m_outStream;
+    LIB_UTILITIES_EXPORT static bool          m_printBacktrace;
+};
 
 /// Assert Level 0 -- Fundamental assert which
 /// is used whether in FULLDEBUG, DEBUG or OPT
@@ -188,41 +206,45 @@ namespace ErrorUtil
 /// considered code critical, even under
 /// optimized compilation.
 
-#define NEKERROR(type, msg) \
-    ErrorUtil::Error(type, __FILE__, __LINE__, msg, 0);
+#define NEKERROR(type, msg)                                     \
+    Nektar::ErrorUtil::Error(type, __FILE__, __LINE__, msg, 0);
 
 
-#define ROOTONLY_NEKERROR(type, msg)                                     \
-    ErrorUtil::Error(type, __FILE__, __LINE__, msg, 0,true);
+#define ROOTONLY_NEKERROR(type, msg)                                    \
+    Nektar::ErrorUtil::Error(type, __FILE__, __LINE__, msg, 0, true);
 
-#define ASSERTL0(condition,msg) \
-    if(!(condition)) \
-{ \
-    ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg, 0); \
-}
+#define ASSERTL0(condition,msg)                                         \
+    if(!(condition))                                                    \
+    {                                                                   \
+        Nektar::ErrorUtil::Error(                                       \
+            Nektar::ErrorUtil::efatal, __FILE__, __LINE__, msg, 0);     \
+    }
 
-#define WARNINGL0(condition,msg) \
-    if(!(condition)) \
-{ \
-    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 0); \
-}
-
+#define WARNINGL0(condition,msg)                                        \
+    if(!(condition))                                                    \
+    {                                                                   \
+        Nektar::ErrorUtil::Error(                                       \
+            Nektar::ErrorUtil::ewarning, __FILE__, __LINE__, msg, 0);   \
+    }
 
 /// Assert Level 1 -- Debugging which is used whether in FULLDEBUG or
 /// DEBUG compilation mode.  This level assert is designed for aiding
 /// in standard debug (-g) mode
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
 
-#define ASSERTL1(condition,msg) \
-    if(!(condition)) \
-{ \
-    ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg, 1); \
-}
-#define WARNINGL1(condition,msg) \
-    if(!(condition)) \
-{ \
-    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 1); \
-}
+#define ASSERTL1(condition,msg)                                         \
+    if(!(condition))                                                    \
+    {                                                                   \
+        Nektar::ErrorUtil::Error(                                       \
+            Nektar::ErrorUtil::efatal, __FILE__, __LINE__, msg, 1);     \
+    }
+
+#define WARNINGL1(condition,msg)                                        \
+    if(!(condition))                                                    \
+    {                                                                   \
+        Nektar::ErrorUtil::Error(                                       \
+            Nektar::ErrorUtil::ewarning, __FILE__, __LINE__, msg, 1);   \
+    }
 
 #else //defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
 #define ASSERTL1(condition,msg)
@@ -235,21 +257,25 @@ namespace ErrorUtil
 /// checks within the code (such as bounds checking, etc.).
 #ifdef NEKTAR_FULLDEBUG
 
-#define ASSERTL2(condition,msg) \
-    if(!(condition)) \
-{ \
-    ErrorUtil::Error(ErrorUtil::efatal, __FILE__, __LINE__, msg, 2); \
-}
-#define WARNINGL2(condition,msg) \
-    if(!(condition)) \
-{ \
-    ErrorUtil::Error(ErrorUtil::ewarning, __FILE__, __LINE__, msg, 2); \
-}
+#define ASSERTL2(condition,msg)                                         \
+    if(!(condition))                                                    \
+    {                                                                   \
+        Nektar::ErrorUtil::Error(                                       \
+            Nektar::ErrorUtil::efatal, __FILE__, __LINE__, msg, 2);     \
+    }
+#define WARNINGL2(condition,msg)                                        \
+    if(!(condition))                                                    \
+    {                                                                   \
+        Nektar::ErrorUtil::Error(                                       \
+            Nektar::ErrorUtil::ewarning, __FILE__, __LINE__, msg, 2);   \
+    }
 
 #else //NEKTAR_FULLDEBUG
 #define ASSERTL2(condition,msg)
 #define WARNINGL2(condition,msg)
 #endif //NEKTAR_FULLDEBUG
+
+}
 
 #endif //ERRORUTIL_HPP
 

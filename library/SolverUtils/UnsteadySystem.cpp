@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,17 +32,17 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+
 #include <iostream>
 #include <iomanip>
+using namespace std;
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
+#include <boost/core/ignore_unused.hpp>
+#include <boost/format.hpp>
+
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SolverUtils/UnsteadySystem.h>
-
-#include <boost/format.hpp>
-
-using namespace std;
 
 namespace Nektar
 {
@@ -92,7 +91,7 @@ namespace Nektar
             m_session->MatchSolverInfo("REACTIONADVANCEMENT", "Explicit",
                                        m_explicitReaction, true);
 
-            m_session->LoadParameter("CheckNanSteps", m_nanSteps, 1);
+            m_session->LoadParameter("CheckAbortSteps", m_abortSteps, 1);
             // Steady state tolerance
             m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 0.0);
             // Frequency for checking steady state
@@ -102,15 +101,23 @@ namespace Nektar
             // For steady problems, we do not initialise the time integration
             if (m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
             {
-                m_intScheme = LibUtilities::GetTimeIntegrationWrapperFactory().
-                    CreateInstance(m_session->GetSolverInfo(
-                                       "TIMEINTEGRATIONMETHOD"));
+                std::string methodName = m_session->GetSolverInfo(
+                                                "TIMEINTEGRATIONMETHOD" );
+                m_intScheme = LibUtilities::GetTimeIntegrationSchemeFactory()
+		    .CreateInstance( methodName, "", 0,
+				     std::vector<NekDouble>());
 
                 // Load generic input parameters
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
+                m_session->LoadParameter("IO_FiltersInfoSteps",
+                    m_filtersInfosteps, 10.0 * m_infosteps);
                 m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.0);
-                m_session->LoadParameter("CFL_End", m_CFLEnd, 0.0);
+                m_session->LoadParameter("CFLEnd", m_CFLEnd, 0.0);
                 m_session->LoadParameter("CFLGrowth", m_CFLGrowth, 1.0);
+
+                // Time tolerance between filter update time and time integration
+                m_session->LoadParameter("FilterTimeWarning",
+                                         m_filterTimeWarning, 1);
 
                 // Ensure that there is no conflict of parameters
                 if(m_cflSafetyFactor > 0.0)
@@ -130,7 +137,7 @@ namespace Nektar
                 }
 
                 // Ensure that there is no conflict of parameters
-                if(m_CFLGrowth > 1.0)
+                if (m_CFLGrowth > 1.0)
                 {
                     // Check final condition
                     ASSERTL0(m_CFLEnd >= m_cflSafetyFactor,
@@ -148,9 +155,8 @@ namespace Nektar
             // Set up filters
             for (auto &x : m_session->GetFilters())
             {
-                m_filters.push_back(
-                    GetFilterFactory().CreateInstance(
-                        x.first, m_session, x.second));
+                m_filters.push_back(make_pair(x.first, GetFilterFactory().CreateInstance(
+                        x.first, m_session, shared_from_this(), x.second)));
             }
         }
 
@@ -166,49 +172,7 @@ namespace Nektar
          */
         NekDouble UnsteadySystem::MaxTimeStepEstimator()
         {
-            NekDouble TimeStability = 0.0;
-            switch(m_intScheme->GetIntegrationMethod())
-            {
-                case LibUtilities::eForwardEuler:
-                case LibUtilities::eClassicalRungeKutta4:
-                case LibUtilities::eRungeKutta4:
-                {
-                    TimeStability = 2.784;
-                    break;
-                }
-                case LibUtilities::eAdamsBashforthOrder1:
-                case LibUtilities::eMidpoint:
-                case LibUtilities::eRungeKutta2:
-                case LibUtilities::eRungeKutta2_ImprovedEuler:
-                case LibUtilities::eRungeKutta2_SSP:
-                case LibUtilities::eRungeKutta3_SSP:
-                {
-                    TimeStability = 2.0;
-                    break;
-                }
-                case LibUtilities::eAdamsBashforthOrder2:
-                {
-                    TimeStability = 1.0;
-                    break;
-                }
-                case LibUtilities::eBackwardEuler:
-                case LibUtilities::eDIRKOrder2:
-                case LibUtilities::eDIRKOrder3:
-                case LibUtilities::eDIRKOrder3Stage5:
-                case LibUtilities::eDIRKOrder4Stage6:
-                {
-                    TimeStability = 2.0;
-                    break;
-                }
-                default:
-                {
-                    ASSERTL0(
-                        false,
-                        "No CFL control implementation for this time"
-                        "integration scheme");
-                }
-            }
-            return TimeStability;
+            return m_intScheme->GetTimeStability();
         }
 
         /**
@@ -219,11 +183,9 @@ namespace Nektar
         {
             ASSERTL0(m_intScheme != 0, "No time integration scheme.");
 
-            int nwidthcolm = 10;
-
             int i = 1;
             int nvariables = 0;
-            int nfields = m_fields.num_elements();
+            int nfields = m_fields.size();
 
             if (m_intVariables.empty())
             {
@@ -261,76 +223,42 @@ namespace Nektar
             }
 
             // Initialise time integration scheme
-            m_intSoln = m_intScheme->InitializeScheme(
-                m_timestep, fields, m_time, m_ode);
+            m_intSoln = m_intScheme->InitializeScheme( m_timestep, fields,
+                                                       m_time, m_ode );
 
             // Initialise filters
-            for (auto &x : m_filters)
+            for( auto &x : m_filters )
             {
-                x->setFilterOperators(m_FilterOperators);
-                x->Initialise(m_fields, m_time);
+                x.second->Initialise(m_fields, m_time);
             }
 
-            LibUtilities::Timer     timer;
-            bool      doCheckTime   = false;
-            int       step          = m_initialStep;
-            int       stepCounter   = 0;
-            int       restartStep   = -1;
-            NekDouble intTime       = 0.0;
-            NekDouble lastCheckTime = 0.0;
-            NekDouble cpuTime       = 0.0;
-            NekDouble elapsed       = 0.0;
+            LibUtilities::Timer         timer;
+            bool      doCheckTime       = false;
+            int       step              = m_initialStep;
+            int       stepCounter       = 0;
+            NekDouble intTime           = 0.0;
+            NekDouble lastCheckTime     = 0.0;
+            NekDouble cpuTime           = 0.0;
+            NekDouble cpuPrevious       = 0.0;
+            NekDouble elapsed           = 0.0;
+            NekDouble totFilterTime     = 0.0;
 
-            m_TotNewtonIts  = 0;
-            m_TotGMRESIts   = 0;
-            m_TotOdeRHS     = 0;
-            m_TotImpStages  = 0;
-
-            NekDouble tmp_cflSafetyFactor = m_cflSafetyFactor;
-            m_CalcuPrecMatCounter = m_PrcdMatFreezNumb;
-            bool flagFreezeCFL = false;
+            Array<OneD, int> abortFlags(2, 0);
+            string    abortFile     = "abort";
+            if (m_session->DefinesSolverInfo("CheckAbortFile"))
+            {
+                abortFile = m_session->GetSolverInfo("CheckAbortFile");
+            }
 
             m_timestepMax = m_timestep;
-            while (step   < m_steps ||
-                   m_time < m_fintime - NekConstants::kNekZeroTol)
+            while ((step   < m_steps ||
+                   m_time < m_fintime - NekConstants::kNekZeroTol) &&
+                   abortFlags[1] == 0)
             {
-                restartStep++;
-
-                // cout    <<" m_TotLinItePerStep= "<<m_TotLinItePerStep
-                //         <<" m_StagesPerStep= "<<m_StagesPerStep
-                //         <<" m_maxLinItePerNewton= "<<m_maxLinItePerNewton<<endl;
-                if(m_CFLEnd>tmp_cflSafetyFactor)
+                if (m_CFLGrowth > 1.0 && m_cflSafetyFactor < m_CFLEnd)
                 {
-                    if( m_steadyStateTol > 0.0 &&
-                        (NekDouble(m_TotLinItePerStep)/NekDouble(m_StagesPerStep)>0.5*NekDouble(m_maxLinItePerNewton)))
-                    {
-                        // cout <<"WARNINGL1(false,tmp_cflSafetyFactor *= 0.9; );"<<endl;
-                        
-                        tmp_cflSafetyFactor = 0.9*tmp_cflSafetyFactor;
-                        flagFreezeCFL = true;
-                        WARNINGL1(false," tmp_cflSafetyFactor *= 0.9; ");
-                    }
-                    else if(flagFreezeCFL)
-                    {
-                        flagFreezeCFL = false;
-                    }
-                    else
-                    {
-                        if (m_steadyStateTol > 0.0 && (!((step+1)%m_steadyStateSteps)) )
-                        {
-                            if(restartStep>1)
-                            {
-                                tmp_cflSafetyFactor = min(m_CFLEnd,std::pow(m_steadyStateRes0/m_steadyStateRes,0.7)*tmp_cflSafetyFactor);
-                            }
-                        }
-                        else
-                        {
-                            if(m_CFLGrowth > 1.0&&m_cflSafetyFactor<m_CFLEnd)
-                            {
-                                tmp_cflSafetyFactor = min(m_CFLEnd,m_CFLGrowth*tmp_cflSafetyFactor);
-                            }
-                        }
-                    }
+                    m_cflSafetyFactor = min(
+                        m_CFLEnd, m_CFLGrowth * m_cflSafetyFactor);
                 }
                 // Flag to update AV
                 m_calcuPhysicalAV = true;
@@ -340,15 +268,7 @@ namespace Nektar
                     ||(m_time + m_timestep > m_fintime && m_fintime > 0.0)
                     ||(m_checktime && m_time + m_timestep - lastCheckTime >= m_checktime))
                 {
-
-                    m_CalcuPrecMatFlag      =   true;
-                    m_CalcuPrecMatCounter   =   0;
-                    m_cflSafetyFactor       =   tmp_cflSafetyFactor;
-
-                    if (m_cflSafetyFactor)
-                    {
-                        m_timestep = GetTimeStep(fields);
-                    }
+                    m_timestep = GetTimeStep(fields);
 
                     // Ensure that the final timestep finishes at the final
                     // time, or at a prescribed IO_CheckTime.
@@ -357,35 +277,13 @@ namespace Nektar
                         m_timestep = m_fintime - m_time;
                     }
                     else if (m_checktime &&
-                            m_time + m_timestep - lastCheckTime >= m_checktime)
+                             m_time + m_timestep - lastCheckTime >= m_checktime)
                     {
                         lastCheckTime += m_checktime;
                         m_timestep     = lastCheckTime - m_time;
                         doCheckTime    = true;
                     }
                 }
-
-                m_CalcuPrecMatCounter++;
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-                if (m_TimeIncrementFactor>1.0)
-                {
-                    NekDouble timeincrementFactor = m_TimeIncrementFactor;
-                    m_timestep  *=  timeincrementFactor;
-
-                    if (m_time + m_timestep > m_fintime && m_fintime > 0.0)
-                    {
-                        m_timestep = m_fintime - m_time;
-                    }
-                }
-                // if(m_CalcuPrecMatCounter>=m_PrcdMatFreezNumb)
-                // {
-
-                //     m_CalcuPrecMatFlag      =   true;
-                //     m_CalcuPrecMatCounter   =   0;
-                // }
-                // m_CalcuPrecMatCounter++;
-
-#endif
 
                 // Perform any solver-specific pre-integration steps
                 timer.Start();
@@ -410,50 +308,30 @@ namespace Nektar
                 if (m_session->GetComm()->GetRank() == 0 &&
                     !((step+1) % m_infosteps))
                 {
-                    cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
-                         << "Steps: " << setw(8)  << left << step+1 << " "
-                         << "Time: "  << setw(8) << left << m_time;
+                    cout << "Steps: " << setw(8)  << left << step+1 << " "
+                         << "Time: "  << setw(12) << left << m_time;
 
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-                    if (m_cflSafetyFactor||m_TimeIncrementFactor>1.0)
-#else
                     if (m_cflSafetyFactor)
-#endif
                     {
-                        cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
-                             << " CFL: " << m_cflSafetyFactor
-                             << " NonAcous-CFL : " << m_cflNonAcoustic
-                             << " Time-step: " << m_timestep;
+                        cout << " Time-step: " << setw(12)
+                             << left << m_timestep;
                     }
 
                     stringstream ss;
                     ss << cpuTime << "s";
-                    cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
-                         << " CPU Time: " << left
-                         << ss.str();
-
-                    cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
-                         <<" INT Time: "<< intTime<<"s"<<endl;
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-                    if(m_flagImplItsStatistcs)
-                    {
-                        cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
-                             << "       &&" 
-                             << " TotImpStages= " << m_TotImpStages 
-                             << " TotNewtonIts= " << m_TotNewtonIts
-                             << " TotGMRESIts = " << m_TotGMRESIts  
-                             << " TotOdeRHS   = " << m_TotOdeRHS    
-                             <<endl;
-                    }
-#endif
-
+                    cout << " CPU Time: " << setw(8) << left
+                         << ss.str() << endl;
+                    cpuPrevious = cpuTime;
                     cpuTime = 0.0;
                 }
 
                 // Transform data into coefficient space
                 for (i = 0; i < nvariables; ++i)
                 {
+                    // copy fields into ExpList::m_phys and assign the new
+                    // array to fields
                     m_fields[m_intVariables[i]]->SetPhys(fields[i]);
+                    fields[i] = m_fields[m_intVariables[i]]->UpdatePhys();
                     if( v_RequireFwdTrans() )
                     {
                         m_fields[m_intVariables[i]]->FwdTrans_IterPerExp(
@@ -462,6 +340,7 @@ namespace Nektar
                     }
                     m_fields[m_intVariables[i]]->SetPhysState(false);
                 }
+                
                 // Perform any solver-specific post-integration steps
                 if (v_PostIntegrate(step))
                 {
@@ -482,28 +361,74 @@ namespace Nektar
                     }
                 }
 
-                // search for NaN and quit if found
-                if (m_nanSteps && !((step+1) % m_nanSteps) )
+                // test for abort conditions (nan, or abort file)
+                if (m_abortSteps && !((step+1) % m_abortSteps) )
                 {
-                    int nanFound = 0;
+                    abortFlags[0] = 0;
                     for (i = 0; i < nvariables; ++i)
                     {
-                        if (Vmath::Nnan(fields[i].num_elements(),
+                        if (Vmath::Nnan(fields[i].size(),
                                 fields[i], 1) > 0)
                         {
-                            nanFound = 1;
+                            abortFlags[0] = 1;
                         }
                     }
-                    m_session->GetComm()->AllReduce(nanFound,
+
+                    //rank zero looks for abort file and deltes it
+                    //if it exists. The communicates the abort
+                    if(m_session->GetComm()->GetRank() == 0)
+                    {
+                        if(boost::filesystem::exists(abortFile))
+                        {
+                            boost::filesystem::remove(abortFile);
+                            abortFlags[1] = 1;
+                        }
+                    }
+
+                    m_session->GetComm()->AllReduce(abortFlags,
                                 LibUtilities::ReduceMax);
-                    ASSERTL0 (!nanFound,
+
+                    ASSERTL0 (!abortFlags[0],
                                 "NaN found during time integration.");
                 }
+
                 // Update filters
                 for (auto &x : m_filters)
                 {
-                    x->Update(m_fields, m_time);
+                    timer.Start();
+                    x.second->Update(m_fields, m_time);
+                    timer.Stop();
+                    elapsed = timer.TimePerTest(1);
+                    totFilterTime += elapsed;
+
+                    // Write out individual filter status information
+                    if(m_session->GetComm()->GetRank() == 0 &&
+                    !((step+1) % m_filtersInfosteps) && !m_filters.empty() &&
+                    m_session->DefinesCmdLineArgument("verbose"))
+                    {
+                        stringstream s0;
+                        s0 << x.first << ":";
+                        stringstream s1;
+                        s1 << elapsed << "s";
+                        stringstream s2;
+                        s2 << elapsed / cpuPrevious * 100 << "%";
+                        cout << "CPU time for filter " << setw(25) << left
+                            << s0.str() << setw(12) << left << s1.str() <<
+                            endl << "\t Percentage of time integration:     "
+                             << setw(10) << left << s2.str() << endl;
+                    }
                 }
+
+                // Write out overall filter status information
+                if (m_session->GetComm()->GetRank() == 0 &&
+                    !((step+1) % m_filtersInfosteps) && !m_filters.empty())
+                 {
+                    stringstream ss;
+                    ss << totFilterTime << "s";
+                    cout << "Total filters CPU Time:\t\t\t     " << setw(10)
+                        << left << ss.str() << endl;
+                 }
+                totFilterTime = 0.0;
 
                 // Write out checkpoint files
                 if ((m_checksteps && !((step + 1) % m_checksteps)) ||
@@ -549,20 +474,19 @@ namespace Nektar
                 ++step;
                 ++stepCounter;
             }
+
             // Print out summary statistics
             if (m_session->GetComm()->GetRank() == 0)
             {
                 if (m_cflSafetyFactor > 0.0)
                 {
-                    cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
-                         << "CFL safety factor : " << m_cflSafetyFactor << endl
+                    cout << "CFL safety factor : " << m_cflSafetyFactor << endl
                          << "CFL time-step     : " << m_timestep        << endl;
                 }
 
                 if (m_session->GetSolverInfo("Driver") != "SteadyState")
                 {
-                    cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
-                         << "Time-integration  : " << intTime  << "s"   << endl;
+                    cout << "Time-integration  : " << intTime  << "s"   << endl;
                 }
             }
 
@@ -592,7 +516,7 @@ namespace Nektar
             // Finalise filters
             for (auto &x : m_filters)
             {
-                x->Finalise(m_fields, m_time);
+                x.second->Finalise(m_fields, m_time);
             }
 
             // Print for 1D problems
@@ -639,12 +563,10 @@ namespace Nektar
                                m_explicitReaction  ? "explicit" : "implicit");
             }
 
-            AddSummaryItem(s, "Time Step", m_timestep);
-            AddSummaryItem(s, "No. of Steps", m_steps);
-            AddSummaryItem(s, "Checkpoints (steps)", m_checksteps);
-            AddSummaryItem(s, "Integration Type",
-                           LibUtilities::TimeIntegrationMethodMap[
-                               m_intScheme->GetIntegrationMethod()]);
+            AddSummaryItem( s, "Time Step", m_timestep );
+            AddSummaryItem( s, "No. of Steps", m_steps );
+            AddSummaryItem( s, "Checkpoints (steps)", m_checksteps );
+            AddSummaryItem( s, "Integration Type", m_intScheme->GetName() );
         }
 
         /**
@@ -676,7 +598,7 @@ namespace Nektar
         {
             if (m_session->DefinesFunction("InitialConditions"))
             {
-                for (int i = 0; i < m_fields.num_elements(); ++i)
+                for (int i = 0; i < m_fields.size(); ++i)
                 {
                     LibUtilities::FunctionType vType;
 
@@ -751,17 +673,20 @@ namespace Nektar
         NekDouble UnsteadySystem::v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray)
         {
-            ASSERTL0(false, "Not defined for this class");
+            boost::ignore_unused(inarray);
+            NEKERROR(ErrorUtil::efatal, "Not defined for this class");
             return 0.0;
         }
 
         bool UnsteadySystem::v_PreIntegrate(int step)
         {
+            boost::ignore_unused(step);
             return false;
         }
 
         bool UnsteadySystem::v_PostIntegrate(int step)
         {
+            boost::ignore_unused(step);
             return false;
         }
 
@@ -770,7 +695,7 @@ namespace Nektar
                   StdRegions::VarCoeffMap              &varCoeffMap)
         {
             int phystot = m_fields[0]->GetTotPoints();
-            int nvel = vel.num_elements();
+            int nvel = vel.size();
 
             Array<OneD, NekDouble> varcoeff(phystot),tmp;
 
@@ -812,9 +737,9 @@ namespace Nektar
             {
                 const int nPoints = m_fields[0]->GetTotPoints();
                 m_previousSolution = Array<OneD, Array<OneD, NekDouble> > (
-                            m_fields.num_elements());
+                            m_fields.size());
 
-                for (int i = 0; i < m_fields.num_elements(); ++i)
+                for (int i = 0; i < m_fields.size(); ++i)
                 {
                     m_previousSolution[i] = Array<OneD, NekDouble>(nPoints);
                     Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1,
@@ -832,9 +757,9 @@ namespace Nektar
 
                     m_errFile << setw(26) << left << "Step";
 
-                    for (int i = 0; i < m_fields.num_elements(); ++i)
+                    for (int i = 0; i < m_fields.size(); ++i)
                     {
-                        m_errFile << setw(26) << m_session->GetVariables()[i];
+                       m_errFile << setw(26) << m_session->GetVariables()[i];
                     }
 
                     m_errFile << endl;
@@ -854,7 +779,7 @@ namespace Nektar
         bool UnsteadySystem::CheckSteadyState(int step, NekDouble totCPUTime)
         {
             const int nPoints = GetTotPoints();
-            const int nFields = m_fields.num_elements();
+            const int nFields = m_fields.size();
 
             // Holds L2 errors.
             Array<OneD, NekDouble> L2       (nFields);
@@ -895,7 +820,7 @@ namespace Nektar
                 return true;
             }
 
-            for (int i = 0; i < m_fields.num_elements(); ++i)
+            for (int i = 0; i < m_fields.size(); ++i)
             {
                 Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1,
                                       m_previousSolution[i], 1);
@@ -911,8 +836,9 @@ namespace Nektar
             int                         step, 
             Array<OneD, NekDouble>      &L2)
         {
+            boost::ignore_unused(step);
             const int nPoints = GetTotPoints();
-            const int nFields = m_fields.num_elements();
+            const int nFields = m_fields.size();
 
             // Holds L2 errors.
             Array<OneD, NekDouble> RHSL2    (nFields);

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -37,7 +36,7 @@
 #include <MultiRegions/PreconditionerDiagonal.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 
@@ -56,15 +55,14 @@ namespace Nektar
         /**
          * @class Preconditioner
          *
-         * This class implements diagonal preconditioning for the conjugate 
+         * This class implements diagonal preconditioning for the conjugate
 	 * gradient matrix solver.
 	 */
 
          PreconditionerDiagonal::PreconditionerDiagonal(
                          const std::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap)
-           : Preconditioner(plinsys, pLocToGloMap),
-             m_preconType(pLocToGloMap->GetPreconType())
+           : Preconditioner(plinsys, pLocToGloMap)
          {
 	 }
 
@@ -75,7 +73,7 @@ namespace Nektar
         void PreconditionerDiagonal::v_BuildPreconditioner()
         {
             GlobalSysSolnType solvertype =
-                m_locToGloMap->GetGlobalSysSolnType();
+                m_locToGloMap.lock()->GetGlobalSysSolnType();
             if (solvertype == eIterativeFull)
             {
                 DiagonalPreconditionerSum();
@@ -92,22 +90,24 @@ namespace Nektar
                 ASSERTL0(0,"Unsupported solver type");
             }
         }
-        
+
         /**
          * Diagonal preconditioner computed by summing the relevant elements of
          * the local matrix system.
          */
          void PreconditionerDiagonal::DiagonalPreconditionerSum()
          {
-             std::shared_ptr<MultiRegions::ExpList> expList = 
+             std::shared_ptr<MultiRegions::ExpList> expList =
                  ((m_linsys.lock())->GetLocMat()).lock();
 
              LocalRegions::ExpansionSharedPtr locExpansion;
 
+             auto asmMap = m_locToGloMap.lock();
+
              int i,j,n,cnt,gid1,gid2;
              NekDouble sign1,sign2,value;
-             int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
-             int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+             int nGlobal = asmMap->GetNumGlobalCoeffs();
+             int nDir    = asmMap->GetNumGlobalDirBndCoeffs();
              int nInt    = nGlobal - nDir;
 
              // fill global matrix
@@ -123,16 +123,16 @@ namespace Nektar
 
                  for(i = 0; i < loc_row; ++i)
                  {
-                     gid1  = m_locToGloMap->GetLocalToGlobalMap(cnt+i)-nDir;
-                     sign1 = m_locToGloMap->GetLocalToGlobalSign(cnt+i);
+                     gid1  = asmMap->GetLocalToGlobalMap(cnt+i)-nDir;
+                     sign1 = asmMap->GetLocalToGlobalSign(cnt+i);
 
                      if(gid1 >= 0)
                      {
                          for(j = 0; j < loc_row; ++j)
                          {
-                             gid2  = m_locToGloMap->GetLocalToGlobalMap(cnt+j)
+                             gid2  = asmMap->GetLocalToGlobalMap(cnt+j)
                                  - nDir;
-                             sign2 = m_locToGloMap->GetLocalToGlobalSign(cnt+j);
+                             sign2 = asmMap->GetLocalToGlobalSign(cnt+j);
                              if(gid2 == gid1)
                              {
                                  // When global matrix is symmetric,
@@ -150,7 +150,7 @@ namespace Nektar
              }
 
              // Assemble diagonal contributions across processes
-             m_locToGloMap->UniversalAssemble(vOutput);
+             asmMap->UniversalAssemble(vOutput);
 
              m_diagonals = Array<OneD, NekDouble> (nInt);
              Vmath::Sdiv(nInt, 1.0, &vOutput[nDir], 1, &m_diagonals[0], 1);
@@ -163,8 +163,10 @@ namespace Nektar
          */
         void PreconditionerDiagonal::StaticCondDiagonalPreconditionerSum()
         {
-            int nGlobalBnd = m_locToGloMap->GetNumGlobalBndCoeffs();
-            int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            auto asmMap = m_locToGloMap.lock();
+
+            int nGlobalBnd = asmMap->GetNumGlobalBndCoeffs();
+            int nDirBnd = asmMap->GetNumGlobalDirBndCoeffs();
             int rows = nGlobalBnd - nDirBnd;
 
             Array<OneD, NekDouble> vOutput(nGlobalBnd,0.0);
@@ -177,7 +179,7 @@ namespace Nektar
             }
 
             // Assemble diagonal contributions across processes
-            m_locToGloMap->UniversalAssembleBnd(vOutput);
+            asmMap->UniversalAssembleBnd(vOutput);
 
             m_diagonals = Array<OneD, NekDouble> (rows);
             Vmath::Sdiv(rows, 1.0, &vOutput[nDirBnd], 1, &m_diagonals[0], 1);
@@ -190,17 +192,18 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            GlobalSysSolnType solvertype = 
-                m_locToGloMap->GetGlobalSysSolnType();            
+            auto asmMap = m_locToGloMap.lock();
+
+            GlobalSysSolnType solvertype = asmMap->GetGlobalSysSolnType();
 
             int nGlobal = solvertype == eIterativeFull ?
-                m_locToGloMap->GetNumGlobalCoeffs() :
-                m_locToGloMap->GetNumGlobalBndCoeffs();
-            int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+                asmMap->GetNumGlobalCoeffs() :
+                asmMap->GetNumGlobalBndCoeffs();
+            int nDir    = asmMap->GetNumGlobalDirBndCoeffs();
             int nNonDir = nGlobal-nDir;
             Vmath::Vmul(nNonDir, &pInput[0], 1, &m_diagonals[0], 1, &pOutput[0], 1);
 	}
-        
+
         string PreconditionerNull::className
         = GetPreconFactory().RegisterCreatorFunction(
             "Null",
@@ -210,14 +213,13 @@ namespace Nektar
         /**
          * @class Null Preconditioner
          *
-         * This class implements no preconditioning for the conjugate 
+         * This class implements no preconditioning for the conjugate
 	 * gradient matrix solver.
 	 */
          PreconditionerNull::PreconditionerNull(
                          const std::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap)
-           : Preconditioner(plinsys, pLocToGloMap),
-             m_preconType(pLocToGloMap->GetPreconType())
+           : Preconditioner(plinsys, pLocToGloMap)
          {
 	 }
 
@@ -242,7 +244,7 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            Vmath::Vcopy(pInput.num_elements(), pInput, 1, pOutput, 1);
+            Vmath::Vcopy(pInput.size(), pInput, 1, pOutput, 1);
 	}
 
 

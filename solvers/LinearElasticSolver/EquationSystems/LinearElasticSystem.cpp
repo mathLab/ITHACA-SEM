@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -39,8 +38,7 @@
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/NodalTriExp.h>
-#include <MultiRegions/ContField2D.h>
-#include <MultiRegions/ContField3D.h>
+#include <MultiRegions/ContField.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
 #include <MultiRegions/Preconditioner.h>
@@ -157,29 +155,14 @@ void LinearElasticSystem::v_InitObject()
 
     // Create a coupled assembly map which allows us to tie u, v and w
     // fields together.
-    if (nVel == 2)
-    {
-        MultiRegions::ContField2DSharedPtr u = std::dynamic_pointer_cast<
-            MultiRegions::ContField2D>(m_fields[0]);
-        m_assemblyMap = MemoryManager<CoupledAssemblyMap>
-            ::AllocateSharedPtr(m_session,
-                                m_graph,
-                                u->GetLocalToGlobalMap(),
-                                m_fields[0]->GetBndConditions(),
-                                m_fields);
-    }
-
-    if (nVel == 3)
-    {
-        MultiRegions::ContField3DSharedPtr u = std::dynamic_pointer_cast<
-            MultiRegions::ContField3D>(m_fields[0]);
-        m_assemblyMap = MemoryManager<CoupledAssemblyMap>
-            ::AllocateSharedPtr(m_session,
-                                m_graph,
-                                u->GetLocalToGlobalMap(),
-                                m_fields[0]->GetBndConditions(),
-                                m_fields);
-    }
+    MultiRegions::ContFieldSharedPtr u = std::dynamic_pointer_cast<
+        MultiRegions::ContField>(m_fields[0]);
+    m_assemblyMap = MemoryManager<CoupledAssemblyMap>
+        ::AllocateSharedPtr(m_session,
+                            m_graph,
+                            u->GetLocalToGlobalMap(),
+                            m_fields[0]->GetBndConditions(),
+                            m_fields);
 
     // Figure out size of our new matrix systems by looping over all expansions
     // and multiply number of coefficients by velocity components.
@@ -391,7 +374,6 @@ void LinearElasticSystem::v_GenerateSummary(SolverUtils::SummaryList& s)
  */
 void LinearElasticSystem::v_DoSolve()
 {
-
     int i, j, k, l, nv;
     const int nVel = m_fields[0]->GetCoordim(0);
 
@@ -446,7 +428,6 @@ void LinearElasticSystem::v_DoSolve()
     linSys->Initialise(m_assemblyMap);
 
     const int nCoeffs = m_fields[0]->GetNcoeffs();
-    const int nGlobDofs = m_assemblyMap->GetNumGlobalCoeffs();
 
     //
     // -- Evaluate forcing functions
@@ -543,7 +524,7 @@ void LinearElasticSystem::v_DoSolve()
             DNekMat jacIdeal(nVel, nVel, 0.0, eFULL);
             DNekMat metric  (nVel, nVel, 0.0, eFULL);
 
-            for (j = 0; j < deriv[0][0].num_elements(); ++j)
+            for (j = 0; j < deriv[0][0].size(); ++j)
             {
                 for (k = 0; k < nVel; ++k)
                 {
@@ -593,7 +574,7 @@ void LinearElasticSystem::v_DoSolve()
                 }
             }
 
-            if (deriv[0][0].num_elements() != exp->GetTotPoints())
+            if (deriv[0][0].size() != exp->GetTotPoints())
             {
                 Array<OneD, NekDouble> tmp;
                 for (k = 0; k < nVel; ++k)
@@ -635,98 +616,40 @@ void LinearElasticSystem::v_DoSolve()
     //   assembly map. We loop over each element, then the boundary degrees of
     //   freedom for u, boundary for v, followed by the interior for u and then
     //   interior for v.
-    // - rhs is the global assembly of forCoeffs.
-    // - inout holds the Dirichlet degrees of freedom in the global ordering,
-    //   which have been assembled from the boundary expansion.
+    // - inout holds the Dirichlet degrees of freedom in the local ordering,
+    //   which have the boundary conditions imposed 
     Array<OneD, NekDouble> forCoeffs(nVel * nCoeffs, 0.0);
-    Array<OneD, NekDouble> inout    (nGlobDofs, 0.0);
-    Array<OneD, NekDouble> rhs      (nGlobDofs, 0.0);
+    Array<OneD, NekDouble> inout    (nVel * nCoeffs, 0.0);
+    Array<OneD, NekDouble> tmp      (nCoeffs);
 
     for (nv = 0; nv < nVel; ++nv)
     {
         // Take the inner product of the forcing function.
-        Array<OneD, NekDouble> tmp(nCoeffs);
         m_fields[nv]->IProductWRTBase_IterPerExp(forcing[nv], tmp);
 
+        // Impose Dirichlet condition on field which should be initialised 
+        Array<OneD, NekDouble> loc_inout = m_fields[nv]->UpdateCoeffs(); 
+        m_fields[nv]->ImposeDirichletConditions(loc_inout);
+        
         // Scatter forcing into RHS vector according to the ordering dictated in
         // the comment above.
         for (i = 0; i < m_fields[nv]->GetExpSize(); ++i)
         {
-            int nBnd   = m_bmap[i].num_elements();
-            int nInt   = m_imap[i].num_elements();
+            int nBnd   = m_bmap[i].size();
+            int nInt   = m_imap[i].size();
             int offset = m_fields[nv]->GetCoeff_Offset(i);
 
             for (j = 0; j < nBnd; ++j)
             {
                 forCoeffs[nVel*offset + nv*nBnd + j] =
-                    tmp[offset+m_bmap[i][j]];
+                    -1.0*tmp[offset+m_bmap[i][j]];
+                inout[nVel*offset + nv*nBnd + j] =
+                    loc_inout[offset+m_bmap[i][j]];
             }
             for (j = 0; j < nInt; ++j)
             {
                 forCoeffs[nVel*(offset + nBnd) + nv*nInt + j] =
-                    tmp[offset+m_imap[i][j]];
-            }
-        }
-    }
-
-    // -- Impose Dirichlet boundary conditions.
-
-    // First try to do parallel assembly: the intention here is that Dirichlet
-    // values at some edges/vertices need to be communicated to processes which
-    // don't contain the entire boundary region. See
-    // ContField2D::v_ImposeDirichletConditions for more detail.
-    map<int, vector<MultiRegions::ExtraDirDof> > &extraDirDofs =
-        m_assemblyMap->GetExtraDirDofs();
-
-    for (nv = 0; nv < nVel; ++nv)
-    {
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp
-            = m_fields[nv]->GetBndCondExpansions();
-
-        // First try to do parallel stuff
-        for (auto &it : extraDirDofs)
-        {
-            for (i = 0; i < it.second.size(); ++i)
-            {
-                inout[std::get<1>(it.second.at(i))*nVel + nv] =
-                    bndCondExp[it.first]->GetCoeffs()[
-                        std::get<0>(it.second.at(i))]*std::get<2>(it.second.at(i));
-            }
-        }
-    }
-
-    m_assemblyMap->UniversalAssemble(inout);
-
-    // Counter for the local Dirichlet boundary to global ordering.
-    int bndcnt = 0;
-
-    // Now assemble local boundary contributions.
-    for (nv = 0; nv < nVel; ++nv)
-    {
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp
-            = m_fields[nv]->GetBndCondExpansions();
-        const Array<OneD, const int> &bndMap
-            = m_assemblyMap->GetBndCondCoeffsToGlobalCoeffsMap();
-
-        for (i = 0; i < bndCondExp.num_elements(); ++i)
-        {
-            if (m_fields[nv]->GetBndConditions()[i]->GetBoundaryConditionType()
-                == SpatialDomains::eDirichlet)
-            {
-                const Array<OneD,const NekDouble> &bndCoeffs =
-                    bndCondExp[i]->GetCoeffs();
-
-                for (j = 0; j < bndCondExp[i]->GetNcoeffs(); ++j)
-                {
-                    NekDouble sign =
-                        m_assemblyMap->GetBndCondCoeffsToGlobalCoeffsSign(
-                            bndcnt);
-                    inout[bndMap[bndcnt++]] = sign * bndCoeffs[j];
-                }
-            }
-            else
-            {
-                bndcnt += bndCondExp[i]->GetNcoeffs();
+                    -1.0*tmp[offset+m_imap[i][j]];
             }
         }
     }
@@ -734,19 +657,8 @@ void LinearElasticSystem::v_DoSolve()
     //
     // -- Perform solve
     //
-
-    // Assemble forcing into the RHS.
-    m_assemblyMap->Assemble(forCoeffs, rhs);
-
-    // Negate RHS to be consistent with matrix definition.
-    Vmath::Neg(rhs.num_elements(), rhs, 1);
-
     // Solve.
-    linSys->Solve(rhs, inout, m_assemblyMap);
-
-    // Scatter the global ordering back to the alternate local ordering.
-    Array<OneD, NekDouble> tmp(nVel * nCoeffs);
-    m_assemblyMap->GlobalToLocal(inout, tmp);
+    linSys->Solve(forCoeffs, inout, m_assemblyMap);
 
     //
     // -- Postprocess
@@ -757,19 +669,19 @@ void LinearElasticSystem::v_DoSolve()
     {
         for (i = 0; i < m_fields[nv]->GetExpSize(); ++i)
         {
-            int nBnd   = m_bmap[i].num_elements();
-            int nInt   = m_imap[i].num_elements();
+            int nBnd   = m_bmap[i].size();
+            int nInt   = m_imap[i].size();
             int offset = m_fields[nv]->GetCoeff_Offset(i);
 
             for (j = 0; j < nBnd; ++j)
             {
                 m_fields[nv]->UpdateCoeffs()[offset+m_bmap[i][j]] =
-                    tmp[nVel*offset + nv*nBnd + j];
+                    inout[nVel*offset + nv*nBnd + j];
             }
             for (j = 0; j < nInt; ++j)
             {
                 m_fields[nv]->UpdateCoeffs()[offset+m_imap[i][j]] =
-                    tmp[nVel*(offset + nBnd) + nv*nInt + j];
+                    inout[nVel*(offset + nBnd) + nv*nInt + j];
             }
         }
         m_fields[nv]->BwdTrans(m_fields[nv]->GetCoeffs(),
@@ -916,7 +828,7 @@ void LinearElasticSystem::v_ExtraFldOutput(
     const int nVel    = m_fields[0]->GetCoordim(0);
     const int nCoeffs = m_fields[0]->GetNcoeffs();
 
-    if (m_temperature.num_elements() == 0)
+    if (m_temperature.size() == 0)
     {
         return;
     }
@@ -930,7 +842,7 @@ void LinearElasticSystem::v_ExtraFldOutput(
             "ThermStressDiv" + boost::lexical_cast<std::string>(i));
     }
 
-    if (m_stress.num_elements() == 0)
+    if (m_stress.size() == 0)
     {
         return;
     }

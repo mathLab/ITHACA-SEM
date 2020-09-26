@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -40,7 +39,7 @@
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdTriExp.h>
 #include <LocalRegions/MatrixKey.h>
-#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 #include <GlobalMapping/Deform.h>
 
@@ -84,7 +83,7 @@ void IterativeElasticSystem::v_InitObject()
         const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
             &bndCond = m_fields[0]->GetBndConditions();
 
-        for (int i = 0; i < bndCond.num_elements(); ++i)
+        for (int i = 0; i < bndCond.size(); ++i)
         {
             if (boost::iequals(bndCond[i]->GetUserDefined(), "Wall"))
             {
@@ -180,7 +179,7 @@ void IterativeElasticSystem::v_DoSolve()
         // Update boundary conditions
         if (m_repeatBCs)
         {
-            for (j = 0; j < m_fields.num_elements(); ++j)
+            for (j = 0; j < m_fields.size(); ++j)
             {
                 string varName = m_session->GetVariable(j);
                 m_fields[j]->EvaluateBoundaryConditions(m_time, varName);
@@ -188,7 +187,7 @@ void IterativeElasticSystem::v_DoSolve()
         }
         else
         {
-            for (j = 0; j < m_fields.num_elements(); ++j)
+            for (j = 0; j < m_fields.size(); ++j)
             {
                 const Array<OneD, const MultiRegions::ExpListSharedPtr>
                     &bndCondExp = m_fields[j]->GetBndCondExpansions();

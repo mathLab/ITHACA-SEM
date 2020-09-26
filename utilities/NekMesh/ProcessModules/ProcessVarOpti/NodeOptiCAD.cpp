@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -67,9 +66,8 @@ void NodeOpti1D3D::Optimise()
         NekDouble yc = m_node->m_y;
         NekDouble zc = m_node->m_z;
         NekDouble nt;
-        Array<OneD, NekDouble> p;
 
-        Array<OneD, NekDouble> sk(1);
+        vector<NekDouble> sk(1);
 
         if (m_grad[1] < 1e-6)
         {
@@ -78,7 +76,8 @@ void NodeOpti1D3D::Optimise()
 
         sk[0] = m_grad[0] / m_grad[1] * -1.0;
 
-        Array<OneD, NekDouble> bd = curve->GetBounds();
+        vector<NekDouble> bd(2);
+        curve->GetBounds(bd[0], bd[1]);
 
         bool found = false;
 
@@ -97,10 +96,7 @@ void NodeOpti1D3D::Optimise()
                 continue;
             }
 
-            p           = curve->P(nt);
-            m_node->m_x = p[0];
-            m_node->m_y = p[1];
-            m_node->m_z = p[2];
+            curve->P(nt, m_node->m_x, m_node->m_y, m_node->m_z);
 
             newVal = GetFunctional<3>(minJacNew, false);
 
@@ -117,11 +113,8 @@ void NodeOpti1D3D::Optimise()
         if (!found)
         {
             // reset the node
-            nt          = tc;
-            p           = curve->P(nt);
-            m_node->m_x = p[0];
-            m_node->m_y = p[1];
-            m_node->m_z = p[2];
+            nt = tc;
+            curve->P(nt, m_node->m_x, m_node->m_y, m_node->m_z);
 
             mtx.lock();
             m_res->nReset[0]++;
@@ -130,7 +123,8 @@ void NodeOpti1D3D::Optimise()
         else
         {
             m_minJac = minJacNew;
-            m_node->Move(p, curve->GetId(), nt);
+            m_node->Move(m_node->m_x, m_node->m_y, m_node->m_z, curve->GetId(),
+                         nt);
         }
         mtx.lock();
         m_res->val = max(sqrt((m_node->m_x - xc) * (m_node->m_x - xc) +
@@ -166,10 +160,10 @@ void NodeOpti2D3D::Optimise()
         NekDouble yc = m_node->m_y;
         NekDouble zc = m_node->m_z;
         Array<OneD, NekDouble> uvt(2);
-        Array<OneD, NekDouble> p;
-        Array<OneD, NekDouble> bd = surf->GetBounds();
+        vector<NekDouble> bd(4);
+        surf->GetBounds(bd[0], bd[1], bd[2], bd[3]);
 
-        Array<OneD, NekDouble> sk(2);
+        vector<NekDouble> sk(2);
         NekDouble val;
 
         // Calculate minimum eigenvalue
@@ -204,10 +198,7 @@ void NodeOpti2D3D::Optimise()
                 continue;
             }
 
-            p           = surf->P(uvt);
-            m_node->m_x = p[0];
-            m_node->m_y = p[1];
-            m_node->m_z = p[2];
+            surf->P(uvt, m_node->m_x, m_node->m_y, m_node->m_z);
 
             newVal = GetFunctional<3>(minJacNew, false);
 
@@ -224,10 +215,7 @@ void NodeOpti2D3D::Optimise()
         if (!found)
         {
             // reset the node
-            p           = surf->P(uvc);
-            m_node->m_x = p[0];
-            m_node->m_y = p[1];
-            m_node->m_z = p[2];
+            surf->P(uvc, m_node->m_x, m_node->m_y, m_node->m_z);
 
             mtx.lock();
             m_res->nReset[1]++;
@@ -236,7 +224,8 @@ void NodeOpti2D3D::Optimise()
         else
         {
             m_minJac = minJacNew;
-            m_node->Move(p, surf->GetId(), uvt);
+            m_node->Move(m_node->m_x, m_node->m_y, m_node->m_z, surf->GetId(),
+                         uvt);
         }
 
         mtx.lock();
@@ -260,11 +249,108 @@ void NodeOpti2D3D::Optimise()
     mtx.unlock();
 }
 
+int NodeOpti1D2D::m_type = GetNodeOptiFactory().RegisterCreatorFunction(
+    12, NodeOpti1D2D::create, "1D2D");
+
+void NodeOpti1D2D::Optimise()
+{
+    NekDouble minJacNew;
+    NekDouble currentW = GetFunctional<2>(minJacNew);
+    NekDouble newVal   = currentW;
+
+    if (m_grad[0] * m_grad[0] + m_grad[1] * m_grad[1] > gradTol())
+    {
+        // modify the gradient to be on the cad system
+        ProcessGradient();
+
+        // needs to optimise
+        NekDouble tc = m_node->GetCADCurveInfo(curve->GetId());
+        NekDouble xc = m_node->m_x;
+        NekDouble yc = m_node->m_y;
+        NekDouble zc = m_node->m_z;
+        NekDouble nt;
+        Array<OneD, NekDouble> p;
+
+        Array<OneD, NekDouble> sk(1);
+
+        if (m_grad[1] < 1e-6)
+        {
+            m_grad[1] = 1e-6 - m_grad[1];
+        }
+
+        sk[0] = m_grad[0] / m_grad[1] * -1.0;
+
+        bool found = false;
+
+        NekDouble pg = m_grad[0] * sk[0];
+
+        // normal gradient line Search
+        NekDouble alpha = 1.0;
+
+        while (alpha > alphaTol())
+        {
+            // Update node
+            nt = tc + alpha * sk[0];
+            if (nt < m_bd[0] || nt > m_bd[1])
+            {
+                alpha /= 2.0;
+                continue;
+            }
+
+            p           = curve->P(nt);
+            m_node->m_x = p[0];
+            m_node->m_y = p[1];
+            m_node->m_z = p[2];
+
+            newVal = GetFunctional<2>(minJacNew, false);
+
+            // Wolfe conditions
+            if (newVal <= currentW + c1() * alpha * pg)
+            {
+                found = true;
+                break;
+            }
+
+            alpha /= 2.0;
+        }
+
+        if (!found)
+        {
+            // reset the node
+            nt          = tc;
+            p           = curve->P(nt);
+            m_node->m_x = p[0];
+            m_node->m_y = p[1];
+            m_node->m_z = p[2];
+
+            mtx.lock();
+            m_res->nReset[0]++;
+            mtx.unlock();
+        }
+        else
+        {
+            m_minJac = minJacNew;
+            m_node->Move(p, curve->GetId(), nt);
+        }
+
+        mtx.lock();
+        m_res->val = max(sqrt((m_node->m_x - xc) * (m_node->m_x - xc) +
+                              (m_node->m_y - yc) * (m_node->m_y - yc) +
+                              (m_node->m_z - zc) * (m_node->m_z - zc)),
+                         m_res->val);
+        mtx.unlock();
+    }
+
+    mtx.lock();
+    m_res->func += newVal;
+    mtx.unlock();
+}
+
 void NodeOpti1D3D::ProcessGradient()
 {
-    NekDouble tc = m_node->GetCADCurveInfo(curve->GetId());
-    Array<OneD, NekDouble> grad = m_grad;
-    m_grad = Array<OneD, NekDouble>(2, 0.0);
+    NekDouble tc           = m_node->GetCADCurveInfo(curve->GetId());
+    vector<NekDouble> grad = m_grad;
+    m_grad                 = vector<NekDouble>(2, 0.0);
 
     // Grab first and second order CAD derivatives
     Array<OneD, NekDouble> d2 = curve->D2(tc);
@@ -284,8 +370,8 @@ void NodeOpti2D3D::ProcessGradient()
 {
     Array<OneD, NekDouble> uvc = m_node->GetCADSurfInfo(surf->GetId());
 
-    Array<OneD, NekDouble> grad = m_grad;
-    m_grad = Array<OneD, NekDouble>(5, 0.0);
+    vector<NekDouble> grad = m_grad;
+    m_grad                 = vector<NekDouble>(5, 0.0);
 
     Array<OneD, NekDouble> d2 = surf->D2(uvc);
     // r[0]   x
@@ -337,6 +423,25 @@ void NodeOpti2D3D::ProcessGradient()
                 grad[4] * (d2[3] * d2[7] + d2[4] * d2[6]) +
                 grad[5] * (d2[3] * d2[8] + d2[5] * d2[6]) +
                 grad[7] * (d2[4] * d2[8] + d2[5] * d2[7]);
+}
+
+void NodeOpti1D2D::ProcessGradient()
+{
+    NekDouble tc = m_node->GetCADCurveInfo(curve->GetId());
+    vector<NekDouble> grad = m_grad;
+    m_grad = vector<NekDouble>(2, 0.0);
+
+    // Grab first and second order CAD derivatives
+    Array<OneD, NekDouble> d2 = curve->D2(tc);
+
+    // Multiply gradient by derivative of CAD
+    m_grad[0] = grad[0] * d2[3] + grad[1] * d2[4];
+
+    // Second order: product rule of above, so multiply gradient by second
+    // order CAD derivatives and Hessian by gradient of CAD
+    m_grad[1] = grad[0] * d2[6] + grad[1] * d2[7] +
+                d2[3] * (grad[2] * d2[3] + grad[3] * d2[4]) +
+                d2[4] * (grad[3] * d2[3] + grad[4] * d2[4]);
 }
 }
 }

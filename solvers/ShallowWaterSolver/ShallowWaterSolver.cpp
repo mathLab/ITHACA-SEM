@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -88,16 +87,11 @@ int main(int argc, char *argv[])
     cout << "-------------------------------------------" << endl;
     cout << "Total Computation Time = " << CPUtime << " hr." << endl;
 
-    int ndigits=6, nothers= 8, nwidthcolm=nothers+ndigits-1; // the second value determines the number of sigificant digits
     
     for(int i = 0; i < equ->GetNvariables(); ++i)
     {
-        cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " 
-             <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
-             << equ->L2Error(i,true) << endl;
-        cout << "L inf error (variable " << equ->GetVariable(i)  << "): " 
-             <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
-             << equ->LinfError(i) << endl;
+        cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i,true) << endl;
+        cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i) << endl;
     }
 
     session->Finalise();

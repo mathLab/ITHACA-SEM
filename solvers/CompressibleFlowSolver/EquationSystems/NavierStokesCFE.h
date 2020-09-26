@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -39,9 +38,7 @@
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 #include <CompressibleFlowSolver/Misc/EquationOfState.h>
 #include <LibUtilities/BasicUtils/Smath.h>
-#include <MultiRegions/ContField3D.h>
-#include <MultiRegions/ContField2D.h>
-#include <MultiRegions/ContField1D.h>
+#include <MultiRegions/ContField.h>
 
 namespace Nektar
 {
@@ -77,8 +74,6 @@ namespace Nektar
 
   protected:
     std::string                         m_ViscosityType;
-    NekDouble                           m_mu;
-    NekDouble                           m_thermalConductivity;
     NekDouble                           m_Cp;
     NekDouble                           m_Cv;
     NekDouble                           m_Prandtl;
@@ -93,30 +88,45 @@ namespace Nektar
     EquationOfStateSharedPtr            m_eos;
 
     Array<OneD, GetdFlux_dDeriv>        m_GetdFlux_dDeriv_Array;
+    NekDouble                           m_Twall;
+    NekDouble                           m_muRef;
+    NekDouble                           m_thermalConductivityRef;
+    Array<OneD, NekDouble>              m_mu;
+    Array<OneD, NekDouble>              m_thermalConductivity;
 
     NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession,
                     const SpatialDomains::MeshGraphSharedPtr& pGraph);
 
     void GetViscousFluxVectorConservVar(
-        const int                                                       nConvectiveFields,
-        const int                                                       nDim,
-        const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
-        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &outarray,
-              Array< OneD, int >                                        &nonZeroIndex       =   NullInt1DArray,
-        const Array<OneD, Array<OneD, NekDouble> >                      &normal             =   NullNekDoubleArrayofArray,
-        const Array<OneD, NekDouble>                                    &ArtifDiffFactor    =   NullNekDouble1DArray);
+        const int                                           nDim,
+        const Array<OneD, Array<OneD, NekDouble> >          &inarray,
+        const TensorOfArray3D<NekDouble>                    &qfields,
+        TensorOfArray3D<NekDouble>                          &outarray,
+        Array< OneD, int >                                       
+            &nonZeroIndex       =   NullInt1DArray,    
+        const Array<OneD, Array<OneD, NekDouble> >               
+            &normal             =   NullNekDoubleArrayofArray,           
+        const Array<OneD, NekDouble>                             
+            &ArtifDiffFactor    =   NullNekDouble1DArray);
 
-    void GetPrimDerivFromConsDeriv(
-        const Array<OneD, Array<OneD, NekDouble> >                      &inarray,
-        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &qfields,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >        &outarray);
+    void GetViscousSymmtrFluxConservVar(
+            const int                                         nSpaceDim,
+            const Array<OneD, Array<OneD, NekDouble> >        &inaverg,
+            const Array<OneD, Array<OneD, NekDouble > >       &inarray,
+            TensorOfArray3D<NekDouble>                        &outarray,
+            Array< OneD, int >                                &nonZeroIndex,
+            const Array<OneD, Array<OneD, NekDouble> >        &normals);
+    
+      void GetPrimDerivFromConsDeriv(
+           const Array<OneD, Array<OneD, NekDouble> >                &inarray,
+           const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfields,
+           Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &outarray);
 
-    void SpecialBndTreat(
-        const int                                           nConvectiveFields,
-              Array<OneD,       Array<OneD, NekDouble> >    &consvar);
-    void ApplyFluxBndConds(
-        const int                                           nConvectiveFields,
+      void SpecialBndTreat(
+            Array<OneD,       Array<OneD, NekDouble> >    &consvar);
+
+      void ApplyFluxBndConds(
+             const int                                 nConvectiveFields,
               Array<OneD,       Array<OneD, NekDouble> >    &flux);
 
     void GetArtificialViscosity(
@@ -124,24 +134,24 @@ namespace Nektar
               Array<OneD,             NekDouble  >  &muav);
 
     void GetViscousFluxBilinearForm(
-        const int                                                       nConvectiveFields,
-        const int                                                       FluxDirection,
-        const int                                                       DerivDirection,
-        const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
-        const Array<OneD, const Array<OneD, NekDouble> >                &injumpp,
-        const Array<OneD, NekDouble>                                    &mu,
-        const Array<OneD, const Array<OneD, NekDouble> >                &auxVars,
-              Array<OneD, Array<OneD, NekDouble> >                      &outarray);
+        const int                                         nConvectiveFields,
+        const int                                         FluxDirection,
+        const int                                         DerivDirection,
+        const Array<OneD, const Array<OneD, NekDouble> >  &inaverg,
+        const Array<OneD, const Array<OneD, NekDouble> >  &injumpp,
+        const Array<OneD, NekDouble>                      &mu,
+        const Array<OneD, const Array<OneD, NekDouble> >  &auxVars,
+              Array<OneD, Array<OneD, NekDouble> >        &outarray);
 
     void CalcAuxiVarForBilinearFom(
-        const int                                                       nConvectiveFields,
-        const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
-        Array<OneD, NekDouble>                                          &mu,
-        Array<OneD, Array<OneD, NekDouble> >                            &auxVars);
+        const int                                         nConvectiveFields,
+        const Array<OneD, const Array<OneD, NekDouble> >  &inaverg,
+        Array<OneD, NekDouble>                            &mu,
+        Array<OneD, Array<OneD, NekDouble> >              &auxVars);
 
     void CalcViscosity(
-        const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
-        Array<OneD, NekDouble>                                          &mu);
+        const Array<OneD, const Array<OneD, NekDouble> >   &inaverg,
+        Array<OneD, NekDouble>                             &mu);
     
     virtual void v_InitObject();
 
@@ -155,27 +165,27 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >   &pBwd);
     virtual void v_DoDiffusion_coeff(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-               Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >   &pBwd);
+        const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
+        Array<OneD, Array<OneD, NekDouble> >                &outarray,
+        const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
+        const Array<OneD, Array<OneD, NekDouble> >          &pBwd);
 
-    virtual void v_DoDiffusionFlux(
+   virtual void v_DoDiffusionFlux(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
             Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeFlux,
             Array<OneD, Array<OneD, NekDouble>>              &TraceFlux,
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
 
-    virtual void v_GetViscousFluxVector(
+   virtual void v_GetViscousFluxVector(
         const Array<OneD, Array<OneD, NekDouble> >         &physfield,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
-    virtual void v_GetViscousFluxVectorDeAlias(
-        const Array<OneD, Array<OneD, NekDouble> >         &physfield,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
+        TensorOfArray3D<NekDouble>                         &derivatives,
+        TensorOfArray3D<NekDouble>                         &viscousTensor);
 
+   virtual void v_GetViscousFluxVectorDeAlias(
+        const Array<OneD, Array<OneD, NekDouble> >         &physfield,
+        TensorOfArray3D<NekDouble>                         &derivatives,
+        TensorOfArray3D<NekDouble>                         &viscousTensor);
 
     virtual void v_GetViscousSymmtrFluxConservVar(
             const int                                                       nConvectiveFields,
@@ -186,55 +196,55 @@ namespace Nektar
             Array< OneD, int >                                              &nonZeroIndex,
             const Array<OneD, Array<OneD, NekDouble> >                      &normals);
 
-    void GetPhysicalAV(
+      void GetPhysicalAV(
         const Array<OneD, const Array<OneD, NekDouble>> &physfield);
+      
+      void GetTracePhysicalAV();
+      void Ducros( Array<OneD, NekDouble> &field );
+      void C0Smooth(Array<OneD, NekDouble> &field);
 
-    void GetTracePhysicalAV();
-    void Ducros( Array<OneD, NekDouble> &field );
-    void C0Smooth(Array<OneD, NekDouble> &field);
-
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-  virtual void v_MinusDiffusionFluxJacDirctn(
-        const int                                                       nDirctn,
-        const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+      virtual void v_MinusDiffusionFluxJacDirctn(
+        const int                                               nDirctn,
+        const Array<OneD, const Array<OneD, NekDouble> >        &inarray,
         const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,
         Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray);
-    virtual void v_MinusDiffusionFluxJacDirctnElmt(
-            const int                                                       nConvectiveFields,
-            const int                                                       nElmtPnt,
-            const Array<OneD, Array<OneD, NekDouble> >                      &locVars,
-            const Array<OneD, Array<OneD,  Array<OneD, NekDouble> > >       &locDerv,
-            const Array<OneD, NekDouble>                                    &locmu,
-            const Array<OneD, NekDouble>                                    &locDmuDT,
-            const Array<OneD, NekDouble>                                    &normals,
-            DNekMatSharedPtr                                                &wspMat,
-            Array<OneD, Array<OneD, NekDouble> >                            &PntJacArray);
+      
+      virtual void v_MinusDiffusionFluxJacDirctnElmt(
+            const int                                  nConvectiveFields,
+            const int                                  nElmtPnt,
+            const Array<OneD, Array<OneD, NekDouble> >  &locVars,
+            const Array<OneD, Array<OneD,  Array<OneD, NekDouble> > > &locDerv,
+            const Array<OneD, NekDouble>                              &locmu,
+            const Array<OneD, NekDouble>                &locDmuDT,
+            const Array<OneD, NekDouble>                &normals,
+            DNekMatSharedPtr                            &wspMat,
+            Array<OneD, Array<OneD, NekDouble> >        &PntJacArray);
 
     virtual void v_GetFluxDerivJacDirctn(
-        const MultiRegions::ExpListSharedPtr                            &explist,
-        const Array<OneD, const Array<OneD, NekDouble> >                &normals,
-        const int                                                       nDervDir,
-        const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
+        const MultiRegions::ExpListSharedPtr              &explist,
+        const Array<OneD, const Array<OneD, NekDouble> >  &normals,
+        const int                                         nDervDir,
+        const Array<OneD, const Array<OneD, NekDouble> >  &inarray,
 
-        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray,
-        const int                                                       nfluxDir);
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD,
+        Array<OneD, NekDouble> > > > > &ElmtJacArray,
+        const int                                         nfluxDir);
     virtual void v_GetFluxDerivJacDirctnElmt(
-        const int                                                       nConvectiveFields,
-        const int                                                       nElmtPnt,
-        const int                                                       nDervDir,
-        const Array<OneD, Array<OneD, NekDouble> >                      &locVars,
-        const Array<OneD, NekDouble>                                    &locmu,
-        const Array<OneD, Array<OneD, NekDouble> >                      &locnormal,
-        DNekMatSharedPtr                                                &wspMat,
-        Array<OneD, Array<OneD, NekDouble> >                            &PntJacArray);
+        const int                                         nConvectiveFields,
+        const int                                         nElmtPnt,
+        const int                                         nDervDir,
+        const Array<OneD, Array<OneD, NekDouble> >        &locVars,
+        const Array<OneD, NekDouble>                      &locmu,
+        const Array<OneD, Array<OneD, NekDouble> >        &locnormal,
+        DNekMatSharedPtr                                  &wspMat,
+        Array<OneD, Array<OneD, NekDouble> >              &PntJacArray);
     
     virtual void v_GetFluxDerivJacDirctn(
-        const MultiRegions::ExpListSharedPtr                            &explist,
-        const Array<OneD, const Array<OneD, NekDouble> >                &normals,
-        const int                                                       nDervDir,
-        const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-              Array<OneD, Array<OneD, DNekMatSharedPtr> >               &ElmtJac);
-
+        const MultiRegions::ExpListSharedPtr              &explist,
+        const Array<OneD, const Array<OneD, NekDouble> >  &normals,
+        const int                                         nDervDir,
+        const Array<OneD, const Array<OneD, NekDouble> >  &inarray,
+              Array<OneD, Array<OneD, DNekMatSharedPtr>>  &ElmtJac);
 
     virtual void v_GetDiffusionFluxJacPoint(
             const Array<OneD, NekDouble>                        &conservVar, 
@@ -245,13 +255,13 @@ namespace Nektar
                   DNekMatSharedPtr                              &fluxJac);
 
     virtual void v_CalphysDeriv(
-            const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-                  Array<OneD,       Array<OneD, Array<OneD, NekDouble> > >  &qfield);
+            const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield);
 
     virtual void v_CalcMuDmuDT(
-            const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-            Array<OneD, NekDouble>                                          &mu,
-            Array<OneD, NekDouble>                                          &DmuDT);
+            const Array<OneD, const Array<OneD, NekDouble> >     &inarray,
+            Array<OneD, NekDouble>                               &mu,
+            Array<OneD, NekDouble>                               &DmuDT);
       
     /**
      * @brief return part of viscous Jacobian:
@@ -367,8 +377,15 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >    &qfield,
               DNekMatSharedPtr                              &OutputMatrix);
 
-#endif
+    virtual void v_GetFluxPenalty(
+        const Array<OneD, Array<OneD, NekDouble> > &uFwd,
+        const Array<OneD, Array<OneD, NekDouble> > &uBwd,
+              Array<OneD, Array<OneD, NekDouble> > &penaltyCoeff);
 
+    void GetViscosityAndThermalCondFromTemp(
+        const Array<OneD, NekDouble> &temperature,
+              Array<OneD, NekDouble> &mu,
+              Array<OneD, NekDouble> &thermalCond);
   };
 }
 #endif

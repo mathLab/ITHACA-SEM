@@ -12,6 +12,14 @@
 # `-llibname` to the linker flags. This avoids the issue of e.g. linking against
 # an outdated system zlib installation.
 #
+# On Windows, it is necessary to link using .lib files which will have been
+# generated based on whether the target library was built as STATIC or SHARED.
+# Where the library has been built as a SHARED library the associated DLLs
+# are used at runtime. The setting of LIBTYPE determines the file names to
+# link against so on Windows setting this to SHARED results in trying to link
+# against .dll files. LIBTYPE is therefore forced to be STATIC on WIN32
+# platforms to ensure linking against the .lib files.
+#
 # Arguments:
 #   - `varname`: variable name containing the third-party library name. On
 #     output will be altered to update the correct path.
@@ -24,7 +32,12 @@ MACRO(THIRDPARTY_LIBRARY varname)
     CMAKE_PARSE_ARGUMENTS(TPLIB "" "DESCRIPTION" "STATIC;SHARED" ${ARGN})
 
     IF(TPLIB_SHARED)
-        SET(LIBTYPE "SHARED")
+        IF(WIN32)
+            # Ensure linking against .lib files on Windows
+            SET(LIBTYPE "STATIC")
+        ELSE()
+            SET(LIBTYPE "SHARED")
+        ENDIF()
         SET(TPLIBS ${TPLIB_SHARED})
     ELSEIF(TPLIB_STATIC)
         SET(LIBTYPE "STATIC")
@@ -67,25 +80,42 @@ MACRO(SET_COMMON_PROPERTIES name)
     SET_TARGET_PROPERTIES(${name} PROPERTIES MINSIZEREL_POSTFIX -ms)
     SET_TARGET_PROPERTIES(${name} PROPERTIES RELWITHDEBINFO_POSTFIX -rg)
     
-    IF( MSVC )
-        # Disable the warnings about duplicate copy/assignment methods 
-        #   (4521, 4522)
-        # Disable the warning that arrays are default intialized (4351)	
-        # Disable "forcing value to bool 'true' or 'false' (performance
-        #   warning)" warning (4800)
-        # 4250 - Inheritance via dominance.  Nektar appears to be handling the 
-        # diamond correctly.
-        # 4373 - Overriding a virtual method with parameters that differ by const
-        #        or volatile conforms to the standard.
-        # /Za is necessary to prevent temporaries being bound to reference
-        #   parameters.
-        SET_TARGET_PROPERTIES(${name} PROPERTIES COMPILE_FLAGS 
-                                "/wd4521 /wd4522 /wd4351 /wd4018 /wd4800 /wd4250 /wd4373")
+    IF (MSVC)
+        # Enable production-level warnings
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE /W4)
+        # Temporarily disable signed/unsigned comparison warning
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE /wd4018)
+        # Temporarily disable narrowing warnings
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE /wd4244 /wd4267)
+        # Enable source-level parallel builds
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE /MP)
+        # Specify minimum Windows version (501=WinXP, 601=Windows 7)
+        TARGET_COMPILE_DEFINITIONS(${name} PRIVATE _WIN32_WINNT=0x0601)
+    ELSE ()
+        # Enable all warnings
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wall -Wextra)
+        IF (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            # For GNU compilers add pedantic warnings
+            TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wpedantic)
+        ENDIF()
+        # Temporarily disable warnings about comparing signed and unsigned
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wno-sign-compare)
+        # Temporarily disable warnings about narrowing of data types
+        TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wno-narrowing -Wno-conversion)
+        IF (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            TARGET_COMPILE_OPTIONS(${name} PRIVATE -fpermissive)
+        ENDIF()
+        
+        # Disable dignostic about partially overloaded virtual functions
+        IF (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+            TARGET_COMPILE_OPTIONS(${name} PRIVATE -diag-disable 654)
+        ENDIF()
 
-        # Enable source level parallel builds.
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
-    ENDIF( MSVC )	
-    
+        IF ( NEKTAR_ERROR_ON_WARNINGS )
+            TARGET_COMPILE_OPTIONS(${name} PRIVATE -Werror)
+        ENDIF()
+    ENDIF()
+
     IF (${CMAKE_COMPILER_IS_GNUCXX})
         IF(NEKTAR_ENABLE_PROFILE)
             SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
@@ -104,19 +134,6 @@ MACRO(SET_COMMON_PROPERTIES name)
                     "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_FULLDEBUG")
         ENDIF( NEKTAR_FULL_DEBUG)
    
-        IF(NOT MSVC)
-            SET(CMAKE_CXX_FLAGS_DEBUG 
-                "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wno-deprecated -Wno-sign-compare")
-            SET(CMAKE_CXX_FLAGS_RELEASE 
-                "${CMAKE_CXX_FLAGS_RELEASE} -Wall -Wno-deprecated -Wno-sign-compare")
-            SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO
-                "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -Wall -Wno-deprecated -Wno-sign-compare")
-            IF (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-                SET(CMAKE_CXX_FLAGS_DEBUG 
-                    "${CMAKE_CXX_FLAGS_DEBUG} -fpermissive")
-            ENDIF()
-        ENDIF (NOT MSVC)
-
         # Define version
         SET_PROPERTY(TARGET ${name}
             APPEND PROPERTY COMPILE_DEFINITIONS
@@ -249,3 +266,47 @@ MACRO(ADD_NEKTAR_TEST name)
             COMMAND Tester ${CMAKE_CURRENT_SOURCE_DIR}/Tests/${name}.tst)
     ENDIF()
 ENDMACRO(ADD_NEKTAR_TEST)
+
+#
+# ADD_NEKPY_LIBRARY(name SOURCES src1 src2 ...)
+#
+# Adds a new NekPy library with the given sources.
+#
+MACRO(ADD_NEKPY_LIBRARY name)
+    CMAKE_PARSE_ARGUMENTS(NEKPY "" "DEPENDS" "SOURCES" ${ARGN})
+
+    # Create library.
+    ADD_LIBRARY(_${name} SHARED ${NEKPY_SOURCES})
+
+    # Python requires a .so extension, even on OS X.
+    SET_TARGET_PROPERTIES(_${name} PROPERTIES PREFIX "")
+    SET_TARGET_PROPERTIES(_${name} PROPERTIES SUFFIX ".so")
+    SET_TARGET_PROPERTIES(_${name} PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/NekPy/${name})
+
+    ADD_DEPENDENCIES(_${name} boost-numpy)
+
+    # Add target link libraries.
+    TARGET_LINK_LIBRARIES(_${name}
+        ${Boost_SYSTEM_LIBRARY}
+        ${BOOST_PYTHON_LIB}
+        ${BOOST_NUMPY_LIB}
+        ${PYTHON_LIBRARIES}
+        ${name})
+
+    # Install __init__.py files.
+    SET(TMPOUT "")
+    IF (NEKPY_DEPENDS)
+        SET(TMPOUT "from ..${NEKPY_DEPENDS} import _${NEKPY_DEPENDS}\n")
+    ENDIF()
+    SET(TMPOUT "${TMPOUT}from ._${name} import *")
+
+    FILE(WRITE ${CMAKE_BINARY_DIR}/NekPy/${name}/__init__.py ${TMPOUT})
+ENDMACRO()
+
+MACRO(ADD_NEKPY_EXECUTABLE name source)
+    # Copy the files into binary directory.
+    INSTALL(FILES ${source} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+    FILE(COPY ${source} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+    ADD_CUSTOM_TARGET(${name} SOURCES ${source})
+ENDMACRO()

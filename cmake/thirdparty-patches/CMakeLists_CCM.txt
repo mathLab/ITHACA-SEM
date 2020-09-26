@@ -1,0 +1,41 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 3.5.1)
+PROJECT(libccmio)
+
+# compile in Release mode by default
+SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
+
+SET(CCMIO_PATH "CCMiolib" CACHE PATH "path to libccmio")
+
+SET(CCMIO_SOURCES
+    libccmio/ccmio.c
+    libccmio/ccmiocore.c
+    libccmio/ccmioprivate.c
+    libccmio/ccmioutility.c
+)
+
+SET(CCMIO_HEADERS
+    libadf/ADF.h
+    libadf/ADF_fbind.h
+    libadf/ADF_internals.h
+    libccmio/ccmio.h
+    libccmio/ccmiocore.h
+    libccmio/ccmioprivate.h
+    libccmio/ccmiotypes.h
+    libccmio/ccmioutility.h
+)
+
+SET(ADF_SOURCES
+    libadf/ADF_fortran.f
+    libadf/ADF_fortran_2_c.c
+    libadf/ADF_interface.c
+    libadf/ADF_internals.c
+)
+
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
+
+ADD_LIBRARY(ccmio STATIC ${CCMIO_SOURCES})
+ADD_LIBRARY(adf   STATIC ${ADF_SOURCES})
+
+INSTALL(TARGETS ccmio DESTINATION lib)
+INSTALL(TARGETS adf DESTINATION lib)
+INSTALL(FILES ${CCMIO_HEADERS} DESTINATION include/libccmio)

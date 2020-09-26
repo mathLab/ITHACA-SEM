@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -35,11 +34,14 @@
 
 #include <set>
 #include <string>
-#include <boost/format.hpp>
 using namespace std;
 
-#include "OutputFld.h"
+#include <boost/core/ignore_unused.hpp>
+#include <boost/format.hpp>
+
 #include <LibUtilities/BasicUtils/FileSystem.h>
+
+#include "OutputFld.h"
 
 namespace Nektar
 {
@@ -67,11 +69,14 @@ OutputFld::~OutputFld()
 
 void OutputFld::OutputFromPts(po::variables_map &vm)
 {
-    ASSERTL0(false, "OutputFld can't write using Pts information.");
+    boost::ignore_unused(vm);
+    NEKERROR(ErrorUtil::efatal,
+             "OutputFld can't write using Pts information.");
 }
 
 void OutputFld::OutputFromExp(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
     ASSERTL0(m_f->m_variables.size(),
             "OutputFld: need input data.")
 
@@ -107,7 +112,8 @@ void OutputFld::OutputFromExp(po::variables_map &vm)
                 }
             }
         }
-        fld->Write(filename, FieldDef, FieldData, m_f->m_fieldMetaDataMap);
+        fld->Write(filename, FieldDef, FieldData, m_f->m_fieldMetaDataMap,
+                   false);
     }
     else
     {
@@ -121,6 +127,8 @@ void OutputFld::OutputFromExp(po::variables_map &vm)
 
 void OutputFld::OutputFromData(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
     // Set up FieldIO object.
@@ -135,12 +143,15 @@ void OutputFld::OutputFromData(po::variables_map &vm)
 fs::path OutputFld::GetPath(std::string &filename,
                             po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
     return   fs::path(filename);
 }
 
 fs::path OutputFld::GetFullOutName(std::string &filename,
                             po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int nprocs = m_f->m_comm->GetSize();
     fs::path specPath(filename), fulloutname;
     if (nprocs == 1)

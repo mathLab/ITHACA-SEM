@@ -35,6 +35,7 @@
 
 #include <LibUtilities/LinearAlgebra/NekLinSysIterative.h>
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <iomanip>
 
 using namespace std;
 
@@ -685,6 +686,8 @@ namespace Nektar
         Array<OneD, NekDouble> &hsingle,
         Array<OneD, NekDouble> &eta)
     {
+        boost::ignore_unused(nGlobal,nDir);
+        
         NekDouble temp_dbl, dd, hh;
         int idtem = endtem - 1;
         // The starttem and endtem are beginning and ending order of Givens rotation
@@ -756,7 +759,7 @@ namespace Nektar
         const NekVector<NekDouble> &pIn)
     {
         Array<OneD, NekDouble> vExchange(1, 0.0);
-        if (m_map.num_elements() > 0)
+        if (m_map.size() > 0)
         {
             vExchange[0] = Vmath::Dot2(pIn.GetDimension(),
                                        &pIn[0], &pIn[0], &m_map[0]);

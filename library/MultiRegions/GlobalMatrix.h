@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -42,14 +41,14 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-
+        
         /// Represents a matrix of all degrees of freedom.
         class GlobalMatrix
         {
         public:
             typedef NekSparseMatrix<StorageSmvBsr<NekDouble> > DNekSmvBsrMat;
             typedef std::shared_ptr<DNekSmvBsrMat> DNekSmvBsrMatSharedPtr;
-
+            
             /// Construct a new matrix.
             MULTI_REGIONS_EXPORT GlobalMatrix(
                          const LibUtilities::SessionReaderSharedPtr& pSession,
@@ -59,26 +58,26 @@ namespace Nektar
                          const MatrixStorage& matStorage = eFULL);
 
             MULTI_REGIONS_EXPORT ~GlobalMatrix() {}
-
-
+            
+            
             /// Perform a matrix-vector multiply.
             MULTI_REGIONS_EXPORT void Multiply(
-                          const Array<OneD,const NekDouble> &in,
-                                Array<OneD,      NekDouble> &out);
+                                               const Array<OneD,const NekDouble> &in,
+                                               Array<OneD,      NekDouble> &out);
 
             MULTI_REGIONS_EXPORT unsigned long GetMulCallsCounter() const;
             MULTI_REGIONS_EXPORT unsigned int  GetNumNonZeroEntries() const;
-
+            
         private:
             /// Pointer to a double-precision Nektar++ sparse matrix.
             DNekSmvBsrMatSharedPtr       m_smvbsrmatrix;
-
+            
             unsigned int                 m_rows;
             Array<OneD, NekDouble>       m_tmpin;
             Array<OneD, NekDouble>       m_tmpout;
-
+            
             unsigned long                m_mulCallsCounter;
-
+            
             bool                         m_copyOp;
 
             static std::string           def;
@@ -91,7 +90,7 @@ namespace Nektar
         typedef std::map<GlobalMatrixKey,GlobalMatrixSharedPtr> GlobalMatrixMap;
         /// Shared pointer to a global matrix map.
         typedef std::shared_ptr<GlobalMatrixMap> GlobalMatrixMapShPtr;
-
+    
     } //end of namespace
 } //end of namespace
 

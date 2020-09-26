@@ -7,14 +7,15 @@ IF (NOT NEKTAR_BUILD_SOLVERS)
 ENDIF()
 
 IF( NEKTAR_SOLVER_DIFFUSION )
-    SET(DiffusionSolverSource 
-        ./DiffusionSolver.cpp)
-    SET(DiffusionSolverTimeIntSource
-        ./DiffusionSolverTimeInt.cpp)
-        
     ADD_SOLVER_EXECUTABLE(DiffusionSolver SOURCES DiffusionSolver.cpp)
     ADD_SOLVER_EXECUTABLE(DiffusionSolverTimeInt SOURCES DiffusionSolverTimeInt COMPONENT diffusionsolver)
+    ADD_SOLVER_EXECUTABLE(MMFDiffusion SOURCES MMFDiffusion.cpp)
 
     ADD_NEKTAR_TEST(ImDiffusion_m6)
     ADD_NEKTAR_TEST(ImDiffusion_m6_time_int)
+    
+    #MMF Diffusion
+    ADD_NEKTAR_TEST(TestMMFDiffPlane)
+    ADD_NEKTAR_TEST(TestMMFDiffSphere)
+    ADD_NEKTAR_TEST(TestMMFDiffCube)
 ENDIF( NEKTAR_SOLVER_DIFFUSION )

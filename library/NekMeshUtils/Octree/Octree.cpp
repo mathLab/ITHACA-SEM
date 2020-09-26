@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -116,7 +115,7 @@ NekDouble Octree::Query(Array<OneD, NekDouble> loc)
     }
 
     OctantSharedPtr n = m_masteroct;
-    int quad;
+    int quad = 0;
 
     bool found = false;
 
@@ -836,12 +835,10 @@ int Octree::CountElemt()
 
 void Octree::CompileSourcePointList()
 {
-    int totalEnt = m_mesh->m_cad->GetNumSurf();
-    int preEnt = 0;
+    int totalEnt = 0;
     if(m_mesh->m_cad->Is2D())
     {
         totalEnt += m_mesh->m_cad->GetNumCurve();
-        preEnt += m_mesh->m_cad->GetNumCurve();
         for (int i = 1; i <= m_mesh->m_cad->GetNumCurve(); i++)
         {
             if (m_mesh->m_verbose)
@@ -863,9 +860,9 @@ void Octree::CompileSourcePointList()
 
                 Array<OneD, NekDouble> loc = curve->P(t);
 
-                vector<pair<CADSurfSharedPtr, CADOrientation::Orientation> > ss =
+                vector<pair<weak_ptr<CADSurf>, CADOrientation::Orientation> > ss =
                     curve->GetAdjSurf();
-                Array<OneD, NekDouble> uv = ss[0].first->locuv(loc);
+                Array<OneD, NekDouble> uv = ss[0].first.lock()->locuv(loc);
 
                 if (C != 0.0)
                 {
@@ -882,7 +879,7 @@ void Octree::CompileSourcePointList()
 
                     CPointSharedPtr newCPoint =
                         MemoryManager<CPoint>::AllocateSharedPtr(
-                            ss[0].first->GetId(), uv, loc, del);
+                            ss[0].first.lock()->GetId(), uv, loc, del);
 
                     m_SPList.push_back(newCPoint);
                 }
@@ -890,137 +887,145 @@ void Octree::CompileSourcePointList()
                 {
                     BPointSharedPtr newBPoint =
                         MemoryManager<BPoint>::AllocateSharedPtr(
-                            ss[0].first->GetId(), uv, loc);
+                            ss[0].first.lock()->GetId(), uv, loc);
 
                     m_SPList.push_back(newBPoint);
                 }
             }
         }
     }
-
-    for (int i = 1; i <= m_mesh->m_cad->GetNumSurf(); i++)
+    else
     {
-        if (m_mesh->m_verbose)
+        totalEnt = m_mesh->m_cad->GetNumSurf();
+        for (int i = 1; i <= totalEnt; i++)
         {
-            LibUtilities::PrintProgressbar(preEnt + i, totalEnt,
-                                           "\tCompiling source points");
-        }
-
-        CADSurfSharedPtr surf = m_mesh->m_cad->GetSurf(i);
-        Array<OneD, NekDouble> bounds = surf->GetBounds();
-
-        // to figure out the amount of curvature sampling to be conducted on
-        // each parameter plane the surface is first sampled with a 40x40 grid
-        // the real space lengths of this grid are analysed to find the largest
-        // strecthing in the u and v directions
-        // this stretching is then cosnidered with the mindelta user input
-        // to find a number of sampling points in each direction which
-        // enures that in the final octree each surface octant will have at
-        // least one sample point within its volume.
-        // the 40x40 grid is used to ensure each surface has a minimum of 40x40
-        // samples.
-        NekDouble du = (bounds[1] - bounds[0]) / (40 - 1);
-        NekDouble dv = (bounds[3] - bounds[2]) / (40 - 1);
-
-        NekDouble DeltaU = 0.0;
-        NekDouble DeltaV = 0.0;
-
-        Array<TwoD, Array<OneD, NekDouble> > samplepoints(40, 40);
-
-        for (int j = 0; j < 40; j++)
-        {
-            for (int k = 0; k < 40; k++)
+            if (m_mesh->m_verbose)
             {
-                Array<OneD, NekDouble> uv(2);
-                uv[0] = k * du + bounds[0];
-                uv[1] = j * dv + bounds[2];
-                if (j == 40 - 1)
-                    uv[1] = bounds[3];
-                if (k == 40 - 1)
-                    uv[0]          = bounds[1];
-                samplepoints[k][j] = surf->P(uv);
+                LibUtilities::PrintProgressbar(i, totalEnt,
+                                               "\tCompiling source points");
             }
-        }
 
-        for (int j = 0; j < 40 - 1; j++)
-        {
-            for (int k = 0; k < 40 - 1; k++)
+            CADSurfSharedPtr surf = m_mesh->m_cad->GetSurf(i);
+            Array<OneD, NekDouble> bounds = surf->GetBounds();
+
+            // to figure out the amount of curvature sampling to be conducted on
+            // each parameter plane the surface is first sampled with a 40x40
+            // grid the real space lengths of this grid are analyzed to find the
+            // largest stretching in the u and v directions
+            // this stretching is then considered with the mindelta user input
+            // to find a number of sampling points in each direction which
+            // ensures that in the final octree each surface octant will have at
+            // least one sample point within its volume.
+            // the 40x40 grid is used to ensure each surface has a minimum of
+            // 40x40 samples.
+            NekDouble du = (bounds[1] - bounds[0]) / (40 - 1);
+            NekDouble dv = (bounds[3] - bounds[2]) / (40 - 1);
+
+            NekDouble DeltaU = 0.0;
+            NekDouble DeltaV = 0.0;
+
+            Array<TwoD, Array<OneD, NekDouble> > samplepoints(40, 40);
+
+            for (int j = 0; j < 40; j++)
             {
-                NekDouble deltau = sqrt(
-                    (samplepoints[k][j][0] - samplepoints[k + 1][j][0]) *
+                for (int k = 0; k < 40; k++)
+                {
+                    Array<OneD, NekDouble> uv(2);
+                    uv[0] = k * du + bounds[0];
+                    uv[1] = j * dv + bounds[2];
+                    if (j == 40 - 1)
+                        uv[1] = bounds[3];
+                    if (k == 40 - 1)
+                        uv[0]          = bounds[1];
+                    samplepoints[k][j] = surf->P(uv);
+                }
+            }
+
+            for (int j = 0; j < 40 - 1; j++)
+            {
+                for (int k = 0; k < 40 - 1; k++)
+                {
+                    NekDouble deltau = sqrt(
+                        (samplepoints[k][j][0] - samplepoints[k + 1][j][0]) *
                         (samplepoints[k][j][0] - samplepoints[k + 1][j][0]) +
-                    (samplepoints[k][j][1] - samplepoints[k + 1][j][1]) *
+                        (samplepoints[k][j][1] - samplepoints[k + 1][j][1]) *
                         (samplepoints[k][j][1] - samplepoints[k + 1][j][1]) +
-                    (samplepoints[k][j][2] - samplepoints[k + 1][j][2]) *
+                        (samplepoints[k][j][2] - samplepoints[k + 1][j][2]) *
                         (samplepoints[k][j][2] - samplepoints[k + 1][j][2]));
-                NekDouble deltav = sqrt(
-                    (samplepoints[k][j][0] - samplepoints[k][j + 1][0]) *
+                    NekDouble deltav = sqrt(
+                        (samplepoints[k][j][0] - samplepoints[k][j + 1][0]) *
                         (samplepoints[k][j][0] - samplepoints[k][j + 1][0]) +
-                    (samplepoints[k][j][1] - samplepoints[k][j + 1][1]) *
+                        (samplepoints[k][j][1] - samplepoints[k][j + 1][1]) *
                         (samplepoints[k][j][1] - samplepoints[k][j + 1][1]) +
-                    (samplepoints[k][j][2] - samplepoints[k][j + 1][2]) *
+                        (samplepoints[k][j][2] - samplepoints[k][j + 1][2]) *
                         (samplepoints[k][j][2] - samplepoints[k][j + 1][2]));
 
-                if (deltau > DeltaU)
-                    DeltaU = deltau;
-                if (deltav > DeltaV)
-                    DeltaV = deltav;
-            }
-        }
-
-        // these are the acutal number of sample points in each parametric
-        // direction
-        int nu = ceil(DeltaU * 40 / m_minDelta) * 2;
-        int nv = ceil(DeltaV * 40 / m_minDelta) * 2;
-        nu = max(40, nu);
-        nv = max(40, nv);
-
-        for (int j = 0; j < nu; j++)
-        {
-            for (int k = 0; k < nv; k++)
-            {
-                Array<OneD, NekDouble> uv(2);
-                uv[0] = (bounds[1] - bounds[0]) / (nu - 1) * j + bounds[0];
-                uv[1] = (bounds[3] - bounds[2]) / (nv - 1) * k + bounds[2];
-
-                // this prevents round off error at the end of the surface
-                // may not be neseercary but works
-                if (j == nu - 1)
-                    uv[0] = bounds[1];
-                if (k == nv - 1)
-                    uv[1] = bounds[3];
-
-                NekDouble C = surf->Curvature(uv);
-
-                // create new point based on smallest R, flat surfaces have k=0
-                // but still need a point for element estimation
-                if (C != 0.0)
-                {
-                    NekDouble del =
-                        2.0 * (1.0 / C) * sqrt(m_eps * (2.0 - m_eps));
-
-                    if (del > m_maxDelta)
-                    {
-                        del = m_maxDelta;
-                    }
-                    if (del < m_minDelta)
-                    {
-                        del = m_minDelta;
-                    }
-
-                    CPointSharedPtr newCPoint =
-                        MemoryManager<CPoint>::AllocateSharedPtr(
-                            surf->GetId(), uv, surf->P(uv), del);
-
-                    m_SPList.push_back(newCPoint);
+                    if (deltau > DeltaU)
+                        DeltaU = deltau;
+                    if (deltav > DeltaV)
+                        DeltaV = deltav;
                 }
-                else
-                {
-                    BPointSharedPtr newBPoint =
-                        MemoryManager<BPoint>::AllocateSharedPtr(
-                            surf->GetId(), uv, surf->P(uv));
+            }
 
-                    m_SPList.push_back(newBPoint);
+            // these are the acutal number of sample points in each parametric
+            // direction
+            int nu = ceil(DeltaU * 40 / m_minDelta) * 2;
+            int nv = ceil(DeltaV * 40 / m_minDelta) * 2;
+            nu = max(40, nu);
+            nv = max(40, nv);
+
+            for (int j = 0; j < nu; j++)
+            {
+                for (int k = 0; k < nv; k++)
+                {
+                    Array<OneD, NekDouble> uv(2);
+                    uv[0] = (bounds[1] - bounds[0]) / (nu - 1) * j + bounds[0];
+                    uv[1] = (bounds[3] - bounds[2]) / (nv - 1) * k + bounds[2];
+
+                    // this prevents round off error at the end of the surface
+                    // may not be neseercary but works
+                    if (j == nu - 1)
+                        uv[0] = bounds[1];
+                    if (k == nv - 1)
+                        uv[1] = bounds[3];
+
+                    NekDouble C = surf->Curvature(uv);
+
+                    // create new point based on smallest R, flat surfaces have
+                    // k=0 but still need a point for element estimation
+                    if (C == -1.0)
+                    {
+                        // Curvature not defined
+                        continue;
+                    }
+                    if (C != 0.0)
+                    {
+                        NekDouble del =
+                            2.0 * (1.0 / C) * sqrt(m_eps * (2.0 - m_eps));
+
+                        if (del > m_maxDelta)
+                        {
+                            del = m_maxDelta;
+                        }
+                        if (del < m_minDelta)
+                        {
+                            del = m_minDelta;
+                        }
+
+                        CPointSharedPtr newCPoint =
+                            MemoryManager<CPoint>::AllocateSharedPtr(
+                                surf->GetId(), uv, surf->P(uv), del);
+
+                        m_SPList.push_back(newCPoint);
+                    }
+                    else
+                    {
+                        BPointSharedPtr newBPoint =
+                            MemoryManager<BPoint>::AllocateSharedPtr(
+                                surf->GetId(), uv, surf->P(uv));
+
+                        m_SPList.push_back(newBPoint);
+                    }
                 }
             }
         }

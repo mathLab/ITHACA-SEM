@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -33,6 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Forcing/ForcingNoise.h>
 #include <MultiRegions/ExpList.h>
 
@@ -49,8 +50,9 @@ namespace SolverUtils
                                                         "White Noise Forcing");
 
     ForcingNoise::ForcingNoise(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : Forcing(pSession)
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::weak_ptr<EquationSystem>      &pEquation)
+        : Forcing(pSession, pEquation)
     {
     }
 
@@ -65,7 +67,7 @@ namespace SolverUtils
         const TiXmlElement* noiseElmt = pForce->FirstChildElement("WHITENOISE");
         ASSERTL0(noiseElmt, "Requires WHITENOISE tag specifying "
                                "magnitude of white noise force.");
-        
+
         string noiseValue = noiseElmt->GetText();
 
         m_noise = boost::lexical_cast<NekDouble>(noiseValue);
@@ -116,6 +118,8 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> > &outarray,
             const NekDouble &time)
     {
+        boost::ignore_unused(fields, inarray, time);
+
         // Do not apply forcing if exceeded m_numSteps
         if( m_numSteps && (m_index >= m_numSteps) )
         {
@@ -127,7 +131,7 @@ namespace SolverUtils
         {
             for (int i = 0; i < m_NumVariable; ++i)
             {
-                Vmath::FillWhiteNoise(outarray[i].num_elements(),
+                Vmath::FillWhiteNoise(outarray[i].size(),
                                       m_noise,m_Forcing[i],1);
             }
         }
@@ -135,7 +139,7 @@ namespace SolverUtils
         // Apply forcing
         for (int i = 0; i < m_NumVariable; i++)
         {
-            Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
+            Vmath::Vadd(outarray[i].size(), outarray[i], 1,
                         m_Forcing[i], 1, outarray[i], 1);
         }
 

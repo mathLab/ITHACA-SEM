@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -31,6 +30,15 @@
 //
 // Description: Collection of templated functions for vector mathematics
 //
+// Note: For those unfamiliar with the vector routines notation, it is
+//       reverse polish notation (RPN).  For example:
+//
+//       In the function "Vvtvp()", it is "Vvt" means vector vector times,
+//       which in infix notation is "v * v".  So "Vvtvp" is:
+//
+//       RPN:    vector vector times vector plus
+//       Infix:  ( vector * vector ) + vector
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef NEKTAR_LIB_LIBUTILITIES_BASSICUTILS_VECTORMATH_HPP
@@ -41,17 +49,13 @@
 
 namespace Vmath 
 {
-    
     /***************** Math routines  ***************/
     
     /// \brief Fill a vector with a constant value
     template<class T>  LIB_UTILITIES_EXPORT void Fill( int n, const T alpha,  T *x, const int incx );
 
-
-
     /// \brief Generates a number from ~Normal(0,1)
     template<class T> LIB_UTILITIES_EXPORT T ran2 (long* idum);
-
 
     /// \brief Fills a vector with white noise.
     template<class T>  LIB_UTILITIES_EXPORT void FillWhiteNoise(
@@ -141,37 +145,40 @@ namespace Vmath
                 T *y, const int incy);
     
     /********** Triad  routines  ***********************/
-    
+
     /// \brief  vvtvp (vector times vector plus vector): z = w*x + y
-    template<class T> LIB_UTILITIES_EXPORT void Vvtvp(int n, 
-                                 const T *w, const int incw, 
-                                 const T *x, const int incx, 
-                                 const T *y, const int incy,
-                                       T *z, const int incz);
+    template<class T> LIB_UTILITIES_EXPORT void Vvtvp( int n, 
+                                                       const T *w, const int incw, 
+                                                       const T *x, const int incx, 
+                                                       const T *y, const int incy,
+                                                       T *z,       const int incz );
     
     /// \brief vvtvm (vector times vector plus vector): z = w*x - y
     template<class T> LIB_UTILITIES_EXPORT void Vvtvm(int n, const T *w, const int incw, const T *x,
                  const int incx, const T *y, const int incy,
                  T *z, const int incz);
 
-    /// \brief  svtvp (scalar times vector plus vector): z = alpha*x + y
+    /// \brief  Svtvp (scalar times vector plus vector): z = alpha*x + y
     template<class T> LIB_UTILITIES_EXPORT void Svtvp(int n, const T alpha, const T *x,
                  const int incx, const T *y, const int incy,
                  T *z, const int incz);
 
-    /// \brief  svtvp (scalar times vector plus vector): z = alpha*x - y
-    template<class T> LIB_UTILITIES_EXPORT void Svtvm(int n, const T alpha, const T *x,
-                 const int incx, const T *y, const int incy,
-                 T *z, const int incz);
+    /// \brief  Svtvm (scalar times vector minus vector): z = alpha*x - y
+    template<class T> LIB_UTILITIES_EXPORT void Svtvm ( int n, const T alpha, const T *x,
+                                                        const int incx, const T *y, const int incy,
+                                                        T *z, const int incz );
 
     /// \brief  vvtvvtp (vector times vector plus vector times vector): 
     // z = v*w + x*y
-    template<class T> LIB_UTILITIES_EXPORT void Vvtvvtp (int n,
-                                    const T* v, int incv,
-                                    const T* w, int incw,
-                                    const T* x, int incx,
-                                    const T* y, int incy,
-                                          T* z, int incz);
+    //
+    // @param n  Number of items in each vector.
+    template<class T> LIB_UTILITIES_EXPORT void Vvtvvtp (       int n,
+                                                          const T*  v, int incv,
+                                                          const T*  w, int incw,
+                                                          const T*  x, int incx,
+                                                          const T*  y, int incy,
+                                                                T*  z, int incz );
+
     /// \brief  vvtvvtm (vector times vector minus vector times vector): 
     // z = v*w - x*y
     template<class T> LIB_UTILITIES_EXPORT void Vvtvvtm (int n,

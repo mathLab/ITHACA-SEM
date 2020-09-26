@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 //  Description: Minimal HDF5 wrapper
 //
 ////////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/BasicUtils/H5.h>
 #include <LibUtilities/Foundations/BasisType.h>
@@ -319,9 +320,10 @@ bool CanHaveGroupsDataSets::LinkIterator::operator==(
     return (m_grp == other.m_grp && m_idx == other.m_idx);
 }
 herr_t CanHaveGroupsDataSets::LinkIterator::helper(hid_t g_id, const char *name,
-                                                   const H5L_info_t *info,
+                                                   const H5L_info_t * info,
                                                    void *op_data)
 {
+    boost::ignore_unused(g_id, info);
     CanHaveGroupsDataSets::LinkIterator *iter =
         static_cast<CanHaveGroupsDataSets::LinkIterator *>(op_data);
     iter->m_currentName = name;
@@ -390,9 +392,10 @@ bool CanHaveAttributes::AttrIterator::operator==(
 }
 
 herr_t CanHaveAttributes::AttrIterator::helper(hid_t g_id, const char *name,
-                                               const H5A_info_t *info,
+                                               const H5A_info_t * info,
                                                void *op_data)
 {
+    boost::ignore_unused(g_id, info);
     CanHaveAttributes::AttrIterator *iter =
         static_cast<CanHaveAttributes::AttrIterator *>(op_data);
     iter->m_currentName = name;
@@ -464,6 +467,41 @@ void DataSpace::SelectRange(const hsize_t start, const hsize_t count)
     H5_CALL(H5Sselect_hyperslab,
             (m_Id, H5S_SELECT_SET, &start, NULL, &count, NULL));
 }
+void DataSpace::AppendRange(const hsize_t start, const hsize_t count)
+{
+    H5_CALL(H5Sselect_hyperslab,
+            (m_Id, H5S_SELECT_OR, &start, NULL, &count, NULL));
+}
+void DataSpace::SelectRange(const std::vector<hsize_t> start,
+                            const std::vector<hsize_t> count)
+{
+    H5_CALL(H5Sselect_hyperslab,
+            (m_Id, H5S_SELECT_SET, &start[0], NULL, &count[0], NULL));
+}
+void DataSpace::AppendRange(const std::vector<hsize_t> start,
+                            const std::vector<hsize_t> count)
+{
+    H5_CALL(H5Sselect_hyperslab,
+            (m_Id, H5S_SELECT_OR, &start[0], NULL, &count[0], NULL));
+}
+void DataSpace::SetSelection(const hsize_t num_elmt,
+                             const std::vector<hsize_t> &coords)
+{
+    if (num_elmt == 0)
+    {
+        H5_CALL(H5Sselect_none, (m_Id));
+    }
+    else
+    {
+        H5_CALL(H5Sselect_elements,
+                (m_Id, H5S_SELECT_SET, num_elmt, &coords[0]));
+    }
+}
+
+void DataSpace::ClearRange()
+{
+    H5_CALL(H5Sselect_none, (m_Id));
+}
 
 hsize_t DataSpace::GetSize()
 {
@@ -472,14 +510,9 @@ hsize_t DataSpace::GetSize()
 
 std::vector<hsize_t> DataSpace::GetDims()
 {
-    std::vector<hsize_t> ret;
     int ndims = H5Sget_simple_extent_ndims(m_Id);
-    hsize_t dims[ndims];
-    H5Sget_simple_extent_dims(m_Id, dims, NULL);
-    for(int i = 0; i < ndims; i++)
-    {
-        ret.push_back(dims[i]);
-    }
+    std::vector<hsize_t> ret(ndims, 0);
+    H5Sget_simple_extent_dims(m_Id, &ret[0], NULL);
     return ret;
 }
 
@@ -614,7 +647,10 @@ FileSharedPtr File::Open(const std::string &filename, unsigned mode,
 
 File::~File()
 {
-    Close();
+    if (m_Id != H5I_INVALID_HID)
+    {
+        Close();
+    }
 }
 
 void File::Close()
@@ -633,7 +669,10 @@ Group::Group(hid_t id) : Object(id)
 
 Group::~Group()
 {
-    Close();
+    if (m_Id != H5I_INVALID_HID)
+    {
+        Close();
+    }
 }
 
 void Group::Close()

@@ -2,6 +2,7 @@ SET(FieldUtilsHeaders
     Module.h
     Field.hpp
     Interpolator.h
+    Octree.h
     InputModules/InputDat.h
     InputModules/InputFld.h
     InputModules/InputXml.h
@@ -25,8 +26,10 @@ SET(FieldUtilsHeaders
     ProcessModules/ProcessCreateExp.h
     ProcessModules/ProcessDeform.h
     ProcessModules/ProcessDisplacement.h
+    ProcessModules/ProcessDOF.h
     ProcessModules/ProcessEquiSpacedOutput.h
     ProcessModules/ProcessGrad.h
+    ProcessModules/ProcessHalfModeToFourier.h
     ProcessModules/ProcessHomogeneousPlane.h
     ProcessModules/ProcessHomogeneousStretch.h
     ProcessModules/ProcessInnerProduct.h
@@ -41,8 +44,10 @@ SET(FieldUtilsHeaders
     ProcessModules/ProcessNumModes.h
     ProcessModules/ProcessMean.h
     ProcessModules/ProcessMeanMode.h
+    ProcessModules/ProcessPhiFromFile.h
     ProcessModules/ProcessPointDataToFld.h
     ProcessModules/ProcessPrintFldNorms.h
+    ProcessModules/ProcessRemoveField.h
     ProcessModules/ProcessScaleInFld.h
     ProcessModules/ProcessStreamFunction.h
     ProcessModules/ProcessSurfDistance.h
@@ -58,6 +63,7 @@ SET(FieldUtilsHeaders
 SET(FieldUtilsSources
     Module.cpp
     Interpolator.cpp
+    Octree.cpp
     InputModules/InputDat.cpp
     InputModules/InputFld.cpp
     InputModules/InputXml.cpp
@@ -81,8 +87,10 @@ SET(FieldUtilsSources
     ProcessModules/ProcessCreateExp.cpp
     ProcessModules/ProcessDeform.cpp
     ProcessModules/ProcessDisplacement.cpp
+    ProcessModules/ProcessDOF.cpp
     ProcessModules/ProcessEquiSpacedOutput.cpp
     ProcessModules/ProcessGrad.cpp
+    ProcessModules/ProcessHalfModeToFourier.cpp
     ProcessModules/ProcessHomogeneousPlane.cpp
     ProcessModules/ProcessHomogeneousStretch.cpp
     ProcessModules/ProcessInnerProduct.cpp
@@ -97,8 +105,10 @@ SET(FieldUtilsSources
     ProcessModules/ProcessNumModes.cpp
     ProcessModules/ProcessMean.cpp
     ProcessModules/ProcessMeanMode.cpp
+    ProcessModules/ProcessPhiFromFile.cpp
     ProcessModules/ProcessPointDataToFld.cpp
     ProcessModules/ProcessPrintFldNorms.cpp
+    ProcessModules/ProcessRemoveField.cpp    
     ProcessModules/ProcessScaleInFld.cpp
     ProcessModules/ProcessVorticity.cpp
     ProcessModules/ProcessScalGrad.cpp

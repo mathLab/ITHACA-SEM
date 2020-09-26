@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -58,15 +57,15 @@ namespace Metis
         int *vwgt   = 0;
         int *vsize  = 0;
         int *adjwgt = 0;
-        if (vertWgt.num_elements() > 0)
+        if (vertWgt.size() > 0)
         {
             vwgt = &vertWgt[0];
         }
-        if (vertSize.num_elements() > 0)
+        if (vertSize.size() > 0)
         {
             vsize = &vertSize[0];
         }
-        if (edgeWgt.num_elements() > 0)
+        if (edgeWgt.size() > 0)
         {
             adjwgt = &edgeWgt[0];
         }

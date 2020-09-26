@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -104,46 +103,17 @@ bool PrismGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                 NekDouble tol,
                                 NekDouble &resid)
 {
-    // Validation checks
-    ASSERTL1(gloCoord.num_elements() == 3,
-             "Three dimensional geometry expects three coordinates.");
-
-    // find min, max point and check if within twice this
-    // distance other false this is advisable since
-    // GetLocCoord is expensive for non regular elements.
+    //Rough check if within twice min/max point
     if (GetMetricInfo()->GetGtype() != eRegular)
     {
-        int i;
-        Array<OneD, NekDouble> mincoord(3), maxcoord(3);
-        NekDouble diff = 0.0;
-
-        v_FillGeom();
-
-        const int npts = m_xmap->GetTotPoints();
-        Array<OneD, NekDouble> pts(npts);
-
-        for (i = 0; i < 3; ++i)
+        if (!MinMaxCheck(gloCoord))
         {
-            m_xmap->BwdTrans(m_coeffs[i], pts);
-
-            mincoord[i] = Vmath::Vmin(pts.num_elements(), pts, 1);
-            maxcoord[i] = Vmath::Vmax(pts.num_elements(), pts, 1);
-
-            diff = max(maxcoord[i] - mincoord[i], diff);
-        }
-
-        for (i = 0; i < 3; ++i)
-        {
-            if ((gloCoord[i] < mincoord[i] - 0.2 * diff) ||
-                (gloCoord[i] > maxcoord[i] + 0.2 * diff))
-            {
-                return false;
-            }
+            return false;
         }
     }
 
     // Convert to the local Cartesian coordinates.
-    resid = v_GetLocCoords(gloCoord, locCoord);
+    resid = GetLocCoords(gloCoord, locCoord);
 
     // Check local coordinate is within std region bounds.
     if (locCoord[0] >= -(1 + tol) && locCoord[1] >= -(1 + tol) &&
@@ -153,22 +123,8 @@ bool PrismGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
         return true;
     }
 
-    // If out of range clamp locCoord to be within [-1,1]^3
-    // since any larger value will be very oscillatory if
-    // called by 'returnNearestElmt' option in
-    // ExpList::GetExpIndex
-    for (int i = 0; i < 3; ++i)
-    {
-        if (locCoord[i] < -(1 + tol))
-        {
-            locCoord[i] = -(1 + tol);
-        }
-
-        if (locCoord[i] > (1 + tol))
-        {
-            locCoord[i] = 1 + tol;
-        }
-    }
+    //Clamp local coords
+    ClampLocCoords(locCoord, tol);
 
     return false;
 }
@@ -309,7 +265,7 @@ NekDouble PrismGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         ptdist = sqrt(tmp1[min_i]);
 
         // Get collapsed coordinate
-        int qa = za.num_elements(), qb = zb.num_elements();
+        int qa = za.size(), qb = zb.size();
         Lcoords[2] = zc[min_i / (qa * qb)];
         min_i = min_i % (qa * qb);
         Lcoords[1] = zb[min_i / qa];
@@ -485,7 +441,7 @@ void PrismGeom::SetUpLocalEdges()
                 << (m_faces[3])->GetGlobalID();
         ASSERTL0(false, errstrm.str());
     }
-};
+}
 
 void PrismGeom::SetUpLocalVertices()
 {
@@ -554,7 +510,7 @@ void PrismGeom::SetUpLocalVertices()
         errstrm << m_edges[8]->GetGlobalID();
         ASSERTL0(false, errstrm.str());
     }
-};
+}
 
 void PrismGeom::SetUpEdgeOrientation()
 {
@@ -581,7 +537,7 @@ void PrismGeom::SetUpEdgeOrientation()
             ASSERTL0(false, "Could not find matching vertex for the edge");
         }
     }
-};
+}
 
 void PrismGeom::SetUpFaceOrientation()
 {
@@ -769,7 +725,6 @@ void PrismGeom::SetUpFaceOrientation()
             dotproduct1 += elementAaxis[i] * faceAaxis[i];
         }
 
-        NekDouble norm = fabs(dotproduct1) / elementAaxis_length / faceAaxis_length;
         orientation = 0;
 
         // if the innerproduct is equal to the (absolute value of the ) products
@@ -791,9 +746,10 @@ void PrismGeom::SetUpFaceOrientation()
                 dotproduct2 += elementBaxis[i] * faceBaxis[i];
             }
 
-            norm = fabs(dotproduct2 / elementBaxis_length / faceBaxis_length);
-            ASSERTL1(fabs(norm - 1.0) < NekConstants::kNekZeroTol,
-                     "These vectors should be parallel");
+            ASSERTL1(
+                fabs(fabs(dotproduct2 / elementBaxis_length / faceBaxis_length)
+                     - 1.0) < NekConstants::kNekZeroTol,
+                "These vectors should be parallel");
 
             // if the inner product is negative, both B-axis point
             // in reverse direction
@@ -816,9 +772,10 @@ void PrismGeom::SetUpFaceOrientation()
             }
 
             // check that both these axis are indeed parallel
-            norm = fabs(dotproduct1) / elementAaxis_length / faceBaxis_length;
-            ASSERTL1(fabs(norm - 1.0) < NekConstants::kNekZeroTol,
-                     "These vectors should be parallel");
+            ASSERTL1(
+                fabs(fabs(dotproduct1) / elementAaxis_length / faceBaxis_length
+                     - 1.0) < NekConstants::kNekZeroTol,
+                "These vectors should be parallel");
 
             // if the result is negative, both axis point in reverse
             // directions
@@ -834,9 +791,10 @@ void PrismGeom::SetUpFaceOrientation()
                 dotproduct2 += elementBaxis[i] * faceAaxis[i];
             }
 
-            norm = fabs(dotproduct2) / elementBaxis_length / faceAaxis_length;
-            ASSERTL1(fabs(norm - 1.0) < NekConstants::kNekZeroTol,
-                     "These vectors should be parallel");
+            ASSERTL1(
+                fabs(fabs(dotproduct2) / elementBaxis_length / faceAaxis_length
+                     - 1.0) < NekConstants::kNekZeroTol,
+                "These vectors should be parallel");
 
             if (dotproduct2 < 0.0)
             {
@@ -885,41 +843,41 @@ void PrismGeom::SetUpXmap()
 
     if (m_forient[0] < 9)
     {
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(0));
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(2));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(0));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(2));
         order0 = *max_element(tmp.begin(), tmp.end());
     }
     else
     {
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(1));
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(3));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(1));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(3));
         order0 = *max_element(tmp.begin(), tmp.end());
     }
 
     if (m_forient[0] < 9)
     {
         tmp.clear();
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(1));
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(3));
-        tmp.push_back(m_faces[2]->GetXmap()->GetEdgeNcoeffs(2));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(1));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(3));
+        tmp.push_back(m_faces[2]->GetXmap()->GetTraceNcoeffs(2));
         order1 = *max_element(tmp.begin(), tmp.end());
     }
     else
     {
         tmp.clear();
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(0));
-        tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(2));
-        tmp.push_back(m_faces[2]->GetXmap()->GetEdgeNcoeffs(2));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(0));
+        tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(2));
+        tmp.push_back(m_faces[2]->GetXmap()->GetTraceNcoeffs(2));
         order1 = *max_element(tmp.begin(), tmp.end());
     }
 
     tmp.clear();
     tmp.push_back(order0);
     tmp.push_back(order1);
-    tmp.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs(1));
-    tmp.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs(2));
-    tmp.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs(1));
-    tmp.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs(2));
+    tmp.push_back(m_faces[1]->GetXmap()->GetTraceNcoeffs(1));
+    tmp.push_back(m_faces[1]->GetXmap()->GetTraceNcoeffs(2));
+    tmp.push_back(m_faces[3]->GetXmap()->GetTraceNcoeffs(1));
+    tmp.push_back(m_faces[3]->GetXmap()->GetTraceNcoeffs(2));
     int order2 = *max_element(tmp.begin(), tmp.end());
 
     const LibUtilities::BasisKey A(

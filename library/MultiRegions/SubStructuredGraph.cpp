@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -52,7 +51,11 @@ using std::cout;
 using std::endl;
 
 #ifdef NEKTAR_USE_SCOTCH
+#ifdef NEKTAR_USE_MPI
+#include <ptscotch.h>
+#else
 #include <scotch.h>
+#endif
 
 #define SCOTCH_CALL(scotchFunc, args)                                   \
     {                                                                   \
@@ -68,7 +71,7 @@ namespace Nektar
     {
         PatchMap::PatchMap(void)
         {
-            
+
         }
 
         PatchMap::PatchMap(const int nvals)
@@ -78,15 +81,15 @@ namespace Nektar
             m_bndPatch = Array<OneD, unsigned int>(nvals);
             m_sign     = Array<OneD, NekDouble>   (nvals);
         }
-            
+
         PatchMap::~PatchMap(void)
         {
 
         }
 
         void PatchMap::SetPatchMap(
-            const int          n, 
-            const int          patchId, 
+            const int          n,
+            const int          patchId,
             const int          dofId,
             const unsigned int bndPatch,
             const NekDouble    sign)
@@ -97,51 +100,63 @@ namespace Nektar
             m_sign    [n] = sign;
         }
         
+        void PatchMap::SetNewLevelMap(Array<OneD, const unsigned int> numLocalBndCondPerPatch,
+                                      Array<OneD, const unsigned int> numLocalIntCondPerPatch)
+        {
+            int npatch = numLocalBndCondPerPatch.size();
+            
+            Array<OneD, int> bndoffset(npatch+1);
+            Array<OneD, int> intoffset(npatch+1);
+
+            bndoffset[0] = intoffset[0] = 0;
+            for(int i = 1; i <= npatch; ++i)
+            {
+                bndoffset[i] = bndoffset[i-1] + numLocalBndCondPerPatch[i-1];
+                intoffset[i] = intoffset[i-1] + numLocalIntCondPerPatch[i-1];
+            }
+            
+            m_newLevelMap = Array<OneD, int>(m_dofId.size());
+
+            for(int i = 0; i < m_dofId.size(); ++i)
+            {
+                if(m_bndPatch[i] == true)
+                {
+                    m_newLevelMap[i] = bndoffset[m_patchId[i]] + m_dofId[i];
+                }
+                else
+                {
+                    m_newLevelMap[i] = bndoffset[npatch] + intoffset[m_patchId[i]] + m_dofId[i];
+                }
+            }
+        }
+        
         MultiLevelBisectedGraph::MultiLevelBisectedGraph(
             MultiLevelBisectedGraphSharedPtr oldLevel,
             const int                        nPartition)
         {
-            m_leftDaughterGraph = oldLevel;
+            m_daughterGraphs.push_back(oldLevel);
             m_BndDofs = MemoryManager<SubGraph>::AllocateSharedPtr(nPartition);
         }
 
         MultiLevelBisectedGraph::MultiLevelBisectedGraph(const int nBndDofs):
-            m_BndDofs(MemoryManager<SubGraph>::AllocateSharedPtr(nBndDofs)),
-            m_leftDaughterGraph(),
-            m_rightDaughterGraph()
+            m_BndDofs(MemoryManager<SubGraph>::AllocateSharedPtr(nBndDofs))
         {
         }
-        
+
         MultiLevelBisectedGraph::~MultiLevelBisectedGraph(void)
         {
         }
 
         int MultiLevelBisectedGraph::GetTotDofs() const
         {
-            static int nBndDofs = 0;
-            static int level = 0;
-            level++;
+            int returnval = 0;
 
-            int returnval;
-
-            if(m_leftDaughterGraph.get())
+            for (auto &g : m_daughterGraphs)
             {
-                m_leftDaughterGraph->GetTotDofs();
-            }
-            if(m_rightDaughterGraph.get())
-            {
-                m_rightDaughterGraph->GetTotDofs();
+                returnval += g->GetTotDofs();
             }
 
-            nBndDofs += m_BndDofs->GetNverts();
-            returnval = nBndDofs;
- 
-            level--;
-            if(level == 0)
-            {
-                nBndDofs = 0;
-            }
-
+            returnval += m_BndDofs->GetNverts();
             return returnval;
         }
 
@@ -151,13 +166,9 @@ namespace Nektar
             static int offset = 0;
             level++;
 
-            if(m_leftDaughterGraph.get())
+            for (auto &g : m_daughterGraphs)
             {
-                m_leftDaughterGraph->SetGlobalNumberingOffset();
-            }
-            if(m_rightDaughterGraph.get())
-            {
-                m_rightDaughterGraph->SetGlobalNumberingOffset();
+                g->SetGlobalNumberingOffset();
             }
 
             m_BndDofs->SetIdOffset(offset);
@@ -175,16 +186,12 @@ namespace Nektar
             static int level = 0;
             level++;
             cout << "LEVEL " << level << " " << m_BndDofs->GetNverts() << endl;
-            
-            if (m_leftDaughterGraph.get())
+
+            for (auto &g : m_daughterGraphs)
             {
-                m_leftDaughterGraph->DumpNBndDofs();
+                g->DumpNBndDofs();
             }
-            if (m_rightDaughterGraph.get())
-            {
-                m_rightDaughterGraph->DumpNBndDofs();
-            }
-            
+
             level--;
         }
 
@@ -192,19 +199,13 @@ namespace Nektar
             std::vector<SubGraphSharedPtr>& leaves) const
         {
             int cnt = 0;
-            
-            if (m_leftDaughterGraph.get())
+
+            for (auto &g : m_daughterGraphs)
             {
-                m_leftDaughterGraph->CollectLeaves(leaves);
+                g->CollectLeaves(leaves);
                 cnt++;
             }
-            
-            if (m_rightDaughterGraph.get())
-            {
-                m_rightDaughterGraph->CollectLeaves(leaves);
-                cnt++;
-            }
-            
+
             if (cnt == 0)
             {
                 SubGraphSharedPtr leave = m_BndDofs;
@@ -212,68 +213,38 @@ namespace Nektar
             }
         }
 
-        inline int MultiLevelBisectedGraph::GetNdaughterGraphs() const
-        {
-            int cnt = 0;
-            
-            if (m_leftDaughterGraph.get())
-            {
-                cnt++;
-            }
-
-            if (m_rightDaughterGraph.get())
-            {
-                cnt++;
-            }
-            
-            return cnt;
-        } 
-
         int MultiLevelBisectedGraph::CutEmptyLeaves()
         {
             int        returnval;
             static int level = 0;
             static int nLeaves = 0;
             level++;
-            
-            if (level == 1 &&
-                !m_leftDaughterGraph.get() && !m_rightDaughterGraph.get())
+
+            if (level == 1 && m_daughterGraphs.size() == 0)
             {
                 level   = 0;
                 nLeaves = 0;
                 return 0;
             }
-            
-            if (m_leftDaughterGraph.get())
+
+            for (auto it = m_daughterGraphs.begin(); it != m_daughterGraphs.end();)
             {
-                if (m_leftDaughterGraph->GetNdaughterGraphs()           == 0 && 
-                    m_leftDaughterGraph->GetBndDofsGraph()->GetNverts() == 0)
+                auto g = *it;
+                if (g->GetNdaughterGraphs() == 0 &&
+                    g->GetBndDofsGraph()->GetNverts() == 0)
                 {
-                    m_leftDaughterGraph = MultiLevelBisectedGraphSharedPtr();
+                    it = m_daughterGraphs.erase(it);
                     nLeaves++;
                 }
                 else
                 {
-                    m_leftDaughterGraph->CutEmptyLeaves();
-                }
-            }
-            
-            if(m_rightDaughterGraph.get())
-            {
-                if (m_rightDaughterGraph->GetNdaughterGraphs()           == 0 &&
-                    m_rightDaughterGraph->GetBndDofsGraph()->GetNverts() == 0)
-                {
-                    m_rightDaughterGraph = MultiLevelBisectedGraphSharedPtr();
-                    nLeaves++;
-                }
-                else
-                {
-                    m_rightDaughterGraph->CutEmptyLeaves();
+                    g->CutEmptyLeaves();
+                    ++it;
                 }
             }
 
             returnval = nLeaves;
- 
+
             level--;
             if(level == 0)
             {
@@ -290,42 +261,30 @@ namespace Nektar
             static int nLeaves = 0;
             level++;
 
-            if( (level == 1) && 
-                (!m_leftDaughterGraph.get()) && 
-                (!m_rightDaughterGraph.get()) )
+            if (level == 1 && m_daughterGraphs.size() == 0)
             {
                 level = 0;
                 nLeaves = 0;
                 return 0;
             }
 
-            if(m_leftDaughterGraph.get())
+            for (auto it = m_daughterGraphs.begin(); it != m_daughterGraphs.end();)
             {
-                if(m_leftDaughterGraph->GetNdaughterGraphs() == 0)
+                auto g = *it;
+                if (g->GetNdaughterGraphs() == 0)
                 {
-                    m_leftDaughterGraph = MultiLevelBisectedGraphSharedPtr();
+                    it = m_daughterGraphs.erase(it);
                     nLeaves++;
                 }
                 else
                 {
-                    m_leftDaughterGraph->CutLeaves();
-                }
-            }
-            if(m_rightDaughterGraph.get())
-            {
-                if(m_rightDaughterGraph->GetNdaughterGraphs() == 0)
-                {
-                    m_rightDaughterGraph = MultiLevelBisectedGraphSharedPtr();
-                    nLeaves++;
-                }
-                else
-                {
-                    m_rightDaughterGraph->CutLeaves();
+                    g->CutLeaves();
+                    ++it;
                 }
             }
 
             returnval = nLeaves;
- 
+
             level--;
             if(level == 0)
             {
@@ -348,7 +307,7 @@ namespace Nektar
             {
                 subgraph = MemoryManager<SubGraph>::AllocateSharedPtr(1,i);
                 m_IntBlocks.push_back(subgraph);
-            } 
+            }
         }
 
         BottomUpSubStructuredGraph::BottomUpSubStructuredGraph(
@@ -381,11 +340,11 @@ namespace Nektar
                     AllocateSharedPtr(graph);
             }
         }
-        
+
         BottomUpSubStructuredGraph::~BottomUpSubStructuredGraph(void)
         {
         }
-            
+
         int BottomUpSubStructuredGraph::GetTotDofs() const
         {
             static int nIntDofs = 0;
@@ -405,7 +364,7 @@ namespace Nektar
             }
 
             returnval = nIntDofs;
- 
+
             level--;
             if(level == 0)
             {
@@ -424,34 +383,34 @@ namespace Nektar
             cout << "interior blocks" << endl;
             for (int i = 0; i < m_IntBlocks.size(); i++)
             {
-                cout << "  " << i 
+                cout << "  " << i
                      << "/"  << m_IntBlocks.size()-1
-                     << ": " << m_IntBlocks[i]->GetNverts() 
+                     << ": " << m_IntBlocks[i]->GetNverts()
                      << ", " << m_IntBlocks[i]->GetIdOffset() << endl;
             }
             cout << endl;
-            
+
             if (m_daughterGraph.get())
             {
                 m_daughterGraph->Dump();
             }
- 
+
             level--;
         }
 
         void BottomUpSubStructuredGraph::UpdateBottomUpReordering(
-            Array<OneD, int> &perm, 
+            Array<OneD, int> &perm,
             Array<OneD, int> &iperm) const
         {
             int nDofs = GetTotDofs();
-            
+
             // Step 1: make a permutation array that goes from the current
             // reordering in the bottom-up graph to an ordering where the
             // interior dofs of the first (=bottom) level are ordered last,
             // followed interior dofs of the second level, ...
             Array<OneD, int> iperm1(nDofs);
             SetBottomUpReordering(iperm1);
-            
+
             // Now, based upon the input permutation array, update the
             // permutation arrays between the original ordering of the dofs
             // (defined somewhere outside) and the final reordering as given by
@@ -462,7 +421,7 @@ namespace Nektar
                 perm[iperm[i]] = i;
             }
         }
-        
+
         void BottomUpSubStructuredGraph::SetBottomUpReordering(
             Array<OneD, int>& iperm) const
         {
@@ -485,7 +444,7 @@ namespace Nektar
                     offset++;
                 }
             }
- 
+
             level--;
             if(level == 0)
             {
@@ -520,14 +479,14 @@ namespace Nektar
 
                 m_IntBlocks[i]->SetNverts(newNverts);
             }
-            
+
             // erase the blocks that do not have any vertices
             m_IntBlocks.erase(
-                remove_if(m_IntBlocks.begin(), 
-                          m_IntBlocks.end(), 
-                          SubGraphWithoutVerts), 
+                remove_if(m_IntBlocks.begin(),
+                          m_IntBlocks.end(),
+                          SubGraphWithoutVerts),
                 m_IntBlocks.end());
-            
+
             // remove the current level if there are no interior blocks
             if(m_IntBlocks.size() == 0 && m_daughterGraph.get())
             {
@@ -543,7 +502,7 @@ namespace Nektar
         }
 
         void BottomUpSubStructuredGraph::MaskPatches(
-            const int               leveltomask, 
+            const int               leveltomask,
             Array<OneD, NekDouble> &maskarray) const
         {
             static int level = 0;
@@ -556,7 +515,7 @@ namespace Nektar
             else if(level == leveltomask)
             {
                 int GlobIdOffset;
-                int nVerts;   
+                int nVerts;
                 for(int i = 0; i < m_IntBlocks.size(); i++)
                 {
                     GlobIdOffset = m_IntBlocks[i]->GetIdOffset();
@@ -572,7 +531,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,
                          "If statement should not arrive here");
             }
- 
+
             level--;
         }
 
@@ -597,14 +556,14 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,
                          "If statement should not arrive here");
             }
- 
+
             level--;
 
             return returnval;
         }
 
         void BottomUpSubStructuredGraph::GetNintDofsPerPatch(
-            const int                  whichlevel, 
+            const int                  whichlevel,
             Array<OneD, unsigned int> &outarray) const
         {
             static int level = 0;
@@ -616,9 +575,9 @@ namespace Nektar
             }
             else if(level == whichlevel)
             {
-                ASSERTL1(outarray.num_elements() >= m_IntBlocks.size(),
+                ASSERTL1(outarray.size() >= m_IntBlocks.size(),
                          "Array dimension not sufficient");
-                
+
                 for(int i = 0; i < m_IntBlocks.size(); i++)
                 {
                     outarray[i] = (unsigned int) m_IntBlocks[i]->GetNverts();
@@ -629,10 +588,10 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,
                          "If statement should not arrive here");
             }
- 
+
             level--;
         }
-            
+
         int BottomUpSubStructuredGraph::GetInteriorOffset(
             const int whichlevel, const int patch) const
         {
@@ -653,7 +612,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,
                          "If statement should not arrive here");
             }
- 
+
             level--;
 
             return retval;
@@ -679,9 +638,9 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,
                          "If statement should not arrive here");
             }
- 
+
             level--;
-            return returnval; 
+            return returnval;
         }
 
         int BottomUpSubStructuredGraph::GetNumGlobalDofs(
@@ -705,34 +664,34 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,
                          "If statement should not arrive here");
             }
- 
+
             level--;
 
             return returnval;
         }
 
         int BottomUpSubStructuredGraph::GetNlevels() const
-        {        
+        {
             int returnval = 0;
             static int level = 0;
             level++;
-                
+
             if( m_daughterGraph.get())
             {
                 returnval = m_daughterGraph->GetNlevels();
             }
             returnval = max(returnval,level);
-                
+
             level--;
-                
+
             return returnval;
-                
+
         }
 
         bool SubGraphWithoutVerts(const SubGraphSharedPtr g)
         {
             return g->GetNverts() == 0;
-        } 
+        }
 
         namespace
         {
@@ -753,8 +712,8 @@ namespace Nektar
         {
             int nGraphVerts = boost::num_vertices(graph);
 
-            ASSERTL1(perm. num_elements() >= nGraphVerts &&
-                     iperm.num_elements() >= nGraphVerts,
+            ASSERTL1(perm. size() >= nGraphVerts &&
+                     iperm.size() >= nGraphVerts,
                      "Non-matching dimensions");
 
             // Call boost::cuthill_mckee_ordering to reorder the graph-vertices
@@ -779,14 +738,16 @@ namespace Nektar
             int                                  mdswitch)
         {
 #ifndef NEKTAR_USE_SCOTCH
+            boost::ignore_unused(graph, perm, iperm, substructgraph, partVerts,
+                                 mdswitch);
             ASSERTL0(false, "Multi-level static condensation requires Nektar++"
                             " to be built with SCOTCH.");
 #else
             int nGraphVerts = boost::num_vertices(graph);
             int nGraphEdges = boost::num_edges   (graph);
 
-            ASSERTL1(perm. num_elements() >= nGraphVerts &&
-                     iperm.num_elements() >= nGraphVerts,
+            ASSERTL1(perm. size() >= nGraphVerts &&
+                     iperm.size() >= nGraphVerts,
                      "Non-matching dimensions");
 
             // We will now use Scotch to reorder the graph.  For the purpose of
@@ -907,7 +868,7 @@ namespace Nektar
                 boost::replace_all(strat_str, "<BBAL>", "0.1");
                 boost::replace_all(
                     strat_str, "<TSTS>",
-                    "vert>"+boost::lexical_cast<std::string>(mdswitch));
+                    "vert>"+std::to_string(mdswitch));
 
                 // Set up the re-ordering strategy.
                 SCOTCH_Strat strat;
@@ -957,8 +918,8 @@ namespace Nektar
                     graphs[i] = MemoryManager<MultiLevelBisectedGraph>
                         ::AllocateSharedPtr(rangtab[i+1] - rangtab[i]);
 
-                    // If we're the root block (treetab[i] == -1) we don't need
-                    // to do anything, go onto the next block.
+                    // If we're a root block (treetab[i] == -1) we don't need to
+                    // do anything, just move onto the next block.
                     if (treetab[i] == -1)
                     {
                         continue;
@@ -970,28 +931,13 @@ namespace Nektar
                     // _first_ in the iperm/perm arrays returned from Scotch,
                     // but if there is both a left and right daughter, we'll
                     // come across the right daughter first because the
-                    // separators are being traversed backwards. In this case we
-                    // therefore need to set the left daughter graph to be the
-                    // right daughter and re-set the left daughter.
+                    // separators are being traversed backwards. We'll therefore
+                    // insert this at the beginning of the daughter graphs
+                    // vector.
                     MultiLevelBisectedGraphSharedPtr tmp = graphs[treetab[i]];
-                    int nDaughter = tmp->GetNdaughterGraphs();
-
-                    if (nDaughter == 0)
-                    {
-                        tmp->SetLeftDaughterGraph(graphs[i]);
-                    }
-                    else if (nDaughter == 1)
-                    {
-                        tmp->SetRightDaughterGraph(tmp->GetLeftDaughterGraph());
-                        tmp->SetLeftDaughterGraph(graphs[i]);
-                    }
-                    else
-                    {
-                        // This should never be possible, but let's be pedantic
-                        // and check anyway.
-                        ASSERTL1(false, "Error in constructing Scotch graph for"
-                                        " multi-level static condensation");
-                    }
+                    std::vector<MultiLevelBisectedGraphSharedPtr> &daughters =
+                        tmp->GetDaughterGraphs();
+                    daughters.insert(daughters.begin(), graphs[i]);
                 }
 
                 // Change permutations from Scotch to account for initial offset
@@ -1015,13 +961,40 @@ namespace Nektar
                 for (i = 0; i < nGraphVerts; ++i)
                 {
                     ASSERTL1(perm[iperm[i]] == i, "Perm error "
-                             + boost::lexical_cast<std::string>(i));
+                             + std::to_string(i));
+                }
+
+                // If we were passed a graph with disconnected regions, we need
+                // to create a bisected graph with the appropriate roots.
+                std::vector<int> rootBlocks;
+                for (i = 0; i < cblknbr; ++i)
+                {
+                    if (treetab[i] == -1)
+                    {
+                        rootBlocks.push_back(i);
+                    }
+                }
+
+                MultiLevelBisectedGraphSharedPtr root;
+                if (rootBlocks.size() == 1)
+                {
+                    root = graphs[rootBlocks[0]];
+                }
+                else
+                {
+                    root = MemoryManager<MultiLevelBisectedGraph>
+                        ::AllocateSharedPtr(0);
+
+                    for (int i = 0; i < rootBlocks.size(); ++i)
+                    {
+                        root->GetDaughterGraphs().push_back(graphs[rootBlocks[i]]);
+                    }
                 }
 
                 // Check that our degree of freedom count in the constructed
                 // graph is the same as the number of degrees of freedom that we
                 // were given in the function input.
-                ASSERTL0(graphs.back()->GetTotDofs() == nNonPartition,
+                ASSERTL0(root->GetTotDofs() == nNonPartition,
                          "Error in constructing Scotch graph for multi-level"
                          " static condensation.");
 
@@ -1030,7 +1003,7 @@ namespace Nektar
                 // and reorder the permutation from Scotch.
                 //
                 substructgraph = MemoryManager<BottomUpSubStructuredGraph>::
-                    AllocateSharedPtr(graphs.back(), nPartition, true);
+                    AllocateSharedPtr(root, nPartition, true);
 
                 // Important: we cannot simply use the ordering given by Scotch
                 // as it does not order the different blocks as we would like
@@ -1069,8 +1042,8 @@ namespace Nektar
         {
             int nGraphVerts = boost::num_vertices(graph);
 
-            ASSERTL1(perm. num_elements() >= nGraphVerts &&
-                     iperm.num_elements() >= nGraphVerts,
+            ASSERTL1(perm. size() >= nGraphVerts &&
+                     iperm.size() >= nGraphVerts,
                      "Non-matching dimensions");
 
             for (int i = 0; i < nGraphVerts; i++)

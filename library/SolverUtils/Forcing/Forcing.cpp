@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -48,8 +47,10 @@ namespace Nektar
             return instance;
         }
 
-        Forcing::Forcing(const LibUtilities::SessionReaderSharedPtr& pSession)
-                : m_session(pSession)
+        Forcing::Forcing(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::weak_ptr<EquationSystem>      &pEquation)
+                : m_session(pSession), m_equ(pEquation)
         {
 
         }
@@ -95,9 +96,10 @@ namespace Nektar
          *
          */
         vector<ForcingSharedPtr> Forcing::Load(
-                            const LibUtilities::SessionReaderSharedPtr& pSession,
-                            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
-                            const unsigned int& pNumForcingFields)
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const std::weak_ptr<EquationSystem>      &pEquation,
+                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                    const unsigned int& pNumForcingFields)
         {
             vector<ForcingSharedPtr> vForceList;
 
@@ -112,7 +114,7 @@ namespace Nektar
                 unsigned int vNumForcingFields = pNumForcingFields;
                 if (!pNumForcingFields)
                 {
-                    vNumForcingFields = pFields.num_elements();
+                    vNumForcingFields = pFields.size();
                 }
 
                 TiXmlElement* vForce = vForcing->FirstChildElement("FORCE");
@@ -121,8 +123,8 @@ namespace Nektar
                     string vType = vForce->Attribute("TYPE");
 
                     vForceList.push_back(GetForcingFactory().CreateInstance(
-                                            vType, pSession, pFields,
-                                            vNumForcingFields, vForce));
+                                        vType, pSession, pEquation, pFields,
+                                        vNumForcingFields, vForce));
                     vForce = vForce->NextSiblingElement("FORCE");
                 }
             }
@@ -148,10 +150,10 @@ namespace Nektar
         {
             ASSERTL0(pSession->DefinesFunction(pFunctionName),
                      "Function '" + pFunctionName + "' does not exist.");
-            
+
             LibUtilities::EquationSharedPtr ffunc =
                 pSession->GetFunction(pFunctionName, pFieldName);
-            
+
             EvaluateTimeFunction(pTime,ffunc,pArray);
         }
 
@@ -162,11 +164,11 @@ namespace Nektar
                Array<OneD, NekDouble>&                  pArray)
         {
             // dummy array of zero pts.
-            Array<OneD, NekDouble> x0(pArray.num_elements(),0.0);
+            Array<OneD, NekDouble> x0(pArray.size(),0.0);
 
             pEqn->Evaluate(x0, x0, x0, pTime, pArray);
         }
-        
+
         SessionFunctionSharedPtr Forcing::GetFunction(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>  &pFields,
                 const LibUtilities::SessionReaderSharedPtr         &pSession,
@@ -199,7 +201,8 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const NekDouble &time)
         {
-                ASSERTL0(false, "v_Apply_coeff not defined");
+            boost::ignore_unused(fields,inarray,outarray,time);
+            ASSERTL0(false, "v_Apply_coeff not defined");
         }
 
 

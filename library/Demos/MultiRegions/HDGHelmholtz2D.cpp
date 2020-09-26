@@ -4,7 +4,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <MultiRegions/DisContField2D.h>
+#include <MultiRegions/DisContField.h>
 #include <SpatialDomains/MeshGraph.h>
 
 //#define TIMING
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 
     LibUtilities::CommSharedPtr vComm = vSession->GetComm();
 
-    MultiRegions::DisContField2DSharedPtr Exp,Fce;
+    MultiRegions::DisContFieldSharedPtr Exp,Fce;
     MultiRegions::ExpListSharedPtr DerExp1,DerExp2;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce;
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     // Print summary of solution details
     factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
     factors[StdRegions::eFactorTau] = 1.0;
-    const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
+    const SpatialDomains::ExpansionInfoMap &expansions = graph2D->GetExpansionInfo();
     LibUtilities::BasisKey bkey0
                             = expansions.begin()->second->m_basisKeyVector[0];
 
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Define Expansion
-    Exp = MemoryManager<MultiRegions::DisContField2D>::
+    Exp = MemoryManager<MultiRegions::DisContField>::
         AllocateSharedPtr(vSession,graph2D,vSession->GetVariable(0));
     //----------------------------------------------
     Timing("Read files and define exp ..");
@@ -111,14 +111,14 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Setup expansion containing the  forcing function
-    Fce = MemoryManager<MultiRegions::DisContField2D>::AllocateSharedPtr(*Exp);
+    Fce = MemoryManager<MultiRegions::DisContField>::AllocateSharedPtr(*Exp);
     Fce->SetPhys(fce);
     //----------------------------------------------
     Timing("Define forcing ..");
 
     //----------------------------------------------
     // Helmholtz solution taking physical forcing
-    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), NullFlagList, factors);
+    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), factors);
     //----------------------------------------------
 
     Timing("Helmholtz Solve ..");
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 #ifdef TIMING
     for(i = 0; i < 100; ++i)
     {
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), NullFlagList, factors);
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), factors);
     }
 
     Timing("100 Helmholtz Solves:... ");

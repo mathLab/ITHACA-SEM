@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -47,7 +46,6 @@
 
 namespace Nektar
 {
-
 namespace SpatialDomains
 {
 
@@ -76,9 +74,12 @@ public:
     SPATIAL_DOMAINS_EXPORT static const int kNverts = 3;
 
     SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation GetFaceOrientation(
-        const TriGeom &face1, const TriGeom &face2);
+                           const TriGeom &face1, const TriGeom &face2,
+                           bool doRot, int dir, NekDouble angle, NekDouble tol);
+    
     SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation GetFaceOrientation(
-        const PointGeomVector &face1, const PointGeomVector &face2);
+              const PointGeomVector &face1, const PointGeomVector &face2,
+              bool doRot, int dir, NekDouble angle, NekDouble tol);
 
 protected:
     SPATIAL_DOMAINS_EXPORT virtual NekDouble v_GetCoord(
@@ -94,6 +95,8 @@ protected:
         Array<OneD, NekDouble> &locCoord,
         NekDouble tol,
         NekDouble &resid);
+    SPATIAL_DOMAINS_EXPORT virtual int v_GetDir(const int faceidx, const int facedir) const;
+
     SPATIAL_DOMAINS_EXPORT virtual void v_Reset(CurveMap &curvedEdges,
                                                 CurveMap &curvedFaces);
     SPATIAL_DOMAINS_EXPORT virtual void v_Setup();

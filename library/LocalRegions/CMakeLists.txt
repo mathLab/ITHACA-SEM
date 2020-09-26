@@ -4,14 +4,15 @@ Expansion0D.cpp
 Expansion1D.cpp
 Expansion2D.cpp
 Expansion3D.cpp
-QuadExp.cpp
 HexExp.cpp
+IndexMapKey.cpp
 MatrixKey.cpp
 NodalTetExp.cpp
 NodalTriExp.cpp
 PointExp.cpp
 PrismExp.cpp
 PyrExp.cpp
+QuadExp.cpp
 SegExp.cpp
 TetExp.cpp
 TriExp.cpp
@@ -24,8 +25,8 @@ Expansion1D.h
 Expansion2D.h
 Expansion3D.h
 HexExp.h
+IndexMapKey.h
 LinSys.hpp
-#LocalRegions.h
 LocalRegions.hpp
 LocalRegionsDeclspec.h
 MatrixKey.h
@@ -48,6 +49,10 @@ ADD_NEKTAR_LIBRARY(LocalRegions
     DEPENDS SpatialDomains
     SUMMARY "Nektar++ LocalRegions library"
     DESCRIPTION "This library provides physical space expansions on the various supported regions.")
+
+IF (NEKTAR_BUILD_PYTHON)
+    SUBDIRS(Python)
+ENDIF()
 
 INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/LocalRegions
     COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

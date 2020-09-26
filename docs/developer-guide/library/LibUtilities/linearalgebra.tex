@@ -1,0 +1,26 @@
+%
+\section{Linear Algebra}
+
+This directory contains files related to linear algebra operations.  Files such as NekMatrix, BlockMatrix and NekLinearSystem are fundamental to many of the operations we do within {\nek}.
+These files represent our attempt to encapsulate linear algebra operations in a way that make sense from the programmer perspective but for which we do not loose efficiency.  As can be seen in these
+routines and throughout the code, we rely heavily on BLAS (Basic Linear Algebra Subroutines).
+
+\begin{center}
+\begin{tabular}{|c | c | c |} \hline
+Arpack.hpp &	Blas.hpp & BlasArray.hpp	\\ \hline		
+BlockMatrix.cpp & BlockMatrix.hpp	& CanGetRawPtr.hpp	\\ \hline	
+ExplicitInstantiation.h & Lapack.hpp	& MatrixBase.cpp	\\ \hline		
+MatrixBase.hpp	 & MatrixFuncs.cpp	& MatrixFuncs.h	\\ \hline		
+MatrixOperations.cpp & MatrixOperations.hpp & MatrixStorageType.h	\\ \hline	
+MatrixType.h & MatrixVectorMultiplication.cpp	& NekLinAlgAlgorithms.hpp	\\ \hline	
+NekLinSys.hpp	& NekMatrix.hpp & NekMatrixFwd.hpp	\\ \hline	
+NekPoint.hpp & NekTypeDefs.hpp & NekVector.cpp \\ \hline
+NekVector.hpp & NekVectorFwd.hpp & NistSparseDescriptors.hpp \\ \hline
+PointerWrapper.h & ScaledMatrix.cpp & ScaledMatrix.hpp \\ \hline
+SparseDiagBlkMatrix.cpp & SparseDiagBlkMatrix.hpp & SparseMatrix.cpp \\ \hline
+SparseMatrix.hpp & SparseMatrixFwd.hpp & SparseUtils.cpp \\ \hline
+SparseUtils.hpp & StandardMatrix.cpp & StandardMatrix.hpp \\ \hline
+StorageSmvBsr.cpp & StorageSmvBsr.hpp & TransF77.hpp \\ \hline
+blas.cpp & & \\ \hline
+\end{tabular}
+\end{center}

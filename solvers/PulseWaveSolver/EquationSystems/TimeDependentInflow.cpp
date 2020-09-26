@@ -39,47 +39,45 @@ using namespace std;
 
 namespace Nektar
 {
-    std::string TimeDependentInflow::className
-    = GetBoundaryFactory().RegisterCreatorFunction(
-        "TimeDependent",
-        TimeDependentInflow::create,
+
+std::string TimeDependentInflow::className =
+    GetBoundaryFactory().RegisterCreatorFunction(
+        "TimeDependent", TimeDependentInflow::create,
         "TimeDependent inflow boundary condition");
 
-    /**
-     *
-     */
-    TimeDependentInflow::TimeDependentInflow(
-        Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
-        const LibUtilities::SessionReaderSharedPtr pSession,
-        PulseWavePressureAreaSharedPtr pressureArea)
-        : PulseWaveBoundary(pVessel,pSession,pressureArea)
+TimeDependentInflow::TimeDependentInflow(
+    Array<OneD, MultiRegions::ExpListSharedPtr> pVessel,
+    const LibUtilities::SessionReaderSharedPtr pSession,
+    PulseWavePressureAreaSharedPtr pressureArea)
+    : PulseWaveBoundary(pVessel, pSession, pressureArea)
+{
+}
+
+TimeDependentInflow::~TimeDependentInflow()
+{
+}
+
+void TimeDependentInflow::v_DoBoundary(
+    const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+    Array<OneD, Array<OneD, NekDouble> > &A_0,
+    Array<OneD, Array<OneD, NekDouble> > &beta,
+    Array<OneD, Array<OneD, NekDouble> > &alpha,
+    const NekDouble time, int omega, int offset, int n)
+{
+    Array<OneD, MultiRegions::ExpListSharedPtr> vessel(2);
+
+    // Pointers to the domains
+    vessel[0] = m_vessels[2 * omega];
+    vessel[1] = m_vessels[2 * omega + 1];
+
+    /* Evaluate the boundary conditions. Note that this does not assign new
+       variables in the virtual region, so it only prescribes the inflow
+       characteristic. */
+    for (int i = 0; i < 2; ++i)
     {
-    }
-
-    /**
-     *
-     */
-    TimeDependentInflow::~TimeDependentInflow()
-    {
-
-    }
-
-    void TimeDependentInflow::v_DoBoundary(
-        const Array<OneD,const Array<OneD, NekDouble> > &inarray,
-        Array<OneD, Array<OneD, NekDouble> > &A_0,
-        Array<OneD, Array<OneD, NekDouble> > &beta,
-        const NekDouble time,
-        int omega,int offset,int n)
-    { 
-        Array<OneD, MultiRegions::ExpListSharedPtr>     vessel(2);
-
-        vessel[0] = m_vessels[2*omega];
-        vessel[1] = m_vessels[2*omega+1];
-
-        for (int i = 0; i < 2; ++i)
-        {
-            vessel[i]->EvaluateBoundaryConditions(time);
-        }
+        vessel[i]->EvaluateBoundaryConditions(time);
     }
 
 }
+
+} // namespace Nektar

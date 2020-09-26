@@ -49,15 +49,16 @@ IF( NEKTAR_USE_MPI )
     ADD_DEFINITIONS(-DNEKTAR_USE_MPI)
 
     IF (THIRDPARTY_BUILD_GSMPI)
+        INCLUDE(ExternalProject)
         EXTERNALPROJECT_ADD(
-            gsmpi-1.2.1
-            URL ${TPURL}/gsmpi-1.2.1_1.tar.bz2
-            URL_MD5 c247ed68134a65b8033c639277e46825
+            gsmpi-1.2.1_2
+            URL ${TPURL}/gsmpi-1.2.1_2.tar.bz2
+            URL_MD5 3690b4a658324cd5ad17cf8f6115fb5d
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
-            SOURCE_DIR ${TPSRC}/gsmpi-1.2.1
-            BINARY_DIR ${TPBUILD}/gsmpi-1.2.1
-            TMP_DIR ${TPBUILD}/gsmpi-1.2.1-tmp
+            SOURCE_DIR ${TPSRC}/gsmpi-1.2.1_2
+            BINARY_DIR ${TPBUILD}/gsmpi-1.2.1_2
+            TMP_DIR ${TPBUILD}/gsmpi-1.2.1_2-tmp
             INSTALL_DIR ${TPDIST}
             CONFIGURE_COMMAND
                 ${CMAKE_COMMAND}
@@ -66,7 +67,7 @@ IF( NEKTAR_USE_MPI )
                 -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
                 -DCMAKE_BUILD_TYPE:STRING=Debug
                 -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST}
-                ${TPSRC}/gsmpi-1.2.1
+                ${TPSRC}/gsmpi-1.2.1_2
         )
         THIRDPARTY_LIBRARY(GSMPI_LIBRARY STATIC gsmpi DESCRIPTION "GSMPI Library")
         THIRDPARTY_LIBRARY(XXT_LIBRARY STATIC xxt DESCRIPTION "XXT Library")

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,6 +35,8 @@
 #ifndef NEKTAR_SOLVERUTILS_ADVECTIONWEAKDG
 #define NEKTAR_SOLVERUTILS_ADVECTIONWEAKDG
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <SolverUtils/Advection/Advection.h>
 #define CFS_DEBUGMODE
 
@@ -48,16 +49,13 @@ namespace Nektar
         public:
             static AdvectionSharedPtr create(std::string advType)
             {
+                boost::ignore_unused(advType);
                 return AdvectionSharedPtr(new AdvectionWeakDG());
             }
 
             static std::string type;
 
         protected:
-#ifdef CFS_DEBUGMODE
-            // 1: Con; 2: Deriv; Default: all
-            int                                 m_DebugVolTraceSwitch; 
-#endif
             AdvectionWeakDG();
 
             virtual void v_InitObject(
@@ -71,28 +69,33 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const NekDouble                                   &time,
-                const Array<OneD, Array<OneD, NekDouble> >        &pFwd = NullNekDoubleArrayofArray,
-                const Array<OneD, Array<OneD, NekDouble> >        &pBwd = NullNekDoubleArrayofArray);
-            
-            virtual void v_Advect_coeff(
+                const Array<OneD, Array<OneD, NekDouble> >
+                    &pFwd = NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble> >
+                    &pBwd = NullNekDoubleArrayofArray);
+
+            virtual void v_AdvectCoeffs(
                 const int                                          nConvective,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &advVel,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const NekDouble                                   &time,
-                const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
-                
+                const Array<OneD, Array<OneD, NekDouble> >
+                    &pFwd = NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble> >
+                    &pBwd = NullNekDoubleArrayofArray);
 
              virtual void v_AdvectVolumeFlux(
-                const int                                         nConvectiveFields,
+                const int                                     nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble>>         &advVel,
                 const Array<OneD, Array<OneD, NekDouble>>         &inarray,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble>>>  &VolumeFlux,
+                TensorOfArray3D<NekDouble>                        &VolumeFlux,
                 const NekDouble &time)
             {
+                boost::ignore_unused(nConvectiveFields, fields, advVel, inarray,
+                                        VolumeFlux, time);
                 m_fluxVector(inarray, VolumeFlux);
             }
 
@@ -101,12 +104,13 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble>>         &advVel,
                 const Array<OneD, Array<OneD, NekDouble>>         &inarray,
-                      Array<OneD, Array<OneD, NekDouble>>         &TraceFlux, 
+                      Array<OneD, Array<OneD, NekDouble>>         &TraceFlux,
                 const NekDouble                                   &time,
-                const Array<OneD, Array<OneD, NekDouble>>         &pFwd =NullNekDoubleArrayofArray,
-                const Array<OneD, Array<OneD, NekDouble>>         &pBwd =NullNekDoubleArrayofArray);
+                const Array<OneD, Array<OneD, NekDouble>>
+                    &pFwd =NullNekDoubleArrayofArray,
+                const Array<OneD, Array<OneD, NekDouble>>
+                    &pBwd =NullNekDoubleArrayofArray);
 
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
             virtual void v_AddVolumJacToMat( 
                 const Array<OneD, MultiRegions::ExpListSharedPtr>                       &pFields,
                 const int                                                               &nConvectiveFields,
@@ -129,7 +133,6 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &pBwd,
                 DNekBlkMatSharedPtr &FJac,
                 DNekBlkMatSharedPtr &BJac);
-#endif
         };
     }
 }

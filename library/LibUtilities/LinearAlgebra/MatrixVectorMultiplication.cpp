@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 
 #include <type_traits>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/LinearAlgebra/ExplicitInstantiation.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 
@@ -48,7 +49,6 @@
 #include <LibUtilities/LinearAlgebra/ScaledMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
-#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixOperations.hpp>
 
 namespace Nektar
@@ -99,6 +99,8 @@ namespace Nektar
                     typename std::enable_if<
                                  CanGetRawPtr<NekMatrix<LhsDataType, MatrixType> >::value >::type* p=0)
     {
+        boost::ignore_unused(p);
+
         int m  = lhs.GetRows();
         int n  = lhs.GetColumns();
         int kl = lhs.GetNumberOfSubDiagonals();
@@ -122,6 +124,8 @@ namespace Nektar
                     typename std::enable_if<
                                  !CanGetRawPtr<NekMatrix<LhsDataType, BlockMatrixTag> >::value>::type* p=0)
     {
+        boost::ignore_unused(result, lhs, rhs, p);
+
         NEKERROR(ErrorUtil::efatal, "Banded block matrix multiplication not yet implemented");
     }
 
@@ -535,6 +539,8 @@ namespace Nektar
     void NekMultiplySymmetricMatrix(DataType* result, const NekMatrix<InnerMatrixType, MatrixTag>& lhs, const DataType* rhs,
                                     typename std::enable_if<CanGetRawPtr<NekMatrix<InnerMatrixType, MatrixTag> >::value >::type* p=0)
     {
+        boost::ignore_unused(p);
+
         const unsigned int* size = lhs.GetSize();
 
         DataType alpha = lhs.Scale();
@@ -552,6 +558,8 @@ namespace Nektar
     void NekMultiplySymmetricMatrix(DataType* result, const NekMatrix<InnerMatrixType, MatrixTag>& lhs, const DataType* rhs,
                                     typename std::enable_if<!CanGetRawPtr<NekMatrix<InnerMatrixType, MatrixTag> >::value >::type* p = 0)
     {
+        boost::ignore_unused(p);
+
         NekMultiplyUnspecializedMatrixType(result, lhs, rhs);
     }
 
@@ -559,6 +567,8 @@ namespace Nektar
     void NekMultiplyFullMatrix(DataType* result, const NekMatrix<InnerMatrixType, MatrixTag>& lhs, const DataType* rhs,
                                typename std::enable_if<CanGetRawPtr<NekMatrix<InnerMatrixType, MatrixTag> >::value >::type* p=0)
     {
+        boost::ignore_unused(p);
+
         const unsigned int* size = lhs.GetSize();
 
         char t = lhs.GetTransposeFlag();
@@ -579,6 +589,8 @@ namespace Nektar
     void NekMultiplyFullMatrix(DataType* result, const NekMatrix<InnerMatrixType, MatrixTag>& lhs, const DataType* rhs,
         typename std::enable_if<!CanGetRawPtr<NekMatrix<InnerMatrixType, MatrixTag> >::value>::type* p = 0)
     {
+        boost::ignore_unused(p);
+
         NekMultiplyUnspecializedMatrixType(result, lhs, rhs);
     }
 
@@ -622,9 +634,9 @@ namespace Nektar
     {
                        
         ASSERTL1(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
-            boost::lexical_cast<std::string>(lhs.GetColumns()) + 
+            std::to_string(lhs.GetColumns()) + 
             std::string(" and a right side vector with row count ") + 
-            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
+            std::to_string(rhs.GetRows()) + std::string(" can't be multiplied."));
         Multiply(result.GetRawPtr(), lhs, rhs.GetRawPtr());
     }
 
@@ -661,6 +673,5 @@ namespace Nektar
 
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_ALL_MATRIX_TYPES, (1, (NekVector<NekDouble>)), (0, ()), (1,(const NekVector<NekDouble>&)));
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_ALL_MATRIX_TYPES_SINGLE, (1, (NekVector<NekSingle>)), (0, ()), (1,(const NekVector<NekSingle>&)));
-
 
 }

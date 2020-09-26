@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NEKTAR>
+  <GEOMETRY DIM="1" SPACE="1">
+    <VERTEX>
+      <V ID="0"> -1.0  0.0  0.0</V>
+      <V ID="1"> -0.8  0.0  0.0</V>
+      <V ID="2"> -0.6  0.0  0.0</V>
+      <V ID="3"> -0.4  0.0  0.0</V>
+      <V ID="4"> -0.2  0.0  0.0</V>
+      <V ID="5">  0.0  0.0  0.0</V>
+      <V ID="6">  0.2  0.0  0.0</V>
+      <V ID="7">  0.4  0.0  0.0</V>
+      <V ID="8">  0.6  0.0  0.0</V>
+      <V ID="9">  0.8  0.0  0.0</V>
+      <V ID="10"> 1.0  0.0  0.0</V>
+    </VERTEX>
+    <ELEMENT>
+      <S ID="0">    0     1 </S>
+      <S ID="1">    1     2 </S>
+      <S ID="2">    2     3 </S>
+      <S ID="3">    3     4 </S>
+      <S ID="4">    4     5 </S>
+      <S ID="5">    5     6 </S>
+      <S ID="6">    6     7 </S>
+      <S ID="7">    7     8 </S>
+      <S ID="8">    8     9 </S>
+      <S ID="9">    9    10 </S>
+    </ELEMENT>
+    <COMPOSITE>
+      <C ID="0"> S[0-9] </C>
+      <C ID="1"> V[0]   </C>
+      <C ID="2"> V[10]  </C>
+    </COMPOSITE>
+    <DOMAIN> C[0] </DOMAIN>
+  </GEOMETRY>
+  <EXPANSIONS>
+    <E COMPOSITE="C[0]" FIELDS="p,u" TYPE="MODIFIED" NUMMODES="4"/>
+  </EXPANSIONS>
+  <CONDITIONS>
+    <SOLVERINFO>
+      <I PROPERTY="EQType" VALUE="APE"/> <!-- Acoustic perturbation equations -->
+      <I PROPERTY="Projection" VALUE="DisContinuous"/>
+      <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
+      <I PROPERTY="UpwindType" VALUE="LaxFriedrichs"/>
+    </SOLVERINFO>
+    <PARAMETERS>
+      <P> TimeStep       = 0.00001           </P>
+      <P> NumSteps       = 300               </P>
+      <P> FinTime        = TimeStep*NumSteps </P>
+      <P> IO_CheckSteps  = 5                 </P>
+      <P> IO_InfoSteps   = 10                </P>
+      <P> Rho0           = 1.204             </P> <!-- Incompressible density -->
+      <P> Pinfinity      = 100000            </P> <!-- Ambient pressure -->
+      <P> omega0         = 6283.185          </P>
+      <P> pmax           = 100               </P>
+    </PARAMETERS>
+    <VARIABLES>
+      <V ID="0"> p  </V>
+      <V ID="1"> u  </V>
+    </VARIABLES>
+    <BOUNDARYREGIONS>
+      <B ID="0"> C[1,2] </B>
+    </BOUNDARYREGIONS>
+    <BOUNDARYCONDITIONS>
+      <REGION REF="0">
+        <D VAR="p" USERDEFINEDTYPE="RiemannInvariantBC"/>
+        <D VAR="u" USERDEFINEDTYPE="RiemannInvariantBC"/>
+      </REGION>
+    </BOUNDARYCONDITIONS>
+    <FUNCTION NAME="Baseflow">
+      <E VAR="u0" VALUE="0"/>
+      <E VAR="c0sq" VALUE="1.4 * Pinfinity / Rho0"/>
+      <E VAR="rho0" VALUE="Rho0"/>
+    </FUNCTION>
+    <FUNCTION NAME="Source">
+      <E VAR="p" VALUE="pmax*omega0*cos(omega0*t)*exp(-32*x^2)"/>
+      <E VAR="u" VALUE="0"/>
+    </FUNCTION>
+    <FUNCTION NAME="ExactSolution">
+      <E VAR="p" VALUE="0"/>
+      <E VAR="u" VALUE="0"/>
+    </FUNCTION>
+    <FUNCTION NAME="InitialConditions">
+      <E VAR="p" VALUE="0"/>
+      <E VAR="u" VALUE="0"/>
+    </FUNCTION>
+  </CONDITIONS>
+  <FORCING>
+    <FORCE TYPE="Field">
+        <FIELDFORCE> Source <FIELDFORCE/>
+    </FORCE>
+  </FORCING>
+</NEKTAR>

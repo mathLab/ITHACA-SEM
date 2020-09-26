@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -150,9 +149,9 @@ namespace Nektar
             // Evaluations Methods
             //---------------------------
 
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                    const Array<OneD, const NekDouble>& Lcoords,
-                    const Array<OneD, const NekDouble>& physvals);
+            STD_REGIONS_EXPORT NekDouble v_PhysEvaluateBasis(
+                const Array<OneD, const NekDouble>& coords,
+                int mode) final;
 
             STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(
                     const Array<OneD, const NekDouble> &inarray,
@@ -204,8 +203,10 @@ namespace Nektar
             //----------------------------
             // Helper functions
             //---------------------------
-
             STD_REGIONS_EXPORT virtual int v_GetNverts() const;
+            STD_REGIONS_EXPORT virtual int v_GetNtraces() const;
+            STD_REGIONS_EXPORT virtual int v_GetTraceNcoeffs(const int i) const;
+            STD_REGIONS_EXPORT virtual int v_GetTraceNumPoints(const int i) const;
             STD_REGIONS_EXPORT virtual int v_NumBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int v_NumDGBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual bool v_IsBoundaryInteriorExpansion();
@@ -240,6 +241,13 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray);
 
+            STD_REGIONS_EXPORT virtual void v_GetTraceToElementMap(
+                    const int                  tid,
+                    Array<OneD, unsigned int>& maparray,
+                    Array<OneD, int>&          signarray,
+                    Orientation                edgeOrient,
+                    int P,  int Q);
+            
         private:
 
         };

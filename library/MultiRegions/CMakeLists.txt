@@ -1,23 +1,16 @@
 SET(MULTI_REGIONS_SOURCES
+./AssemblyMap/AssemblyCommDG.cpp
 ./AssemblyMap/AssemblyMap.cpp
 ./AssemblyMap/AssemblyMapCG.cpp
 ./AssemblyMap/AssemblyMapDG.cpp
 ./AssemblyMap/LocTraceToTraceMap.cpp
-ContField1D.cpp
-ContField2D.cpp
-ContField3D.cpp
+ContField.cpp
 ContField3DHomogeneous1D.cpp
 ContField3DHomogeneous2D.cpp
-DisContField1D.cpp
-DisContField2D.cpp
-DisContField3D.cpp
+DisContField.cpp
 DisContField3DHomogeneous1D.cpp
 DisContField3DHomogeneous2D.cpp
 ExpList.cpp
-ExpList0D.cpp
-ExpList1D.cpp
-ExpList2D.cpp
-ExpList3D.cpp
 ExpListHomogeneous1D.cpp
 ExpListHomogeneous2D.cpp
 ExpList2DHomogeneous1D.cpp
@@ -35,7 +28,6 @@ GlobalLinSysIterativeStaticCond.cpp
 GlobalLinSysStaticCond.cpp
 GlobalMatrix.cpp
 GlobalMatrixKey.cpp
-GlobalOptimizationParameters.cpp
 Preconditioner.cpp
 PreconditionerDiagonal.cpp
 PreconditionerLowEnergy.cpp
@@ -44,21 +36,13 @@ SubStructuredGraph.cpp
 )
 
 SET(MULTI_REGIONS_HEADERS
-ContField1D.h
-ContField2D.h
-ContField3D.h
+ContField.h
 ContField3DHomogeneous1D.h
 ContField3DHomogeneous2D.h
-DisContField1D.h
-DisContField2D.h
-DisContField3D.h
+DisContField.h
 DisContField3DHomogeneous1D.h
 DisContField3DHomogeneous2D.h
 ExpList.h
-ExpList0D.h
-ExpList1D.h
-ExpList2D.h
-ExpList3D.h
 ExpListHomogeneous1D.h
 ExpListHomogeneous2D.h
 ExpList2DHomogeneous1D.h
@@ -76,7 +60,6 @@ GlobalLinSysIterativeStaticCond.h
 GlobalLinSysStaticCond.h
 GlobalMatrix.h
 GlobalMatrixKey.h
-GlobalOptimizationParameters.h
 MultiRegions.hpp
 MultiRegionsDeclspec.h
 Preconditioner.h
@@ -87,6 +70,7 @@ SubStructuredGraph.h
 )
 
 SET(ASSEMBLY_MAP_HEADERS
+./AssemblyMap/AssemblyCommDG.h
 ./AssemblyMap/AssemblyMap.h
 ./AssemblyMap/AssemblyMapCG.h
 ./AssemblyMap/AssemblyMapDG.h
@@ -144,8 +128,12 @@ ENDIF( NEKTAR_USE_MPI )
 
 IF( NEKTAR_USE_PETSC )
     TARGET_LINK_LIBRARIES(MultiRegions LINK_PRIVATE ${PETSC_LIBRARIES})
-    ADD_DEPENDENCIES(MultiRegions petsc-3.7.7)
+    ADD_DEPENDENCIES(MultiRegions petsc-3.11.4)
 ENDIF( NEKTAR_USE_PETSC )
+
+IF (NEKTAR_BUILD_PYTHON)
+    SUBDIRS(Python)
+ENDIF()
 
 INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/MultiRegions COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
 

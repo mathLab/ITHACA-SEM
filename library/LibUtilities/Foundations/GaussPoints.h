@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -68,91 +67,93 @@ namespace Nektar
 
             GaussPoints(const PointsKey &pkey):PointsBaseType(pkey)
             {
-                using namespace std::placeholders;
+                namespace pl = std::placeholders;
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussLegendre),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMLegendre),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauPLegendre),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussLobattoLegendre),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussChebyshev),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMChebyshev),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauPChebyshev),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussLobattoChebyshev),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta1),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha1Beta0),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha2Beta0),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussKronrodLegendre),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauKronrodMLegendre),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauKronrodMAlpha1Beta0),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eGaussLobattoKronrodLegendre),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, eFourierEvenlySpaced),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
                 m_InterpManager.RegisterCreator(PointsKey(0, ePolyEvenlySpaced),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));
 		m_InterpManager.RegisterCreator(PointsKey(0, eBoundaryLayerPoints),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));            
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));            
 		m_InterpManager.RegisterCreator(PointsKey(0, eBoundaryLayerPointsRev),
-                    std::bind(&GaussPoints::CreateMatrix, this, _1));            
+                    std::bind(&GaussPoints::CreateMatrix, this, pl::_1));            
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussGaussLegendre),
-                   std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                   std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauMLegendre),
-                    std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauPLegendre),
-                    std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussLobattoLegendre),
-                    std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussGaussChebyshev),
-                    std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauMChebyshev),
-                    std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauPChebyshev),
-                    std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussLobattoChebyshev),
-                    std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta1),
-                    std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2),
-                    std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha1Beta0),
-                    std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha2Beta0),
-                    std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussKronrodLegendre),
-                    std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauKronrodMLegendre),
-                    std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauKronrodMAlpha1Beta0),
-                    std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussLobattoKronrodLegendre),
-                    std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eFourierEvenlySpaced),
-                    std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, ePolyEvenlySpaced),
-                    std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
 		m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eBoundaryLayerPoints),
-                    std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
 		m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eBoundaryLayerPointsRev),
-                    std::bind(&GaussPoints::CreateGPMatrix, this, _1));
+                    std::bind(&GaussPoints::CreateGPMatrix, this, pl::_1));
             }
 
 
         private:
+            static bool initPointsManager[];
+
             /// These should not be called.  All creation is done
             /// using the constructor requiring the key, declared
             /// above.

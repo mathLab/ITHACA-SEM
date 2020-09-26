@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -80,6 +79,7 @@ namespace Nektar
     private:
         NekDouble C_m;
         NekDouble V_0;
+        NekDouble V_fi;
         NekDouble u_fi;
         NekDouble u_c;
         NekDouble u_v;
@@ -112,7 +112,24 @@ namespace Nektar
             eCF2b,
             eCF2c,
             eCF3a,
-            eCF3b
+            eCF3b,
+            eFC2002Set1a,
+            eFC2002Set1b,
+            eFC2002Set1c,
+            eFC2002Set1d,
+            eFC2002Set1e,
+            eFC2002Set2,
+            eFC2002Set4a,
+            eFC2002Set4b,
+            eFC2002Set4c,
+            eFC2002Set4d,
+            eFC2002Set5,
+            eFC2002Set6,
+            eFC2002Set7,
+            eFC2002Set8,
+            eFC2002Set9,
+            eLawson,
+            eCAF
         };
         enum Variants model_variant;
 

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -63,8 +62,6 @@ namespace Nektar
                                                  : Expansion(pGeom),
                                                    StdExpansion1D()
                 {
-                    m_elementEdgeLeft  = -1;
-                    m_elementEdgeRight = -1;
                 }
 
                 LOCAL_REGIONS_EXPORT virtual ~Expansion1D() {}
@@ -74,17 +71,6 @@ namespace Nektar
                         Array<OneD, const NekDouble> &inarray,
                         Array<OneD,NekDouble> &outarray);
 
-                inline Expansion2DSharedPtr GetLeftAdjacentElementExp() const;
-
-                inline Expansion2DSharedPtr GetRightAdjacentElementExp() const;
-
-                inline int GetLeftAdjacentElementEdge() const;
-
-                inline int GetRightAdjacentElementEdge() const;
-
-                inline void SetAdjacentElementExp(
-                    int                  edge,
-                    Expansion2DSharedPtr &e);
 
                 void AddHDGHelmholtzTraceTerms(
                     const NekDouble                      tau,
@@ -94,7 +80,7 @@ namespace Nektar
                 inline SpatialDomains::Geometry1DSharedPtr GetGeom1D() const;
 
             protected:
-                std::map<int, bool>                     m_negatedNormals;
+                std::map<int, NormalVector>             m_vertexNormals;
 
                 virtual DNekMatSharedPtr v_GenMatrix(
                     const StdRegions::StdMatrixKey      &mkey);
@@ -107,68 +93,21 @@ namespace Nektar
                 virtual void v_AddRobinEdgeContribution(
                     const int                            vert,
                     const Array<OneD, const NekDouble > &primCoeffs,
-                          Array<OneD, NekDouble>        &coeffs);
+                    const Array<OneD, NekDouble>        &incoeffs,
+                    Array<OneD, NekDouble>        &coeffs);
 
                 virtual NekDouble v_VectorFlux(
                     const Array<OneD, Array<OneD, NekDouble> > &vec);
 
-                virtual void v_NegateVertexNormal (const int vertex);
-
-                virtual bool v_VertexNormalNegated(const int vertex);
+                virtual const NormalVector &v_GetTraceNormal(const int edge) const final;
+                virtual void v_ReOrientTracePhysMap(
+                         const StdRegions::Orientation orient,
+                         Array<OneD, int> &idmap,
+                         const int nq0,  const int nq1);
 
             private:
-                Expansion2DWeakPtr m_elementLeft;
-                Expansion2DWeakPtr m_elementRight;
-                int                m_elementEdgeLeft;
-                int                m_elementEdgeRight;
 
         };
-        
-        inline Expansion2DSharedPtr Expansion1D::
-            GetLeftAdjacentElementExp() const
-        {
-            ASSERTL1(m_elementLeft.lock().get(),
-                     "Left adjacent element not set.");
-            return m_elementLeft.lock();
-        }
-
-        inline Expansion2DSharedPtr Expansion1D::
-            GetRightAdjacentElementExp() const
-        {
-            ASSERTL1(m_elementLeft.lock().get(),
-                     "Right adjacent element not set.");
-            
-            return m_elementRight.lock();
-        }
-
-        inline int Expansion1D::GetLeftAdjacentElementEdge() const
-        {
-            return m_elementEdgeLeft;
-        }
-
-        inline int Expansion1D::GetRightAdjacentElementEdge() const
-        {
-            return m_elementEdgeRight;
-        }
-
-        inline void Expansion1D::SetAdjacentElementExp(
-            int                  edge,
-            Expansion2DSharedPtr &e)
-        {
-            if (m_elementLeft.lock().get())
-            {
-                ASSERTL1(!m_elementRight.lock().get(),
-                         "Both adjacent elements already set.");
-                
-                m_elementRight     = e;
-                m_elementEdgeRight = edge;
-            }
-            else
-            {
-                m_elementLeft     = e;
-                m_elementEdgeLeft = edge;
-            }
-        }
 
         inline SpatialDomains::Geometry1DSharedPtr Expansion1D
             ::GetGeom1D() const

@@ -40,34 +40,29 @@ using namespace std;
 namespace Nektar
 {
 
-    /**
-     * @class PulseWaveFlow
-     *
-     */
-  PulseWaveBoundary::PulseWaveBoundary(
-      Array<OneD, MultiRegions::ExpListSharedPtr> &pVessel, 
-      const LibUtilities::SessionReaderSharedPtr &pSession,
-      PulseWavePressureAreaSharedPtr & pressureArea)
-    : m_vessels(pVessel),
-      m_session(pSession),
-      m_pressureArea(pressureArea)
-    {
-        m_session->LoadParameter("pout", m_pout, 0.0);
-        m_session->LoadParameter("pext", m_pext, 0.0);
-        m_session->LoadParameter("rho", m_rho, 0.5);
-    }
-
-    PulseWaveBoundary::~PulseWaveBoundary()
-    {
-    }
-
-        
-    /**
-     *
-     */
-    BoundaryFactory& GetBoundaryFactory()
-    {
-        static BoundaryFactory instance;
-        return instance;
-    }
+/**
+ * @class PulseWaveFlow
+ *
+ */
+PulseWaveBoundary::PulseWaveBoundary(
+    Array<OneD, MultiRegions::ExpListSharedPtr> &pVessel,
+    const LibUtilities::SessionReaderSharedPtr &pSession,
+    PulseWavePressureAreaSharedPtr &pressureArea)
+    : m_vessels(pVessel), m_session(pSession), m_pressureArea(pressureArea)
+{
+    m_session->LoadParameter("pout", m_pout, 0.0);
+    m_session->LoadParameter("pext", m_pext, 0.0);
+    m_session->LoadParameter("rho", m_rho, 0.5);
 }
+
+PulseWaveBoundary::~PulseWaveBoundary()
+{
+}
+
+BoundaryFactory &GetBoundaryFactory()
+{
+    static BoundaryFactory instance;
+    return instance;
+}
+
+} // namespace Nektar

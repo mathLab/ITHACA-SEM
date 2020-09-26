@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,17 +36,22 @@
 #include <string>
 using namespace std;
 
+#include <boost/core/ignore_unused.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/thread.hpp>
 namespace io = boost::iostreams;
 
 #include <tinyxml.h>
 #include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/PointGeom.h>
-
 #include <NekMeshUtils/MeshElements/Element.h>
+
 #include "OutputNekpp.h"
 
 using namespace Nektar::NekMeshUtils;
@@ -71,31 +75,73 @@ OutputNekpp::OutputNekpp(MeshSharedPtr m) : OutputModule(m)
 {
     m_config["test"] = ConfigOption(
         true, "0", "Attempt to load resulting mesh and create meshgraph.");
+    m_config["stats"] = ConfigOption(
+        true, "0", "Print out basic mesh statistics.");
     m_config["uncompress"] = ConfigOption(true, "0", "Uncompress xml sections");
     m_config["order"] = ConfigOption(false, "-1", "Enforce a polynomial order");
+    m_config["testcond"] = ConfigOption(
+        false, "", "Test a condition.");
+    m_config["varopti"] =
+        ConfigOption(true, "0", "Run the variational optimser");
 }
 
 OutputNekpp::~OutputNekpp()
 {
 }
 
-/*
-template <typename T> void TestElmts(SpatialDomains::MeshGraphSharedPtr &graph)
+template <typename T> void TestElmts(
+    const std::map<int, std::shared_ptr<T> >  &geomMap,
+    SpatialDomains::MeshGraphSharedPtr        &graph,
+    LibUtilities::Interpreter                 &strEval,
+    int                                        exprId)
 {
-    const std::map<int, std::shared_ptr<T> > &tmp =
-        graph->GetAllElementsOfType<T>();
+    boost::ignore_unused(graph);
 
-    SpatialDomains::CurveMap &curvedEdges = graph->GetCurvedEdges();
-    SpatialDomains::CurveMap &curvedFaces = graph->GetCurvedFaces();
-
-    for (auto it1 = tmp.begin(), it2 = tmp.end(); it1 != it2; ++it1)
+    for (auto &geomIt : geomMap)
     {
-        SpatialDomains::GeometrySharedPtr geom = it1->second;
+        SpatialDomains::GeometrySharedPtr geom = geomIt.second;
+        geom->Setup();
         geom->FillGeom();
-        geom->Reset(curvedEdges, curvedFaces);
+
+        if (exprId != -1)
+        {
+            int nq = geom->GetXmap()->GetTotPoints();
+            int dim = geom->GetCoordim();
+
+            Array<OneD, Array<OneD, NekDouble>> coords(3);
+
+            for (int i = 0; i < 3; ++i)
+            {
+                coords[i] = Array<OneD, NekDouble>(nq, 0.0);
+            }
+
+            for (int i = 0; i < dim; ++i)
+            {
+                geom->GetXmap()->BwdTrans(geom->GetCoeffs(i), coords[i]);
+            }
+
+            for (int i = 0; i < nq; ++i)
+            {
+                NekDouble output = strEval.Evaluate(
+                    exprId, coords[0][i], coords[1][i], coords[2][i], 0.0);
+                ASSERTL0(output == 1.0, "Output mesh failed coordinate test");
+            }
+
+            // Also evaluate at mid-point to test for deformed vs. regular
+            // elements.
+            Array<OneD, NekDouble> eta(dim, 0.0), evalPt(3, 0.0);
+            for (int i = 0; i < dim; ++i)
+            {
+                evalPt[i] = geom->GetXmap()->PhysEvaluate(eta, coords[i]);
+            }
+
+            NekDouble output = strEval.Evaluate(
+                exprId, evalPt[0], evalPt[1], evalPt[2], 0.0);
+            ASSERTL0(output == 1.0,
+                     "Output mesh failed coordinate midpoint test");
+        }
     }
 }
-*/
 
 void OutputNekpp::Process()
 {
@@ -111,8 +157,36 @@ void OutputNekpp::Process()
         m_mesh->MakeOrder(order, LibUtilities::ePolyEvenlySpaced);
     }
 
+    // Useful when doing r-adaptation
+    if (m_config["varopti"].beenSet)
+    {
+        unsigned int np        = boost::thread::physical_concurrency();
+        ModuleSharedPtr module = GetModuleFactory().CreateInstance(
+            ModuleKey(eProcessModule, "varopti"), m_mesh);
+        module->RegisterConfig("hyperelastic", "");
+        module->RegisterConfig("numthreads", boost::lexical_cast<string>(np));
+
+        try
+        {
+            module->SetDefaults();
+            module->Process();
+        }
+        catch (runtime_error &e)
+        {
+            cout << "Variational optimisation has failed with message:" << endl;
+            cout << e.what() << endl;
+            cout << "The mesh will be written as is, it may be invalid" << endl;
+            return;
+        }
+    }
+
     string file = m_config["outfile"].as<string>();
     string ext = boost::filesystem::extension(file);
+
+    if (m_config["stats"].beenSet)
+    {
+        m_mesh->PrintStats(std::cout);
+    }
 
     // Default to compressed XML output.
     std::string type = "XmlCompressed";
@@ -135,8 +209,10 @@ void OutputNekpp::Process()
     graph->Empty(m_mesh->m_expDim, m_mesh->m_spaceDim);
 
     TransferVertices(graph);
-    TransferEdges(graph);
-    TransferFaces(graph);
+
+    std::unordered_map<int, SegGeomSharedPtr> segMap;
+    TransferEdges(graph, segMap);
+    TransferFaces(graph, segMap);
     TransferElements(graph);
     TransferCurves(graph);
     TransferComposites(graph);
@@ -145,29 +221,49 @@ void OutputNekpp::Process()
     string out = m_config["outfile"].as<string>();
     graph->WriteGeometry(out, true, m_mesh->m_metadata);
 
-    /*
     // Test the resulting XML file (with a basic test) by loading it
     // with the session reader, generating the MeshGraph and testing if
     // each element is valid.
     if (m_config["test"].beenSet)
     {
-        vector<string> filenames(1);
-        filenames[0] = filename;
+        // Create an equation based on the test condition. Should evaluate to 1
+        // or 0 using boolean logic.
+        string testcond = m_config["testcond"].as<string>();
+        int exprId = -1;
 
+        if (testcond.length() > 0)
+        {
+            exprId = m_strEval.DefineFunction("x y z", testcond);
+        }
+
+        vector<string> filenames(1);
+
+        if (type == "HDF5")
+        {
+            vector<string> tmp;
+            boost::split(tmp, filename, boost::is_any_of("."));
+            filenames[0] = tmp[0] + ".xml";
+        }
+        else
+        {
+            filenames[0] = filename;
+        }
+
+        char *prgname = const_cast<char *>("NekMesh");
         LibUtilities::SessionReaderSharedPtr vSession =
-            LibUtilities::SessionReader::CreateInstance(0, NULL, filenames);
-        SpatialDomains::MeshGraphSharedPtr graphShPt =
+            LibUtilities::SessionReader::CreateInstance(1, &prgname, filenames,
+                                                        m_mesh->m_comm);
+        SpatialDomains::MeshGraphSharedPtr graph =
             SpatialDomains::MeshGraph::Read(vSession);
 
-        TestElmts<SpatialDomains::SegGeom>(graphShPt);
-        TestElmts<SpatialDomains::TriGeom>(graphShPt);
-        TestElmts<SpatialDomains::QuadGeom>(graphShPt);
-        TestElmts<SpatialDomains::TetGeom>(graphShPt);
-        TestElmts<SpatialDomains::PrismGeom>(graphShPt);
-        TestElmts<SpatialDomains::PyrGeom>(graphShPt);
-        TestElmts<SpatialDomains::HexGeom>(graphShPt);
+        TestElmts(graph->GetAllSegGeoms(),   graph, m_strEval, exprId);
+        TestElmts(graph->GetAllTriGeoms(),   graph, m_strEval, exprId);
+        TestElmts(graph->GetAllQuadGeoms(),  graph, m_strEval, exprId);
+        TestElmts(graph->GetAllTetGeoms(),   graph, m_strEval, exprId);
+        TestElmts(graph->GetAllPrismGeoms(), graph, m_strEval, exprId);
+        TestElmts(graph->GetAllPyrGeoms(),   graph, m_strEval, exprId);
+        TestElmts(graph->GetAllHexGeoms(),   graph, m_strEval, exprId);
     }
-    */
 }
 
 void OutputNekpp::TransferVertices(MeshGraphSharedPtr graph)
@@ -182,7 +278,9 @@ void OutputNekpp::TransferVertices(MeshGraphSharedPtr graph)
     }
 }
 
-void OutputNekpp::TransferEdges(MeshGraphSharedPtr graph)
+void OutputNekpp::TransferEdges(
+    MeshGraphSharedPtr graph,
+    std::unordered_map<int, SegGeomSharedPtr> &edgeMap)
 {
     if (m_mesh->m_expDim >= 2)
     {
@@ -193,12 +291,15 @@ void OutputNekpp::TransferEdges(MeshGraphSharedPtr graph)
                                            graph->GetVertex(it->m_n2->m_id)};
             SegGeomSharedPtr edge = MemoryManager<SegGeom>::AllocateSharedPtr(
                                 it->m_id, m_mesh->m_spaceDim, verts);
-            segMap[it->m_id] = edge;
+            segMap [it->m_id] = edge;
+            edgeMap[it->m_id] = edge;
         }
     }
 }
 
-void OutputNekpp::TransferFaces(MeshGraphSharedPtr graph)
+void OutputNekpp::TransferFaces(
+    MeshGraphSharedPtr graph,
+    std::unordered_map<int, SegGeomSharedPtr> &edgeMap)
 {
     if(m_mesh->m_expDim == 3)
     {
@@ -210,9 +311,9 @@ void OutputNekpp::TransferFaces(MeshGraphSharedPtr graph)
             {
                 SegGeomSharedPtr edges[TriGeom::kNedges] =
                 {
-                    graph->GetSegGeom(it->m_edgeList[0]->m_id),
-                    graph->GetSegGeom(it->m_edgeList[1]->m_id),
-                    graph->GetSegGeom(it->m_edgeList[2]->m_id)
+                    edgeMap[it->m_edgeList[0]->m_id],
+                    edgeMap[it->m_edgeList[1]->m_id],
+                    edgeMap[it->m_edgeList[2]->m_id]
                 };
 
                 TriGeomSharedPtr tri = MemoryManager<TriGeom>::AllocateSharedPtr(it->m_id, edges);
@@ -222,10 +323,10 @@ void OutputNekpp::TransferFaces(MeshGraphSharedPtr graph)
             {
                 SegGeomSharedPtr edges[QuadGeom::kNedges] =
                 {
-                    graph->GetSegGeom(it->m_edgeList[0]->m_id),
-                    graph->GetSegGeom(it->m_edgeList[1]->m_id),
-                    graph->GetSegGeom(it->m_edgeList[2]->m_id),
-                    graph->GetSegGeom(it->m_edgeList[3]->m_id)
+                    edgeMap[it->m_edgeList[0]->m_id],
+                    edgeMap[it->m_edgeList[1]->m_id],
+                    edgeMap[it->m_edgeList[2]->m_id],
+                    edgeMap[it->m_edgeList[3]->m_id]
                 };
 
                 QuadGeomSharedPtr quad = MemoryManager<QuadGeom>::AllocateSharedPtr(it->m_id, edges);
@@ -383,12 +484,37 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
             for(int i = 0; i < ns.size(); i++)
             {
                 PointGeomSharedPtr vert = MemoryManager<PointGeom>::AllocateSharedPtr(
-                    m_mesh->m_expDim, edgecnt, ns[i]->m_x, ns[i]->m_y, ns[i]->m_z);
+                    m_mesh->m_spaceDim, edgecnt, ns[i]->m_x, ns[i]->m_y, ns[i]->m_z);
                 curve->m_points.push_back(vert);
             }
 
             edges[it->m_id] = curve;
             edgecnt++;
+        }
+    }
+
+    if(m_mesh->m_expDim == 1 && m_mesh->m_spaceDim > 1)
+    {
+        for(int e = 0; e < m_mesh->m_element[1].size(); e++)
+        {
+            ElementSharedPtr el = m_mesh->m_element[1][e];
+            vector<NodeSharedPtr> ns;
+            el->GetCurvedNodes(ns);
+            if(ns.size() > 2)
+            {
+                CurveSharedPtr curve = MemoryManager<Curve>::AllocateSharedPtr(
+                    el->GetId(), el->GetCurveType());
+
+                for(int i = 0; i < ns.size(); i++)
+                {
+                    PointGeomSharedPtr vert = MemoryManager<PointGeom>::AllocateSharedPtr(
+                        m_mesh->m_spaceDim, edgecnt, ns[i]->m_x, ns[i]->m_y, ns[i]->m_z);
+                    curve->m_points.push_back(vert);
+                }
+
+                edges[el->GetId()] = curve;
+                edgecnt++;
+            }
         }
     }
 
@@ -400,14 +526,17 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
     {
         if(it->m_faceNodes.size() > 0)
         {
-            CurveSharedPtr curve = MemoryManager<Curve>::AllocateSharedPtr(it->m_id,
-                                            it->m_curveType);
+            CurveSharedPtr curve =
+                MemoryManager<Curve>::AllocateSharedPtr(it->m_id,
+                                                        it->m_curveType);
             vector<NodeSharedPtr> ns;
             it->GetCurvedNodes(ns);
             for(int i = 0; i < ns.size(); i++)
             {
-                PointGeomSharedPtr vert = MemoryManager<PointGeom>::AllocateSharedPtr(
-                    m_mesh->m_expDim, facecnt, ns[i]->m_x, ns[i]->m_y, ns[i]->m_z);
+                PointGeomSharedPtr vert =
+                    MemoryManager<PointGeom>::AllocateSharedPtr
+                    (m_mesh->m_spaceDim, facecnt, ns[i]->m_x, ns[i]->m_y,
+                     ns[i]->m_z);
                 curve->m_points.push_back(vert);
             }
 
@@ -422,22 +551,29 @@ void OutputNekpp::TransferCurves(MeshGraphSharedPtr graph)
         for(int e = 0; e < m_mesh->m_element[2].size(); e++)
         {
             ElementSharedPtr el = m_mesh->m_element[2][e];
-            vector<NodeSharedPtr> ns;
-            el->GetCurvedNodes(ns);
-            if(ns.size() > 4)
+
+            if(el->GetVolumeNodes().size() > 0) // needed for extract surf case
             {
-                CurveSharedPtr curve = MemoryManager<Curve>::AllocateSharedPtr(
-                    el->GetId(), el->GetCurveType());
-
-                for(int i = 0; i < ns.size(); i++)
+                vector<NodeSharedPtr> ns;
+                el->GetCurvedNodes(ns);
+                if(ns.size() > 4)
                 {
-                    PointGeomSharedPtr vert = MemoryManager<PointGeom>::AllocateSharedPtr(
-                        m_mesh->m_expDim, facecnt, ns[i]->m_x, ns[i]->m_y, ns[i]->m_z);
-                    curve->m_points.push_back(vert);
-                }
+                    CurveSharedPtr curve =
+                        MemoryManager<Curve>::AllocateSharedPtr
+                        (el->GetId(), el->GetCurveType());
 
-                faces[el->GetId()] = curve;
-                facecnt++;
+                    for(int i = 0; i < ns.size(); i++)
+                    {
+                        PointGeomSharedPtr vert =
+                            MemoryManager<PointGeom>::AllocateSharedPtr
+                            (m_mesh->m_spaceDim, facecnt, ns[i]->m_x, ns[i]->m_y,
+                             ns[i]->m_z);
+                        curve->m_points.push_back(vert);
+                    }
+
+                    faces[el->GetId()] = curve;
+                    facecnt++;
+                }
             }
         }
     }

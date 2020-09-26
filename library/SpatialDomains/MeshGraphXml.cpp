@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -34,9 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <iomanip>
+
 #include <SpatialDomains/MeshGraphXml.h>
 #include <SpatialDomains/MeshPartition.h>
 
+#include <LibUtilities/Interpreter/Interpreter.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/FieldIOXml.h>
@@ -44,6 +46,7 @@
 #include <boost/format.hpp>
 
 #include <tinyxml.h>
+
 using namespace std;
 
 namespace Nektar
@@ -125,11 +128,17 @@ void MeshGraphXml::PartitionMesh(
             ASSERTL0(comm->GetSize() == 1,
                      "The 'part-only' option should be used in serial.");
 
+            // Read 'lite' geometry information
+            ReadGeometry(NullDomainRangeShPtr, false);
+
             // Number of partitions is specified by the parameter.
             int nParts;
+            auto comp = CreateCompositeDescriptor();
+
             MeshPartitionSharedPtr partitioner =
                 GetMeshPartitionFactory().CreateInstance(
-                    partitionerName, session, shared_from_this());
+                    partitionerName, session, m_meshDimension,
+                    CreateMeshEntities(), comp);
 
             if (session->DefinesCmdLineArgument("part-only"))
             {
@@ -142,9 +151,19 @@ void MeshGraphXml::PartitionMesh(
                 partitioner->PartitionMesh(nParts, true, true);
             }
 
-            partitioner->WriteAllPartitions();
-            m_compOrder = partitioner->GetCompositeOrdering();
-            m_bndRegOrder = partitioner->GetBndRegionOrdering();
+            vector<set<unsigned int>> elmtIDs;
+            vector<unsigned int> parts(nParts);
+            for (int i = 0; i < nParts; ++i)
+            {
+                vector<unsigned int> elIDs;
+                set<unsigned int> tmp;
+                partitioner->GetElementIDs(i, elIDs);
+                tmp.insert(elIDs.begin(), elIDs.end());
+                elmtIDs.push_back(tmp);
+                parts[i] = i;
+            }
+
+            this->WriteXMLGeometry(m_session->GetSessionName(), elmtIDs, parts);
 
             if (isRoot && session->DefinesCmdLineArgument("part-info"))
             {
@@ -169,15 +188,34 @@ void MeshGraphXml::PartitionMesh(
                     // Read 'lite' geometry information
                     ReadGeometry(NullDomainRangeShPtr, false);
 
+                    // Store composite ordering and boundary information.
+                    m_compOrder = CreateCompositeOrdering();
+                    auto comp = CreateCompositeDescriptor();
+
                     // Create mesh partitioner.
                     MeshPartitionSharedPtr partitioner =
                         GetMeshPartitionFactory().CreateInstance(
-                            partitionerName, session, shared_from_this());
+                            partitionerName, session, m_meshDimension,
+                            CreateMeshEntities(), comp);
 
                     partitioner->PartitionMesh(nParts, true);
-                    partitioner->WriteAllPartitions();
-                    m_compOrder = partitioner->GetCompositeOrdering();
-                    m_bndRegOrder = partitioner->GetBndRegionOrdering();
+
+                    vector<set<unsigned int>> elmtIDs;
+                    vector<unsigned int> parts(nParts);
+                    for (i = 0; i < nParts; ++i)
+                    {
+                        vector<unsigned int> elIDs;
+                        set<unsigned int> tmp;
+                        partitioner->GetElementIDs(i, elIDs);
+                        tmp.insert(elIDs.begin(), elIDs.end());
+                        elmtIDs.push_back(tmp);
+                        parts[i] = i;
+                    }
+
+                    // Call WriteGeometry to write out partition files. This
+                    // will populate m_bndRegOrder.
+                    this->WriteXMLGeometry(
+                        m_session->GetSessionName(), elmtIDs, parts);
 
                     // Communicate orderings to the other processors.
 
@@ -221,8 +259,14 @@ void MeshGraphXml::PartitionMesh(
                     }
 
                     // Send across data.
-                    comm->Bcast(keys, 0);
-                    comm->Bcast(vals, 0);
+                    if (!keys.empty())
+                    {
+                        comm->Bcast(keys, 0);
+                    }
+                    if (!vals.empty())
+                    {
+                        comm->Bcast(vals, 0);
+                    }
                     for (auto &bIt : m_bndRegOrder)
                     {
                         comm->Bcast(bIt.second, 0);
@@ -255,9 +299,14 @@ void MeshGraphXml::PartitionMesh(
 
                     keys.resize(bndSize);
                     vals.resize(bndSize);
-                    comm->Bcast(keys, 0);
-                    comm->Bcast(vals, 0);
-
+                    if (!keys.empty())
+                    {
+                        comm->Bcast(keys, 0);
+                    }
+                    if (!vals.empty())
+                    {
+                        comm->Bcast(vals, 0);
+                    }
                     for (int i = 0; i < keys.size(); ++i)
                     {
                         vector<unsigned int> tmp(vals[i]);
@@ -271,17 +320,25 @@ void MeshGraphXml::PartitionMesh(
                 m_session->InitSession();
                 ReadGeometry(NullDomainRangeShPtr, false);
 
+                m_compOrder = CreateCompositeOrdering();
+                auto comp = CreateCompositeDescriptor();
+
                 // Partitioner now operates in parallel. Each process receives
                 // partitioning over interconnect and writes its own session
                 // file to the working directory.
                 MeshPartitionSharedPtr partitioner =
                     GetMeshPartitionFactory().CreateInstance(
-                        partitionerName, session, shared_from_this());
+                        partitionerName, session, m_meshDimension,
+                        CreateMeshEntities(), comp);
 
                 partitioner->PartitionMesh(nParts, false);
-                partitioner->WriteLocalPartition();
-                m_compOrder = partitioner->GetCompositeOrdering();
-                m_bndRegOrder = partitioner->GetBndRegionOrdering();
+
+                vector<unsigned int> parts(1), tmp;
+                parts[0] = commMesh->GetRank();
+                vector<set<unsigned int>> elIDs(1);
+                partitioner->GetElementIDs(parts[0], tmp);
+                elIDs[0].insert(tmp.begin(), tmp.end());
+                this->WriteXMLGeometry(session->GetSessionName(), elIDs, parts);
 
                 if (m_session->DefinesCmdLineArgument("part-info") && isRoot)
                 {
@@ -355,31 +412,31 @@ void MeshGraphXml::ReadGeometry(
         if (attrName == "DIM")
         {
             err = attr->QueryIntValue(&m_meshDimension);
-            ASSERTL1(err == TIXML_SUCCESS, "Unable to read mesh dimension.");
+            ASSERTL0(err == TIXML_SUCCESS, "Unable to read mesh dimension.");
         }
         else if (attrName == "SPACE")
         {
             err = attr->QueryIntValue(&m_spaceDimension);
-            ASSERTL1(err == TIXML_SUCCESS, "Unable to read space dimension.");
+            ASSERTL0(err == TIXML_SUCCESS, "Unable to read space dimension.");
         }
         else if (attrName == "PARTITION")
         {
             err = attr->QueryIntValue(&m_partition);
-            ASSERTL1(err == TIXML_SUCCESS, "Unable to read partition.");
+            ASSERTL0(err == TIXML_SUCCESS, "Unable to read partition.");
             m_meshPartitioned = true;
         }
         else
         {
             std::string errstr("Unknown attribute: ");
             errstr += attrName;
-            ASSERTL1(false, errstr.c_str());
+            ASSERTL0(false, errstr.c_str());
         }
 
         // Get the next attribute.
         attr = attr->Next();
     }
 
-    ASSERTL1(m_meshDimension <= m_spaceDimension,
+    ASSERTL0(m_meshDimension <= m_spaceDimension,
              "Mesh dimension greater than space dimension");
 
     ReadVertices();
@@ -412,8 +469,7 @@ void MeshGraphXml::ReadVertices()
 
     // check to see if any scaling parameters are in
     // attributes and determine these values
-    LibUtilities::AnalyticExpressionEvaluator expEvaluator;
-    // LibUtilities::ExpressionEvaluator expEvaluator;
+    LibUtilities::Interpreter expEvaluator;
     const char *xscal = element->Attribute("XSCALE");
     if (!xscal)
     {
@@ -455,7 +511,6 @@ void MeshGraphXml::ReadVertices()
     // check to see if any moving parameters are in
     // attributes and determine these values
 
-    // LibUtilities::ExpressionEvaluator expEvaluator;
     const char *xmov = element->Attribute("XMOVE");
     if (!xmov)
     {
@@ -574,7 +629,7 @@ void MeshGraphXml::ReadCurves()
 
     NekDouble xscale, yscale, zscale;
 
-    LibUtilities::AnalyticExpressionEvaluator expEvaluator;
+    LibUtilities::Interpreter expEvaluator;
     const char *xscal = element->Attribute("XSCALE");
     if (!xscal)
     {
@@ -616,7 +671,6 @@ void MeshGraphXml::ReadCurves()
     // check to see if any moving parameters are in
     // attributes and determine these values
 
-    // LibUtilities::ExpressionEvaluator expEvaluator;
     const char *xmov = element->Attribute("XMOVE");
     if (!xmov)
     {
@@ -2647,48 +2701,16 @@ void MeshGraphXml::WriteComposites(TiXmlElement *geomTag, CompositeMap &comps)
 {
     TiXmlElement *compTag = new TiXmlElement("COMPOSITE");
 
-    // Create a map that gets around the issue of mapping faces -> F and
-    // edges -> E inside the tag.
-    map<LibUtilities::ShapeType, pair<string, string>> compMap;
-    compMap[LibUtilities::ePoint]         = make_pair("V", "V");
-    compMap[LibUtilities::eSegment]       = make_pair("S", "E");
-    compMap[LibUtilities::eQuadrilateral] = make_pair("Q", "F");
-    compMap[LibUtilities::eTriangle]      = make_pair("T", "F");
-    compMap[LibUtilities::eTetrahedron]   = make_pair("A", "A");
-    compMap[LibUtilities::ePyramid]       = make_pair("P", "P");
-    compMap[LibUtilities::ePrism]         = make_pair("R", "R");
-    compMap[LibUtilities::eHexahedron]    = make_pair("H", "H");
-
-    std::vector<unsigned int> idxList;
-
     for (auto &cIt : comps)
     {
-        stringstream s;
-        TiXmlElement *c = new TiXmlElement("C");
-
         if (cIt.second->m_geomVec.size() == 0)
         {
             continue;
         }
 
-        GeometrySharedPtr firstGeom = cIt.second->m_geomVec[0];
-        int shapeDim                = firstGeom->GetShapeDim();
-        string tag                  = (shapeDim < m_meshDimension)
-                         ? compMap[firstGeom->GetShapeType()].second
-                         : compMap[firstGeom->GetShapeType()].first;
-
-        idxList.clear();
-        s << " " << tag << "[";
-
-        for (int i = 0; i < cIt.second->m_geomVec.size(); ++i)
-        {
-            idxList.push_back(cIt.second->m_geomVec[i]->GetGlobalID());
-        }
-
-        s << ParseUtils::GenerateSeqString(idxList) << "] ";
-
+        TiXmlElement *c = new TiXmlElement("C");
         c->SetAttribute("ID", cIt.first);
-        c->LinkEndChild(new TiXmlText(s.str()));
+        c->LinkEndChild(new TiXmlText(GetCompositeString(cIt.second)));
         compTag->LinkEndChild(c);
     }
 
@@ -2803,9 +2825,9 @@ void MeshGraphXml::WriteGeometry(
     doc.SaveFile(outfilename);
 }
 
-void MeshGraphXml::WriteGeometry(std::string outname,
-                                 vector<set<unsigned int>> elements,
-                                 vector<unsigned int> partitions)
+void MeshGraphXml::WriteXMLGeometry(std::string outname,
+                                    vector<set<unsigned int>> elements,
+                                    vector<unsigned int> partitions)
 {
     // so in theory this function is used by the mesh partitioner
     // giving instructions on how to write out a paritioned mesh.
@@ -3219,5 +3241,23 @@ void MeshGraphXml::WriteGeometry(std::string outname,
         doc.SaveFile(LibUtilities::PortablePath(fullpath));
     }
 }
+
+CompositeOrdering MeshGraphXml::CreateCompositeOrdering()
+{
+    CompositeOrdering ret;
+
+    for (auto &c : m_meshComposites)
+    {
+        std::vector<unsigned int> ids;
+        for (auto &elmt : c.second->m_geomVec)
+        {
+            ids.push_back(elmt->GetGlobalID());
+        }
+        ret[c.first] = ids;
+    }
+
+    return ret;
+}
+
 }
 }

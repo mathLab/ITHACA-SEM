@@ -7,7 +7,15 @@
 ########################################################################
 
 IF(NEKTAR_USE_MESHGEN)
-    SET(BUILD_TRIANGLE ON)
+    # Search for system-installed Triangle installation
+    FIND_LIBRARY(TRIANGLE_LIBRARY NAMES triangle)
+    FIND_PATH(TRIANGLE_INCLUDE_DIR triangle.h)
+
+    IF(TRIANGLE_LIBRARY AND TRIANGLE_INCLUDE_DIR)
+        SET(BUILD_TRIANGLE OFF)
+    ELSE()
+        SET(BUILD_TRIANGLE ON)
+    ENDIF()
 
     OPTION(THIRDPARTY_BUILD_TRIANGLE
     "Build Triangle library from ThirdParty." ${BUILD_TRIANGLE})
@@ -17,7 +25,7 @@ IF(NEKTAR_USE_MESHGEN)
         EXTERNALPROJECT_ADD(
             triangle-1.6
             PREFIX ${TPSRC}
-            URL ${TPURL}/triangle.zip
+            URL ${TPURL}/triangle-1.6.zip
             URL_MD5 357cb7107f51f3f89940c47435d4fa49
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}

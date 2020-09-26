@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -120,11 +119,11 @@ void VolumeMesh::Process()
                 vector<EdgeSharedPtr> es = els[i]->GetEdgeList();
                 for (int j = 0; j < es.size(); j++)
                 {
-                    vector<pair<ElementSharedPtr, int> > lk = es[j]->m_elLink;
+		    vector<pair<weak_ptr<Element>, int> > lk = es[j]->m_elLink;
                     es[j]->m_elLink.clear();
                     for (int k = 0; k < lk.size(); k++)
                     {
-                        if (lk[k].first == els[i])
+                        if (lk[k].first.lock() == els[i])
                         {
                             continue;
                         }

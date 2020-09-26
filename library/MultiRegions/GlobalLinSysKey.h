@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -54,8 +53,10 @@ namespace Nektar
             MULTI_REGIONS_EXPORT GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const AssemblyMapSharedPtr &locToGloMap
                                         = NullAssemblyMapSharedPtr,
-                            const StdRegions::ConstFactorMap &factors = StdRegions::NullConstFactorMap,
-                            const StdRegions::VarCoeffMap &varCoeffs = StdRegions::NullVarCoeffMap,
+                            const StdRegions::ConstFactorMap &factors =
+                                                 StdRegions::NullConstFactorMap,
+                            const StdRegions::VarCoeffMap &varCoeffs =
+                                                 StdRegions::NullVarCoeffMap,
                             const VarFactorsMap &varFactos = NullVarFactorsMap);
 
             /// Copy constructor.
@@ -116,7 +117,7 @@ namespace Nektar
         {
             return m_varFactors;
         }
-    }
-}
-
+    } //end of namespace
+} //end of namespace
 #endif
+

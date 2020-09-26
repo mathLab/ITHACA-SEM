@@ -8,7 +8,7 @@ ENDIF()
 
 IF( NEKTAR_SOLVER_ADR )
     ADD_SOLVER_EXECUTABLE(ADRSolver SOURCES
-        ./ADRSolver.cpp 
+        ./ADRSolver.cpp
         ./EquationSystems/Helmholtz.cpp
         ./EquationSystems/Laplace.cpp
         ./EquationSystems/Poisson.cpp
@@ -16,11 +16,18 @@ IF( NEKTAR_SOLVER_ADR )
         ./EquationSystems/SteadyAdvectionDiffusion.cpp
         ./EquationSystems/SteadyAdvectionDiffusionReaction.cpp
         ./EquationSystems/UnsteadyAdvection.cpp
+        ./EquationSystems/MMFAdvection.cpp
         ./EquationSystems/UnsteadyDiffusion.cpp
         ./EquationSystems/UnsteadyAdvectionDiffusion.cpp
         ./EquationSystems/UnsteadyInviscidBurger.cpp
+        ./EquationSystems/UnsteadyReactionDiffusion.cpp
         ./EquationSystems/UnsteadyViscousBurgers.cpp
         ./EquationSystems/EigenValuesAdvection.cpp)
+
+    #MMF advection
+    ADD_NEKTAR_TEST        (TestMMFAdvPlane)
+    ADD_NEKTAR_TEST        (TestMMFAdvCube)
+    ADD_NEKTAR_TEST        (TestMMFAdvSphere)
 
     # 1D discontinuous advection (weak DG/flux reconstruction)
     ADD_NEKTAR_TEST(Advection1D_FRDG_GLL_LAGRANGE_SEM LENGTHY)
@@ -67,7 +74,7 @@ IF( NEKTAR_SOLVER_ADR )
     ADD_NEKTAR_TEST(Advection2D_periodic_deformed_MODIFIED_10x10 LENGTHY)
     ADD_NEKTAR_TEST(Advection_m12_DG_periodic)
     ADD_NEKTAR_TEST(Advection2D_m12_DG_quad_VarP)
-    ADD_NEKTAR_TEST(Advection2D_m12_DG_tri_VarP)	
+    ADD_NEKTAR_TEST(Advection2D_m12_DG_tri_VarP)
     ADD_NEKTAR_TEST(Advection2D_ISO_regular_SSPRK2)
     ADD_NEKTAR_TEST(Advection2D_ISO_regular_SSPRK3)
 
@@ -75,6 +82,7 @@ IF( NEKTAR_SOLVER_ADR )
     ADD_NEKTAR_TEST(Advection_m12_Order1)
     ADD_NEKTAR_TEST(Advection_m12_Order2)
     ADD_NEKTAR_TEST(Advection_m14_Order4)
+    ADD_NEKTAR_TEST(CylindricalHelmholtz)
 
     # 2D advection diffusion (Imex DG)
     ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_2D_ImexDG)
@@ -83,15 +91,18 @@ IF( NEKTAR_SOLVER_ADR )
     ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_2D_WeakDG)
 
     # 3D discontinous advection
-    ADD_NEKTAR_TEST(Advection3D_m12_DG_hex_periodic_nodal LENGTHY)
-    ADD_NEKTAR_TEST(Advection3D_m12_DG_hex_nodal)
+    ADD_NEKTAR_TEST(Advection3D_m10_DG_hex_periodic_nodal LENGTHY)
+    ADD_NEKTAR_TEST(Advection3D_m8_DG_hex_nodal)
     ADD_NEKTAR_TEST(Advection3D_m12_DG_hex_periodic)
-    ADD_NEKTAR_TEST(Advection3D_m12_DG_hex)
-    ADD_NEKTAR_TEST(Advection3D_m12_DG_hex_VarP)
+    ADD_NEKTAR_TEST(Advection3D_m8_DG_hex)
+    ADD_NEKTAR_TEST(Advection3D_m10_DG_hex_VarP)
     ADD_NEKTAR_TEST(Advection3D_m12_DG_prism)
-    ADD_NEKTAR_TEST(Advection3D_m12_DG_prism_VarP)
+    ADD_NEKTAR_TEST(Advection3D_m10_DG_prism_VarP)
     ADD_NEKTAR_TEST(Advection3D_m12_DG_tet)
     ADD_NEKTAR_TEST(Advection3D_m12_DG_tet_VarP)
+    # face rotation test
+    ADD_NEKTAR_TEST(Advection3D_DG_hex_faceRotation1122)
+    ADD_NEKTAR_TEST(Advection3D_DG_hex_faceRotation1221)
 
     # 1D inviscid Burger (DG/FR)
     ADD_NEKTAR_TEST(InviscidBurger1D_FRDG_GLL_LAGRANGE_SEM LENGTHY)
@@ -120,6 +131,7 @@ IF( NEKTAR_SOLVER_ADR )
 
     # 2D explicit diffusion (LDG/LFR)
     ADD_NEKTAR_TEST(ExDiffusion_2D_LDG_hybrid_m3)
+    ADD_NEKTAR_TEST(ExDiffusion_2D_LDG_hybrid_m3_periodic)
     ADD_NEKTAR_TEST(ExDiffusion_2D_LDG_hybrid_m8 LENGTHY)
     ADD_NEKTAR_TEST(ExDiffusion_2D_LDG_regular_Neumann)
     ADD_NEKTAR_TEST(ExDiffusion_2D_LDG_regular_Neumann_GAUSS)
@@ -141,10 +153,13 @@ IF( NEKTAR_SOLVER_ADR )
     # C^0 projection
     ADD_NEKTAR_TEST(Projection2D)
 
+    # Reaction-diffusion
+    ADD_NEKTAR_TEST(ReactionDiffusion2D)
+
     ADD_NEKTAR_TEST(Helmholtz1D_8modes_DG)
     ADD_NEKTAR_TEST(Helmholtz1D_8modes)
     ADD_NEKTAR_TEST(Helmholtz1D_8nodes)
-    
+
     ADD_NEKTAR_TEST(SteadyAdvDiffReact2D_modal)
     ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_3DHomo1D_MVM)
     ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_3DHomo2D_MVM)
@@ -162,7 +177,7 @@ IF( NEKTAR_SOLVER_ADR )
     ADD_NEKTAR_TEST(UnsteadyDiffusion_LFRHU_3DHomo1D_MVM)
     ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_WeakDG_LDG_3DHomo1D_MVM)
     ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_FRDG_LFRDG_3DHomo1D_MVM)
-    ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_FRSD_LFRSD_3DHomo1D_MVM)        	    
+    ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_FRSD_LFRSD_3DHomo1D_MVM)
     ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_FRHU_LFRHU_3DHomo1D_MVM)
 
     ADD_NEKTAR_TEST(Helmholtz2D_modal_DG)
@@ -209,23 +224,27 @@ IF( NEKTAR_SOLVER_ADR )
         ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_FRHU_LFRHU_3DHomo1D_FFT)
     ENDIF (NEKTAR_USE_FFTW)
 
+    ADD_NEKTAR_TEST(RotPerBcs3D LENGTHY)
+
     IF (NEKTAR_USE_MPI)
-        ADD_NEKTAR_TEST(Advection3D_m12_DG_hex_par LENGTHY)
+        ADD_NEKTAR_TEST(Advection3D_m8_DG_hex_par LENGTHY)
         ADD_NEKTAR_TEST(Advection3D_m12_DG_prism_par LENGTHY)
         ADD_NEKTAR_TEST(Advection3D_m12_DG_tet_par LENGTHY)
-	ADD_NEKTAR_TEST(Advection3D_m12_DG_hex_VarP_par LENGTHY)
+	ADD_NEKTAR_TEST(Advection3D_m10_DG_hex_VarP_par LENGTHY)
 	ADD_NEKTAR_TEST(Advection3D_m12_DG_tet_VarP_par LENGTHY)
-	ADD_NEKTAR_TEST(Advection3D_m12_DG_prism_VarP_par LENGTHY)
+	ADD_NEKTAR_TEST(Advection3D_m10_DG_prism_VarP_par LENGTHY)
         ADD_NEKTAR_TEST(Advection3D_m12_DG_hex_periodic_par)
         ADD_NEKTAR_TEST(ImDiffusion_Quad_Periodic_m7_par LENGTHY)
         ADD_NEKTAR_TEST(ImDiffusion_Hex_Periodic_m5_par)
         ADD_NEKTAR_TEST(Helmholtz3D_CubePeriodic_par)
         ADD_NEKTAR_TEST(Helmholtz3D_CubeDirichlet_par)
-        ADD_NEKTAR_TEST(Helmholtz3D_CubePeriodic_RotateFace_par)	
+        ADD_NEKTAR_TEST(Helmholtz3D_CubePeriodic_RotateFace_par)
 	ADD_NEKTAR_TEST(Advection2D_m12_DG_quad_VarP_par)
 	ADD_NEKTAR_TEST(Advection2D_m12_DG_tri_VarP_par)
         IF (NEKTAR_USE_HDF5)
-            ADD_NEKTAR_TEST(Advection3D_m12_DG_prism_VarP_hdf)
+            ADD_NEKTAR_TEST(Advection3D_m10_DG_prism_VarP_hdf)
         ENDIF()
+        ADD_NEKTAR_TEST(RotPerBcs3D_Annulus LENGTHY)
+            ADD_NEKTAR_TEST(UnsteadyAdvection_WDG_3DHomo1D_MVM_NPZ)
     ENDIF (NEKTAR_USE_MPI)
 ENDIF( NEKTAR_SOLVER_ADR )

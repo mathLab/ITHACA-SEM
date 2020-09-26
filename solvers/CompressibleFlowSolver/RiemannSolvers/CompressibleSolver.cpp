@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,8 +33,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <CompressibleFlowSolver/RiemannSolvers/CompressibleSolver.h>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <boost/core/ignore_unused.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 namespace Nektar
 {
@@ -54,7 +53,7 @@ namespace Nektar
         // Check if using ideal gas
         m_idealGas = boost::iequals(eosType,"IdealGas");
     }
-    
+
     void CompressibleSolver::v_Solve(
         const int                                         nDim,
         const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
@@ -64,14 +63,14 @@ namespace Nektar
         if (m_pointSolve)
         {
             int expDim      = nDim;
-            int nvariables  = Fwd.num_elements();
-            
+            int nvariables  = Fwd.size();
+
             NekDouble rhouf, rhovf;
-            
+
             // Check if PDE-based SC is used
             if (expDim == 1)
             {
-                for (int i = 0; i < Fwd[0].num_elements(); ++i)
+                for (int i = 0; i < Fwd[0].size(); ++i)
                 {
                     v_PointSolve(
                         Fwd [0][i], Fwd [1][i], 0.0,   0.0,   Fwd [2][i],
@@ -83,7 +82,7 @@ namespace Nektar
             {
                 if (nvariables == expDim+2)
                 {
-                    for (int i = 0; i < Fwd[0].num_elements(); ++i)
+                    for (int i = 0; i < Fwd[0].size(); ++i)
                     {
                         v_PointSolve(
                             Fwd [0][i], Fwd [1][i], Fwd [2][i], 0.0,   Fwd [3][i],
@@ -91,10 +90,10 @@ namespace Nektar
                             flux[0][i], flux[1][i], flux[2][i], rhovf, flux[3][i]);
                     }
                 }
-                
+
                 if (nvariables > expDim+2)
                 {
-                    for (int i = 0; i < Fwd[0].num_elements(); ++i)
+                    for (int i = 0; i < Fwd[0].size(); ++i)
                     {
                         v_PointSolveVisc(
                             Fwd [0][i], Fwd [1][i], Fwd [2][i], 0.0, Fwd [3][i], Fwd [4][i],
@@ -102,11 +101,11 @@ namespace Nektar
                             flux[0][i], flux[1][i], flux[2][i], rhovf, flux[3][i], flux[4][i]);
                     }
                 }
-                
+
             }
             else if (expDim == 3)
             {
-                for (int i = 0; i < Fwd[0].num_elements(); ++i)
+                for (int i = 0; i < Fwd[0].size(); ++i)
                 {
                     v_PointSolve(
                         Fwd [0][i], Fwd [1][i], Fwd [2][i], Fwd [3][i], Fwd [4][i],
@@ -115,7 +114,7 @@ namespace Nektar
                 }
                 if (nvariables > expDim+2)
                 {
-                    for (int i = 0; i < Fwd[0].num_elements(); ++i)
+                    for (int i = 0; i < Fwd[0].size(); ++i)
                     {
                         v_PointSolveVisc(
                             Fwd [0][i], Fwd [1][i], Fwd [2][i], Fwd [3][i], Fwd [4][i], Fwd [5][i],
@@ -136,6 +135,8 @@ namespace Nektar
         NekDouble rhoR, NekDouble pR, NekDouble eR, NekDouble HR, NekDouble srR,
         NekDouble HRoe, NekDouble URoe2, NekDouble srLR)
     {
+        boost::ignore_unused(HL, srL, HR, srR, srLR);
+
         static NekDouble gamma = m_params["gamma"]();
         NekDouble cRoe;
         if(m_idealGas)
@@ -186,7 +187,7 @@ namespace Nektar
             // chiRoe and kappaRoe (eq 66)
             NekDouble chiRoe, kappaRoe;
             NekDouble fac = D - deltaP*deltaRho;
-            if( abs(fac) > NekConstants::kNekZeroTol)
+            if( std::abs(fac) > NekConstants::kNekZeroTol)
             {
                 chiRoe   = (D*avgChi + s*s*deltaRho*dP) / fac;
                 kappaRoe = D*avgKappa / fac;
@@ -202,81 +203,4 @@ namespace Nektar
         return cRoe;
     }
 
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
-    void CompressibleSolver::v_CalcFluxJacobian(
-        const int                                         nDim,
-        const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
-        const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-        const Array<OneD, const Array<OneD, NekDouble> > &normals,
-              DNekBlkMatSharedPtr                        &FJac,
-              DNekBlkMatSharedPtr                        &BJac)
-    {
-        int expDim      = nDim;
-        int nvariables  = Fwd.num_elements();
-        int nnomals     = normals.num_elements();
-        // int nvariables3D = nvariables+2;
-        int nvariables3D = 5;
-
-        if (nvariables > expDim+2)
-        {
-            ASSERTL0(false,"nvariables > expDim+2 case not coded")
-        }
-
-        DNekMatSharedPtr PointFJac3D = MemoryManager<DNekMat>
-            ::AllocateSharedPtr(nvariables3D, nvariables3D);
-        DNekMatSharedPtr PointBJac3D = MemoryManager<DNekMat>
-            ::AllocateSharedPtr(nvariables3D, nvariables3D);
-        
-        Array<OneD, NekDouble> PointFwd(nvariables3D,0.0),PointBwd(nvariables3D,0.0);
-        Array<OneD, NekDouble> PointNormal(3,0.0);
-
-
-        Array<OneD, unsigned int> index(nvariables);
-
-        index[nvariables-1] = 4;
-        for(int i=0;i<nvariables-1;i++)
-        {
-            index[i] = i;
-        }
-
-        int nj=0;
-        int nk=0;
-        for (int i = 0; i < Fwd[0].num_elements(); ++i)
-        {
-            for(int j=0; j< nnomals; j++)
-            {
-                PointNormal[j] = normals [j][i];
-            }
-
-            for(int j=0; j< nvariables; j++)
-            {
-                nj = index[j];
-                PointFwd[nj] = Fwd [j][i];
-                PointBwd[nj] = Bwd [j][i];
-                // std::cout << "PointFwd["<<i<<"]"<< PointFwd[i]<<std::endl;
-            }
-            
-            v_PointFluxJacobian(PointFwd,PointBwd,PointNormal,PointFJac3D,PointBJac3D);
-            
-            DNekMatSharedPtr PointFJac = MemoryManager<DNekMat>
-                ::AllocateSharedPtr(nvariables, nvariables);
-            DNekMatSharedPtr PointBJac = MemoryManager<DNekMat>
-                ::AllocateSharedPtr(nvariables, nvariables);
-
-            for(int j=0; j< nvariables; j++)
-            {
-                nj = index[j];
-                for(int k=0; k< nvariables; k++)
-                {
-                    nk = index[k];
-                    (*PointFJac)(j,k) = (*PointFJac3D)(nj,nk); 
-                    (*PointBJac)(j,k) = (*PointBJac3D)(nj,nk); 
-                }
-            }
-
-            FJac->SetBlock(i, i, PointFJac);
-            BJac->SetBlock(i, i, PointBJac);
-        }
-    }
-#endif
 }

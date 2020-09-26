@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -102,7 +101,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
     Array<OneD, Array<OneD, NekDouble> > grad(ngrad), fgrad(ngrad),
         outfield(nfields);
 
-    StdRegions::StdExpansionSharedPtr elmt;
+    LocalRegions::ExpansionSharedPtr elmt;
     StdRegions::StdExpansion2DSharedPtr bc;
     Array<OneD, int> BoundarytoElmtID, BoundarytoTraceID;
     Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> > BndExp(nfields);
@@ -116,7 +115,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
     }
 
     // loop over the types of boundary conditions
-    for (cnt = n = 0; n < BndExp[0].num_elements(); ++n)
+    for (cnt = n = 0; n < BndExp[0].size(); ++n)
     {
         bool doneBnd = false;
         // identify if boundary has been defined
@@ -168,7 +167,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
                         // Get face normals
                         const SpatialDomains::GeomFactorsSharedPtr m_metricinfo = lep->GetMetricInfo();
 
-                        const Array<OneD, const Array<OneD, NekDouble> > normals = elmt->GetFaceNormal(boundary);
+                        const Array<OneD, const Array<OneD, NekDouble> > normals = elmt->GetTraceNormal(boundary);
 
                         // initialise arrays
                         for (j = 0; j < ngrad; ++j)
@@ -186,7 +185,7 @@ void ProcessScalGrad::Process(po::variables_map &vm)
 
                             for (j = 0; j < ngrad; ++j)
                             {
-                                elmt->GetFacePhysVals(boundary, bc, grad[j],
+                                elmt->GetTracePhysVals(boundary, bc, grad[j],
                                                       fgrad[j]);
                             }
 

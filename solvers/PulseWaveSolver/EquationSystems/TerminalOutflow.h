@@ -35,51 +35,54 @@
 #ifndef NEKTAR_TERMINALOUTFLOW_H
 #define NEKTAR_TERMINALOUTFLOW_H
 
-#include <string>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <PulseWaveSolver/EquationSystems/PulseWaveBoundary.h>
+#include <string>
 
 namespace Nektar
 {
-    // Forward declarations
-    class TerminalOutflow;
 
-    /// Pointer to a PulseWaveOutflow object.
-    typedef std::shared_ptr<TerminalOutflow> TerminalOutflowSharedPtr;
-    
-    /// A global linear system.
-    class TerminalOutflow : public PulseWaveBoundary
-    {
+// Forward declarations
+class TerminalOutflow;
+
+/// Pointer to a PulseWaveOutflow object.
+typedef std::shared_ptr<TerminalOutflow> TerminalOutflowSharedPtr;
+
+/// A global linear system.
+class TerminalOutflow : public PulseWaveBoundary
+{
     public:
-        /// Creates an instance of this class
-      static PulseWaveBoundarySharedPtr create(Array<OneD, MultiRegions::ExpListSharedPtr>& pVessel, 
-                                               const LibUtilities::SessionReaderSharedPtr& pSession,
-                                               PulseWavePressureAreaSharedPtr& pressureArea)
+        // Creates an instance of this class
+        static PulseWaveBoundarySharedPtr
+        create(Array<OneD, MultiRegions::ExpListSharedPtr> &pVessel,
+               const LibUtilities::SessionReaderSharedPtr &pSession,
+               PulseWavePressureAreaSharedPtr &pressureArea)
         {
-            return MemoryManager<TerminalOutflow>::AllocateSharedPtr(pVessel,pSession,pressureArea);
+            return MemoryManager<TerminalOutflow>::AllocateSharedPtr(pVessel,
+                                                                     pSession,
+                                                                     pressureArea);
         }
 
-        /// Name of class
+        // Name of class
         static std::string className;
-        
-        TerminalOutflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
+
+        TerminalOutflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel,
                         const LibUtilities::SessionReaderSharedPtr pSession,
-                        PulseWavePressureAreaSharedPtr pressureArea); 
+                        PulseWavePressureAreaSharedPtr pressureArea);
 
         virtual ~TerminalOutflow();
+
     protected:
-        virtual void v_DoBoundary(
-            const Array<OneD,const Array<OneD, NekDouble> > &inarray,
-            Array<OneD, Array<OneD, NekDouble> > &A_0,
-            Array<OneD, Array<OneD, NekDouble> > &beta,
-            const NekDouble time,
-            int omega,
-            int offset, 
-            int n);
+        virtual void
+        v_DoBoundary(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                     Array<OneD, Array<OneD, NekDouble> > &A_0,
+                     Array<OneD, Array<OneD, NekDouble> > &beta,
+                     Array<OneD, Array<OneD, NekDouble> > &alpha,
+                     const NekDouble time, int omega, int offset, int n);
 
     private:
+};
 
-    };
-}
+} // namespace Nektar
 
 #endif

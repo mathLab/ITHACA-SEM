@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,6 +35,8 @@
 
 #ifndef EXPLIST3DHOMO1D_H
 #define EXPLIST3DHOMO1D_H
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <vector>
@@ -89,7 +90,7 @@ namespace Nektar
                          const NekDouble lhom, 
                          const bool useFFT,
                          const bool dealiasing,
-                         const SpatialDomains::ExpansionMap &expansions,
+                         const SpatialDomains::ExpansionInfoMap &expansions,
                          const Collections::ImplementationType ImpType
                          = Collections::eNoImpType);
                                     
@@ -147,15 +148,15 @@ namespace Nektar
             virtual void v_GetPeriodicEntities(
                 PeriodicMap &periodicVerts,
                 PeriodicMap &periodicEdges,
-                PeriodicMap &periodicFaces)// default argument for dimension compatibility
-                                            
+                PeriodicMap &periodicFaces)
             {
+                boost::ignore_unused(periodicFaces);
                 m_planes[0]->GetPeriodicEntities(periodicVerts,periodicEdges);
             }
 
         private:
 
-            MULTI_REGIONS_EXPORT void GenExpList3DHomogeneous1D(const SpatialDomains::ExpansionMap &expansions,  const Collections::ImplementationType ImpType);
+            MULTI_REGIONS_EXPORT void GenExpList3DHomogeneous1D(const SpatialDomains::ExpansionInfoMap &expansions,  const Collections::ImplementationType ImpType);
 
         };
 

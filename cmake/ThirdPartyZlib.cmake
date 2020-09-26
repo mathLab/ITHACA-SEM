@@ -6,30 +6,21 @@
 #
 ########################################################################
 
-# Attempt to identify Macports libraries, if they exist and we didn't override
-# ZLIB_ROOT on the command line or in ccmake. This prevents cmake warnings later
-# on.
-IF (NOT DEFINED ZLIB_ROOT)
-    SET(ZLIB_ROOT /opt/local/)
-ENDIF()
-
 # Find a system ZLIB library. If not found enable the THIRDPARTY_BUILD_ZLIB
 # option.
-SET(ZLIB_FIND_QUIETLY ON)
-FIND_PACKAGE(ZLIB)
-IF (ZLIB_FOUND AND NOT ZLIB_VERSION_PATCH LESS 7)
-    SET(ZLIB_LIBRARY ${ZLIB_LIBRARIES} CACHE FILEPATH
-        "Zlib library" FORCE)
-    SET(ZLIB_LIBRARY_DEBUG ${ZLIB_LIBRARIES} CACHE FILEPATH
-        "Zlib library" FORCE)
-    SET(ZLIB_LIBRARY_RELEASE ${ZLIB_LIBRARIES} CACHE FILEPATH
-        "Zlib library" FORCE)
-    MARK_AS_ADVANCED(ZLIB_LIBRARY ZLIB_LIBRARY_DEBUG ZLIB_LIBRARY_RELEASE)
-    SET(ZLIB_INCLUDE_DIR ${ZLIB_INCLUDE_DIRS} CACHE PATH
-        "Zlib include" FORCE)
-    SET(BUILD_ZLIB OFF)
-ELSE ()
+# On Windows, we want to force the use of third party zlib
+# since this will be used with the boost build if boost is being
+# built as a third party lib
+IF(WIN32)
+    MESSAGE(STATUS "On a WIN32 platform, zlib will be built as a third party library...")
     SET(BUILD_ZLIB ON)
+ELSE()
+    FIND_PACKAGE(ZLIB QUIET)
+    IF (ZLIB_FOUND AND NOT ZLIB_VERSION_PATCH LESS 7)
+        SET(BUILD_ZLIB OFF)
+    ELSE ()
+        SET(BUILD_ZLIB ON)
+    ENDIF()
 ENDIF()
 
 OPTION(THIRDPARTY_BUILD_ZLIB "Build ZLib library" ${BUILD_ZLIB})
@@ -62,32 +53,28 @@ IF (THIRDPARTY_BUILD_ZLIB)
     ENDIF ()
 
     IF (WIN32)
-        THIRDPARTY_LIBRARY(ZLIB_LIBRARY STATIC zlib
-            DESCRIPTION "Zlib library")
-        THIRDPARTY_LIBRARY(ZLIB_LIBRARY_DEBUG STATIC zlibd
-            DESCRIPTION "Zlib library")
-        THIRDPARTY_LIBRARY(ZLIB_LIBRARY_RELEASE STATIC zlib
-            DESCRIPTION "Zlib library")
+        SET(ZLIB_NAME zlib)
+        SET(ZLIB_NAME_DEBUG zlibd)
     ELSE ()
-        THIRDPARTY_LIBRARY(ZLIB_LIBRARY SHARED z
-            DESCRIPTION "Zlib library")
-        THIRDPARTY_LIBRARY(ZLIB_LIBRARY_DEBUG SHARED z
-            DESCRIPTION "Zlib library")
-        THIRDPARTY_LIBRARY(ZLIB_LIBRARY_RELEASE SHARED z
-            DESCRIPTION "Zlib library")
+        SET(ZLIB_NAME z)
+        SET(ZLIB_NAME_DEBUG z)
     ENDIF ()
+    THIRDPARTY_LIBRARY(ZLIB_LIBRARIES SHARED ${ZLIB_NAME} DESCRIPTION "Zlib library")
+    THIRDPARTY_LIBRARY(ZLIB_LIBRARIES_DEBUG SHARED ${ZLIB_NAME_DEBUG} DESCRIPTION "Zlib library")
 
-    MESSAGE(STATUS "Build Zlib: ${ZLIB_LIBRARY}")
+    MESSAGE(STATUS "Build Zlib: ")
+    MESSAGE(STATUS " -- Optimized: ${ZLIB_LIBRARIES}")
+    MESSAGE(STATUS " -- Debug:     ${ZLIB_LIBRARIES_DEBUG}")
     SET(ZLIB_INCLUDE_DIR ${TPDIST}/include CACHE PATH "Zlib include" FORCE)
     SET(ZLIB_CONFIG_INCLUDE_DIR ${TPINC})
 ELSE (THIRDPARTY_BUILD_ZLIB)
     ADD_CUSTOM_TARGET(zlib-1.2.7 ALL)
-    MESSAGE(STATUS "Found Zlib: ${ZLIB_LIBRARY} (version ${ZLIB_VERSION_STRING})")
-    SET(ZLIB_CONFIG_INCLUDE_DIR ${ZLIB_INCLUDE_DIR})
+    MESSAGE(STATUS "Found Zlib: ${ZLIB_LIBRARIES} (version ${ZLIB_VERSION_STRING})")
+
+    # We use the found library also for debug builds.
+    SET(ZLIB_LIBRARIES_DEBUG ${ZLIB_LIBRARIES})
+
+    SET(ZLIB_CONFIG_INCLUDE_DIR ${ZLIB_INCLUDE_DIRS})
 ENDIF (THIRDPARTY_BUILD_ZLIB)
 
-MARK_AS_ADVANCED(ZLIB_LIBRARY)
-MARK_AS_ADVANCED(ZLIB_LIBRARY_DEBUG)
-MARK_AS_ADVANCED(ZLIB_LIBRARY_RELEASE)
-MARK_AS_ADVANCED(ZLIB_INCLUDE_DIR)
-INCLUDE_DIRECTORIES(${ZLIB_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${ZLIB_INCLUDE_DIRS})

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -37,11 +36,14 @@
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_NEK_MANAGER_HPP
 
 #include <map>
+#include <sstream>
 #include <memory>
 #include <functional>
 
+#ifdef NEKTAR_USE_THREAD_SAFETY
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/locks.hpp>
+#endif
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
@@ -49,10 +51,10 @@ namespace Nektar
 {
     namespace LibUtilities
     {
-        using namespace std;
-
+#ifdef NEKTAR_USE_THREAD_SAFETY
         typedef boost::unique_lock<boost::shared_mutex> WriteLock;
         typedef boost::shared_lock<boost::shared_mutex> ReadLock;
+#endif
 
         template <typename KeyType>
         struct defOpLessCreator
@@ -116,7 +118,9 @@ namespace Nektar
                 {
                     if (!whichPool.empty())
                     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
                         ReadLock v_rlock(m_mutex); // reading static members
+#endif
                         auto iter = m_ValueContainerPool.find(whichPool);
                         if (iter != m_ValueContainerPool.end())
                         {
@@ -125,12 +129,17 @@ namespace Nektar
                         }
                         else
                         {
+#ifdef NEKTAR_USE_THREAD_SAFETY
                             v_rlock.unlock();
-                            // now writing static members.  Apparently upgrade_lock has less desirable properties
-                            // than just dropping read lock, grabbing write lock.
-                            // write will block until all reads are done, but reads cannot be acquired if write
-                            // lock is blocking.  In this context writes are supposed to be rare.
+                            // now writing static members.  Apparently
+                            // upgrade_lock has less desirable properties than
+                            // just dropping read lock, grabbing write lock.
+                            // write will block until all reads are done, but
+                            // reads cannot be acquired if write lock is
+                            // blocking.  In this context writes are supposed to
+                            // be rare.
                             WriteLock v_wlock(m_mutex);
+#endif
                             m_values = ValueContainerShPtr(new ValueContainer);
                             m_ValueContainerPool[whichPool] = m_values;
                             if (m_managementEnabledContainerPool.find(whichPool) == m_managementEnabledContainerPool.end())
@@ -212,8 +221,9 @@ namespace Nektar
                         }
                         else
                         {
-                            std::string keyAsString = boost::lexical_cast<std::string>(key);
-                            std::string message = std::string("No create func found for key ") + keyAsString;
+                            std::stringstream ss;
+                            ss << key;
+                            std::string message = "No create func found for key " + ss.str();
                             NEKERROR(ErrorUtil::efatal, message.c_str());
                             static ValueType result;
                             return result;
@@ -235,8 +245,9 @@ namespace Nektar
                 {
                     if (!whichPool.empty())
                     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
                         WriteLock v_wlock(m_mutex);
-
+#endif
                         auto x = m_ValueContainerPool.find(whichPool);
                         ASSERTL1(x != m_ValueContainerPool.end(),
                                 "Could not find pool " + whichPool);
@@ -244,7 +255,9 @@ namespace Nektar
                     }
                     else
                     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
                         WriteLock v_wlock(m_mutex);
+#endif
 
                         for (auto &x : m_ValueContainerPool)
                         {
@@ -268,7 +281,9 @@ namespace Nektar
                 {
                     if (!whichPool.empty())
                     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
                         WriteLock v_wlock(m_mutex);
+#endif
 
                         auto x = m_managementEnabledContainerPool.find(whichPool);
                         if (x != m_managementEnabledContainerPool.end())
@@ -286,8 +301,9 @@ namespace Nektar
                 {
                     if (!whichPool.empty())
                     {
+#ifdef NEKTAR_USE_THREAD_SAFETY
                         WriteLock v_wlock(m_mutex);
-
+#endif
                         auto x = m_managementEnabledContainerPool.find(whichPool);
                         if (x != m_managementEnabledContainerPool.end())
                         {
@@ -310,12 +326,16 @@ namespace Nektar
                 static FlagContainerPool m_managementEnabledContainerPool;
                 CreateFuncType m_globalCreateFunc;
                 CreateFuncContainer m_keySpecificCreateFuncs;
+#ifdef NEKTAR_USE_THREAD_SAFETY
                 static boost::shared_mutex m_mutex;
+#endif
         };
         template <typename KeyType, typename ValueT, typename opLessCreator> typename NekManager<KeyType, ValueT, opLessCreator>::ValueContainerPool NekManager<KeyType, ValueT, opLessCreator>::m_ValueContainerPool;
         template <typename KeyType, typename ValueT, typename opLessCreator> typename NekManager<KeyType, ValueT, opLessCreator>::FlagContainerPool NekManager<KeyType, ValueT, opLessCreator>::m_managementEnabledContainerPool;
+#ifdef NEKTAR_USE_THREAD_SAFETY
         template <typename KeyType, typename ValueT, typename opLessCreator>
             typename boost::shared_mutex NekManager<KeyType, ValueT, opLessCreator>::m_mutex;
+#endif
     }
 }
 

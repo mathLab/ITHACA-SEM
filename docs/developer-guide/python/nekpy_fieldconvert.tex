@@ -1,0 +1,108 @@
+\chapter{FieldConvert in NekPy}
+
+This chapter will describe the idea behind the \texttt{FieldConvert} utility in 
+NekPy and discuss how the process is implemented through a Python 
+\texttt{FieldConverter} class. As this part of the project has not been fully 
+completed yet, this chapter also outlines the tasks that need to be done in order 
+to show the proof-of-concept, as well as some ideas for further improving the tool.
+
+\section{Idea and motivation}
+
+The idea behind porting \texttt{FieldConvert} utility to Python is to allow the 
+user to execute a seamless workflow, from converting the mesh and running 
+calculations to preparing data visualisations. This solution is a potential 
+improvement over the original \texttt{FieldConvert} tool, as the Python-based 
+workflow can potentially be executed from a single Python script.
+
+Another advantage of the Python version of the tool is the possibility of 
+interacting with other software featuring Python interface, e.g. Paraview. 
+This could make the process of visualising the results of computations done 
+with \nek{} even easier.
+
+\section{Design and implementation}
+
+\texttt{FieldConvert} utility in Python was designed to provide the user with 
+an easy workflow. Hence, a minimum effort is required to set up the conversion 
+and the majority of work is done behind the scenes.
+
+This section will discuss the design of the utility, including the description 
+of work yet to be done, as well as the user workflow required to execute the 
+basic conversions.
+
+\subsection{\texttt{FieldConverter} class}
+
+The entire procedure outlined in the original \texttt{FieldConvert} utility is 
+managed by the \texttt{FieldConverter} class located in 
+\path{utilities/FieldConvert/Python/FieldConvert.py}. The class has the following 
+attributes:
+
+\begin{itemize}
+	\item \texttt{fieldSharedPtr}: a shared pointer to the field, necessary to 
+	initialise a module;
+	\begin{itemize}
+		\item \emph{TO-DO}: \texttt{FieldSharedPtr} type remains to be wrapped.
+		\item \emph{TO-DO}: Whether a separate \texttt{FieldSharedPtr} is 
+		needed for each module initialisation needs to be discussed.
+	\end{itemize}
+	\item \texttt{moduleFactory}: would be equivalent to \texttt{GetModuleFactory()}
+	in the original utility;
+	\begin{itemize}
+		\item \emph{TO-DO}: Whether this is possible needs to be discussed.
+		\item \emph{TO-DO}: It would be best to wrap the general template 
+		\texttt{NekFactory} and initialise a module factory this way.
+	\end{itemize}
+	\item \texttt{availableModuleList}: holds a list of available modules in 
+	order to assert that the modules requested by the user are available;
+	\begin{itemize}
+		\item \emph{TO-DO}: \texttt{PrintAvailableClasses} method needs to 
+		be wrapped.
+		\item \emph{TO-DO}: It would definitely be neater if the available modules 
+		existed as an enum rather than just strings containing names.
+	\end{itemize}
+	\item \texttt{sessionFile}, \texttt{inputFile}, \texttt{outputFile}: 
+	hold the necessary filenames;
+	\item \texttt{moduleList}: holds a list of \texttt{Module} objects, created as 
+	requested by the user;
+	\item \texttt{variableMap}: equivalent of \texttt{vm} variable from the original 
+	utility.
+	\begin{itemize}
+		\item \emph{TO-DO}: This variable map needs to be constructed from user 
+		input as it needs to be passed into \texttt{Process} method of 
+		\texttt{Module} class.
+	\end{itemize}
+\end{itemize}
+
+\subsection{User workflow}
+
+The currently suggested user workflow is as follows:
+
+\begin{enumerate}
+	\item Initialise an instance of \texttt{FieldConverter} class.
+	\item Add a session file as well as an input and an output file.
+	\begin{itemize}
+		\item The converter will assert that the session file and the input file 
+		exist, assert that the file extensions are supported and create appropriate 
+		modules.
+	\end{itemize}
+	\item Add any modules, e.g. \texttt{vorticity}.
+	\begin{itemize}
+		\item Currently the argument passed into \texttt{addProcessModule} is a 
+		string containing the module name.
+		\item \emph{TO-DO}: As mentioned before, it would be neater if said 
+		argument was an enum.
+		\item \emph{TO-DO}: Some more thought is required about how to support 
+		modules requiring or permitting parameters. One solution would be to pass 
+		a tuple containing module name and parameters. Care needs to be taking in 
+		asserting the validity of parameters.
+		\item As before, the converter will assert that the module exists and create 
+		an appropriate \texttt{Module} class object.
+	\end{itemize}
+	\item Run the conversion.
+\end{enumerate}
+
+The code showcasing the suggested workflow can be found in the main function of the 
+\texttt{FieldConvert.py} file.
+
+\subsection{Conversion process}
+
+\section{Further development and improvement}

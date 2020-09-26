@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -362,7 +361,7 @@ void FieldIOXml::v_Write(const std::string &outFile,
     if (m_comm->TreatAsRankZero())
     {
         tm1 = m_comm->Wtime();
-        cout << " (" << tm1 - tm0 << "s, XML)" << endl;
+        std::cout << " (" << tm1 - tm0 << "s, XML)" << std::endl;
     }
 }
 
@@ -405,9 +404,9 @@ void FieldIOXml::WriteMultiFldFileIDs(
 
             elemIDs->SetAttribute("FileName", fileNames[t]);
 
-            string IDstring = ParseUtils::GenerateSeqString(elementList[t]);
+            std::string IDstr = ParseUtils::GenerateSeqString(elementList[t]);
 
-            elemIDs->LinkEndChild(new TiXmlText(IDstring));
+            elemIDs->LinkEndChild(new TiXmlText(IDstr));
         }
     }
 
@@ -432,6 +431,8 @@ void FieldIOXml::ImportMultiFldFileIDs(
     std::vector<std::vector<unsigned int> > &elementList,
     FieldMetaDataMap                        &fieldmetadatamap)
 {
+    boost::ignore_unused(fieldmetadatamap);
+
     TiXmlDocument doc(inFile);
     bool loadOkay = doc.LoadFile();
 
@@ -533,7 +534,7 @@ void FieldIOXml::v_Import(const std::string &infilename,
             {
                 fs::path pfilename(filenames[i]);
                 fullpath                       = pinfilename / pfilename;
-                string fname                   = PortablePath(fullpath);
+                std::string fname              = PortablePath(fullpath);
                 DataSourceSharedPtr dataSource = XmlDataSource::create(fname);
                 ImportFieldDefs(dataSource, fielddefs, false);
                 if (fielddata != NullVectorNekDoubleVector)
@@ -545,9 +546,8 @@ void FieldIOXml::v_Import(const std::string &infilename,
         else // only load relevant elements from partitions
         {
             int i, j;
-            map<int, vector<int> > FileIDs;
-            map<int, vector<int> >::iterator it;
-            set<int> LoadFile;
+            std::map<int, std::vector<int> > FileIDs;
+            std::set<int> LoadFile;
 
             for (i = 0; i < elementIDs_OnPartitions.size(); ++i)
             {
@@ -557,9 +557,9 @@ void FieldIOXml::v_Import(const std::string &infilename,
                 }
             }
 
-            for (i = 0; i < ElementIDs.num_elements(); ++i)
+            for (i = 0; i < ElementIDs.size(); ++i)
             {
-                it = FileIDs.find(ElementIDs[i]);
+                auto it = FileIDs.find(ElementIDs[i]);
                 if (it != FileIDs.end())
                 {
                     for (j = 0; j < it->second.size(); ++j)
@@ -569,12 +569,11 @@ void FieldIOXml::v_Import(const std::string &infilename,
                 }
             }
 
-            set<int>::iterator iter;
-            for (iter = LoadFile.begin(); iter != LoadFile.end(); ++iter)
+            for (auto &iter : LoadFile)
             {
-                fs::path pfilename(filenames[*iter]);
+                fs::path pfilename(filenames[iter]);
                 fullpath                       = pinfilename / pfilename;
-                string fname                   = PortablePath(fullpath);
+                std::string fname              = PortablePath(fullpath);
                 DataSourceSharedPtr dataSource = XmlDataSource::create(fname);
                 ImportFieldDefs(dataSource, fielddefs, false);
                 if (fielddata != NullVectorNekDoubleVector)
@@ -635,8 +634,9 @@ DataSourceSharedPtr FieldIOXml::v_ImportFieldMetaData(
             }
             else
             {
-                ASSERTL0(false, "PARAM not provided as an attribute in "
-                                "FIELDMETADATA section");
+                NEKERROR(ErrorUtil::efatal,
+                         "PARAM not provided as an attribute in "
+                         "FIELDMETADATA section");
             }
 
             // Now read body of param
@@ -663,10 +663,16 @@ DataSourceSharedPtr FieldIOXml::v_ImportFieldMetaData(
             if (paramString != "Provenance")
             {
                 // Now read body of param
-                TiXmlNode *paramBody     = param->FirstChild();
-                std::string paramBodyStr = paramBody->ToText()->Value();
-
-                fieldmetadatamap[paramString] = paramBodyStr;
+                if (param->NoChildren())
+                {
+                    fieldmetadatamap[paramString] = "";
+                }
+                else
+                {
+                    TiXmlNode *paramBody     = param->FirstChild();
+                    std::string paramBodyStr = paramBody->ToText()->Value();
+                    fieldmetadatamap[paramString] = paramBodyStr;
+                }
             }
             param = param->NextSiblingElement();
         }
@@ -690,23 +696,22 @@ DataSourceSharedPtr FieldIOXml::v_ImportFieldMetaData(
  */
 void FieldIOXml::SetUpFieldMetaData(
     const std::string &outname,
-    const vector<FieldDefinitionsSharedPtr> &fielddefs,
+    const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
     const FieldMetaDataMap &fieldmetadatamap)
 {
     ASSERTL0(!outname.empty(), "Empty path given to SetUpFieldMetaData()");
 
-    int nprocs = m_comm->GetSize();
-    int rank   = m_comm->GetRank();
+    unsigned int nprocs = m_comm->GetSize();
+    unsigned int rank   = m_comm->GetRank();
 
     fs::path specPath(outname);
 
     // Compute number of elements on this process and share with other
     // processes. Also construct list of elements on this process from
     // available vector of field definitions.
-    std::vector<unsigned int> elmtnums(nprocs, 0);
+    std::vector<size_t>       elmtnums(nprocs, 0);
     std::vector<unsigned int> idlist;
-    int i;
-    for (i = 0; i < fielddefs.size(); ++i)
+    for (size_t i = 0; i < fielddefs.size(); ++i)
     {
         elmtnums[rank] += fielddefs[i]->m_elementIDs.size();
         idlist.insert(idlist.end(),
@@ -723,16 +728,19 @@ void FieldIOXml::SetUpFieldMetaData(
 
         // Populate the list of element ID lists from all processes
         ElementIDs[0] = idlist;
-        for (i = 1; i < nprocs; ++i)
+        for (size_t i = 1; i < nprocs; ++i)
         {
-            std::vector<unsigned int> tmp(elmtnums[i]);
-            m_comm->Recv(i, tmp);
-            ElementIDs[i] = tmp;
+            if (elmtnums[i] > 0)
+            {
+                std::vector<unsigned int> tmp(elmtnums[i]);
+                m_comm->Recv(i, tmp);
+                ElementIDs[i] = tmp;
+            }
         }
 
         // Set up output names
         std::vector<std::string> filenames;
-        for (int i = 0; i < nprocs; ++i)
+        for (unsigned int i = 0; i < nprocs; ++i)
         {
             boost::format pad("P%1$07d.%2$s");
             pad % i % GetFileEnding();
@@ -740,7 +748,7 @@ void FieldIOXml::SetUpFieldMetaData(
         }
 
         // Write the Info.xml file
-        string infofile =
+        std::string infofile =
             LibUtilities::PortablePath(specPath / fs::path("Info.xml"));
 
         WriteMultiFldFileIDs(infofile, filenames, ElementIDs, fieldmetadatamap);
@@ -748,8 +756,12 @@ void FieldIOXml::SetUpFieldMetaData(
     else
     {
         // Send this process's ID list to the root process
-        m_comm->Send(0, idlist);
+        if (elmtnums[rank] > 0)
+        {
+            m_comm->Send(0, idlist);
+        }
     }
+
 }
 
 /**
@@ -788,7 +800,6 @@ void FieldIOXml::ImportFieldDefs(
     while (loopXml)
     {
         TiXmlElement *element = loopXml->FirstChildElement("ELEMENTS");
-        ASSERTL0(element, "Unable to find ELEMENTS tag within nektar tag.");
 
         while (element)
         {
@@ -863,7 +874,7 @@ void FieldIOXml::ImportFieldDefs(
                               "Compressed formats do not "
                               "match. Expected: " +
                               CompressData::GetCompressString() +
-                              " but got " + string(attr->Value()));
+                              " but got " + std::string(attr->Value()));
                 }
                 else if (attrName == "BITSIZE")
                 {
@@ -875,7 +886,7 @@ void FieldIOXml::ImportFieldDefs(
                 {
                     std::string errstr("Unknown attribute: ");
                     errstr += attrName;
-                    ASSERTL1(false, errstr.c_str());
+                    NEKERROR(ErrorUtil::ewarning, errstr.c_str());
                 }
 
                 // Get the next attribute.
@@ -884,7 +895,7 @@ void FieldIOXml::ImportFieldDefs(
 
             // Check to see if using strips formulation
             bool strips = false;
-            if (shapeString.find("Strips") != string::npos)
+            if (shapeString.find("Strips") != std::string::npos)
             {
                 strips = true;
             }
@@ -894,9 +905,9 @@ void FieldIOXml::ImportFieldDefs(
             int numHomoDir = 0;
             size_t loc;
             //---> This finds the first location of  'n'!
-            if ((loc = shapeString.find_first_of("-")) != string::npos)
+            if ((loc = shapeString.find_first_of("-")) != std::string::npos)
             {
-                if (shapeString.find("Exp1D") != string::npos)
+                if (shapeString.find("Exp1D") != std::string::npos)
                 {
                     numHomoDir = 1;
                 }
@@ -917,7 +928,7 @@ void FieldIOXml::ImportFieldDefs(
             }
 
             // Get the geometrical shape
-            ShapeType shape;
+            ShapeType shape = (ShapeType)0;
             bool valid = false;
             for (unsigned int j = 0; j < SIZE_ShapeType; j++)
             {
@@ -1141,7 +1152,7 @@ void FieldIOXml::ImportFieldData(
                           "Compressed formats do not match. "
                           "Expected: " +
                           CompressData::GetCompressString() +
-                          " but got " + string(CompressStr));
+                          " but got " + std::string(CompressStr));
             }
 
             ASSERTL0(Z_OK == CompressData::ZlibDecodeFromBase64Str(

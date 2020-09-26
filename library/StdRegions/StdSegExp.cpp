@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -32,6 +31,8 @@
 // Description: Routines within Standard Segment Expansions
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <StdRegions/StdSegExp.h>
 #include <LibUtilities/Foundations/InterpCoeff.h>
@@ -157,6 +158,7 @@ namespace Nektar
                 Array<OneD, NekDouble> &out_d1,
                 Array<OneD, NekDouble> &out_d2)
         {
+            boost::ignore_unused(out_d1, out_d2);
             PhysTensorDeriv(inarray,out_d0);
         }
 
@@ -165,6 +167,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
         {
+            boost::ignore_unused(dir);
             ASSERTL1(dir==0,"input dir is out of range");
             PhysTensorDeriv(inarray,outarray);
             // PhysDeriv(inarray, outarray);
@@ -176,6 +179,7 @@ namespace Nektar
                 Array<OneD, NekDouble> &out_d1,
                 Array<OneD, NekDouble> &out_d2)
         {
+            boost::ignore_unused(out_d1, out_d2);
             PhysTensorDeriv(inarray,out_d0);
             // PhysDeriv(inarray, out_d0);
         }
@@ -185,6 +189,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray)
         {
+            boost::ignore_unused(dir);
             ASSERTL1(dir==0,"input dir is out of range");
             PhysTensorDeriv(inarray,outarray);
             // PhysDeriv(inarray, outarray);
@@ -240,7 +245,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
         {
-            int n_coeffs = inarray.num_elements();
+            int n_coeffs = inarray.size();
 
             Array<OneD, NekDouble> coeff(n_coeffs);
             Array<OneD, NekDouble> coeff_tmp(n_coeffs,0.0);
@@ -322,7 +327,7 @@ namespace Nektar
             else
             {
                 int nInteriorDofs = m_ncoeffs-2;
-                int offset;
+                int offset        = 0;
 
                 switch(m_base[0]->GetBasisType())
                 {
@@ -426,6 +431,8 @@ namespace Nektar
                   Array<OneD,       NekDouble> &outarray,
             int coll_check)
         {
+            boost::ignore_unused(coll_check);
+
             int    nquad = m_base[0]->GetNumPoints();
             Array<OneD, NekDouble> tmp(nquad);
             Array<OneD, const NekDouble> w =  m_base[0]->GetW();
@@ -468,7 +475,8 @@ namespace Nektar
                 const int dir,
                 const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> & outarray)
-      {
+        {
+            boost::ignore_unused(dir);
             ASSERTL1(dir >= 0 && dir < 1,"input dir is out of range");
             v_IProductWRTBase(m_base[0]->GetDbdata(),inarray,outarray,1);
         }
@@ -516,12 +524,11 @@ namespace Nektar
             Vmath::Vcopy(nquad,(NekDouble *)base+mode*nquad,1, &outarray[0],1);
         }
 
-
-        NekDouble StdSegExp::v_PhysEvaluate(
-                const Array<OneD, const NekDouble>& coords,
-                const Array<OneD, const NekDouble>& physvals)
+        NekDouble StdSegExp::v_PhysEvaluateBasis(
+            const Array<OneD, const NekDouble>& coords,
+            int mode)
         {
-            return  StdExpansion1D::v_PhysEvaluate(coords, physvals);
+            return StdExpansion::BaryEvaluateBasis<0>(coords[0], mode);
         }
 
         void StdSegExp::v_LaplacianMatrixOp(
@@ -529,6 +536,8 @@ namespace Nektar
                   Array<OneD,       NekDouble> &outarray,
             const StdMatrixKey                 &mkey)
         {
+            boost::ignore_unused(mkey);
+
             int    nquad = m_base[0]->GetNumPoints();
 
             Array<OneD,NekDouble> physValues(nquad);
@@ -663,6 +672,7 @@ namespace Nektar
                 Array<OneD, NekDouble> &coords_1,
                 Array<OneD, NekDouble> &coords_2)
         {
+            boost::ignore_unused(coords_1, coords_2);
             Blas::Dcopy(GetNumPoints(0),(m_base[0]->GetZ()).get(),
                         1,&coords_0[0],1);
         }
@@ -680,6 +690,23 @@ namespace Nektar
             return 2;
         }
 
+        int StdSegExp::v_GetNtraces() const
+        {
+            return 2;
+        }
+
+        int StdSegExp::v_GetTraceNcoeffs(const int i) const
+        {
+            boost::ignore_unused(i);
+            return 1;
+        }
+
+        int StdSegExp::v_GetTraceNumPoints(const int i) const
+        {
+            boost::ignore_unused(i);
+            return 1;
+        }
+        
         int StdSegExp::v_NumBndryCoeffs() const
         {
             return 2;
@@ -782,7 +809,7 @@ namespace Nektar
 
         void StdSegExp::v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
         {
-            if(outarray.num_elements() != NumBndryCoeffs())
+            if(outarray.size() != NumBndryCoeffs())
             {
                 outarray = Array<OneD, unsigned int>(NumBndryCoeffs());
             }
@@ -812,7 +839,7 @@ namespace Nektar
         void StdSegExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
         {
             int i;
-            if(outarray.num_elements()!=GetNcoeffs()-NumBndryCoeffs())
+            if(outarray.size()!=GetNcoeffs()-NumBndryCoeffs())
             {
                 outarray = Array<OneD, unsigned int>(GetNcoeffs()-NumBndryCoeffs());
             }
@@ -844,6 +871,7 @@ namespace Nektar
 
         int StdSegExp::v_GetVertexMap(int localVertexId,bool useCoeffPacking)
         {
+            boost::ignore_unused(useCoeffPacking);
             ASSERTL0((localVertexId==0)||(localVertexId==1),"local vertex id"
                      "must be between 0 or 1");
 
@@ -861,6 +889,7 @@ namespace Nektar
             Array<OneD, int> &conn,
             bool              standard)
         {
+            boost::ignore_unused(standard);
             int np = m_base[0]->GetNumPoints();
 
             conn     = Array<OneD, int>(2*(np-1));
@@ -869,6 +898,51 @@ namespace Nektar
             {
                 conn[cnt++] = i;
                 conn[cnt++] = i+1;
+            }
+        }
+
+        void StdSegExp::v_GetTraceToElementMap(
+             const int                  tid,
+             Array<OneD, unsigned int>& maparray,
+             Array<OneD, int>&          signarray,
+             Orientation                orient,
+             int P,  int Q)
+        {
+            boost::ignore_unused(P,Q,orient);
+            int order0 = m_base[0]->GetNumModes();
+    
+            ASSERTL0(tid < 2,"eid must be between 0 and 1");
+
+            if (maparray.size() != 2)
+            {
+                maparray = Array<OneD, unsigned int>(2);
+            }
+
+            if(signarray.size() != 2)
+            {
+                signarray = Array<OneD, int>(2, 1);
+            }
+            else
+            {
+                fill(signarray.get(), signarray.get()+2, 1);
+            }
+
+            const LibUtilities::BasisType bType = GetBasisType(0);
+
+            if (bType == LibUtilities::eModified_A)
+            {
+                maparray[0] = 0;
+                maparray[1] = 1;
+            }
+            else if(bType == LibUtilities::eGLL_Lagrange ||
+                    bType == LibUtilities::eGauss_Lagrange)
+            {
+                maparray[0] = 0;
+                maparray[1] = order0-1;
+            }
+            else
+            {
+                ASSERTL0(false,"Unknown Basis");
             }
         }
 

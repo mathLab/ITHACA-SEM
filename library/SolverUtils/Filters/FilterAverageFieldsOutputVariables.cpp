@@ -41,12 +41,14 @@ namespace SolverUtils
 {
 std::string FilterAverageFieldsOutputVariables::className =
         GetFilterFactory().RegisterCreatorFunction(
-                "AverageFieldsOutputVariables", FilterAverageFieldsOutputVariables::create);
+                "AverageFieldsOutputVariables",
+                FilterAverageFieldsOutputVariables::create);
 
 FilterAverageFieldsOutputVariables::FilterAverageFieldsOutputVariables(
     const LibUtilities::SessionReaderSharedPtr &pSession,
+    const std::weak_ptr<EquationSystem>      &pEquation,
     const ParamMap &pParams)
-    : FilterAverageFields(pSession, pParams)
+    : FilterAverageFields(pSession, pEquation, pParams)
 {
 }
 
@@ -57,30 +59,41 @@ FilterAverageFieldsOutputVariables::~FilterAverageFieldsOutputVariables()
 void FilterAverageFieldsOutputVariables::v_FillVariablesName(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
 {
+    int nfield = pFields.size();
     std::vector<Array<OneD, NekDouble> > fieldcoeffs(
-                pFields.num_elements());
-    std::vector<std::string> variables(pFields.num_elements());
+                pFields.size());
+    std::vector<std::string> variables(pFields.size());
+    for (int n = 0; n < nfield; ++n)
+    {
+        m_variables[n] = pFields[n]->GetSession()->GetVariable(n);
+    }
 
-
-    m_oprtor.ExtraFldOutput(fieldcoeffs, variables);   
-    m_variables = variables;
+    // Need to create a dummy coeffs vector to get extra variables names...
+    std::vector<Array<OneD, NekDouble> > coeffs(nfield);
+    for (int n = 0; n < nfield; ++n)
+    {
+        coeffs[n] = pFields[n]->GetCoeffs();
+    }
+    // Get extra variables
+    auto equ = m_equ.lock();
+    ASSERTL0(equ, "Weak pointer expired");
+    equ->ExtraFldOutput(coeffs, m_variables);
 }
 
 void FilterAverageFieldsOutputVariables::v_ProcessSample(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+    std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
     const NekDouble &time)
 {
-    std::vector<Array<OneD, NekDouble> > fieldcoeffs(
-                pFields.num_elements());
-    std::vector<std::string> variables(pFields.num_elements());
+    boost::ignore_unused(time);
+    std::vector<std::string> variables(pFields.size());
 
-    m_oprtor.ExtraFldOutput(fieldcoeffs, variables);   
-
-    ASSERTL0(fieldcoeffs.size()==m_outFields.size(), "FilterAverageFieldsOutputVariables:: fieldcoeffs.size()!=m_outFields.size()");
+    ASSERTL0(fieldcoeffs.size()==m_outFields.size(),
+             "FilterAverageFieldsOutputVariables:: fieldcoeffs.size()!=m_outFields.size()");
     
     for(int n = 0; n < m_outFields.size(); ++n)
     {
-        Vmath::Vadd(m_outFields[n].num_elements(),
+        Vmath::Vadd(m_outFields[n].size(),
                     fieldcoeffs[n],
                     1,
                     m_outFields[n],

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -47,8 +46,8 @@ namespace Nektar
     namespace MultiRegions
     {
         // Forward declaration for typedefs
-        ExpListHomogeneous1D::ExpListHomogeneous1D():
-            ExpList(),
+        ExpListHomogeneous1D::ExpListHomogeneous1D(const ExpansionType type):
+            ExpList(type),
             m_homogeneousBasis(LibUtilities::NullBasisSharedPtr),
             m_lhom(1),
             m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr())
@@ -56,20 +55,24 @@ namespace Nektar
         }
 
         ExpListHomogeneous1D::ExpListHomogeneous1D(
-                   const LibUtilities::SessionReaderSharedPtr
-                   &pSession,const LibUtilities::BasisKey &HomoBasis,
+                   const ExpansionType type,
+                   const LibUtilities::SessionReaderSharedPtr &pSession,
+                   const LibUtilities::BasisKey &HomoBasis,
                    const NekDouble lhom,
                    const bool useFFT,
                    const bool dealiasing):
-            ExpList(pSession),
+            ExpList(type),
             m_useFFT(useFFT),
             m_lhom(lhom),
             m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr()),
             m_dealiasing(dealiasing)
         {
+            m_session = pSession;
+            m_comm    = pSession->GetComm();
+
             ASSERTL2(HomoBasis != LibUtilities::NullBasisKey,
                      "Homogeneous Basis is a null basis");
-            
+
             m_homogeneousBasis = LibUtilities::BasisManager()[HomoBasis];
 
             m_StripZcomm = m_session->DefinesSolverInfo("HomoStrip") ?
@@ -136,14 +139,14 @@ namespace Nektar
             m_tmpIN(In.m_tmpIN),
             m_tmpOUT(In.m_tmpOUT),
             m_homogeneousBasis(In.m_homogeneousBasis),
-            m_lhom(In.m_lhom), 
+            m_lhom(In.m_lhom),
             m_homogeneous1DBlockMat(In.m_homogeneous1DBlockMat),
             m_dealiasing(In.m_dealiasing),
             m_padsize(In.m_padsize)
         {
-            m_planes = Array<OneD, ExpListSharedPtr>(In.m_planes.num_elements());
+            m_planes = Array<OneD, ExpListSharedPtr>(In.m_planes.size());
         }
-        
+
         ExpListHomogeneous1D::ExpListHomogeneous1D(const ExpListHomogeneous1D &In,
                                             const std::vector<unsigned int> &eIDs):
             ExpList(In,eIDs,false),
@@ -153,12 +156,12 @@ namespace Nektar
             m_tmpIN(In.m_tmpIN),
             m_tmpOUT(In.m_tmpOUT),
             m_homogeneousBasis(In.m_homogeneousBasis),
-            m_lhom(In.m_lhom), 
+            m_lhom(In.m_lhom),
             m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr()),
             m_dealiasing(In.m_dealiasing),
             m_padsize(In.m_padsize)
         {
-            m_planes = Array<OneD, ExpListSharedPtr>(In.m_planes.num_elements());
+            m_planes = Array<OneD, ExpListSharedPtr>(In.m_planes.size());
         }
 
         /**
@@ -170,24 +173,22 @@ namespace Nektar
     
         void ExpListHomogeneous1D::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                          Array<OneD, NekDouble> &outarray, 
-                                                         CoeffState coeffstate,
                                                          bool Shuff,
                                                          bool UnShuff)
         {
             // Forwards trans
-            Homogeneous1DTrans(inarray,outarray,true,coeffstate,Shuff,UnShuff);
+            Homogeneous1DTrans(inarray,outarray,true,Shuff,UnShuff);
         }
     
         void ExpListHomogeneous1D::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                          Array<OneD, NekDouble> &outarray, 
-                                                         CoeffState coeffstate,
                                                          bool Shuff,
                                                          bool UnShuff)
         {
             // Backwards trans
-            Homogeneous1DTrans(inarray,outarray,false,coeffstate,Shuff,UnShuff);
+            Homogeneous1DTrans(inarray,outarray,false,Shuff,UnShuff);
         }
-        
+
         /**
          * Dealiasing routine
          *
@@ -197,10 +198,9 @@ namespace Nektar
          */
         void ExpListHomogeneous1D::v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
                                                    const Array<OneD, NekDouble> &inarray2,
-                                                   Array<OneD, NekDouble> &outarray, 
-                                                   CoeffState coeffstate)
+                                                   Array<OneD, NekDouble> &outarray)
         {
-            int num_dofs = inarray1.num_elements();
+            int num_dofs = inarray1.size();
             int N = m_homogeneousBasis->GetNumPoints();
 
             Array<OneD, NekDouble> V1(num_dofs);
@@ -214,11 +214,11 @@ namespace Nektar
             }
             else
             {
-                HomogeneousFwdTrans(inarray1,V1,coeffstate);
-                HomogeneousFwdTrans(inarray2,V2,coeffstate);
+                HomogeneousFwdTrans(inarray1,V1);
+                HomogeneousFwdTrans(inarray2,V2);
             }
 
-            int num_points_per_plane = num_dofs/m_planes.num_elements();
+            int num_points_per_plane = num_dofs/m_planes.size();
             int num_proc;
             if(!m_session->DefinesSolverInfo("HomoStrip"))
             {
@@ -284,7 +284,7 @@ namespace Nektar
             {
                 m_transposition->Transpose(ShufV1V2, V1V2, false,
                                        LibUtilities::eZtoXY);
-                HomogeneousBwdTrans(V1V2, outarray, coeffstate);
+                HomogeneousBwdTrans(V1V2, outarray);
             }
         }
 
@@ -300,18 +300,17 @@ namespace Nektar
         void ExpListHomogeneous1D::v_DealiasedDotProd(
                         const Array<OneD, Array<OneD, NekDouble> > &inarray1,
                         const Array<OneD, Array<OneD, NekDouble> > &inarray2,
-                        Array<OneD, Array<OneD, NekDouble> > &outarray,
-                        CoeffState coeffstate)
+                        Array<OneD, Array<OneD, NekDouble> > &outarray)
         {
-            int ndim = inarray1.num_elements();
-            ASSERTL1( inarray2.num_elements() % ndim == 0,
+            int ndim = inarray1.size();
+            ASSERTL1( inarray2.size() % ndim == 0,
                      "Wrong dimensions for DealiasedDotProd.");
-            int nvec = inarray2.num_elements() / ndim;
+            int nvec = inarray2.size() / ndim;
 
-            int num_dofs = inarray1[0].num_elements();
+            int num_dofs = inarray1[0].size();
             int N = m_homogeneousBasis->GetNumPoints();
 
-            int num_points_per_plane = num_dofs/m_planes.num_elements();
+            int num_points_per_plane = num_dofs/m_planes.size();
             int num_proc;
             if(!m_session->DefinesSolverInfo("HomoStrip"))
             {
@@ -343,12 +342,12 @@ namespace Nektar
                 for (int i = 0; i < ndim; i++)
                 {
                     V1[i] = Array<OneD, NekDouble> (num_dofs);
-                    HomogeneousFwdTrans(inarray1[i],V1[i],coeffstate);
+                    HomogeneousFwdTrans(inarray1[i],V1[i]);
                 }
                 for (int i = 0; i < ndim*nvec; i++)
                 {
                     V2[i] = Array<OneD, NekDouble> (num_dofs);
-                    HomogeneousFwdTrans(inarray2[i],V2[i],coeffstate);
+                    HomogeneousFwdTrans(inarray2[i],V2[i]);
                 }
             }
 
@@ -454,7 +453,7 @@ namespace Nektar
                 {
                     m_transposition->Transpose(ShufV1V2[j], V1V2, false,
                                        LibUtilities::eZtoXY);
-                    HomogeneousBwdTrans(V1V2, outarray[j], coeffstate);
+                    HomogeneousBwdTrans(V1V2, outarray[j]);
                 }
             }
         }
@@ -462,35 +461,36 @@ namespace Nektar
         /**
          * Forward transform
          */
-        void ExpListHomogeneous1D::v_FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, CoeffState coeffstate )
+        void ExpListHomogeneous1D::v_FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
         {
             int cnt = 0, cnt1 = 0;
             Array<OneD, NekDouble> tmparray;
-            
-            for(int n = 0; n < m_planes.num_elements(); ++n)
+
+            for(int n = 0; n < m_planes.size(); ++n)
             {
-                m_planes[n]->FwdTrans(inarray+cnt, tmparray = outarray + cnt1,
-                                      coeffstate);
+                m_planes[n]->FwdTrans(inarray+cnt, tmparray = outarray + cnt1);
                 cnt   += m_planes[n]->GetTotPoints();
-                
+
                 cnt1  += m_planes[n]->GetNcoeffs(); // need to skip ncoeffs
             }
             if(!m_WaveSpace)
             {
-                HomogeneousFwdTrans(outarray,outarray,coeffstate);
+                HomogeneousFwdTrans(outarray,outarray);
             }
         }
 
         /**
          * Forward transform element by element
          */
-        void ExpListHomogeneous1D::v_FwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        void ExpListHomogeneous1D::v_FwdTrans_IterPerExp(const Array<OneD,
+                                                         const NekDouble> &inarray,
+                                                         Array<OneD, NekDouble> &outarray)
         {
             int cnt = 0, cnt1 = 0;
             Array<OneD, NekDouble> tmparray;
-            
+
             //spectral element FwdTrans plane by plane
-            for(int n = 0; n < m_planes.num_elements(); ++n)
+            for(int n = 0; n < m_planes.size(); ++n)
             {
                 m_planes[n]->FwdTrans_IterPerExp(inarray+cnt, tmparray = outarray + cnt1);
                 cnt   += m_planes[n]->GetTotPoints();
@@ -501,19 +501,41 @@ namespace Nektar
                 HomogeneousFwdTrans(outarray,outarray);
             }
         }
-        
+
         /**
-         * Backward transform
+         * Forward transform element by element with boundaries constrained
          */
-        void ExpListHomogeneous1D::v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, CoeffState coeffstate)
+        void ExpListHomogeneous1D::v_FwdTrans_BndConstrained(const Array<OneD,
+                                                             const NekDouble> &inarray,
+                                                             Array<OneD, NekDouble> &outarray)
         {
             int cnt = 0, cnt1 = 0;
             Array<OneD, NekDouble> tmparray;
-            
-            for(int n = 0; n < m_planes.num_elements(); ++n)
+
+            //spectral element FwdTrans plane by plane
+            for(int n = 0; n < m_planes.size(); ++n)
             {
-                m_planes[n]->BwdTrans(inarray+cnt, tmparray = outarray + cnt1,
-                                      coeffstate);
+                m_planes[n]->FwdTrans_BndConstrained(inarray+cnt, tmparray = outarray + cnt1);
+                cnt   += m_planes[n]->GetTotPoints();
+                cnt1  += m_planes[n]->GetNcoeffs();
+            }
+            if(!m_WaveSpace)
+            {
+                HomogeneousFwdTrans(outarray,outarray);
+            }
+        }
+
+        /**
+         * Backward transform
+         */
+        void ExpListHomogeneous1D::v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            int cnt = 0, cnt1 = 0;
+            Array<OneD, NekDouble> tmparray;
+
+            for(int n = 0; n < m_planes.size(); ++n)
+            {
+                m_planes[n]->BwdTrans(inarray+cnt, tmparray = outarray + cnt1);
                 cnt  += m_planes[n]->GetNcoeffs();
                 cnt1 += m_planes[n]->GetTotPoints();
             }
@@ -522,7 +544,7 @@ namespace Nektar
                 HomogeneousBwdTrans(outarray,outarray);
             }
         }
-    
+
         /**
          * Backward transform element by element
          */
@@ -530,11 +552,11 @@ namespace Nektar
         {
             int cnt = 0, cnt1 = 0;
             Array<OneD, NekDouble> tmparray;
-            
-            for(int n = 0; n < m_planes.num_elements(); ++n)
+
+            for(int n = 0; n < m_planes.size(); ++n)
             {
                 m_planes[n]->BwdTrans_IterPerExp(inarray+cnt, tmparray = outarray + cnt1);
-                
+
                 cnt    += m_planes[n]->GetNcoeffs();
                 cnt1   += m_planes[n]->GetTotPoints();
             }
@@ -543,11 +565,11 @@ namespace Nektar
                 HomogeneousBwdTrans(outarray,outarray);
             }
         }
-        
+
         /**
          * Inner product
          */
-        void ExpListHomogeneous1D::v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, CoeffState coeffstate)
+        void ExpListHomogeneous1D::v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
         {
             int cnt = 0, cnt1 = 0;
             Array<OneD, NekDouble> tmparray, tmpIn;
@@ -558,24 +580,24 @@ namespace Nektar
             }
             else
             {
-                tmpIn = Array<OneD, NekDouble> (inarray.num_elements(), 0.0);
+                tmpIn = Array<OneD, NekDouble> (inarray.size(), 0.0);
                 HomogeneousFwdTrans(inarray,tmpIn);
             }
 
-            for(int n = 0; n < m_planes.num_elements(); ++n)
+            for(int n = 0; n < m_planes.size(); ++n)
             {
-                m_planes[n]->IProductWRTBase(tmpIn+cnt, tmparray = outarray + cnt1,coeffstate);
+                m_planes[n]->IProductWRTBase(tmpIn+cnt, tmparray = outarray + cnt1);
 
                 cnt1    += m_planes[n]->GetNcoeffs();
                 cnt   += m_planes[n]->GetTotPoints();
             }
         }
-    
+
         /**
          * Inner product element by element
          */
         void ExpListHomogeneous1D::v_IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
-        { 
+        {
             int cnt = 0, cnt1 = 0;
             Array<OneD, NekDouble> tmparray, tmpIn;
 
@@ -585,42 +607,41 @@ namespace Nektar
             }
             else
             {
-                tmpIn = Array<OneD, NekDouble> (inarray.num_elements(), 0.0);
+                tmpIn = Array<OneD, NekDouble> (inarray.size(), 0.0);
                 HomogeneousFwdTrans(inarray,tmpIn);
             }
 
-            for(int n = 0; n < m_planes.num_elements(); ++n)
+            for(int n = 0; n < m_planes.size(); ++n)
             {
                 m_planes[n]->IProductWRTBase_IterPerExp(tmpIn+cnt, tmparray = outarray + cnt1);
-        
+
                 cnt1  += m_planes[n]->GetNcoeffs();
                 cnt   += m_planes[n]->GetTotPoints();
-            } 
+            }
         }
-    
+
         /**
          * Homogeneous transform Bwd/Fwd (MVM and FFT)
          */
         void ExpListHomogeneous1D::Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, 
                                                       bool IsForwards, 
-                                                      CoeffState coeffstate,
                                                       bool Shuff,
                                                       bool UnShuff)
         {
             int num_dofs;
-            
-            if(IsForwards) 
+
+            if(IsForwards)
             {
-                num_dofs = inarray.num_elements();
+                num_dofs = inarray.size();
             }
             else
             {
-                num_dofs = outarray.num_elements();
+                num_dofs = outarray.size();
             }
-            
+
             if(m_useFFT)
-            {        
-                int num_points_per_plane = num_dofs/m_planes.num_elements();
+            {
+                int num_points_per_plane = num_dofs/m_planes.size();
                 int num_dfts_per_proc;
                 if(!m_session->DefinesSolverInfo("HomoStrip"))
                 {
@@ -637,17 +658,17 @@ namespace Nektar
 
                 Array<OneD, NekDouble> fft_in (num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),0.0);
                 Array<OneD, NekDouble> fft_out(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),0.0);
-        
+
                 if(Shuff)
                 {
                     m_transposition->Transpose(inarray,fft_in,false,LibUtilities::eXYtoZ);
                 }
-                else 
+                else
                 {
                     Vmath::Vcopy(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),
                                  inarray,1,fft_in,1);
                 }
-                
+
                 if(IsForwards)
                 {
                     for(int i = 0 ; i < num_dfts_per_proc ; i++)
@@ -655,28 +676,28 @@ namespace Nektar
                         m_FFT->FFTFwdTrans(m_tmpIN = fft_in + i*m_homogeneousBasis->GetNumPoints(), m_tmpOUT = fft_out + i*m_homogeneousBasis->GetNumPoints());
                     }
                 }
-                else 
+                else
                 {
                     for(int i = 0 ; i < num_dfts_per_proc ; i++)
                     {
                         m_FFT->FFTBwdTrans(m_tmpIN = fft_in + i*m_homogeneousBasis->GetNumPoints(), m_tmpOUT = fft_out + i*m_homogeneousBasis->GetNumPoints());
                     }
                 }
-        
+
                 if(UnShuff)
                 {
                     m_transposition->Transpose(fft_out,outarray,false,LibUtilities::eZtoXY);
                 }
-                else 
+                else
                 {
                     Vmath::Vcopy(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),
                                  fft_out,1,outarray,1);
                 }
             }
-            else 
+            else
             {
                 DNekBlkMatSharedPtr blkmat;
-        
+
                 if(num_dofs == m_npoints) //transform phys space
                 {
                     if(IsForwards)
@@ -692,56 +713,56 @@ namespace Nektar
                 {
                     if(IsForwards)
                     {
-                        blkmat = GetHomogeneous1DBlockMatrix(eForwardsCoeffSpace1D,coeffstate);
+                        blkmat = GetHomogeneous1DBlockMatrix(eForwardsCoeffSpace1D);
                     }
                     else
                     {
-                        blkmat = GetHomogeneous1DBlockMatrix(eBackwardsCoeffSpace1D,coeffstate);
+                        blkmat = GetHomogeneous1DBlockMatrix(eBackwardsCoeffSpace1D);
                     }
                 }
-        
+
                 int nrows = blkmat->GetRows();
                 int ncols = blkmat->GetColumns();
-        
+
                 Array<OneD, NekDouble> sortedinarray(ncols,0.0);
                 Array<OneD, NekDouble> sortedoutarray(nrows,0.0);
-        
+
                 if(Shuff)
                 {
                     m_transposition->Transpose(inarray,sortedinarray,!IsForwards,LibUtilities::eXYtoZ);
                 }
-                else 
+                else
                 {
                     Vmath::Vcopy(ncols,inarray,1,sortedinarray,1);
                 }
-                
+
                 // Create NekVectors from the given data arrays
                 NekVector<NekDouble> in (ncols,sortedinarray,eWrapper);
                 NekVector<NekDouble> out(nrows,sortedoutarray,eWrapper);
-        
+
                 // Perform matrix-vector multiply.
                 out = (*blkmat)*in;
-        
+
                 if(UnShuff)
                 {
                     m_transposition->Transpose(sortedoutarray,outarray,IsForwards,LibUtilities::eZtoXY);
                 }
-                else 
+                else
                 {
                     Vmath::Vcopy(nrows,sortedoutarray,1,outarray,1);
                 }
-                
+
             }
         }
 
-        DNekBlkMatSharedPtr ExpListHomogeneous1D::GetHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, CoeffState coeffstate) const
+        DNekBlkMatSharedPtr ExpListHomogeneous1D::GetHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype) const
         {
             auto matrixIter = m_homogeneous1DBlockMat->find(mattype);
-            
+
             if(matrixIter == m_homogeneous1DBlockMat->end())
             {
                 return ((*m_homogeneous1DBlockMat)[mattype] =
-                        GenHomogeneous1DBlockMatrix(mattype,coeffstate));
+                        GenHomogeneous1DBlockMatrix(mattype));
             }
             else
             {
@@ -750,13 +771,13 @@ namespace Nektar
         }
 
 
-        DNekBlkMatSharedPtr ExpListHomogeneous1D::GenHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, CoeffState coeffstate) const
+        DNekBlkMatSharedPtr ExpListHomogeneous1D::GenHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype) const
         {
             DNekMatSharedPtr    loc_mat;
             DNekBlkMatSharedPtr BlkMatrix;
             int n_exp = 0;
             int num_trans_per_proc = 0;
-            
+
             if((mattype == eForwardsCoeffSpace1D)
                ||(mattype == eBackwardsCoeffSpace1D)) // will operate on m_coeffs
             {
@@ -791,13 +812,13 @@ namespace Nektar
             if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)
             {
                 StdRegions::StdPointExp StdPoint(m_homogeneousBasis->GetBasisKey());
-                
+
                 if((mattype == eForwardsCoeffSpace1D)||(mattype == eForwardsPhysSpace1D))
                 {
                     StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
                                                     StdPoint.DetShapeType(),
                                                     StdPoint);
-                    
+
                     loc_mat = StdPoint.GetStdMatrix(matkey);
                 }
                 else
@@ -805,21 +826,21 @@ namespace Nektar
                     StdRegions::StdMatrixKey matkey(StdRegions::eBwdTrans,
                                                     StdPoint.DetShapeType(),
                                                     StdPoint);
-                    
+
                     loc_mat = StdPoint.GetStdMatrix(matkey);
                 }
             }
             //other cases
-            else 
+            else
             {
                 StdRegions::StdSegExp StdSeg(m_homogeneousBasis->GetBasisKey());
-                
+
                 if((mattype == eForwardsCoeffSpace1D)||(mattype == eForwardsPhysSpace1D))
                 {
                     StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
                                                     StdSeg.DetShapeType(),
                                                     StdSeg);
-                    
+
                     loc_mat = StdSeg.GetStdMatrix(matkey);
                 }
                 else
@@ -827,10 +848,10 @@ namespace Nektar
                     StdRegions::StdMatrixKey matkey(StdRegions::eBwdTrans,
                                                     StdSeg.DetShapeType(),
                                                     StdSeg);
-                    
+
                     loc_mat = StdSeg.GetStdMatrix(matkey);
-                }                
-                
+                }
+
             }
 
             // set up array of block matrices.
@@ -845,13 +866,13 @@ namespace Nektar
         std::vector<LibUtilities::FieldDefinitionsSharedPtr> ExpListHomogeneous1D::v_GetFieldDefinitions()
         {
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> returnval;
-            
+
             // Set up Homogeneous length details.
             Array<OneD,LibUtilities::BasisSharedPtr> HomoBasis(1,m_homogeneousBasis);
-            
+
             std::vector<NekDouble> HomoLen;
             HomoLen.push_back(m_lhom);
-            
+
             std::vector<unsigned int> StripsIDs;
 
             bool strips;
@@ -860,7 +881,7 @@ namespace Nektar
             {
                 StripsIDs.push_back(m_transposition->GetStripID());
             }
-            
+
             std::vector<unsigned int> PlanesIDs;
             int IDoffset = 0;
 
@@ -871,12 +892,12 @@ namespace Nektar
                 IDoffset  = 2;
             }
 
-            for(int i = 0; i < m_planes.num_elements(); i++)
+            for(int i = 0; i < m_planes.size(); i++)
             {
                 PlanesIDs.push_back(m_transposition->GetPlaneID(i)+IDoffset);
             }
-            
-            m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, HomoBasis, 
+
+            m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, HomoBasis,
                     HomoLen, strips, StripsIDs, PlanesIDs);
             return returnval;
         }
@@ -885,10 +906,10 @@ namespace Nektar
         {
             // Set up Homogeneous length details.
             Array<OneD,LibUtilities::BasisSharedPtr> HomoBasis(1,m_homogeneousBasis);
-            
+
             std::vector<NekDouble> HomoLen;
             HomoLen.push_back(m_lhom);
-            
+
             std::vector<unsigned int> StripsIDs;
 
             bool strips;
@@ -897,7 +918,7 @@ namespace Nektar
             {
                 StripsIDs.push_back(m_transposition->GetStripID());
             }
-            
+
             std::vector<unsigned int> PlanesIDs;
             int IDoffset = 0;
 
@@ -906,11 +927,11 @@ namespace Nektar
                 IDoffset = 2;
             }
 
-            for(int i = 0; i < m_planes.num_elements(); i++)
+            for(int i = 0; i < m_planes.size(); i++)
             {
                 PlanesIDs.push_back(m_transposition->GetPlaneID(i)+IDoffset);
             }
-            
+
             // enforce NumHomoDir == 1 by direct call
             m_planes[0]->GeneralGetFieldDefinitions(fielddef, 1, HomoBasis,
                     HomoLen, strips, StripsIDs, PlanesIDs);
@@ -922,7 +943,7 @@ namespace Nektar
             over its Fourier modes where as data in the expandion is
             stored with all consecutive elements and then the Fourier
             modes
-         */ 
+         */
         void ExpListHomogeneous1D::v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)
         {
             int i,n;
@@ -943,13 +964,13 @@ namespace Nektar
                 int eid     = m_elmtToExpId[fielddef->m_elementIDs[i]];
                 int datalen = (*m_exp)[eid]->GetNcoeffs();
 
-                for(n = 0; n < m_planes.num_elements(); ++n)
+                for(n = 0; n < m_planes.size(); ++n)
                 {
                     fielddata.insert(fielddata.end(),&coeffs[m_coeff_offset[eid]+n*ncoeffs_per_plane],&coeffs[m_coeff_offset[eid]+n*ncoeffs_per_plane]+datalen);
                 }
             }
         }
-        
+
         void ExpListHomogeneous1D::v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
         {
            v_AppendFieldData(fielddef,fielddata,m_coeffs);
@@ -967,8 +988,8 @@ namespace Nektar
             int nzmodes = 1;
             int datalen = fielddata.size()/fielddef->m_fields.size();
             std::vector<unsigned int> fieldDefHomoZids;
-            
-            
+
+
             // Find data location according to field definition
             for(i = 0; i < fielddef->m_fields.size(); ++i)
             {
@@ -985,16 +1006,16 @@ namespace Nektar
             }
             else
             {
-                
+
                 int modes_offset = 0;
                 int planes_offset = 0;
                 Array<OneD, NekDouble> coeff_tmp;
-                
+
                 // Build map of plane IDs lying on this processor and determine
                 // mapping from element ids to location in expansion list.
                 if (m_zIdToPlane.size() == 0)
                 {
-                    for (i = 0; i < m_planes.num_elements(); ++i)
+                    for (i = 0; i < m_planes.size(); ++i)
                     {
                         m_zIdToPlane[m_transposition->GetPlaneID(i)] = i;
                     }
@@ -1004,7 +1025,7 @@ namespace Nektar
                         m_elmtToExpId[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
                     }
                 }
-                
+
                 if(fielddef->m_numHomogeneousDir)
                 {
                     nzmodes = fielddef->m_homogeneousZIDs.size();
@@ -1017,22 +1038,22 @@ namespace Nektar
                 }
 
                 // calculate number of modes in the current partition
-                int ncoeffs_per_plane = m_planes[0]->GetNcoeffs(); 
-                
+                int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
+
                 for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
                 {
                     if(fielddef->m_uniOrder == true) // reset modes_offset to zero
                     {
                         modes_offset = 0;
                     }
-                    
-                    int datalen = LibUtilities::GetNumberOfCoefficients(fielddef->m_shapeType, 
+
+                    int datalen = LibUtilities::GetNumberOfCoefficients(fielddef->m_shapeType,
                                                                         fielddef->m_numModes,
                                                                         modes_offset);
 
                     auto it = m_elmtToExpId.find(fielddef->m_elementIDs[i]);
-                    
-                    // ensure element is on this partition for parallel case. 
+
+                    // ensure element is on this partition for parallel case.
                     if(it == m_elmtToExpId.end())
                     {
                         // increase offset for correct FieldData access
@@ -1041,7 +1062,7 @@ namespace Nektar
                                         fielddef->m_numHomogeneousDir;
                         continue;
                     }
-                    
+
                     int eid = it->second;
                     bool sameBasis = true;
                     for (int j = 0; j < fielddef->m_basis.size()-1; ++j)
@@ -1052,18 +1073,18 @@ namespace Nektar
                             break;
                         }
                     }
-                    
+
                     for(n = 0; n < nzmodes; ++n, offset += datalen)
                     {
-                        
+
                         it = m_zIdToPlane.find(fieldDefHomoZids[n]);
-                        
+
                         // Check to make sure this mode number lies in this field.
                         if (it == m_zIdToPlane.end())
                         {
                             continue;
-                        } 
-                        
+                        }
+
                         planes_offset = it->second;
                         if(datalen == (*m_exp)[eid]->GetNcoeffs() && sameBasis)
                         {
@@ -1078,7 +1099,7 @@ namespace Nektar
                 }
             }
         }
-        
+
         //Extract the data in fielddata into the m_coeff list
         void ExpListHomogeneous1D::v_ExtractCoeffsToCoeffs(
                                                            const std::shared_ptr<ExpList> &fromExpList,const  Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
@@ -1086,9 +1107,9 @@ namespace Nektar
             int i;
             int fromNcoeffs_per_plane = fromExpList->GetPlane(0)->GetNcoeffs();
             int toNcoeffs_per_plane = m_planes[0]->GetNcoeffs();
-            Array<OneD, NekDouble> tocoeffs_tmp, fromcoeffs_tmp; 
-            
-            for(i = 0; i < m_planes.num_elements(); ++i)
+            Array<OneD, NekDouble> tocoeffs_tmp, fromcoeffs_tmp;
+
+            for(i = 0; i < m_planes.size(); ++i)
             {
                 m_planes[i]->ExtractCoeffsToCoeffs(fromExpList->GetPlane(i),fromcoeffs_tmp =  fromCoeffs + fromNcoeffs_per_plane*i, tocoeffs_tmp = toCoeffs + toNcoeffs_per_plane*i);
             }
@@ -1098,7 +1119,7 @@ namespace Nektar
                                         std::string var)
         {
             // If there is only one plane (e.g. HalfMode), we write a 2D plane.
-            if (m_planes.num_elements() == 1)
+            if (m_planes.size() == 1)
             {
                 m_planes[0]->WriteVtkPieceData(outfile, expansion, var);
                 return;
@@ -1141,7 +1162,7 @@ namespace Nektar
             outfile << "        <DataArray type=\"Float64\" Name=\""
                     << var << "\">" << endl;
             outfile << "          ";
-            for (int n = 0; n < m_planes.num_elements(); ++n)
+            for (int n = 0; n < m_planes.size(); ++n)
             {
                 const Array<OneD, NekDouble> phys = m_phys + m_phys_offset[expansion] + n*npoints_per_plane;
                 for(i = 0; i < nq; ++i)
@@ -1160,20 +1181,20 @@ namespace Nektar
             outfile << endl;
             outfile << "        </DataArray>" << endl;
         }
-        
+
         void ExpListHomogeneous1D::v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
         {
             int cnt,cnt1;
             Array<OneD, NekDouble> tmparray;
             cnt  = m_planes[0]->GetTotPoints();
             cnt1 = m_planes[0]->Get1DScaledTotPoints(scale);
-            
-            ASSERTL1(m_planes.num_elements()*cnt1 <= outarray.num_elements(),"size of outarray does not match internal estimage");
-            
-            
-            for(int i = 0; i < m_planes.num_elements(); i++)
+
+            ASSERTL1(m_planes.size()*cnt1 <= outarray.size(),"size of outarray does not match internal estimage");
+
+
+            for(int i = 0; i < m_planes.size(); i++)
             {
-         
+
                 m_planes[i]->PhysInterp1DScaled(scale,inarray+i*cnt,
                                                  tmparray = outarray+i*cnt1);
             }
@@ -1186,90 +1207,90 @@ namespace Nektar
             Array<OneD, NekDouble> tmparray;
             cnt  = m_planes[0]->Get1DScaledTotPoints(scale);
             cnt1 = m_planes[0]->GetTotPoints();
-            
-            ASSERTL1(m_planes.num_elements()*cnt <= inarray.num_elements(),"size of outarray does not match internal estimage");
-            
-            
-            for(int i = 0; i < m_planes.num_elements(); i++)
+
+            ASSERTL1(m_planes.size()*cnt <= inarray.size(),"size of outarray does not match internal estimage");
+
+
+            for(int i = 0; i < m_planes.size(); i++)
             {
                 m_planes[i]->PhysGalerkinProjection1DScaled(scale,inarray+i*cnt,
                                                  tmparray = outarray+i*cnt1);
             }
-            
+
         }
         void ExpListHomogeneous1D::v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                                Array<OneD, NekDouble> &out_d0,
-                                               Array<OneD, NekDouble> &out_d1, 
+                                               Array<OneD, NekDouble> &out_d1,
                                                Array<OneD, NekDouble> &out_d2)
         {
-            int nT_pts = inarray.num_elements();          //number of total points = n. of Fourier points * n. of points per plane (nT_pts)
-            int nP_pts = nT_pts/m_planes.num_elements();    //number of points per plane = n of Fourier transform required (nP_pts)
-            
+            int nT_pts = inarray.size();          //number of total points = n. of Fourier points * n. of points per plane (nT_pts)
+            int nP_pts = nT_pts/m_planes.size();    //number of points per plane = n of Fourier transform required (nP_pts)
+
             Array<OneD, NekDouble> temparray(nT_pts);
             Array<OneD, NekDouble> outarray(nT_pts);
             Array<OneD, NekDouble> tmp1;
             Array<OneD, NekDouble> tmp2;
-            Array<OneD, NekDouble> tmp3;            
-            
-            for(int i = 0; i < m_planes.num_elements(); i++)
+            Array<OneD, NekDouble> tmp3;
+
+            for(int i = 0; i < m_planes.size(); i++)
             {
                 m_planes[i]->PhysDeriv(inarray + i*nP_pts ,tmp2 = out_d0 + i*nP_pts , tmp3 = out_d1 + i*nP_pts );
             }
-            
+
             if(out_d2 != NullNekDouble1DArray)
             {
-                if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourier || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode || 
-                   m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)            
+                if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourier || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode ||
+                   m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)
                 {
                     if(m_WaveSpace)
                     {
                         temparray = inarray;
                     }
-                    else 
-                    { 
+                    else
+                    {
                         HomogeneousFwdTrans(inarray,temparray);
                     }
-                    
+
                     NekDouble sign = -1.0;
                     NekDouble beta;
-                    
+
                     //Half Mode
                     if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe)
                     {
                         beta = sign*2*M_PI*(m_transposition->GetK(0))/m_lhom;
-                        
+
                         Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
                     }
                     else if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)
                     {
                         beta = -sign*2*M_PI*(m_transposition->GetK(0))/m_lhom;
-                        
+
                         Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
                     }
-                    
+
                     //Fully complex
                     else
                     {
-                        for(int i = 0; i < m_planes.num_elements(); i++)
+                        for(int i = 0; i < m_planes.size(); i++)
                         {
                             beta = -sign*2*M_PI*(m_transposition->GetK(i))/m_lhom;
-                            
+
                             Vmath::Smul(nP_pts,beta,tmp1 = temparray + i*nP_pts,1,tmp2 = outarray + (i-int(sign))*nP_pts,1);
-                            
+
                             sign = -1.0*sign;
                         }
                     }
-                    
+
                     if(m_WaveSpace)
                     {
                         out_d2 = outarray;
                     }
-                    else 
+                    else
                     {
                         HomogeneousBwdTrans(outarray,out_d2);
                     }
                 }
-                else 
+                else
                 {
                     if(!m_session->DefinesSolverInfo("HomoStrip"))
                     {
@@ -1290,85 +1311,85 @@ namespace Nektar
                                         "implemented yet for non-Fourier "
                                         "basis");
                     }
-                    else 
+                    else
                     {
                         StdRegions::StdSegExp StdSeg(m_homogeneousBasis->GetBasisKey());
-                        
+
                         m_transposition->Transpose(inarray,temparray,false,LibUtilities::eXYtoZ);
-                        
+
                         for(int i = 0; i < nP_pts; i++)
                         {
-                            StdSeg.PhysDeriv(temparray + i*m_planes.num_elements(), tmp2 = outarray + i*m_planes.num_elements());
+                            StdSeg.PhysDeriv(temparray + i*m_planes.size(), tmp2 = outarray + i*m_planes.size());
                         }
-                        
+
                         m_transposition->Transpose(outarray,out_d2,false,LibUtilities::eZtoXY);
-                        
-                        Vmath::Smul(nT_pts,2.0/m_lhom,out_d2,1,out_d2,1);                    
+
+                        Vmath::Smul(nT_pts,2.0/m_lhom,out_d2,1,out_d2,1);
                     }
                 }
             }
         }
-    
+
         void ExpListHomogeneous1D::v_PhysDeriv(Direction edir,
                                                const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &out_d)
-            
+
         {
-            int nT_pts = inarray.num_elements();        //number of total points = n. of Fourier points * n. of points per plane (nT_pts)
-            int nP_pts = nT_pts/m_planes.num_elements();  //number of points per plane = n of Fourier transform required (nP_pts)
-            
+            int nT_pts = inarray.size();        //number of total points = n. of Fourier points * n. of points per plane (nT_pts)
+            int nP_pts = nT_pts/m_planes.size();  //number of points per plane = n of Fourier transform required (nP_pts)
+
             int dir= (int)edir;
-            
+
             Array<OneD, NekDouble> temparray(nT_pts);
             Array<OneD, NekDouble> outarray(nT_pts);
             Array<OneD, NekDouble> tmp1;
             Array<OneD, NekDouble> tmp2;
-            
+
             if (dir < 2)
             {
-                for(int i=0; i < m_planes.num_elements(); i++)
+                for(int i=0; i < m_planes.size(); i++)
                 {
                     m_planes[i]->PhysDeriv(edir, inarray + i*nP_pts ,tmp2 = out_d + i*nP_pts);
                 }
             }
             else
             {
-                if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourier || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode || 
-                   m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)    
+                if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourier || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode ||
+                   m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)
                 {
                     if(m_WaveSpace)
                     {
                         temparray = inarray;
                     }
-                    else 
-                    { 
+                    else
+                    {
                         HomogeneousFwdTrans(inarray,temparray);
                     }
-                    
+
                     NekDouble sign = -1.0;
                     NekDouble beta;
-                    
+
                     //HalfMode
                     if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe)
                     {
                         beta = 2*sign*M_PI*(m_transposition->GetK(0))/m_lhom;
-            
+
                         Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
                     }
                     else if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)
                     {
                         beta = -2*sign*M_PI*(m_transposition->GetK(0))/m_lhom;
-            
+
                         Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
                     }
                     //Fully complex
                     else
                     {
-                        for(int i = 0; i < m_planes.num_elements(); i++)
+                        for(int i = 0; i < m_planes.size(); i++)
                         {
                             beta = -sign*2*M_PI*(m_transposition->GetK(i))/m_lhom;
-                            
+
                             Vmath::Smul(nP_pts,beta,tmp1 = temparray + i*nP_pts,1,tmp2 = outarray + (i-int(sign))*nP_pts,1);
-                            
+
                             sign = -1.0*sign;
                         }
                     }
@@ -1376,12 +1397,12 @@ namespace Nektar
                     {
                         out_d = outarray;
                     }
-                    else 
+                    else
                     {
                         HomogeneousBwdTrans(outarray,out_d);
                     }
                 }
-                else 
+                else
                 {
                     if(!m_session->DefinesSolverInfo("HomoStrip"))
                     {
@@ -1395,51 +1416,51 @@ namespace Nektar
                                  "Parallelisation in the homogeneous direction "
                                  "implemented just for Fourier basis");
                     }
-                    
+
                     if(m_WaveSpace)
                     {
                         ASSERTL0(false,"Semi-phyisical time-stepping not implemented yet for non-Fourier basis");
                     }
-                    else 
+                    else
                     {
                         StdRegions::StdSegExp StdSeg(m_homogeneousBasis->GetBasisKey());
-                        
+
                         m_transposition->Transpose(inarray,temparray,false,LibUtilities::eXYtoZ);
-                        
+
                         for(int i = 0; i < nP_pts; i++)
                         {
-                            StdSeg.PhysDeriv(temparray + i*m_planes.num_elements(), tmp2 = outarray + i*m_planes.num_elements());
+                            StdSeg.PhysDeriv(temparray + i*m_planes.size(), tmp2 = outarray + i*m_planes.size());
                         }
-            
+
                         m_transposition->Transpose(outarray,out_d,false,LibUtilities::eZtoXY);
-                        
+
                         Vmath::Smul(nT_pts,2.0/m_lhom,out_d,1,out_d,1);
                     }
                 }
             }
         }
-        
+
         void ExpListHomogeneous1D::PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD, NekDouble> &out_d0,
-                                             Array<OneD, NekDouble> &out_d1, 
+                                             Array<OneD, NekDouble> &out_d1,
                                              Array<OneD, NekDouble> &out_d2)
-            
+
         {
             v_PhysDeriv(inarray,out_d0,out_d1,out_d2);
         }
-    
+
         void ExpListHomogeneous1D::PhysDeriv(Direction edir,
                                              const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD, NekDouble> &out_d)
         {
             v_PhysDeriv(edir,inarray,out_d);
         }
-        
+
         LibUtilities::TranspositionSharedPtr ExpListHomogeneous1D::v_GetTransposition(void)
         {
             return m_transposition;
         }
-        
+
         NekDouble ExpListHomogeneous1D::v_GetHomoLen(void)
         {
             return m_lhom;
@@ -1453,6 +1474,23 @@ namespace Nektar
         Array<OneD, const unsigned int> ExpListHomogeneous1D::v_GetZIDs(void)
         {
             return m_transposition->GetPlanesIDs();
+        }
+
+        NekDouble ExpListHomogeneous1D::v_Integral(const Array<OneD,
+            const NekDouble> &inarray)
+        {
+            NekDouble val = 0.0;
+            int       i   = 0;
+
+            for (i = 0; i < (*m_exp).size(); ++i)
+            {
+                val += (*m_exp)[i]->Integral(inarray + m_phys_offset[i]);
+            }
+            val *= m_lhom/m_homogeneousBasis->GetNumModes();
+
+            m_comm->AllReduce(val, LibUtilities::ReduceSum);
+
+            return val;
         }
     } //end of namespace
 } //end of namespace

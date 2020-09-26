@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -49,12 +48,13 @@ public:
 
     /// Creates an instance of this class
     static FilterSharedPtr create(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
         const std::map<std::string, std::string> &pParams)
     {
         FilterSharedPtr p =
             MemoryManager<FilterReynoldsStresses>::AllocateSharedPtr(pSession,
-                                                                     pParams);
+                                                        pEquation, pParams);
         return p;
     }
 
@@ -62,8 +62,10 @@ public:
     static std::string className;
 
     SOLVER_UTILS_EXPORT
-    FilterReynoldsStresses(const LibUtilities::SessionReaderSharedPtr &pSession,
-                           const std::map<std::string, std::string> &pParams);
+    FilterReynoldsStresses(
+        const LibUtilities::SessionReaderSharedPtr         &pSession,
+        const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
+        const std::map<std::string, std::string> &pParams);
     SOLVER_UTILS_EXPORT ~FilterReynoldsStresses();
 
 protected:
@@ -74,6 +76,7 @@ protected:
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields);
     virtual void v_ProcessSample(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+              std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
         const NekDouble &time);
     virtual void v_PrepareOutput(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,

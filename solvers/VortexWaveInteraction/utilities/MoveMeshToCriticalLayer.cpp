@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -40,7 +39,6 @@
 #include <tinyxml.h>
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/ExpList2D.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 
 using namespace std;
@@ -61,14 +59,14 @@ struct MoveVerts
 {
     vector<NekDouble> kspring;
     vector<int> springVid;
-    SolveType solve; 
+    SolveType solve;
 };
 
-void GetInterfaceVerts(const int compositeID, 
+void GetInterfaceVerts(const int compositeID,
                        SpatialDomains::MeshGraphSharedPtr &mesh,
                        vector<int> &InterfaceVerts);
 
-void GetStreakLocation(LibUtilities::SessionReaderSharedPtr &vSession, 
+void GetStreakLocation(LibUtilities::SessionReaderSharedPtr &vSession,
                        SpatialDomains::MeshGraphSharedPtr &mesh, string &fieldfile,
                        Array<OneD, NekDouble> &xc, Array<OneD, NekDouble> &yc);
 
@@ -81,11 +79,11 @@ void GetNewVertexLocation(TiXmlElement *doc,
                           Array<OneD,NekDouble> &verty,
                           int maxiter);
 
-void  TurnOffEdges(TiXmlElement *doc, 
-                   SpatialDomains::SegGeomMap &meshedges, 
+void  TurnOffEdges(TiXmlElement *doc,
+                   SpatialDomains::SegGeomMap &meshedges,
                    Array<OneD,MoveVerts> &verts);
 
-void   RedefineVertices(TiXmlElement *doc, 
+void   RedefineVertices(TiXmlElement *doc,
                         Array<OneD,NekDouble> &dvertx, Array<OneD,NekDouble> &dverty);
 
 void EnforceRotationalSymmetry(SpatialDomains::MeshGraphSharedPtr &mesh,
@@ -99,7 +97,7 @@ int main(int argc, char *argv[])
         fprintf(stderr,"Usage: ./MoveMeshToCriticalLayer  meshfile streakfile  outfile\n");
         exit(1);
     }
-    
+
     //------------------------------------------------------------
     // Create Session file by reading only first meshfile
     //-----------------------------------------------------------
@@ -107,14 +105,14 @@ int main(int argc, char *argv[])
         = LibUtilities::SessionReader::CreateInstance(2, argv);
     SpatialDomains::MeshGraphSharedPtr mesh =
         SpatialDomains::MeshGraph::Read(vSession);
-    
+
     //-------------------------------------------------------------
     // Read in mesh from input file
     //------------------------------------------------------------
     TiXmlDocument& meshdoc = vSession->GetDocument();
     TiXmlHandle docHandle(&meshdoc);
     TiXmlElement* doc = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
-    
+
     //------------------------------------------------------------
     // Get list of vertices along interface
     //------------------------------------------------------------
@@ -129,16 +127,16 @@ int main(int argc, char *argv[])
     GetStreakLocation(vSession,mesh,fieldfile,xstreak,ystreak);
 
     //------------------------------------------------------------
-    // Move internal mesh using critical layer info and under string analogy 
+    // Move internal mesh using critical layer info and under string analogy
     //------------------------------------------------------------
-    Array<OneD,NekDouble>  dvertx(mesh->GetNvertices(),0.0), dverty(mesh->GetNvertices(),0.0); 
+    Array<OneD,NekDouble>  dvertx(mesh->GetNvertices(),0.0), dverty(mesh->GetNvertices(),0.0);
     int maxiter;
     vSession->LoadParameter("MoveMeshMaxIterations",maxiter,100);
 
     GetNewVertexLocation(doc, mesh,InterfaceVerts,xstreak,ystreak,dvertx,dverty,maxiter);
 
     //------------------------------------------------------------
-    // Enforce rotational symmetry on mesh 
+    // Enforce rotational symmetry on mesh
     //------------------------------------------------------------
     if(vSession->DefinesSolverInfo("EnforceRotationalSymmetry"))
     {
@@ -146,12 +144,12 @@ int main(int argc, char *argv[])
     }
 
     //------------------------------------------------------------
-    // Redfine vertices in doc 
+    // Redfine vertices in doc
     //------------------------------------------------------------
     RedefineVertices(doc,dvertx,dverty);
 
     //------------------------------------------------------------
-    // Write out moved mesh file 
+    // Write out moved mesh file
     //------------------------------------------------------------
     std::string outfile(argv[argc-1]);
     meshdoc.SaveFile(outfile);
@@ -169,19 +167,19 @@ void GetInterfaceVerts(const int compositeID, SpatialDomains::MeshGraphSharedPtr
     {
         if(vertmap.count(composite->m_geomVec[i]->GetVid(0)) == 0)
         {
-            InterfaceVerts.push_back(composite->m_geomVec[i]->GetVid(0)); 
+            InterfaceVerts.push_back(composite->m_geomVec[i]->GetVid(0));
             vertmap[composite->m_geomVec[i]->GetVid(0)]  = 1;
         }
 
         if(vertmap.count(composite->m_geomVec[i]->GetVid(1)) == 0)
         {
-            InterfaceVerts.push_back(composite->m_geomVec[i]->GetVid(1)); 
+            InterfaceVerts.push_back(composite->m_geomVec[i]->GetVid(1));
             vertmap[composite->m_geomVec[i]->GetVid(1)]  = 1;
         }
     }
 }
 
-void GetStreakLocation(LibUtilities::SessionReaderSharedPtr &vSession, 
+void GetStreakLocation(LibUtilities::SessionReaderSharedPtr &vSession,
                        SpatialDomains::MeshGraphSharedPtr &mesh, string &fieldfile,
                        Array<OneD, NekDouble> &xc, Array<OneD, NekDouble> &yc)
 {
@@ -189,7 +187,7 @@ void GetStreakLocation(LibUtilities::SessionReaderSharedPtr &vSession,
     // Define Streak Expansion   
     MultiRegions::ExpListSharedPtr streak;   
     
-    streak = MemoryManager<MultiRegions::ExpList2D>
+    streak = MemoryManager<MultiRegions::ExpList>
         ::AllocateSharedPtr(vSession,mesh);
     //---------------------------------------------------------------
 
@@ -211,15 +209,15 @@ void GetStreakLocation(LibUtilities::SessionReaderSharedPtr &vSession,
                                     streak->UpdateCoeffs());
     }
     //----------------------------------------------
-    
+
     NekDouble cr = 0.0;
 
     cerr << "Extracting Critical Layer ";
-    Computestreakpositions(streak,xc, yc,cr);    
+    Computestreakpositions(streak,xc, yc,cr);
 }
 
 
-void GetNewVertexLocation(TiXmlElement *doc, 
+void GetNewVertexLocation(TiXmlElement *doc,
                           SpatialDomains::MeshGraphSharedPtr &mesh,
                           vector<int> &InterfaceVerts,
                           Array<OneD, NekDouble> &xstreak,
@@ -229,12 +227,12 @@ void GetNewVertexLocation(TiXmlElement *doc,
                           int maxiter)
 {
     int i,j,k;
-    int nverts = mesh->GetNvertices(); 
+    int nverts = mesh->GetNvertices();
 
     SpatialDomains::SegGeomMap meshedges = mesh->GetAllSegGeoms();
 
     Array<OneD,MoveVerts> Verts(nverts);
-    
+
     // loop mesh edges and fill in verts info
     SpatialDomains::PointGeomSharedPtr v0,v1;
     SpatialDomains::PointGeom dist;
@@ -251,17 +249,17 @@ void GetNewVertexLocation(TiXmlElement *doc,
 
         v0 = (segIter.second)->GetVertex(0);
         v1 = (segIter.second)->GetVertex(1);
-        
-        kspring = 1.0/v0->dist(*v1); 
-        
+
+        kspring = 1.0/v0->dist(*v1);
+
         Verts[vid0].kspring.push_back(kspring);
         Verts[vid0].springVid.push_back(vid1);
         Verts[vid1].kspring.push_back(kspring);
         Verts[vid1].springVid.push_back(vid0);
 
     }
-    
-    // Scale spring by total around vertex and turn on all vertices. 
+
+    // Scale spring by total around vertex and turn on all vertices.
     for(i = 0; i < nverts; ++i)
     {
         NekDouble invktot = 0.0;
@@ -276,31 +274,31 @@ void GetNewVertexLocation(TiXmlElement *doc,
         }
 
         Verts[i].solve = eSolveXY;
-    }        
+    }
 
 
     // Turn off all edges defined by composite lists of correct dimension
     TurnOffEdges(doc,meshedges,Verts);
-    
+
     NekDouble z,h0,h1,h2;
     // Set interface vertices to lie on critical layer
     for(i = 0; i < InterfaceVerts.size(); ++i)
     {
-        Verts[InterfaceVerts[i]].solve = eNoSolve; 
+        Verts[InterfaceVerts[i]].solve = eNoSolve;
         mesh->GetVertex(InterfaceVerts[i])->GetCoords(x,y,z);
-        
-        for(j = 0; j < xstreak.num_elements()-1; ++j)
+
+        for(j = 0; j < xstreak.size()-1; ++j)
         {
             if((x >= xstreak[j])&&(x <= xstreak[j+1]))
             {
                 break;
             }
         }
-        
-        ASSERTL0(j != xstreak.num_elements(),"Did not find x location along critical layer");
-        
+
+        ASSERTL0(j != xstreak.size(),"Did not find x location along critical layer");
+
         k = (j==0)?1: j; // offset index at beginning
-        
+
         // quadraticalling interpolate points
         h0 = (x-xstreak[k])*(x-xstreak[k+1])/
             ((xstreak[k-1]-xstreak[k])*(xstreak[k-1]-xstreak[k+1]));
@@ -308,9 +306,9 @@ void GetNewVertexLocation(TiXmlElement *doc,
             ((xstreak[k]-xstreak[k-1])*(xstreak[k]-xstreak[k+1]));
         h2 = (x-xstreak[k-1])*(x-xstreak[k])/
             ((xstreak[k+1]-xstreak[k-1])*(xstreak[k+1]-xstreak[k]));
-        
-        dvertx[InterfaceVerts[i]] =  (xstreak[k-1]*h0 + xstreak[k]*h1 + xstreak[k+1]*h2) - x; 
-        dverty[InterfaceVerts[i]] =  (ystreak[k-1]*h0 + ystreak[k]*h1 + ystreak[k+1]*h2) - y; 
+
+        dvertx[InterfaceVerts[i]] =  (xstreak[k-1]*h0 + xstreak[k]*h1 + xstreak[k+1]*h2) - x;
+        dverty[InterfaceVerts[i]] =  (ystreak[k-1]*h0 + ystreak[k]*h1 + ystreak[k+1]*h2) - y;
     }
 
     // shift quads in critical layer to move more or less rigidly
@@ -320,7 +318,7 @@ void GetNewVertexLocation(TiXmlElement *doc,
         for(i = 0; i < 4; ++i)
         {
             vid0 = (quadIter.second)->GetVid(i);
-            
+
             switch(Verts[vid0].solve)
             {
             case eSolveXY:
@@ -339,7 +337,7 @@ void GetNewVertexLocation(TiXmlElement *doc,
                         x1 = x2;
                         y1 = y2;
                     }
-                    
+
                     // currently just shift vert as average of two sides
                     dvertx[vid0] = (x2-x)/(x2-x1)*dvertx[InterfaceVerts[j]]+
                         (x-x1)/(x2-x1)*dvertx[InterfaceVerts[j+1]];
@@ -351,7 +349,7 @@ void GetNewVertexLocation(TiXmlElement *doc,
                 {
                     mesh->GetVertex(vid0)->GetCoords(x,y,z);
                     mesh->GetVertex(InterfaceVerts[0])->GetCoords(x1,y1,z1);
-                    
+
                     if(fabs(x-x1) < 1e-6)
                     {
                         dverty[vid0] = dverty[InterfaceVerts[0]];
@@ -369,11 +367,11 @@ void GetNewVertexLocation(TiXmlElement *doc,
         }
     }
 
-    
 
 
-            
-    // Iterate internal vertices 
+
+
+    // Iterate internal vertices
     bool ContinueToIterate = true;
     int cnt  = 0;
     int nsum = 0;
@@ -383,13 +381,13 @@ void GetNewVertexLocation(TiXmlElement *doc,
 
     while (ContinueToIterate)
     {
-        
+
         sum = 0.0;
         nsum = 0;
 
-        // use a ramping function to help move interior slowly 
+        // use a ramping function to help move interior slowly
         fac = (cnt < blend)? 1.0/(blend+1.0)*(cnt+1): 1.0;
-        
+
         for(i = 0; i < nverts; ++i)
         {
             if(Verts[i].solve != eNoSolve)
@@ -411,12 +409,12 @@ void GetNewVertexLocation(TiXmlElement *doc,
                         dy += fac*Verts[i].kspring[j]*dverty[Verts[i].springVid[j]];
                     }
                 }
-                
+
                 dsum = (dx*dx + dy*dy);
-                
+
                 dvertx[i] = dx;
                 dverty[i] = dy;
-                
+
                 if(dsum > 1e-16)
                 {
                     //sum  += dsum/(dvertx[i]*dvertx[i] + dverty[i]*dverty[i]);
@@ -429,7 +427,7 @@ void GetNewVertexLocation(TiXmlElement *doc,
         if(nsum)
         {
             sum = sqrt(sum/(NekDouble)nsum);
-            
+
             NekDouble chg = sum-prev_sum;
             prev_sum = sum;
 
@@ -439,13 +437,13 @@ void GetNewVertexLocation(TiXmlElement *doc,
             {
                 ContinueToIterate = false;
             }
-            
+
         }
         else if(cnt > blend)
         {
             ContinueToIterate = false;
 
-        }            
+        }
 
         if(cnt++ > maxiter)
         {
@@ -455,9 +453,9 @@ void GetNewVertexLocation(TiXmlElement *doc,
 }
 
 
-// Read Composites from xml document and turn off verts that are along edge composites. 
-void  TurnOffEdges(TiXmlElement *doc, 
-                   SpatialDomains::SegGeomMap &meshedges, 
+// Read Composites from xml document and turn off verts that are along edge composites.
+void  TurnOffEdges(TiXmlElement *doc,
+                   SpatialDomains::SegGeomMap &meshedges,
                    Array<OneD,MoveVerts> &Verts)
 {
     TiXmlElement* field = doc->FirstChildElement("COMPOSITE");
@@ -472,11 +470,11 @@ void  TurnOffEdges(TiXmlElement *doc,
     while (composite)
     {
         nextCompositeNumber++;
-        
+
         int indx;
         int err = composite->QueryIntAttribute("ID", &indx);
         ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
-        
+
         TiXmlNode* compositeChild = composite->FirstChild();
         // This is primarily to skip comments that may be present.
         // Comments appear as nodes just like elements.
@@ -486,10 +484,10 @@ void  TurnOffEdges(TiXmlElement *doc,
         {
             compositeChild = compositeChild->NextSibling();
         }
-        
+
         ASSERTL0(compositeChild, "Unable to read composite definition body.");
         std::string compositeStr = compositeChild->ToText()->ValueStr();
-        
+
         /// Parse out the element components corresponding to type of element.
         std::istringstream compositeDataStrm(compositeStr.c_str());
 
@@ -497,28 +495,28 @@ void  TurnOffEdges(TiXmlElement *doc,
         {
             std::string compositeElementStr;
             compositeDataStrm >> compositeElementStr;
-            
+
             std::istringstream tokenStream(compositeElementStr);
             char type;
-            
+
             tokenStream >> type;
-            
-            // in what follows we are assuming there is only one block of data 
+
+            // in what follows we are assuming there is only one block of data
             std::string::size_type indxBeg = compositeElementStr.find_first_of('[') + 1;
             std::string::size_type indxEnd = compositeElementStr.find_last_of(']') - 1;
-        
+
             ASSERTL0(indxBeg <= indxEnd, (std::string("Error reading index definition:") +  compositeElementStr).c_str());
-            
+
             std::string indxStr = compositeElementStr.substr(indxBeg, indxEnd - indxBeg + 1);
             std::vector<unsigned int> seqVector;
-            
+
             bool err = ParseUtils::GenerateSeqVector(indxStr, seqVector);
-            
+
             ASSERTL0(err, (std::string("Error reading composite elements: ") + indxStr).c_str());
-            
+
             switch(type)
             {
-            case 'E':  // Turn off vertices along composite edges 
+            case 'E':  // Turn off vertices along composite edges
                 {
                     int seqlen = seqVector.size();
                     NekDouble x0,y0,z0,x1,y1,z1;
@@ -542,7 +540,7 @@ void  TurnOffEdges(TiXmlElement *doc,
                             {
                                 Verts[vid0].solve = eSolveY;
                             }
-                            
+
                             if(Verts[vid1].solve == eSolveX)
                             {
                                 Verts[vid1].solve = eNoSolve;
@@ -564,7 +562,7 @@ void  TurnOffEdges(TiXmlElement *doc,
                             {
                                 Verts[vid0].solve = eSolveX;
                             }
-                            
+
                             if(Verts[vid1].solve == eSolveY)
                             {
                                 Verts[vid1].solve = eNoSolve;
@@ -578,7 +576,7 @@ void  TurnOffEdges(TiXmlElement *doc,
 
                 }
                 break;
-                
+
                 case 'T':  case 'Q':  // do nothing
                 {
                     break;
@@ -586,52 +584,52 @@ void  TurnOffEdges(TiXmlElement *doc,
             default:
                 NEKERROR(ErrorUtil::efatal, (std::string("Unrecognized composite token: ") + compositeElementStr).c_str());
             }
-            
+
         }
         catch(...)
         {
             NEKERROR(ErrorUtil::efatal,
                      (std::string("Unable to read COMPOSITE data for composite: ") + compositeStr).c_str());
         }
-        
+
         /// Keep looking
         composite = composite->NextSiblingElement("C");
     }
 }
 
-void   RedefineVertices(TiXmlElement *doc, 
-                        Array<OneD,NekDouble> &dvertx, 
+void   RedefineVertices(TiXmlElement *doc,
+                        Array<OneD,NekDouble> &dvertx,
                         Array<OneD,NekDouble> &dverty)
 {
 
 
     TiXmlElement* element = doc->FirstChildElement("VERTEX");
     ASSERTL0(element, "Unable to find mesh VERTEX tag in file.");
-    
+
     TiXmlElement *vertex = element->FirstChildElement("V");
-    
+
     int indx;
     int nextVertexNumber = -1;
     int err;    /// Error value returned by TinyXML.
-    
+
     vector<NekDouble> xpts,ypts,zpts;
     NekDouble xval, yval, zval;
-        
+
     while (vertex)
     {
         nextVertexNumber++;
-        
+
         TiXmlAttribute *vertexAttr = vertex->FirstAttribute();
         std::string attrName(vertexAttr->Name());
 
         ASSERTL0(attrName == "ID", (std::string("Unknown attribute name: ") + attrName).c_str());
-        
+
         err = vertexAttr->QueryIntValue(&indx);
         ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
-        
+
         // Now read body of vertex
         std::string vertexBodyStr;
-        
+
         TiXmlNode *vertexBody = vertex->FirstChild();
 
         while (vertexBody)
@@ -642,7 +640,7 @@ void   RedefineVertices(TiXmlElement *doc,
                 vertexBodyStr += vertexBody->ToText()->Value();
                 vertexBodyStr += " ";
             }
-            
+
             vertexBody = vertexBody->NextSibling();
         }
 
@@ -655,14 +653,14 @@ void   RedefineVertices(TiXmlElement *doc,
         {
             while(!vertexDataStrm.fail())
             {
-                vertexDataStrm >> xval >> yval >> zval;                
+                vertexDataStrm >> xval >> yval >> zval;
             }
 
             xval += dvertx[indx];
             yval += dverty[indx];
-            
+
             stringstream s;
-            s << scientific << setprecision(8) 
+            s << scientific << setprecision(8)
               << xval << " " << yval << " " << zval;
 
             vertex->ReplaceChild(vertex->FirstChild(), TiXmlText(s.str()));
@@ -670,7 +668,7 @@ void   RedefineVertices(TiXmlElement *doc,
         catch(...)
         {
             ASSERTL0(false, "Unable to read VERTEX data.");
-        }   
+        }
         vertex = vertex->NextSiblingElement("V");
     }
 
@@ -691,11 +689,11 @@ void EnforceRotationalSymmetry(SpatialDomains::MeshGraphSharedPtr &mesh,
         x[i] = xval + dvertx[i];
         y[i] = yval + dverty[i];
     }
-    
+
     NekDouble xmax = Vmath::Vmax(nverts,x,1);
     NekDouble tol = 1e-5, dist2,xrot,yrot;
     Array<OneD,int> index(nverts);
-    // find nearest 
+    // find nearest
     for(i = 0; i < nverts; ++i)
     {
         xrot = -x[i] + xmax;
@@ -720,7 +718,7 @@ void EnforceRotationalSymmetry(SpatialDomains::MeshGraphSharedPtr &mesh,
 
         xrot = 0.5*(-x[index[i]] + xmax + x[i]);
         yrot = 0.5*(-y[index[i]] + y[i]);
-        
+
         dvertx[i] = xrot - xval;
         dverty[i] = yrot - yval;
     }

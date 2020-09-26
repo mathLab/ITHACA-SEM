@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,17 +36,19 @@
 #include <string>
 using namespace std;
 
-#include <FieldUtils/Interpolator.h>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/geometry.hpp>
-#include "ProcessInterpPoints.h"
+#include <boost/lexical_cast.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
+#include <FieldUtils/Interpolator.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/PtsIO.h>
 #include <LibUtilities/BasicUtils/CsvIO.h>
-#include <boost/lexical_cast.hpp>
-#include <boost/math/special_functions/fpclassify.hpp>
+
+#include "ProcessInterpPoints.h"
 
 namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;
@@ -108,12 +109,18 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     FieldSharedPtr fromField = std::shared_ptr<Field>(new Field());
     std::vector<std::string> files;
     ParseUtils::GenerateVector(m_config["fromxml"].as<string>(), files);
+
     // set up session file for from field
+    char *argv[] = { const_cast<char *>("FieldConvert"), nullptr };
     fromField->m_session =
-        LibUtilities::SessionReader::CreateInstance(0, 0, files);
+        LibUtilities::SessionReader::CreateInstance(
+            1, argv, files,
+            LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0));
+
     // Set up range based on min and max of local parallel partition
     SpatialDomains::DomainRangeShPtr rng =
         MemoryManager<SpatialDomains::DomainRange>::AllocateSharedPtr();
+    
     int coordim = m_f->m_fieldPts->GetDim();
     int npts    = m_f->m_fieldPts->GetNpoints();
     std::vector<std::string> fieldNames = m_f->m_fieldPts->GetFieldNames();
@@ -141,24 +148,28 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                 rng->m_zmin -= 1;
                 rng->m_zmax += 1;
             }
+            /* Falls through. */
         case 2:
             rng->m_doYrange = true;
             rng->m_ymin     = Vmath::Vmin(npts, pts[1], 1);
             rng->m_ymax     = Vmath::Vmax(npts, pts[1], 1);
+            /* Falls through. */
         case 1:
             rng->m_doXrange = true;
             rng->m_xmin     = Vmath::Vmin(npts, pts[0], 1);
             rng->m_xmax     = Vmath::Vmax(npts, pts[0], 1);
             break;
         default:
-            ASSERTL0(false, "too many values specfied in range");
+            NEKERROR(ErrorUtil::efatal, "Too many values specified in range");
     }
+
     // setup rng parameters.
     fromField->m_graph =
         SpatialDomains::MeshGraph::Read(fromField->m_session, rng);
+
     // Read in local from field partitions
-    const SpatialDomains::ExpansionMap &expansions =
-        fromField->m_graph->GetExpansions();
+    const SpatialDomains::ExpansionInfoMap &expansions =
+        fromField->m_graph->GetExpansionInfo();
     Array<OneD, int> ElementGIDs(expansions.size());
 
     int i = 0;
@@ -166,22 +177,24 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     {
         ElementGIDs[i++] = expIt.second->m_geomShPtr->GetGlobalID();
     }
-    // check to see that we do have some elmement in teh domain since
+    // check to see that we do have some element in the domain since
     // possibly all points could be outside of the domain
     ASSERTL0(i > 0, "No elements are set. Are the interpolated points "
-                    "wihtin the domain given by the xml files?");
+                    "within the domain given by the xml files?");
     string fromfld = m_config["fromfld"].as<string>();
     m_f->FieldIOForFile(fromfld)->Import(
         fromfld, fromField->m_fielddef, fromField->m_data,
         LibUtilities::NullFieldMetaDataMap, ElementGIDs);
     int NumHomogeneousDir = fromField->m_fielddef[0]->m_numHomogeneousDir;
+    
     //----------------------------------------------
     // Set up Expansion information to use mode order from field
-    fromField->m_graph->SetExpansions(fromField->m_fielddef);
+    fromField->m_graph->SetExpansionInfo(fromField->m_fielddef);
     int nfields = fromField->m_fielddef[0]->m_fields.size();
     fromField->m_exp.resize(nfields);
     fromField->m_exp[0] = fromField->SetUpFirstExpList(NumHomogeneousDir, true);
     m_f->m_exp.resize(nfields);
+    
     // declare auxiliary fields.
     for (i = 1; i < nfields; ++i)
     {
@@ -208,6 +221,46 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     NekDouble clamp_low = m_config["clamptolowervalue"].as<NekDouble>();
     NekDouble clamp_up  = m_config["clamptouppervalue"].as<NekDouble>();
     NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();
+    
+    // If 3DH1D must ensure that z-coordinate of all points corresponds to a
+    // Fourier plane. Therefore we reset all points that lie outside
+    // of a plane to the nearest plane. This means care must be taken when
+    // analysing the points after interpolation. This should works after
+    // having set up rng as the bounding box doesn't seem to affect the 3rd
+    // direction in 3DH1D cases.
+    if (NumHomogeneousDir == 1 && coordim == 3)
+    {
+        int nPlanes = fromField->m_exp[0]->GetHomogeneousBasis()->GetZ().size();
+        NekDouble lHom = fromField->m_exp[0]->GetHomoLen();
+        for (int pt = 0; pt < npts; ++pt)
+        {
+            int targetPlane =
+                std::round((m_f->m_fieldPts->GetPts(2)[pt] * nPlanes) / lHom);
+            if (targetPlane == nPlanes) // Reset to plane 0
+            {
+                targetPlane = 0;
+            }
+            NekDouble targetZ = (fromField->m_exp[0]
+                                     ->GetHomogeneousBasis()
+                                     ->GetZ())[targetPlane];
+            targetZ           = (targetZ + 1) * lHom / 2;
+
+            // If point is out of plane, reset z-location to closest plane
+            if (fabs(m_f->m_fieldPts->GetPts(2)[pt] - targetZ) > 
+                NekConstants::kVertexTheSameDouble)
+            {
+                cout << "Resetting point from (x,y,z) = ("
+                        << m_f->m_fieldPts->GetPts(0)[pt] << ", "
+                        << m_f->m_fieldPts->GetPts(1)[pt] << ", "
+                        << m_f->m_fieldPts->GetPts(2)[pt] << ") to (x,y,z) = ("
+                        << m_f->m_fieldPts->GetPts(0)[pt] << ", "
+                        << m_f->m_fieldPts->GetPts(1)[pt] << ", " << targetZ
+                        << ")" << endl;
+            
+                m_f->m_fieldPts->GetPts(2)[pt] = targetZ;
+            }
+        }
+    }
 
     InterpolateFieldToPts(fromField->m_exp, m_f->m_fieldPts, clamp_low,
                           clamp_up, def_value);
@@ -220,6 +273,8 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
 
 void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int rank   = m_f->m_comm->GetRank();
     int nprocs = m_f->m_comm->GetSize();
     // Check for command line point specification
@@ -231,14 +286,16 @@ void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
         if (boost::filesystem::path(inFile).extension() == ".pts")
         {
             LibUtilities::PtsIOSharedPtr ptsIO =
-                MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(m_f->m_comm);
+                MemoryManager<LibUtilities::PtsIO>::AllocateSharedPtr(
+                    m_f->m_comm);
 
             ptsIO->Import(inFile, m_f->m_fieldPts);
         }
         else if (boost::filesystem::path(inFile).extension() == ".csv")
         {
             LibUtilities::CsvIOSharedPtr csvIO =
-                MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(m_f->m_comm);
+                MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(
+                    m_f->m_comm);
 
             csvIO->Import(inFile, m_f->m_fieldPts);
         }
@@ -295,7 +352,7 @@ void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
             }
         }
 
-        vector<int> ppe;
+        vector<size_t> ppe;
         ppe.push_back(npts);
         m_f->m_fieldPts =
             MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim,
@@ -365,7 +422,7 @@ void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
             }
         }
 
-        vector<int> ppe;
+        vector<size_t> ppe;
         ppe.push_back(npts[0]);
         ppe.push_back(npts[1]);
         m_f->m_fieldPts =
@@ -428,7 +485,7 @@ void ProcessInterpPoints::CreateFieldPts(po::variables_map &vm)
             }
         }
 
-        vector<int> ppe;
+        vector<size_t> ppe;
         ppe.push_back(npts[0]);
         ppe.push_back(npts[1]);
         ppe.push_back(npts[2]);
@@ -455,6 +512,8 @@ void ProcessInterpPoints::InterpolateFieldToPts(
     NekDouble clamp_up,
     NekDouble def_value)
 {
+    boost::ignore_unused(def_value);
+
     ASSERTL0(pts->GetNFields() == field0.size(), "ptField has too few fields");
 
     int nfields = field0.size();

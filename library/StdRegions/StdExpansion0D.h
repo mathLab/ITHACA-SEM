@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -62,9 +61,7 @@ namespace Nektar
 			
             
         protected:
-            std::map<int, NormalVector> m_vertexNormals;
-			
-                        STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                                          const Array<OneD, const NekDouble>& coords,
                                          const Array<OneD, const NekDouble>& physvals);
         private:
@@ -81,12 +78,7 @@ namespace Nektar
                 return 1;
             }
 
-            virtual int v_GetNedges() const
-            {
-                return 0;
-            }
-
-            virtual int v_GetNfaces() const
+            virtual int v_GetNtraces() const
             {
                 return 0;
             }

@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -65,10 +64,14 @@ public:
     void Initialise(int i, TopoDS_Shape in);
 
     virtual Array<OneD, NekDouble> GetBounds();
+    virtual void GetBounds(NekDouble &umin, NekDouble &umax,
+                           NekDouble &vmin, NekDouble &vmax);
     virtual Array<OneD, NekDouble> N(Array<OneD, NekDouble> uv);
     virtual Array<OneD, NekDouble> D1(Array<OneD, NekDouble> uv);
     virtual Array<OneD, NekDouble> D2(Array<OneD, NekDouble> uv);
     virtual Array<OneD, NekDouble> P(Array<OneD, NekDouble> uv);
+    virtual void P(Array<OneD, NekDouble> uv, NekDouble &x, NekDouble &y,
+                   NekDouble &z);
     virtual Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p,
                                          NekDouble &dist);
     virtual NekDouble Curvature(Array<OneD, NekDouble> uv);
@@ -88,6 +91,8 @@ private:
     TopoDS_Shape m_shape;
     ///
     BRepTopAdaptor_FClass2d *m_2Dclass;
+    /// True if we're a transfinite surface (used for Geo)
+    bool m_isTransfiniteSurf;
 };
 
 } // namespace NekMeshUtils

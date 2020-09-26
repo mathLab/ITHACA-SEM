@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,8 +36,8 @@
 #ifndef NEKTAR_SPATIALDOMAINS_MGHDF5_H
 #define NEKTAR_SPATIALDOMAINS_MGHDF5_H
 
-#include "MeshGraph.h"
-
+#include <SpatialDomains/MeshEntities.hpp>
+#include <SpatialDomains/MeshGraph.h>
 #include <LibUtilities/BasicUtils/H5.h>
 
 namespace Nektar
@@ -58,11 +57,6 @@ public:
         bool defaultExp = false,
         const LibUtilities::FieldMetaDataMap &metadata
                                          = LibUtilities::NullFieldMetaDataMap);
-
-    SPATIAL_DOMAINS_EXPORT virtual void WriteGeometry(
-        std::string outname,
-        std::vector<std::set<unsigned int>> elements,
-        std::vector<unsigned int> partitions);
 
     virtual ~MeshGraphHDF5()
     {
@@ -84,32 +78,52 @@ protected:
 
 private:
 
-    void ReadVertices();
-    void ReadCurves();
+    void ReadCurveMap(
+        CurveMap                      &curveMap,
+        std::string                    dsName,
+        const std::unordered_set<int> &readIds);
     void ReadDomain();
-
-    void ReadEdges();
-    void ReadFaces();
-
-    void ReadElements();
     void ReadComposites();
 
-    void WriteVertices(PointGeomMap &verts);
-    void WriteEdges(SegGeomMap &edges);
-    void WriteTris(TriGeomMap &tris);
-    void WriteQuads(QuadGeomMap &quads);
-    void WriteHexs(HexGeomMap &hexs);
-    void WritePrisms(PrismGeomMap &pris);
-    void WritePyrs(PyrGeomMap &pyrs);
-    void WriteTets(TetGeomMap &tets);
-    void WriteCurves(CurveMap &edges, CurveMap &faces);
-    void WriteComposites(CompositeMap &comps);
-    void WriteDomain(vector<CompositeMap> &domain);
+    template<class T>
+    void WriteGeometryMap(std::map<int, std::shared_ptr<T>> &geomMap,
+                          std::string datasetName);
 
-    string m_hdf5Name;
+    template<class T, typename DataType> void ReadGeometryData(
+        std::map<int, std::shared_ptr<T>>      &geomMap,
+        std::string                             dataSet,
+        const std::unordered_set<int>          &readIds,
+        std::vector<int>                       &ids,
+        std::vector<DataType>                  &geomData);
+    template<class T, typename DataType> void FillGeomMap(
+        std::map<int, std::shared_ptr<T>> &geomMap,
+        const CurveMap                    &curveMap,
+        std::vector<int>                  &ids,
+        std::vector<DataType>             &geomData);
+    template<class T, typename DataType> void ConstructGeomObject(
+        std::map<int, std::shared_ptr<T>> &geomMap, int id,
+        DataType *data, CurveSharedPtr curve);
+
+    CompositeDescriptor CreateCompositeDescriptor(
+        std::unordered_map<int, int> &id2row);
+
+    void WriteCurveMap(CurveMap &curves,
+                       std::string dsName,
+                       MeshCurvedPts &curvedPts,
+                       int &ptOffset,
+                       int &newIdx);
+    void WriteCurvePoints(MeshCurvedPts &curvedPts);
+
+    void WriteComposites(CompositeMap &comps);
+    void WriteDomain(std::vector<CompositeMap> &domain);
+
+    std::string m_hdf5Name;
     LibUtilities::H5::FileSharedPtr m_file;
+    LibUtilities::H5::PListSharedPtr m_readPL;
     LibUtilities::H5::GroupSharedPtr m_mesh;
     LibUtilities::H5::GroupSharedPtr m_maps;
+
+    static const unsigned int FORMAT_VERSION;
 };
 
 } // end of namespace

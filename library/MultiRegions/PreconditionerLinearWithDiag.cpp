@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -37,7 +36,7 @@
 #include <MultiRegions/PreconditionerLinearWithDiag.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <LocalRegions/MatrixKey.h>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 
@@ -54,28 +53,28 @@ namespace Nektar
                     "FullLinearSpaceWithDiagonal",
                     PreconditionerLinearWithDiag::create,
                     "Full linear space and diagonal preconditioning");
- 
+
        /**
          * @class PreconditionerLinearWithDiag
          *
-         * This class implements preconditioning for the conjugate 
+         * This class implements preconditioning for the conjugate
 	 * gradient matrix solver.
 	 */
-        
+
         PreconditionerLinearWithDiag::PreconditionerLinearWithDiag(
             const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
             : Preconditioner(plinsys, pLocToGloMap)
         {
         }
-       
+
         /**
          *
-         */ 
+         */
         void PreconditionerLinearWithDiag::v_InitObject()
         {
-            m_linSpacePrecon = GetPreconFactory().CreateInstance("FullLinearSpace",m_linsys.lock(),m_locToGloMap);
-            m_diagonalPrecon = GetPreconFactory().CreateInstance("Diagonal",m_linsys.lock(),m_locToGloMap);
+            m_linSpacePrecon = GetPreconFactory().CreateInstance("FullLinearSpace",m_linsys.lock(),m_locToGloMap.lock());
+            m_diagonalPrecon = GetPreconFactory().CreateInstance("Diagonal",m_linsys.lock(),m_locToGloMap.lock());
         }
 
         /**
@@ -95,8 +94,8 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            
-            Array<OneD, NekDouble> OutputDiag(pOutput.num_elements());
+
+            Array<OneD, NekDouble> OutputDiag(pOutput.size());
             m_diagonalPrecon->DoPreconditioner(pInput, OutputDiag);
 
             // Since linear preconditioner just copies other entries

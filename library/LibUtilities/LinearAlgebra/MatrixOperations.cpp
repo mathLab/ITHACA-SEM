@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -117,9 +116,9 @@ namespace Nektar
                                          const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
     {
         ASSERTL1(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
-            boost::lexical_cast<std::string>(lhs.GetColumns()) + 
+            std::to_string(lhs.GetColumns()) + 
             std::string(" and a right side matrix with row count ") + 
-            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
+            std::to_string(rhs.GetRows()) + std::string(" can't be multiplied."));
 
         for(unsigned int i = 0; i < result.GetRows(); ++i)
         {
@@ -153,9 +152,9 @@ namespace Nektar
                      const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
     {
         ASSERTL1(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
-            boost::lexical_cast<std::string>(lhs.GetColumns()) + 
+            std::to_string(lhs.GetColumns()) + 
             std::string(" and a right side matrix with row count ") + 
-            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
+            std::to_string(rhs.GetRows()) + std::string(" can't be multiplied."));
 
         result.SetSize(lhs.GetRows(), rhs.GetColumns());
         if( lhs.GetType() == eFULL && rhs.GetType() == eFULL)
@@ -176,11 +175,11 @@ namespace Nektar
                   const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
     {
         ASSERTL1(result.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
-            boost::lexical_cast<std::string>(result.GetRows()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be added."));
+            std::to_string(result.GetRows()) + std::string(" and ") +
+            std::to_string(rhs.GetRows()) + std::string(" can't be added."));
         ASSERTL1(result.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
-            boost::lexical_cast<std::string>(result.GetColumns()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
+            std::to_string(result.GetColumns()) + std::string(" and ") +
+            std::to_string(rhs.GetColumns()) + std::string(" can't be added."));
 
         for(unsigned int i = 0; i < rhs.GetRows(); ++i)
         {
@@ -197,11 +196,11 @@ namespace Nektar
                      const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
     {
         ASSERTL1(result.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
-            boost::lexical_cast<std::string>(result.GetRows()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be added."));
+            std::to_string(result.GetRows()) + std::string(" and ") +
+            std::to_string(rhs.GetRows()) + std::string(" can't be added."));
         ASSERTL1(result.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
-            boost::lexical_cast<std::string>(result.GetColumns()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
+            std::to_string(result.GetColumns()) + std::string(" and ") +
+            std::to_string(rhs.GetColumns()) + std::string(" can't be added."));
 
         for(unsigned int i = 0; i < rhs.GetRows(); ++i)
         {
@@ -224,11 +223,11 @@ namespace Nektar
                 const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
     {
         ASSERTL1(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
-            boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be added."));
+            std::to_string(lhs.GetRows()) + std::string(" and ") +
+            std::to_string(rhs.GetRows()) + std::string(" can't be added."));
         ASSERTL1(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
-            boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
+            std::to_string(lhs.GetColumns()) + std::string(" and ") +
+            std::to_string(rhs.GetColumns()) + std::string(" can't be added."));
 
         for(unsigned int i = 0; i < lhs.GetRows(); ++i)
         {
@@ -245,11 +244,11 @@ namespace Nektar
                        const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
     {
         ASSERTL1(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
-            boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be added."));
+            std::to_string(lhs.GetRows()) + std::string(" and ") +
+            std::to_string(rhs.GetRows()) + std::string(" can't be added."));
         ASSERTL1(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
-            boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be added."));
+            std::to_string(lhs.GetColumns()) + std::string(" and ") +
+            std::to_string(rhs.GetColumns()) + std::string(" can't be added."));
 
         for(unsigned int i = 0; i < lhs.GetRows(); ++i)
         {
@@ -286,11 +285,11 @@ namespace Nektar
                 const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
     {
         ASSERTL1(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
-            boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be subtracted."));
+            std::to_string(lhs.GetRows()) + std::string(" and ") +
+            std::to_string(rhs.GetRows()) + std::string(" can't be subtracted."));
         ASSERTL1(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
-            boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be subtracted."));
+            std::to_string(lhs.GetColumns()) + std::string(" and ") +
+            std::to_string(rhs.GetColumns()) + std::string(" can't be subtracted."));
 
         for(unsigned int i = 0; i < lhs.GetRows(); ++i)
         {
@@ -307,11 +306,11 @@ namespace Nektar
                 const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
     {
         ASSERTL1(lhs.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
-            boost::lexical_cast<std::string>(lhs.GetRows()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be subtracted."));
+            std::to_string(lhs.GetRows()) + std::string(" and ") +
+            std::to_string(rhs.GetRows()) + std::string(" can't be subtracted."));
         ASSERTL1(lhs.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
-            boost::lexical_cast<std::string>(lhs.GetColumns()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be subtracted."));
+            std::to_string(lhs.GetColumns()) + std::string(" and ") +
+            std::to_string(rhs.GetColumns()) + std::string(" can't be subtracted."));
 
         for(unsigned int i = 0; i < lhs.GetRows(); ++i)
         {
@@ -334,11 +333,11 @@ namespace Nektar
                           const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
     {
         ASSERTL1(result.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
-            boost::lexical_cast<std::string>(result.GetRows()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be subtracted."));
+            std::to_string(result.GetRows()) + std::string(" and ") +
+            std::to_string(rhs.GetRows()) + std::string(" can't be subtracted."));
         ASSERTL1(result.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
-            boost::lexical_cast<std::string>(result.GetColumns()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be subtracted."));
+            std::to_string(result.GetColumns()) + std::string(" and ") +
+            std::to_string(rhs.GetColumns()) + std::string(" can't be subtracted."));
 
         for(unsigned int i = 0; i < rhs.GetRows(); ++i)
         {
@@ -354,11 +353,11 @@ namespace Nektar
                           const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
     {
         ASSERTL1(result.GetRows() == rhs.GetRows(), std::string("Matrices with different row counts  ") + 
-            boost::lexical_cast<std::string>(result.GetRows()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be subtracted."));
+            std::to_string(result.GetRows()) + std::string(" and ") +
+            std::to_string(rhs.GetRows()) + std::string(" can't be subtracted."));
         ASSERTL1(result.GetColumns() == rhs.GetColumns(), std::string("Matrices with different column counts  ") + 
-            boost::lexical_cast<std::string>(result.GetColumns()) + std::string(" and ") +
-            boost::lexical_cast<std::string>(rhs.GetColumns()) + std::string(" can't be subtracted."));
+            std::to_string(result.GetColumns()) + std::string(" and ") +
+            std::to_string(rhs.GetColumns()) + std::string(" can't be subtracted."));
 
         for(unsigned int i = 0; i < rhs.GetRows(); ++i)
         {

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NEKTAR>
+    <EXPANSIONS>
+        <E COMPOSITE="C[10]" NUMMODES="4" TYPE="MODIFIED" FIELDS="u0S,v0S,u0R,v0R" />
+    </EXPANSIONS>
+    <COUPLING NAME="coupling1" TYPE="Cwipi">
+        <I PROPERTY="RemoteName" VALUE="Dummy1" />
+        <I PROPERTY="ReceiveSteps" VALUE="1" />
+        <I PROPERTY="ReceiveVariables" VALUE="u0R,v0R,F_0_u0R,F_0_v0R" />
+        <I PROPERTY="Oversample" VALUE="5" />
+        <I PROPERTY="FilterWidth" VALUE="10E-3" />
+        <I PROPERTY="NotLocMethod" VALUE="Extrapolate" />
+        <I PROPERTY="SendSteps" VALUE="1" />
+        <I PROPERTY="SendVariables" VALUE="u0S,v0S,F_0_u0S,F_0_v0S" />
+        <I PROPERTY="SendMethod" VALUE="EVALUATE" />
+    </COUPLING>
+    <CONDITIONS>
+        <SOLVERINFO>
+            <I PROPERTY="EQType"                VALUE="Dummy"                 />
+            <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler"/>
+        </SOLVERINFO>
+            <GLOBALSYSSOLNINFO>
+            <V VAR="DefaultVar">
+                <I PROPERTY="GlobalSysSoln"   VALUE="PETScStaticCond" />
+            </V>
+            </GLOBALSYSSOLNINFO>
+        <PARAMETERS>
+            <P> TimeStep      = 3E-6                </P>
+            <P> NumSteps      = 10                  </P>
+            <P> FinTime       = TimeStep*NumSteps   </P>
+            <P> IO_CheckSteps = 1                   </P>
+            <P> IO_InfoSteps  = 1                   </P>
+        </PARAMETERS>
+        <VARIABLES>
+            <V ID="0"> u0S </V>
+            <V ID="1"> v0S </V>
+            <V ID="2"> u0R </V>
+            <V ID="3"> v0R </V>
+        </VARIABLES>
+        <FUNCTION NAME="SendFields">
+            <E VAR="u0S" VALUE="10*x*y*z*t"/>
+            <E VAR="v0S" VALUE="-10*x*y*z*t"/>
+        </FUNCTION>
+        <FUNCTION NAME="CouplingSource">
+            <E VAR="u0S" VALUE="10.5"/>
+            <E VAR="v0S" VALUE="15.5"/>
+            <E VAR="u0R" VALUE="20.5"/>
+            <E VAR="v0R" VALUE="25.5"/>
+        </FUNCTION>
+    </CONDITIONS>
+    <FORCING>
+        <FORCE TYPE="Field">
+            <FIELDFORCE> CouplingSource </FIELDFORCE>
+            <FIELDFORCETIMEFCN> 1.0 </FIELDFORCETIMEFCN>
+        </FORCE>
+    </FORCING>
+</NEKTAR>
+
+

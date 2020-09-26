@@ -1,12 +1,15 @@
 SET(LibUtilitiesUnitTestSources
     TestConsistentObjectAccess.cpp
     TestRawType.cpp
+    TestInterpreter.cpp
     TestSharedArray.cpp
+    TestCheckedCast.cpp
+    TestRealComparison.cpp
     main.cpp
     ../util.cpp
 )
 
-SET(UnitTestSources ${PrecompiledHeaderSources} main.cpp)   
+SET(UnitTestSources ${PrecompiledHeaderSources} main.cpp)
 
 SET(UnitTestHeaders
 	LibUtilitiesUnitTestsPrecompiledHeader.h

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -37,8 +36,10 @@
 #include <fstream>
 #include <vector>
 
-#include <MetricFile.h>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/algorithm/string.hpp>
+
+#include <MetricFile.h>
 #include <sha1.h>
 
 namespace Nektar
@@ -165,6 +166,8 @@ namespace Nektar
     
     bool MetricFile::v_Test(std::istream& pStdout, std::istream& pStderr)
     {
+        boost::ignore_unused(pStdout, pStderr);
+
         std::map<std::string, std::string>::iterator it;
         bool success = true;
         
@@ -186,8 +189,9 @@ namespace Nektar
 
     void MetricFile::v_Generate(std::istream& pStdout, std::istream& pStderr)
     {
+        boost::ignore_unused(pStdout, pStderr);
+
         std::map<std::string, std::string>::iterator it;
-        bool success = true;
 
         // Update SHA1 hashes.
         for (it = m_filehash.begin(); it != m_filehash.end(); ++it)

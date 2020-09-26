@@ -1,0 +1,97 @@
+%
+\section{Polylib}
+
+This directory contains polylib.h and polylib.cpp.  These files contain foundational routines used for computing various operations related to Jacobi polynomials.
+The following abbreviations are used throughout the file:
+
+\begin{itemize}
+\item z   --   Set of collocation/quadrature points
+%
+\item w   --   Set of quadrature weights
+%
+\item D   --   Derivative matrix
+%
+\item h   --   Lagrange Interpolant
+%
+\item I    --   Interpolation matrix
+%
+\item g   --   Gauss
+%
+\item	 k   --   Kronrod
+%
+\item  gr  --   Gauss-Radau
+%
+\item  gl  --   Gauss-Lobatto
+%
+\item  j    --   Jacobi
+%
+\item  m  --   point at minus 1 in Radau rules
+%
+\item  p  --   point at plus  1 in Radau rules
+\end{itemize}
+
+
+\paragraph{Points and Weights: }  The following routines are used to compute points and weights:
+
+\begin{itemize}
+\item zwgj    --   Compute Gauss-Jacobi points and weights
+%
+\item zwgrjm  --   Compute Gauss-Radau-Jacobi points and weights ($z=-1$)
+%
+\item zwgrjp  --  Compute Gauss-Radau-Jacobi  points and weights ($z=1$)
+%
+\item zwglj    --  Compute Gauss-Lobatto-Jacobi points and weights
+%
+\item	zwgk   --  Compute Gauss-Kronrod-Jacobi points and weights
+%
+\item	zwrk   --  Compute Radau-Kronrod points and weights
+%
+\item	zwlk  --  Compute Lobatto-Kronrod points and weights
+%
+\item	 JacZeros  --  Compute Gauss-Jacobi points and weights
+\end{itemize}
+
+\paragraph{Derivative Matrices: } The following routines are used to compute derivative matrices:
+
+\begin{itemize}
+\item  Dgj  --   Compute Gauss-Jacobi  derivative matrix
+%
+\item Dgrjm --   Compute Gauss-Radau-Jacobi  derivative matrix ($z=-1$)
+%
+\item  Dgrjp  --  Compute Gauss-Radau-Jacobi  derivative matrix ($z=1$)
+%
+\item  Dglj  --  Compute Gauss-Lobatto-Jacobi derivative matrix
+\end{itemize}
+
+\paragraph{Lagrange Interpolants: } The following routines are used to compute Lagrange interpolation matrices:
+
+\begin{itemize}
+\item hgj  --  Compute Gauss-Jacobi  Lagrange interpolants
+%
+\item hgrjm --  Compute Gauss-Radau-Jacobi  Lagrange interpolants ($z=-1$)
+%
+\item hgrjp --   Compute Gauss-Radau-Jacobi  Lagrange interpolants ($z=1$)
+%
+\item hglj  --   Compute Gauss-Lobatto-Jacobi Lagrange interpolants
+\end{itemize}
+
+\paragraph{Interpolation Operators: } The following routines are used to compute various interpolation operators:
+
+\begin{itemize}
+\item Imgj  --  Compute interpolation operator gj->m
+%
+\item Imgrjm  --  Compute interpolation operator grj->m ($z=-1$)
+%
+\item Imgrjp  --  Compute interpolation operator grj->m ($z=1$)
+%
+\item Imglj  --  Compute interpolation operator glj->m
+\end{itemize}
+
+\paragraph{Polynomial Evaluation: } The following routines are used to evaluate Jacobi polynomials.
+
+\begin{itemize}
+ \item jacobfd  --   Returns value and derivative of Jacobi polynomial at point z
+%
+ \item jacobd  --    Returns derivative of Jacobi polynomial at point z (valid at $z=-1,1$)
+\end{itemize}
+       

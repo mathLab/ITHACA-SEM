@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -30,7 +29,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // Description: Copy velocity field into forcing terms for stability
-// analysis of coupled solver. 
+// analysis of coupled solver.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -45,8 +44,9 @@ std::string ForcingStabilityCoupledLNS::className = SolverUtils::GetForcingFacto
                                     "RHS forcing for coupled LNS stability solver");
 
 ForcingStabilityCoupledLNS::ForcingStabilityCoupledLNS(
-        const LibUtilities::SessionReaderSharedPtr& pSession)
-    : Forcing(pSession)
+                const LibUtilities::SessionReaderSharedPtr         &pSession,
+                const std::weak_ptr<SolverUtils::EquationSystem> &pEquation)
+    : Forcing(pSession, pEquation)
 {
 }
 
@@ -64,14 +64,14 @@ void ForcingStabilityCoupledLNS::v_Apply(
         const NekDouble&                                    time)
 {
     int npts = fields[0]->GetTotPoints();
-    
-    ASSERTL1(fields.num_elements() == outarray.num_elements(),
+
+    ASSERTL1(fields.size() == outarray.size(),
              "Fields and outarray are of different size");
-        
+
     // Apply m_forcing terms
-    for (int i = 0; i < fields.num_elements(); i++)
+    for (int i = 0; i < fields.size(); i++)
     {
-        Vmath::Vadd(npts, fields[i]->GetPhys(), 1, outarray[i], 1, 
+        Vmath::Vadd(npts, fields[i]->GetPhys(), 1, outarray[i], 1,
                     outarray[i], 1);
     }
 

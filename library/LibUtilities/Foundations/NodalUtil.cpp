@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -242,7 +241,7 @@ NodalUtilTriangle::NodalUtilTriangle(int                    degree,
     : NodalUtil(degree, 2), m_eta(2)
 {
     // Set up parent variables.
-    m_numPoints = r.num_elements();
+    m_numPoints = r.size();
     m_xi[0] = r;
     m_xi[1] = s;
 
@@ -423,7 +422,7 @@ NodalUtilTetrahedron::NodalUtilTetrahedron(int                    degree,
                                            Array<OneD, NekDouble> t)
     : NodalUtil(degree, 3), m_eta(3)
 {
-    m_numPoints = r.num_elements();
+    m_numPoints = r.size();
     m_xi[0] = r;
     m_xi[1] = s;
     m_xi[2] = t;
@@ -658,7 +657,7 @@ NodalUtilPrism::NodalUtilPrism(int                    degree,
                                Array<OneD, NekDouble> t)
     : NodalUtil(degree, 3), m_eta(3)
 {
-    m_numPoints = r.num_elements();
+    m_numPoints = r.size();
     m_xi[0] = r;
     m_xi[1] = s;
     m_xi[2] = t;
@@ -846,7 +845,7 @@ NodalUtilQuad::NodalUtilQuad(int                    degree,
     : NodalUtil(degree, 2)
 {
     // Set up parent variables.
-    m_numPoints = r.num_elements();
+    m_numPoints = r.size();
     m_xi[0] = r;
     m_xi[1] = s;
 
@@ -960,7 +959,7 @@ NodalUtilHex::NodalUtilHex(int degree,
     : NodalUtil(degree, 3)
 {
     // Set up parent variables.
-    m_numPoints = r.num_elements();
+    m_numPoints = r.size();
     m_xi[0] = r;
     m_xi[1] = s;
     m_xi[2] = t;

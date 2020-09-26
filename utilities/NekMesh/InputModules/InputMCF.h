@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -63,11 +62,10 @@ public:
 private:
     std::string m_minDelta, m_maxDelta, m_eps, m_cadfile, m_order, m_blsurfs,
         m_blthick, m_blprog, m_bllayers, m_refinement, m_nacadomain, m_periodic,
-        m_adjustment, m_spaceoutblthr, m_nospaceoutsurf;
+        m_adjustment, m_spaceoutblthr, m_nospaceoutsurf, m_voidPts;
 
     bool m_makeBL, m_surfopti, m_varopti, m_refine, m_woct, m_2D, m_splitBL,
-        m_naca, m_adjust, m_adjustall, m_smoothbl, m_manifold, m_cfiMesh,
-        m_spaceoutbl;
+        m_naca, m_adjust, m_adjustall, m_smoothbl, m_manifold, m_spaceoutbl;
 };
 }
 }

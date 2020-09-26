@@ -43,7 +43,7 @@ std::string UpwindPulseSolver::solverName =
 
 UpwindPulseSolver::UpwindPulseSolver(
     const LibUtilities::SessionReaderSharedPtr& pSession)
-    : RiemannSolver(pSession)
+    : RiemannSolver(pSession), m_session(pSession)
 {
 }
 
@@ -59,7 +59,7 @@ void UpwindPulseSolver::v_Solve(
     Array<OneD, Array<OneD, NekDouble>> &flux)
 {
     int i;
-    int nTracePts = Fwd[0].num_elements();
+    int nTracePts = Fwd[0].size();
 
     ASSERTL1(CheckScalars("A0"), "A0 not defined.");
     const Array<OneD, NekDouble> &A0 = m_scalars["A0"]();
@@ -67,21 +67,23 @@ void UpwindPulseSolver::v_Solve(
     ASSERTL1(CheckScalars("beta"), "beta not defined.");
     const Array<OneD, NekDouble> &beta = m_scalars["beta"]();
 
+    const Array<OneD, NekDouble> &alpha = m_scalars["alpha"]();
+
     ASSERTL1(CheckScalars("N"), "N not defined.");
     const Array<OneD, NekDouble> &N = m_scalars["N"]();
 
     for (i = 0; i < nTracePts; ++i)
     {
         RiemannSolverUpwind(Fwd[0][i], Fwd[1][i], Bwd[0][i], Bwd[1][i],
-                            flux[0][i], flux[1][i], A0[i], beta[i], N[i]);
+                            flux[0][i], flux[1][i], A0[i], beta[i], N[i], alpha[i]);
     }
 }
 
 /**
  *  Riemann solver for upwinding at an interface between two
  *  elements. Uses the characteristic variables for calculating
- *  the upwinded state \f$(A_u,u_u)\f$ from the left
- *  \f$(A_L,u_L)\f$ and right state \f$(A_R,u_R)\f$.  Returns the
+ *  the upwinded state \f$(A_u, u_u)\f$ from the left
+ *  \f$(A_L, u_L)\f$ and right state \f$(A_R, u_R)\f$.  Returns the
  *  upwinded flux $\mathbf{F}^u$ needed for the weak formulation
  *  (1). Details can be found in "Pulse wave propagation in the
  *  human vascular system", section 3.3
@@ -90,52 +92,68 @@ void UpwindPulseSolver::v_Solve(
 void UpwindPulseSolver::RiemannSolverUpwind(NekDouble AL, NekDouble uL,
                                             NekDouble AR, NekDouble uR,
                                             NekDouble &Aflux, NekDouble &uflux,
-                                            NekDouble A_0, NekDouble beta,
-                                            NekDouble n)
+                                            NekDouble A0, NekDouble beta,
+                                            NekDouble n, NekDouble alpha)
 {
-    Array<OneD, NekDouble> W(2);
-    Array<OneD, NekDouble> upwindedphysfield(2);
-    NekDouble cL  = 0.0;
-    NekDouble cR  = 0.0;
-    NekDouble p   = 0.0;
-    NekDouble p_t = 0.0;
+    NekDouble W1 = 0.0;
+    NekDouble W2 = 0.0;
+    NekDouble IL = 0.0;
+    NekDouble IR = 0.0;
+    NekDouble Au = 0.0;
+    NekDouble uu = 0.0;
+    NekDouble cL = 0.0;
+    NekDouble cR = 0.0;
+    NekDouble P  = 0.0;
 
     ASSERTL1(CheckParams("rho"), "rho not defined.");
-    NekDouble rho = m_params["rho"]();
+    NekDouble rho      = m_params["rho"]();
+    NekDouble nDomains = m_params["domains"]();
 
-    ASSERTL1(CheckParams("pext"), "pext not defined.");
-    NekDouble pext = m_params["pext"]();
+    m_nVariables = m_session->GetVariables().size();
 
-    // Compute the wave speeds. The use of the normal here allows
-    // for the definition of the characteristics to be inverted
-    // (and hence the left and right state) if n is in the -ve
-    // x-direction. This means we end up with the positive
-    // defintion of the flux which has to therefore be multiplied
-    // by the normal at the end of the methods This is a bit of a
-    // mind twister but is efficient from a coding perspective.
-    cL = sqrt(beta * sqrt(AL) / (2 * rho)) * n;
-    cR = sqrt(beta * sqrt(AR) / (2 * rho)) * n;
+    m_vessels =
+        Array<OneD, MultiRegions::ExpListSharedPtr>(m_nVariables * nDomains);
 
+    if (m_session->DefinesSolverInfo("PressureArea"))
+    {
+        m_pressureArea = GetPressureAreaFactory().CreateInstance(
+                m_session->GetSolverInfo("PressureArea"), m_vessels, m_session);
+    }
+    else
+    {
+        m_pressureArea = GetPressureAreaFactory().CreateInstance("Beta",
+                                                          m_vessels, m_session);
+    }
+
+    // Compute the wave speeds to check dynamics are sub-sonic
+    m_pressureArea->GetC(cL, beta, AL, A0, alpha);
+    m_pressureArea->GetC(cR, beta, AR, A0, alpha);
     ASSERTL1(fabs(cL + cR) > fabs(uL + uR), "Conditions are not sub-sonic");
 
-    // If upwinding from left and right for subsonic domain
-    // then know characteristics immediately
-    W[0] = uL + 4 * cL;
-    W[1] = uR - 4 * cR;
+    /*
+    Calculate the characteristics. The use of the normal here allows
+    for the definition of the characteristics (and hence the left
+    and right state) to be inverted if n is in the -ve
+    x-direction. This means we end up with the positive
+    defintion of the flux which has to therefore be multiplied
+    by the normal at the end of the method. This is a bit of a
+    mind twister but is efficient from a coding perspective.
+    */
+    m_pressureArea->GetCharIntegral(IL, beta, AL, A0, alpha);
+    m_pressureArea->GetCharIntegral(IR, beta, AR, A0, alpha);
+    W1 = uL + n * IL;
+    W2 = uR - n * IR;
 
     // Calculate conservative variables from characteristics
-    NekDouble w0mw1 = 0.25 * (W[0] - W[1]);
-    NekDouble fac   = rho / (2 * beta);
-    w0mw1 *= w0mw1; // squared
-    w0mw1 *= w0mw1; // fourth power
-    fac *= fac;     // squared
-    upwindedphysfield[0] = w0mw1 * fac;
-    upwindedphysfield[1] = 0.5 * (W[0] + W[1]);
+    m_pressureArea->GetAFromChars(Au, n * W1, n * W2, beta, A0, alpha);
+    m_pressureArea->GetUFromChars(uu, W1, W2);
 
-    // Compute the fluxes multipled by the normal.
-    Aflux = upwindedphysfield[0] * upwindedphysfield[1] * n;
-    p     = pext + beta * (sqrt(upwindedphysfield[0]) - sqrt(A_0));
-    p_t   = 0.5 * (upwindedphysfield[1] * upwindedphysfield[1]) + p / rho;
-    uflux = p_t * n;
+    // Pressure for the energy flux
+    m_pressureArea->GetPressure(P, beta, Au, A0, 0, 0, alpha);
+
+    // Compute the fluxes multiplied by the normal
+    Aflux = Au * uu * n;
+    uflux = (uu * uu / 2 + P / rho) * n;
 }
-}
+
+} // namespace Nektar

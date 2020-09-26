@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -43,6 +42,7 @@
 #include <SpatialDomains/GeomFactors.h>
 
 #include <unordered_map>
+#include <array>
 
 namespace Nektar
 {
@@ -138,6 +138,8 @@ public:
     //---------------------------------------
     // Point lookups
     //---------------------------------------
+    SPATIAL_DOMAINS_EXPORT std::array<NekDouble, 6> GetBoundingBox();
+
     SPATIAL_DOMAINS_EXPORT inline bool ContainsPoint(
         const Array<OneD, const NekDouble> &gloCoord,
         NekDouble tol = 0.0);
@@ -155,6 +157,11 @@ public:
         Array<OneD, NekDouble> &Lcoords);
     SPATIAL_DOMAINS_EXPORT inline NekDouble GetCoord(
         const int i, const Array<OneD, const NekDouble> &Lcoord);
+    SPATIAL_DOMAINS_EXPORT bool MinMaxCheck(
+        const Array<OneD, const NekDouble> &gloCoord);
+    SPATIAL_DOMAINS_EXPORT void ClampLocCoords(
+        Array<OneD, NekDouble> &locCoord,
+        NekDouble tol);
 
     //---------------------------------------
     // Misc. helper functions
@@ -162,7 +169,9 @@ public:
     SPATIAL_DOMAINS_EXPORT inline int GetVertexEdgeMap(int i, int j) const;
     SPATIAL_DOMAINS_EXPORT inline int GetVertexFaceMap(int i, int j) const;
     SPATIAL_DOMAINS_EXPORT inline int GetEdgeFaceMap(int i, int j) const;
+    SPATIAL_DOMAINS_EXPORT inline int GetDir(const int i, const int j = 0) const;
 
+    
     SPATIAL_DOMAINS_EXPORT inline void Reset(CurveMap &curvedEdges,
                                              CurveMap &curvedFaces);
     SPATIAL_DOMAINS_EXPORT inline void Setup();
@@ -192,6 +201,7 @@ protected:
     int                               m_globalID;
     /// Array containing expansion coefficients of @p m_xmap
     Array<OneD, Array<OneD, NekDouble> > m_coeffs;
+
     /// Handles generation of geometry factors.
     void                              GenGeomFactors();
 
@@ -224,6 +234,7 @@ protected:
     virtual int v_GetVertexEdgeMap(int i, int j) const;
     virtual int v_GetVertexFaceMap(int i, int j) const;
     virtual int v_GetEdgeFaceMap(int i, int j) const;
+    virtual int v_GetDir(const int faceidx, const int facedir) const;
 
     virtual void v_Reset(CurveMap &curvedEdges, CurveMap &curvedFaces);
     virtual void v_Setup();
@@ -603,6 +614,16 @@ inline int Geometry::GetVertexFaceMap(int i, int j) const
 inline int Geometry::GetEdgeFaceMap(int i, int j) const
 {
     return v_GetEdgeFaceMap(i, j);
+}
+
+
+/**
+ * @brief Returns the element coordinate direction corresponding to a given face
+ * coordinate direction
+ */
+inline int Geometry::GetDir(const int faceidx, const int facedir) const
+{
+    return v_GetDir(faceidx, facedir);
 }
 
 /**

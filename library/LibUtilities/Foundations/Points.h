@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -35,6 +34,8 @@
 
 #ifndef NEKTAR_LIB_UTILITIES_FOUNDATIONS_POINTS_H
 #define NEKTAR_LIB_UTILITIES_FOUNDATIONS_POINTS_H
+
+#include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
@@ -188,7 +189,8 @@ namespace Nektar
                     totpoints = m_numpoints*(m_numpoints+1)/2;
                     break;
                 case eNodalTriSPI:
-                    ASSERTL0(false,"this method cannot be implemented");
+                    NEKERROR(ErrorUtil::efatal,
+                             "This method cannot be implemented");
                     break;
 
                 case eNodalQuadElec:
@@ -200,7 +202,8 @@ namespace Nektar
                     totpoints = m_numpoints*(m_numpoints+1)*(m_numpoints+2)/6;
                     break;
                 case eNodalTetSPI:
-                    ASSERTL0(false,"this method cannot be implemented");
+                    NEKERROR(ErrorUtil::efatal,
+                             "This method cannot be implemented");
                     break;
 
                 case eNodalPrismEvenlySpaced:
@@ -208,7 +211,8 @@ namespace Nektar
                     totpoints = m_numpoints*m_numpoints*(m_numpoints+1)/2;
                     break;
                 case eNodalPrismSPI:
-                    ASSERTL0(false,"this method cannot be implemented");
+                    NEKERROR(ErrorUtil::efatal,
+                             "This method cannot be implemented");
                     break;
 
                 case eNodalHexElec:
@@ -257,6 +261,7 @@ namespace Nektar
             {
                 CalculatePoints();
                 CalculateWeights();
+                CalculateBaryWeights();
                 CalculateDerivMatrix();
             }
 
@@ -297,6 +302,11 @@ namespace Nektar
                 w = m_weights;
             }
 
+            inline const Array<OneD, const NekDouble>& GetBaryWeights() const
+            {
+                return m_bcweights;
+            }
+
             inline void GetPoints(Array<OneD, const DataType> &x) const
             {
                 x = m_points[0];
@@ -323,30 +333,34 @@ namespace Nektar
                 return m_derivmatrix[(int)dir];
             }
 
-            virtual const MatrixSharedPtrType GetI(const PointsKey &pkey)
+            virtual const MatrixSharedPtrType GetI(const PointsKey &key)
             {
-                ASSERTL0(false, "Method not implemented ");
+                boost::ignore_unused(key);
+                NEKERROR(ErrorUtil::efatal, "Method not implemented ");
                 std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 
             virtual const MatrixSharedPtrType GetI(const Array<OneD, const DataType>& x)
             {
-                ASSERTL0(false, "Method not implemented");
+                boost::ignore_unused(x);
+                NEKERROR(ErrorUtil::efatal, "Method not implemented");
                 std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 
-            virtual const MatrixSharedPtrType GetI(unsigned int numpoints, const Array<OneD, const DataType>& x)
+            virtual const MatrixSharedPtrType GetI(unsigned int, const Array<OneD, const DataType>& x)
             {
-                ASSERTL0(false, "Method not implemented");
+                boost::ignore_unused(x);
+                NEKERROR(ErrorUtil::efatal, "Method not implemented");
                 std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 
             virtual const MatrixSharedPtrType GetI(const Array<OneD, const DataType>& x, const Array<OneD, const DataType>& y)
             {
-                ASSERTL0(false, "Method not implemented");
+                boost::ignore_unused(x, y);
+                NEKERROR(ErrorUtil::efatal, "Method not implemented");
                 std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
@@ -354,22 +368,31 @@ namespace Nektar
             virtual const MatrixSharedPtrType GetI(const Array<OneD, const DataType>& x, const Array<OneD, const DataType>& y,
                                                    const Array<OneD, const DataType>& z)
             {
-                ASSERTL0(false, "Method not implemented");
+                boost::ignore_unused(x, y, z);
+                NEKERROR(ErrorUtil::efatal, "Method not implemented");
                 std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 
             virtual const MatrixSharedPtrType GetGalerkinProjection(const PointsKey &pkey)
             {
-                ASSERTL0(false, "Method not implemented ");
+                boost::ignore_unused(pkey);
+                NEKERROR(ErrorUtil::efatal, "Method not implemented ");
                 std::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
                 return returnval;
             }
 
         protected:
+            /// Points type for this points distributions.
             PointsKey             m_pointsKey;
+            /// Storage for the point locations, allowing for up to a 3D points
+            /// storage.
             Array<OneD, DataType> m_points[3];
+            /// Quadrature weights for the weights.
             Array<OneD, DataType> m_weights;
+            /// Barycentric weights.
+            Array<OneD, DataType> m_bcweights;
+            /// Derivative matrices.
             MatrixSharedPtrType   m_derivmatrix[3];
             NekManager<PointsKey, NekMatrix<DataType>, PointsKey::opLess> m_InterpManager;
             NekManager<PointsKey, NekMatrix<DataType>, PointsKey::opLess> m_GalerkinProjectionManager;
@@ -390,6 +413,40 @@ namespace Nektar
                 m_weights = Array<OneD, DataType>(GetTotNumPoints());
             }
 
+            /**
+             * @brief This function calculates the barycentric weights used for
+             * enhanced interpolation speed.
+             *
+             * For the points distribution \f$ z_i \f$ with \f% 1\leq z_i \leq N
+             * \f$, the barycentric weights are computed as:
+             *
+             * \f[
+             * b_i=\prod_{\substack{1\leq j\leq N\\ i\neq j}} \frac{1}{z_i-z_j}
+             * \f]
+             */
+            virtual void CalculateBaryWeights()
+            {
+                const unsigned int totNumPoints = m_pointsKey.GetNumPoints();
+                m_bcweights = Array<OneD, DataType>(totNumPoints, 1.0);
+
+                Array<OneD, DataType> z = m_points[0];
+
+                for (unsigned int i = 0; i < totNumPoints; ++i)
+                {
+                    for (unsigned int j = 0; j < totNumPoints; ++j)
+                    {
+                        if (i == j)
+                        {
+                            continue;
+                        }
+
+                        m_bcweights[i] *= (z[i] - z[j]);
+                    }
+
+                    m_bcweights[i] = 1.0 / m_bcweights[i];
+                }
+            }
+
             virtual void CalculateDerivMatrix()
             {
                 int totNumPoints = GetTotNumPoints();
@@ -407,15 +464,18 @@ namespace Nektar
             // These should never be called
             Points(const Points &pts)
             {
-                NEKERROR(ErrorUtil::efatal,"Copy Constructor for Points should not be called");
+                boost::ignore_unused(pts);
+                NEKERROR(ErrorUtil::efatal,
+                         "Copy Constructor for Points should not be called");
             }
             Points()
             {
-                NEKERROR(ErrorUtil::efatal,"Default Constructor for Points should not be called");
+                NEKERROR(ErrorUtil::efatal,
+                         "Default Constructor for Points should not be called");
             }
         };
 
-    }; // end of namespace
+    } // end of namespace
 } // end of namespace
 
 #endif //NEKTAR_LIB_UTILITIES_FOUNDATIONS_POINTS_H

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -383,6 +382,7 @@ class ThreadStartupManager: public ThreadManager
 {
     public:
         ThreadStartupManager();
+        ThreadStartupManager(const ThreadStartupManager& src) = default;
         virtual ~ThreadStartupManager();
         virtual void QueueJobs(std::vector<ThreadJob*>& joblist);
         virtual void QueueJob(ThreadJob* job);
@@ -399,6 +399,9 @@ class ThreadStartupManager: public ThreadManager
         virtual bool IsInitialised();
         virtual const std::string& GetType() const;
     private:
+        // Do not allow assignment as m_type is const
+        ThreadStartupManager& operator=(const ThreadStartupManager& src);
+
         const std::string m_type;
 };
 

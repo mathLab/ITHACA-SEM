@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -94,6 +93,9 @@ void DriverArpack::v_InitObject(ostream &out)
     ASSERTL0(2      <= m_kdim-m_nvec,"NCV-NEV is less than 2");
 
     m_equ[0]->PrintSummary(out);
+
+    ASSERTL0(m_comm->GetSize() == 1,
+             "ARPACK Arnoldi solver does not support execution in parallel.");
 
     // Print session parameters
     out << "\tArnoldi solver type    : Arpack" << endl;
@@ -274,7 +276,7 @@ void DriverArpack::v_Execute(ostream &out)
                 m_equ[0]->TransCoeffToPhys();
 
                 Array<OneD, MultiRegions::ExpListSharedPtr>  fields = m_equ[0]->UpdateFields();
-                for (int i = 0; i < fields.num_elements(); ++i)
+                for (int i = 0; i < fields.size(); ++i)
                 {
                     fields[i]->IProductWRTBase(fields[i]->GetPhys(),
                                                fields[i]->UpdateCoeffs());
@@ -384,19 +386,14 @@ void DriverArpack::v_Execute(ostream &out)
 
     pFile.close();
 
-    int ndigits=6, nothers= 8, nwidthcolm=nothers+ndigits-1; // the second value determines the number of sigificant digits
     for(int j = 0; j < m_equ[0]->GetNvariables(); ++j)
     {
         NekDouble vL2Error = m_equ[0]->L2Error(j,false);
         NekDouble vLinfError = m_equ[0]->LinfError(j);
         if (m_comm->GetRank() == 0)
         {
-            out << "L 2 error (variable " << m_equ[0]->GetVariable(j) << ") : " 
-                <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
-                << vL2Error << endl;
-            out << "L inf error (variable " << m_equ[0]->GetVariable(j) << ") : " 
-                <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(ndigits-1) 
-                << vLinfError << endl;
+            out << "L 2 error (variable " << m_equ[0]->GetVariable(j) << ") : " << vL2Error << endl;
+            out << "L inf error (variable " << m_equ[0]->GetVariable(j) << ") : " << vLinfError << endl;
         }
     }
 }

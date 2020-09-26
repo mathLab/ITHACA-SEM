@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -58,11 +57,13 @@ public:
     SPATIAL_DOMAINS_EXPORT Geometry0D(const int coordim);
     SPATIAL_DOMAINS_EXPORT virtual ~Geometry0D();
 
+    SPATIAL_DOMAINS_EXPORT static const int kDim = 0;
+
 protected:
     virtual int v_GetShapeDim() const;
 };
 
-}; // end of namespace
-}; // end of namespace
+} // end of namespace
+} // end of namespace
 
 #endif // NEKTAR_SPATIALDOMAINS_GEOMETRY1D_H

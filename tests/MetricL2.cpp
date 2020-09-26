@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -62,7 +61,7 @@ namespace Nektar
             // the L2 error.
             ASSERTL0(value->Attribute("tolerance"),
                      "Missing tolerance in L2 metric");
-            ASSERTL0(value->GetText() || value->GetText() == "",
+            ASSERTL0(!EmptyString(value->GetText()),
                      "Missing value in L2 metric.");
 
             MetricRegexFieldValue var;

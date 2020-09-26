@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -68,12 +67,6 @@ public:
     }
 
     /// Calculate the temperature
-    inline NekDouble GetGamma()
-    {
-        return m_gamma;
-    };
-
-    /// Calculate the temperature
     NekDouble GetTemperature(const NekDouble &rho, const NekDouble &e);
 
     /// Calculate the pressure
@@ -84,10 +77,6 @@ public:
 
     /// Calculate the entropy
     NekDouble GetEntropy(const NekDouble &rho, const NekDouble &e);
-
-    /// Calculate the enthalpy
-    NekDouble GetEnthalpy(const NekDouble &T);
-
 
     /// Calculate the partial derivative of P(rho,e) with respect to rho
     NekDouble GetDPDrho_e(const NekDouble &rho, const NekDouble &e);
@@ -100,9 +89,6 @@ public:
 
     /// Obtain the density from P and T
     NekDouble GetRhoFromPT(const NekDouble &p, const NekDouble &T);
-
-     /// Calculate the enthalpy
-    NekDouble GetInternalEnergy(const NekDouble &T);
 
 protected:
     NekDouble m_gamma;
@@ -133,10 +119,6 @@ protected:
 
     virtual NekDouble v_GetRhoFromPT(const NekDouble &rho,
                                      const NekDouble &p) = 0;
-                                     
-    virtual NekDouble v_GetEnthalpy(const NekDouble &T);
-
-    virtual NekDouble v_GetInternalEnergy(const NekDouble &T);
 };
 }
 

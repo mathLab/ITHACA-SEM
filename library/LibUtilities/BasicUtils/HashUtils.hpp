@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -37,6 +36,8 @@
 #ifndef LIBUTILITIES_BASICUTILS_HASHUTILS
 #define LIBUTILITIES_BASICUTILS_HASHUTILS
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <functional>
 
 namespace Nektar
@@ -44,6 +45,7 @@ namespace Nektar
 
 inline void hash_combine(std::size_t& seed)
 {
+    boost::ignore_unused(seed);
 }
 
 template <typename T, typename... Args>
@@ -57,6 +59,7 @@ inline void hash_combine(std::size_t& seed, const T& v, Args... args)
 template <typename T, typename... Args>
 inline std::size_t hash_combine(const T& v, Args... args)
 {
+    boost::ignore_unused(v);
     std::size_t seed = 0;
     hash_combine(seed, args...);
     return seed;

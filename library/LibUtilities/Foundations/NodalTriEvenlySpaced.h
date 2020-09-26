@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -28,7 +27,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: Header file of 2D Nodal Triangle Evenly Spaced Points
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -47,27 +46,27 @@
 
 namespace Nektar
 {
-    namespace LibUtilities 
+    namespace LibUtilities
     {
         class NodalTriEvenlySpaced: public Points<NekDouble>
         {
         public:
             virtual ~NodalTriEvenlySpaced()
             {
-                            
+
             }
 
             NodalTriEvenlySpaced(const PointsKey &key) : PointsBaseType(key)
             {
 
             }
-            
-            LIB_UTILITIES_EXPORT static std::shared_ptr<PointsBaseType> 
+
+            LIB_UTILITIES_EXPORT static std::shared_ptr<PointsBaseType>
                 Create(const PointsKey &key);
 
             const MatrixSharedPtrType GetI(const PointsKey &pkey)
             {
-                ASSERTL0(pkey.GetPointsDim() == 2, 
+                ASSERTL0(pkey.GetPointsDim() == 2,
                          "NodalTriEvenlySpaced Points can only interp to other "
                          "2d point distributions");
                 Array<OneD, const NekDouble> x, y;
@@ -79,18 +78,20 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &x,
                 const Array<OneD, const NekDouble> &y)
             {
-                int          numpoints = x.num_elements();
+                size_t       numpoints = x.size();
                 unsigned int np        = GetTotNumPoints();
-                
+
                 Array<OneD, NekDouble> interp(GetTotNumPoints()*numpoints);
                 CalculateInterpMatrix(x, y, interp);
-                
+
                 NekDouble* d = interp.data();
                 return MemoryManager<NekMatrix<NekDouble> >
                     ::AllocateSharedPtr(numpoints, np, d);
             }
 
         private:
+            static bool initPointsManager[];
+
             std::shared_ptr<NodalUtilTriangle> m_util;
 
             /// Deafult constructor should not be called except by Create matrix
@@ -108,6 +109,6 @@ namespace Nektar
                       Array<OneD,       NekDouble> &interp);
         }; // end of NodalTriEvenlySpaced
    } // end of namespace
-} // end of namespace 
+} // end of namespace
 
 #endif //NODALTRIEVENLYSPACED_H

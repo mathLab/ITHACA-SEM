@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -36,14 +35,16 @@
 #include <string>
 using namespace std;
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/geometry.hpp>
-#include "ProcessInterpField.h"
+#include <boost/math/special_functions/fpclassify.hpp>
 
 #include <FieldUtils/Interpolator.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <boost/math/special_functions/fpclassify.hpp>
+
+#include "ProcessInterpField.h"
 
 namespace bg  = boost::geometry;
 namespace bgi = boost::geometry::index;
@@ -82,14 +83,19 @@ ProcessInterpField::~ProcessInterpField()
 
 void ProcessInterpField::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     FieldSharedPtr fromField = std::shared_ptr<Field>(new Field());
 
     std::vector<std::string> files;
 
     // set up session file for from field
+    char *argv[] = { const_cast<char *>("FieldConvert"), nullptr };
     ParseUtils::GenerateVector(m_config["fromxml"].as<string>(), files);
     fromField->m_session =
-        LibUtilities::SessionReader::CreateInstance(0, 0, files);
+        LibUtilities::SessionReader::CreateInstance(
+            1, argv, files,
+            LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0));
 
     // Set up range based on min and max of local parallel partition
     SpatialDomains::DomainRangeShPtr rng =
@@ -118,17 +124,19 @@ void ProcessInterpField::Process(po::variables_map &vm)
             rng->m_doZrange = true;
             rng->m_zmin     = Vmath::Vmin(npts, coords[2], 1);
             rng->m_zmax     = Vmath::Vmax(npts, coords[2], 1);
+            /* Falls through. */
         case 2:
             rng->m_doYrange = true;
             rng->m_ymin     = Vmath::Vmin(npts, coords[1], 1);
             rng->m_ymax     = Vmath::Vmax(npts, coords[1], 1);
+            /* Falls through. */
         case 1:
             rng->m_doXrange = true;
             rng->m_xmin     = Vmath::Vmin(npts, coords[0], 1);
             rng->m_xmax     = Vmath::Vmax(npts, coords[0], 1);
             break;
         default:
-            ASSERTL0(false, "coordim should be <= 3");
+            NEKERROR(ErrorUtil::efatal, "coordim should be <= 3");
     }
 
     // setup rng parameters.
@@ -136,8 +144,8 @@ void ProcessInterpField::Process(po::variables_map &vm)
         SpatialDomains::MeshGraph::Read(fromField->m_session, rng);
 
     // Read in local from field partitions
-    const SpatialDomains::ExpansionMap &expansions =
-        fromField->m_graph->GetExpansions();
+    const SpatialDomains::ExpansionInfoMap &expansions =
+        fromField->m_graph->GetExpansionInfo();
 
     // check for case where no elements are specified on this
     // parallel partition
@@ -163,7 +171,7 @@ void ProcessInterpField::Process(po::variables_map &vm)
 
     //----------------------------------------------
     // Set up Expansion information to use mode order from field
-    fromField->m_graph->SetExpansions(fromField->m_fielddef);
+    fromField->m_graph->SetExpansionInfo(fromField->m_fielddef);
 
     int nfields = fromField->m_fielddef[0]->m_fields.size();
 

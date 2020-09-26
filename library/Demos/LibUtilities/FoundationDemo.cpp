@@ -5,6 +5,8 @@
 
 using namespace std;
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
@@ -70,6 +72,8 @@ long double derivativeFunction(long double x, int N, PointsType type)
 
 long double integrationFunction(int nPts, PointsType type)
 {
+    boost::ignore_unused(nPts);
+
    long double integral = 0;
    switch(type)
    {
@@ -77,7 +81,7 @@ long double integrationFunction(int nPts, PointsType type)
           integral = 0;
        break;
        default:
-          integral = (long double)20.0/3.0;           
+          integral = (long double)20.0/3.0;
    }
    return integral;
 }
@@ -91,7 +95,7 @@ long double integrandWeightFunction(long double x, PointsType type)
         case eGaussGaussChebyshev:
         case eGaussRadauMChebyshev:
         case eGaussRadauPChebyshev:
-        case eGaussLobattoChebyshev: 
+        case eGaussLobattoChebyshev:
             weight = 1.0 / sqrt(1.0 - x*x);
         break;
 
@@ -99,10 +103,10 @@ long double integrandWeightFunction(long double x, PointsType type)
             // weight = 1.0 + x; // ?
         break;
 
-        case eGaussRadauMAlpha0Beta2: 
+        case eGaussRadauMAlpha0Beta2:
             // weight = (1.0 + x)*(1.0 + x); // ?
         break;
-                
+
 
         default:
             weight = 1.0;
@@ -148,7 +152,7 @@ int main(int argc, char *argv[])
     // Show the set up to the user
     cout << "Points type:               " << kPointsTypeStr[pointsType] << endl;
     cout << "Number of points:          " << nPts << endl;
-    
+
     // Display the example test function to the user
     if( pointsType == eFourierEvenlySpaced )
     {
@@ -163,12 +167,12 @@ int main(int argc, char *argv[])
 
       // Obtain a reference to a Points object via an appropriate PointsKey object
     PointsKey key(nPts, pointsType);
-    
+
     PointsSharedPtr points = PointsManager()[key];
     //std::shared_ptr<Points<NekDouble> > points = PointsManager()[key];
     //const ptr<Points<NekDouble> > points = PointsManager()[key];
-    
-    
+
+
     // Get the abscissas and their matching quadrature weights
    //    SharedArray<const NekDouble> z, w;
     Array<OneD, const NekDouble> z, w;
@@ -183,7 +187,7 @@ int main(int argc, char *argv[])
     {
         y[i] = func( z[i], nPts, pointsType );
     }
-    
+
 
 
     // /////////////////////////////////////////////////////////
@@ -194,12 +198,12 @@ int main(int argc, char *argv[])
     int nNodes = 2*nPts; // Number of interpolating nodes
     std::shared_ptr<Points<NekDouble> > nodes = PointsManager()[PointsKey(nNodes, pointsType)];
     Array<OneD, const NekDouble> zNode = nodes->GetZ();
-    
+
     // Get the interpolation matrix I
     // Note that I is 2N rows by N columns
     const Points<NekDouble>::MatrixSharedPtrType Iptr = points->GetI(nNodes,zNode);
     const NekMatrix<NekDouble> & I = *Iptr;
-    
+
     // Interpolate the data values in the y vector using the interpolation matrix I
     Array<OneD, NekDouble> u(I.GetRows());
     for(int i = 0; i < int(I.GetRows()); ++i)
@@ -210,7 +214,7 @@ int main(int argc, char *argv[])
             u[i] += I(i,j) * y[j];
         }
     }
-    
+
     // Display the original samples
     cout << setprecision(3);
     cout << "\nOriginal data: \nx      = ";
@@ -232,7 +236,7 @@ int main(int argc, char *argv[])
     {
         cout << setw(6) << u[i] << " ";
     }
-    
+
     // Determine the exact solutions
     cout << "\nexact  = ";
     for(int i = 0; i < nNodes; ++i)
@@ -262,7 +266,7 @@ int main(int argc, char *argv[])
     cout << setprecision(6);
     cout << "\nLinf   = " << setw(6) << Linf;
     cout << "\nRMS    = " << setw(6) << RMS << endl;
-    
+
     // Show the interpolation matrix
     cout << "\nI = " << endl;
     for(int i = 0; i < int(I.GetRows()); ++i)
@@ -281,19 +285,19 @@ int main(int argc, char *argv[])
     ///////////////////////////////////////////////////////////
 
     // Generate a list of projection nodes
-    Array<OneD, NekDouble> yNode(zNode.num_elements());
-    
+    Array<OneD, NekDouble> yNode(zNode.size());
+
     for(int i = 0; i < nNodes; ++i)
     {
         yNode[i] = func( zNode[i], nNodes, pointsType );
     }
 
     PointsKey key1(nNodes, pointsType);
-    
+
     // Note that I is 2N rows by N columns
     const Points<NekDouble>::MatrixSharedPtrType GPptr = points->GetGalerkinProjection(key1);
     const NekMatrix<NekDouble> & GP = *GPptr;
-    
+
     // Project the data values in the yNode vector using the projection matrix GP
     for(int i = 0; i < int(GP.GetRows()); ++i)
     {
@@ -303,12 +307,12 @@ int main(int argc, char *argv[])
             u[i] += GP(i,j) * yNode[j];
         }
     }
-    
+
     // Display the original samples
     cout << setprecision(3);
     cout << "\n\n\n              **** Galerkin Project ****";
     cout << "\n\nResults of Galkerin Project with " << kPointsTypeStr[pointsType] << ":";
-    
+
     cout << "\nOriginal data: \nx      = ";
     for(int i = 0; i < nPts; ++i)
     {
@@ -325,7 +329,7 @@ int main(int argc, char *argv[])
     {
         cout << setw(6) << u[i] << " ";
     }
-    
+
 
 
     // Display the pointwise error
@@ -350,7 +354,7 @@ int main(int argc, char *argv[])
     cout << setprecision(6);
     cout << "\nLinf   = " << setw(6) << Linf;
     cout << "\nRMS    = " << setw(6) << RMS << endl;
-    
+
     // Show the projection matrix
     cout << "\nI = " << endl;
     for(int i = 0; i < int(GP.GetRows()); ++i)
@@ -362,7 +366,7 @@ int main(int argc, char *argv[])
         }
         cout << "" << endl;
     }
-    
+
 
       // /////////////////////////////////////////////////////////
      //                     Derivation                         //
@@ -373,8 +377,8 @@ int main(int argc, char *argv[])
     // Note that, unlike I, D is N rows by N columns
     const Points<NekDouble>::MatrixSharedPtrType Dptr = points->GetD();
     const NekMatrix<NekDouble> & D = *Dptr;
-    
-    
+
+
     // Differentiate the data values in the y vector using the derivative matrix D
     Array<OneD, NekDouble> v(nPts);
     for(int i = 0; i < int(D.GetRows()); ++i)
@@ -386,7 +390,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    
+
     // Display the derivative approximations
     cout << "\n\n\n              **** Differentiation ****" << setprecision(3);
     cout << "\n\nResults of differentiation with " << kPointsTypeStr[pointsType] << ":";
@@ -395,7 +399,7 @@ int main(int argc, char *argv[])
     {
         cout << setw(6) << v[i] << " ";
     }
-    
+
     // Determine the exact solutions
     cout << "\nexact   = ";
     for(int i = 0; i < nPts; ++i)
@@ -427,7 +431,7 @@ int main(int argc, char *argv[])
     cout << setprecision(6);
     cout << "\nLinf    = " << setw(6) << Linf;
     cout << "\nRMS     = " << setw(6) << RMS << endl;
-    
+
 
     // Show the derivation matrix
     cout << "\nD = " << endl;
@@ -442,13 +446,13 @@ int main(int argc, char *argv[])
     }
 
 
-    
+
 
       // /////////////////////////////////////////////////////////
      //                     Integration                        //
     // /////////////////////////////////////////////////////////
-    
-    
+
+
     // Integrate the function by approximating the integral as a weighted
     // linear combination of function evaluations at the z[i] points: y[i] = f(z[i])
     long double numericalIntegration = 0.0;
@@ -457,7 +461,7 @@ int main(int argc, char *argv[])
         numericalIntegration += w[i] * y[i] / integrandWeightFunction(z[i], pointsType);
     }
 
-    
+
     // Display the integral approximation
     cout << "\n\n\n              **** Integration ****" << setprecision(6);
     cout << "\n\nResults of integration with " << kPointsTypeStr[pointsType] << ":";

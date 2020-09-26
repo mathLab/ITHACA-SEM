@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -100,7 +99,7 @@ void ProcessJac::Process()
 
         LibUtilities::PointsKeyVector p = geom->GetXmap()->GetPointsKeys();
         SpatialDomains::DerivStorage deriv = gfac->GetDeriv(p);
-        const int pts = deriv[0][0].num_elements();
+        const int pts = deriv[0][0].size();
         Array<OneD,NekDouble> jc(pts);
         for (int k = 0; k < pts; ++k)
         {
@@ -126,8 +125,8 @@ void ProcessJac::Process()
             }
         }
 
-        NekDouble scaledJac = Vmath::Vmin(jc.num_elements(),jc,1) /
-                              Vmath::Vmax(jc.num_elements(),jc,1);
+        NekDouble scaledJac = Vmath::Vmin(jc.size(),jc,1) /
+                              Vmath::Vmax(jc.size(),jc,1);
 
         bool valid = gfac->IsValid();
 

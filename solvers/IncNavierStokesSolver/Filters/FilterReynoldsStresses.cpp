@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -65,12 +64,25 @@ std::string FilterReynoldsStresses::className =
  * or the time constant \f$ \tau \f$ must be prescribed.
  */
 FilterReynoldsStresses::FilterReynoldsStresses(
-    const LibUtilities::SessionReaderSharedPtr &pSession,
+    const LibUtilities::SessionReaderSharedPtr         &pSession,
+    const std::weak_ptr<SolverUtils::EquationSystem> &pEquation,
     const std::map<std::string, std::string> &pParams)
-    : FilterFieldConvert(pSession, pParams)
+    : FilterFieldConvert(pSession, pEquation, pParams)
 {
+    // Load sampling frequency
+    auto it = pParams.find("SampleFrequency");
+    if (it == pParams.end())
+    {
+        m_sampleFrequency = 1;
+    }
+    else
+    {
+        LibUtilities::Equation equ(m_session->GetInterpreter(), it->second);
+        m_sampleFrequency = round(equ.Evaluate());
+    }
+
     // Check if should use moving average
-    auto it = pParams.find("MovingAverage");
+    it = pParams.find("MovingAverage");
     if (it == pParams.end())
     {
         m_movAvg = false;
@@ -99,8 +111,7 @@ FilterReynoldsStresses::FilterReynoldsStresses(
         else
         {
             // Load time constant
-            LibUtilities::Equation equ(
-                m_session->GetExpressionEvaluator(), it->second);
+            LibUtilities::Equation equ(m_session->GetInterpreter(), it->second);
             NekDouble tau = equ.Evaluate();
             // Load delta T between samples
             NekDouble dT;
@@ -112,8 +123,7 @@ FilterReynoldsStresses::FilterReynoldsStresses(
     }
     else
     {
-        LibUtilities::Equation equ(
-            m_session->GetExpressionEvaluator(), it->second);
+        LibUtilities::Equation equ(m_session->GetInterpreter(), it->second);
         m_alpha = equ.Evaluate();
         // Check if tau was also defined
         it = pParams.find("tau");
@@ -135,9 +145,9 @@ void FilterReynoldsStresses::v_Initialise(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
-    int dim          = pFields.num_elements() - 1;
+    int dim          = pFields.size() - 1;
     int nExtraFields = dim == 2 ? 3 : 6;
-    int origFields   = pFields.num_elements();
+    int origFields   = pFields.size();
 
     // Allocate storage
     m_fields.resize(origFields + nExtraFields);
@@ -172,8 +182,8 @@ void FilterReynoldsStresses::v_Initialise(
 void FilterReynoldsStresses::v_FillVariablesName(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
 {
-    int dim          = pFields.num_elements() - 1;
-    int origFields   = pFields.num_elements();
+    int dim          = pFields.size() - 1;
+    int origFields   = pFields.size();
 
     // Fill name of variables
     for (int n = 0; n < origFields; ++n)
@@ -203,11 +213,12 @@ void FilterReynoldsStresses::v_FillVariablesName(
 
 void FilterReynoldsStresses::v_ProcessSample(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+          std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
     const NekDouble &time)
 {
     int i, j, n;
     int nq             = pFields[0]->GetTotPoints();
-    int dim            = pFields.num_elements() - 1;
+    int dim            = pFields.size() - 1;
     bool waveSpace     = pFields[0]->GetWaveSpace();
     NekDouble nSamples = (NekDouble)m_numSamples;
 
@@ -254,7 +265,7 @@ void FilterReynoldsStresses::v_ProcessSample(
         Vmath::Svtvm(nq, facDelta, m_fields[n], 1, vel, 1, m_delta[n], 1);
     }
     // Update pressure (directly to outFields)
-    Vmath::Svtsvtp(m_outFields[dim].num_elements(),
+    Vmath::Svtsvtp(m_outFields[dim].size(),
                    facAvg,
                    pFields[dim]->GetCoeffs(),
                    1,
@@ -286,7 +297,7 @@ void FilterReynoldsStresses::v_PrepareOutput(
     const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
     const NekDouble &time)
 {
-    int dim = pFields.num_elements() - 1;
+    int dim = pFields.size() - 1;
 
     m_fieldMetaData["NumberOfFieldDumps"] =
         boost::lexical_cast<std::string>(m_numSamples);

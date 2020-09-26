@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -58,75 +57,14 @@ namespace Nektar
                 SpatialDomains::Geometry0DSharedPtr pGeom);
             
             LOCAL_REGIONS_EXPORT virtual ~Expansion0D() {}
-            
-            inline Expansion1DSharedPtr GetLeftAdjacentElementExp() const;
-            
-            inline Expansion1DSharedPtr GetRightAdjacentElementExp() const;
-            
-            inline int GetLeftAdjacentElementVertex() const;
-            
-            inline int GetRightAdjacentElementVertex() const;
-            
-            inline void SetAdjacentElementExp(
-                int                   vertex,
-                Expansion1DSharedPtr &v);
-            
+                        
             inline SpatialDomains::Geometry0DSharedPtr GetGeom0D() const;
 
         protected:
-            
+			
         private:
-            Expansion1DWeakPtr m_elementLeft;
-            Expansion1DWeakPtr m_elementRight;
-            int                m_elementVertexLeft;
-            int                m_elementVertexRight;
         };
         
-        inline Expansion1DSharedPtr Expansion0D::
-            GetLeftAdjacentElementExp() const
-        {
-            ASSERTL1(m_elementLeft.lock().get(),
-                     "Left adjacent element not set.");
-            
-            return m_elementLeft.lock();
-        }
-
-        inline Expansion1DSharedPtr Expansion0D::
-            GetRightAdjacentElementExp() const
-        {
-            ASSERTL1(m_elementLeft.lock().get(),
-                     "Right adjacent element not set.");
-            
-            return m_elementRight.lock();
-        }
-
-        inline int Expansion0D::GetLeftAdjacentElementVertex() const
-        {
-            return m_elementVertexLeft;
-        }
-
-        inline int Expansion0D::GetRightAdjacentElementVertex() const
-        {
-            return m_elementVertexRight;
-        }
-
-        inline void Expansion0D::SetAdjacentElementExp(
-            int                   vertex,
-            Expansion1DSharedPtr &v)
-        {
-            if (m_elementLeft.lock().get())
-            {
-                //ASSERTL1(!m_elementRight.lock().get(),
-                //         "Both adjacent elements already set.");
-                m_elementRight       = v;
-                m_elementVertexRight = vertex;
-            }
-            else
-            {
-                m_elementLeft       = v;
-                m_elementVertexLeft = vertex;
-            }
-        }
 
         inline SpatialDomains::Geometry0DSharedPtr
             Expansion0D::GetGeom0D() const

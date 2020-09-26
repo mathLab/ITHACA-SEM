@@ -92,7 +92,14 @@ FieldConvert test.xml test.fld test.plt
 where \inltt{FieldConvert} is the executable associated to the utility
 FieldConvert, \inltt{test.xml} is the session file and
 \inltt{test.vtu}, \inltt{test.dat},  \inltt{test.plt} are the desired
-format outputs, either Paraview, VisIt or Tecplot formats.
+format outputs, either Paraview, VisIt or Tecplot formats. \\
+When converting to \inltt{.dat} or \inltt{.plt} format, it is possible to
+enable output with double precision, which is more accurate but requires larger
+disk space. For example, double precision output in plt. format can be produced
+with the command:
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert test.xml test.fld test.plt:plt:double
+\end{lstlisting}
 %
 \begin{tipbox}
 Note that the session file is also supported
@@ -162,9 +169,11 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{combineAvg}: Combine two \nekpp binary output (.chk or .fld) field file containing averages of fields (and
 possibly also Reynolds stresses) into single file;
 \item \inltt{concatenate}: Concatenate a \nekpp binary output (.chk or .fld) field file into single file (deprecated);
+\item \inltt{dof}: Count the total number of DOF;
 \item \inltt{equispacedoutput}: Write data as equi-spaced output using simplices to represent the data for connecting points;
 \item \inltt{extract}: Extract a boundary field;
 \item \inltt{gradient}: Computes gradient of fields;
+\item \inltt{halfmodetofourier}: Convert \inltt{HalfMode} expansion to \inltt{SingleMode} for further processing;
 \item \inltt{homplane}: Extract a plane from 3DH1D expansions;
 \item \inltt{homstretch}: Stretch a 3DH1D expansion by an integer factor;
 \item \inltt{innerproduct}: take the inner product between one or a series of fields with another field (or series of fields).
@@ -180,6 +189,7 @@ possibly also Reynolds stresses) into single file;
 \item \inltt{pointdatatofld}: Given discrete data at quadrature points
   project them onto an expansion basis and output fld file;
 \item \inltt{printfldnorms}: Print L2 and LInf norms to stdout;
+\item \inltt{removefield}: Removes one or more fields from .fld files;
 \item \inltt{scalargrad}: Computes scalar gradient field;
 \item \inltt{scaleinputfld}: Rescale input field by a constant factor;
 \item \inltt{shear}: Computes time-averaged shear stress metrics: TAWSS, OSI, transWSS, TAAFI, TACFI, WSSG;
@@ -187,6 +197,8 @@ possibly also Reynolds stresses) into single file;
 \item \inltt{surfdistance}: Computes height of a prismatic boundary layer mesh and projects onto the surface (for e.g. $y^+$ calculation).
 \item \inltt{vorticity}: Computes the vorticity field.
 \item \inltt{wss}: Computes wall shear stress field.
+\item \inltt{phifile}: Computes the $\Phi$ function representing a body defined
+  in an \inltt{.stl} file. Useful for the Smoothed Profile Method solver.
 \end{enumerate}
 The module list above can be seen by running the command
 %
@@ -356,6 +368,16 @@ required anymore, and will be removed in a future release.
 %
 %
 %
+\subsection{Count the number of DOF: \textit{dof} module}
+To count the number of DOF in a solution file,
+one can run the following command
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m dof file.xml file.fld out.stdout
+\end{lstlisting}
+%
+%
+%
 \subsection{Equi-spaced output of data: \textit{equispacedoutput} module}
 This module interpolates the output data to a truly equispaced set of
 points (not equispaced along the collapsed coordinate
@@ -428,6 +450,13 @@ to visualise the result either in Tecplot, Paraview or VisIt.
 %
 %
 
+\subsection{Convert HalfMode expansion to SingleMode for further processing: \textit{halfmodetofourier} module}
+
+To obtain full Fourier expansion form a \inltt{HalfMode} result, use the comand:
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m halfmodetofourier file.xml half_mode_file.fld single_mode_file.fld
+\end{lstlisting}
+
 \subsection{Extract a plane from 3DH1D expansion: \textit{homplane} module}
 
 To obtain a 2D expansion containing one of the planes of a
@@ -454,7 +483,7 @@ To stretch a 3DH1D expansion in the z-direction, use the command:
 FieldConvert -m homstretch:factor=value file.xml file.fld file-stretch.fld
 \end{lstlisting}
 The number of modes in the resulting field can be chosen using the command-line
-parameter \inltt{output-points-hom-z}.
+parameter \inltt{-{}-output-points-hom-z}.
 
 The output file \inltt{file-stretch.fld} can be processed in a similar
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
@@ -624,7 +653,8 @@ The format of the file \inltt{file2.pts} is of the same form as for the
 </NEKTAR>
 \end{lstlisting}
 Similar to the \textit{interppointdatatofld} module, the \inltt{.pts} file can
-be interchanged with a \inltt{.csv} file:
+be interchanged with a \inltt{.csv} file (the output can also be written to 
+\inltt{.csv}):
 \begin{lstlisting}[style=BashInputStyle]
 # x, y
 0.0,0.0
@@ -638,38 +668,44 @@ interpolation between these two values and the third defines the default
 value to be used if the point is outside the domain. Their default values
 are -10,000,000, 10,000,000 and 0.
 
-In addition, instead of specifying the file \inltt{file2.pts}, a module list of the form
+In addition, instead of specifying the file \inltt{file2.pts}, a module list of
+the form 
 \begin{lstlisting}[style=BashInputStyle]
 FieldConvert -m interppoints:fromxml=file1.xml:fromfld= \
-	file1.fld:line=npts,x0,y0,x1,y1
+	file1.fld:line=npts,x0,y0,x1,y1 file2.dat
 \end{lstlisting}
 can be specified where \inltt{npts} is the number of equispaced points between
-$(x0,y0)$ to $(x1,y1)$ which can also be used in 3D by specifying $(x0,y0,z0)$
-to $(x1,y1,z1)$.
+$(x_0,y_0)$ to $(x_1,y_1)$. This also works in 3D, by specifying
+$(x_0,y_0,z_0)$ to $(x_1,y_1,z_1)$.
 
 An extraction of a plane of points can also be specified by
 \begin{lstlisting}[style=BashInputStyle]
   FieldConvert -m interppoints:fromxml=file1.xml:fromfld=file1.fld:\
-        plane=npts1,npts2,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3
+        plane=npts1,npts2,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3 file2.dat
 \end{lstlisting}
 where \inltt{npts1,npts2} is the number of equispaced points in each
-direction and $(x0,y0,z0)$, $(x1,y1,z1)$, $(x2,y2,z2)$ and $(x3,y3,z3)$
-define the plane of points specified in a clockwise or anticlockwise direction.
+direction and $(x_0,y_0,z_0)$, $(x_1,y_1,z_1)$, $(x_2,y_2,z_2)$ and
+$(x_3,y_3,z_3)$ define the plane of points specified in a clockwise or
+anticlockwise direction.
 
-In addition an extraction of a box of points can also be specified by
+In addition, an extraction of a box of points can also be specified by
 \begin{lstlisting}[style=BashInputStyle]
   FieldConvert -m interppoints:fromxml=file1.xml:fromfld=file1.fld:\
-       box=npts1,npts2,npts3,xmin,xmax,ymin,ymax,zmin,zmax
+       box=npts1,npts2,npts3,xmin,xmax,ymin,ymax,zmin,zmax file2.dat
 \end{lstlisting}
 where \inltt{npts1,npts2,npts3} is the number of equispaced points in each
-direction and $(xmin,ymin,zmin)$ and $(xmax,ymax,zmax3)$
+direction and $(x_{min},y_{min},z_{min})$ and $(x_{max},y_{max},z_{max})$
 define the limits of the box of points.
 
 There is also an additional optional argument \inltt{cp=p0,q} which adds to the
 interpolated fields the value of $c_p=(p-p0)/q$ and $c_{p0}=(p-p0+0.5 u^2)/q$
 where $p0$ is a reference pressure and $q$ is the free stream dynamics pressure.
 If the input does not contain a field ``p'' or a velocity field ``u,v,w'' then $cp$
-and $cp0$ are not evaluated accordingly
+and $cp0$ are not evaluated accordingly.
+
+Interpolation of 3DH1D fields is performed only in the x-y
+spectral/\emph{hp} planes. At every x-y location, if the point lies outside a
+Fourier plane its z-coordinate is reset to the closest plane.
 %
 \begin{notebox}
 This module  runs in parallel for the line, plane and box extraction of points.
@@ -916,6 +952,19 @@ then printed to the stdout.
 %
 %
 
+\subsection{Removes one or more fields from .fld files: \textit{removefield} module}
+This module allows to remove one or more fields from a .fld file:
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m removefield:fieldname="u,v,p" test.xml test.fld test-removed.fld
+\end{lstlisting}
+where the file \inltt{test-removed.fld} can be processed in a similar
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise the result either in Tecplot, Paraview or VisIt. The lighter resulting
+file speeds up the postprocessing of large files when not all fields are required. 
+%
+%
+%
+
 \subsection{Computes the scalar gradient: \textit{scalargrad} module}
 The scalar gradient of a field is computed by running:
 \begin{lstlisting}[style=BashInputStyle]
@@ -930,7 +979,7 @@ The option \inltt{bnd} specifies which boundary region to extract. Note this is 
 \subsection{Scale a given .fld: \textit{scaleinputfld} module}
 To scale a .fld file by a given scalar quantity, the user can run:
 \begin{lstlisting}[style=BashInputStyle]
-FieldConvert -m scaleinputfld:scale=value test.fld test-scal.fld
+FieldConvert -m scaleinputfld:scale=value test.xml test.fld test-scal.fld
 \end{lstlisting}
 The argument \inltt{scale=value} rescales of a factor \inltt{value}
 \inltt{test.fld} by the factor value.
@@ -1037,6 +1086,58 @@ To process the output file(s) you will need an xml file of the same region.
 %
 %
 
+\subsection{Calculating the shape function $\Phi$ for an SPM case:
+\textit{phifile} module}
+\label{s:utilities:fieldconvert:sub:phifile}
+
+\begin{notebox}
+    This module is in experimental phase and only runs in serial. When reading
+    3D geometries from \inltt{.stl} files, errors may occur if triangles are
+    placed exactly at $90^{\circ}$.
+\end{notebox}
+
+This FieldConvert module converts a binary \inltt{.stl} CAD file into
+\inltt{.fld} or \inltt{.vtu}/\inltt{.dat} files that can be used as inputs for
+the Smoothed Profile Method solver. Running the command:
+
+\begin{lstlisting}[style=BashInputStyle]
+    FieldConvert -m phifile:file=geom.stl:scale=value session.xml geom.fld
+\end{lstlisting}
+
+will generate an output file \inltt{geom.fld} with all the information required
+to define a shape function $\Phi$ representing the geometry specified in
+\inltt{geom.stl}. The option \inltt{scale} sets the value of $\xi$ as it is
+described in the Synopsis chapter of the Incompressible N-S solver. If the
+output file gets the extension \inltt{.vtu} or \inltt{.dat}, the module will
+produce a graphical representation of the shape function; however, the
+recommended way to proceed is to generate an \inltt{.fld} file and then, use
+FieldConvert to obtain the \inltt{.vtu} or \inltt{.dat} files if needed for
+visualisation purposes:
+\begin{lstlisting}[style=BashInputStyle]
+    FieldConvert -m phifile:file=geom.stl:scale=value session.xml geom.fld
+    FieldConvert session.xml geom.fld geom.vtu
+\end{lstlisting}
+This module can also be used to produce a \inltt{.fld} and \inltt{.vtu} /
+\inltt{.dat} file of shapes defined directly in the session file through an
+analytical expression. In this case, the commands simplify to:
+\begin{lstlisting}[style=BashInputStyle]
+    FieldConvert -m phifile session.xml geom.fld
+    FieldConvert session.xml geom.fld geom.vtu
+\end{lstlisting}
+
+The algorithm computes an octree for the triangles that define the 3D object
+in the \inltt{.stl} file, and then loops over all the nodes of the
+computational mesh looking for the shortest distance to the 3D object. Since
+this module is currently in experimental phase, it only runs in serial and
+therefore its performance in computing the shape function from the \inltt{.stl}
+file is limited, especially in 3D cases. In addition to this, it is recommended
+to make sure that the angles between triangles are not strictly equal to
+$90^\circ$, since the algorithm will probably fail to find the real $\Phi$
+function.
+%
+%
+%
+
 \subsection{Manipulating meshes with FieldConvert}
 FieldConvert has support for two modules that can be used in conjunction with
 the linear elastic solver, as shown in chapter~\ref{s:elasticity}. To do this,
@@ -1128,63 +1229,13 @@ process each parallel partition in serial, for example when interpolating a
 solution field from one mesh to another or creating an output file for
 visualization.
 
-\subsection{Using the \textit{nparts} options}
-
-One option is to use the \inltt{nparts}  command line
-option. For example, the following command will create a
-\inltt{.vtu} file using 10 partitions of \inltt{file1.xml}:
-\begin{lstlisting}[style=BashInputStyle]
-FieldConvert --nparts 10  file1.xml file1.fld file1.vtu
-\end{lstlisting}
-Note this will create a parallel vtu file as it processes each partition. 
-
-
-Another example is to interpolate \inltt{file1.fld} from one mesh
-\inltt{file1.xml} to another \inltt{file2.xml}. If the mesh files are
-large we can do this by partitioning \inltt{file2.xml} into 10 (or more)
-partitions and interpolating each partition one by one using the
-command:
-\begin{lstlisting}[style=BashInputStyle]
-  FieldConvert --nparts 10 -m interpfield:fromxml=file1.xml:fromfld=file1.fld \
-  file2.xml file2.fld
-\end{lstlisting}
-Note that internally the routine uses the range option so that it
-only has to load the part of \inltt{file1.xml} that overlaps with each
-partition of \inltt{file2.xml}.
-The resulting output will lie in a directory called \inltt{file2.fld}, with each
-of the different parallel partitions in files with names \inltt{P0000000.fld},
-\inltt{P0000001.fld}, \dots, \inltt{P0000009.fld}. This is nearly a complete
-parallel field file. However, when the output file is in the .fld format,
-the \inltt{Info.xml} file, which contains the information about which elements
-lie in each partition, is not correct since it will only contain the information for one of the partitions. The correct \inltt{Info.xml} file  can be generated by using the command
-\begin{lstlisting}[style=BashInputStyle]
-FieldConvert file2.xml file2.fld/Info.xml:info:nparts=10
-\end{lstlisting}
-Note the \inltt{:info} extension on the last argument is necessary to tell
-FieldConvert that you wish to generate an info file, but with the extension
-\inltt{.xml}. This syntax allows the routine not to get confused with the
-input/output XML files.
-
-\subsection{Running in parallel with the \textit{ nparts} option}
-
-The examples above will process each partition serially which may now
-take a while for many partitions. You can however run this option in
-parallel using a smaller number of cores than the nparts.
-
-For the example of creating a vtu file above you can use 4 processor concurrently wiht the command line:
-\begin{lstlisting}[style=BashInputStyle]
-mpirun -n 4 FieldConvert --nparts 10   file1.xml file1.fld file1.vtu
-\end{lstlisting}
-
-Obviously the executable will have to have been compiled with the MPI option for this to work. 
 
 \subsection{Using the \textit{ part-only} and \textit{ part-only-overlapping} options}
 
-The options above will all load in the full \inltt{file1.xml}, partition
-it into \inltt{nparts} files in a director called \inltt{file1\_xml}.
-This can be expensive if the \inltt{file1.xml} is already large. So instead you can
-pre-partition the file using the using the  \inltt{--part-only}
-option. So the command
+Loading full \inltt{file1.xml} can be expensive if the
+\inltt{file1.xml} is already large. So instead you can pre-partition
+the file using the using the \inltt{--part-only} option. So the
+command
 \begin{lstlisting}[style=BashInputStyle]
 FieldConvert --part-only 10 file.xml file.fld
 \end{lstlisting}
@@ -1192,13 +1243,6 @@ will partition the mesh into 10 partitions and write each partition into a
 directory called \inltt{file\_xml}. If you enter this directory you will find
 partitioned XML files \inltt{P0000000.xml}, \inltt{P0000001.xml}, \dots,
 \inltt{P0000009.xml} which can then be processed individually as outlined above.
-
-If you have a partitioned directory either from a parallel run or using the \inltt{--part-only} option  you can now run the \inltt{FieldConvert} option using the command
-\begin{lstlisting}[style=BashInputStyle]
-mpirun -n 4 FieldConvert --nparts 10  file1\_xml:xml file1.fld file1.vtu
-\end{lstlisting}
-
-Note the form \inltt{file1\_xml:xml} option tells the code it is a parallel partition which should be treated as an \inltt{xml} type file. 
 
 There is also a \inltt{--part-only-overlapping} option, which can be run in the
 same fashion.
@@ -1215,6 +1259,58 @@ be a gap between partitions, as the smoother tends to shrink the isocontour
 within a partition. using the \inltt{--part-only-overlapping} option will still
 yield a shrinking isocontour, but the overlapping partitions help to overlap the
 partiiton boundaries.
+
+\subsection{Using the \textit{nparts} options}
+
+If you have a partitioned directory either from a parallel run or
+using the \inltt{--part-only} option you can now run the
+\inltt{FieldConvert} option using the \inltt{nparts}  command line
+option, that is
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert --nparts 10  file1\_xml:xml file1.fld file1.vtu
+\end{lstlisting}
+
+Note the form \inltt{file1\_xml:xml} option tells the code it is a
+parallel partition which should be treated as an \inltt{xml} type
+file. the argument of \inltt{nparts} should correpsond to the number
+of partitions used in generating the file1\_xml directory. This will
+create a parallel vtu file as it processes each partition.
+
+
+Another example is to interpolate \inltt{file1.fld} from one mesh
+\inltt{file1.xml} to another \inltt{file2.xml}. If the mesh files are
+large we can do this by partitioning \inltt{file2.xml} into 10 (or
+more) partitions to generate the \inltt{file\_xml} directory and
+interpolating each partition one by one using the command:
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert --nparts 10 -m interpfield:fromxml=file1.xml:fromfld=file1.fld \
+  file2_xml:xml file2.fld
+\end{lstlisting}
+Note that internally the routine uses the range option so that it only
+has to load the part of \inltt{file1.xml} that overlaps with each
+partition of \inltt{file2.xml}.  The resulting output will lie in a
+directory called \inltt{file2.fld}, with each of the different
+parallel partitions in files with names \inltt{P0000000.fld},
+\inltt{P0000001.fld}, \dots, \inltt{P0000009.fld}. In previous
+versions of FieldConvert it was necessary to generate an updated
+\inltt{Info.xml} file but in the current version it should
+automatically be updating this file.
+
+\subsection{Running in parallel with the \textit{ nparts} option}
+
+The examples above will process each partition serially which may now
+take a while for many partitions. You can however run this option in
+parallel using a smaller number of cores than the nparts.
+
+For the example of creating a vtu file above you can use 4 processor
+concurrently wiht the command line:
+\begin{lstlisting}[style=BashInputStyle]
+mpirun -n 4 FieldConvert --nparts 10   file1\_xml:xml file1.fld file1.vtu
+\end{lstlisting}
+
+Obviously the executable will have to have been compiled with the MPI
+option for this to work.
+
 
 %%% Local Variables:
 %%% mode: latex

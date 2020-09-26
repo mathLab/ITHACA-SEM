@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -90,46 +89,17 @@ bool TetGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                               NekDouble tol,
                               NekDouble &resid)
 {
-    // Validation checks
-    ASSERTL1(gloCoord.num_elements() == 3,
-             "Three dimensional geometry expects three coordinates.");
-
-    // find min, max point and check if within twice this
-    // distance other false this is advisable since
-    // GetLocCoord is expensive for non regular elements.
+    //Rough check if within twice min/max point
     if (GetMetricInfo()->GetGtype() != eRegular)
     {
-        int i;
-        Array<OneD, NekDouble> mincoord(3), maxcoord(3);
-        NekDouble diff = 0.0;
-
-        v_FillGeom();
-
-        const int npts = m_xmap->GetTotPoints();
-        Array<OneD, NekDouble> pts(npts);
-
-        for (i = 0; i < 3; ++i)
+        if (!MinMaxCheck(gloCoord))
         {
-            m_xmap->BwdTrans(m_coeffs[i], pts);
-
-            mincoord[i] = Vmath::Vmin(pts.num_elements(), pts, 1);
-            maxcoord[i] = Vmath::Vmax(pts.num_elements(), pts, 1);
-
-            diff = max(maxcoord[i] - mincoord[i], diff);
-        }
-
-        for (i = 0; i < 3; ++i)
-        {
-            if ((gloCoord[i] < mincoord[i] - 0.2 * diff) ||
-                (gloCoord[i] > maxcoord[i] + 0.2 * diff))
-            {
-                return false;
-            }
+            return false;
         }
     }
 
     // Convert to the local (eta) coordinates.
-    resid = v_GetLocCoords(gloCoord, locCoord);
+    resid = GetLocCoords(gloCoord, locCoord);
 
     // Check local coordinate is within cartesian bounds.
     if (locCoord[0] >= -(1 + tol) && locCoord[1] >= -(1 + tol) &&
@@ -139,22 +109,8 @@ bool TetGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
         return true;
     }
 
-    // If out of range clamp locCoord to be within [-1,1]^3
-    // since any larger value will be very oscillatory if
-    // called by 'returnNearestElmt' option in
-    // ExpList::GetExpIndex
-    for (int i = 0; i < 3; ++i)
-    {
-        if (locCoord[i] < -(1 + tol))
-        {
-            locCoord[i] = -(1 + tol);
-        }
-
-        if (locCoord[i] > (1 + tol))
-        {
-            locCoord[i] = 1 + tol;
-        }
-    }
+    //Clamp local coords
+    ClampLocCoords(locCoord, tol);
 
     return false;
 }
@@ -231,7 +187,7 @@ NekDouble TetGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         ptdist = sqrt(tmp1[min_i]);
 
         // Get collapsed coordinate
-        int qa = za.num_elements(), qb = zb.num_elements();
+        int qa = za.size(), qb = zb.size();
         Lcoords[2] = zc[min_i / (qa * qb)];
         min_i = min_i % (qa * qb);
         Lcoords[1] = zb[min_i / qa];
@@ -402,7 +358,7 @@ void TetGeom::SetUpLocalEdges()
             ASSERTL0(false, errstrm.str());
         }
     }
-};
+}
 
 void TetGeom::SetUpLocalVertices()
 {
@@ -480,7 +436,7 @@ void TetGeom::SetUpLocalVertices()
                 << m_edges[2]->GetGlobalID();
         ASSERTL0(false, errstrm.str());
     }
-};
+}
 
 void TetGeom::SetUpEdgeOrientation()
 {
@@ -507,7 +463,7 @@ void TetGeom::SetUpEdgeOrientation()
             ASSERTL0(false, "Could not find matching vertex for the edge");
         }
     }
-};
+}
 
 void TetGeom::SetUpFaceOrientation()
 {
@@ -791,21 +747,21 @@ void TetGeom::v_GenGeomFactors()
 void TetGeom::SetUpXmap()
 {
     vector<int> tmp;
-    tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(0));
+    tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(0));
     int order0 = *max_element(tmp.begin(), tmp.end());
 
     tmp.clear();
     tmp.push_back(order0);
-    tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(1));
-    tmp.push_back(m_faces[0]->GetXmap()->GetEdgeNcoeffs(2));
+    tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(1));
+    tmp.push_back(m_faces[0]->GetXmap()->GetTraceNcoeffs(2));
     int order1 = *max_element(tmp.begin(), tmp.end());
 
     tmp.clear();
     tmp.push_back(order0);
     tmp.push_back(order1);
-    tmp.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs(1));
-    tmp.push_back(m_faces[1]->GetXmap()->GetEdgeNcoeffs(2));
-    tmp.push_back(m_faces[3]->GetXmap()->GetEdgeNcoeffs(1));
+    tmp.push_back(m_faces[1]->GetXmap()->GetTraceNcoeffs(1));
+    tmp.push_back(m_faces[1]->GetXmap()->GetTraceNcoeffs(2));
+    tmp.push_back(m_faces[3]->GetXmap()->GetTraceNcoeffs(1));
     int order2 = *max_element(tmp.begin(), tmp.end());
 
     const LibUtilities::BasisKey A(

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -65,18 +64,19 @@ namespace Nektar
             MULTI_REGIONS_EXPORT static std::string className;
 
             /// Constructor for full direct matrix solve.
-            MULTI_REGIONS_EXPORT GlobalLinSysDirectFull(const GlobalLinSysKey &pLinSysKey,
+            MULTI_REGIONS_EXPORT GlobalLinSysDirectFull(
+                         const GlobalLinSysKey &pLinSysKey,
                          const std::weak_ptr<ExpList> &pExpList,
                          const std::shared_ptr<AssemblyMap>
-                                                                &pLocToGloMap);
-
+                         &pLocToGloMap);
+            
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysDirectFull();
 
         private:
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
-            virtual void v_Solve( const Array<OneD, const NekDouble> &in,
-                              Array<OneD,       NekDouble> &out,
+            virtual void v_Solve( const Array<OneD, const NekDouble> &pLocInput,
+                              Array<OneD,       NekDouble> &pLocalOutput,
                         const AssemblyMapSharedPtr &locToGloMap,
                         const Array<OneD, const NekDouble> &dirForcing
                                                         = NullNekDouble1DArray);

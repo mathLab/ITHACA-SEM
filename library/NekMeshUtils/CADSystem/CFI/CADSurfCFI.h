@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,8 +36,11 @@
 #define NEKMESHUTILS_CADSYSTEM_CFI_CADSURFCFI
 
 #include "../CADSurf.h"
-#include "CADSystemCFI.h"
 
+#ifndef NEK_CADFIXAPI_HXX
+#define NEK_CADFIXAPI_HXX
+#include "cadfixapi.hxx"
+#endif
 namespace Nektar
 {
 namespace NekMeshUtils
@@ -66,6 +68,9 @@ public:
 
     Array<OneD, NekDouble> GetBounds();
 
+    void GetBounds(NekDouble &umin, NekDouble &umax, NekDouble &vmin,
+                           NekDouble &vmax);
+
     Array<OneD, NekDouble> N(Array<OneD, NekDouble> uv);
 
     Array<OneD, NekDouble> D1(Array<OneD, NekDouble> uv);
@@ -74,7 +79,9 @@ public:
 
     Array<OneD, NekDouble> P(Array<OneD, NekDouble> uv);
 
-    Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p,  NekDouble &dist);
+    void P(Array<OneD, NekDouble> uv, NekDouble &x, NekDouble &y, NekDouble &z);
+
+    Array<OneD, NekDouble> locuv(Array<OneD, NekDouble> p, NekDouble &dist);
 
     NekDouble Curvature(Array<OneD, NekDouble> uv);
 
@@ -90,10 +97,16 @@ public:
         return false;
     }
 
+    cfi::Face *GetCfiPointer()
+    {
+        return m_cfiSurface;
+    }
+
 private:
     /// Function which tests the the value of uv used is within the surface
     void Test(Array<OneD, NekDouble> uv)
     {
+        boost::ignore_unused(uv);
     }
     /// CFI object for surface.
     cfi::Face *m_cfiSurface;

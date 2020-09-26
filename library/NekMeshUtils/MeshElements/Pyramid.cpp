@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -177,7 +176,16 @@ SpatialDomains::GeometrySharedPtr Pyramid::GetGeom(int coordDim)
 unsigned int Pyramid::GetNumNodes(ElmtConfig pConf)
 {
     int n = pConf.m_order;
-    return 5 + 8 * (n - 1);
+
+    if (pConf.m_faceNodes)
+    {
+        // @todo currently only valid for 2nd order pyramids
+        return 5 + 8 * (n - 1) + (n - 1)*(n - 1);
+    }
+    else
+    {
+        return 5 + 8 * (n - 1);
+    }
 }
 }
 }

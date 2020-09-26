@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -62,7 +61,7 @@ Projection::~Projection()
 
 void Projection::v_DoSolve()
 {
-    for (int i = 0; i < m_fields.num_elements(); ++i)
+    for (int i = 0; i < m_fields.size(); ++i)
     {
         // Zero field so initial conditions are zero
         Vmath::Zero(m_fields[i]->GetNcoeffs(), m_fields[i]->UpdateCoeffs(), 1);
@@ -75,7 +74,7 @@ void Projection::v_DoSolve()
 void Projection::v_GenerateSummary(SolverUtils::SummaryList &s)
 {
     EquationSystem::SessionSummary(s);
-    for (int i = 0; i < m_fields.num_elements(); ++i)
+    for (int i = 0; i < m_fields.size(); ++i)
     {
         stringstream name;
         name << "Forcing func [" << i << "]";

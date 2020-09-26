@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -53,8 +52,9 @@ namespace SolverUtils
                                 "Field Forcing");
 
     ForcingBody::ForcingBody(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : Forcing(pSession),
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::weak_ptr<EquationSystem>      &pEquation)
+        : Forcing(pSession, pEquation),
           m_hasTimeFcnScaling(false)
     {
     }
@@ -104,7 +104,7 @@ namespace SolverUtils
 
             m_session->SubstituteExpressions(funcNameTime);
             m_timeFcnEqn = MemoryManager<LibUtilities::Equation>
-                ::AllocateSharedPtr(m_session->GetExpressionEvaluator(),funcNameTime);
+                ::AllocateSharedPtr(m_session->GetInterpreter(),funcNameTime);
 
             m_hasTimeFcnScaling = true;
         }
@@ -115,21 +115,56 @@ namespace SolverUtils
             m_Forcing[i] = Array<OneD, NekDouble> (pFields[0]->GetTotPoints(), 0.0);
         }
 
+        Array<OneD, Array<OneD, NekDouble> > tmp(pFields.size());
+        for (int i = 0; i < m_NumVariable; ++i)
+        {
+            tmp[i] = pFields[i]->GetPhys();
+        }
 
-        Update(pFields, 0.0);
+        Update(pFields, tmp, 0.0);
     }
 
 
     void ForcingBody::Update(
             const Array< OneD, MultiRegions::ExpListSharedPtr > &pFields,
+            const Array<OneD, Array<OneD, NekDouble> > &inarray,
             const NekDouble &time)
     {
+        LibUtilities::EquationSharedPtr eqn = m_session->GetFunction(
+            m_funcName, m_session->GetVariable(0));
+
+        if (!boost::iequals(eqn->GetVlist(), "x y z t"))
+        {
+            // Coupled forcing
+            int nq = pFields[0]->GetNpoints();
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq), t(nq, time);
+            std::string varstr = "x y z";
+            std::vector<Array<OneD, const NekDouble>> fielddata = {
+                xc, yc, zc, t};
+
+            for (int i = 0; i < m_NumVariable; ++i)
+            {
+                varstr += " " + m_session->GetVariable(i);
+                fielddata.push_back(inarray[i]);
+            }
+
+            // Evaluate function
+            for (int i = 0; i < m_NumVariable; ++i)
+            {
+                m_session->GetFunction(m_funcName, m_session->GetVariable(i))->
+                    Evaluate(fielddata, m_Forcing[i]);
+            }
+
+            return;
+        }
+
         for (int i = 0; i < m_NumVariable; ++i)
         {
             std::string  s_FieldStr   = m_session->GetVariable(i);
             ASSERTL0(m_session->DefinesFunction(m_funcName, s_FieldStr),
                      "Variable '" + s_FieldStr + "' not defined.");
-            GetFunction(pFields, m_session, m_funcName, true)->Evaluate(s_FieldStr, m_Forcing[i], time);
+            GetFunction(pFields, m_session, m_funcName, true)->Evaluate(
+                s_FieldStr, m_Forcing[i], time);
         }
 
         // If singleMode or halfMode, transform the forcing term to be in
@@ -159,7 +194,7 @@ namespace SolverUtils
             {
                 EvaluateTimeFunction(time, m_timeFcnEqn, TimeFcn);
 
-                Vmath::Svtvp(outarray[i].num_elements(), TimeFcn[0],
+                Vmath::Svtvp(outarray[i].size(), TimeFcn[0],
                              m_Forcing[i], 1,
                              outarray[i],  1,
                              outarray[i],  1);
@@ -167,11 +202,11 @@ namespace SolverUtils
         }
         else
         {
-            Update(fields, time);
+            Update(fields, inarray, time);
 
             for (int i = 0; i < m_NumVariable; i++)
             {
-                Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
+                Vmath::Vadd(outarray[i].size(), outarray[i], 1,
                             m_Forcing[i], 1, outarray[i], 1);
             }
         }
@@ -183,7 +218,8 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> > &outarray,
             const NekDouble &time)
     {
-        int ncoeff = outarray[m_NumVariable-1].num_elements();
+        boost::ignore_unused(inarray);
+        int ncoeff = outarray[m_NumVariable-1].size();
         Array<OneD, NekDouble> tmp(ncoeff, 0.0);
 
         if(m_hasTimeFcnScaling)
@@ -204,8 +240,15 @@ namespace SolverUtils
         }
         else
         {
-            Update(fields, time);
-
+            Array<OneD, Array<OneD, NekDouble> > phys(fields.size());
+            
+            for (int i = 0; i < m_NumVariable; ++i)
+            {
+                phys[i] = fields[i]->GetPhys();
+            }
+            
+            Update(fields, phys, time);
+            
             for (int i = 0; i < m_NumVariable; i++)
             {
                 fields[i]->FwdTrans(m_Forcing[i],tmp);

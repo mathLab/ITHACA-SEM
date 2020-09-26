@@ -12,24 +12,19 @@ IF(NEKTAR_USE_MESHGEN)
 
     IF (NEKTAR_USE_CFI)
 
-        SET(TEST_ENV $ENV{CFI_DIR})
+	SET(TEST_ENV $ENV{FEGS_TOP})
         IF(NOT DEFINED TEST_ENV)
-            MESSAGE(FATAL_ERROR "Cannot build with CFI without environment variable CFI_DIR set which points to cadfix1100fcs folder in the CFI installation")
+		MESSAGE(FATAL_ERROR "Cannot build with CFI without environment variable FEGS_TOP set which points to the top folder in the CFI installation")
         ENDIF()
-
-        FIND_LIBRARY(CFI_LIBRARY_API NAMES cadfixapi PATHS $ENV{CFI_DIR}/lib64)
-
+	FIND_LIBRARY(CFI_LIBRARY_API NAMES cadfixapi PATHS $ENV{FEGS_LIB})
+	FIND_LIBRARY(CFI_LIBRARY_CXX NAMES oocfi_cxx.a PATHS $ENV{FEGS_TOP}/cadfixdev/oocfi/cxx)
         IF(CFI_LIBRARY_API)
-            FIND_PATH (CFI_INCLUDE_DIR_HXX cadfixapi.hxx PATHS $ENV{CFI_DIR}/oocfi/cxx/cadfixapi)
-            FIND_PATH (CFI_INCLUDE_DIR cfiStandardFun.h PATHS $ENV{CFI_DIR}/include)
+		FIND_PATH (CFI_INCLUDE_DIR_HXX cadfixapi.hxx PATHS $ENV{FEGS_TOP}/cadfixdev/oocfi/cxx/cadfixapi)
+		FIND_PATH (CFI_INCLUDE_DIR cfiStandardFun.h PATHS $ENV{FEGS_TOP}/cadfixdev/include)
 
             IF(CFI_INCLUDE_DIR)
-                SET(CFI_LIBRARIES_TMP cadfixapi extra)
-                FOREACH(CFI_LIBRARIES_TMP ${CFI_LIBRARIES_TMP})
-                    LIST(APPEND CFI_LIBRARIES $ENV{CFI_DIR}/lib64/lib${CFI_LIBRARIES_TMP}.so)
-                ENDFOREACH()
 
-                MESSAGE(STATUS "cfi libraries: ${CFI_LIBRARIES}")
+		MESSAGE(STATUS "Found CFI Libraries: ${CFI_LIBRARY_API}")
 
                 INCLUDE_DIRECTORIES(NekMeshUtils ${CFI_INCLUDE_DIR_HXX})
                 INCLUDE_DIRECTORIES(NekMeshUtils ${CFI_INCLUDE_DIR})
@@ -42,3 +37,5 @@ IF(NEKTAR_USE_MESHGEN)
         ENDIF()
     ENDIF()
 ENDIF()
+
+INCLUDE_DIRECTORIES(SYSTEM ${CFI_INCLUDE_DIR_HXX})

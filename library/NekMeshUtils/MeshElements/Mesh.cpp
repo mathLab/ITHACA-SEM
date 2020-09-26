@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -150,7 +149,7 @@ void Mesh::MakeOrder(int order, LibUtilities::PointsType distType)
     // First, we fill in the volume-interior nodes. This preserves the original
     // curvature of the mesh.
     const int nElmt = m_element[m_expDim].size();
-    int tmpId = 0;
+    int tmpId       = 0;
     for (int i = 0; i < nElmt; ++i)
     {
         if (m_verbose)
@@ -160,7 +159,8 @@ void Mesh::MakeOrder(int order, LibUtilities::PointsType distType)
         ElementSharedPtr el                    = m_element[m_expDim][i];
         SpatialDomains::GeometrySharedPtr geom = el->GetGeom(m_spaceDim);
         geom->FillGeom();
-        el->MakeOrder(order, geom, pTypes[el->GetConf().m_e], m_spaceDim, tmpId);
+        el->MakeOrder(order, geom, pTypes[el->GetConf().m_e], m_spaceDim,
+                      tmpId);
     }
 
     // Now make copies of each of the edges.
@@ -292,5 +292,98 @@ void Mesh::MakeOrder(int order, LibUtilities::PointsType distType)
         cout << endl;
     }
 }
+
+/**
+ * @brief Print out basic statistics of this mesh.
+ */
+void Mesh::PrintStats(std::ostream &out)
+{
+    out << "Mesh statistics" << std::endl
+        << "---------------" << std::endl
+        << std::endl;
+
+    out << "Mesh dimension       : " << m_spaceDim << std::endl
+        << "Element dimension    : " << m_expDim << std::endl
+        << "Has CAD attached     : " << (m_cad ? "yes" : "no") << std::endl
+        << "Node count           : " << m_vertexSet.size() << std::endl;
+
+    if (m_edgeSet.size() > 0)
+    {
+        out << "Edge count           : " << m_edgeSet.size() << std::endl;
+    }
+
+    if (m_faceSet.size() > 0)
+    {
+        out << "Face count           : " << m_faceSet.size() << std::endl;
+    }
+
+    out << "Elements             : " << m_element[m_expDim].size() << std::endl
+        << "Bnd elements         : " << m_element[m_expDim - 1].size()
+        << std::endl;
+
+    // Print out number of composites
+
+    out << "Number of composites : " << m_composite.size() << std::endl;
+
+    // Calculate domain extent
+    auto extent = m_element[m_expDim][0]->GetBoundingBox();
+    for (int i = 1; i < m_element[m_expDim].size(); ++i)
+    {
+        auto el           = m_element[m_expDim][i]->GetBoundingBox();
+        extent.first.m_x  = std::min(extent.first.m_x, el.first.m_x);
+        extent.first.m_y  = std::min(extent.first.m_y, el.first.m_y);
+        extent.first.m_z  = std::min(extent.first.m_z, el.first.m_z);
+        extent.second.m_x = std::max(extent.second.m_x, el.second.m_x);
+        extent.second.m_y = std::max(extent.second.m_y, el.second.m_y);
+        extent.second.m_z = std::max(extent.second.m_z, el.second.m_z);
+    }
+
+    out << "Lower mesh extent    : " << extent.first.m_x << " "
+        << extent.first.m_y << " " << extent.first.m_z << std::endl
+        << "Upper mesh extent    : " << extent.second.m_x << " "
+        << extent.second.m_y << " " << extent.second.m_z << std::endl;
+
+    std::map<LibUtilities::ShapeType, std::pair<int, int>> elmtCounts;
+
+    for (int i = 1; i < LibUtilities::SIZE_ShapeType; ++i)
+    {
+        elmtCounts[(LibUtilities::ShapeType)i] = std::make_pair(0, 0);
+    }
+
+    for (int dim = 0; dim <= 3; ++dim)
+    {
+        for (auto &elmt : m_element[dim])
+        {
+            auto &counts = elmtCounts[elmt->GetShapeType()];
+
+            if (elmt->IsDeformed())
+            {
+                counts.second++;
+            }
+            else
+            {
+                counts.first++;
+            }
+        }
+    }
+
+    out << std::endl << "Element counts (regular/deformed/total):" << std::endl;
+    for (int i = 1; i < LibUtilities::SIZE_ShapeType; ++i)
+    {
+        auto shapeType = (LibUtilities::ShapeType)i;
+        auto counts    = elmtCounts[shapeType];
+
+        if (counts.first + counts.second == 0)
+        {
+            continue;
+        }
+
+        out << "  " << std::setw(14)
+            << LibUtilities::ShapeTypeMap[(LibUtilities::ShapeType)i] << ": "
+            << setw(12) << counts.first << "  " << setw(12) << counts.second
+            << "  " << setw(12) << counts.first + counts.second << std::endl;
+    }
 }
-}
+
+} // namespace NekMeshUtils
+} // namespace Nektar

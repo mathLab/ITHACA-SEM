@@ -15,6 +15,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
         ./EquationSystems/IncNavierStokes.cpp
         ./EquationSystems/VelocityCorrectionScheme.cpp
         ./EquationSystems/VelocityCorrectionSchemeWeakPressure.cpp
+        ./EquationSystems/SmoothedProfileMethod.cpp
         ./EquationSystems/VCSMapping.cpp
         ./EquationSystems/Extrapolate.cpp
         ./EquationSystems/StandardExtrapolate.cpp
@@ -28,9 +29,9 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
         ./AdvectionTerms/SkewSymmetricAdvection.cpp
         ./AdvectionTerms/AlternateSkewAdvection.cpp
         ./AdvectionTerms/NoAdvection.cpp
-        ./Filters/FilterEnergy.cpp
         ./Filters/FilterReynoldsStresses.cpp
         ./Filters/FilterMovingBody.cpp
+        ./Filters/FilterAeroForcesSPM.cpp
         ./Forcing/ForcingMovingBody.cpp
         ./Forcing/ForcingStabilityCoupledLNS.cpp
         )
@@ -42,7 +43,9 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     #ADD_NEKTAR_TEST(ChanStability_adj)
     #ADD_NEKTAR_TEST(ChanStability_Coupled_3D)
     ADD_NEKTAR_TEST(2DFlow_lineforcing_bcfromfile)
+    ADD_NEKTAR_TEST(BercovierEngelman)
     ADD_NEKTAR_TEST(ChanFlow2D_bcsfromfiles)
+    ADD_NEKTAR_TEST(ChanFlow_3DH1D_bcsfromfiles)
     ADD_NEKTAR_TEST(ChanFlow_3DH1D_MVM LENGTHY)
     ADD_NEKTAR_TEST(ChanFlow_3DH2D_MVM LENGTHY)
     ADD_NEKTAR_TEST(ChanFlow_LinNS_m8)
@@ -63,9 +66,9 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(Pyr_channel_m3)
     ADD_NEKTAR_TEST(Pyr_channel_varP)
     ADD_NEKTAR_TEST(Hex_channel_m6_nodalRestart)
-    ADD_NEKTAR_TEST(Hex_channel_m8 LENGTHY)
-    ADD_NEKTAR_TEST(Hex_channel_m8_srhs LENGTHY)
+    ADD_NEKTAR_TEST(Hex_channel_m3_srhs LENGTHY)
     ADD_NEKTAR_TEST(Hex_Kovasnay_SubStep)
+    ADD_NEKTAR_TEST(PrismHex_channel_m4)
     ADD_NEKTAR_TEST(HM)
     ADD_NEKTAR_TEST(HM_Adj)
     ADD_NEKTAR_TEST(bfs_tg LENGTHY)
@@ -89,6 +92,8 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(KovaFlow_SubStep_2order)
     ADD_NEKTAR_TEST(KovaFlow_SubStep_2order_VCSWeakPress)
     ADD_NEKTAR_TEST(Kovas_Quad6_Tri4_mixedbcs)
+    ADD_NEKTAR_TEST(Moving_reference_frame)
+    ADD_NEKTAR_TEST(Rayleigh_Bernard)    
     ADD_NEKTAR_TEST(SinCos_LinNS_3DHom1D)
     ADD_NEKTAR_TEST(TaylorVor_dt1)
     ADD_NEKTAR_TEST(TaylorVor_dt2 LENGTHY)
@@ -119,6 +124,11 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(PPF_R10000_ModifiedArnoldi_Shift) 
     ADD_NEKTAR_TEST(PPF_R15000_ModifiedArnoldi_Shift)
     ADD_NEKTAR_TEST(ChanFlow_m8_Flowrate)
+    ADD_NEKTAR_TEST(ChanFlow_3DH1D_FlowrateExplicit_MVM)
+    ADD_NEKTAR_TEST(PhaseSampling)
+    ADD_NEKTAR_TEST(CylFlow2D_SPM)
+    ADD_NEKTAR_TEST(CylFlow2DMov_SPM)
+    ADD_NEKTAR_TEST(CylFlow3DH1D_SPM)
 
     IF (NEKTAR_USE_SCOTCH)
         # This tests exhibits sensitivity to the choice of DirectStaticCond
@@ -156,14 +166,22 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
         ADD_NEKTAR_TEST(ChanFlow_3DH1D_Parallel_mode1)
         ADD_NEKTAR_TEST(ChanFlow_3DH1D_Parallel_mode2)
         ADD_NEKTAR_TEST(ChanFlow_m3_par)
-        ADD_NEKTAR_TEST(KovaFlow_expFromFile_par)
         ADD_NEKTAR_TEST(ChanFlow_m8_BodyForce_par LENGTHY)
-        ADD_NEKTAR_TEST(KovaFlow_varP_per_par)
-        ADD_NEKTAR_TEST(Hex_channel_m8_par LENGTHY)
-        ADD_NEKTAR_TEST(Hex_channel_varP_par)
+
+        IF (NOT WIN32)
+            ADD_NEKTAR_TEST(KovaFlow_expFromFile_par)
+            ADD_NEKTAR_TEST(KovaFlow_varP_per_par)
+            ADD_NEKTAR_TEST(Hex_channel_varP_par)
+        ENDIF ()
+
+        ADD_NEKTAR_TEST(Hex_channel_m3_par LENGTHY)
         ADD_NEKTAR_TEST(Pyr_channel_m6_par LENGTHY)
-        ADD_NEKTAR_TEST(Hex_channel_m8_srhs_par LENGTHY)
-        ADD_NEKTAR_TEST(Tet_channel_m4_per_xxt_ml_par)
+        ADD_NEKTAR_TEST(Hex_channel_m3_srhs_par LENGTHY)
+
+        IF (NOT WIN32)
+            ADD_NEKTAR_TEST(Tet_channel_m4_per_xxt_ml_par)
+        ENDIF ()
+
         ADD_NEKTAR_TEST(Tet_channel_m8_par)
         ADD_NEKTAR_TEST(Tet_channel_m8_iter_ml_par LENGTHY)
         ADD_NEKTAR_TEST(bfs_tg_par LENGTHY)
@@ -172,14 +190,21 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
         ADD_NEKTAR_TEST(ChanFlow_3DH1D_Flowrate_MVM)
         ADD_NEKTAR_TEST(ChanFlow_3DH1D_Flowrate_MVM_hybrid)
         ADD_NEKTAR_TEST(Hex_channel_m3_Flowrate)
+        ADD_NEKTAR_TEST(ChanFlow_3DH1D_FlowrateExplicit_MVM_par)
+        ADD_NEKTAR_TEST(ChanFlow_3DH1D_FlowrateExplicit_MVM_par_hybrid)
 
         IF (NEKTAR_USE_PETSC)
             ADD_NEKTAR_TEST(Tet_channel_m8_petsc_sc_par LENGTHY)
         ENDIF (NEKTAR_USE_PETSC)
         IF (NEKTAR_USE_HDF5)
             ADD_NEKTAR_TEST(TriQuadChannelHdf5)
+            ADD_NEKTAR_TEST(Tet_channel_m4_per_hdf5)
             ADD_NEKTAR_TEST(Tet_channel_m8_hdf)
             ADD_NEKTAR_TEST(KovaFlow_3DH1D_P5_20modes_MVM_hdf5)
+            ADD_NEKTAR_TEST(CylFlow2D_FieldConvertFilter_Hdf5)
+            IF (NEKTAR_USE_SCOTCH)
+                ADD_NEKTAR_TEST(CubeAllElements_ChanFlow)
+            ENDIF()
         ENDIF (NEKTAR_USE_HDF5)
     ENDIF (NEKTAR_USE_MPI)
 ENDIF( NEKTAR_SOLVER_INCNAVIERSTOKES )

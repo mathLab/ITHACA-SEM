@@ -33,7 +33,7 @@ IF(OCE_FOUND AND OCE_ALL_FOUND)
 ELSE(OCE_FOUND AND OCE_ALL_FOUND) #look for OpenCASCADE
     MESSAGE(STATUS "OpenCASCADE Community Edition could not be found or has missing components.")
     SET(OpenCASCADE_FIND_COMPONENTS ${OCE_FIND_COMPONENTS})
-    FIND_PACKAGE(OpenCASCADE 6.8 QUIET HINTS /opt/local)
+    FIND_PACKAGE(OpenCASCADE)
 
     IF(OpenCASCADE_FOUND)
         MESSAGE(STATUS "OpenCASCADE has been found with all required components.")

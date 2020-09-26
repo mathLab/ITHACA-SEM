@@ -39,37 +39,30 @@ using namespace std;
 
 namespace Nektar
 {
-    std::string UndefinedInOutflow::className
-    = GetBoundaryFactory().RegisterCreatorFunction(
-        "NoUserDefined",
-        UndefinedInOutflow::create,
-        "No boundary condition");
 
-    /**
-     *
-     */
-    UndefinedInOutflow::UndefinedInOutflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
-                                           const LibUtilities::SessionReaderSharedPtr pSession,
-                                           PulseWavePressureAreaSharedPtr pressureArea)
-        : PulseWaveBoundary(pVessel,pSession,pressureArea)
-    {
-    }
+std::string UndefinedInOutflow::className =
+    GetBoundaryFactory().RegisterCreatorFunction(
+        "NoUserDefined", UndefinedInOutflow::create, "No boundary condition");
 
-    /**
-     *
-     */
-    UndefinedInOutflow::~UndefinedInOutflow()
-    {
-
-    }
-
-    void UndefinedInOutflow::v_DoBoundary(
-        const Array<OneD,const Array<OneD, NekDouble> > &inarray,
-        Array<OneD, Array<OneD, NekDouble> > &A_0,
-        Array<OneD, Array<OneD, NekDouble> > &beta,
-        const NekDouble time,
-        int omega,int offset,int n)
-    { 
-    }
-
+UndefinedInOutflow::UndefinedInOutflow(
+    Array<OneD, MultiRegions::ExpListSharedPtr> pVessel,
+    const LibUtilities::SessionReaderSharedPtr pSession,
+    PulseWavePressureAreaSharedPtr pressureArea)
+    : PulseWaveBoundary(pVessel, pSession, pressureArea)
+{
 }
+
+UndefinedInOutflow::~UndefinedInOutflow()
+{
+}
+
+void UndefinedInOutflow::v_DoBoundary(
+    const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+    Array<OneD, Array<OneD, NekDouble> > &A_0,
+    Array<OneD, Array<OneD, NekDouble> > &beta,
+    Array<OneD, Array<OneD, NekDouble> > &alpha, const NekDouble time, int omega,
+    int offset, int n)
+{
+}
+
+} // namespace Nektar

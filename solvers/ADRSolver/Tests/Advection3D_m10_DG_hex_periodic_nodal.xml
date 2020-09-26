@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+  <GEOMETRY DIM="3" SPACE="3">
+    <VERTEX>
+      <!-- Always must have four values per entry. -->
+      <V ID="0">  0.0  0.0  0.0 </V>
+      <V ID="1">  1.0  0.0  0.0 </V>
+      <V ID="2">  1.0  1.0  0.0 </V>
+      <V ID="3">  0.0  1.0  0.0 </V>
+      <V ID="4">  0.0  0.0  1.0 </V>
+      <V ID="5">  1.0  0.0  1.0 </V>
+      <V ID="6">  1.0  1.0  1.0 </V>
+      <V ID="7">  0.0  1.0  1.0 </V>
+    </VERTEX>
+    <EDGE>
+      <E ID="0"> 0 1 </E>
+      <E ID="1"> 1 2 </E>
+      <E ID="2"> 2 3 </E>
+      <E ID="3"> 3 0 </E>
+      <E ID="4"> 0 4 </E>
+      <E ID="5"> 1 5 </E>
+      <E ID="6"> 2 6 </E>
+      <E ID="7"> 3 7 </E>
+      <E ID="8"> 4 5 </E>
+      <E ID="9"> 5 6 </E>
+      <E ID="10"> 6 7 </E>
+      <E ID="11"> 7 4 </E>
+    </EDGE>
+    
+    <!-- Can include Q - quads, T - triangles -->
+    <FACE>
+      <Q ID="0"> 0 1 2 3 </Q>
+      <Q ID="1"> 0 4 8 5 </Q>
+      <Q ID="2"> 1 6 9 5 </Q>
+      <Q ID="3"> 2 6 10 7 </Q>
+      <Q ID="4"> 3 7 11 4 </Q>
+      <Q ID="5"> 8 9 10 11 </Q>
+    </FACE>
+    <ELEMENT>
+      <H ID="0">    0     1     2     3     4     5 </H>
+    </ELEMENT>
+    <COMPOSITE>
+      <C ID="0"> H[0] </C>
+      <C ID="1"> F[0] </C>
+      <C ID="2"> F[1] </C>
+      <C ID="3"> F[2] </C>
+      <C ID="4"> F[3] </C>
+      <C ID="5"> F[4] </C>
+      <C ID="6"> F[5] </C>
+    </COMPOSITE>
+    <DOMAIN> C[0] </DOMAIN>
+  </GEOMETRY>
+  <EXPANSIONS>
+      <E COMPOSITE="C[0]" NUMMODES="10" TYPE="GLL_LAGRANGE" FIELDS="u" />
+  </EXPANSIONS>
+  <CONDITIONS>
+    <PARAMETERS>
+      <P> NumSteps       = 100      </P>
+      <P> TimeStep       = 0.002    </P>
+      <P> IO_CheckSteps  = 200      </P>
+      <P> IO_InfoSteps   = 200      </P>
+      <P> advx           = 1        </P>
+      <P> advy           = 1        </P>
+      <P> advz           = 1        </P>
+    </PARAMETERS>
+    
+    <SOLVERINFO>
+        <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvection"   />
+        <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+        <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
+        <I PROPERTY="UpwindType"            VALUE="Upwind"              />       
+        <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
+    </SOLVERINFO>
+
+    <VARIABLES>
+      <V ID="0"> u </V>
+    </VARIABLES>
+
+    <BOUNDARYREGIONS>
+      <B ID="0"> C[1] </B>
+      <B ID="1"> C[2] </B>
+      <B ID="2"> C[3] </B>
+      <B ID="3"> C[4] </B>
+      <B ID="4"> C[5] </B>
+      <B ID="5"> C[6] </B>
+    </BOUNDARYREGIONS>
+    
+    <BOUNDARYCONDITIONS>
+      <REGION REF="0">
+        <P VAR="u" VALUE="[5]" />
+      </REGION>
+      <REGION REF="1">
+        <P VAR="u" VALUE="[3]" />
+      </REGION>
+      <REGION REF="2">
+        <P VAR="u" VALUE="[4]" />
+      </REGION>
+      <REGION REF="3">
+        <P VAR="u" VALUE="[1]" />
+      </REGION>
+      <REGION REF="4">
+        <P VAR="u" VALUE="[2]" />
+      </REGION>
+      <REGION REF="5">
+        <P VAR="u" VALUE="[0]" />
+      </REGION>
+    </BOUNDARYCONDITIONS>
+
+    <FUNCTION NAME="AdvectionVelocity">
+      <E VAR="Vx" VALUE="1" />
+      <E VAR="Vy" VALUE="1" />
+      <E VAR="Vz" VALUE="1" />
+    </FUNCTION>
+
+    <FUNCTION NAME="ExactSolution">
+      <E VAR="u" VALUE="sin(2*PI*(x-advx*t))*sin(2*PI*(y-advy*t))*sin(2*PI*(z-advz*t))" />
+    </FUNCTION>
+
+    <FUNCTION NAME="InitialConditions">
+      <E VAR="u" VALUE="sin(2*PI*x)*sin(2*PI*y)*sin(2*PI*z)" />
+    </FUNCTION>
+  </CONDITIONS>
+</NEKTAR>

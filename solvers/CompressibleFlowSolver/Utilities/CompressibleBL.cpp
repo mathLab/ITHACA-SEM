@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -41,18 +40,15 @@
 #include <iomanip>
 #include <cmath>
 
+#include <boost/core/ignore_unused.hpp>
+
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/ExpList1D.h>
-#include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
-#include <MultiRegions/ExpList3D.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
-#include <MultiRegions/ContField2D.h>
-#include <MultiRegions/ContField3D.h>
-#include <MultiRegions/DisContField2D.h>
-#include <MultiRegions/DisContField3D.h>
+#include <MultiRegions/ContField.h>
+#include <MultiRegions/DisContField.h>
 
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/Expansion2D.h>
@@ -144,6 +140,8 @@ void RK4(Array<OneD, NekDouble> y,
          NekDouble              h,
          Array<OneD, NekDouble> yout)
 {
+    boost::ignore_unused(x);
+
     int nmax = 5;
 
     Array<OneD, NekDouble> yt (nmax, 0.0);
@@ -253,7 +251,7 @@ void OUTPUT(int                                  m_xpoints,
     Array <OneD, NekDouble > test    (m_xpoints, 0.0);
 
 
-    NekDouble dd, dm, scale, flg;
+    NekDouble dd, dm, scale;
     NekDouble xcher, ycher;
     int index = -1;
 
@@ -266,11 +264,6 @@ void OUTPUT(int                                  m_xpoints,
         dm   = ff[3][i-1] - ff[1][i-1];
         dd   = ff[3][i] - ff[1][i];
         sumd = sumd + 0.5 * (xx[i] - xx[i-1]) * (dd + dm);
-
-        if ((ff[1][i] > 0.999) && (flg < 1.0))
-        {
-            flg  = 2.0;
-        }
     }
 
     scale = sumd;
@@ -402,52 +395,28 @@ int main(int argc, char *argv[])
     Array<OneD, NekDouble> y_QuadraturePts;
     Array<OneD, NekDouble> z_QuadraturePts;
 
-    if (expdim == 2)
-    {
-        MultiRegions::ContField2DSharedPtr Domain;
-        Domain = MemoryManager<MultiRegions::ContField2D>
-            ::AllocateSharedPtr(vSession, graphShPt,
-                                vSession->GetVariable(0));
+    MultiRegions::ContFieldSharedPtr Domain;
+    Domain = MemoryManager<MultiRegions::ContField>
+        ::AllocateSharedPtr(vSession, graphShPt,
+                            vSession->GetVariable(0));
+    
+    // Get the total number of elements
+    nElements = Domain->GetExpSize();
+    std::cout << "Number of elements                 = "
+              << nElements << std::endl;
+    
+    // Get the total number of quadrature points (depends on n. modes)
+    nQuadraturePts = Domain->GetTotPoints();
+    std::cout << "Number of quadrature points        = "
+              << nQuadraturePts << std::endl;
+    
+    // Coordinates of the quadrature points
+    x_QuadraturePts = Array<OneD, NekDouble>(nQuadraturePts);
+    y_QuadraturePts = Array<OneD, NekDouble>(nQuadraturePts);
+    z_QuadraturePts = Array<OneD, NekDouble>(nQuadraturePts);
+    Domain->GetCoords(x_QuadraturePts, y_QuadraturePts, z_QuadraturePts);
 
-        // Get the total number of elements
-        nElements = Domain->GetExpSize();
-        std::cout << "Number of elements                 = "
-                  << nElements << std::endl;
-
-        // Get the total number of quadrature points (depends on n. modes)
-        nQuadraturePts = Domain->GetTotPoints();
-        std::cout << "Number of quadrature points        = "
-                  << nQuadraturePts << std::endl;
-
-        // Coordinates of the quadrature points
-        x_QuadraturePts = Array<OneD, NekDouble>(nQuadraturePts);
-        y_QuadraturePts = Array<OneD, NekDouble>(nQuadraturePts);
-        z_QuadraturePts = Array<OneD, NekDouble>(nQuadraturePts);
-        Domain->GetCoords(x_QuadraturePts, y_QuadraturePts, z_QuadraturePts);
-    }
-    else if (expdim == 3)
-    {
-        MultiRegions::ContField3DSharedPtr Domain;
-        Domain = MemoryManager<MultiRegions::ContField3D>
-            ::AllocateSharedPtr(vSession, graphShPt, vSession->GetVariable(0));
-
-        // Get the total number of elements
-        nElements = Domain->GetExpSize();
-        std::cout << "Number of elements                 = "
-                  << nElements << std::endl;
-
-        // Get the total number of quadrature points (depends on n. modes)
-        nQuadraturePts = Domain->GetTotPoints();
-        std::cout << "Number of quadrature points        = "
-                  << nQuadraturePts << std::endl;
-
-        // Coordinates of the quadrature points
-        x_QuadraturePts = Array<OneD, NekDouble>(nQuadraturePts);
-        y_QuadraturePts = Array<OneD, NekDouble>(nQuadraturePts);
-        z_QuadraturePts = Array<OneD, NekDouble>(nQuadraturePts);
-        Domain->GetCoords(x_QuadraturePts, y_QuadraturePts, z_QuadraturePts);
-    }
-    else
+    if(expdim == 1)
     {
         ASSERTL0(false, "Routine available for 2D and 3D problem only.")
     }
@@ -700,25 +669,25 @@ int main(int argc, char *argv[])
     string file_name;
     if (expdim == 2)
     {
-        MultiRegions::ContField2DSharedPtr Domain;
-        Domain = MemoryManager<MultiRegions::ContField2D>
+        MultiRegions::ContFieldSharedPtr Domain;
+        Domain = MemoryManager<MultiRegions::ContField>
             ::AllocateSharedPtr(vSession, graphShPt, vSession->GetVariable(0));
 
         Array<OneD, MultiRegions::ExpListSharedPtr> Exp(4);
-        MultiRegions::ExpList2DSharedPtr Exp2D_uk;
-        Exp2D_uk = MemoryManager<MultiRegions::ExpList2D>
+        MultiRegions::ExpListSharedPtr Exp2D_uk;
+        Exp2D_uk = MemoryManager<MultiRegions::ExpList>
             ::AllocateSharedPtr(vSession, graphShPt);
 
-        MultiRegions::ExpList2DSharedPtr Exp2D_vk;
-        Exp2D_vk = MemoryManager<MultiRegions::ExpList2D>
+        MultiRegions::ExpListSharedPtr Exp2D_vk;
+        Exp2D_vk = MemoryManager<MultiRegions::ExpList>
             ::AllocateSharedPtr(vSession, graphShPt);
 
-        MultiRegions::ExpList2DSharedPtr Exp2D_rhok;
-        Exp2D_rhok = MemoryManager<MultiRegions::ExpList2D>
+        MultiRegions::ExpListSharedPtr Exp2D_rhok;
+        Exp2D_rhok = MemoryManager<MultiRegions::ExpList>
             ::AllocateSharedPtr(vSession, graphShPt);
 
-        MultiRegions::ExpList2DSharedPtr Exp2D_Tk;
-        Exp2D_Tk = MemoryManager<MultiRegions::ExpList2D>
+        MultiRegions::ExpListSharedPtr Exp2D_Tk;
+        Exp2D_Tk = MemoryManager<MultiRegions::ExpList>
             ::AllocateSharedPtr(vSession, graphShPt);
 
         // Filling the 2D expansion using a recursive algorithm based on the
@@ -795,32 +764,32 @@ int main(int argc, char *argv[])
     }
     else if (expdim == 3)
     {
-        MultiRegions::ContField3DSharedPtr Domain;
-        Domain = MemoryManager<MultiRegions::ContField3D>
+        MultiRegions::ContFieldSharedPtr Domain;
+        Domain = MemoryManager<MultiRegions::ContField>
             ::AllocateSharedPtr(vSession, graphShPt, vSession->GetVariable(0));
 
         Array<OneD,NekDouble> w_QuadraturePts;
         w_QuadraturePts = Array<OneD,NekDouble>(nQuadraturePts, 0.0);
         Array<OneD, MultiRegions::ExpListSharedPtr> Exp(5);
 
-        MultiRegions::ExpList3DSharedPtr Exp3D_uk;
-        Exp3D_uk = MemoryManager<MultiRegions::ExpList3D>
+        MultiRegions::ExpListSharedPtr Exp3D_uk;
+        Exp3D_uk = MemoryManager<MultiRegions::ExpList>
             ::AllocateSharedPtr(vSession, graphShPt);
 
-        MultiRegions::ExpList3DSharedPtr Exp3D_vk;
-        Exp3D_vk = MemoryManager<MultiRegions::ExpList3D>
+        MultiRegions::ExpListSharedPtr Exp3D_vk;
+        Exp3D_vk = MemoryManager<MultiRegions::ExpList>
             ::AllocateSharedPtr(vSession, graphShPt);
 
-        MultiRegions::ExpList3DSharedPtr Exp3D_wk;
-        Exp3D_wk = MemoryManager<MultiRegions::ExpList3D>
+        MultiRegions::ExpListSharedPtr Exp3D_wk;
+        Exp3D_wk = MemoryManager<MultiRegions::ExpList>
             ::AllocateSharedPtr(vSession, graphShPt);
 
-        MultiRegions::ExpList3DSharedPtr Exp3D_rhok;
-        Exp3D_rhok = MemoryManager<MultiRegions::ExpList3D>
+        MultiRegions::ExpListSharedPtr Exp3D_rhok;
+        Exp3D_rhok = MemoryManager<MultiRegions::ExpList>
             ::AllocateSharedPtr(vSession, graphShPt);
 
-        MultiRegions::ExpList3DSharedPtr Exp3D_Tk;
-        Exp3D_Tk = MemoryManager<MultiRegions::ExpList3D>
+        MultiRegions::ExpListSharedPtr Exp3D_Tk;
+        Exp3D_Tk = MemoryManager<MultiRegions::ExpList>
             ::AllocateSharedPtr(vSession, graphShPt);
 
         // Filling the 3D expansion using a recursive algorithm based

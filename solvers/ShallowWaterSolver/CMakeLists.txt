@@ -11,6 +11,7 @@ IF( NEKTAR_SOLVER_SHALLOW_WATER )
        ./ShallowWaterSolver.cpp
        ./EquationSystems/ShallowWaterSystem.cpp
        ./EquationSystems/LinearSWE.cpp
+       ./EquationSystems/MMFSWE.cpp
        ./EquationSystems/NonlinearSWE.cpp
        ./EquationSystems/NonlinearPeregrine.cpp
        ./RiemannSolvers/LinearSWESolver.cpp
@@ -25,6 +26,11 @@ IF( NEKTAR_SOLVER_SHALLOW_WATER )
 	)
 
     ADD_SOLVER_EXECUTABLE(ShallowWaterSolver SOURCES ${ShallowWaterSolverSource})
+
+    #MMF Shallow Water
+    ADD_NEKTAR_TEST(TestMMFSWEPlane)
+    ADD_NEKTAR_TEST(TestMMFSWEZonalSphere)
+    ADD_NEKTAR_TEST(TestMMFSWERossbySphere)
 
     ADD_NEKTAR_TEST(LinearSWE_StandingWave_WallBC_CG_P4)
     ADD_NEKTAR_TEST(LinearSWE_StandingWave_WallBC_CG_P8)

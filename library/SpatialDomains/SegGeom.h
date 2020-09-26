@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -77,7 +76,6 @@ public:
     }
 
     SPATIAL_DOMAINS_EXPORT static const int kNverts = 2;
-    SPATIAL_DOMAINS_EXPORT static const int kNedges = 1;
 
 protected:
     SpatialDomains::PointGeomSharedPtr m_verts[kNverts];
@@ -96,7 +94,6 @@ protected:
     virtual NekDouble v_GetCoord(
         const int i, const Array<OneD, const NekDouble> &Lcoord);
     virtual int v_GetNumVerts() const;
-    virtual int v_GetNumEdges() const;
     virtual bool v_ContainsPoint(
         const Array<OneD, const NekDouble> &gloCoord,
         Array<OneD, NekDouble> &locCoord,
@@ -109,7 +106,7 @@ private:
 
     void SetUpXmap();
 };
-}; // end of namespace
-}; // end of namespace
+} // end of namespace
+} // end of namespace
 
 #endif // NEKTAR_SPATIALDOMAINS_SEGGEOM_H

@@ -39,7 +39,14 @@ IF (NEKTAR_USE_FFTW)
             BINARY_DIR ${TPBUILD}/fftw-3.2.2
             TMP_DIR ${TPBUILD}/fftw-3.2.2-tmp
             INSTALL_DIR ${TPDIST}
-            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} ${TPSRC}/fftw-3.2.2/configure --prefix=${TPDIST} --quiet --enable-shared --disable-dependency-tracking
+            CONFIGURE_COMMAND
+                CC=${CMAKE_C_COMPILER}
+                ${TPSRC}/fftw-3.2.2/configure
+                --prefix=${TPDIST}
+                --libdir=${TPDIST}/lib
+                --quiet
+                --enable-shared
+                --disable-dependency-tracking
         )
 
         SET(FFTW_LIBRARY fftw3 CACHE FILEPATH
@@ -62,8 +69,9 @@ IF (NEKTAR_USE_FFTW)
     # version of some C header files and -isystem reorders include paths).
     GET_FILENAME_COMPONENT(X "${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES}"  ABSOLUTE)
     GET_FILENAME_COMPONENT(Y ${FFTW_INCLUDE_DIR} ABSOLUTE)
+    STRING(FIND "${X}" "${Y}" X_FIND)
 
-    IF (NOT Y MATCHES ".*${X}.*")
+    IF (X_FIND EQUAL -1)
         INCLUDE_DIRECTORIES(SYSTEM ${FFTW_INCLUDE_DIR})
     ENDIF()
 

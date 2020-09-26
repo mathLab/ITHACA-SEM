@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -43,18 +42,21 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-using namespace std;
 
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/algorithm/string.hpp>
+
 #include <tinyxml.h>
+
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
+#include <LibUtilities/BasicUtils/CheckedCast.hpp>
+#include <LibUtilities/Interpreter/Interpreter.h>
 
 #include <boost/program_options.hpp>
 #include <boost/format.hpp>
@@ -62,6 +64,8 @@ using namespace std;
 #ifndef NEKTAR_VERSION
 #define NEKTAR_VERSION "Unknown"
 #endif
+
+using namespace std;
 
 namespace po = boost::program_options;
 namespace io = boost::iostreams;
@@ -203,9 +207,9 @@ namespace Nektar
                     "IterativeStaticCond";
             }
 
-            m_exprEvaluator = MemoryManager<AnalyticExpressionEvaluator>
-                ::AllocateSharedPtr();
-            m_exprEvaluator->SetRandomSeed((m_comm->GetRank() + 1) * time(NULL));
+            m_interpreter = MemoryManager<Interpreter>::AllocateSharedPtr();
+            m_interpreter->SetRandomSeed((m_comm->GetRank() + 1)
+                                            * (unsigned int)time(NULL));
 
             // Split up the communicator
             PartitionComm();
@@ -249,9 +253,9 @@ namespace Nektar
                     "IterativeStaticCond";
             }
 
-            m_exprEvaluator = MemoryManager<AnalyticExpressionEvaluator>
-                ::AllocateSharedPtr();
-            m_exprEvaluator->SetRandomSeed((m_comm->GetRank() + 1) * time(NULL));
+            m_interpreter = MemoryManager<Interpreter>::AllocateSharedPtr();
+            m_interpreter->SetRandomSeed((m_comm->GetRank() + 1)
+                                            * (unsigned int)time(NULL));
 
             // Split up the communicator
             PartitionComm();
@@ -396,6 +400,10 @@ namespace Nektar
                 ("part-only-overlapping",    po::value<int>(),
                                  "only partition mesh into N overlapping partitions.")
                 ("part-info",    "Output partition information")
+#ifdef NEKTAR_USE_CWIPI
+                ("cwipi",        po::value<std::string>(),
+                                 "set CWIPI name")
+#endif
             ;
 
             for (auto &cmdIt : GetCmdLineArgMap())
@@ -666,7 +674,7 @@ namespace Nektar
         /**
          *
          */
-        CommSharedPtr& SessionReader::GetComm()
+        CommSharedPtr SessionReader::GetComm()
         {
             return m_comm;
         }
@@ -729,7 +737,8 @@ namespace Nektar
             auto paramIter = m_parameters.find(vName);
             ASSERTL0(paramIter != m_parameters.end(), "Required parameter '" +
                      pName + "' not specified in session.");
-            pVar = (int)round(paramIter->second);
+            NekDouble param = round(paramIter->second);
+            pVar = checked_cast<int>(param);
         }
 
 
@@ -743,7 +752,8 @@ namespace Nektar
             auto paramIter = m_parameters.find(vName);
             if(paramIter != m_parameters.end())
             {
-                pVar = (int)round(paramIter->second);
+                NekDouble param = round(paramIter->second);
+                pVar = checked_cast<int>(param);
             }
             else
             {
@@ -907,7 +917,7 @@ namespace Nektar
                 auto iter = m_solverInfo.find(vName);
                 if(iter != m_solverInfo.end())
                 {
-                    return true;
+                    return boost::iequals(iter->second, pTrueVal);
                 }
             }
             return false;
@@ -1449,9 +1459,9 @@ namespace Nektar
                     io::copy(in, ss);
                     ss >> (*pDoc);
                 }
-                catch (io::gzip_error& e)
+                catch (io::gzip_error&)
                 {
-                    ASSERTL0(false,
+                    NEKERROR(ErrorUtil::efatal,
                              "Error: File '" + pFilename + "' is corrupt.");
                 }
             }
@@ -1522,7 +1532,7 @@ namespace Nektar
                                 "an empty XML element " +
                                 std::string(p->Value()) +
                                 " which will be ignored.";
-                            WARNINGL0(false, warningmsg.c_str());
+                            NEKERROR(ErrorUtil::ewarning, warningmsg.c_str());
                         }
                         else
                         {
@@ -1590,8 +1600,12 @@ namespace Nektar
                 {
                     vCommModule = "ParallelMPI";
                 }
+                if (m_cmdLineOptions.count("cwipi") && GetCommFactory().ModuleExists("CWIPI"))
+                {
+                    vCommModule = "CWIPI";
+                }
 
-                m_comm = GetCommFactory().CreateInstance(vCommModule,argc,argv);
+                m_comm = GetCommFactory().CreateInstance(vCommModule, argc, argv);
             }
         }
 
@@ -1693,9 +1707,9 @@ namespace Nektar
                         }
                         catch (...)
                         {
-                            ASSERTL0(false, "Syntax error in parameter "
-                                     "expression '" + line
-                                     + "' in XML element: \n\t'"
+                            NEKERROR(ErrorUtil::efatal,
+                                     "Syntax error in parameter expression '"
+                                     + line + "' in XML element: \n\t'"
                                      + tagcontent.str() + "'");
                         }
 
@@ -1708,17 +1722,17 @@ namespace Nektar
                             try
                             {
                                 LibUtilities::Equation expession(
-                                    m_exprEvaluator, rhs);
+                                    m_interpreter, rhs);
                                 value = expession.Evaluate();
                             }
                             catch (const std::runtime_error &)
                             {
-                                ASSERTL0(false,
+                                NEKERROR(ErrorUtil::efatal,
                                          "Error evaluating parameter expression"
                                          " '" + rhs + "' in XML element: \n\t'"
                                          + tagcontent.str() + "'");
                             }
-                            m_exprEvaluator->SetParameter(lhs, value);
+                            m_interpreter->SetParameter(lhs, value);
                             caseSensitiveParameters[lhs] = value;
                             boost::to_upper(lhs);
                             m_parameters[lhs] = value;
@@ -2169,7 +2183,7 @@ namespace Nektar
 
                         // set expression
                         funcDef.m_expression = MemoryManager<Equation>
-                            ::AllocateSharedPtr(m_exprEvaluator, fcnStr, evarsStr);
+                            ::AllocateSharedPtr(m_interpreter, fcnStr, evarsStr);
                     }
 
                     // Files are denoted by F
@@ -2230,7 +2244,7 @@ namespace Nektar
                         stringstream tagcontent;
                         tagcontent << *variable;
 
-                        ASSERTL0(false,
+                        NEKERROR(ErrorUtil::efatal,
                                 "Identifier " + conditionType + " in function "
                                 + std::string(function->Attribute("NAME"))
                                 + " is not recognised in XML element: \n\t'"
@@ -2326,8 +2340,8 @@ namespace Nektar
                   std::string &rhs)
         {
             /// Pull out lhs and rhs and eliminate any spaces.
-            int beg = line.find_first_not_of(" ");
-            int end = line.find_first_of("=");
+            size_t beg = line.find_first_not_of(" ");
+            size_t end = line.find_first_of("=");
             // Check for no parameter name
             if (beg == end) throw 1;
             // Check for no parameter value
@@ -2355,7 +2369,7 @@ namespace Nektar
                     m_cmdLineOptions["solverinfo"].as<
                         std::vector<std::string> >();
 
-                for (int i = 0; i < solverInfoList.size(); ++i)
+                for (size_t i = 0; i < solverInfoList.size(); ++i)
                 {
                     std::string lhs, rhs;
 
@@ -2365,7 +2379,8 @@ namespace Nektar
                     }
                     catch (...)
                     {
-                        ASSERTL0(false, "Parse error with command line "
+                        NEKERROR(ErrorUtil::efatal,
+                                 "Parse error with command line "
                                  "option: "+solverInfoList[i]);
                     }
 
@@ -2380,7 +2395,7 @@ namespace Nektar
                     m_cmdLineOptions["parameter"].as<
                         std::vector<std::string> >();
 
-                for (int i = 0; i < parametersList.size(); ++i)
+                for (size_t i = 0; i < parametersList.size(); ++i)
                 {
                     std::string lhs, rhs;
 
@@ -2390,7 +2405,8 @@ namespace Nektar
                     }
                     catch (...)
                     {
-                        ASSERTL0(false, "Parse error with command line "
+                        NEKERROR(ErrorUtil::efatal,
+                                 "Parse error with command line "
                                  "option: "+parametersList[i]);
                     }
 
@@ -2403,7 +2419,8 @@ namespace Nektar
                     }
                     catch (...)
                     {
-                        ASSERTL0(false, "Unable to convert string: "+rhs+
+                        NEKERROR(ErrorUtil::efatal,
+                                 "Unable to convert string: "+rhs+
                                  "to double value.");
                     }
                 }
@@ -2432,6 +2449,11 @@ namespace Nektar
         void SessionReader::SetUpXmlDoc(void)
         {
             m_xmlDoc = MergeDoc(m_filenames);
+        }
+
+        InterpreterSharedPtr SessionReader::GetInterpreter()
+        {
+            return m_interpreter;
         }
     }
 }

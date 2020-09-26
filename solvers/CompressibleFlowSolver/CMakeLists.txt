@@ -10,7 +10,6 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     SET(CompressibleFlowSolverSource
        ./ArtificialDiffusion/ArtificialDiffusion.cpp
        ./ArtificialDiffusion/NonSmoothShockCapture.cpp
-       ./ArtificialDiffusion/SmoothShockCapture.cpp
        ./BoundaryConditions/CFSBndCond.cpp
        ./BoundaryConditions/ExtrapOrder0BC.cpp
        ./BoundaryConditions/IsentropicVortexBC.cpp
@@ -19,7 +18,6 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./BoundaryConditions/PressureOutflowBC.cpp
        ./BoundaryConditions/PressureOutflowNonReflectiveBC.cpp
        ./BoundaryConditions/RiemannInvariantBC.cpp
-       ./BoundaryConditions/RiemannBoundary.cpp
        ./BoundaryConditions/RinglebFlowBC.cpp
        ./BoundaryConditions/StagnationInflowBC.cpp
        ./BoundaryConditions/SymmetryBC.cpp
@@ -34,8 +32,6 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./EquationSystems/NavierStokesCFE.cpp
        ./EquationSystems/NavierStokesCFEAxisym.cpp
        ./EquationSystems/RinglebFlow.cpp
-       ./Filters/FilterEnergy.cpp
-       ./Filters/FilterCompressibleReynoldsStresses.cpp
        ./Forcing/ForcingAxiSymmetric.cpp
        ./Forcing/ForcingQuasi1D.cpp
        ./Misc/EquationOfState.cpp
@@ -55,7 +51,6 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./RiemannSolvers/HLLCSolver.cpp
        ./RiemannSolvers/LaxFriedrichsSolver.cpp
        ./RiemannSolvers/RoeSolver.cpp
-       ./RiemannSolvers/StegerWarmingSolver.cpp
        )
 
     ADD_SOLVER_EXECUTABLE(CompressibleFlowSolver SOURCES ${CompressibleFlowSolverSource})
@@ -83,7 +78,6 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     #ADD_NEKTAR_TEST(Couette_WeakDG_LDG_MODIFIED)
     ADD_NEKTAR_TEST(Couette_WeakDG_LDG_SEM)
     ADD_NEKTAR_TEST(Couette_WeakDG_LDG_SEM_VariableMu)
-    ADD_NEKTAR_TEST(Couette_WeakDG_LDG_SEM_useUnifiedWeakIntg)
     #ADD_NEKTAR_TEST(Couette_WeakDG_LDG_GAUSS)
     #ADD_NEKTAR_TEST(Couette_FRDG_LFRDG_GAUSS)
     ADD_NEKTAR_TEST(Couette_FRDG_LDG_GAUSS LENGTHY)
@@ -96,6 +90,7 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     # disabled as fails on 32-bit linux  -- cc
     #ADD_NEKTAR_TEST(CylinderSubsonic_NS_WeakDG_LDG_SEM LENGTHY)
     ADD_NEKTAR_TEST(CylinderSubsonic_NS_WeakDG_LDG_GAUSS LENGTHY)
+    ADD_NEKTAR_TEST(CylinderSubsonic_NS_WeakDG_IP_GAUSS LENGTHY)
     ADD_NEKTAR_TEST(CylinderSubsonic_NS_FRDG_LFRDG_GAUSS LENGTHY)
     ADD_NEKTAR_TEST(CylinderSubsonic_NS_WeakDG_LDG_SEM_VariableMu)
     ADD_NEKTAR_TEST(Couette_WeakDG_LDG_SEM_3DHOMO1D_MVM)
@@ -109,12 +104,13 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     ADD_NEKTAR_TEST(Nozzle_AxiSym_NoSwirl)
     ADD_NEKTAR_TEST(Nozzle_AxiSym_Swirl)
     ADD_NEKTAR_TEST(Nozzle_Quasi1D_P6)
-    ADD_NEKTAR_TEST(Nozzle_Quasi1D_P6_unifiedWeakIntg)
     ADD_NEKTAR_TEST(PipeFlow_NSAxisym)
     ADD_NEKTAR_TEST(hump3D_GLL)
     ADD_NEKTAR_TEST(hump3D_SEM)
+    ADD_NEKTAR_TEST(hump3D_SEM_IP)
     ADD_NEKTAR_TEST(Rarefaction_vanderWaals LENGTHY)
-    ADD_NEKTAR_TEST(RiemannBoundary LENGTHY)
+    ADD_NEKTAR_TEST(MMS_Compressible_Poiseuille_testIP)
+    ADD_NEKTAR_TEST(ShockTube_2D_mixedMesh_Lap)
 
     IF (NEKTAR_USE_MPI)
         #ADD_NEKTAR_TEST(Perturbation_M05_square_CBC_par LENGTHY)
@@ -126,10 +122,8 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
         #ADD_NEKTAR_TEST(Perturbation_NS_M05_square_CBC_par LENGTHY)
         #ADD_NEKTAR_TEST(Perturbation_NS_M15_square_CBC_par LENGTHY)
         ADD_NEKTAR_TEST(RAE5240_BSF_LE_bcsfromfile_par)
-        ADD_NEKTAR_TEST(Couette_FRDG_LDG_GAUSS_par)
-        ADD_NEKTAR_TEST(Couette_FRHU_LDG_SEM_par)
-        ADD_NEKTAR_TEST(Couette_WeakDG_LDG_SEM_VariableMu_par)
-        ADD_NEKTAR_TEST(CylinderSubsonic_NS_WeakDG_LDG_SEM_VariableMu_par)
+        # disabled as intermittently fails
+        #ADD_NEKTAR_TEST(Couette_WeakDG_LDG_Exact_par)
     ENDIF (NEKTAR_USE_MPI)
 
     IF (NEKTAR_USE_FFTW)

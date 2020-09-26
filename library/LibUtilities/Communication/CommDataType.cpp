@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -36,6 +35,10 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Communication/CommDataType.h>
 
+#ifdef NEKTAR_USING_PETSC
+#include "petscsys.h"
+#endif
+
 namespace Nektar
 {
 namespace LibUtilities
@@ -54,6 +57,28 @@ int CommDataTypeGetSize(CommDataType dt)
     int size;
     MPI_Type_size(dt, &size);
     return size;
+#elif NEKTAR_USING_PETSC
+    if (dt == MPI_CHAR)
+       return sizeof(char);
+    else if (dt == MPI_INT)
+       return sizeof(int);
+    else if (dt == MPI_UNSIGNED)
+        return sizeof(unsigned);
+    else if (dt == MPI_LONG)
+        return sizeof(long);
+    else if (dt == MPI_UNSIGNED_LONG)
+        return sizeof(unsigned long);
+    else if (dt == MPI_LONG_LONG)
+        return sizeof(long long);
+    else if (dt == MPI_UNSIGNED_LONG_LONG)
+        return sizeof(unsigned long long);
+    else if (dt == MPI_FLOAT)
+        return sizeof(float);
+    else if (dt == MPI_DOUBLE)
+        return sizeof(double);
+    else if (dt == MPI_LONG_DOUBLE)
+        return sizeof(long double);
+    return sizeof(int);
 #else
     switch (dt)
     {

@@ -4,7 +4,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField.h>
 #include <SpatialDomains/MeshGraph.h>
 
 using namespace std;
@@ -28,13 +28,12 @@ int main(int argc, char *argv[])
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-    MultiRegions::ContField2DSharedPtr Exp,Fce;
+    MultiRegions::ContFieldSharedPtr Exp,Fce;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     StdRegions::ConstFactorMap factors;
     StdRegions::VarCoeffMap varcoeffs;
-    FlagList flags;
 
     if(argc < 2)
     {
@@ -55,9 +54,8 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Print summary of solution details
-        flags.set(eUseGlobal, true);
         factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
-        const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
+        const SpatialDomains::ExpansionInfoMap &expansions = graph2D->GetExpansionInfo();
         LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
 
         if (vSession->GetComm()->GetRank() == 0)
@@ -73,7 +71,7 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Define Expansion
-        Exp = MemoryManager<MultiRegions::ContField2D>::
+        Exp = MemoryManager<MultiRegions::ContField>::
             AllocateSharedPtr(vSession,graph2D,vSession->GetVariable(0));
         //----------------------------------------------
 
@@ -130,7 +128,7 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Setup expansion containing the  forcing function
-        Fce = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(*Exp);
+        Fce = MemoryManager<MultiRegions::ContField>::AllocateSharedPtr(*Exp);
         Fce->SetPhys(fce);
         //----------------------------------------------
         Timing("Define forcing ..");
@@ -139,7 +137,7 @@ int main(int argc, char *argv[])
         //Helmholtz solution taking physical forcing after setting
         //initial condition to zero
         Vmath::Zero(Exp->GetNcoeffs(),Exp->UpdateCoeffs(),1);
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), flags, factors, varcoeffs);
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), factors, varcoeffs);
         //----------------------------------------------
         Timing("Helmholtz Solve ..");
 
@@ -147,7 +145,7 @@ int main(int argc, char *argv[])
         for(i = 0; i < 20; ++i)
         {
             Vmath::Zero(Exp->GetNcoeffs(),Exp->UpdateCoeffs(),1);
-            Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), flags, factors, varcoeffs);
+            Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), factors, varcoeffs);
         }
 
         Timing("20 Helmholtz Solves:... ");
@@ -155,7 +153,7 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Backward Transform Solution to get solved values
-        Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(), MultiRegions::eGlobal);
+        Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
         //----------------------------------------------
 
         //-----------------------------------------------
@@ -165,7 +163,6 @@ int main(int argc, char *argv[])
                                                     = Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
-        Exp->GlobalToLocal(Exp->GetCoeffs(),Exp->UpdateCoeffs());
         for(i = 0; i < FieldDef.size(); ++i)
         {
             FieldDef[i]->m_fields.push_back("u");

@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -36,13 +35,15 @@
 #include <string>
 using namespace std;
 
-#include "ProcessEquiSpacedOutput.h"
+#include <boost/core/ignore_unused.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/Interp.h>
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdTriExp.h>
-#include <boost/math/special_functions/fpclassify.hpp>
+
+#include "ProcessEquiSpacedOutput.h"
 
 namespace Nektar
 {
@@ -72,6 +73,8 @@ ProcessEquiSpacedOutput::~ProcessEquiSpacedOutput()
 
 void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
 {
+    boost::ignore_unused(vm);
+
     int nel = m_f->m_exp[0]->GetExpSize();
     if (!nel)
     {
@@ -136,7 +139,7 @@ void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
         e = m_f->m_exp[0]->GetExp(i);
         if (e->DetShapeType() == LibUtilities::ePrism)
         {
-            StdRegions::Orientation forient = e->GetForient(0);
+            StdRegions::Orientation forient = e->GetTraceOrient(0);
             int fid                         = e->GetGeom()->GetFid(0);
             if (face0orient.count(fid))
             { // face 1 meeting face 1 so reverse this id
@@ -170,7 +173,7 @@ void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
             if (face0orient.count(fid))
             {
                 // check to see how face 2 is orientated
-                StdRegions::Orientation forient2 = e->GetForient(2);
+                StdRegions::Orientation forient2 = e->GetTraceOrient(2);
                 StdRegions::Orientation forient0 = face0orient[fid];
 
                 // If dir 1 or forient2 is bwd then check agains
@@ -313,8 +316,8 @@ void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
                 e->GetSimplexEquiSpacedConnectivity(conn);
             }
         }
-        Array<OneD, int> newconn(conn.num_elements());
-        for (int j = 0; j < conn.num_elements(); ++j)
+        Array<OneD, int> newconn(conn.size());
+        for (int j = 0; j < conn.size(); ++j)
         {
             newconn[j] = conn[j] + cnt;
         }
@@ -417,7 +420,7 @@ void ProcessEquiSpacedOutput::SetHomogeneousConnectivity(void)
 {
     LocalRegions::ExpansionSharedPtr e;
     int nel          = m_f->m_exp[0]->GetPlane(0)->GetExpSize();
-    int nPlanes      = m_f->m_exp[0]->GetZIDs().num_elements();
+    int nPlanes      = m_f->m_exp[0]->GetZIDs().size();
     int npts         = m_f->m_fieldPts->GetNpoints();
     int nptsPerPlane = npts / nPlanes;
     int coordim      = 3;
@@ -430,8 +433,8 @@ void ProcessEquiSpacedOutput::SetHomogeneousConnectivity(void)
         // Write points with extra plane
         Array<OneD, Array<OneD, NekDouble> > pts;
         m_f->m_fieldPts->GetPts(pts);
-        Array<OneD, Array<OneD, NekDouble> > newPts(pts.num_elements());
-        for (int i = 0; i < pts.num_elements(); i++)
+        Array<OneD, Array<OneD, NekDouble> > newPts(pts.size());
+        for (int i = 0; i < pts.size(); i++)
         {
             newPts[i] = Array<OneD, NekDouble>(npts + nptsPerPlane);
             // Copy old points
@@ -479,8 +482,8 @@ void ProcessEquiSpacedOutput::SetHomogeneousConnectivity(void)
         int connPerPlane = oldConn.size() / nPlanes;
         for (int i = 0; i < connPerPlane; i++)
         {
-            conn = Array<OneD, int>(oldConn[i].num_elements());
-            for (int j = 0; j < conn.num_elements(); j++)
+            conn = Array<OneD, int>(oldConn[i].size());
+            for (int j = 0; j < conn.size(); j++)
             {
                 conn[j] = oldConn[i][j] + npts;
             }
@@ -502,7 +505,7 @@ void ProcessEquiSpacedOutput::SetHomogeneousConnectivity(void)
     {
         for(int i = 0; i < nel; ++i)
         {
-            int nLines = oldConn[i].num_elements()/2;
+            int nLines = oldConn[i].size()/2;
             // Create array for new connectivity
             // (2 triangles between each plane for each line)
             conn = Array<OneD, int> (2*3*nLines*(nPlanes-1));
@@ -713,7 +716,7 @@ void ProcessEquiSpacedOutput::SetHomogeneousConnectivity(void)
         // Crete new connectivity using homogeneous information
         for(int i = 0; i < nel; ++i)
         {
-            int nTris = oldConn[i].num_elements()/3;
+            int nTris = oldConn[i].size()/3;
             // Create array for new connectivity
             // (3 tetrahedra between each plane for each triangle)
             conn = Array<OneD, int> (4*3*nTris*(nPlanes-1));

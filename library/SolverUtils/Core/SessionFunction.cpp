@@ -11,7 +11,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -98,7 +97,7 @@ void SessionFunction::Evaluate(std::vector<std::string> pFieldNames,
                                const NekDouble &pTime,
                                const int domain)
 {
-    ASSERTL1(pFieldNames.size() == pArray.num_elements(),
+    ASSERTL1(pFieldNames.size() == pArray.size(),
              "Function '" + m_name +
              "' variable list size mismatch with array storage.");
 
@@ -122,7 +121,7 @@ void SessionFunction::Evaluate(
     const NekDouble &pTime,
     const int domain)
 {
-    ASSERTL0(pFieldNames.size() == pFields.num_elements(),
+    ASSERTL0(pFieldNames.size() == pFields.size(),
              "Field list / name list size mismatch.");
 
     for (int i = 0; i < pFieldNames.size(); i++)
@@ -159,7 +158,7 @@ void SessionFunction::Evaluate(std::string pFieldName,
               (pTime - m_lastCached[key] < NekConstants::kNekZeroTol))))
     {
         // found cached field
-        if (pArray.num_elements() < nq)
+        if (pArray.size() < nq)
         {
             pArray = Array<OneD, NekDouble>(nq);
         }
@@ -249,7 +248,7 @@ void SessionFunction::EvaluateExp(string pFieldName,
                                   const int domain)
 {
     unsigned int nq = m_field->GetNpoints();
-    if (pArray.num_elements() < nq)
+    if (pArray.size() < nq)
     {
         pArray = Array<OneD, NekDouble>(nq);
     }
@@ -281,7 +280,7 @@ void SessionFunction::EvaluateFld(string pFieldName,
                                   const int domain)
 {
     unsigned int nq = m_field->GetNpoints();
-    if (pArray.num_elements() < nq)
+    if (pArray.size() < nq)
     {
         pArray = Array<OneD, NekDouble>(nq);
     }
@@ -384,7 +383,7 @@ void SessionFunction::EvaluatePts(string pFieldName,
                                   const int domain)
 {
     unsigned int nq = m_field->GetNpoints();
-    if (pArray.num_elements() < nq)
+    if (pArray.size() < nq)
     {
         pArray = Array<OneD, NekDouble>(nq);
     }
@@ -478,7 +477,7 @@ void SessionFunction::EvaluatePts(string pFieldName,
     }
     else
     {
-        interp = FieldUtils::Interpolator(Nektar::FieldUtils::eShepard);
+        interp = FieldUtils::Interpolator(LibUtilities::eShepard);
         if (m_session->GetComm()->GetRank() == 0)
         {
             interp.SetProgressCallback(&SessionFunction::PrintProgressbar,

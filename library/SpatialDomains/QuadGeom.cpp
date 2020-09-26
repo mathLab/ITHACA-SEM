@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -87,6 +86,7 @@ QuadGeom::QuadGeom(const int id,
 }
 
 QuadGeom::QuadGeom(const QuadGeom &in)
+    : Geometry2D(in)
 {
     // From Geometry
     m_shapeType = in.m_shapeType;
@@ -136,9 +136,11 @@ NekDouble QuadGeom::v_GetCoord(const int i,
 }
 
 StdRegions::Orientation QuadGeom::GetFaceOrientation(const QuadGeom &face1,
-                                                     const QuadGeom &face2)
+                                                     const QuadGeom &face2,
+            bool doRot, int dir, NekDouble angle, NekDouble tol)
 {
-    return GetFaceOrientation(face1.m_verts, face2.m_verts);
+    return GetFaceOrientation(face1.m_verts, face2.m_verts,
+                              doRot, dir, angle, tol);
 }
 
 /**
@@ -146,43 +148,66 @@ StdRegions::Orientation QuadGeom::GetFaceOrientation(const QuadGeom &face1,
  * not face1 to face2!).
  */
 StdRegions::Orientation QuadGeom::GetFaceOrientation(
-    const PointGeomVector &face1, const PointGeomVector &face2)
+            const PointGeomVector &face1, const PointGeomVector &face2,
+            bool doRot, int dir, NekDouble angle, NekDouble tol)
 {
     int i, j, vmap[4] = {-1, -1, -1, -1};
-    NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
 
-    // For periodic faces, we calculate the vector between the centre
-    // points of the two faces. (For connected faces this will be
-    // zero). We can then use this to determine alignment later in the
-    // algorithm.
-    for (i = 0; i < 4; ++i)
+    if(doRot)
     {
-        cx += (*face2[i])(0) - (*face1[i])(0);
-        cy += (*face2[i])(1) - (*face1[i])(1);
-        cz += (*face2[i])(2) - (*face1[i])(2);
-    }
-    cx /= 4;
-    cy /= 4;
-    cz /= 4;
+        PointGeom rotPt;
 
-    // Now construct a mapping which takes us from the vertices of one
-    // face to the other. That is, vertex j of face2 corresponds to
-    // vertex vmap[j] of face1.
-    for (i = 0; i < 4; ++i)
-    {
-        x = (*face1[i])(0);
-        y = (*face1[i])(1);
-        z = (*face1[i])(2);
-        for (j = 0; j < 4; ++j)
+        for (i = 0; i < 4; ++i)
         {
-            x1 = (*face2[j])(0) - cx;
-            y1 = (*face2[j])(1) - cy;
-            z1 = (*face2[j])(2) - cz;
-            if (sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) +
-                     (z1 - z) * (z1 - z)) < 1e-8)
+            rotPt.Rotate((*face1[i]), dir, angle);
+            for (j = 0; j < 4; ++j)
             {
-                vmap[j] = i;
-                break;
+                if (rotPt.dist(*face2[j]) < tol)
+                {
+                    vmap[j] = i;
+                    break;
+                }
+            }
+        }
+    }
+    else
+    {
+
+        NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
+
+        // For periodic faces, we calculate the vector between the centre
+        // points of the two faces. (For connected faces this will be
+        // zero). We can then use this to determine alignment later in the
+        // algorithm.
+        for (i = 0; i < 4; ++i)
+        {
+            cx += (*face2[i])(0) - (*face1[i])(0);
+            cy += (*face2[i])(1) - (*face1[i])(1);
+            cz += (*face2[i])(2) - (*face1[i])(2);
+        }
+        cx /= 4;
+        cy /= 4;
+        cz /= 4;
+
+        // Now construct a mapping which takes us from the vertices of one
+        // face to the other. That is, vertex j of face2 corresponds to
+        // vertex vmap[j] of face1.
+        for (i = 0; i < 4; ++i)
+        {
+            x = (*face1[i])(0);
+            y = (*face1[i])(1);
+            z = (*face1[i])(2);
+            for (j = 0; j < 4; ++j)
+            {
+                x1 = (*face2[j])(0) - cx;
+                y1 = (*face2[j])(1) - cy;
+                z1 = (*face2[j])(2) - cz;
+                if (sqrt((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) +
+                         (z1 - z) * (z1 - z)) < 1e-8)
+                {
+                    vmap[j] = i;
+                    break;
+                }
             }
         }
     }
@@ -369,7 +394,7 @@ void QuadGeom::v_FillGeom()
         for (i = 0; i < kNedges; i++)
         {
             m_edges[i]->FillGeom();
-            m_xmap->GetEdgeToElementMap(i, m_eorient[i], mapArray, signArray);
+            m_xmap->GetTraceToElementMap(i,  mapArray, signArray, m_eorient[i]);
 
             nEdgeCoeffs = m_edges[i]->GetXmap()->GetNcoeffs();
 
@@ -444,8 +469,8 @@ NekDouble QuadGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
 
         int min_i = Vmath::Imin(npts, tmpx, 1);
 
-        Lcoords[0] = za[min_i % za.num_elements()];
-        Lcoords[1] = zb[min_i / za.num_elements()];
+        Lcoords[0] = za[min_i % za.size()];
+        Lcoords[1] = zb[min_i / za.size()];
 
         // Perform newton iteration to find local coordinates
         NewtonIterationForLocCoord(coords, ptsx, ptsy, Lcoords, resid);
@@ -458,16 +483,36 @@ bool QuadGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                NekDouble tol,
                                NekDouble &resid)
 {
-    ASSERTL1(gloCoord.num_elements() >= 2,
-             "Two dimensional geometry expects at least two coordinates.");
+    //Rough check if within twice min/max point
+    if (GetMetricInfo()->GetGtype() != eRegular)
+    {
+        if (!MinMaxCheck(gloCoord))
+        {
+            return false;
+        }
+    }
 
+    // Convert to the local (eta) coordinates.
     resid = GetLocCoords(gloCoord, stdCoord);
+
+    // Check local coordinate is within cartesian bounds.
     if (stdCoord[0] >= -(1 + tol) && stdCoord[1] >= -(1 + tol) &&
         stdCoord[0] <= (1 + tol) && stdCoord[1] <= (1 + tol))
     {
         return true;
     }
+
+    //Clamp local coords
+    ClampLocCoords(stdCoord, tol);
+
     return false;
+}
+
+int QuadGeom::v_GetDir(const int i, const int j) const
+{
+    boost::ignore_unused(j); // required in 3D shapes
+
+    return i%2;
 }
 
 void QuadGeom::v_Reset(CurveMap &curvedEdges, CurveMap &curvedFaces)
@@ -503,5 +548,5 @@ void QuadGeom::v_Setup()
     }
 }
 
-}; // end of namespace
-}; // end of namespace
+} // end of namespace
+} // end of namespace

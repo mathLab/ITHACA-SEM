@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -62,6 +61,10 @@ protected:
     virtual void v_GenGeomFactors();
     virtual NekDouble v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
                                      Array<OneD, NekDouble> &Lcoords);
+    virtual bool v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
+                                 Array<OneD, NekDouble> &locCoord,
+                                 NekDouble tol,
+                                 NekDouble &resid);
     virtual int v_GetDir(const int faceidx, const int facedir) const;
     virtual void v_Reset(CurveMap &curvedEdges, CurveMap &curvedFaces);
     virtual void v_Setup();

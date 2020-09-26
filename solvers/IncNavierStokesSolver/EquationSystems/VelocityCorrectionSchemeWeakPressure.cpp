@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -78,12 +77,11 @@ namespace Nektar
         UnsteadySystem::v_GenerateSummary(s);
 
         SolverUtils::AddSummaryItem(s, "Splitting Scheme", "Velocity correction (weak press. form)");
-        if (m_extrapolation->GetSubStepIntegrationMethod() !=
-            LibUtilities::eNoTimeIntegrationMethod)
+
+        if( m_extrapolation->GetSubStepName().size() )
         {
-            SolverUtils::AddSummaryItem(s, "Substepping", 
-                             LibUtilities::TimeIntegrationMethodMap[
-                              m_extrapolation->GetSubStepIntegrationMethod()]);
+            SolverUtils::AddSummaryItem( s, "Substepping", 
+                                         m_extrapolation->GetSubStepName() );
         }
 
         string dealias = m_homogen_dealiasing ? "Homogeneous1D" : "";
@@ -140,7 +138,6 @@ namespace Nektar
 
         // Solver Pressure Poisson Equation
         m_pressure->HelmSolve(Forcing, m_pressure->UpdateCoeffs(),
-                              NullFlagList,
                               factors, StdRegions::NullVarCoeffMap,
                               MultiRegions::NullVarFactorsMap,
                               NullNekDouble1DArray, false);

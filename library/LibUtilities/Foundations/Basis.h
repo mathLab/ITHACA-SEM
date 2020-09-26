@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -79,6 +78,9 @@ namespace Nektar
             ~BasisKey()
             {
             }
+
+            /// Assignment operator
+            BasisKey& operator=(const BasisKey &) = default;
 
             /// Returns the order of the basis.
             inline int GetNumModes() const
@@ -188,7 +190,7 @@ namespace Nektar
                                             const BasisKey &rhs) const;
 
         protected:
-            int        m_nummodes;   ///< Expansion order.
+            unsigned int        m_nummodes;   ///< Expansion order.
             BasisType  m_basistype;  ///< Expansion type.
             PointsKey  m_pointsKey;  ///< Points specification.
 
@@ -275,6 +277,11 @@ namespace Nektar
                 m_points->GetZW(z,w);
             }
 
+            inline const Array<OneD, const NekDouble>& GetBaryWeights() const
+            {
+                return m_points->GetBaryWeights();
+            }
+
             inline const std::shared_ptr<NekMatrix<NekDouble> > & GetD(
                               Direction dir = xDir) const
             {
@@ -336,6 +343,8 @@ namespace Nektar
                                     m_InterpManager;
 
         private:
+            static bool initBasisManager[];
+
             /// Private constructor with BasisKey.
             Basis(const BasisKey &bkey);
 

@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -124,6 +123,37 @@ namespace Nektar
                     bool doCheckCollDir1,
                     bool doCheckCollDir2);
 
+            /** \brief return the number of edges in 3D expansion
+             */
+            int GetNedges() const
+            {
+                return v_GetNedges();
+            }
+            
+            /** \brief This function returns the number of expansion coefficients
+             *  belonging to the \a i-th edge
+             *
+             *  This function is a wrapper around the virtual function
+             *  \a v_GetEdgeNcoeffs()
+             *
+             *  \param i specifies which edge
+             *  \return returns the number of expansion coefficients belonging to
+             *  the \a i-th edge
+             */
+            int GetEdgeNcoeffs(const int i) const
+            {
+                return v_GetEdgeNcoeffs(i);
+            }
+
+            void GetEdgeInteriorToElementMap(
+                    const int                  tid,
+                    Array<OneD, unsigned int> &maparray,
+                    Array<OneD,          int> &signarray,
+                    Orientation                traceOrient = eForwards)
+            {
+                v_GetEdgeInteriorToElementMap(tid,maparray,signarray,traceOrient);
+            }
+
         protected:
 
             /** \brief This function evaluates the expansion at a single
@@ -190,19 +220,14 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual NekDouble v_Integral(
                 const Array<OneD, const NekDouble>& inarray);
 
-            STD_REGIONS_EXPORT virtual void v_NegateFaceNormal(
-                const int face);
+            STD_REGIONS_EXPORT virtual int v_GetNedges(void) const;
+            STD_REGIONS_EXPORT virtual int v_GetEdgeNcoeffs(const int i) const;
 
-            STD_REGIONS_EXPORT virtual bool v_FaceNormalNegated(
-                const int face);
-
-            STD_REGIONS_EXPORT virtual int v_GetTraceNcoeffs(const int i) const
-            {
-                return GetFaceNcoeffs(i);
-            }
-
-            std::map<int, NormalVector> m_faceNormals;
-            std::map<int, bool> m_negatedNormals;
+            STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorToElementMap(
+               const int                  tid,
+               Array<OneD, unsigned int> &maparray,
+               Array<OneD,          int> &signarray,
+               Orientation                traceOrient = eForwards);
 
             STD_REGIONS_EXPORT virtual void v_GenStdMatBwdDeriv(
                   const int dir,
@@ -219,8 +244,6 @@ namespace Nektar
             {
                 return 3;
             }
-            STD_REGIONS_EXPORT const NormalVector & v_GetSurfaceNormal(const int id) const;
-            STD_REGIONS_EXPORT const NormalVector & v_GetFaceNormal(const int face) const;
 
             inline virtual void v_MultplyStdDerivBase0(
                 const Array<OneD, const NekDouble>& inarray,
@@ -257,7 +280,6 @@ namespace Nektar
                                          inarray, outarray, wsp,
                                          true,true,false);
             }
-            
         };
 
         STD_REGIONS_EXPORT LibUtilities::BasisKey EvaluateTriFaceBasisKey(

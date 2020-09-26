@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -76,6 +75,24 @@ private:
     static std::vector<int> PrismReordering(NekMeshUtils::ElmtConfig conf);
     static std::vector<int> TetReordering  (NekMeshUtils::ElmtConfig conf);
     static std::vector<int> LineReordering (NekMeshUtils::ElmtConfig conf);
+
+    // Gmsh file version
+    NekDouble m_version;
+    // Previous id for contiguousness
+    int m_prevId;
+    // Id map if non-contiguous
+    std::map<int, int> m_idMap;
+    // Highest tag number
+    int m_maxTagId;
+    // This map takes each element ID and maps it to a permutation map
+    // that is required to take Gmsh element node orderings and map them
+    // to Nektar++ orderings.
+    std::unordered_map<int, std::vector<int>> m_orderingMap;
+
+    void ReadNextNode();
+    void ReadNextNodeBlock(int nVertices = 0);
+    void SaveNode(int id, NekDouble x = 0, NekDouble y = 0, NekDouble z = 0);
+    void ReadNextElement(int tag = 0, int elm_type = 0);
 };
 }
 }

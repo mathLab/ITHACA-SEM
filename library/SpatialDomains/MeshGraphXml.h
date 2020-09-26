@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -37,7 +36,8 @@
 #ifndef NEKTAR_SPATIALDOMAINS_MGXML_H
 #define NEKTAR_SPATIALDOMAINS_MGXML_H
 
-#include "MeshGraph.h"
+#include <SpatialDomains/MeshGraph.h>
+#include <SpatialDomains/MeshPartition.h>
 
 namespace Nektar
 {
@@ -61,7 +61,7 @@ public:
         const LibUtilities::FieldMetaDataMap &metadata
                                          = LibUtilities::NullFieldMetaDataMap);
 
-    SPATIAL_DOMAINS_EXPORT virtual void WriteGeometry(
+    SPATIAL_DOMAINS_EXPORT void WriteXMLGeometry(
         std::string outname,
         std::vector<std::set<unsigned int>> elements,
         std::vector<unsigned int> partitions);
@@ -119,8 +119,10 @@ protected:
     virtual void WriteTets(TiXmlElement *elmtTag, TetGeomMap &tets);
     virtual void WriteCurves(TiXmlElement *geomTag, CurveMap &edges, CurveMap &faces);
     void WriteComposites(TiXmlElement *geomTag, CompositeMap &comps);
-    void WriteDomain(TiXmlElement *geomTag, vector<CompositeMap> &domain);
+    void WriteDomain(TiXmlElement *geomTag, std::vector<CompositeMap> &domain);
     void WriteDefaultExpansion(TiXmlElement *root);
+
+    CompositeOrdering CreateCompositeOrdering();
 };
 
 } // end of namespace

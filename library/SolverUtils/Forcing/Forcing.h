@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -50,6 +49,7 @@ namespace SolverUtils
 {
     //  Forward declaration
     class Forcing;
+    class EquationSystem;
 
     /// A shared pointer to an EquationSystem object
     SOLVER_UTILS_EXPORT typedef std::shared_ptr<Forcing> ForcingSharedPtr;
@@ -57,6 +57,7 @@ namespace SolverUtils
     /// Declaration of the forcing factory
     typedef LibUtilities::NekFactory<std::string, Forcing,
             const LibUtilities::SessionReaderSharedPtr&,
+            const std::weak_ptr<EquationSystem>&,
             const Array<OneD, MultiRegions::ExpListSharedPtr>&,
             const unsigned int&,
             const TiXmlElement*> ForcingFactory;
@@ -94,7 +95,8 @@ namespace SolverUtils
                 const NekDouble                                   &time);
 
             SOLVER_UTILS_EXPORT static std::vector<ForcingSharedPtr> Load(
-                        const LibUtilities::SessionReaderSharedPtr& pSession,
+                        const LibUtilities::SessionReaderSharedPtr &pSession,
+                        const std::weak_ptr<EquationSystem>      &pEquation,
                         const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                         const unsigned int& pNumForcingFields = 0);
 
@@ -106,6 +108,8 @@ namespace SolverUtils
         protected:
             /// Session reader
             LibUtilities::SessionReaderSharedPtr m_session;
+            /// Weak pointer to equation system using this forcing
+            const std::weak_ptr<EquationSystem> m_equ;
             /// Evaluated forcing function
             Array<OneD, Array<OneD, NekDouble> > m_Forcing;
             /// Number of variables
@@ -115,7 +119,8 @@ namespace SolverUtils
 
             /// Constructor
             SOLVER_UTILS_EXPORT Forcing(
-                const LibUtilities::SessionReaderSharedPtr&);
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::weak_ptr<EquationSystem>      &pEquation);
 
             SOLVER_UTILS_EXPORT virtual void v_InitObject(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>&       pFields,

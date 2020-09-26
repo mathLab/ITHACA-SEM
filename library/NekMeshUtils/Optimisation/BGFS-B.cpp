@@ -10,7 +10,6 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -55,8 +54,8 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
     Array<OneD, NekDouble> li = opti->Getli();
 
     set<int> Fset;
-    Array<OneD, NekDouble> ti(xi.num_elements());
-    for (int i = 0; i < ti.num_elements(); i++)
+    Array<OneD, NekDouble> ti(xi.size());
+    for (int i = 0; i < ti.size(); i++)
     {
         if (J(i, 0) < 0)
         {
@@ -77,8 +76,8 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
     }
 
     // intitialise d
-    DNekMat d(xi.num_elements(), 1);
-    for (int i = 0; i < xi.num_elements(); i++)
+    DNekMat d(xi.size(), 1);
+    for (int i = 0; i < xi.size(); i++)
     {
         if (fabs(ti[i]) < 1E-10)
         {
@@ -90,9 +89,9 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
         }
     }
 
-    Array<OneD, NekDouble> xci(xi.num_elements());
+    Array<OneD, NekDouble> xci(xi.size());
 
-    for (int i = 0; i < xci.num_elements(); i++)
+    for (int i = 0; i < xci.size(); i++)
     {
         if (xi[i] + d(i, 0) < li[i])
         {
@@ -117,10 +116,10 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
         }
     }
 
-    DNekMat Z(xci.num_elements(), xci.num_elements(), 0.0);
+    DNekMat Z(xci.size(), xci.size(), 0.0);
 
     set<int>::iterator it;
-    for (int i = 0; i < xci.num_elements(); i++)
+    for (int i = 0; i < xci.size(); i++)
     {
         it = Fset.find(i);
         if (it != Fset.end())
@@ -129,8 +128,8 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
         }
     }
 
-    DNekMat dx(xci.num_elements(), 1, 0.0);
-    for (int i = 0; i < xci.num_elements(); i++)
+    DNekMat dx(xci.size(), 1, 0.0);
+    for (int i = 0; i < xci.size(); i++)
     {
         dx(i, 0) = xci[i] - xi[i];
     }
@@ -155,8 +154,8 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
 
     DNekMat grad = alpha * du;
 
-    Array<OneD, NekDouble> dk(xci.num_elements()), xibar(xci.num_elements());
-    for (int i = 0; i < xci.num_elements(); i++)
+    Array<OneD, NekDouble> dk(xci.size()), xibar(xci.size());
+    for (int i = 0; i < xci.size(); i++)
     {
         set<int>::iterator f = Fset.find(i);
         if (f != Fset.end())
@@ -169,12 +168,12 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
         }
     }
 
-    Vmath::Vsub(xci.num_elements(), &xibar[0], 1, &xi[0], 1, &dk[0], 1);
+    Vmath::Vsub(xci.size(), &xibar[0], 1, &xi[0], 1, &dk[0], 1);
 
     NekDouble c = 0.0;
     NekDouble r = 0.0;
     NekDouble l = 0.0;
-    for (int i = 0; i < dk.num_elements(); i++)
+    for (int i = 0; i < dk.size(); i++)
     {
         c += 1E-4 * J(i, 0) * dk[i];
         r += J(i, 0) * dk[i];
@@ -182,7 +181,7 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
 
     /*cout << endl << J << endl << endl;
 
-    for(int i = 0; i < dk.num_elements(); i++)
+    for(int i = 0; i < dk.size(); i++)
     {
         cout << dk[i] << endl;
     }
@@ -193,7 +192,7 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
     int iterct    = 0;
     NekDouble fo  = opti->F(xi);
     NekDouble fn;
-    Array<OneD, NekDouble> tst(xi.num_elements());
+    Array<OneD, NekDouble> tst(xi.size());
     do
     {
         if (iterct > 100)
@@ -205,7 +204,7 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
 
         lam *= 0.5;
 
-        for (int i = 0; i < xi.num_elements(); i++)
+        for (int i = 0; i < xi.size(); i++)
         {
             tst[i] = xi[i] + lam * dk[i];
         }
@@ -215,7 +214,7 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
         DNekMat jn = opti->dF(tst);
 
         l = 0.0;
-        for (int i = 0; i < dk.num_elements(); i++)
+        for (int i = 0; i < dk.size(); i++)
         {
             l += jn(i, 0) * dk[i];
         }
@@ -229,8 +228,8 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
     DNekMat y  = Jn - J;
     DNekMat yT = Jn - J;
     yT.Transpose();
-    DNekMat s(dk.num_elements(), 1, 0.0);
-    for (int i = 0; i < dk.num_elements(); i++)
+    DNekMat s(dk.size(), 1, 0.0);
+    for (int i = 0; i < dk.size(); i++)
     {
         s(i, 0) = lam * dk[i];
     }
@@ -243,7 +242,7 @@ bool BGFSUpdate(OptiObjSharedPtr opti, DNekMat &J, DNekMat &B, DNekMat &H)
     DNekMat n1 = yT * H * y;
 
     NekDouble ynorm = 0.0;
-    for (int i = 0; i < dk.num_elements(); i++)
+    for (int i = 0; i < dk.size(); i++)
     {
         ynorm += y(i, 0) * y(i, 0);
     }

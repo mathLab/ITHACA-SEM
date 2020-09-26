@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -41,7 +40,7 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/SegExp.h>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 
@@ -67,16 +66,14 @@ namespace Nektar
         PreconditionerBlock::PreconditionerBlock(
             const std::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
-            : Preconditioner(plinsys, pLocToGloMap),
-              m_linsys(plinsys),
-              m_preconType(pLocToGloMap->GetPreconType()),
-              m_locToGloMap(pLocToGloMap)
+            : Preconditioner(plinsys, pLocToGloMap)
         {
         }
 
         void PreconditionerBlock::v_InitObject()
         {
-            GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
+            GlobalSysSolnType solvertype =
+                m_locToGloMap.lock()->GetGlobalSysSolnType();
             ASSERTL0(solvertype == MultiRegions::eIterativeStaticCond ||
                      solvertype == MultiRegions::ePETScStaticCond,
                      "Solver type not valid");
@@ -123,8 +120,10 @@ namespace Nektar
             int i, j, k, n, cnt, gId;
             int meshVertId, meshEdgeId, meshFaceId;
 
+            auto asmMap = m_locToGloMap.lock();
+
             const int nExp = expList->GetExpSize();
-            const int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            const int nDirBnd = asmMap->GetNumGlobalDirBndCoeffs();
 
             // Grab periodic geometry information.
             PeriodicMap periodicVerts, periodicEdges, periodicFaces;
@@ -172,7 +171,7 @@ namespace Nektar
                     int locId = exp->GetVertexMap(i);
 
                     // Get the global ID of this vertex.
-                    gId = m_locToGloMap->GetLocalToGlobalMap(
+                    gId = asmMap->GetLocalToGlobalMap(
                         cnt + locId) - nDirBnd;
 
                     // Ignore all Dirichlet vertices.
@@ -224,7 +223,7 @@ namespace Nektar
 
                 // Process edges. This logic is mostly the same as the previous
                 // block.
-                for (i = 0; i < exp->GetNedges(); ++i)
+                for (i = 0; i < exp->GetGeom()->GetNumEdges(); ++i)
                 {
                     meshEdgeId = exp->GetGeom()->GetEid(i);
 
@@ -248,14 +247,25 @@ namespace Nektar
                     // Grab edge interior map, and the edge inverse boundary
                     // map, so that we can extract this edge from the Schur
                     // complement matrix.
-                    exp->GetEdgeInteriorMap(i, edgeOrient, bmap, sign);
-                    bmap2 = exp->GetEdgeInverseBoundaryMap(i);
+                    if(exp->GetGeom()->GetNumFaces()) // 3D Element calls
+                    {
+                        exp->as<LocalRegions::Expansion3D>()->
+                            GetEdgeInteriorToElementMap(i, bmap, sign, edgeOrient);
+                        bmap2 = exp->as<LocalRegions::Expansion3D>()->
+                            GetEdgeInverseBoundaryMap(i);
+                    }
+                    else
+                    {
+                        exp->GetTraceInteriorToElementMap(i, bmap, sign, edgeOrient);
+                        bmap2 = exp->as<LocalRegions::Expansion2D>()->
+                            GetTraceInverseBoundaryMap(i);
+                    }
 
                     // Allocate temporary storage for the extracted edge matrix.
-                    const int nEdgeCoeffs = bmap.num_elements();
+                    const int nEdgeCoeffs = bmap.size();
                     vector<NekDouble> tmpStore(nEdgeCoeffs*nEdgeCoeffs);
 
-                    gId = m_locToGloMap->GetLocalToGlobalMap(cnt + bmap[0]);
+                    gId = asmMap->GetLocalToGlobalMap(cnt + bmap[0]);
 
                     for (j = 0; j < nEdgeCoeffs; ++j)
                     {
@@ -265,7 +275,7 @@ namespace Nektar
                         // global degrees of freedom for edge interior
                         // coefficients.
                         gId = min(gId,
-                                  m_locToGloMap->GetLocalToGlobalMap(
+                                  asmMap->GetLocalToGlobalMap(
                                       cnt + bmap[j])
                                   - nDirBnd);
 
@@ -314,7 +324,7 @@ namespace Nektar
 
                 // Process faces. This logic is mostly the same as the previous
                 // block.
-                for (i = 0; i < exp->GetNfaces(); ++i)
+                for (i = 0; i < exp->GetGeom()->GetNumFaces(); ++i)
                 {
                     meshFaceId = exp->GetGeom()->GetFid(i);
 
@@ -333,20 +343,20 @@ namespace Nektar
                             faceOrient, pIt->second[0].orient);
                     }
 
-                    exp->GetFaceInteriorMap(i, faceOrient, bmap, sign);
-                    bmap2 = exp->GetFaceInverseBoundaryMap(i);
+                    exp->GetTraceInteriorToElementMap(i, bmap, sign, faceOrient);
+                    bmap2 = exp->as<LocalRegions::Expansion3D>()
+                        ->GetTraceInverseBoundaryMap(i);
 
                     // Allocate temporary storage for the extracted face matrix.
-                    const int nFaceCoeffs = bmap.num_elements();
+                    const int nFaceCoeffs = bmap.size();
                     vector<NekDouble> tmpStore(nFaceCoeffs*nFaceCoeffs);
 
-                    gId = m_locToGloMap->GetLocalToGlobalMap(cnt + bmap[0]);
+                    gId = asmMap->GetLocalToGlobalMap(cnt + bmap[0]);
 
                     for (j = 0; j < nFaceCoeffs; ++j)
                     {
                         gId = min(gId,
-                                  m_locToGloMap->GetLocalToGlobalMap(
-                                      cnt + bmap[j])
+                                  asmMap->GetLocalToGlobalMap(cnt + bmap[j])
                                   - nDirBnd);
 
                         // Ignore Dirichlet faces.
@@ -548,13 +558,13 @@ namespace Nektar
             DNekScalMatSharedPtr    bnd_mat;
 
             AssemblyMapDGSharedPtr asmMap = std::dynamic_pointer_cast<
-                AssemblyMapDG>(m_locToGloMap);
+                AssemblyMapDG>(m_locToGloMap.lock());
 
             int i, j, k, n, cnt, cnt2;
 
             // Figure out number of Dirichlet trace elements
             int nTrace = expList->GetTrace()->GetExpSize();
-            int nDir   = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int nDir   = asmMap->GetNumGlobalDirBndCoeffs();
 
             for (cnt = n = 0; n < nTrace; ++n)
             {
@@ -607,8 +617,7 @@ namespace Nektar
                 loc_mat = (m_linsys.lock())->GetStaticCondBlock(n);
                 bnd_mat = loc_mat->GetBlock(0,0);
 
-                int nFacets = locExpansion->GetNumBases() == 2 ?
-                    locExpansion->GetNedges() : locExpansion->GetNfaces();
+                int nFacets = locExpansion->GetNtraces();
 
                 for (cnt2 = i = 0; i < nFacets; ++i)
                 {
@@ -644,7 +653,7 @@ namespace Nektar
             }
 
             // Set up IDs for universal numbering.
-            Array<OneD, long> uniIds(tmpStore.num_elements());
+            Array<OneD, long> uniIds(tmpStore.size());
             for (cnt = 0, n = nDir; n < nTrace; ++n)
             {
                 LocalRegions::ExpansionSharedPtr traceExp = trace->GetExp(n);
@@ -701,8 +710,8 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
+            int nDir    = m_locToGloMap.lock()->GetNumGlobalDirBndCoeffs();
+            int nGlobal = m_locToGloMap.lock()->GetNumGlobalBndCoeffs();
             int nNonDir = nGlobal-nDir;
             DNekBlkMat &M = (*m_blkMat);
             NekVector<NekDouble> r(nNonDir,pInput,eWrapper);

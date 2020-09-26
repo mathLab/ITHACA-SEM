@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -104,12 +103,16 @@ namespace Nektar
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~AssemblyMapCG();
 
-            MULTI_REGIONS_EXPORT std::map<int, std::vector<ExtraDirDof> >
-                &GetExtraDirDofs()
+            MULTI_REGIONS_EXPORT std::set<ExtraDirDof> &GetCopyLocalDirDofs()
             {
-                return m_extraDirDofs;
+                return m_copyLocalDirDofs;
             }
 
+            MULTI_REGIONS_EXPORT std::set<int> &GetParallelDirBndSign()
+            {
+                return m_parallelDirBndSign;
+            }
+            
         protected:
             /// Integer map of local coeffs to global space
             Array<OneD,int> m_localToGlobalMap;
@@ -143,9 +146,12 @@ namespace Nektar
             int m_numLocDirBndCondDofs;
             /// Maximum static condensation level.
             int m_maxStaticCondLevel;
-            /// Map indicating degrees of freedom which are Dirichlet but whose
+            /// Set indicating degrees of freedom which are Dirichlet but whose
             /// value is stored on another processor.
-            std::map<int, std::vector<ExtraDirDof> > m_extraDirDofs;
+            std::set<ExtraDirDof> m_copyLocalDirDofs;
+            /// Set indicating the local coeffs just touching parallel
+            /// dirichlet boundary that have a sign change
+            std::set<int> m_parallelDirBndSign;
 
             MULTI_REGIONS_EXPORT int CreateGraph(
                 const ExpList                       &locExp,

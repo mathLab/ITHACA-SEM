@@ -10,7 +10,6 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
-// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -176,11 +175,6 @@ namespace StdRegions
                           Array<OneD,       NekDouble> &outarray,
                     const StdRegions::StdMatrixKey &mkey);
 
-            STD_REGIONS_EXPORT virtual int v_GetTraceNcoeffs(const int i) const
-            {
-                return GetEdgeNcoeffs(i);
-            }
-
             STD_REGIONS_EXPORT virtual void v_GenStdMatBwdDeriv(
                   const int dir,
                   DNekMatSharedPtr &mat);
@@ -190,11 +184,6 @@ namespace StdRegions
             virtual int v_GetShapeDimension() const
             {
                 return 2;
-            }
-
-            virtual int v_GetNfaces() const
-            {
-                return 0;
             }
 
             virtual int v_GetCoordim(void)

@@ -133,7 +133,8 @@ namespace Nektar
                                                     "Preconditioner", precon);
             }
 
-            if(pSession->DefinesGlobalSysSolnInfo(variable, "LinIteratSovler"))
+            if (pSession->DefinesGlobalSysSolnInfo(variable,
+                                                   "LinIteratSovler"))
             {
                 std::string iterater = pSession->GetGlobalSysSolnInfo(variable,
                                                             "LinIteratSovler");

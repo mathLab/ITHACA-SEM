@@ -68,7 +68,8 @@ namespace Nektar
             {
                 NekLinSysIteratSharedPtr p = MemoryManager<
                     NekLinSysIteratGMRES>::AllocateSharedPtr(pSession,
-                                                             vComm, nDimen);
+                                                             vComm, 
+                                                             nDimen);
                 p->InitObject();
                 return p;
             }
@@ -117,7 +118,7 @@ namespace Nektar
             int DoGMRES(
                 const int pNumRows,
                 const Array<OneD, const NekDouble> &pInput,
-                    Array<OneD,       NekDouble> &pOutput,
+                      Array<OneD,       NekDouble> &pOutput,
                 const int pNumDir);
             /// Actual iterative gmres solver for one restart
             NekDouble DoGmresRestart(
@@ -137,11 +138,11 @@ namespace Nektar
                 // V_total(:,1:nd) total search directions
                 Array<OneD, Array<OneD,  NekDouble> > &V_local,
                 // V[nd] current search direction
-                Array<OneD,  NekDouble> &Vsingle1,
+                Array<OneD,  NekDouble>               &Vsingle1,
                 // V[nd+1] new search direction
-                Array<OneD, NekDouble> &Vsingle2,
+                Array<OneD, NekDouble>                &Vsingle2,
                 // One line of Hessenburg matrix
-                Array<OneD, NekDouble> &hsingle
+                Array<OneD, NekDouble>                &hsingle
             );
             // QR fatorization through Givens rotation
             void DoGivensRotation(

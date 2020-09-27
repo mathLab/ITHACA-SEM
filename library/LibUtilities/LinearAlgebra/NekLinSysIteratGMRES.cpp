@@ -172,7 +172,7 @@ namespace Nektar
         int  NekLinSysIteratGMRES::DoGMRES(
             const int                          nGlobal,
             const Array<OneD, const NekDouble> &pInput,
-            Array<OneD,      NekDouble> &pOutput,
+            Array<OneD,      NekDouble>        &pOutput,
             const int                          nDir)
         {
             m_prec_factor = NekConstants::kNekUnsetDouble;
@@ -253,7 +253,7 @@ namespace Nektar
                         << " (error = " 
                         << sqrt(eps * m_prec_factor / m_rhs_magnitude) << ")";
                     
-                  cout  << " WITH (GMRES eps = " 
+                   cout << " WITH (GMRES eps = " 
                         << eps << " REAL eps= " << eps1 <<")";
 
                     if (m_converged)
@@ -354,8 +354,8 @@ namespace Nektar
                 m_operator.DoNonlinLinPrecond(tmp1, tmp2);
             }
             
-            // norm of (r0)
-            // m_map tells how to connect
+            // Norm of (r0)
+            // The m_map tells how to connect
             vExchange    = Vmath::Dot2(nNonDir,
                                        &r0[0] + nDir,
                                        &r0[0] + nDir,
@@ -369,7 +369,7 @@ namespace Nektar
                 {
                     if (m_flag_LeftPrecond)
                     {
-                        // evaluate initial residual error for exit check
+                        // Evaluate initial residual error for exit check
                         vExchange    = Vmath::Dot2(nNonDir,
                                                 &pInput[0] + nDir,
                                                 &pInput[0] + nDir,
@@ -465,7 +465,7 @@ namespace Nektar
                 // This Gmres merge truncted Gmres to accelerate.
                 // If truncted, cannot jump out because 
                 // the last term of eta is not residual
-                if((!truncted) || (nd < m_maxhesband))
+                if ((!truncted) || (nd < m_maxhesband))
                 {
                     // If (eps * m_prec_factor < m_tolerance *
                     // m_tolerance * m_rhs_magnitude )
@@ -524,10 +524,10 @@ namespace Nektar
             Array<OneD, NekDouble> &Vsingle1,
             // V[nd+1]
             Array<OneD, NekDouble> &Vsingle2,
-            //h
+            // h
             Array<OneD, NekDouble> &hsingle)
         {
-            // // Get the communicator for performing data exchanges
+            // Get the communicator for performing data exchanges
             // LibUtilities::CommSharedPtr m_Comm
             //     = m_expList.lock()->GetComm()->GetRowComm();
 
@@ -537,7 +537,7 @@ namespace Nektar
             Array<OneD, NekDouble> tmp1, tmp2;
             int numbertem;
             int nNonDir = nGlobal - nDir;
-            //later for parallel
+            // Later for parallel
             NekDouble vExchange = 0.0;
             // w=AV(:,nd)
             Array<OneD, NekDouble> w(nGlobal, 0.0);
@@ -611,7 +611,8 @@ namespace Nektar
             hsingle[endtem] = sqrt(vExchange);
 
             alpha = 1.0 / hsingle[endtem];
-            Vmath::Smul(nNonDir, alpha, &w[0] + nDir, 1, &Vsingle2[0] + nDir, 1);
+            Vmath::Smul(nNonDir, alpha, &w[0] + nDir, 1,
+                        &Vsingle2[0] + nDir, 1);
         }
 
         // QR factorization through Givens rotation
@@ -642,7 +643,7 @@ namespace Nektar
             }
             dd = hsingle[idtem];
             hh = hsingle[endtem];
-            if(hh == 0.0)
+            if (hh == 0.0)
             {
                 c[idtem] = 1.0;
                 s[idtem] = 0.0;
@@ -670,7 +671,8 @@ namespace Nektar
         }
 
         // Backward calculation
-        // to notice, Hesssenburg matrix's column and row changes due to use Array<OneD,Array<OneD,NekDouble>>
+        // To notice, Hesssenburg matrix's column
+        // and row changes due to use Array<OneD,Array<OneD,NekDouble>>
         void  NekLinSysIteratGMRES::DoBackward(
             const int  number,
             Array<OneD, Array<OneD, NekDouble> > &A,
@@ -678,7 +680,8 @@ namespace Nektar
             Array <OneD, NekDouble> &y
         )
         {
-            // number is the entry number, but C++'s order need to be one smaller
+            // Number is the entry number
+            // but C++'s order need to be one smaller
             int maxid = number - 1;
             NekDouble sum;
             y[maxid] = b[maxid] / A[maxid][maxid];

@@ -97,15 +97,15 @@ namespace Nektar
             /// Global to universal unique map
             Array<OneD, int>                            m_map;
 
-            /// dot product of rhs to normalise stopping criterion
+            /// Dot product of rhs to normalise stopping criterion
             NekDouble m_rhs_magnitude = NekConstants::kNekUnsetDouble;
-            /// maximum iterations
+            /// Maximum iterations
             int                                         m_maxiter;
             /// Tolerance of iterative solver.
             NekDouble                                   m_tolerance;
 
             int                                         m_totalIterations = 0;
-            /// cnt to how many times rhs_magnitude is called 
+            /// Cnt to how many times rhs_magnitude is called 
             NekDouble                                   m_rhs_mag_sm = 0.9; 
 
             NekDouble                                   m_prec_factor = 1.0;

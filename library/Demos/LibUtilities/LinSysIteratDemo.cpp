@@ -64,7 +64,7 @@ class LinSysDemo
             AllocateInitMatrix();
 
             std::string LinIteratSovlerType = "FixedpointJacobi";
-            if(pSession->DefinesSolverInfo("LinIteratSovler"))
+            if (pSession->DefinesSolverInfo("LinIteratSovler"))
             {
               LinIteratSovlerType = pSession->GetSolverInfo("LinIteratSovler");
             }
@@ -94,13 +94,15 @@ class LinSysDemo
             int ntmpIts = m_linsol->SolveSystem(m_matDim, m_SysRhs,
                                                 pOutput, 0,1.0E-9);
             boost::ignore_unused(ntmpIts);
-
-            int ndigits     = 9;  // the number of sigificant digits
-            int nothers     = 10; // extra width to place -, E, and power
-            int nwidthcolm  = nothers+ndigits - 1; // the second value determines the number of sigificant digits
+            // The number of sigificant digits
+            int ndigits     = 9;  
+            // Extra width to place -, E, and power
+            int nothers     = 10; 
+            // The second value determines the number of sigificant digits
+            int nwidthcolm  = nothers + ndigits - 1;
             cout << " ntmpIts= " << ntmpIts << endl
-                 << std::scientific << std::setw(nwidthcolm) <<
-                   std::setprecision(ndigits - 1);
+                 << std::scientific << std::setw(nwidthcolm)
+                 << std::setprecision(ndigits - 1);
 
             string vars = "uvwx";
             for (int i = 0;i < m_matDim; ++i)

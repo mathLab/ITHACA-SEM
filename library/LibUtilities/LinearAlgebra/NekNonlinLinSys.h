@@ -196,7 +196,8 @@ namespace Nektar
                 {
                     NekNonlinLinSysSharedPtr p = MemoryManager<
                         NekNonlinLinSys>::AllocateSharedPtr(pSession, 
-                                                            vComm, nDimen);
+                                                            vComm, 
+                                                            nDimen);
                     return p;
                 }
                 LIB_UTILITIES_EXPORT NekNonlinLinSys(
@@ -246,7 +247,7 @@ namespace Nektar
                 bool                                        m_converged;
                 /// Root if parallel
                 bool                                        m_root;
-                /// verbose
+                /// Verbose
                 bool                                        m_verbose;
                 /// Operators
                 NonlinLinSysOperators                       m_operator;

@@ -339,11 +339,12 @@ namespace Nektar
                 return;
             }
 
-            // normalisation of new solution
+            // Normalisation of new solution
             Vmath::Smul(nNonDir, 1.0 / anorm, 
                         px_s.get() + nDir, 1, px_s.get() + nDir, 1);
 
-            // updating storage with non-Dirichlet-dof part of new solution vector
+            // Updating storage with non-Dirichlet-dof part of 
+            // new solution vector
             m_prevLinSol.push_back(px_s + nDir);
             m_numPrevSols++;
         }
@@ -527,7 +528,7 @@ namespace Nektar
 
                 m_totalIterations++;
 
-                // test if norm is within tolerance
+                // Test if norm is within tolerance
                 if (eps < m_tolerance * m_tolerance * m_rhs_magnitude)
                 {
                     if (m_verbose && m_root)

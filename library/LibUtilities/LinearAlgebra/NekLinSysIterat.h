@@ -105,7 +105,6 @@ namespace Nektar
             NekDouble                                   m_tolerance;
 
             int                                         m_totalIterations = 0;
-            /// Cnt to how many times rhs_magnitude is called 
             NekDouble                                   m_rhs_mag_sm = 0.9; 
 
             NekDouble                                   m_prec_factor = 1.0;

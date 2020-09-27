@@ -159,7 +159,6 @@ namespace Nektar
                                             eWrapper);
 
                 // check the input vector (rhs) is not zero
-
                 NekDouble rhsNorm = Vmath::Dot2(nNonDir,
                                                 pInput + nDir,
                                                 pInput + nDir,

@@ -61,7 +61,6 @@ namespace Nektar
         {
             m_maxstorage        =   30;
             m_maxhesband        =   30;
-            // m_maxiter           =   60;
             std::vector<std::string>  variables(1);
             variables[0] = pSession->GetVariable(0);
             string variable = variables[0];
@@ -176,7 +175,6 @@ namespace Nektar
             const int                          nDir)
         {
             m_prec_factor = NekConstants::kNekUnsetDouble;
-            // m_rhs_magnitude = NekConstants::kNekUnsetDouble;
 
             if (m_rhs_magnitude == NekConstants::kNekUnsetDouble)
             {
@@ -201,10 +199,6 @@ namespace Nektar
             bool restarted = false;
             bool truncted = false;
 
-            // m_maxstorage = 5;
-            // m_maxrestart = m_maxiter / m_maxstorage + 1;
-            // default truncted Gmres(m) closed
-            // m_maxhesband = 0;
             if (m_maxhesband > 0)
             {
                 truncted = true;
@@ -326,8 +320,6 @@ namespace Nektar
             Array<OneD, NekDouble> Vsingle2;
             Array<OneD, NekDouble> hsingle1;
             Array<OneD, NekDouble> hsingle2;
-            ///////////////////////////////////////////////////////////////////////////////
-            // // tmp2 for preconditioner multiplication, later consider it
 
             if (restarted)
             {
@@ -379,7 +371,6 @@ namespace Nektar
                     }
                     else
                     {
-                        // cout << "Right precondtioning"<<endl;
                         m_prec_factor = 1.0;
                     }
                 }
@@ -389,14 +380,6 @@ namespace Nektar
             Vmath::Smul(nNonDir, sqrt(m_prec_factor), tmp2, 1, tmp2, 1);
             eps     =   eps*m_prec_factor;
             eta[0] = sqrt(eps);
-
-            // // If input residual is less than tolerance skip solve.
-            // // if (eps * m_prec_factor < m_tolerance * m_tolerance * m_rhs_magnitude)
-            // if (eps < m_tolerance * m_tolerance * m_rhs_magnitude)
-            // {
-            //     m_converged = true;
-            //     return eps;
-            // }
 
             // Give an order for the entries in Hessenburg matrix
             for (int nd = 0; nd < m_maxstorage; ++nd)
@@ -527,10 +510,6 @@ namespace Nektar
             // h
             Array<OneD, NekDouble> &hsingle)
         {
-            // Get the communicator for performing data exchanges
-            // LibUtilities::CommSharedPtr m_Comm
-            //     = m_expList.lock()->GetComm()->GetRowComm();
-
             // To notice, V_local's order not certainly equal to starttem:endtem
             // starttem:endtem is the entry position in Hessenburg matrix
             NekDouble alpha, beta;
@@ -553,7 +532,6 @@ namespace Nektar
             
             Vmath::Smul(nNonDir, sqrt(m_prec_factor), tmp2, 1, tmp2, 1);
 
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             // Modified Gram-Schmidt
             // The pointer not certainly equal to starttem.
             // Like initially, Gmres-deep need to use numbertem=0
@@ -574,32 +552,7 @@ namespace Nektar
                 numbertem = numbertem + 1;
             }
             // end of Modified Gram-Schmidt
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            // // Classical Gram-Schmidt
-            // int number = endtem - starttem;
-            // Array<OneD,NekDouble> vExchangeArray(number, 0.0);
-            // numbertem=0;
-            // for (int i = starttem; i < endtem; ++i)
-            // {
-            //     vExchangeArray[numbertem] =
-            //         Vmath::Dot2(nNonDir, &w[0] + nDir, &V_local[i][0] + nDir,
-            //                     &m_map[0] + nDir);
-            //     numbertem = numbertem + 1;
-            // }
-            // m_Comm->AllReduce(vExchangeArray,  LibUtilities::ReduceSum);
-            // numbertem = 0;
-            // for (int i = starttem; i < endtem; ++i)
-            // {
-            //     hsingle[i] = vExchangeArray[numbertem];
-            //     beta       = -1.0 * vExchangeArray[numbertem];
-            //     Vmath::Svtvp(nNonDir, beta, &V_local[i][0] + nDir, 1,
-            //                  &w[0] + nDir, 1, &w[0] + nDir, 1);
-            //     numbertem = numbertem + 1;
-            // }
-            // // end of Classical Gram-Schmidt
-            // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+            
             // calculate the L2 norm and normalize
             vExchange = Vmath::Dot2(nNonDir,
                                     &w[0] + nDir,

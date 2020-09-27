@@ -47,7 +47,8 @@ namespace Nektar
 
         // =====================================================================
         // ==== DEFINITION OF THE CLASS  NonlinLinSysOperators
-        // ==== Defines operators needed by iterative solver of nonlinear or linear system
+        // ==== Defines operators needed by iterative solver of nonlinear or 
+        // ==== linear system
         // =====================================================================
         class NonlinLinSysOperators
         {
@@ -122,7 +123,7 @@ namespace Nektar
                     const  bool     &flag = false) const
                 {
                     ASSERTL1(m_functors1[0],
-                    "DoNonlinLinSysRhsEval should be defined for this time integration scheme");
+                    "DoNonlinLinSysRhsEval should be defined");
                     m_functors1[0](inarray, outarray, flag);
                 }
                 
@@ -132,7 +133,7 @@ namespace Nektar
                     const  bool     &flag = false) const
                 {
                     ASSERTL1(m_functors1[1],
-                    "DoNonlinLinSysLhsEval should be defined for this time integration scheme");
+                    "DoNonlinLinSysLhsEval should be defined");
                     m_functors1[1](inarray, outarray, flag);
                 }
                 
@@ -159,17 +160,26 @@ namespace Nektar
                     const  bool     &flag = false) const
                 {
                     ASSERTL1(m_functors2[0],
-                    "DoNonlinLinFixPointIte should be defined for this time integration scheme");
+                    "DoNonlinLinFixPointIte should be defined");
                     m_functors2[0](rhs, xn, xn1, flag);
                 }
             protected:
                 /* Defines three operators 
-                    DoNonlinLinSysRhsEval   :   evaluations the RHS of the Nonlinear/Linear system. May not be used for linear system.
-                    DoNonlinLinSysLhsEval   :   evaluations the LHS of the Nonlinear/Linear system (Ax), where A is the matrix x is solution vector.
-                                                For linear system A is the coefficient matrix; 
-                                                For nonlinear system A is the coefficient matrix in each nonlinear iterations, for example A is the Jacobian matrix for Newton method; 
-                    DoNonlinLinPrecond      :   Preconditioning operator of the system.
-                    DoNonlinLinFixPointIte  :   Operator to calculate RHS of fix point iterations (x^{n+1}=M^{-1}(b-N*x^{n}), with M+N=A).
+                    DoNonlinLinSysRhsEval   :   
+                        evaluations the RHS of the Nonlinear/Linear system. 
+                        May not be used for linear system.
+                    DoNonlinLinSysLhsEval   :   
+                        evaluations the LHS of the Nonlinear/Linear system (Ax), 
+                        where A is the matrix x is solution vector.
+                        For linear system A is the coefficient matrix; 
+                        For nonlinear system A is the coefficient matrix in 
+                        each nonlinear iterations, for example A is the 
+                        Jacobian matrix for Newton method; 
+                    DoNonlinLinPrecond      :   
+                        Preconditioning operator of the system.
+                    DoNonlinLinFixPointIte  :   
+                        Operator to calculate RHS of fix point iterations 
+                        (x^{n+1}=M^{-1}(b-N*x^{n}), with M+N=A).
                 */
                 FunctorType1Array m_functors1;
                 FunctorType2Array m_functors2;
@@ -186,8 +196,7 @@ namespace Nektar
 
                 /// Support creation through MemoryManager.
                 friend class MemoryManager<NekNonlinLinSys>;
-                /**
-                 */
+
                 LIB_UTILITIES_EXPORT static NekNonlinLinSysSharedPtr 
                     CreateInstance(
                     const LibUtilities::SessionReaderSharedPtr  &pSession,
@@ -276,11 +285,6 @@ namespace Nektar
                     const int                           nIteration,
                     const Array<OneD, const NekDouble>  &Residual,
                     const NekDouble                     tol         );
-                // {
-                //     boost::ignore_unused(nIteration, Residual, tol);
-                //     ASSERTL0(false, "LinIteratSovler NOT CORRECT.");
-                //     return false;
-                // }
         };
     }
 }

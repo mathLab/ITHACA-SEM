@@ -220,12 +220,12 @@ public:
         {
             case 3:
             {
-                ASSERTL0(5==phase->m_numstages,"Only DIRKOrder3_ES5 have been implemented for 3rd-order")
+                ASSERTL0(5==phase->m_numstages,
+                    "Only DIRKOrder3_ES5 have been implemented for 3rd-order");
                 NekDouble lambda;
                 if(freeParams.size())
                 {
                     lambda = freeParams[0];
-                    //TODO: Add check of the lambda to maintain stable.
                 }
                 else
                 {
@@ -405,8 +405,9 @@ public:
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-                                                 std::vector<NekDouble> freeParams)
+    static TimeIntegrationSchemeSharedPtr create(
+        std::string variant, unsigned int order,
+        std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
@@ -433,8 +434,9 @@ public:
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-                                                 std::vector<NekDouble> freeParams)
+    static TimeIntegrationSchemeSharedPtr create(
+        std::string variant, unsigned int order,
+        std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
@@ -447,7 +449,7 @@ public:
 
     static std::string className;
 
-}; // end class DIRKOrder4_ES6TimeIntegrationScheme
+}; 
 
 
 } // end namespace LibUtilities

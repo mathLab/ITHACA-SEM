@@ -77,21 +77,6 @@ namespace Nektar
                                         1.0E-10);
             }
 
-            // m_NonlinIteTolRelativeL8 = sqrt(m_NonlinIteTolRelativeL2); 
-            // if(pSession->DefinesGlobalSysSolnInfo(variable,
-            //                                     "NonlinIteTolRelativeL8"))
-            // {
-            //     m_NonlinIteTolRelativeL8 = boost::lexical_cast<int>(
-            //             pSession->GetGlobalSysSolnInfo(variable,
-            //                     "NonlinIteTolRelativeL8").c_str());
-            // }
-            // else
-            // {
-            //     pSession->LoadParameter("NonlinIteTolRelativeL8",
-            //                             m_NonlinIteTolRelativeL8,
-            //                             1.0E-3);
-            // }
-
             if (pSession->DefinesGlobalSysSolnInfo(variable,
                                                    "NonlinIteTolLinRelatTol"))
             {
@@ -234,22 +219,6 @@ namespace Nektar
                 || m_SysResNorm < tol)
             {
                 converged = true;
-                // resmaxm = 0.0;
-                // for(int i=0;i<ntotal;i++)
-                // {
-                //     resmaxm = max(resmaxm,abs(Residual[i]));
-                // }
-                // m_Comm->AllReduce(resmaxm, Nektar::LibUtilities::ReduceMax);
-                // if((resmaxm<m_NonlinIteTolRelativeL8)&&nIteration>0)
-                // {
-                //     converged = true;
-                //     if(resratio>m_NonlinIteTolRelativeL2&&m_root)
-                //     {
-                //         WARNINGL0(true,"     # resratio>tol2Ratio in CompressibleFlowSystem::DoImplicitSolve ");
-                //         cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
-                //             <<" resratio= "<<resratio<<" tol2Ratio= "<<m_NonlinIteTolRelativeL2<<endl;
-                //     }
-                // }
             }
             
             return converged;

@@ -139,7 +139,7 @@ namespace Nektar
                 std::string iterater = pSession->GetGlobalSysSolnInfo(variable,
                                                             "LinIteratSovler");
                 m_LinIteratSovler = pSession->GetValueAsEnum<LinIteratSovler>(
-                                                    "LinIteratSovler", iterater);
+                                                "LinIteratSovler", iterater);
             }
 
             if(pSession->DefinesGlobalSysSolnInfo(variable,

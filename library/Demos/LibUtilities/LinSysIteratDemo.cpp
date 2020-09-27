@@ -34,10 +34,6 @@
 
 #include <iostream>
 #include <string>
-// #include <SolverUtils/Driver.h>
-// #include <SolverUtils/EquationSystem.h>
-// #include <LibUtilities/BasicUtils/SessionReader.h>
-// #include <SpatialDomains/MeshGraph.h>
 #include <boost/algorithm/string.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
@@ -48,7 +44,6 @@
 using namespace std;
 using namespace Nektar;
 using namespace Nektar::LibUtilities;
-// using namespace Nektar::SolverUtils;
 
 class LinSysDemo
 {
@@ -88,7 +83,6 @@ class LinSysDemo
 
         void DoSolve()
         {
-            // m_linsol->setRhsMagnitude(m_rhs_magnitude);
             Array<OneD, NekDouble> pOutput(m_matDim, 0.0);
 
             int ntmpIts = m_linsol->SolveSystem(m_matDim, m_SysRhs,
@@ -198,11 +192,9 @@ class LinSysDemo
 int main(int argc, char *argv[])
 {
     LibUtilities::SessionReaderSharedPtr session;
-    // SpatialDomains::MeshGraphSharedPtr graph;
 
     session = LibUtilities::SessionReader::CreateInstance(argc, argv);
     session->InitSession();
-    // graph = SpatialDomains::MeshGraph::Read(session);
 
     LinSysDemo linsys(session,session->GetComm());
 

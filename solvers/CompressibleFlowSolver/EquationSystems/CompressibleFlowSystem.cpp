@@ -404,15 +404,15 @@ namespace Nektar
     }
 
     void CompressibleFlowSystem::NonlinSysEvaluator1D(
-        const Array<OneD, NekDouble>    &inarray,
-        Array<OneD, NekDouble>          &out,
-        const bool                      &flag)
+        const TensorOfArray1D<NekDouble>    &inarray,
+        TensorOfArray1D<NekDouble>          &out,
+        const bool                          &flag)
     {
         boost::ignore_unused(flag);
         unsigned int nvariables     = m_fields.size();
         unsigned int npoints        = m_fields[0]->GetNcoeffs();
-        Array<OneD, Array<OneD, NekDouble> > in2D(nvariables),
-                                             out2D(nvariables);
+        TensorOfArray2D<NekDouble> in2D(nvariables);
+        TensorOfArray2D<NekDouble> out2D(nvariables);
         for (int i = 0; i < nvariables; ++i)
         {
             int offset = i * npoints;
@@ -423,8 +423,8 @@ namespace Nektar
     }
 
     void CompressibleFlowSystem::NonlinSysEvaluator_coeff(
-        Array<OneD, Array<OneD, NekDouble> > &inarray,
-        Array<OneD, Array<OneD, NekDouble> > &out)
+        TensorOfArray2D<NekDouble>  &inarray,
+        TensorOfArray2D<NekDouble>  &out)
     {
         const Array<OneD, const NekDouble> refsol 
                                 = m_nonlinsol->GetRefSolution();
@@ -433,14 +433,14 @@ namespace Nektar
         unsigned int ncoeffs    = inarray[nvariable - 1].size();
         unsigned int npoints    = m_fields[0]->GetNpoints();
 
-        Array<OneD, Array<OneD, NekDouble> > inpnts(nvariable);
+        TensorOfArray2D<NekDouble> inpnts(nvariable);
 
         for (int i = 0; i < nvariable; ++i)
         {
-            inpnts[i]   =   Array<OneD, NekDouble>(npoints, 0.0);
+            inpnts[i] = TensorOfArray1D<NekDouble>(npoints, 0.0);
             m_fields[i]->BwdTrans(inarray[i], inpnts[i]);
         }
-
+        
         DoOdeProjection(inpnts, inpnts, m_BndEvaluateTime);
         DoOdeRhs_coeff(inpnts, out, m_BndEvaluateTime);
 
@@ -459,16 +459,16 @@ namespace Nektar
      * @brief Compute the right-hand side.
      */
     void CompressibleFlowSystem::DoOdeRhs_coeff(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const NekDouble                                   time)
+        const TensorOfArray2D<NekDouble>    &inarray,
+        TensorOfArray2D<NekDouble>          &outarray,
+        const NekDouble                     time)
     {
         int nvariables = inarray.size();
         int nTracePts  = GetTraceTotPoints();
         int ncoeffs    = GetNcoeffs();
         // Store forwards/backwards space along trace space
-        Array<OneD, Array<OneD, NekDouble> > Fwd    (nvariables);
-        Array<OneD, Array<OneD, NekDouble> > Bwd    (nvariables);
+        TensorOfArray2D<NekDouble> Fwd    (nvariables);
+        TensorOfArray2D<NekDouble> Bwd    (nvariables);
 
         if (m_HomogeneousType == eHomogeneous1D)
         {
@@ -479,45 +479,26 @@ namespace Nektar
         {
             for(int i = 0; i < nvariables; ++i)
             {
-                Fwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
-                Bwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
+                Fwd[i]     = TensorOfArray1D<NekDouble> (nTracePts, 0.0);
+                Bwd[i]     = TensorOfArray1D<NekDouble> (nTracePts, 0.0);
                 m_fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
             }
         }
  
          // Calculate advection
         DoAdvection_coeff(inarray, outarray, time, Fwd, Bwd);
+
         // Negate results
-        
         for (int i = 0; i < nvariables; ++i)
         {
             Vmath::Neg(ncoeffs, outarray[i], 1);
         }
-#ifdef CFS_DEBUGMODE
-        if(2==m_DebugAdvDiffSwitch)
-        {
-            for (int i = 0; i < nvariables; ++i)
-            {
-                Vmath::Zero(ncoeffs, outarray[i], 1);
-            }
-        }
-#endif
 
-#ifdef CFS_DEBUGMODE
-        if(1!=m_DebugAdvDiffSwitch)
-        {
-#endif
-        // Add diffusion t
-        // DoDiffusion(inarray, outarray, Fwd, Bwd);
         DoDiffusion_coeff(inarray, outarray, Fwd, Bwd);
-#ifdef CFS_DEBUGMODE
-        }
-#endif
+
         // Add forcing terms
         for (auto &x : m_forcing)
         {
-            // boost::ignore_unused(x);
-            // ASSERTL0(false,"forcing not coded for DoOdeRhs_coeff");
             x->Apply_coeff(m_fields, inarray, outarray, time);
         }
 
@@ -526,9 +507,9 @@ namespace Nektar
             int nElements = m_fields[0]->GetExpSize();
             int nq, offset;
             NekDouble fac;
-            Array<OneD, NekDouble> tmp;
+            TensorOfArray1D<NekDouble> tmp;
 
-            Array<OneD, NekDouble> tstep(nElements, 0.0);
+            TensorOfArray1D<NekDouble> tstep(nElements, 0.0);
             GetElmtTimeStep(inarray, tstep);
 
             // Loop over elements
@@ -550,14 +531,14 @@ namespace Nektar
      * @brief Compute the advection terms for the right-hand side
      */
     void CompressibleFlowSystem::DoAdvection_coeff(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const NekDouble                                   time,
-        const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
-        const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
+        const TensorOfArray2D<NekDouble>    &inarray,
+        TensorOfArray2D<NekDouble>          &outarray,
+        const NekDouble                     time,
+        const TensorOfArray2D<NekDouble>    &pFwd,
+        const TensorOfArray2D<NekDouble>    &pBwd)
     {
         int nvariables = inarray.size();
-        Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
+        TensorOfArray2D<NekDouble> advVel(m_spacedim);
 
         m_advObject->AdvectCoeffs(nvariables, m_fields, advVel, inarray,
                                   outarray, time, pFwd, pBwd);
@@ -577,18 +558,18 @@ namespace Nektar
     }
 
     void CompressibleFlowSystem::DoImplicitSolve_phy2coeff(
-                        const Array<OneD, const Array<OneD, NekDouble> >&inpnts,
-                        Array<OneD,       Array<OneD, NekDouble> >      &outpnt,
-                                          const NekDouble                  time,
-                                          const NekDouble                lambda)
+        const TensorOfArray2D<NekDouble>    &inpnts,
+        TensorOfArray2D<NekDouble>          &outpnt,
+        const NekDouble                     time,
+        const NekDouble                     lambda)
     {
         unsigned int nvariables  = inpnts.size();
         unsigned int ncoeffs     = m_fields[0]->GetNcoeffs();
         unsigned int ntotal      = nvariables * ncoeffs;
 
-        Array<OneD, NekDouble>  inarray(ntotal);
-        Array<OneD, NekDouble>  out(ntotal);
-        Array<OneD, NekDouble>  tmpArray;
+        TensorOfArray1D<NekDouble>  inarray(ntotal);
+        TensorOfArray1D<NekDouble>  out(ntotal);
+        TensorOfArray1D<NekDouble>  tmpArray;
 
         for (int i = 0; i < nvariables; ++i)
         {
@@ -608,11 +589,11 @@ namespace Nektar
     }
 
     void CompressibleFlowSystem::DoImplicitSolve_coeff(
-            const Array<OneD, const Array<OneD, NekDouble> >    &inpnts,
-            const Array<OneD, NekDouble>                        &inarray,
-            Array<OneD, NekDouble>                              &out,
-            const NekDouble                                     time,
-            const NekDouble                                     lambda)
+            const TensorOfArray2D<NekDouble>    &inpnts,
+            const TensorOfArray1D<NekDouble>    &inarray,
+            TensorOfArray1D<NekDouble>          &out,
+            const NekDouble                     time,
+            const NekDouble                     lambda)
     {
         boost::ignore_unused(inpnts);
         m_TimeIntegLambda               = lambda;
@@ -634,7 +615,7 @@ namespace Nektar
     }
 
     void CompressibleFlowSystem::CalcRefValues(
-            const Array<OneD, NekDouble>        &inarray)
+            const TensorOfArray1D<NekDouble>    &inarray)
     {
         unsigned int nvariables         = m_fields.size();
         unsigned int ntotal             = inarray.size();
@@ -687,9 +668,9 @@ namespace Nektar
     }
 
     void CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff(
-            const Array<OneD, NekDouble>                       &inarray,
-            Array <OneD, NekDouble >                           &out,
-            const bool                                         &flag)
+            const TensorOfArray1D<NekDouble>    &inarray,
+            TensorOfArray1D<NekDouble>          &out,
+            const bool                          &flag)
     {
         boost::ignore_unused(flag);
         const Array<OneD, const NekDouble> refsol 
@@ -708,12 +689,12 @@ namespace Nektar
         unsigned int ntotal     = inarray.size();
         unsigned int npoints    = ntotal / nvariables;
         Array<OneD, NekDouble > tmp;
-        Array<OneD,       Array<OneD, NekDouble> > solplus(nvariables);
-        Array<OneD,       Array<OneD, NekDouble> > resplus(nvariables);
+        TensorOfArray2D<NekDouble> solplus(nvariables);
+        TensorOfArray2D<NekDouble> resplus(nvariables);
         for (int i = 0; i < nvariables; ++i)
         {
-            solplus[i] =  Array<OneD, NekDouble>(npoints, 0.0);
-            resplus[i] =  Array<OneD, NekDouble>(npoints, 0.0);
+            solplus[i] = TensorOfArray1D<NekDouble> (npoints, 0.0);
+            resplus[i] = TensorOfArray1D<NekDouble> (npoints, 0.0);
         }
 
         for (int i = 0; i < nvariables; ++i)

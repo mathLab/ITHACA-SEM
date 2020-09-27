@@ -34,10 +34,6 @@
 
 #include <iostream>
 #include <string>
-// #include <SolverUtils/Driver.h>
-// #include <SolverUtils/EquationSystem.h>
-// #include <LibUtilities/BasicUtils/SessionReader.h>
-// #include <SpatialDomains/MeshGraph.h>
 #include <boost/algorithm/string.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
@@ -48,7 +44,6 @@
 using namespace std;
 using namespace Nektar;
 using namespace Nektar::LibUtilities;
-// using namespace Nektar::SolverUtils;
 
 class LinSysDemo
 {
@@ -64,10 +59,6 @@ class LinSysDemo
             AllocateInitMatrix();
 
             std::string SovlerType = "Newton";
-            // if(pSession->DefinesSolverInfo("NonlinIteratSovler"))
-            // {
-            //     SovlerType = pSession->GetSolverInfo("NonlinIteratSovler");
-            // }
             ASSERTL0(LibUtilities::GetNekNonlinSysFactory().
                      ModuleExists(SovlerType),
                      "NekNonlinSys '" + SovlerType + "' is not defined.\n");
@@ -89,9 +80,9 @@ class LinSysDemo
             int ntmpIts =  m_nonlinsol->SolveSystem(m_matDim, pOutput, 
                                                     pOutput, 0, 1.0E-9);
 
-            int ndigits     = 9;  // the number of sigificant digits
-            int nothers     = 10; // extra width to place -, E, and power
-            int nwidthcolm  = nothers + ndigits - 1; // the second value determines the number of sigificant digits
+            int ndigits     = 9;  
+            int nothers     = 10; 
+            int nwidthcolm  = nothers + ndigits - 1; 
             cout    << "ntmpIts = " << ntmpIts << endl
                     << std::scientific << std::setw(nwidthcolm) <<
                        std::setprecision(ndigits - 1);
@@ -159,11 +150,9 @@ class LinSysDemo
 int main(int argc, char *argv[])
 {
     LibUtilities::SessionReaderSharedPtr session;
-    // SpatialDomains::MeshGraphSharedPtr graph;
 
     session = LibUtilities::SessionReader::CreateInstance(argc, argv);
     session->InitSession();
-    // graph = SpatialDomains::MeshGraph::Read(session);
 
     LinSysDemo linsys(session, session->GetComm());
 

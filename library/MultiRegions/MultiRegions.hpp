@@ -136,7 +136,7 @@ namespace Nektar
 
         enum LinIteratSovler
         {
-            eNoLinIteratSovler,    ///< No Solution type specified
+            eNoLinIteratSovler,///< No Solution type specified
             eConjugateGradient,
             eGMRES
         };

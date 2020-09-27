@@ -46,7 +46,7 @@ namespace Nektar
          *
          * Solves a linear system using iterative methods.
          */
-		 NekNonlinSysFactory& GetNekNonlinSysFactory()
+		NekNonlinSysFactory & GetNekNonlinSysFactory()
         {
             static NekNonlinSysFactory instance;
             return instance;
@@ -63,7 +63,7 @@ namespace Nektar
             variables[0] =  pSession->GetVariable(0);
             string variable = variables[0];
 
-            if(pSession->DefinesGlobalSysSolnInfo(variable,
+            if (pSession->DefinesGlobalSysSolnInfo(variable,
                                               "NonlinIteratSolverTolerance"))
             {
                 m_tolerance = boost::lexical_cast<NekDouble>(
@@ -77,7 +77,7 @@ namespace Nektar
                                         NekConstants::kNekIterativeTol);
             }
 
-            if(pSession->DefinesGlobalSysSolnInfo(variable,
+            if (pSession->DefinesGlobalSysSolnInfo(variable,
                                                   "NonlinIteratMaxIterations"))
             {
                 m_maxiter = boost::lexical_cast<int>(

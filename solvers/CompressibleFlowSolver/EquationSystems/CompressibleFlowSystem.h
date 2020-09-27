@@ -90,12 +90,12 @@ namespace Nektar
         void DoOdeRhs_coeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                 Array<OneD,       Array<OneD, NekDouble> >   &outarray,
-            const NekDouble                                   time);
+            const NekDouble                                  time);
         
         void DoAdvection_coeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                 Array<OneD,       Array<OneD, NekDouble> >   &outarray,
-            const NekDouble                                   time,
+            const NekDouble                                  time,
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
         void DoImplicitSolve_phy2coeff(

@@ -246,9 +246,9 @@ namespace SolverUtils
 
     void ForcingAbsorption::v_Apply_coeff(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble> > &inarray,
-            Array<OneD, Array<OneD, NekDouble> > &outarray,
-            const NekDouble &time)
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray,
+            const NekDouble                                   &time)
     {
         // int nq = m_Forcing[0].size();
         int ncoeff = outarray[m_NumVariable - 1].size();
@@ -265,8 +265,8 @@ namespace SolverUtils
 
     void ForcingAbsorption::CalculateForcing(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble> > &inarray,
-            const NekDouble &time)
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            const NekDouble                                   &time)
     {
         boost::ignore_unused(fields);
         int nq = m_Forcing[0].size();

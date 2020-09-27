@@ -99,8 +99,9 @@ namespace Nektar
                 break;
             }
 
-            m_doBlockMatOp = Array<OneD, Array<OneD,bool> > (SIZE_OptimizeOperationType);
-            for(i = 0; i < SIZE_OptimizeOperationType; ++i)
+            m_doBlockMatOp = Array<OneD, Array<OneD,bool> > 
+                (SIZE_OptimizeOperationType);
+            for (i = 0; i < SIZE_OptimizeOperationType; ++i)
             {
                 m_doBlockMatOp[i] = Array<OneD, bool> (numShapes, false);
             }

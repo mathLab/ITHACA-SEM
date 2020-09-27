@@ -63,7 +63,7 @@ namespace Nektar
             variables[0] =  pSession->GetVariable(0);
             string variable = variables[0];
 
-            if(pSession->DefinesGlobalSysSolnInfo(variable,
+            if (pSession->DefinesGlobalSysSolnInfo(variable,
                                                 "NonlinIteTolRelativeL2"))
             {
                 m_NonlinIteTolRelativeL2 = boost::lexical_cast<int>(
@@ -92,8 +92,8 @@ namespace Nektar
             //                             1.0E-3);
             // }
 
-            if(pSession->DefinesGlobalSysSolnInfo(variable,
-                                                "NonlinIteTolLinRelatTol"))
+            if (pSession->DefinesGlobalSysSolnInfo(variable,
+                                                   "NonlinIteTolLinRelatTol"))
             {
                 m_NonlinIteTolLinRelatTol = boost::lexical_cast<int>(
                         pSession->GetGlobalSysSolnInfo(variable,
@@ -107,16 +107,19 @@ namespace Nektar
             }
 
             m_LinIteratSovlerType = "GMRES";
-            if(pSession->DefinesGlobalSysSolnInfo(variable,
+            if (pSession->DefinesGlobalSysSolnInfo(variable,
                                                 "LinIteratSovler"))
             {
-                m_LinIteratSovlerType = pSession->GetGlobalSysSolnInfo(variable,"LinIteratSovler");
+                m_LinIteratSovlerType = pSession->GetGlobalSysSolnInfo(
+                                        variable,
+                                        "LinIteratSovler");
             }
             else
             {
-                if(pSession->DefinesSolverInfo("LinIteratSovler"))
+                if (pSession->DefinesSolverInfo("LinIteratSovler"))
                 {
-                    m_LinIteratSovlerType = pSession->GetSolverInfo("LinIteratSovler");
+                    m_LinIteratSovlerType = pSession->GetSolverInfo(
+                    "LinIteratSovler");
                 }
             }
         }
@@ -124,13 +127,16 @@ namespace Nektar
         void NekNonlinSysNewton::v_InitObject()
         {
             NekNonlinLinSys::v_InitObject();
-            m_Residual = Array<OneD, NekDouble> (m_SysDimen,0.0);
-            m_DeltSltn = Array<OneD, NekDouble> (m_SysDimen,0.0);
+            m_Residual = Array<OneD, NekDouble> (m_SysDimen, 0.0);
+            m_DeltSltn = Array<OneD, NekDouble> (m_SysDimen, 0.0);
 
-            ASSERTL0(LibUtilities::GetNekLinSysIteratFactory().ModuleExists(m_LinIteratSovlerType),
-                    "NekLinSysIterat '" + m_LinIteratSovlerType + "' is not defined.\n");
+            ASSERTL0(LibUtilities::GetNekLinSysIteratFactory().
+                    ModuleExists(m_LinIteratSovlerType),
+                    "NekLinSysIterat '" + m_LinIteratSovlerType + 
+                    "' is not defined.\n");
             m_linsol = LibUtilities::GetNekLinSysIteratFactory().CreateInstance(
-                                m_LinIteratSovlerType, m_session,m_Comm,m_SysDimen);
+                                m_LinIteratSovlerType, 
+                                m_session, m_Comm, m_SysDimen);
 
         }
 
@@ -152,40 +158,50 @@ namespace Nektar
             int nwidthcolm = 12;
             m_linsol->setSysOperators(m_operator);
 
-            ASSERTL0(0==nDir,"0!=nDir not tested");
-            ASSERTL0(m_SysDimen==nGlobal, "m_SysDimen!=nGlobal");
+            ASSERTL0(0 == nDir,"0 != nDir not tested");
+            ASSERTL0(m_SysDimen == nGlobal, "m_SysDimen!=nGlobal");
 
             boost::ignore_unused(factor);
 
-            int ntotal = nGlobal-nDir;
+            int ntotal = nGlobal - nDir;
             int NtotLinSysIts = 0;
             
             int NttlNonlinIte    = 0;
             m_converged = false;
 
             m_Solution = pOutput;
-            Vmath::Vcopy(ntotal,pInput,1, m_Solution,1);
-            for (int k = 0; k < m_maxiter; k++)
+            Vmath::Vcopy(ntotal, pInput, 1, m_Solution, 1);
+            for (int k = 0; k < m_maxiter; ++k)
             {
-                m_operator.DoNonlinLinSysRhsEval(m_Solution,m_Residual);
+                m_operator.DoNonlinLinSysRhsEval(m_Solution, m_Residual);
                 
                 m_converged = v_ConvergenceCheck(k,m_Residual, tol);
-                if(m_converged) break;
+                if (m_converged) break;
 
-                NekDouble   LinSysTol = m_NonlinIteTolLinRelatTol*sqrt(m_SysResNorm);
-                int ntmpGMRESIts =  m_linsol->SolveSystem(ntotal,m_Residual,m_DeltSltn,0,LinSysTol);
+                NekDouble   LinSysTol = m_NonlinIteTolLinRelatTol * 
+                                        sqrt(m_SysResNorm);
+                int ntmpGMRESIts =  m_linsol->SolveSystem(ntotal, 
+                                                          m_Residual,
+                                                          m_DeltSltn,
+                                                          0, 
+                                                          LinSysTol);
                 NtotLinSysIts   +=  ntmpGMRESIts;
-                Vmath::Vsub(ntotal,m_Solution,1,m_DeltSltn,1,m_Solution,1);
-                NttlNonlinIte ++;
+                Vmath::Vsub(ntotal, m_Solution, 1, 
+                            m_DeltSltn, 1, m_Solution, 1);
+                NttlNonlinIte++;
             }
 
-            if((m_root||(!m_converged))&&m_verbose)
+            if ((m_root || (!m_converged)) && m_verbose)
             {
-                WARNINGL0(m_converged,"     # Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ");
-                cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
+                WARNINGL0(m_converged,
+                    "     # Nonlinear solver not converge in DoImplicitSolve");
+               cout << right << scientific << setw(nwidthcolm) 
+                    << setprecision(nwidthcolm-6)
                     <<"     * Newton-Its converged (RES="
-                    << sqrt(m_SysResNorm)<<" Res/(DtRHS): "<<sqrt(m_SysResNorm/m_SysResNorm0)
-                    <<" with "<<setw(3)<<NttlNonlinIte<<" Non-Its)"<<endl;
+                    << sqrt(m_SysResNorm) << " Res/(DtRHS): "
+                    << sqrt(m_SysResNorm / m_SysResNorm0)
+                    << " with " << setw(3) << NttlNonlinIte
+                    << " Non-Its)" <<endl;
             }
             return NttlNonlinIte;
         }
@@ -204,17 +220,18 @@ namespace Nektar
             m_SysResNorm = Vmath::Dot(ntotal,Residual,Residual);
             m_Comm->AllReduce(m_SysResNorm, Nektar::LibUtilities::ReduceSum);
 
-            if(0==nIteration)
+            if (0 == nIteration)
             {
                 m_SysResNorm0 = m_SysResNorm;
                 resratio = 1.0;
             }
             else
             {
-                resratio = m_SysResNorm/m_SysResNorm0;
+                resratio = m_SysResNorm / m_SysResNorm0;
             }
 
-            if (resratio<(m_NonlinIteTolRelativeL2*m_NonlinIteTolRelativeL2)||m_SysResNorm<tol)
+            if (resratio < (m_NonlinIteTolRelativeL2 * m_NonlinIteTolRelativeL2) 
+                || m_SysResNorm < tol)
             {
                 converged = true;
                 // resmaxm = 0.0;

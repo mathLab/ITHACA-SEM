@@ -564,7 +564,7 @@ TimeIntegrationSchemeData::TimeIntegrate( const NekDouble deltaT,
         // Calculate the stage derivative based upon the stage value
         if (type == eDiagonallyImplicit)
         {
-            if( (stage==0) && m_firstStageEqualsOldSolution )
+            if( (stage == 0) && m_firstStageEqualsOldSolution )
             {
                 op.DoOdeRhs(m_Y, m_F[stage], m_T);        
             }

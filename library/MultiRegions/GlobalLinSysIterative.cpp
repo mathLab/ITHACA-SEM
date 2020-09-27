@@ -106,7 +106,7 @@ namespace Nektar
                     const AssemblyMapSharedPtr &plocToGloMap,
                     const int nDir)
         {
-            if(LibUtilities::NullNekLinSysIteratSharedPtr==m_linsol)
+            if (LibUtilities::NullNekLinSysIteratSharedPtr == m_linsol)
             {
                 LibUtilities::CommSharedPtr v_Comm = 
                 m_expList.lock()->GetComm()->GetRowComm();
@@ -118,7 +118,7 @@ namespace Nektar
                 string variable = variables[0];
 
                 std::string LinIteratSovlerType = "ConjugateGradient";
-                if(pSession->DefinesGlobalSysSolnInfo(variable,
+                if (pSession->DefinesGlobalSysSolnInfo(variable,
                                                     "LinIteratSovler"))
                 {
                     LinIteratSovlerType = pSession->GetGlobalSysSolnInfo(
@@ -136,18 +136,18 @@ namespace Nektar
                 // Check such a module exists for this equation.
                 ASSERTL0(LibUtilities::GetNekLinSysIteratFactory().
                 ModuleExists(LinIteratSovlerType),
-                        "NekLinSysIterat '" + LinIteratSovlerType + 
-                        "' is not defined.\n");
+                    "NekLinSysIterat '" + LinIteratSovlerType + 
+                    "' is not defined.\n");
                 m_linsol = LibUtilities::GetNekLinSysIteratFactory().
                            CreateInstance(LinIteratSovlerType, pSession,
                                           v_Comm, nGlobal - nDir);
 
                 m_LinSysOprtors.DefineNonlinLinSysLhsEval(
-                &GlobalLinSysIterative::DoMatrixMultiplyFlag, this);
+                    &GlobalLinSysIterative::DoMatrixMultiplyFlag, this);
                 m_LinSysOprtors.DefineNonlinLinPrecond(
-                &GlobalLinSysIterative::DoPreconditionerFlag, this);
+                    &GlobalLinSysIterative::DoPreconditionerFlag, this);
                 m_linsol->setSysOperators(m_LinSysOprtors);
-                v_UniqueMap();
+                    v_UniqueMap();
                 m_linsol->setUniversalUniqueMap(m_map);
             }
             

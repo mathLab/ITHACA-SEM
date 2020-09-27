@@ -70,14 +70,14 @@ class LinSysDemo
             }
             
             ASSERTL0(LibUtilities::GetNekLinSysIteratFactory().
-            ModuleExists(LinIteratSovlerType),
-            "NekLinSysIterat '" + LinIteratSovlerType + "' is not defined.\n");
+                ModuleExists(LinIteratSovlerType), "NekLinSysIterat '" + 
+                LinIteratSovlerType + "' is not defined.\n");
             m_linsol = LibUtilities::GetNekLinSysIteratFactory().CreateInstance(
                             LinIteratSovlerType, m_session, m_comm, m_matDim);
 
             m_LinSysOprtors.DefineNonlinLinSysLhsEval(&LinSysDemo::DoLhs, this);
             m_LinSysOprtors.DefineNonlinLinFixPointIte(&LinSysDemo::
-            DoFixedPoint, this);
+                DoFixedPoint, this);
             m_linsol->setSysOperators(m_LinSysOprtors);
             UniqueMap();
             m_linsol->setUniversalUniqueMap(m_map);
@@ -98,9 +98,9 @@ class LinSysDemo
             int ndigits     = 9;  // the number of sigificant digits
             int nothers     = 10; // extra width to place -, E, and power
             int nwidthcolm  = nothers+ndigits - 1; // the second value determines the number of sigificant digits
-            cout << " ntmpIts= "<<ntmpIts << endl
-                 <<std::scientific<<std::setw(nwidthcolm)<<
-                   std::setprecision(ndigits-1);
+            cout << " ntmpIts= " << ntmpIts << endl
+                 << std::scientific << std::setw(nwidthcolm) <<
+                   std::setprecision(ndigits - 1);
 
             string vars = "uvwx";
             for (int i = 0;i < m_matDim; ++i)

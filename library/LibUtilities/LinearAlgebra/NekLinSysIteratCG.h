@@ -101,7 +101,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble>  &pInput,
                 Array <OneD,      NekDouble>        &pOutput,
                 const int                           nDir,
-                const NekDouble                     tol    ,
+                const NekDouble                     tol,
                 const NekDouble                     factor );
             
         private:

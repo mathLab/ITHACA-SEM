@@ -51,7 +51,7 @@ namespace Nektar
             NekNonlinSys,
             const LibUtilities::SessionReaderSharedPtr  &,
             const LibUtilities::CommSharedPtr           &,
-            const int                                    > NekNonlinSysFactory;
+            const int                                   > NekNonlinSysFactory;
         LIB_UTILITIES_EXPORT NekNonlinSysFactory& GetNekNonlinSysFactory();
 
         class  NekNonlinSys : public NekNonlinLinSys 
@@ -65,7 +65,8 @@ namespace Nektar
                     const int                                   nDimen)
                 {
                     NekNonlinSysSharedPtr p = MemoryManager<
-                        NekNonlinSys>::AllocateSharedPtr(pSession, vComm,nDimen);
+                        NekNonlinSys>::AllocateSharedPtr(pSession,
+                                                         vComm, nDimen);
                     return p;
                 }
                 LIB_UTILITIES_EXPORT NekNonlinSys(
@@ -75,19 +76,19 @@ namespace Nektar
                 LIB_UTILITIES_EXPORT ~NekNonlinSys();
 
                 LIB_UTILITIES_EXPORT const Array<OneD, const NekDouble> 
-                &GetRefSolution() const
+                & GetRefSolution() const
                 {
                     return m_Solution;
                 }
 
                 LIB_UTILITIES_EXPORT const Array<OneD, const NekDouble> 
-                &GetRefResidual() const
+                & GetRefResidual() const
                 {
                     return m_Residual;
                 }
                 
             protected:
-                /// maximum iterations
+                /// Maximum iterations
                 int                                       m_maxiter;
                 /// Tolerance of iterative solver.
                 NekDouble                                 m_tolerance;

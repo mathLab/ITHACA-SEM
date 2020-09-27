@@ -92,7 +92,7 @@ namespace SolverUtils
             
             void CalculateForcing(
                     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                    const Array<OneD, Array<OneD, NekDouble> > &inarray,
+                    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                     const NekDouble &time);
                     
             SOLVER_UTILS_EXPORT virtual void v_InitObject(

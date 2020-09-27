@@ -47,7 +47,7 @@ namespace Nektar
          *
          * Solves a linear system using iterative methods.
          */
-        NekLinSysIteratFactory& GetNekLinSysIteratFactory()
+        NekLinSysIteratFactory & GetNekLinSysIteratFactory()
         {
             static NekLinSysIteratFactory instance;
             return instance;
@@ -58,7 +58,7 @@ namespace Nektar
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const LibUtilities::CommSharedPtr          &vComm,
             const int                                   nDimen)
-            : NekNonlinLinSys(pSession,vComm, nDimen)
+            : NekNonlinLinSys(pSession, vComm, nDimen)
         {
             std::vector<std::string>  variables(1);
             variables[0] =  pSession->GetVariable(0);
@@ -107,7 +107,7 @@ namespace Nektar
                                            Array<OneD, int> &map)
         {
             int nmap = map.size();
-            if(m_map.size() != nmap)
+            if (m_map.size() != nmap)
             {
                 m_map   =   Array<OneD, int>(nmap, 0);
             }
@@ -126,7 +126,7 @@ namespace Nektar
             if (m_map.size() > 0)
             {
                 vExchange[0] = Vmath::Dot2(pIn.GetDimension(),
-                                        &pIn[0], &pIn[0], &m_map[0]);
+                                           &pIn[0], &pIn[0], &m_map[0]);
             }
             m_Comm->AllReduce(vExchange, LibUtilities::ReduceSum);
 
@@ -136,14 +136,14 @@ namespace Nektar
             // way to control this.
             NekDouble new_rhs_mag = (vExchange[0] > 1e-6) ? vExchange[0] : 1.0;
 
-            if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)
+            if (m_rhs_magnitude == NekConstants::kNekUnsetDouble)
             {
                 m_rhs_magnitude = new_rhs_mag;
             }
             else
             {
                 m_rhs_magnitude = (m_rhs_mag_sm * (m_rhs_magnitude) +
-                                (1.0 - m_rhs_mag_sm) * new_rhs_mag);
+                                  (1.0 - m_rhs_mag_sm) * new_rhs_mag);
             }
         }
     }

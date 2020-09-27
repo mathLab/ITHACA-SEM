@@ -74,11 +74,11 @@ namespace Nektar
                 m_functors1(nfunctor1),
                 m_functors2(nfunctor2)
                 {
-                    for (int i = 0; i < nfunctor1; i++)
+                    for (int i = 0; i < nfunctor1; ++i)
                     {
                         m_functors1[i] = in.m_functors1[i];
                     }
-                    for (int i = 0; i < nfunctor2; i++)
+                    for (int i = 0; i < nfunctor2; ++i)
                     {
                         m_functors2[i] = in.m_functors2[i];
                     }
@@ -119,10 +119,11 @@ namespace Nektar
                 inline void DoNonlinLinSysRhsEval(
                     InArrayType     &inarray, 
                     OutArrayType    &outarray,
-                    const  bool      &flag = false) const
+                    const  bool     &flag = false) const
                 {
-                    ASSERTL1(m_functors1[0],"DoNonlinLinSysRhsEval should be defined for this time integration scheme");
-                    m_functors1[0](inarray,outarray,flag);
+                    ASSERTL1(m_functors1[0],
+                    "DoNonlinLinSysRhsEval should be defined for this time integration scheme");
+                    m_functors1[0](inarray, outarray, flag);
                 }
                 
                 inline void DoNonlinLinSysLhsEval(
@@ -130,8 +131,9 @@ namespace Nektar
                     OutArrayType    &outarray,
                     const  bool     &flag = false) const
                 {
-                    ASSERTL1(m_functors1[1],"DoNonlinLinSysLhsEval should be defined for this time integration scheme");
-                    m_functors1[1](inarray,outarray,flag);
+                    ASSERTL1(m_functors1[1],
+                    "DoNonlinLinSysLhsEval should be defined for this time integration scheme");
+                    m_functors1[1](inarray, outarray, flag);
                 }
                 
                 inline void DoNonlinLinPrecond(
@@ -139,13 +141,13 @@ namespace Nektar
                     OutArrayType    &outarray,
                     const  bool     &flag = false) const
                 {
-                    if(m_functors1[2])
+                    if (m_functors1[2])
                     {
-                        m_functors1[2](inarray,outarray,flag);
+                        m_functors1[2](inarray, outarray, flag);
                     }
                     else
                     {
-                        Vmath::Vcopy(outarray.size(),inarray,1,outarray,1);
+                        Vmath::Vcopy(outarray.size(), inarray, 1, outarray, 1);
                     }
                     
                 }
@@ -156,8 +158,9 @@ namespace Nektar
                     OutArrayType    &xn1,
                     const  bool     &flag = false) const
                 {
-                    ASSERTL1(m_functors2[0],"DoNonlinLinFixPointIte should be defined for this time integration scheme");
-                    m_functors2[0](rhs,xn,xn1,flag);
+                    ASSERTL1(m_functors2[0],
+                    "DoNonlinLinFixPointIte should be defined for this time integration scheme");
+                    m_functors2[0](rhs, xn, xn1, flag);
                 }
             protected:
                 /* Defines three operators 
@@ -176,7 +179,8 @@ namespace Nektar
 
         typedef std::shared_ptr<NekNonlinLinSys> NekNonlinLinSysSharedPtr;
         
-        class  NekNonlinLinSys : public std::enable_shared_from_this<NekNonlinLinSys>
+        class  NekNonlinLinSys : public std::enable_shared_from_this<
+               NekNonlinLinSys>
         {
             public:
 
@@ -184,13 +188,15 @@ namespace Nektar
                 friend class MemoryManager<NekNonlinLinSys>;
                 /**
                  */
-                LIB_UTILITIES_EXPORT static NekNonlinLinSysSharedPtr CreateInstance(
+                LIB_UTILITIES_EXPORT static NekNonlinLinSysSharedPtr 
+                    CreateInstance(
                     const LibUtilities::SessionReaderSharedPtr  &pSession,
                     const LibUtilities::CommSharedPtr           &vComm,
                     const int                                   nDimen)
                 {
                     NekNonlinLinSysSharedPtr p = MemoryManager<
-                        NekNonlinLinSys>::AllocateSharedPtr(pSession, vComm,nDimen);
+                        NekNonlinLinSys>::AllocateSharedPtr(pSession, 
+                                                            vComm, nDimen);
                     return p;
                 }
                 LIB_UTILITIES_EXPORT NekNonlinLinSys(
@@ -203,7 +209,8 @@ namespace Nektar
                 }
                 LIB_UTILITIES_EXPORT ~NekNonlinLinSys();
                 
-                LIB_UTILITIES_EXPORT inline void setSysOperators(NonlinLinSysOperators &in)
+                LIB_UTILITIES_EXPORT inline void setSysOperators
+                    (NonlinLinSysOperators &in)
                 {
                     m_operator = NonlinLinSysOperators(in);
                 }
@@ -216,7 +223,8 @@ namespace Nektar
                     const NekDouble                     tol    =   1.0E-7,
                     const NekDouble                     factor =   1.0)
                 {
-                    return v_SolveSystem(nGlobal,pInput,pOutput,nDir,tol,factor);
+                    return v_SolveSystem(nGlobal, pInput,
+                                         pOutput, nDir, tol, factor);
                 }
 
                 LIB_UTILITIES_EXPORT bool ConvergenceCheck(
@@ -257,7 +265,8 @@ namespace Nektar
                     const NekDouble                     tol    ,
                     const NekDouble                     factor )
                 {
-                    boost::ignore_unused(nGlobal, pInput, pOutput,nDir,tol,factor);
+                    boost::ignore_unused(nGlobal, pInput, pOutput, nDir,
+                                         tol, factor);
                     ASSERTL0(false, "LinIteratSovler NOT CORRECT.");
                     return 0;
                 }

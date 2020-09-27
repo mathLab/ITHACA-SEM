@@ -79,7 +79,8 @@ public:
         }
         else
         {
-            DIRKTimeIntegrationScheme::SetupSchemeDataESDIRK( m_integration_phases[0],variant,order,freeParams);
+            DIRKTimeIntegrationScheme::SetupSchemeDataESDIRK( 
+                m_integration_phases[0], variant, order, freeParams);
         }
     }
 
@@ -87,11 +88,13 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-                                                 std::vector<NekDouble> freeParams)
+    static TimeIntegrationSchemeSharedPtr create(std::string variant, 
+                                                 unsigned int order,
+                                   std::vector<NekDouble> freeParams)
     {
          TimeIntegrationSchemeSharedPtr p =
-           MemoryManager<DIRKTimeIntegrationScheme>::AllocateSharedPtr(variant, order, freeParams);
+           MemoryManager<DIRKTimeIntegrationScheme>::AllocateSharedPtr(
+                                             variant, order, freeParams);
         return p;
     }
 
@@ -231,9 +234,11 @@ public:
 
                 phase->m_A[0][0][0] = 0.0;
                 phase->m_A[0][1][0] = lambda;
-                phase->m_A[0][2][0] = 9.0*(1.0+ConstSqrt2)/80.0;
-                phase->m_A[0][3][0] = (22.0+15.0*ConstSqrt2)/(80.0*(1+ConstSqrt2));
-                phase->m_A[0][4][0] = (2398.0+1205.0*ConstSqrt2)/(2835.0*(4+3.0*ConstSqrt2));
+                phase->m_A[0][2][0] = 9.0 * (1.0 + ConstSqrt2) / 80.0;
+                phase->m_A[0][3][0] = (22.0 + 15.0 * ConstSqrt2) / 
+                                      (80.0 * (1 + ConstSqrt2));
+                phase->m_A[0][4][0] = (2398.0 + 1205.0 * ConstSqrt2) / 
+                                      (2835.0 * (4 + 3.0 * ConstSqrt2));
 
                 phase->m_A[0][1][1] = phase->m_A[0][1][0];
                 phase->m_A[0][2][1] = phase->m_A[0][2][0];
@@ -241,11 +246,12 @@ public:
                 phase->m_A[0][4][1] = phase->m_A[0][4][0];
 
                 phase->m_A[0][2][2] = lambda;
-                phase->m_A[0][3][2] = -7.0/(40.0*(1.0+ConstSqrt2));
-                phase->m_A[0][4][2] = -2374*(2.0+ConstSqrt2)/(2835.0*(4.0+3.0*ConstSqrt2));
+                phase->m_A[0][3][2] = -7.0 / (40.0 * (1.0 + ConstSqrt2));
+                phase->m_A[0][4][2] = -2374 * (2.0 + ConstSqrt2)/ 
+                                      (2835.0 * (4.0 + 3.0 * ConstSqrt2));
 
                 phase->m_A[0][3][3] = lambda;
-                phase->m_A[0][4][3] = 5827.0/7560.0;
+                phase->m_A[0][4][3] = 5827.0 / 7560.0;
 
                 phase->m_A[0][4][4] = lambda;
 
@@ -259,25 +265,28 @@ public:
 
             case 4:
             {
-                ASSERTL0(6==phase->m_numstages,"Only DIRKOrder4_ES6 have been implemented for 3rd-order")
+                ASSERTL0(6 == phase->m_numstages,
+                    "Only DIRKOrder4_ES6 have been implemented for 3rd-order")
                 NekDouble lambda;
-                if(freeParams.size())
+                if (freeParams.size())
                 {
                     lambda = freeParams[0];
                 }
                 else
                 {
-                    lambda = 1.0/4.0;
+                    lambda = 1.0 / 4.0;
                 }
 
                 const NekDouble ConstSqrt2  = sqrt(2.0);
 
                 phase->m_A[0][0][0] = 0.0;
                 phase->m_A[0][1][0] = lambda;
-                phase->m_A[0][2][0] = (1.0-ConstSqrt2)/8.0;
-                phase->m_A[0][3][0] = (5.0-7.0*ConstSqrt2)/64.0;
-                phase->m_A[0][4][0] = (-13796.0-54539*ConstSqrt2)/125000.0;
-                phase->m_A[0][5][0] = (1181.0-987.0*ConstSqrt2)/ 13782.0;
+                phase->m_A[0][2][0] = (1.0 - ConstSqrt2) / 8.0;
+                phase->m_A[0][3][0] = (5.0 - 7.0 * ConstSqrt2) / 64.0;
+                phase->m_A[0][4][0] = (-13796.0 - 54539 * ConstSqrt2) / 
+                                      125000.0;
+                phase->m_A[0][5][0] = (1181.0 - 987.0 * ConstSqrt2) /
+                                       13782.0;
 
                 phase->m_A[0][1][1] = phase->m_A[0][1][0];
                 phase->m_A[0][2][1] = phase->m_A[0][2][0];
@@ -286,16 +295,22 @@ public:
                 phase->m_A[0][5][1] = phase->m_A[0][5][0];
 
                 phase->m_A[0][2][2] = lambda;
-                phase->m_A[0][3][2] = 7.0*(1.0+ConstSqrt2)/32.0;
-                phase->m_A[0][4][2] = (506605.0+132109.0*ConstSqrt2)/437500.0;
-                phase->m_A[0][5][2] = 47.0*(-267.0+1783.0*ConstSqrt2)/273343.0;
+                phase->m_A[0][3][2] = 7.0 * (1.0 + ConstSqrt2) /
+                                      32.0;
+                phase->m_A[0][4][2] = (506605.0 + 132109.0 * ConstSqrt2) /
+                                      437500.0;
+                phase->m_A[0][5][2] = 47.0 * (-267.0 + 1783.0 * ConstSqrt2) /
+                                      273343.0;
 
                 phase->m_A[0][3][3] = lambda;
-                phase->m_A[0][4][3] = 166.0*(-97.0+376.0*ConstSqrt2)/109375.0;
-                phase->m_A[0][5][3] = -16.0*(-22922.0+3525.0*ConstSqrt2)/571953.0;
+                phase->m_A[0][4][3] = 166.0 * (-97.0 + 376.0 * ConstSqrt2) /
+                                      109375.0;
+                phase->m_A[0][5][3] = -16.0 * (-22922.0 + 3525.0 * ConstSqrt2) /
+                                      571953.0;
 
                 phase->m_A[0][4][4] = lambda;
-                phase->m_A[0][5][4] = -15625.0*(97.0+376.0*ConstSqrt2)/90749876.0;
+                phase->m_A[0][5][4] = -15625.0 * (97.0 + 376.0 * ConstSqrt2) /
+                                      90749876.0;
 
                 phase->m_A[0][5][5] = lambda;
             }
@@ -303,7 +318,8 @@ public:
             default:
             {
                 ASSERTL0(false, std::string("ESDIRK of order" +
-                                    std::to_string(phase->m_order)+" not defined"));
+                                    std::to_string(phase->m_order)+
+                                    " not defined"));
                 break;
             }
         }

@@ -108,9 +108,9 @@ namespace Nektar
         private:
             
             void DoMatrixMultiplyFlag(
-                const Array<OneD, NekDouble>& pInput,
-                      Array<OneD, NekDouble>& pOutput,
-                const  bool                 &controlFlag)
+                const Array<OneD, NekDouble> &pInput,
+                      Array<OneD, NekDouble> &pOutput,
+                const  bool                  &controlFlag)
             {
                 boost::ignore_unused(controlFlag);
                 
@@ -118,13 +118,13 @@ namespace Nektar
             }
 
             void DoPreconditionerFlag(
-                const Array<OneD, NekDouble>& pInput,
-                      Array<OneD, NekDouble>& pOutput,
-                const  bool                 &controlFlag)
+                const Array<OneD, NekDouble> &pInput,
+                      Array<OneD, NekDouble> &pOutput,
+                const  bool                  &controlFlag)
             {
                 boost::ignore_unused(controlFlag);
                 
-                m_precon->DoPreconditioner(pInput,pOutput);
+                m_precon->DoPreconditioner(pInput, pOutput);
             }
 
 

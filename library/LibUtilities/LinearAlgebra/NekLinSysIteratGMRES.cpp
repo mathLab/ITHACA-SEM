@@ -71,8 +71,8 @@ namespace Nektar
             pSession->MatchSolverInfo(
                 "flag_RightPrecond", "False", m_flag_RightPrecond, true);
             
-            if(pSession->DefinesGlobalSysSolnInfo(variable,
-                                                "MaxStorage"))
+            if (pSession->DefinesGlobalSysSolnInfo(variable,
+                                                   "MaxStorage"))
             {
                 m_maxstorage = boost::lexical_cast<int>(
                         pSession->GetGlobalSysSolnInfo(variable,
@@ -84,7 +84,7 @@ namespace Nektar
                                         m_maxstorage,
                                         30);
             }
-            if(pSession->DefinesGlobalSysSolnInfo(variable, 
+            if (pSession->DefinesGlobalSysSolnInfo(variable, 
                                                   "MaxHesband"))
             {
                 m_maxhesband = boost::lexical_cast<int>(
@@ -178,7 +178,7 @@ namespace Nektar
             m_prec_factor = NekConstants::kNekUnsetDouble;
             // m_rhs_magnitude = NekConstants::kNekUnsetDouble;
 
-            if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)
+            if (m_rhs_magnitude == NekConstants::kNekUnsetDouble)
             {
                 NekVector<NekDouble> inGlob (nGlobal, pInput, eWrapper);
                 Set_Rhs_Magnitude(inGlob);
@@ -205,14 +205,14 @@ namespace Nektar
             // m_maxrestart = m_maxiter / m_maxstorage + 1;
             // default truncted Gmres(m) closed
             // m_maxhesband = 0;
-            if(m_maxhesband > 0)
+            if (m_maxhesband > 0)
             {
                 truncted = true;
             }
 
             int nwidthcolm = 13;
 
-            for(int nrestart = 0; nrestart < m_maxrestart; ++nrestart)
+            for (int nrestart = 0; nrestart < m_maxrestart; ++nrestart)
             {
                 eps = DoGmresRestart(restarted,
                                     truncted,
@@ -221,7 +221,7 @@ namespace Nektar
                                     pOutput,
                                     nDir);
 
-                if(m_converged)
+                if (m_converged)
                 {
                     break;
                 }
@@ -229,28 +229,34 @@ namespace Nektar
             }
 
 
-            if(m_verbose)
+            if (m_verbose)
             {
                 Array<OneD, NekDouble> r0(nGlobal, 0.0);
-                m_operator.DoNonlinLinSysLhsEval(pOutput, r0,m_DifferenceFlag0);
-                Vmath::Svtvp(nNonDir, -1.0, &r0[0] + nDir, 1, &pInput[0] + nDir, 1, &r0[0] + nDir, 1);
+                m_operator.DoNonlinLinSysLhsEval(pOutput, r0,
+                                                 m_DifferenceFlag0);
+                Vmath::Svtvp(nNonDir, -1.0, &r0[0] + nDir, 1,
+                             &pInput[0] + nDir, 1, &r0[0] + nDir, 1);
                 NekDouble vExchange    = Vmath::Dot2(nNonDir,
-                                            &r0[0] + nDir,
-                                            &r0[0] + nDir,
-                                            &m_map[0] + nDir);
+                                                     &r0[0] + nDir,
+                                                     &r0[0] + nDir,
+                                                     &m_map[0] + nDir);
                 m_Comm->AllReduce(vExchange, LibUtilities::ReduceSum);
                 NekDouble eps1 = vExchange;
 
                 if (m_root)
                 {
-                    cout <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8) 
-                            << "       GMRES iterations made = " << m_totalIterations
-                            << " using tolerance of "  << m_tolerance
-                            << " (error = " << sqrt(eps * m_prec_factor / m_rhs_magnitude) << ")";
+                   cout << std::scientific << std::setw(nwidthcolm) 
+                        << std::setprecision(nwidthcolm - 8) 
+                        << "       GMRES iterations made = "
+                        << m_totalIterations
+                        << " using tolerance of "  << m_tolerance
+                        << " (error = " 
+                        << sqrt(eps * m_prec_factor / m_rhs_magnitude) << ")";
                     
-                    cout << " WITH (GMRES eps = " << eps << " REAL eps= "<<eps1<<")";
+                  cout  << " WITH (GMRES eps = " 
+                        << eps << " REAL eps= " << eps1 <<")";
 
-                    if(m_converged)
+                    if (m_converged)
                     {
                         cout <<" CONVERGED"<<endl;
                     }
@@ -294,25 +300,25 @@ namespace Nektar
             {
                 V_total[i] = Array<OneD, NekDouble>(nGlobal, 0.0);
             }
-            //Residual
+            // Residual
             Array<OneD, NekDouble> eta    (m_maxstorage + 1, 0.0);
-            //Givens rotation c
+            // Givens rotation c
             Array<OneD, NekDouble> cs     (m_maxstorage, 0.0);
-            //Givens rotation s
+            // Givens rotation s
             Array<OneD, NekDouble> sn     (m_maxstorage, 0.0);
-            //Total coefficients, just for check
+            // Total coefficients, just for check
             Array<OneD, NekDouble> y_total     (m_maxstorage, 0.0);
             // Residual
             NekDouble eps;
-            //Search direction order
+            // Search direction order
             Array<OneD, int> id (m_maxstorage, 0);
             Array<OneD, int> id_start (m_maxstorage, 0);
             Array<OneD, int> id_end (m_maxstorage, 0);
-            // temporary variables
+            // Temporary variables
             int idtem, starttem, endtem;
             NekDouble beta, alpha;
             NekDouble vExchange = 0;
-            // temporary Array
+            // Temporary Array
             Array<OneD, NekDouble> r0(nGlobal, 0.0);
             Array<OneD, NekDouble> tmp1;
             Array<OneD, NekDouble> tmp2;
@@ -323,15 +329,16 @@ namespace Nektar
             ///////////////////////////////////////////////////////////////////////////////
             // // tmp2 for preconditioner multiplication, later consider it
 
-            if(restarted)
+            if (restarted)
             {
-                // tmp2=Ax
+                // This is tmp2=Ax
                 m_operator.DoNonlinLinSysLhsEval(pOutput, r0, m_DifferenceFlag0);
 
-                //The first search direction
+                // The first search direction
                 beta = -1.0;
-                //PYT: r0=b-AX
-                Vmath::Svtvp(nNonDir, beta, &r0[0] + nDir, 1, &pInput[0] + nDir, 1, &r0[0] + nDir, 1);
+                // This is r0=b-AX
+                Vmath::Svtvp(nNonDir, beta, &r0[0] + nDir, 1,
+                             &pInput[0] + nDir, 1, &r0[0] + nDir, 1);
 
             }
             else
@@ -340,7 +347,7 @@ namespace Nektar
                 Vmath::Vcopy(nNonDir, &pInput[0] + nDir, 1, &r0[0] + nDir, 1);
             }
             
-            if(m_flag_LeftPrecond)
+            if (m_flag_LeftPrecond)
             {
                 tmp1 = r0 + nDir;
                 tmp2 = r0 + nDir;
@@ -350,17 +357,17 @@ namespace Nektar
             // norm of (r0)
             // m_map tells how to connect
             vExchange    = Vmath::Dot2(nNonDir,
-                                    &r0[0] + nDir,
-                                    &r0[0] + nDir,
-                                    &m_map[0] + nDir);
+                                       &r0[0] + nDir,
+                                       &r0[0] + nDir,
+                                       &m_map[0] + nDir);
             m_Comm->AllReduce(vExchange, LibUtilities::ReduceSum);
             eps = vExchange;
 
-            if(!restarted)
+            if (!restarted)
             {
-                if(m_prec_factor == NekConstants::kNekUnsetDouble)
+                if (m_prec_factor == NekConstants::kNekUnsetDouble)
                 {
-                    if(m_flag_LeftPrecond)
+                    if (m_flag_LeftPrecond)
                     {
                         // evaluate initial residual error for exit check
                         vExchange    = Vmath::Dot2(nNonDir,
@@ -379,7 +386,7 @@ namespace Nektar
             }
 
             tmp2 = r0 + nDir;
-            Vmath::Smul(nNonDir,sqrt(m_prec_factor),tmp2,1,tmp2,1);
+            Vmath::Smul(nNonDir, sqrt(m_prec_factor), tmp2, 1, tmp2, 1);
             eps     =   eps*m_prec_factor;
             eta[0] = sqrt(eps);
 
@@ -392,12 +399,12 @@ namespace Nektar
             // }
 
             // Give an order for the entries in Hessenburg matrix
-            for(int nd = 0; nd < m_maxstorage; ++nd)
+            for (int nd = 0; nd < m_maxstorage; ++nd)
             {
                 id[nd] = nd;
                 id_end[nd] = nd + 1;
                 starttem = id_end[nd] - m_maxhesband;
-                if(truncted && (starttem) > 0)
+                if (truncted && (starttem) > 0)
                 {
                     id_start[nd] = starttem;
                 }
@@ -410,11 +417,12 @@ namespace Nektar
             //Normlized by r0 norm V(:,1)=r0/norm(r0)
             alpha = 1.0 / eta[0];
             //Scalar multiplication
-            Vmath::Smul(nNonDir, alpha, &r0[0] + nDir, 1, &V_total[0][0] + nDir, 1);
+            Vmath::Smul(nNonDir, alpha, &r0[0] + nDir, 1, 
+                        &V_total[0][0] + nDir, 1);
 
             // restarted Gmres(m) process
             int nswp = 0;
-            if(m_flag_RightPrecond)
+            if (m_flag_RightPrecond)
             {
                 Vsingle1    =   Array<OneD, NekDouble>(nGlobal, 0.0);
             }
@@ -424,7 +432,7 @@ namespace Nektar
                 Vsingle2 = V_total[nd + 1];
                 hsingle1 = hes[nd];
 
-                if(m_flag_RightPrecond)
+                if (m_flag_RightPrecond)
                 {
                     tmp1 = V_total[nd] + nDir;
                     tmp2 = Vsingle1 + nDir;
@@ -439,24 +447,30 @@ namespace Nektar
                 starttem = id_start[idtem];
                 endtem = id_end[idtem];
 
-                DoArnoldi(starttem, endtem, nGlobal, nDir, V_total, Vsingle1, Vsingle2, hsingle1);
+                DoArnoldi(starttem, endtem, nGlobal, nDir,
+                          V_total, Vsingle1, Vsingle2, hsingle1);
 
-                if(starttem > 0)
+                if (starttem > 0)
                 {
                     starttem = starttem - 1;
                 }
 
                 hsingle2 = Upper[nd];
-                Vmath::Vcopy(m_maxstorage + 1, &hsingle1[0], 1, &hsingle2[0], 1);
-                DoGivensRotation(starttem, endtem, nGlobal, nDir, cs, sn, hsingle2, eta);
+                Vmath::Vcopy(m_maxstorage + 1, &hsingle1[0], 1,
+                             &hsingle2[0], 1);
+                DoGivensRotation(starttem, endtem, nGlobal, nDir,
+                                 cs, sn, hsingle2, eta);
 
                 eps = eta[nd + 1] * eta[nd + 1];
                 // This Gmres merge truncted Gmres to accelerate.
-                // If truncted, cannot jump out because the last term of eta is not residual
+                // If truncted, cannot jump out because 
+                // the last term of eta is not residual
                 if((!truncted) || (nd < m_maxhesband))
                 {
-                    // if (eps * m_prec_factor < m_tolerance * m_tolerance * m_rhs_magnitude )
-                    if ((eps < m_tolerance * m_tolerance * m_rhs_magnitude)&&nd>0 )
+                    // If (eps * m_prec_factor < m_tolerance *
+                    // m_tolerance * m_rhs_magnitude )
+                    if ((eps < m_tolerance * m_tolerance *
+                         m_rhs_magnitude) && nd>0 )
                     {
                         m_converged = true;
                     }
@@ -478,20 +492,22 @@ namespace Nektar
             DoBackward(nswp, Upper, eta, y_total);
             // calculate output y_total*V_total
             Array<OneD, NekDouble> solution(nGlobal, 0.0);
-            for(int i = 0; i < nswp; ++i)
+            for (int i = 0; i < nswp; ++i)
             {
                 beta = y_total[i];
                 // Vmath::Svtvp(nNonDir, beta, &V_total[i][0] + nDir, 1, &pOutput[0] + nDir, 1, &pOutput[0] + nDir, 1);
-                Vmath::Svtvp(nNonDir, beta, &V_total[i][0] + nDir, 1, &solution[0] + nDir, 1, &solution[0] + nDir, 1);
+                Vmath::Svtvp(nNonDir, beta, &V_total[i][0] + nDir, 1,
+                             &solution[0] + nDir, 1, &solution[0] + nDir, 1);
             }
 
-            if(m_flag_RightPrecond)
+            if (m_flag_RightPrecond)
             {
                 tmp1 = solution + nDir;
                 tmp2 = solution + nDir;
                 m_operator.DoNonlinLinPrecond(tmp1, tmp2);
             }
-            Vmath::Vadd(nNonDir, &solution[0] + nDir, 1, &pOutput[0] + nDir, 1, &pOutput[0] + nDir, 1);
+            Vmath::Vadd(nNonDir, &solution[0] + nDir, 1,
+                        &pOutput[0] + nDir, 1, &pOutput[0] + nDir, 1);
 
             return eps;
         }
@@ -526,23 +542,23 @@ namespace Nektar
             // w=AV(:,nd)
             Array<OneD, NekDouble> w(nGlobal, 0.0);
 
-            m_operator.DoNonlinLinSysLhsEval(Vsingle1, w,m_DifferenceFlag1);
+            m_operator.DoNonlinLinSysLhsEval(Vsingle1, w, m_DifferenceFlag1);
 
             tmp1 = w + nDir;
             tmp2 = w + nDir;
-            if(m_flag_LeftPrecond)
+            if (m_flag_LeftPrecond)
             {
                 m_operator.DoNonlinLinPrecond(tmp1, tmp2);
             }
             
-            Vmath::Smul(nNonDir,sqrt(m_prec_factor),tmp2,1,tmp2,1);
+            Vmath::Smul(nNonDir, sqrt(m_prec_factor), tmp2, 1, tmp2, 1);
 
             //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             // Modified Gram-Schmidt
             // The pointer not certainly equal to starttem.
             // Like initially, Gmres-deep need to use numbertem=0
             numbertem = starttem;
-            for(int i = starttem; i < endtem; ++i)
+            for (int i = starttem; i < endtem; ++i)
             {
                 vExchange = Vmath::Dot2(nNonDir,
                                         &w[0] + nDir,
@@ -553,7 +569,8 @@ namespace Nektar
                 hsingle[i] = vExchange;
 
                 beta = -1.0 * vExchange;
-                Vmath::Svtvp(nNonDir, beta, &V_local[numbertem][0] + nDir, 1, &w[0] + nDir, 1, &w[0] + nDir, 1);
+                Vmath::Svtvp(nNonDir, beta, &V_local[numbertem][0] + nDir, 1, 
+                             &w[0] + nDir, 1, &w[0] + nDir, 1);
                 numbertem = numbertem + 1;
             }
             // end of Modified Gram-Schmidt
@@ -609,7 +626,9 @@ namespace Nektar
             Array<OneD, NekDouble> &eta)
         {
             boost::ignore_unused(nGlobal, nDir);
-            NekDouble temp_dbl, dd, hh;
+            NekDouble temp_dbl;
+            NekDouble dd;
+            NekDouble hh;
             int idtem = endtem - 1;
             // The starttem and endtem are beginning and ending order of Givens rotation
             // They usually equal to the beginning position and ending position of Hessenburg matrix

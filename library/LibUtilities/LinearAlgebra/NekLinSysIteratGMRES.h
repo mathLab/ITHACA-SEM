@@ -86,11 +86,13 @@ namespace Nektar
             }
         
         protected:
-            /// maximum gmres restart iteration
+            // This is maximum gmres restart iteration
             int                                    m_maxrestart;
-            /// maximum gmres search directions for one restart(determines the max storage usage)
+            // This is  maximum gmres search directions for one restart
+            // (determines the max storage usage)
             int                                    m_maxstorage;
-            /// maximum bandwidth of Hessenburg matrix if use truncted Gmres(m)
+            // This is maximum bandwidth of Hessenburg matrix 
+            // if use truncted Gmres(m)
             int                                    m_maxhesband;
             
             bool                                   m_flag_LeftPrecond   = false;
@@ -152,7 +154,8 @@ namespace Nektar
                 Array<OneD, NekDouble> &hsingle,
                 Array<OneD, NekDouble> &eta
             );
-            // Backward calculation to calculate coeficients of least square problem
+            // Backward calculation to calculate coeficients
+            // of least square problem
             // To notice, Hessenburg's columnns and rows are reverse
             void DoBackward(
                 const int  number,

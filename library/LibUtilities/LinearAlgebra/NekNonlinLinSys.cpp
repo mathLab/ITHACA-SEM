@@ -59,7 +59,7 @@ namespace Nektar
             m_root              =   false;
             m_Comm              =   vComm;
 
-            if (0==m_Comm->GetRank())
+            if (0 == m_Comm->GetRank())
             {
                 m_root              =   true;
             }
@@ -83,7 +83,7 @@ namespace Nektar
             int ntotal = Residual.size();
             boost::ignore_unused(nIteration);
 
-            NekDouble   SysResNorm = Vmath::Dot(ntotal,Residual,Residual);
+            NekDouble   SysResNorm = Vmath::Dot(ntotal, Residual, Residual);
             m_Comm->AllReduce(SysResNorm, Nektar::LibUtilities::ReduceSum);
 
             if (SysResNorm < tol)

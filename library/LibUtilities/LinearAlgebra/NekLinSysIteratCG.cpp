@@ -63,7 +63,7 @@ namespace Nektar
             variables[0] =  pSession->GetVariable(0);
             string variable = variables[0];
 
-            if(pSession->DefinesGlobalSysSolnInfo(variable, "SuccessiveRHS"))
+            if (pSession->DefinesGlobalSysSolnInfo(variable, "SuccessiveRHS"))
             {
                 m_successiveRHS = boost::lexical_cast<int>(
                         pSession->GetGlobalSysSolnInfo(variable,
@@ -76,7 +76,7 @@ namespace Nektar
             }
 
             int successiveRHS;
-            if((successiveRHS = m_successiveRHS))
+            if ((successiveRHS = m_successiveRHS))
             {
                 m_prevLinSol.set_capacity(successiveRHS);
                 m_useProjection = true;
@@ -183,7 +183,7 @@ namespace Nektar
                 NekVector<NekDouble> pb(nNonDir, tmp = pb_s + nDir, eWrapper);
                 NekVector<NekDouble> px(nNonDir, tmp = px_s + nDir, eWrapper);
                 NekVector<NekDouble> tmpAx(nNonDir, tmp = tmpAx_s + nDir, 
-                                           eWrapper);
+                                     eWrapper);
                 NekVector<NekDouble> tmpx(nNonDir, tmp = tmpx_s  + nDir,
                                      eWrapper);
 
@@ -340,7 +340,7 @@ namespace Nektar
             }
 
             // normalisation of new solution
-            Vmath::Smul(nNonDir, 1.0/anorm, 
+            Vmath::Smul(nNonDir, 1.0 / anorm, 
                         px_s.get() + nDir, 1, px_s.get() + nDir, 1);
 
             // updating storage with non-Dirichlet-dof part of new solution vector
@@ -381,16 +381,22 @@ namespace Nektar
             Array<OneD, NekDouble> tmp;
 
             // Create NekVector wrappers for linear algebra operations
-            NekVector<NekDouble> in (nNonDir,pInput  + nDir,      eWrapper);
-            NekVector<NekDouble> out(nNonDir,tmp = pOutput + nDir,eWrapper);
-            NekVector<NekDouble> w  (nNonDir,tmp = w_A + nDir,    eWrapper);
-            NekVector<NekDouble> s  (nNonDir,tmp = s_A + nDir,    eWrapper);
-            NekVector<NekDouble> p  (nNonDir,p_A,                 eWrapper);
-            NekVector<NekDouble> r  (nNonDir,r_A,                 eWrapper);
-            NekVector<NekDouble> q  (nNonDir,q_A,                 eWrapper);
+            NekVector<NekDouble> in (nNonDir,pInput  + nDir,       eWrapper);
+            NekVector<NekDouble> out(nNonDir,tmp = pOutput + nDir, eWrapper);
+            NekVector<NekDouble> w  (nNonDir,tmp = w_A + nDir,     eWrapper);
+            NekVector<NekDouble> s  (nNonDir,tmp = s_A + nDir,     eWrapper);
+            NekVector<NekDouble> p  (nNonDir,p_A,                  eWrapper);
+            NekVector<NekDouble> r  (nNonDir,r_A,                  eWrapper);
+            NekVector<NekDouble> q  (nNonDir,q_A,                  eWrapper);
 
             int k;
-            NekDouble alpha, beta, rho, rho_new, mu, eps,  min_resid;
+            NekDouble alpha;
+            NekDouble  beta;
+            NekDouble rho;
+            NekDouble rho_new;
+            NekDouble mu;
+            NekDouble eps;
+            NekDouble min_resid;
             Array<OneD, NekDouble> vExchange(3,0.0);
 
             // Copy initial residual from input
@@ -398,7 +404,7 @@ namespace Nektar
             // zero homogeneous out array ready for solution updates
             // Should not be earlier in case input vector is same as
             // output and above copy has been peformed
-            Vmath::Zero(nNonDir,tmp = pOutput + nDir,1);
+            Vmath::Zero(nNonDir, tmp = pOutput + nDir, 1);
 
 
             // evaluate initial residual error for exit check
@@ -411,7 +417,7 @@ namespace Nektar
             
             eps       = vExchange[2];
 
-            if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)
+            if (m_rhs_magnitude == NekConstants::kNekUnsetDouble)
             {
                 NekVector<NekDouble> inGlob (nGlobal, pInput, eWrapper);
                 Set_Rhs_Magnitude(inGlob);
@@ -455,7 +461,7 @@ namespace Nektar
             mu                = vExchange[1];
             min_resid         = m_rhs_magnitude;
             beta              = 0.0;
-            alpha             = rho/mu;
+            alpha             = rho / mu;
             m_totalIterations = 1;
 
             // Continue until convergence
@@ -476,14 +482,18 @@ namespace Nektar
                 }
 
                 // Compute new search direction p_k, q_k
-                Vmath::Svtvp(nNonDir, beta, &p_A[0], 1, &w_A[nDir], 1, &p_A[0], 1);
-                Vmath::Svtvp(nNonDir, beta, &q_A[0], 1, &s_A[nDir], 1, &q_A[0], 1);
+                Vmath::Svtvp(nNonDir, beta, &p_A[0], 1, 
+                             &w_A[nDir], 1, &p_A[0], 1);
+                Vmath::Svtvp(nNonDir, beta, &q_A[0], 1, &s_A[nDir], 1,
+                             &q_A[0], 1);
 
                 // Update solution x_{k+1}
-                Vmath::Svtvp(nNonDir, alpha, &p_A[0], 1, &pOutput[nDir], 1, &pOutput[nDir], 1);
+                Vmath::Svtvp(nNonDir, alpha, &p_A[0], 1, &pOutput[nDir], 1,
+                             &pOutput[nDir], 1);
 
                 // Update residual vector r_{k+1}
-                Vmath::Svtvp(nNonDir, -alpha, &q_A[0], 1, &r_A[0], 1, &r_A[0], 1);
+                Vmath::Svtvp(nNonDir, -alpha, &q_A[0], 1, &r_A[0], 1,
+                             &r_A[0], 1);
 
                 // Apply preconditioner
                 m_operator.DoNonlinLinPrecond(r_A, tmp = w_A + nDir);
@@ -524,7 +534,7 @@ namespace Nektar
                     {
                         cout << "CG iterations made = " << m_totalIterations 
                              << " using tolerance of "  << m_tolerance 
-                             << " (error = " << sqrt(eps/m_rhs_magnitude)
+                             << " (error = " << sqrt(eps / m_rhs_magnitude)
                              << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")"
                              << endl;
                     }
@@ -533,8 +543,8 @@ namespace Nektar
                 min_resid = min(min_resid, eps);
 
                 // Compute search direction and solution coefficients
-                beta  = rho_new/rho;
-                alpha = rho_new/(mu - rho_new*beta/alpha);
+                beta  = rho_new / rho;
+                alpha = rho_new / (mu - rho_new * beta / alpha);
                 rho   = rho_new;
                 k++;
             }

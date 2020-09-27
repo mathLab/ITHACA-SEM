@@ -54,7 +54,7 @@ namespace Nektar
             const LibUtilities::CommSharedPtr          &,
             const int                                  > NekLinSysIteratFactory;
             LIB_UTILITIES_EXPORT NekLinSysIteratFactory 
-            &GetNekLinSysIteratFactory();
+            & GetNekLinSysIteratFactory();
         
         class  NekLinSysIterat : public NekNonlinLinSys
         {

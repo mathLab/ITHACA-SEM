@@ -477,7 +477,7 @@ namespace Nektar
         }
         else
         {
-            for(int i = 0; i < nvariables; ++i)
+            for (int i = 0; i < nvariables; ++i)
             {
                 Fwd[i]     = TensorOfArray1D<NekDouble> (nTracePts, 0.0);
                 Bwd[i]     = TensorOfArray1D<NekDouble> (nTracePts, 0.0);
@@ -513,12 +513,12 @@ namespace Nektar
             GetElmtTimeStep(inarray, tstep);
 
             // Loop over elements
-            for(int n = 0; n < nElements; ++n)
+            for (int n = 0; n < nElements; ++n)
             {
-                nq     = m_fields[0]->GetExp(n)->GetTotPoints();
-                offset = m_fields[0]->GetPhys_Offset(n);
+                nq     = m_fields[0]->GetExp(n)->GetNcoeffs();
+                offset = m_fields[0]->GetCoeff_Offset(n);
                 fac    = tstep[n] / m_timestep;
-                for(int i = 0; i < nvariables; ++i)
+                for (int i = 0; i < nvariables; ++i)
                 {
                     Vmath::Smul(nq, fac, outarray[i] + offset, 1,
                                 tmp = outarray[i] + offset, 1);
@@ -646,7 +646,7 @@ namespace Nektar
         {
             m_magnitdEstimat[1]   +=   m_magnitdEstimat[i] ;
         }
-        for(int i = 2; i < nvariables - 1; ++i)
+        for (int i = 2; i < nvariables - 1; ++i)
         {
             m_magnitdEstimat[i]   =   m_magnitdEstimat[1] ;
         }
@@ -1341,7 +1341,7 @@ Array<OneD, NekDouble>  CompressibleFlowSystem::GetElmtMinHP(void)
             {
                 LocalRegions::Expansion3DSharedPtr exp3D;
                 exp3D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion3D>();
-                for(int i = 0; i < exp3D->GetNtraces(); ++i)
+                for (int i = 0; i < exp3D->GetNtraces(); ++i)
                 {
                     h = min(h, exp3D->GetGeom3D()->GetEdge(i)->GetVertex(0)->
                         dist(*(exp3D->GetGeom3D()->GetEdge(i)->GetVertex(1))));
@@ -1353,7 +1353,7 @@ Array<OneD, NekDouble>  CompressibleFlowSystem::GetElmtMinHP(void)
             {
                 LocalRegions::Expansion2DSharedPtr exp2D;
                 exp2D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion2D>();
-                for(int i = 0; i < exp2D->GetNtraces(); ++i)
+                for (int i = 0; i < exp2D->GetNtraces(); ++i)
                 {
                     h = min(h, exp2D->GetGeom2D()->GetEdge(i)->GetVertex(0)->
                         dist(*(exp2D->GetGeom2D()->GetEdge(i)->GetVertex(1))));

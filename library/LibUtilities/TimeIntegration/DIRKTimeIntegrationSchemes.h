@@ -43,6 +43,7 @@
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
 #define LUE LIB_UTILITIES_EXPORT
+using namespace std;
 
 namespace Nektar
 {
@@ -200,7 +201,7 @@ public:
                                     + variant);
 
         phase->m_numsteps  = 1;
-        char stage = variant.back();
+        char const &stage = variant.back();
         phase->m_numstages =  std::atoi(&stage);
 
         phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
@@ -221,7 +222,9 @@ public:
             case 3:
             {
                 ASSERTL0(5==phase->m_numstages,
-                    "Only DIRKOrder3_ES5 have been implemented for 3rd-order");
+                    std::string("DIRKOrder3_ES" +
+                    std::to_string(phase->m_numstages)+
+                    " not defined"));
                 NekDouble lambda;
                 if(freeParams.size())
                 {
@@ -266,7 +269,9 @@ public:
             case 4:
             {
                 ASSERTL0(6 == phase->m_numstages,
-                    "Only DIRKOrder4_ES6 have been implemented for 3rd-order")
+                    std::string("DIRKOrder4_ES" +
+                    std::to_string(phase->m_numstages)+
+                    " not defined"));
                 NekDouble lambda;
                 if (freeParams.size())
                 {

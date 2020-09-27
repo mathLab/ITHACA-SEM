@@ -177,7 +177,7 @@ namespace Nektar
             }
             else
             {
-                int nvariables  =   m_fields.num_elements();
+                int nvariables  =   m_fields.size();
                 m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkSOR_coeff, this);
                 m_PrecMatStorage    =   eDiagonal;
                 m_session->LoadParameter("nPadding",     m_nPadding      ,    4);
@@ -248,7 +248,7 @@ namespace Nektar
                 }
             }
 
-            int nvariables  =   m_fields.num_elements();
+            int nvariables  =   m_fields.size();
             Array<OneD, Array<OneD, Array<OneD, int > > >   map;
             bool flag;
             const MultiRegions::LocTraceToTraceMapSharedPtr locTraceToTraceMap = m_fields[0]->GetlocTraceToTraceMap();
@@ -557,7 +557,7 @@ namespace Nektar
         const NekDouble                                   time)
     {
         int i;
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
 
         switch(m_projectionType)
         {
@@ -596,7 +596,7 @@ namespace Nektar
                                                  const Array<OneD, NekDouble> &inarray,
                                                  Array<OneD, NekDouble >&out)
     {
-        int ntotal     = inarray.num_elements();
+        int ntotal     = inarray.size();
         Vmath::Vcopy(ntotal,inarray,1,out,1);
         return;
     }
@@ -609,8 +609,8 @@ namespace Nektar
         const Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >     &PrecMatVars,
         const DataType                                              &tmpDataType)
     {
-        unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
-        unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
+        unsigned int nvariables = m_TimeIntegtSol_n.size();
+        unsigned int npoints    = m_TimeIntegtSol_n[0].size();
         Array<OneD, Array<OneD, DataType > >Sinarray(nvariables);
         Array<OneD, NekVector<DataType> >tmpVect(nvariables);
         Array<OneD, DataType > Soutarray(npoints);
@@ -627,7 +627,7 @@ namespace Nektar
             tmpVect[m] =  NekVector<DataType> (npoints,Sinarray[m],eWrapper);
         }
 
-        Vmath::Fill(outarray.num_elements(),0.0,outarray,1);
+        Vmath::Fill(outarray.size(),0.0,outarray,1);
 
         for(int m = 0; m < nvariables; m++)
         {
@@ -652,8 +652,8 @@ namespace Nektar
         const TypeNekBlkMatSharedPtr                        &PrecMatVars,
         const DataType                                      &tmpDataType)
     {
-        unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
-        unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
+        unsigned int nvariables = m_TimeIntegtSol_n.size();
+        unsigned int npoints    = m_TimeIntegtSol_n[0].size();
         unsigned int npointsVar = nvariables*npoints;
         Array<OneD, DataType >Sinarray(npointsVar);
         Array<OneD, DataType > Soutarray(npointsVar);
@@ -707,9 +707,9 @@ namespace Nektar
         const NekDouble SORParam        =   m_SORRelaxParam;
         const NekDouble OmSORParam      =   1.0-SORParam;
 
-        unsigned int nvariables = m_TimeIntegtSol_n.num_elements();
-        unsigned int npoints    = m_TimeIntegtSol_n[0].num_elements();
-        unsigned int ntotpnt    = inarray.num_elements();
+        unsigned int nvariables = m_TimeIntegtSol_n.size();
+        unsigned int npoints    = m_TimeIntegtSol_n[0].size();
+        unsigned int ntotpnt    = inarray.size();
         
         ASSERTL0(nvariables*npoints==ntotpnt,"nvariables*npoints==ntotpnt not satisfied in preconditioner_BlkSOR");
 
@@ -1419,7 +1419,7 @@ namespace Nektar
                 Array<OneD, NekDouble>      &L2)
     {
         const int nPoints = GetTotPoints();
-        const int nFields = m_fields.num_elements();
+        const int nFields = m_fields.size();
         Array<OneD, Array<OneD, NekDouble> > rhs (nFields);
         Array<OneD, Array<OneD, NekDouble> > inarray (nFields);
         for (int i = 0; i < nFields; ++i)
@@ -1427,7 +1427,7 @@ namespace Nektar
             rhs[i] =   Array<OneD, NekDouble> (nPoints,0.0);
             inarray[i] =   m_fields[i]->UpdatePhys();
         }
-
+        
         DoOdeRhs(inarray,rhs,m_time);
 
         // Holds L2 errors.

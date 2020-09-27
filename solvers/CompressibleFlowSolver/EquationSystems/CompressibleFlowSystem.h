@@ -356,7 +356,7 @@ namespace Nektar
             mat = MemoryManager<SNekBlkMat>
                 ::AllocateSharedPtr(nrow, ncol, eDIAGONAL);
             SNekMatSharedPtr loc_matNvar;
-            for(int nelm = 0; nelm < nrow.num_elements(); ++nelm)
+            for(int nelm = 0; nelm < nrow.size(); ++nelm)
             {
                 int nrowsVars = nrow[nelm];
                 int ncolsVars = ncol[nelm];
@@ -375,7 +375,7 @@ namespace Nektar
             mat = MemoryManager<DNekBlkMat>
                 ::AllocateSharedPtr(nrow, ncol, eDIAGONAL);
             DNekMatSharedPtr loc_matNvar;
-            for(int nelm = 0; nelm < nrow.num_elements(); ++nelm)
+            for(int nelm = 0; nelm < nrow.size(); ++nelm)
             {
                 int nrowsVars = nrow[nelm];
                 int ncolsVars = ncol[nelm];

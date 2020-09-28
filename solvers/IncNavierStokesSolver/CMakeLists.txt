@@ -10,6 +10,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_SOLVER_EXECUTABLE(IncNavierStokesSolver
         SOURCES ./IncNavierStokesSolver.cpp
         LIBRARY_SOURCES
+        ./EquationSystems/CoupledLinearNS_ROM.cpp
         ./EquationSystems/CoupledLinearNS.cpp
         ./EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
         ./EquationSystems/IncNavierStokes.cpp
@@ -129,6 +130,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(CylFlow2D_SPM)
     ADD_NEKTAR_TEST(CylFlow2DMov_SPM)
     ADD_NEKTAR_TEST(CylFlow3DH1D_SPM)
+    ADD_NEKTAR_TEST(../Tests_ROM/OseenROM)
 
     IF (NEKTAR_USE_SCOTCH)
         # This tests exhibits sensitivity to the choice of DirectStaticCond

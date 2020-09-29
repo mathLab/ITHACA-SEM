@@ -1201,6 +1201,58 @@ namespace Nektar
     {
         SolverUtils::AddSummaryItem(s, "Solver Type", "Coupled Linearised NS");
     }
+
+    void CoupledLinearNS_ROM::load_snapshots()
+    {
+    
+    	cout << " Loading FOM snapshots from files ... " << endl;
+    	
+	// fill the fields snapshot_x_collection and snapshot_y_collection
+
+	int nvelo = 2;
+        Array<OneD, Array<OneD, NekDouble> > test_load_snapshot(nvelo); // for a 2D problem
+
+        for(int i = 0; i < nvelo; ++i)
+        {
+            test_load_snapshot[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);  // number of phys points
+        }
+               
+        std::vector<std::string> fieldStr;
+        for(int i = 0; i < nvelo; ++i)
+        {
+           fieldStr.push_back(m_session->GetVariable(i));
+        }
+
+	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+
+        for(int i = 0; i < number_of_snapshots; ++i)
+        {
+		// generate the correct string
+		std::stringstream sstm;
+		sstm << "TestSnap" << i+1;
+		std::string result = sstm.str();
+		const char* rr = result.c_str();
+
+//	        EvaluateFunction(fieldStr, test_load_snapshot, result);
+	        GetFunction(result)->Evaluate(fieldStr, test_load_snapshot);
+	        
+            //     now:   GetFunction( "Restart")->Evaluate(fieldStr,  Restart);
+            //     PREV:    EvaluateFunction(fieldStr, Restart, "Restart");
+	        
+		snapshot_x_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		snapshot_y_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		for (int j=0; j < GetNpoints(); ++j)
+		{
+			snapshot_x_collection[i][j] = test_load_snapshot[0][j];
+			snapshot_y_collection[i][j] = test_load_snapshot[1][j];
+		}
+        }    	
+
+	
+    	cout << " ... finished loading FOM snapshots from files" << endl;
+
+    }
     
     void CoupledLinearNS_ROM::load_session_parameters()
     {
@@ -1209,6 +1261,7 @@ namespace Nektar
     
     	load_snapshot_data_from_files = m_session->GetParameter("load_snapshot_data_from_files");
 	number_of_snapshots = m_session->GetParameter("number_of_snapshots");
+	POD_tolerance = m_session->GetParameter("POD_tolerance");
 	if (m_session->DefinesParameter("parameter_space_dimension")) 
 	{
 		parameter_space_dimension = m_session->GetParameter("parameter_space_dimension");	
@@ -1217,6 +1270,24 @@ namespace Nektar
 	{
 		parameter_space_dimension = 1;
 	}
+	parameter_types = Array<OneD, int> (parameter_space_dimension); 
+	parameter_types[0] = m_session->GetParameter("type_para1");
+	Nmax = number_of_snapshots;
+    	if (parameter_space_dimension == 1)
+	{
+		param_vector = Array<OneD, NekDouble> (Nmax);
+		for(int i = 0; i < number_of_snapshots; ++i)
+		{
+			// generate the correct string
+			std::stringstream sstm;
+			sstm << "param" << i;
+			std::string result = sstm.str();
+			// const char* rr = result.c_str();
+		        param_vector[i] = m_session->GetParameter(result);
+	        }
+	}
+	
+    	cout << " ... finished loading ROM parameters" << endl;
 	
     }
 
@@ -1225,7 +1296,24 @@ namespace Nektar
     
     	
     	load_session_parameters();
-    	
+    	if ( load_snapshot_data_from_files )
+	{
+		if (parameter_space_dimension == 1)
+		{
+			load_snapshots();
+		}
+		else
+		{
+			cout << "ROM error, expected parameter_space_dim == 1 when loading snapshots" << endl;
+			return;
+		}
+	}
+	else
+	{
+		cout << "ROM error, expected to load snapshots from files" << endl;
+		return;
+	}
+	
         switch(m_equationType)
         {
         case eUnsteadyStokes:
@@ -1495,8 +1583,44 @@ namespace Nektar
         default:
             ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS_ROM");
         }
+        
+	ROM_offline_phase();
+	ROM_online_phase();
+        
+    }
+    
+    
+    Eigen::MatrixXd CoupledLinearNS_ROM::DoTrafo()
+    {
+    
+    	cout << " transform snapshots to different format ... " << endl;
+    
+    	Eigen::MatrixXd transformed_snapshots;
+    	
+    	
+    	cout << " ... finished transform snapshots to different format " << endl;
+    
+    	
+    	return transformed_snapshots;
+    }
+    
+    void CoupledLinearNS_ROM::ROM_offline_phase()
+    {
+       	f_bnd_size = curr_f_bnd.size();
+	f_p_size = curr_f_p.size();
+	f_int_size = curr_f_int.size();
+
+	collect_f_all = DoTrafo();
+
+
+    
     }
 
+
+    void CoupledLinearNS_ROM::ROM_online_phase()
+    {
+    
+    }
 
     /** Virtual function to define if operator in DoSolve is negated
      * with regard to the strong form. This is currently only used in
@@ -2172,6 +2296,22 @@ namespace Nektar
         F_int = F_int + Transpose(*m_mat[mode].m_D_int)*F_p
         - Transpose(*m_mat[mode].m_Btilde)*F_bnd;
         F_int = (*m_mat[mode].m_Cinv)*F_int;
+        
+	curr_f_bnd = Eigen::VectorXd::Zero(f_bnd.size());
+	for (int i_phys_dof = 0; i_phys_dof < f_bnd.size(); i_phys_dof++)
+	{
+		curr_f_bnd(i_phys_dof) = f_bnd[i_phys_dof]; 
+	}
+	curr_f_p = Eigen::VectorXd::Zero(f_p.size()); 
+	for (int i_phys_dof = 0; i_phys_dof < f_p.size(); i_phys_dof++)
+	{
+		curr_f_p(i_phys_dof) = f_p[i_phys_dof]; 
+	}
+	curr_f_int = Eigen::VectorXd::Zero(f_int.size()); 
+	for (int i_phys_dof = 0; i_phys_dof < f_int.size(); i_phys_dof++)
+	{
+		curr_f_int(i_phys_dof) = f_int[i_phys_dof]; 
+	}        
 
         // Unpack solution from Bnd and F_int to v_coeffs
         cnt = cnt1 = 0;

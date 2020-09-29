@@ -40,6 +40,7 @@
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include "ThirdParty/Eigen/Dense"
 //#include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 
 namespace Nektar
@@ -140,7 +141,13 @@ namespace Nektar
         
         void Continuation(void);
         
+        
+	// ROM functions     
+        void load_snapshots(void);
         void load_session_parameters(void);
+        void ROM_offline_phase(void);
+        void ROM_online_phase(void);
+        Eigen::MatrixXd DoTrafo(void);
         
         /*void EvaluateNewtonRHS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
          *								 Array<OneD, Array<OneD, NekDouble> > &PreviousForcing,
@@ -181,11 +188,26 @@ namespace Nektar
         NekDouble m_kinvisStep;
         NekDouble m_KinvisPercentage;
         
+        // ROM variables
         bool load_snapshot_data_from_files;
         int number_of_snapshots;
+        int Nmax;
         int parameter_space_dimension;
-        
-        
+        Array<OneD, int> parameter_types;
+        double POD_tolerance;
+	Array<OneD, NekDouble> param_vector;   
+	Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection;
+	Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection;
+	int f_bnd_size;
+	int f_p_size;
+	int f_int_size;
+	Eigen::VectorXd curr_f_bnd;
+	Eigen::VectorXd curr_f_p;
+	Eigen::VectorXd curr_f_int;	
+	Eigen::MatrixXd collect_f_all;
+	
+
+
         Array<OneD, CoupledSolverMatrices> m_mat;
         
         

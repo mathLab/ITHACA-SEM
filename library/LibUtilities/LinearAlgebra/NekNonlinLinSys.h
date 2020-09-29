@@ -71,7 +71,7 @@ namespace Nektar
                 m_functors2(nfunctor2)
                 {
                 }
-                NonlinLinSysOperators(NonlinLinSysOperators &in):
+                NonlinLinSysOperators(const NonlinLinSysOperators &in):
                 m_functors1(nfunctor1),
                 m_functors2(nfunctor2)
                 {
@@ -84,6 +84,22 @@ namespace Nektar
                         m_functors2[i] = in.m_functors2[i];
                     }
                 }
+
+                NonlinLinSysOperators &operator=(
+                    const NonlinLinSysOperators &in)
+                {
+                    for (int i = 0; i < nfunctor1; ++i)
+                    {
+                        m_functors1[i] = in.m_functors1[i];
+                    }
+                    for (int i = 0; i < nfunctor2; ++i)
+                    {
+                        m_functors2[i] = in.m_functors2[i];
+                    }
+
+                    return *this;
+                }
+
                 template<typename FuncPointerT, typename ObjectPointerT> 
                     void DefineNonlinLinSysRhsEval(FuncPointerT func, 
                                                    ObjectPointerT obj)
@@ -220,9 +236,9 @@ namespace Nektar
                 LIB_UTILITIES_EXPORT ~NekNonlinLinSys();
                 
                 LIB_UTILITIES_EXPORT inline void setSysOperators
-                    (NonlinLinSysOperators &in)
+                    (const NonlinLinSysOperators &in)
                 {
-                    m_operator = NonlinLinSysOperators(in);
+                    m_operator = in;
                 }
                     
                 LIB_UTILITIES_EXPORT int SolveSystem(

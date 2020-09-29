@@ -228,7 +228,9 @@ namespace Nektar
 	
 	std::vector<int> flipperMap;
 	int max_dimension;
+	int continuation_from_files;
 	int compare_accuracy_mode;
+	int no_offline_files;
 	Array<OneD, NekDouble> param_vector2;
 	NekDouble offline_average_time, online_average_time;
 	unsigned int online_no_solves;

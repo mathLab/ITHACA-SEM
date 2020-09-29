@@ -2743,7 +2743,8 @@ namespace Nektar
 	for ( int index_c_f_bnd = 0; index_c_f_bnd < curr_f_bnd.size(); index_c_f_bnd++ )
 	{
 		//cout<<"val: "<<index_c_f_bnd<<" "<<collect_f_all(index_c_f_bnd,0) * param_vector2[1]<<" "<<collect_f_all(index_c_f_bnd,0)<<" "<<collect_f_all(index_c_f_bnd,1)<<endl;
-		if (collect_f_all(index_c_f_bnd,0) * param_vector2[1] == collect_f_all(index_c_f_bnd,1) && collect_f_all(index_c_f_bnd,0) * param_vector2[2] == collect_f_all(index_c_f_bnd,2))
+		if (collect_f_all(index_c_f_bnd,0) * param_vector2[1] == collect_f_all(index_c_f_bnd,1)) 
+			//&& collect_f_all(index_c_f_bnd,0+continuation_from_files) * param_vector2[2+continuation_from_files] == collect_f_all(index_c_f_bnd,2+continuation_from_files))
 		//if (collect_f_all(index_c_f_bnd,0) == collect_f_all(index_c_f_bnd,1))
 		{
 			no_dbc_in_loc++;
@@ -3467,7 +3468,7 @@ namespace Nektar
 			
 			unsigned int iterations, curr_j;
 			Timer timer;
-			double first_param = param_vector[0], last_param = param_vector[param_vector.num_elements()-1], total_steps = 20.0, tol = 1e-4, scaling_steps = 4, current_scaling = 1;
+			double first_param = param_vector[0], last_param = param_vector[param_vector.num_elements()-1], total_steps = 20.0, tol = 1e-7, scaling_steps = 2, current_scaling = 1.0;
 			double rel_err, M, strength, norm_min, tau, last_tau;
 			unsigned int total_solutions = 0, last_first_param_index = 0, number_of_solutions, restart_for_scaling = 0, no_restarts_for_scaling = 0;
 			std::vector<int> indices_to_be_continued, local_indices_to_be_continued;
@@ -3688,7 +3689,7 @@ namespace Nektar
 								cout<<"Converged in "<<iterations<<" steps"<<endl;
 								solve_affine.push_back(temp_solve_affine);
 								local_indices_to_be_continued.push_back(total_solutions);
-								if(create_error_file)	
+								if(create_error_file && total_solutions%5==0)	
 									error_analysis(total_solutions, current_nu, current_scaling, error_outfile);
 								total_solutions++;
 								
@@ -3715,7 +3716,8 @@ namespace Nektar
 					
 					//deflation						////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					cout<<"Deflation over "<<local_indices_to_be_continued.size()<<" solutions"<<endl;
-					bool use_deflation_now = ((local_indices_to_be_continued.size()<3 && current_nu<0.973*current_scaling)|| (current_nu<0.4055*current_scaling && local_indices_to_be_continued.size()<5));
+					// bool use_deflation_now = ((local_indices_to_be_continued.size()<3 && current_nu<0.973*current_scaling)|| (current_nu<0.4055*current_scaling && local_indices_to_be_continued.size()<5));
+					bool use_deflation_now = (local_indices_to_be_continued.size()<3 && current_nu<0.973*current_scaling);
 					for(int j = 0; j < local_indices_to_be_continued.size() && use_deflation_now; j++)
 					{
 						curr_j = local_indices_to_be_continued[j];
@@ -3742,7 +3744,7 @@ namespace Nektar
 						curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
 						affine_vec_proj = gen_affine_vec(current_nu, current_scaling, reconstruct_solution);
 						
-						while(rel_err > tol && ++iterations<300)
+						while(rel_err > tol && ++iterations<100)
 						{	
 							timer.Start();
 							Eigen::MatrixXd affine_mat_proj = gen_affine_mat_proj(current_nu);
@@ -3865,7 +3867,7 @@ namespace Nektar
 							curr_xy_proj = project_onto_basis(reprojection[0], reprojection[1]);
 							
 							
-							if(rel_err <= tol && norm_min > 1 && norm_min < 5e5)
+							if(rel_err <= tol && norm_min > 1 && norm_min < 1e2)
 							{
 								cout<<"Converged in "<<iterations<<" steps with norm_min = "<<norm_min<<endl;
 								solve_affine.push_back(temp_solve_affine);
@@ -4264,10 +4266,12 @@ namespace Nektar
 	{
 		write_SEM_field = 0;
 	} 
-	int continuation_from_files, Nmax1, Nmax2;
+	
+	int Nmax1, Nmax2, Nmax3;
 	if (m_session->DefinesParameter("continuation_from_files")) 
 	{
 		continuation_from_files = m_session->GetParameter("continuation_from_files");
+		babyCLNS_trafo.continuation_from_files = continuation_from_files;
 	}
 	else
 	{
@@ -4292,6 +4296,14 @@ namespace Nektar
 	{
 		snapshot_computation_plot_rel_errors = 0;
 	} 
+	if (m_session->DefinesParameter("no_offline_files")) 
+	{
+		no_offline_files = m_session->GetParameter("no_offline_files");
+	}
+	else
+	{
+		no_offline_files = continuation_from_files*2;
+	}
 	Nmax = number_of_snapshots;
 //	Array<OneD, NekDouble> param_vector(Nmax);
 	param_vector = Array<OneD, NekDouble> (Nmax);
@@ -4549,26 +4561,39 @@ namespace Nektar
 			}
 			else
 			{
-				int n_dofs, i, snap_n;
+				int n_dofs, i, snap_n, dim;
 				ifstream input_snapshots1("snapshots_1.txt");
 				ifstream input_snapshots2("snapshots_2.txt");
+				ifstream input_snapshots3("snapshots_3.txt");
 				ifstream input_params1("params_1.txt");
 				ifstream input_params2("params_2.txt");
+				ifstream input_params3("params_3.txt");
 				n_dofs=-1; 
 				i=0;
 				snap_n=0;
 
 				input_snapshots1 >> Nmax1 >> n_dofs;
 				input_snapshots2 >> Nmax2 >> n_dofs;
+				if(no_offline_files == 3)
+					input_snapshots3 >> Nmax3 >> n_dofs;
 				
-				//Nmax2 = 0;
-				param_vector = Array<OneD, NekDouble> (Nmax1+Nmax2);
-				param_vector2 = Array<OneD, NekDouble> (Nmax1+Nmax2);
+				if(no_offline_files == 2)
+					dim = Nmax1 + Nmax2 + 2;
+				else
+					dim = Nmax1 + Nmax2 + Nmax3 + 2;
+					
+				param_vector = Array<OneD, NekDouble> (dim);
+				param_vector2 = Array<OneD, NekDouble> (dim); 
 
-				snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (Nmax1 + Nmax2);
-				snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (Nmax1 + Nmax2);
+				snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (dim);
+				snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (dim);
+				
+				param_vector[0] = 1;
+				param_vector2[0] = 1;
+				param_vector[1] = 1;
+				param_vector2[1] = 1;
 
-				for(int j=0; j<Nmax1+Nmax2; j++)
+				for(int j=0; j<dim-2; j++)
 				{
 					snapshot_x_collection[j] = Array<OneD, NekDouble> (n_dofs);
 					snapshot_y_collection[j] = Array<OneD, NekDouble> (n_dofs);
@@ -4582,7 +4607,7 @@ namespace Nektar
 						snap_n++; 
 				}
 				
-				i=0;
+				i=2; //ne ho già 2
 				while (input_params1 >> param_vector[i] >> param_vector2[i])
 				{
 					cout<<i<<" "<<param_vector[i]<<" "<<param_vector2[i]<<endl;
@@ -4603,24 +4628,58 @@ namespace Nektar
 						snap_n++; 
 				}
 
-				i=Nmax1;
+				i=Nmax1+2;
 				while (input_params2 >> param_vector[i] >> param_vector2[i])
 				{
 					cout<<i<<" "<<param_vector[i]<<" "<<param_vector2[i]<<endl;
 					i++;
 				}
+				cout<<endl;
 
 				input_snapshots2.close();
 				input_params2.close();
+				
+				if(no_offline_files == 3)
+				{
+					i=0;
+					snap_n=0;
+
+					while (input_snapshots3 >> snapshot_x_collection[snap_n+Nmax1+Nmax2][i-snap_n*n_dofs] >> snapshot_y_collection[snap_n+Nmax1+Nmax2][i-snap_n*n_dofs])
+					{
+						i++;
+						if( i%n_dofs==0 ) 
+							snap_n++; 
+					}
+
+					i=Nmax1+Nmax2+2;
+					while (input_params3 >> param_vector[i] >> param_vector2[i])
+					{
+						cout<<i<<" "<<param_vector[i]<<" "<<param_vector2[i]<<endl;
+						i++;
+					}
+		
+				}
+				
+				input_snapshots3.close();
+				input_params3.close();	
 				
 				babyCLNS_trafo.param_vector2 = param_vector2;
 				babyCLNS_trafo.fake_continuation = true;
 				
 				Eigen::VectorXd params;
-				params.resize(1);
+				params.resize(2);
 				params[0] = param_vector[0];
-				babyCLNS_trafo.Continuation_method(&params);
+				params[1] = param_vector[1];
+				snapshots_from_continuation = babyCLNS_trafo.Continuation_method(&params);
 				flipperMap = babyCLNS_trafo.getFlipperMap();
+				
+				snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (2);
+				snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (2);
+				
+				snapshot_x_collection[0] = snapshots_from_continuation[0][0];
+				snapshot_y_collection[0] = snapshots_from_continuation[1][0];
+				snapshot_x_collection[1] = snapshots_from_continuation[0][1];
+				snapshot_y_collection[1] = snapshots_from_continuation[1][1];
 			}
 		}
 		else
@@ -4636,9 +4695,15 @@ namespace Nektar
 	babyCLNS_trafo.use_Newton = use_Newton;
 	babyCLNS_trafo.debug_mode = debug_mode;
 	if(continuation_from_files == 0)
-		collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
-	else
 	{
+		collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, param_vector);
+	}
+	else	
+	{
+		Array<OneD, NekDouble> single_param = Array<OneD, NekDouble> (2);
+		single_param[0] = param_vector[0];
+		single_param[1] = param_vector[1];
+		collect_f_all = babyCLNS_trafo.DoTrafo(snapshot_x_collection, snapshot_y_collection, single_param);
 		collect_f_all = load_collect_f_all();
 	}
 	Eigen::BDCSVD<Eigen::MatrixXd> svd_collect_f_all(collect_f_all, Eigen::ComputeThinU);
@@ -5417,37 +5482,62 @@ cout<<"END OF OFFLINE PHASE"<<endl;
     
     Eigen::MatrixXd CoupledLinearNS_TT::load_collect_f_all()
     {
-    	int n_dofs, i, snap_n, n_cols1, n_cols2;
+    	int n_dofs, i,j, snap_n, n_cols1, n_cols2, n_cols3, dim;
 		ifstream input_f_all1("collect_f_all_1.txt");
 		ifstream input_f_all2("collect_f_all_2.txt");
+		ifstream input_f_all3("collect_f_all_3.txt");
 		n_dofs=-1; 
-		i=0;
 		snap_n=0;
 		input_f_all1 >> n_dofs >> n_cols1;
 		input_f_all2 >> n_dofs >> n_cols2;
-		
-		Eigen::MatrixXd temp_collect_f_all(n_dofs, n_cols1+n_cols2);
-
-		for(int i=0; i<n_dofs; i++)
+		if(no_offline_files == 3)
 		{
-			for(int j=0; j<n_cols1; j++)
+			input_f_all3 >> n_dofs >> n_cols3;
+			dim = n_cols1+n_cols2+n_cols3+2;
+		}
+		else
+		{
+			dim = n_cols1+n_cols2+2;
+		}
+		
+		Eigen::MatrixXd temp_collect_f_all(n_dofs, dim);
+		for(i=0; i<n_dofs; i++)
+		{
+			temp_collect_f_all(i,0) = collect_f_all(i,0);
+			temp_collect_f_all(i,1) = collect_f_all(i,1);
+		}
+		
+		for(i=0; i<n_dofs; i++)
+		{
+			for(j=0; j<n_cols1; j++)
 			{
-				input_f_all1 >> temp_collect_f_all(i,j);	
+				input_f_all1 >> temp_collect_f_all(i,j+2);	
 			}		
 		}	
 		
-		for(int i=0; i<n_dofs; i++)
+		for(i=0; i<n_dofs; i++)
 		{
-			for(int j=0; j<n_cols2; j++)
+			for(j=0; j<n_cols2; j++)
 			{
-				input_f_all2 >> temp_collect_f_all(i, n_cols1+j);	
+				input_f_all2 >> temp_collect_f_all(i, n_cols1+j+2);	
 			}		
 		}		
 		
+		if(no_offline_files = 3)
+		{
+			for(i=0; i<n_dofs; i++)
+			{
+				for(j=0; j<n_cols3; j++)
+				{
+					input_f_all3 >> temp_collect_f_all(i, n_cols1+n_cols2+j+2);	
+				}		
+			}				
+		}
+		
 		input_f_all1.close();
 		input_f_all2.close();
+		input_f_all3.close();
 		
-
 		return temp_collect_f_all;
     }
     

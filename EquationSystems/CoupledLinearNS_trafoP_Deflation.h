@@ -169,6 +169,7 @@ namespace Nektar
 	int debug_mode;
 	int write_SEM_field;
 	int file_id;
+	int continuation_from_files = 0;
 	Array<OneD, Array<OneD, NekDouble> > myAdvField;
 	std::vector<int> flipperMap;
 	

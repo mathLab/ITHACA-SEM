@@ -1536,7 +1536,7 @@ namespace Nektar
     Array<OneD, Array<OneD, NekDouble> > CoupledLinearNS_trafoP::DoSolve_at_param_continuation(Array<OneD, NekDouble> init_snapshot_x, Array<OneD, NekDouble> init_snapshot_y, NekDouble parameter)
     {
 	double rel_err = 1.0, use_heuristic = true;
-	int iterations = 0, max_iterations = 150;
+	int iterations = 0, max_iterations = 100;
 	bool change_method = use_Newton;
 	
 	if(start_with_Oseen)
@@ -1882,9 +1882,10 @@ namespace Nektar
 		cout<<"\nparams: "<<param_vector[i]<<" "<<param_vector2[i]<<endl;	
 	//	CLNS_trafo.DoInitialise();
 		DoInitialiseAdv(snapshot_x_collection[i], snapshot_y_collection[i]); // replaces .DoInitialise();
-		//DoSolve();
-		deflate = false;
-		DoSolve_at_param_continuation(snapshot_x_collection[i], snapshot_y_collection[i], param_vector[i]);
+		DoSolve();
+		
+		//deflate = false;
+		//DoSolve_at_param_continuation(snapshot_x_collection[i], snapshot_y_collection[i], param_vector[i]);
 
 		// compare the accuracy
 		Array<OneD, MultiRegions::ExpListSharedPtr> m_fields_t = UpdateFields();
@@ -3027,6 +3028,9 @@ namespace Nektar
         m_session->LoadParameter("KinvisStep", step);
         m_session->LoadParameter("UseDeflation", use_deflation);
         
+        if(continuation_from_files)
+        	m_maxIt = 2;
+        
         arclength_step = step;
         max_step = step;
         start_with_Oseen = false;
@@ -3105,7 +3109,7 @@ namespace Nektar
 			FarrelOutput(flipperMap, outfile, FarrelOutputSign(x,y));
 			total_solutions_found = 1;
 			
-			while(m_kinvis > m_kinvisMin && total_solutions_found < m_maxIt && !fake_continuation)
+			while(m_kinvis > m_kinvisMin && total_solutions_found < m_maxIt)// && !fake_continuation)
 			{
 				local_indices_to_be_continued.resize(0);
 				
@@ -3220,7 +3224,8 @@ namespace Nektar
 				int prev_solutions = local_indices_to_be_continued.size();
 				
 				//use_deflation_now = true;
-				use_deflation_now = ((local_indices_to_be_continued.size()<3 && m_kinvis<0.98*second_param)|| (m_kinvis<0.405*second_param && local_indices_to_be_continued.size()<5));
+				//use_deflation_now = ((local_indices_to_be_continued.size()<3 && m_kinvis<0.975*second_param)|| (m_kinvis<0.405*second_param && local_indices_to_be_continued.size()<5));
+				use_deflation_now = ((local_indices_to_be_continued.size()<3 && m_kinvis<0.975*second_param));				
 				for(int i = 0; i < prev_solutions && use_deflation && use_deflation_now && total_solutions_found < m_maxIt; i++)
 				{
 					curr_i = local_indices_to_be_continued[i];
@@ -3353,6 +3358,8 @@ namespace Nektar
 					found = true;
 				}
 			}
+			if(!found)
+				cout<<"GetFlipperMap failed!!!"<<endl;
 		}
 		return flipperMap;
 	}

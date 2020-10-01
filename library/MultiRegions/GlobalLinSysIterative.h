@@ -95,8 +95,7 @@ namespace Nektar
 
             LibUtilities::NonlinLinSysOperators                 m_LinSysOprtors;
 
-            LibUtilities::NekLinSysIteratSharedPtr    
-                          m_linsol = LibUtilities::NullNekLinSysIteratSharedPtr;
+            LibUtilities::NekLinSysIteratSharedPtr      m_linsol;
 
             static std::string IteratSolverlookupIds[];
             static std::string IteratSolverdef;

@@ -106,7 +106,7 @@ namespace Nektar
                     const AssemblyMapSharedPtr &plocToGloMap,
                     const int nDir)
         {
-            if (LibUtilities::NullNekLinSysIteratSharedPtr == m_linsol)
+            if (!m_linsol)
             {
                 LibUtilities::CommSharedPtr v_Comm = 
                 m_expList.lock()->GetComm()->GetRowComm();

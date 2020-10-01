@@ -119,9 +119,10 @@ namespace Nektar
                     ModuleExists(m_LinIteratSovlerType),
                     "NekLinSysIterat '" + m_LinIteratSovlerType + 
                     "' is not defined.\n");
+
             m_linsol = LibUtilities::GetNekLinSysIteratFactory().CreateInstance(
                                 m_LinIteratSovlerType, 
-                                m_session, m_Comm, m_SysDimen);
+                                m_session.lock(), m_Comm, m_SysDimen);
 
         }
 

@@ -53,7 +53,7 @@ namespace Nektar
             const LibUtilities::CommSharedPtr           &vComm,
             const int                                   nDimen)
         {
-            m_session = pSession;
+            m_session           =   pSession;
             m_tolerance         =   NekConstants::kNekIterativeTol;
             m_verbose           =   false;
             m_root              =   false;

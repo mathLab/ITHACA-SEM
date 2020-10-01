@@ -206,6 +206,7 @@ public:
 #ifdef NEKTAR_MEMORY_POOL_ENABLED
         GetMemoryPool().Deallocate(array, sizeof(DataType)*NumberOfElements);
 #else //NEKTAR_MEMORY_POOL_ENABLED
+        boost::ignore_unused(NumberOfElements);
         ::operator delete(array);
 #endif //NEKTAR_MEMORY_POOL_ENABLED
     }

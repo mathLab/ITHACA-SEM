@@ -85,7 +85,7 @@ namespace Nektar
                 const LibUtilities::SessionReaderSharedPtr  &pSession,
                 const LibUtilities::CommSharedPtr           &vComm,
                 const int                                   nDimen);
-            LIB_UTILITIES_EXPORT ~NekLinSysIterat();
+            LIB_UTILITIES_EXPORT virtual ~NekLinSysIterat();
             
             LIB_UTILITIES_EXPORT void setUniversalUniqueMap(
                                       Array<OneD, int> &map);
@@ -115,9 +115,6 @@ namespace Nektar
             virtual void v_InitObject();
         private:
         };
-
-        static NekLinSysIteratSharedPtr NullNekLinSysIteratSharedPtr;
-
     }
 }
     

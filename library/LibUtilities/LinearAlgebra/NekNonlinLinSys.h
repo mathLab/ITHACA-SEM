@@ -233,7 +233,7 @@ namespace Nektar
                 {
                     v_InitObject();
                 }
-                LIB_UTILITIES_EXPORT ~NekNonlinLinSys();
+                LIB_UTILITIES_EXPORT virtual ~NekNonlinLinSys();
                 
                 LIB_UTILITIES_EXPORT inline void setSysOperators
                     (const NonlinLinSysOperators &in)
@@ -266,8 +266,8 @@ namespace Nektar
                 NekDouble                                   m_tolerance;
                 /// Communicate.
                 LibUtilities::CommSharedPtr                 m_Comm;
-                /// Session.
-                LibUtilities::SessionReaderSharedPtr        m_session;
+                /// Session reader.
+                std::weak_ptr<SessionReader>                m_session;
                 /// Whether the iteration has been converged
                 bool                                        m_converged;
                 /// Root if parallel

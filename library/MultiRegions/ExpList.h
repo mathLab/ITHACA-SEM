@@ -1143,7 +1143,7 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT void CoutStandardMat(DNekMatSharedPtr &loc_matNvar,const unsigned int nwidthcolm);
 
-            void CalcuTracephysToLeftRightExpphysMap(
+            MULTI_REGIONS_EXPORT void CalcuTracephysToLeftRightExpphysMap(
                     bool                                            &flag,
                     Array<OneD, Array<OneD, Array<OneD, int > > >   &T2Emap);
 

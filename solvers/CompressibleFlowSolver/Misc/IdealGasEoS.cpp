@@ -105,4 +105,10 @@ NekDouble IdealGasEoS::v_GetRhoFromPT(
     return p/(m_gasConstant*T);
 }
 
+NekDouble IdealGasEoS::v_GetInternalEnergy(
+    const NekDouble &T)
+{
+    return m_gasConstant*T/(m_gamma-1.0);
+}
+
 }

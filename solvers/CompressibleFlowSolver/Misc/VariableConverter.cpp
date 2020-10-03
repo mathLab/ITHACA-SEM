@@ -220,7 +220,7 @@ void VariableConverter::GetDmuDT(
     const Array<OneD, const NekDouble>  &mu,
           Array<OneD, NekDouble>        &DmuDT)
 {
-    const int nPts      = temperature.num_elements();
+    const int nPts      = temperature.size();
     NekDouble tmp       = 0.0;
 
     for (int i = 0; i < nPts; ++i)
@@ -322,11 +322,7 @@ void VariableConverter::GetSensor(
         order = max(numModesElement-1, 1);
         if (order > 0 )
         {
-<<<<<<< HEAD
-            Skappa = m_Skappa - 4.0 * log10(static_cast<NekDouble>(order));
-=======
             Skappa = m_Skappa - 4.25 * log10(static_cast<NekDouble>(order));
->>>>>>> master
         }
         else
         {
@@ -478,11 +474,6 @@ void VariableConverter::GetRhoFromPT(const Array<OneD, NekDouble> &pressure,
 NekDouble VariableConverter::GetGasconstant()
 {
     return m_gasConstant;
-}
-
-EquationOfStateSharedPtr Geteos()
-{
-    return m_eos;
 }
 
 }

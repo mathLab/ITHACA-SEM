@@ -87,7 +87,6 @@ namespace Nektar
     EquationOfStateSharedPtr            m_eos;
 
     Array<OneD, GetdFlux_dDeriv>        m_GetdFlux_dDeriv_Array;
-    NekDouble                           m_Twall;
     NekDouble                           m_muRef;
     NekDouble                           m_thermalConductivityRef;
     Array<OneD, NekDouble>              m_mu;
@@ -116,17 +115,8 @@ namespace Nektar
             Array< OneD, int >                                &nonZeroIndex,
             const Array<OneD, Array<OneD, NekDouble> >        &normals);
     
-      void GetPrimDerivFromConsDeriv(
-           const Array<OneD, Array<OneD, NekDouble> >                &inarray,
-           const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfields,
-           Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &outarray);
-
       void SpecialBndTreat(
             Array<OneD,       Array<OneD, NekDouble> >    &consvar);
-
-      void ApplyFluxBndConds(
-             const int                                 nConvectiveFields,
-              Array<OneD,       Array<OneD, NekDouble> >    &flux);
 
     void GetArtificialViscosity(
         const Array<OneD, Array<OneD, NekDouble> >  &inarray,
@@ -169,13 +159,6 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
         const Array<OneD, Array<OneD, NekDouble> >          &pBwd);
 
-   virtual void v_DoDiffusionFlux(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &VolumeFlux,
-            Array<OneD, Array<OneD, NekDouble>>              &TraceFlux,
-            const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
-
    virtual void v_GetViscousFluxVector(
         const Array<OneD, Array<OneD, NekDouble> >         &physfield,
         TensorOfArray3D<NekDouble>                         &derivatives,
@@ -185,15 +168,6 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >         &physfield,
         TensorOfArray3D<NekDouble>                         &derivatives,
         TensorOfArray3D<NekDouble>                         &viscousTensor);
-
-    virtual void v_GetViscousSymmtrFluxConservVar(
-            const int                                                       nConvectiveFields,
-            const int                                                       nSpaceDim,
-            const Array<OneD, Array<OneD, NekDouble> >                      &inaverg,
-            const Array<OneD, Array<OneD, NekDouble > >                     &inarray,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >              &outarray,
-            Array< OneD, int >                                              &nonZeroIndex,
-            const Array<OneD, Array<OneD, NekDouble> >                      &normals);
 
       void GetPhysicalAV(
         const Array<OneD, const Array<OneD, NekDouble>> &physfield);

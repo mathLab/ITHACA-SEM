@@ -89,6 +89,8 @@ class IdealGasEoS : public EquationOfState
         virtual NekDouble v_GetRhoFromPT(
             const NekDouble &rho, const NekDouble &p);
         
+        virtual NekDouble v_GetInternalEnergy(
+            const NekDouble &T);
     private:
         IdealGasEoS(const LibUtilities::SessionReaderSharedPtr& pSession);
         

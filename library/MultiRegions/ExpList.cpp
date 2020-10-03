@@ -5300,6 +5300,79 @@ namespace Nektar
             break;
             }
         }
+
+        void ExpList::CalcuTracephysToLeftRightExpphysMap(
+                    bool                                            &flag,
+                    Array<OneD, Array<OneD, Array<OneD, int > > >   &T2Emap)
+        {
+            int nfieldPts  = GetTotPoints();
+            int ntotElmt   = (*m_exp).size();
+
+            ExpListSharedPtr traceExplist = GetTrace();
+            std::shared_ptr<LocalRegions::ExpansionVector> ptraceExp= traceExplist->GetExp();
+            int ntotTrace  = (*ptraceExp).size();
+            int nTracePts  = traceExplist->GetTotPoints();
+
+            // Basis definition on each element may need to determine whether interpolations are used 
+            // LibUtilities::BasisSharedPtr basis = (*m_exp)[0]->GetBasis(0);
+            
+            // set up the m_TracephysToLeftRightExpphysMap 
+            Array<OneD, Array<OneD, NekDouble> > mapFwdBwd(2);
+            mapFwdBwd[0]    =   Array<OneD, NekDouble >(nTracePts,0.0);
+            mapFwdBwd[1]    =   Array<OneD, NekDouble >(nTracePts,0.0);
+            Array<OneD, NekDouble > mapfield(nfieldPts,0.0);
+
+
+            for(int nelmt=0;nelmt<ntotElmt;nelmt++)
+            {
+                int nElmtPnt            = (*m_exp)[nelmt]->GetTotPoints();
+                int noffset             = GetPhys_Offset(nelmt);
+
+                for(int npnt=0;npnt<nElmtPnt;npnt++)
+                {
+                    mapfield[noffset+npnt]  =   NekDouble(npnt);
+                }
+            }
+            GetFwdBwdTracePhys(mapfield, mapFwdBwd[0], mapFwdBwd[1]);
+
+            NekDouble   dtmp    = 0.0;
+            int         ntmp    = 0;
+
+            // to make sure the GetFwdBwdTracePhys only uses directly copy
+            // if there are interpolations mapFwdBwd are usually not integer anymore
+            // TODO: this check is not strict, to develop cases with interpolations.
+            flag = true; 
+
+            const Array<OneD, const Array<OneD, bool>> LRAdjflag   =   GetLocTraceToTraceMap()->GetLeftRightAdjacentExpFlag();
+
+            T2Emap  =   Array<OneD, Array<OneD, Array<OneD, int > > > (2);
+            for(int nlr=0;  nlr<2;  nlr++)
+            {
+                T2Emap[nlr] =   Array<OneD, Array<OneD, int > >(ntotTrace);
+
+                for(int ntrace=0;    ntrace<ntotTrace; ntrace++)
+                {
+                    int nTracePnt            = (*ptraceExp)[ntrace]->GetTotPoints();
+                    int noffset             = traceExplist->GetPhys_Offset(ntrace);
+
+                    T2Emap[nlr][ntrace]      =   Array<OneD, int >(nTracePnt,0);
+                    if(LRAdjflag[nlr][ntrace])
+                    {
+                        for(int npnt=0; npnt<nTracePnt;  npnt++)
+                        {
+                            dtmp            =     mapFwdBwd[nlr][noffset+npnt];
+                            ntmp            =     round(dtmp);
+                            T2Emap[nlr][ntrace][npnt] =    ntmp;
+
+                            if(abs(dtmp-NekDouble(ntmp))>1.0E-10)
+                            {
+                                flag = false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
         
         void ExpList::v_AddTraceIntegralToOffDiag(
                 const Array<OneD, const NekDouble> &FwdFlux, 
@@ -5309,7 +5382,6 @@ namespace Nektar
             boost::ignore_unused(FwdFlux, BwdFlux, outarray);
             ASSERTL0(false,"AddTraceIntegralToOffDiag not defined");
         }
-
 
         void ExpList::GetMatIpwrtdbWeightBwd(
                  const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,

@@ -81,8 +81,7 @@ namespace Nektar
     NekDouble                           m_mu0;
     std::string                         m_physicalSensorType;
     std::string                         m_smoothing;
-    MultiRegions::ContField2DSharedPtr  m_C0Project2DExp;
-    MultiRegions::ContField3DSharedPtr  m_C0Project3DExp;
+    MultiRegions::ContFieldSharedPtr    m_C0ProjectExp;
 
     /// Equation of system for computing temperature
     EquationOfStateSharedPtr            m_eos;

@@ -51,6 +51,7 @@
 #include <LocalRegions/Expansion3D.h>
 #include <LocalRegions/Expansion2D.h>
 
+#define DEMO_IMPLICITSOLVER_JFNK_COEFF
 #define CFS_DEBUGMODE
 namespace Nektar
 {
@@ -122,6 +123,23 @@ namespace Nektar
         bool                                m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT;
         bool                                m_DEBUG_VISCOUS_JAC_MAT;
         bool                                m_DEBUG_ADVECTION_JAC_MAT;
+
+        // 1: Adv; 2: Dif; Default: all
+        int                                 m_DebugAdvDiffSwitch; 
+       // 1: Vol; 2: Trace; Default: all
+        int                                 m_DebugVolTraceSwitch; 
+       // 1: Con; 2: Deriv; Default: all
+        int                                 m_DebugConsDerivSwitch; 
+
+
+        int                                 m_DebugNumJacMatSwitch;
+        int                                 m_DebugOutputJacMatSwitch;
+
+        int                                 m_DebugInvMassSwitch   ; 
+        int                                 m_DebugPlusSourceSwitch; 
+
+        int                                 m_DebugIPSymmFluxJacSwitch; 
+        int                                 m_DebugNumJacBSOR;
 
 
         Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble>>>>
@@ -291,7 +309,7 @@ namespace Nektar
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
             const Array<OneD, Array<OneD, NekDouble> >          &AdvVel,
             const Array<OneD, Array<OneD, NekDouble> >          &inarray,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >          &qfield,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
             const NekDouble                                     &time,
             const Array<OneD, Array<OneD, NekDouble> >          &Fwd,
             const Array<OneD, Array<OneD, NekDouble> >          &Bwd,
@@ -305,6 +323,60 @@ namespace Nektar
             const Array<OneD, NekDouble> &normals,
                   DNekMatSharedPtr       &FJac,
             const NekDouble efix,   const NekDouble fsw);
+
+        void NumJacElemental(
+            DNekMatSharedPtr    &NumericalJacobianMatrix,
+            const int                 RowElementID,
+            const int                 ColElementID);
+        
+        void CalOffDiagJacByMinusOffDiagElemental(
+            DNekMatSharedPtr    &MinusoffJacobianMatrix,
+            const int                 RowElementID,
+            const int                 ColElementID);
+        void DebugCheckJac(
+            const int                 RowElementID,
+            const int                 ColElementID);
+        
+        void DebugNumCalJac_coeff(
+            Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >                      &gmtxarray,
+            Array<OneD, Array<OneD, NekDouble > >                               &JacOffDiagArray =NullNekDoubleArrayofArray);
+            
+        void DebugNumCalElmtJac_coeff(
+            Array<OneD, Array<OneD, DNekMatSharedPtr> >                         &ElmtPrecMatVars ,
+            const int                                                           nelmt,
+            Array<OneD, Array<OneD, NekDouble > >                               &JacOffDiagArray);
+        void DebugNumCalElmtJac_coeff(
+            Array<OneD, Array<OneD, DNekMatSharedPtr> >                         &ElmtPrecMatVars ,
+            const int                                                           nelmt);
+
+        void NonlinSysEvaluator_coeff_out(
+                Array<OneD, Array<OneD, NekDouble> > &inarray,
+                Array<OneD, Array<OneD, NekDouble> > &out);
+
+        template<typename TypeNekBlkMatSharedPtr>
+        void CoutBlkMat(
+            TypeNekBlkMatSharedPtr &gmtx, 
+            const unsigned int nwidthcolm=12);
+
+        template<typename TypeNekBlkMatSharedPtr>
+        void CoutStandardMat(
+            TypeNekBlkMatSharedPtr &loc_matNvar,
+            const unsigned int nwidthcolm=12);
+
+        template<typename TypeNekBlkMatSharedPtr>
+        void Cout1DArrayBlkMat(
+            Array<OneD, TypeNekBlkMatSharedPtr> &gmtxarray,
+            const unsigned int nwidthcolm=12);
+        
+        template<typename TypeNekBlkMatSharedPtr>
+        void Cout2DArrayBlkMat(
+            Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> > &gmtxarray,
+            const unsigned int nwidthcolm=12);
+
+        template<typename TypeNekBlkMatSharedPtr>
+        void Cout2DArrayStdMat(
+            Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> > &gmtxarray,
+            const unsigned int nwidthcolm=12);
 
         template<typename DataType, typename TypeNekBlkMatSharedPtr>
         void TranSamesizeBlkDiagMatIntoArray(
@@ -478,7 +550,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >                          &AdvVel,
             const Array<OneD, Array<OneD, NekDouble> >                          &inarray,
             const NekDouble                                                     time,
-            const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qfield,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >                  &qfield,
             const Array<OneD, Array<OneD, NekDouble> >                          &vFwd,
             const Array<OneD, Array<OneD, NekDouble> >                          &vBwd,
             const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >      &qFwd,
@@ -677,6 +749,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
         {
+            boost::ignore_unused(inarray, outarray, pFwd, pBwd);
             // Do nothing by default
         }
         
@@ -701,10 +774,11 @@ namespace Nektar
                 int                         step, 
                 Array<OneD, NekDouble>      &L2);
         virtual void v_CalcMuDmuDT(
-            const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
-            Array<OneD, NekDouble>                                          &mu,
-            Array<OneD, NekDouble>                                          &DmuDT)
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+            Array<OneD, NekDouble>                           &mu,
+            Array<OneD, NekDouble>                           &DmuDT)
         {
+            boost::ignore_unused(inarray, mu, DmuDT);
         }
                 
         virtual void v_GetDiffusionFluxJacPoint(
@@ -714,10 +788,13 @@ namespace Nektar
             const NekDouble                                     DmuDT,
             const Array<OneD, NekDouble>                        &normals,
                   DNekMatSharedPtr                              &fluxJac);
+
         virtual void v_CalphysDeriv(
             const Array<OneD, const Array<OneD, NekDouble> >                &inarray,
                   Array<OneD,       Array<OneD, Array<OneD, NekDouble> > >  &qfield)
-        {}
+        {
+            boost::ignore_unused(inarray, qfield);
+        }
 
         virtual void v_MinusDiffusionFluxJacDirctn(
             const int                                                       nDirctn,

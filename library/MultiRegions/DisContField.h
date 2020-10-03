@@ -334,6 +334,10 @@ namespace Nektar
                 bool FillBnd           = true,
                 bool PutFwdInBwdOnBCs  = false, 
                 bool DoExchange        = true); 
+            virtual void v_FillBwdWithBoundCond(
+                Array<OneD, NekDouble> &Fwd,
+                Array<OneD, NekDouble> &Bwd,
+                bool PutFwdInBwdOnBCs);
 
             inline virtual const Array<OneD,const NekDouble>
                 &v_GetBndCondBwdWeight();

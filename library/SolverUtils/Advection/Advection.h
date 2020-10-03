@@ -246,31 +246,6 @@ public:
         v_NumCalRiemFluxJac(nConvectiveFields,fields,AdvVel,inarray,pFwd,pBwd,FJac,BJac);
     }
 
-    void CoutBlkMat(
-        DNekBlkMatSharedPtr &gmtx, 
-        const unsigned int nwidthcolm=12);
-
-    void CoutStandardMat(
-        DNekMatSharedPtr &loc_matNvar,
-        const unsigned int nwidthcolm=12);
-
-    void Cout1DArrayBlkMat(
-        Array<OneD, DNekBlkMatSharedPtr> &gmtxarray,
-        const unsigned int nwidthcolm=12);
-
-    void Cout2DArrayBlkMat(
-        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> > &gmtxarray,
-        const unsigned int nwidthcolm=12);
-
-    void Cout1DArrayStdMat(
-        Array<OneD, DNekMatSharedPtr> &gmtxarray,
-        const unsigned int nwidthcolm=12);
-
-    void Cout2DArrayStdMat(
-        Array<OneD, Array<OneD, DNekMatSharedPtr> > &gmtxarray,
-        const unsigned int nwidthcolm=12);
-
-
 protected:
     /// Callback function to the flux vector (set when advection is in
     /// conservative form).

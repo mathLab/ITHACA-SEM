@@ -829,6 +829,11 @@ namespace Nektar
     template<class T>
     using TensorOfArray3D = Array<OneD, Array<OneD, Array<OneD, T>>>;
 
+    static TensorOfArray1D<NekDouble> NullTensorOfArray1DDouble;
+    static TensorOfArray2D<NekDouble> NullTensorOfArray2DDouble;
+    static TensorOfArray3D<NekDouble> NullTensorOfArray3DDouble;
+
+
     template<typename T1, typename T2>
     bool operator==(const Array<TwoD, T1>& lhs,
                     const Array<TwoD, T2>& rhs)

@@ -103,20 +103,8 @@ namespace Nektar
         if (m_smoothing == "C0")
         {
             int nDim = m_fields[0]->GetCoordim(0);
-            if (nDim == 2)
-            {
-                m_C0Project2DExp = MemoryManager<MultiRegions::ContField2D>::
-                AllocateSharedPtr(m_session,m_graph,m_session->GetVariable(0));
-            }
-            else if(nDim == 3)
-            {
-                m_C0Project3DExp = MemoryManager<MultiRegions::ContField3D>::
-                AllocateSharedPtr(m_session,m_graph,m_session->GetVariable(0));
-            }
-            else
-            {
-                ASSERTL0(false, "AV C0 smoothing not implemented in 1D.")
-            }
+            m_C0ProjectExp = MemoryManager<MultiRegions::ContField>::
+            AllocateSharedPtr(m_session,m_graph,m_session->GetVariable(0));
         }
         // load physical sensor type
         m_session->LoadSolverInfo("PhysicalSensorType", m_physicalSensorType,
@@ -186,7 +174,6 @@ namespace Nektar
         //Only NavierStokes equation and using weakDG,LDGNS can temparary use the codes
         m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
         m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-        if(m_useUnifiedWeakIntegration)
         // Set up penalty term for LDGNS
         if ("LDGNS" == diffName||
             "LDGNS3DHomogeneous1D" == diffName)
@@ -250,9 +237,9 @@ namespace Nektar
         {
             const int nPhys   = m_fields[0]->GetNpoints();
             const int nCoeffs = m_fields[0]->GetNcoeffs();
-            Array<OneD, Array<OneD, NekDouble> > tmp(m_fields.num_elements());
+            Array<OneD, Array<OneD, NekDouble> > tmp(m_fields.size());
 
-            for (int i = 0; i < m_fields.num_elements(); ++i)
+            for (int i = 0; i < m_fields.size(); ++i)
             {
                 tmp[i] = m_fields[i]->GetPhys();
             }
@@ -576,7 +563,7 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble>>       &pBwd)
     {
         int nDim= m_fields[0]->GetCoordim(0);
-        int nvariables = inarray.num_elements();
+        int nvariables = inarray.size();
         int npoints    = GetNpoints();
         int nTracePts  = GetTraceTotPoints();
 
@@ -1232,7 +1219,7 @@ namespace Nektar
         // Compute boundary conditions  for Energy
         cnt = 0;
         nBndRegions = m_fields[nengy]->
-        GetBndCondExpansions().num_elements();
+        GetBndCondExpansions().size();
         for (j = 0; j < nBndRegions; ++j)
         {
             if (m_fields[nengy]->GetBndConditions()[j]->
@@ -1329,7 +1316,7 @@ namespace Nektar
         Array<OneD, NekDouble>                                          &mu,
         Array<OneD, Array<OneD, NekDouble> >                            &auxVars)
     {
-        int nPts                = inaverg[nConvectiveFields-1].num_elements();
+        int nPts                = inaverg[nConvectiveFields-1].size();
         int nDim=m_spacedim;
 
         CalcViscosity(inaverg,mu);
@@ -1527,8 +1514,8 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >                &inaverg,
         Array<OneD, NekDouble>                                          &mu)
     {
-        int nConvectiveFields       = inaverg.num_elements();
-        int nPts                = inaverg[nConvectiveFields-1].num_elements();
+        int nConvectiveFields       = inaverg.size();
+        int nPts                = inaverg[nConvectiveFields-1].size();
         int nDim=m_spacedim;
 
         if (m_ViscosityType == "Variable")
@@ -2312,7 +2299,7 @@ namespace Nektar
         const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,
         Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray)
     {
-        int nConvectiveFields   = inarray.num_elements();
+        int nConvectiveFields   = inarray.size();
         std::shared_ptr<LocalRegions::ExpansionVector> expvect =    m_fields[0]->GetExp();
         int ntotElmt            = (*expvect).size();
         int nPts            = m_fields[0]->GetTotPoints();
@@ -2543,7 +2530,7 @@ namespace Nektar
         Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray,
         const int                                                       nfluxDir)
     {
-        int nConvectiveFields   = inarray.num_elements();
+        int nConvectiveFields   = inarray.size();
         std::shared_ptr<LocalRegions::ExpansionVector> expvect =    explist->GetExp();
         int ntotElmt            = (*expvect).size();
         int nPts                = explist->GetTotPoints();
@@ -2672,7 +2659,7 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
               Array<OneD, Array<OneD, DNekMatSharedPtr> >   &ElmtJac)
     {
-        int nConvectiveFields   = inarray.num_elements();
+        int nConvectiveFields   = inarray.size();
         std::shared_ptr<LocalRegions::ExpansionVector> expvect =
             explist->GetExp();
         int ntotElmt            = (*expvect).size();
@@ -2680,7 +2667,7 @@ namespace Nektar
         int nSpaceDim           = m_graph->GetSpaceDimension();
 
         //Debug
-        if(!ElmtJac.num_elements())
+        if(!ElmtJac.size())
         {
             ElmtJac =   Array<OneD, Array<OneD, DNekMatSharedPtr> > (ntotElmt);
             for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
@@ -2785,11 +2772,11 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >          &inarray,
         Array<OneD,       Array<OneD, Array<OneD, NekDouble> > >  &qfield)
     {
-        int nConvectiveFields = m_fields.num_elements();
+        int nConvectiveFields = m_fields.size();
         int npoints           = GetTotPoints();
         const Array<OneD, Array<OneD, NekDouble> >                  pFwd;
         const Array<OneD, Array<OneD, NekDouble> >                  pBwd;
-        if(!qfield.num_elements())
+        if(!qfield.size())
         {
             qfield  =   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_spacedim);
             for(int i = 0; i< m_spacedim; i++)
@@ -2809,13 +2796,13 @@ namespace Nektar
         Array<OneD, NekDouble>                                          &mu,
         Array<OneD, NekDouble>                                          &DmuDT)
     {
-        int npoints = mu.num_elements();
+        int npoints = mu.size();
         if (m_ViscosityType == "Variable")
         {
             Array<OneD, NekDouble > temperature        (npoints, 0.0);
             m_varConv->GetTemperature(inarray,temperature);
             m_varConv->GetDynamicViscosity(temperature, mu);
-            if(DmuDT.num_elements()>0)
+            if(DmuDT.size()>0)
             {
                 m_varConv->GetDmuDT(temperature,mu,DmuDT);
             }
@@ -2823,7 +2810,7 @@ namespace Nektar
         else
         {
             Vmath::Fill(npoints, m_mu, mu, 1);
-            if(DmuDT.num_elements()>0)
+            if(DmuDT.size()>0)
             {
                 Vmath::Zero(npoints, DmuDT, 1);
             }

@@ -4375,6 +4375,16 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
+        void ExpList::v_FillBwdWithBoundCond(
+            Array<OneD,NekDouble> &Fwd,
+            Array<OneD,NekDouble> &Bwd,
+            bool PutFwdInBwdOnBCs)
+        {
+            boost::ignore_unused(Fwd, Bwd, PutFwdInBwdOnBCs);
+            NEKERROR(ErrorUtil::efatal,
+                     "This method is not defined or valid for this class type");
+        }
+
         void ExpList::v_AddTraceQuadPhysToField(
             const Array<OneD, const NekDouble>  &Fwd,
             const Array<OneD, const NekDouble>  &Bwd,
@@ -4950,7 +4960,7 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-        void ExpList::v_FillBwdWithBound(
+        void ExpList::v_FillBwdWithBoundCond(
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {

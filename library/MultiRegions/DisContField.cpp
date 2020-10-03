@@ -2859,7 +2859,7 @@ namespace Nektar
             bool PutFwdInBwdOnBCs,
             bool DoExchange)
         {
-            int cnt, n, e, npts, phys_offset;
+            int cnt, n, e, phys_offset;
 
             // Zero forward/backward vectors.
 
@@ -2914,115 +2914,124 @@ namespace Nektar
 
             if(FillBnd)
             {
-                // Fill boundary conditions into missing elements
-                int id1, id2 = 0;
-
-                if(PutFwdInBwdOnBCs) // just set Bwd value to be Fwd value on BCs
-                {
-                    // Fill boundary conditions into missing elements
-                    for (int n = cnt = 0; n < m_bndCondExpansions.size(); ++n)
-                    {
-                        if (m_bndConditions[n]->GetBoundaryConditionType() ==
-                            SpatialDomains::eDirichlet)
-                        {
-                            for (e=0; e<m_bndCondExpansions[n]->GetExpSize();++e)
-                            {
-                                npts = m_bndCondExpansions[n]->
-                                    GetExp(e)->GetTotPoints();
-                                int id2 = m_trace->GetPhys_Offset(m_traceMap->
-                                          GetBndCondIDToGlobalTraceID(cnt+e));
-                                Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
-                            }
-
-                            cnt += e;
-                        }
-                        else if (m_bndConditions[n]->GetBoundaryConditionType() ==
-                                 SpatialDomains::eNeumann ||
-                                 m_bndConditions[n]->GetBoundaryConditionType() ==
-                                 SpatialDomains::eRobin)
-                        {
-                            for (e=0; e<m_bndCondExpansions[n]->GetExpSize(); ++e)
-                            {
-                                npts = m_bndCondExpansions[n]->
-                                    GetExp(e)->GetTotPoints();
-                                int id2 = m_trace->GetPhys_Offset(m_traceMap->
-                                          GetBndCondIDToGlobalTraceID(cnt+e));
-                                Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
-                            }
-
-                            cnt += e;
-                        }
-                        else if (m_bndConditions[n]->GetBoundaryConditionType() !=
-                                 SpatialDomains::ePeriodic)
-                        {
-                            ASSERTL0(false,
-                                     "Method not set up for this "
-                                     "boundary condition.");
-                        }
-                    }
-                }
-                else
-                {
-                    for (cnt = n = 0; n < m_bndCondExpansions.size(); ++n)
-                    {
-                        if (m_bndConditions[n]->GetBoundaryConditionType() ==
-                            SpatialDomains::eDirichlet)
-                        {
-                            for (e=0; e<m_bndCondExpansions[n]->GetExpSize(); ++e)
-                            {
-                                npts = m_bndCondExpansions[n]->GetExp(e)
-                                    ->GetTotPoints();
-                                id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
-                                id2 = m_trace->GetPhys_Offset(m_traceMap->
-                                           GetBndCondIDToGlobalTraceID(cnt+e));
-                                Vmath::Vcopy(npts,
-                                             &(m_bndCondExpansions[n]->GetPhys())
-                                             [id1], 1, &Bwd[id2], 1);
-                            }
-
-                            cnt += e;
-                        }
-                        else if (m_bndConditions[n]->GetBoundaryConditionType() ==
-                                 SpatialDomains::eNeumann ||
-                                 m_bndConditions[n]->GetBoundaryConditionType() ==
-                                 SpatialDomains::eRobin)
-                        {
-                            for(e=0; e<m_bndCondExpansions[n]->GetExpSize(); ++e)
-                            {
-                                npts = m_bndCondExpansions[n]->GetExp(e)
-                                    ->GetTotPoints();
-                                id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
-                                ASSERTL0((m_bndCondExpansions[n]->GetPhys())[id1]
-                                         ==0.0,
-                                         "Method not set up for non-zero Neumann "
-                                         "boundary condition");
-                                id2  = m_trace->GetPhys_Offset(
-                                  m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
-                                Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
-                            }
-
-                            cnt += e;
-                        }
-                        else if (m_bndConditions[n]->GetBoundaryConditionType() ==
-                                 SpatialDomains::eNotDefined)
-                        {
-                            // Do nothing
-                        }
-                        else if (m_bndConditions[n]->GetBoundaryConditionType() !=
-                                 SpatialDomains::ePeriodic)
-                        {
-                            ASSERTL0(false,
-                                     "Method not set up for this boundary "
-                                     "condition.");
-                        }
-                    }
-                }
+                v_FillBwdWithBoundCond(Fwd, Bwd, PutFwdInBwdOnBCs);
             }
 
             if(DoExchange)
             {
                 // Do parallel exchange for forwards/backwards spaces.
                 m_traceMap->GetAssemblyCommDG()->PerformExchange(Fwd, Bwd);
+            }
+        }
+
+        void DisContField::v_FillBwdWithBoundCond(
+            Array<OneD, NekDouble> &Fwd,
+            Array<OneD, NekDouble> &Bwd,
+            bool PutFwdInBwdOnBCs)
+        {
+            int cnt, n, e, npts;
+            // Fill boundary conditions into missing elements
+            int id1, id2 = 0;
+
+            if(PutFwdInBwdOnBCs) // just set Bwd value to be Fwd value on BCs
+            {
+                // Fill boundary conditions into missing elements
+                for (int n = cnt = 0; n < m_bndCondExpansions.size(); ++n)
+                {
+                    if (m_bndConditions[n]->GetBoundaryConditionType() ==
+                        SpatialDomains::eDirichlet)
+                    {
+                        for (e=0; e<m_bndCondExpansions[n]->GetExpSize();++e)
+                        {
+                            npts = m_bndCondExpansions[n]->
+                                GetExp(e)->GetTotPoints();
+                            int id2 = m_trace->GetPhys_Offset(m_traceMap->
+                                        GetBndCondIDToGlobalTraceID(cnt+e));
+                            Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
+                        }
+
+                        cnt += e;
+                    }
+                    else if (m_bndConditions[n]->GetBoundaryConditionType() ==
+                                SpatialDomains::eNeumann ||
+                                m_bndConditions[n]->GetBoundaryConditionType() ==
+                                SpatialDomains::eRobin)
+                    {
+                        for (e=0; e<m_bndCondExpansions[n]->GetExpSize(); ++e)
+                        {
+                            npts = m_bndCondExpansions[n]->
+                                GetExp(e)->GetTotPoints();
+                            int id2 = m_trace->GetPhys_Offset(m_traceMap->
+                                        GetBndCondIDToGlobalTraceID(cnt+e));
+                            Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
+                        }
+
+                        cnt += e;
+                    }
+                    else if (m_bndConditions[n]->GetBoundaryConditionType() !=
+                                SpatialDomains::ePeriodic)
+                    {
+                        ASSERTL0(false,
+                                    "Method not set up for this "
+                                    "boundary condition.");
+                    }
+                }
+            }
+            else
+            {
+                for (cnt = n = 0; n < m_bndCondExpansions.size(); ++n)
+                {
+                    if (m_bndConditions[n]->GetBoundaryConditionType() ==
+                        SpatialDomains::eDirichlet)
+                    {
+                        for (e=0; e<m_bndCondExpansions[n]->GetExpSize(); ++e)
+                        {
+                            npts = m_bndCondExpansions[n]->GetExp(e)
+                                ->GetTotPoints();
+                            id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
+                            id2 = m_trace->GetPhys_Offset(m_traceMap->
+                                        GetBndCondIDToGlobalTraceID(cnt+e));
+                            Vmath::Vcopy(npts,
+                                            &(m_bndCondExpansions[n]->GetPhys())
+                                            [id1], 1, &Bwd[id2], 1);
+                        }
+
+                        cnt += e;
+                    }
+                    else if (m_bndConditions[n]->GetBoundaryConditionType() ==
+                                SpatialDomains::eNeumann ||
+                                m_bndConditions[n]->GetBoundaryConditionType() ==
+                                SpatialDomains::eRobin)
+                    {
+                        for(e=0; e<m_bndCondExpansions[n]->GetExpSize(); ++e)
+                        {
+                            npts = m_bndCondExpansions[n]->GetExp(e)
+                                ->GetTotPoints();
+                            id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
+                            ASSERTL0((m_bndCondExpansions[n]->GetPhys())[id1]
+                                        ==0.0,
+                                        "Method not set up for non-zero Neumann "
+                                        "boundary condition");
+                            id2  = m_trace->GetPhys_Offset(
+                                m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
+                            Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
+                        }
+
+                        cnt += e;
+                    }
+                    else if (m_bndConditions[n]->GetBoundaryConditionType() ==
+                                SpatialDomains::eNotDefined)
+                    {
+                        // Do nothing
+                    }
+                    else if (m_bndConditions[n]->GetBoundaryConditionType() !=
+                                SpatialDomains::ePeriodic)
+                    {
+                        ASSERTL0(false,
+                                    "Method not set up for this boundary "
+                                    "condition.");
+                    }
+                }
             }
         }
 

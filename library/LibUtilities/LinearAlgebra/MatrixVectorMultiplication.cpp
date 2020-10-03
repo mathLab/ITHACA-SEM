@@ -255,70 +255,6 @@ namespace Nektar
         }
     }
 
-    // template<typename DataType>
-    // void DiagonalBlockFullScalMatrixMultiply(NekVector<DataType>& result,
-    //                  const NekMatrix<NekMatrix<NekMatrix<DataType, StandardMatrixTag>, ScaledMatrixTag>, BlockMatrixTag>& lhs,
-    //                  const NekVector<DataType>& rhs)
-    // {
-    //     unsigned int numberOfBlockRows = lhs.GetNumberOfBlockRows();
-    //     DataType* result_ptr = result.GetRawPtr();
-    //     const DataType* rhs_ptr = rhs.GetRawPtr();
-        
-    //     Array<OneD, unsigned int> rowSizes;
-    //     Array<OneD, unsigned int> colSizes;
-    //     lhs.GetBlockSizes(rowSizes, colSizes);
-
-    //     unsigned int curResultRow = 0;
-    //     unsigned int curWrapperRow = 0;
-    //     unsigned int rowsInBlock = 0;
-    //     unsigned int columnsInBlock = 0;
-    //     for(unsigned int blockRow = 0; blockRow < numberOfBlockRows; ++blockRow)
-    //     {
-    //         curResultRow  += rowsInBlock;
-    //         curWrapperRow += columnsInBlock;
-    //         if ( blockRow == 0)
-    //         {
-    //             rowsInBlock    = rowSizes[blockRow] + 1;
-    //             columnsInBlock = colSizes[blockRow] + 1;
-    //         }
-    //         else
-    //         {
-    //             rowsInBlock    = rowSizes[blockRow] - rowSizes[blockRow-1];
-    //             columnsInBlock = colSizes[blockRow] - colSizes[blockRow-1];
-    //         }
-
-    //         if( rowsInBlock == 0)
-    //         {
-    //             continue;
-    //         }
-    //         if( columnsInBlock == 0)
-    //         {
-    //             std::fill(result.begin()+curResultRow,
-    //                      result.begin()+curResultRow + rowsInBlock, 0.0);
-    //             continue;
-    //         }
-
-    //         const DNekScalMat* block = lhs.GetBlockPtr(blockRow, blockRow);
-    //         if( !block )
-    //         {
-    //             continue;
-    //         }
-
-    //         DataType* resultWrapper = result_ptr + curResultRow;
-    //         const DataType* rhsWrapper = rhs_ptr + curWrapperRow;
-
-    //         // Multiply
-    //         const unsigned int* size = block->GetSize();
-    //         Blas::DoSgemv('N', size[0], size[1], block->Scale(),
-    //                     block->GetRawPtr(), size[0], rhsWrapper, 1,
-    //                     0.0, resultWrapper, 1);
-    //     }
-    //     curResultRow  += rowsInBlock;
-    //     if (curResultRow < result.GetRows())
-    //     {
-    //         std::fill(result.begin()+curResultRow, result.end(), 0.0);
-    //     }
-    // }
     void DiagonalBlockFullScalMatrixMultiply(NekVector<double>& result,
                      const NekMatrix<NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>, BlockMatrixTag>& lhs,
                      const NekVector<double>& rhs)
@@ -640,8 +576,8 @@ namespace Nektar
         Multiply(result.GetRawPtr(), lhs, rhs.GetRawPtr());
     }
 
-    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_STANDARD_AND_SCALED_MATRICES, (1, (void)), (1, (NekVector<NekDouble>&)), (1,(const NekVector<NekDouble>&)));
-    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_STANDARD_AND_SCALED_MATRICES_SINGLE, (1, (void)), (1, (NekVector<NekSingle>&)), (1,(const NekVector<NekSingle>&)));
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_STANDARD_AND_SCALED_MATRICES, (1, (void)), (1, (NekVector<NekDouble>&)), (1,(const NekVector<NekDouble>&)))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_STANDARD_AND_SCALED_MATRICES_SINGLE, (1, (void)), (1, (NekVector<NekSingle>&)), (1,(const NekVector<NekSingle>&)))
 
     template<typename DataType, typename LhsInnerMatrixType>
     void Multiply(NekVector<DataType>& result,
@@ -658,8 +594,8 @@ namespace Nektar
         }
     }
 
-    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_BLOCK_MATRIX_TYPES, (1, (void)), (1, (NekVector<NekDouble>&)), (1,(const NekVector<NekDouble>&)));
-    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_BLOCK_MATRIX_TYPES_SINGLE, (1, (void)), (1, (NekVector<NekSingle>&)), (1,(const NekVector<NekSingle>&)));
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_BLOCK_MATRIX_TYPES, (1, (void)), (1, (NekVector<NekDouble>&)), (1,(const NekVector<NekDouble>&)))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_BLOCK_MATRIX_TYPES_SINGLE, (1, (void)), (1, (NekVector<NekSingle>&)), (1,(const NekVector<NekSingle>&)))
 
     template<typename DataType, typename LhsDataType, typename MatrixType>
     NekVector<DataType> 
@@ -671,7 +607,7 @@ namespace Nektar
        return result;
     }
 
-    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_ALL_MATRIX_TYPES, (1, (NekVector<NekDouble>)), (0, ()), (1,(const NekVector<NekDouble>&)));
-    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_ALL_MATRIX_TYPES_SINGLE, (1, (NekVector<NekSingle>)), (0, ()), (1,(const NekVector<NekSingle>&)));
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_ALL_MATRIX_TYPES, (1, (NekVector<NekDouble>)), (0, ()), (1,(const NekVector<NekDouble>&)))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_ALL_MATRIX_TYPES_SINGLE, (1, (NekVector<NekSingle>)), (0, ()), (1,(const NekVector<NekSingle>&)))
 
 }

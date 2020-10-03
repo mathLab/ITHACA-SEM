@@ -897,6 +897,11 @@ namespace Nektar
                 bool PutFwdInBwdOnBCs  = false,
                 bool DoExchange        = true);
 
+            inline void FillBwdWithBoundCond(
+                Array<OneD, NekDouble> &Fwd,
+                Array<OneD, NekDouble> &Bwd,
+                bool PutFwdInBwdOnBCs);
+
             /// Add Fwd and Bwd value to field,
             /// a reverse procedure of GetFwdBwdTracePhys
             inline void AddTraceQuadPhysToField(
@@ -918,7 +923,7 @@ namespace Nektar
                 Array<OneD,       NekDouble>        &locTraceFwd,
                 Array<OneD,       NekDouble>        &locTraceBwd);
 
-            inline void FillBwdWithBound(
+            inline void FillBwdWithBoundCond(
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
             
@@ -1417,6 +1422,11 @@ namespace Nektar
                 bool PutFwdInBwdOnBCs  = false,
                 bool DoExchange        = true);
 
+            virtual void v_FillBwdWithBoundCond(
+                Array<OneD, NekDouble> &Fwd,
+                Array<OneD, NekDouble> &Bwd,
+                bool PutFwdInBwdOnBCs);
+            
             virtual void v_AddTraceQuadPhysToField(
                 const Array<OneD, const NekDouble>  &Fwd,
                 const Array<OneD, const NekDouble>  &Bwd,
@@ -1433,7 +1443,7 @@ namespace Nektar
                 Array<OneD,       NekDouble>        &locTraceFwd,
                 Array<OneD,       NekDouble>        &locTraceBwd);
                       
-            virtual void v_FillBwdWithBound(
+            virtual void v_FillBwdWithBoundCond(
                 const Array<OneD, const NekDouble> &Fwd,
                       Array<OneD,       NekDouble> &Bwd);
             
@@ -2579,6 +2589,14 @@ namespace Nektar
                                  PutFwdInBwdOnBCs,DoExchange);
         }
 
+        inline void ExpList::FillBwdWithBoundCond(
+            Array<OneD,NekDouble> &Fwd,
+            Array<OneD,NekDouble> &Bwd,
+            bool PutFwdInBwdOnBCs)
+        {
+            v_FillBwdWithBoundCond(Fwd, Bwd, PutFwdInBwdOnBCs);
+        }
+
         inline void ExpList::AddTraceQuadPhysToField(
                 const Array<OneD, const NekDouble>  &Fwd,
                 const Array<OneD, const NekDouble>  &Bwd,
@@ -2596,11 +2614,11 @@ namespace Nektar
             v_GetLocTraceFromTracePts(Fwd,Bwd,locTraceFwd,locTraceBwd);
         }
 
-        inline void ExpList::FillBwdWithBound(
+        inline void ExpList::FillBwdWithBoundCond(
             const Array<OneD, const NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
-            v_FillBwdWithBound(Fwd,Bwd);
+            v_FillBwdWithBoundCond(Fwd,Bwd);
         }
 
         inline void ExpList::FillBwdWithBoundDeriv(

@@ -35,7 +35,7 @@
             <P> NumSteps = 1e6      </P>
             <P> IO_CheckSteps = 1000       </P>
             <P> IO_InfoSteps = 1000       </P>
-            <P> Kinvis = 10       </P>
+            <P> Kinvis = 10    </P>
             <P> Kinvis_max = 123       </P>
             <P> load_snapshot_data_from_files = 1       </P>
             <P> number_of_snapshots = 4       </P>
@@ -44,10 +44,8 @@
             <P> param2 = 1       </P>
             <P> param3 = 10       </P>
             <P> type_para1 = 0       </P>    <!-- 0=kin_visc, 1=geo   -->
-            <P> ref_param_index = 2       </P>
-            <P> ref_param_nu = 1       </P>
             <P> POD_tolerance = .9999       </P>
-	    <P> globally_connected = 2      </P>
+	    <P> debug_mode = 0      </P>
         </PARAMETERS>
 
         <VARIABLES>
@@ -99,19 +97,19 @@
         </FUNCTION>  
 
 	<FUNCTION NAME="TestSnap1">
-	      <F FILE="OseenROM_sol0p1.fld" />
+	      <F FILE="../../../solvers/IncNavierStokesSolver/Tests/OseenROM_sol0p1.fld" />
 	</FUNCTION>  
 
 	<FUNCTION NAME="TestSnap2">
-	      <F FILE="OseenROM_sol0p5.fld" />
+	      <F FILE="../../../solvers/IncNavierStokesSolver/Tests/OseenROM_sol0p5.fld" />
 	</FUNCTION>  
 
 	<FUNCTION NAME="TestSnap3">
-	      <F FILE="OseenROM_sol1.fld" />
+	      <F FILE="../../../solvers/IncNavierStokesSolver/Tests/OseenROM_sol1.fld" />
 	</FUNCTION>  
 
 	<FUNCTION NAME="TestSnap4">
-	      <F FILE="OseenROM_sol10.fld" />
+	      <F FILE="../../../solvers/IncNavierStokesSolver/Tests/OseenROM_sol10.fld" />
 	</FUNCTION>  
 
         <FUNCTION NAME="Mapping">

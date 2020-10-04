@@ -148,6 +148,29 @@ namespace Nektar
         void ROM_offline_phase(void);
         void ROM_online_phase(void);
         Eigen::MatrixXd DoTrafo(void);
+        void DoInitialiseAdv(Array<OneD, NekDouble> myAdvField_x, Array<OneD, NekDouble> myAdvField_y);
+        void Set_m_kinvis(NekDouble);
+        void setDBC(Eigen::MatrixXd);
+        void set_f_bnd_dbc();
+        void gen_phys_base_vecs();
+        void gen_proj_adv_terms();
+        void gen_reference_matrices();
+	Eigen::MatrixXd gen_adv_mats_proj_x(Array<OneD, double> curr_PhysBaseVec_x, int use_Newton);
+        Eigen::MatrixXd gen_adv_mats_proj_y(Array<OneD, double> curr_PhysBaseVec_y, int use_Newton);
+        Eigen::VectorXd remove_rows(Eigen::VectorXd the_vector, std::set<int> elements_to_be_removed);
+        Eigen::MatrixXd remove_cols_and_rows(Eigen::MatrixXd the_matrix, std::set<int> elements_to_be_removed);
+        Eigen::MatrixXd gen_no_advection_matrix_pressure();
+        Eigen::MatrixXd gen_no_advection_matrix_ABCD();
+        Eigen::MatrixXd project_onto_basis( Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y);
+        Eigen::MatrixXd reproject_from_basis( Eigen::MatrixXd curr_xy_proj );
+        Eigen::MatrixXd gen_affine_mat_proj(double current_nu);
+        Eigen::VectorXd gen_affine_vec_proj(double current_nu, int current_index);
+        Eigen::VectorXd reconstruct_solution_w_dbc(Eigen::VectorXd reprojected_solve);
+//	int get_curr_elem_pos(int curr_elem);
+
+
+
+
         
         /*void EvaluateNewtonRHS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
          *								 Array<OneD, Array<OneD, NekDouble> > &PreviousForcing,
@@ -205,8 +228,49 @@ namespace Nektar
 	Eigen::VectorXd curr_f_p;
 	Eigen::VectorXd curr_f_int;	
 	Eigen::MatrixXd collect_f_all;
-	
-
+	Array<OneD, Array<OneD, NekDouble> > myAdvField;
+	bool ROM_started;
+	bool debug_mode;
+	int RBsize;
+	int no_dbc_in_loc;
+	int no_not_dbc_in_loc;
+	std::set<int> elem_loc_dbc;   // works for all globally connected scenarios
+	std::set<int> elem_not_loc_dbc;
+        Eigen::MatrixXd PODmodes;
+	int M_truth_size;               // works for all globally connected scenarios
+	int M_truth_size_without_DBC;   // works for all globally connected scenarios
+	int nBndDofs;        
+	Eigen::VectorXd f_bnd_dbc;
+	Eigen::VectorXd f_bnd_dbc_full_size;
+        Eigen::MatrixXd RB;        
+       	Eigen::MatrixXd eigen_phys_basis_x;
+	Eigen::MatrixXd eigen_phys_basis_y;
+	Array<OneD, Array<OneD, double> > orth_PhysBaseVec_x;
+	Array<OneD, Array<OneD, double> > orth_PhysBaseVec_y;
+        Array<OneD, Array<OneD, double> > PhysBaseVec_x;
+	Array<OneD, Array<OneD, double> > PhysBaseVec_y;
+	Array<OneD, Eigen::MatrixXd> adv_mats_proj_x;
+	Array<OneD, Eigen::MatrixXd> adv_mats_proj_y;
+	Array<OneD, Eigen::VectorXd> adv_vec_proj_x;
+	Array<OneD, Eigen::VectorXd> adv_vec_proj_y;
+       	Array<OneD, Eigen::VectorXd> adv_vec_proj_x_newton;
+	Array<OneD, Eigen::VectorXd> adv_vec_proj_y_newton;
+	Array<OneD, Eigen::MatrixXd> adv_vec_proj_x_newton_RB;
+	Array<OneD, Eigen::MatrixXd> adv_vec_proj_y_newton_RB;
+	bool use_Newton;        
+	Eigen::MatrixXd the_const_one;
+	Eigen::MatrixXd the_ABCD_one;
+	Eigen::MatrixXd the_const_one_simplified;
+	Eigen::MatrixXd the_ABCD_one_simplified;
+	Eigen::MatrixXd the_const_one_proj;
+	Eigen::MatrixXd the_ABCD_one_proj;
+	Eigen::VectorXd the_ABCD_one_rhs;
+	Eigen::VectorXd the_const_one_rhs;
+	Eigen::VectorXd the_ABCD_one_rhs_simplified;
+	Eigen::VectorXd the_const_one_rhs_simplified;
+	Eigen::VectorXd the_ABCD_one_rhs_proj;
+	Eigen::VectorXd the_const_one_rhs_proj;        
+       	Eigen::MatrixXd curr_xy_projected;
 
         Array<OneD, CoupledSolverMatrices> m_mat;
         

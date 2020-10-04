@@ -1,0 +1,108 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{verbatim}
+
+%opening
+\title{User Guide - NektarROM}
+\author{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This guide explains functionality added with NektarROM to Nektar++. These are 
+parametric model reduction routines and a few examples showing the usage.
+Some familiarity with the underlying PDE-solver Nektar++ is assumed. 
+\end{abstract}
+
+\section{Installation and Testing}
+
+It is integrated in Nektar++ and the 'make test' routine also covers the main
+reduced order model (ROM) functionality.
+
+\section{Scope of Added Functionality}
+
+The ROM is activated by using in the session file
+
+\begin{verbatim}
+<I PROPERTY="EQTYPE" VALUE="SteadyOseen" />
+<I PROPERTY="SolverType" VALUE="CoupledLinearisedNS_ROM" />
+\end{verbatim}
+
+\section{Using NektarROM}
+
+The session file supports additional parameters for the IncNavierStokes module.
+These are
+
+\subsection{parameter\_space\_dimension}
+
+\noindent type: int
+
+\noindent default: 1
+
+\noindent explanation: dimension of parameter space
+
+\subsection{number\_of\_snapshots}
+
+\noindent type: int
+
+\noindent default: has to be set
+
+\noindent explanation: number of snapshots for the offline sampling
+
+
+\subsection{load\_snapshot\_data\_from\_files}
+
+\noindent type: bool
+
+\noindent default: has to be set
+
+\noindent explanation: if set to 0, then compute the snapshots, otherwise load from file, see
+\begin{verbatim}
+ solvers/IncNavierStokesSolver/Tests_ROM/Test_load_files
+\end{verbatim}
+for usage
+
+
+\subsection{param0}
+
+\noindent type: double
+
+\noindent default: has to be set
+
+\noindent explanation: the first parameter value in the parameter vector in case of only one parameter direction. further paramters are numbered param1, param2, ... and so on
+
+\subsection{POD\_tolerance}
+
+\noindent type: double
+
+\noindent default: has to be set
+
+\noindent explanation: the percentage of singular values to take into account in the SVD/PCA/POD
+
+
+\subsection{debug\_mode}
+
+\noindent type: bool
+
+\noindent default: 1
+
+\noindent explanation: if '0' less verbose output
+
+\subsection{type\_para1}
+
+\noindent type: int
+
+\noindent default: has to be set
+
+\noindent explanation: if '0' the parameter is kinematic viscosity
+
+
+
+   
+
+\section{Examples}
+
+
+\end{document}

@@ -88,10 +88,6 @@ namespace Nektar
                 }
                 
             protected:
-                /// Maximum iterations
-                int                                       m_maxiter;
-                /// Tolerance of iterative solver.
-                NekDouble                                 m_tolerance;
 
                 int                                       m_totalIterations = 0;
 

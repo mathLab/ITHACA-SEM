@@ -5,10 +5,9 @@
 
     <CONDITIONS>
         <SOLVERINFO>
-            <I PROPERTY="LinIteratSovler"   VALUE="GMRES"/>
+            <I PROPERTY="LinSysIterSovler"   VALUE="GMRES"/>
         </SOLVERINFO>
         <PARAMETERS>
-            <!-- <P> IterativeSolverTolerance = 1e-9 </P> -->
             <P> MaxIterations = 4 </P>
         </PARAMETERS>
         <VARIABLES>

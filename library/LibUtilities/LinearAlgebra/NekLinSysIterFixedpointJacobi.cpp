@@ -52,7 +52,6 @@ namespace Nektar
             "FixedpointJacobi", NekLinSysIterFixedpointJacobi::create,
             "NekLinSysIterFixedpointJacobi solver.");
 
-        /// Constructor for full direct matrix solve.
         NekLinSysIterFixedpointJacobi::NekLinSysIterFixedpointJacobi(
             const LibUtilities::SessionReaderSharedPtr  &pSession,
             const LibUtilities::CommSharedPtr           &vComm,
@@ -92,7 +91,7 @@ namespace Nektar
             Vmath::Vcopy(nGlobal, pSolution, 1, pSol0, 1);
             for (int i = 0; i < m_maxiter; ++i)
             {
-                m_operator.DoNonlinLinFixPointIte(pRhs, pSol0, pSolution);
+                m_operator.DoNekSysFixPointIte(pRhs, pSol0, pSolution);
                 Vmath::Vsub(nGlobal, pSolution, 1, pSol0, 1, pSol0, 1);
                 m_converged = ConvergenceCheck(i, pSol0, m_tolerance);
                 Vmath::Vcopy(nGlobal, pSolution,1, pSol0, 1);

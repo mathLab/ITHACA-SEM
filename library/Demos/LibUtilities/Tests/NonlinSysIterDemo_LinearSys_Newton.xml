@@ -5,7 +5,7 @@
 
     <CONDITIONS>
         <SOLVERINFO>
-            <I PROPERTY="LinIteratSovler"   VALUE="GMRES"/>
+            <I PROPERTY="LinSysIterSovler"   VALUE="GMRES"/>
         </SOLVERINFO>
         <PARAMETERS>
             <P> NonlinIteTolRelativeL2 = 1e-8 </P>

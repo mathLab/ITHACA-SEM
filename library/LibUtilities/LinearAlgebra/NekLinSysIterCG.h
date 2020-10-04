@@ -53,16 +53,6 @@ namespace Nektar
 
             /// Support creation through MemoryManager.
             friend class MemoryManager<NekLinSysIterCG>;
-            /**
-             * @brief Creates an instance of the SessionReader class.
-             *
-             * This function should be used by an application to instantiate the
-             * session reader. It should be called at the very beginning of the
-             * application before any other processing of command-line
-             * arguments. After instantiating the class and setting up any
-             * parallel communication, it also calls the main initialisation
-             * of the object.
-             */
 
             LIB_UTILITIES_EXPORT static NekLinSysIterSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr  &pSession,

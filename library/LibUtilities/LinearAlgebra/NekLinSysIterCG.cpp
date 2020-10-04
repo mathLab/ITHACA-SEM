@@ -52,7 +52,6 @@ namespace Nektar
             "ConjugateGradient", NekLinSysIterCG::create,
             "NekLinSysIterCG solver.");
 
-        /// Constructor for full direct matrix solve.
         NekLinSysIterCG::NekLinSysIterCG(
             const LibUtilities::SessionReaderSharedPtr  &pSession,
             const LibUtilities::CommSharedPtr           &vComm,
@@ -217,7 +216,7 @@ namespace Nektar
                              pInput.get() + nDir, 1,
                              pb_s.get()   + nDir, 1);
 
-                m_operator.DoNonlinLinSysLhsEval(px_s, tmpAx_s);
+                m_operator.DoNekSysLhsEval(px_s, tmpAx_s);
 
                 pb -= tmpAx;
 
@@ -250,7 +249,7 @@ namespace Nektar
             // Allocate array storage
             Array<OneD, NekDouble> tmpAx_s(nGlobal, 0.0);
 
-            m_operator.DoNonlinLinSysLhsEval(in, tmpAx_s);
+            m_operator.DoNekSysLhsEval(in, tmpAx_s);
 
             NekDouble anorm_sq = Vmath::Dot2(nNonDir,
                                              in      + nDir,
@@ -302,7 +301,7 @@ namespace Nektar
 
             if (m_prevLinSol.size() > 0)
             {
-                m_operator.DoNonlinLinSysLhsEval(newX, tmpAx_s);
+                m_operator.DoNekSysLhsEval(newX, tmpAx_s);
             }
 
             Array<OneD, NekDouble> alpha (m_prevLinSol.size(), 0.0);
@@ -353,7 +352,7 @@ namespace Nektar
         /**  
          * Solve a global linear system using the conjugate gradient method.  
          * We solve only for the non-Dirichlet modes. The operator is evaluated  
-         * using an auxiliary function m_operator.DoNonlinLinSysLhsEval defined by the  
+         * using an auxiliary function m_operator.DoNekSysLhsEval defined by the  
          * specific solver. Distributed math routines are used to support  
          * parallel execution of the solver.  
          *  
@@ -439,9 +438,9 @@ namespace Nektar
                 return;
             }
 
-            m_operator.DoNonlinLinPrecond(r_A, tmp = w_A + nDir);
+            m_operator.DoNekSysPrecond(r_A, tmp = w_A + nDir);
 
-            m_operator.DoNonlinLinSysLhsEval(w_A, s_A);
+            m_operator.DoNekSysLhsEval(w_A, s_A);
 
             k = 0;
 
@@ -496,10 +495,10 @@ namespace Nektar
                              &r_A[0], 1);
 
                 // Apply preconditioner
-                m_operator.DoNonlinLinPrecond(r_A, tmp = w_A + nDir);
+                m_operator.DoNekSysPrecond(r_A, tmp = w_A + nDir);
 
                 // Perform the method-specific matrix-vector multiply operation.
-                m_operator.DoNonlinLinSysLhsEval(w_A, s_A);
+                m_operator.DoNekSysLhsEval(w_A, s_A);
 
                 // <r_{k+1}, w_{k+1}>
                 vExchange[0] = Vmath::Dot2(nNonDir,

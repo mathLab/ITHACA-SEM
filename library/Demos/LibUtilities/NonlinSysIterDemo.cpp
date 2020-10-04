@@ -28,7 +28,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Demo for testing functionality of NodalUtil classes
+// Description: Demo for testing functionality of NekNonlinSys classes
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -65,8 +65,8 @@ class LinSysDemo
             m_nonlinsol = LibUtilities::GetNekNonlinSysFactory().CreateInstance(
                           SovlerType, m_session, m_comm, m_matDim);
 
-            m_NekSysOp.DefineNonlinLinSysRhsEval(&LinSysDemo::DoRhs, this);
-            m_NekSysOp.DefineNonlinLinSysLhsEval(&LinSysDemo::DoLhs, this);
+            m_NekSysOp.DefineNekSysRhsEval(&LinSysDemo::DoRhs, this);
+            m_NekSysOp.DefineNekSysLhsEval(&LinSysDemo::DoLhs, this);
             m_nonlinsol->setSysOperators(m_NekSysOp);
         }
         ~LinSysDemo()
@@ -125,8 +125,8 @@ class LinSysDemo
                     const  bool     &flag = false)
         {
             boost::ignore_unused(flag);
-            int ntmp = inarray.size();
-            ASSERTL0(m_matDim == ntmp, "m_matDim == ntmp not true");
+            ASSERTL1(m_matDim == inarray.size(), 
+                "CoeffMat dim not equal to NekSys dim in DoRhs");
             NekDouble x = inarray[0];
             NekDouble y = inarray[1];
             NekDouble f1 = x * x * x + y - 1.0;

@@ -144,9 +144,9 @@ namespace Nektar
     void CompressibleFlowSystem::InitialiseNonlinSysSolver()
     {
         std::string SovlerType = "Newton";
-        if (m_session->DefinesSolverInfo("NonlinIteratSovler"))
+        if (m_session->DefinesSolverInfo("NonlinSysIterSovler"))
         {
-            SovlerType = m_session->GetSolverInfo("NonlinIteratSovler");
+            SovlerType = m_session->GetSolverInfo("NonlinSysIterSovler");
         }
         ASSERTL0(LibUtilities::GetNekNonlinSysFactory().
                  ModuleExists(SovlerType),
@@ -157,9 +157,9 @@ namespace Nektar
         m_nonlinsol = LibUtilities::GetNekNonlinSysFactory().CreateInstance(
                             SovlerType, m_session, v_Comm,ntotal);
 
-        m_NekSysOp.DefineNonlinLinSysRhsEval(&CompressibleFlowSystem
+        m_NekSysOp.DefineNekSysRhsEval(&CompressibleFlowSystem
                                                   ::NonlinSysEvaluator1D, this);
-        m_NekSysOp.DefineNonlinLinSysLhsEval(&CompressibleFlowSystem::
+        m_NekSysOp.DefineNekSysLhsEval(&CompressibleFlowSystem::
                                          MatrixMultiply_MatrixFreeCoeff, this);
         m_nonlinsol->setSysOperators(m_NekSysOp);
     }
@@ -202,7 +202,7 @@ namespace Nektar
             ASSERTL0(m_cflSafetyFactor != 0,
                     "Local time stepping requires CFL parameter.");
         }
-        m_session->LoadParameter ("JFEps", m_JFEps, 5.0E-8);
+        m_session->LoadParameter ("JacobiFreeEps", m_JacobiFreeEps, 5.0E-8);
         m_session->LoadParameter("NewtonAbsoluteIteTol", 
                                  m_NewtonAbsoluteIteTol, 1.0E-12);
     }
@@ -428,7 +428,6 @@ namespace Nektar
     {
         const Array<OneD, const NekDouble> refsol 
                                 = m_nonlinsol->GetRefSolution();
-        //inforc = m_TimeIntegForce;
         unsigned int nvariable  = inarray.size();
         unsigned int ncoeffs    = inarray[nvariable - 1].size();
         unsigned int npoints    = m_fields[0]->GetNpoints();
@@ -677,7 +676,7 @@ namespace Nektar
                                          = m_nonlinsol->GetRefSolution();
         const Array<OneD, const NekDouble> refres 
                                          = m_nonlinsol->GetRefResidual();
-        NekDouble eps = m_JFEps;
+        NekDouble eps = m_JacobiFreeEps;
         NekDouble magnitdEstimatMax = 0.0;
         for (int i = 0; i < m_magnitdEstimat.size(); ++i)
         {

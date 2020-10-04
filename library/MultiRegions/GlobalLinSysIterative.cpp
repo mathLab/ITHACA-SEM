@@ -43,15 +43,15 @@ namespace Nektar
         std::string GlobalLinSysIterative::IteratSolverlookupIds[2] =
         {
             LibUtilities::SessionReader::RegisterEnumValue(
-                "LinIteratSovler", "ConjugateGradient", MultiRegions::
+                "LinSysIterSovler", "ConjugateGradient", MultiRegions::
                 eConjugateGradient),
             LibUtilities::SessionReader::RegisterEnumValue(
-                "LinIteratSovler", "GMRES", MultiRegions::eGMRES),
+                "LinSysIterSovler", "GMRES", MultiRegions::eGMRES),
         };
 
         std::string GlobalLinSysIterative::IteratSolverdef =
             LibUtilities::SessionReader::RegisterDefaultSolverInfo(
-                "LinIteratSovler", "ConjugateGradient");
+                "LinSysIterSovler", "ConjugateGradient");
 
         /**
          * @class GlobalLinSysIterative
@@ -117,34 +117,34 @@ namespace Nektar
                 variables[0] =  pSession->GetVariable(0);
                 string variable = variables[0];
 
-                std::string LinIteratSovlerType = "ConjugateGradient";
+                std::string LinSysIterSovlerType = "ConjugateGradient";
                 if (pSession->DefinesGlobalSysSolnInfo(variable,
-                                                    "LinIteratSovler"))
+                                                    "LinSysIterSovler"))
                 {
-                    LinIteratSovlerType = pSession->GetGlobalSysSolnInfo(
-                                          variable,"LinIteratSovler");
+                    LinSysIterSovlerType = pSession->GetGlobalSysSolnInfo(
+                                          variable,"LinSysIterSovler");
                 }
                 else
                 {
-                    if (pSession->DefinesSolverInfo("LinIteratSovler"))
+                    if (pSession->DefinesSolverInfo("LinSysIterSovler"))
                     {
-                        LinIteratSovlerType = pSession->GetSolverInfo(
-                        "LinIteratSovler");
+                        LinSysIterSovlerType = pSession->GetSolverInfo(
+                        "LinSysIterSovler");
                     }
                 }
                 
                 // Check such a module exists for this equation.
                 ASSERTL0(LibUtilities::GetNekLinSysIterFactory().
-                ModuleExists(LinIteratSovlerType),
-                    "NekLinSysIter '" + LinIteratSovlerType + 
+                ModuleExists(LinSysIterSovlerType),
+                    "NekLinSysIter '" + LinSysIterSovlerType + 
                     "' is not defined.\n");
                 m_linsol = LibUtilities::GetNekLinSysIterFactory().
-                           CreateInstance(LinIteratSovlerType, pSession,
+                           CreateInstance(LinSysIterSovlerType, pSession,
                                           v_Comm, nGlobal - nDir);
 
-                m_NekSysOp.DefineNonlinLinSysLhsEval(
+                m_NekSysOp.DefineNekSysLhsEval(
                     &GlobalLinSysIterative::DoMatrixMultiplyFlag, this);
-                m_NekSysOp.DefineNonlinLinPrecond(
+                m_NekSysOp.DefineNekSysPrecond(
                     &GlobalLinSysIterative::DoPreconditionerFlag, this);
                 m_linsol->setSysOperators(m_NekSysOp);
                     v_UniqueMap();

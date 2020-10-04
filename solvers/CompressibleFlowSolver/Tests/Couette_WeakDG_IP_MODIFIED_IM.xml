@@ -31,30 +31,30 @@
     </EXPANSIONS>
 <CONDITIONS>
     <PARAMETERS> 
-      <P> TimeStep              = 0.05     </P>
-      <P> FinTime               = 2.0           </P>
-      <P> IO_CheckSteps         = 500000        </P>
-      <P> IO_InfoSteps          = 1        </P>
-      <P> GasConstant           = 287.058       </P>
-      <P> Gamma                 = 1.4           </P>
-      <P> pInf                  = 101325        </P>
-      <P> rhoInf                = 1.225         </P>
-       <P> Mach                  = 0.1    </P>
-     <P> cInf                  = sqrt(Gamma * pInf / rhoInf) </P>  
-      <P> uInf                  = Mach*cInf                   </P>
-      <P> vInf                  = 0.0           </P>
-      <P> Twall                 = 300.15        </P>
-      <P> T0                   = 0.8*Twall                   </P>
-      <P> T1                    = 0.85*Twall                   </P>
-      <P> Re                    = 100                         </P>
-      <P> L                     = 1                           </P>
-      <P> mu                    = rhoInf * L * uInf / Re      </P>     
-      <P> Pr                    = 0.72                        </P>     
+      <P> TimeStep              = 0.05                          </P>
+      <P> FinTime               = 2.0                           </P>
+      <P> IO_CheckSteps         = 500000                        </P>
+      <P> IO_InfoSteps          = 1                             </P>
+      <P> GasConstant           = 287.058                       </P>
+      <P> Gamma                 = 1.4                           </P>
+      <P> pInf                  = 101325                        </P>
+      <P> rhoInf                = 1.225                         </P>
+       <P> Mach                 = 0.1                           </P>
+     <P> cInf                   = sqrt(Gamma * pInf / rhoInf)   </P>  
+      <P> uInf                  = Mach*cInf                     </P>
+      <P> vInf                  = 0.0                           </P>
+      <P> Twall                 = 300.15                        </P>
+      <P> T0                    = 0.8*Twall                     </P>
+      <P> T1                    = 0.85*Twall                    </P>
+      <P> Re                    = 100                           </P>
+      <P> L                     = 1                             </P>
+      <P> mu                    = rhoInf * L * uInf / Re        </P>     
+      <P> Pr                    = 0.72                          </P>     
       <P> Cv                    = GasConstant/(Gamma-1)         </P> 
-      <P> Cp                    = (Gamma*GasConstant)/(Gamma-1)</P>
+      <P> Cp                    = (Gamma*GasConstant)/(Gamma-1) </P>
 
-      <P> NonlinIteTolRelativeL2  = 1.0E-14                   </P>
-      <P> NewtonAbsoluteIteTol    = 1.0E-14                   </P>
+      <P> NonlinIteTolRelativeL2  = 1.0E-14                     </P>
+      <P> NewtonAbsoluteIteTol    = 1.0E-14                     </P>
       
     </PARAMETERS>
 
@@ -62,14 +62,14 @@
         <I PROPERTY="EQType"                VALUE="NavierStokesCFE"     />
         <I PROPERTY="Projection"            VALUE="DisContinuous"       />
         <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
-        <I PROPERTY="DiffusionType"         VALUE="InteriorPenalty"               />
+        <I PROPERTY="DiffusionType"         VALUE="InteriorPenalty"     />
         <I PROPERTY="AdvectionAdvancement"  VALUE="Implicit"            />
         <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit"            />
-        <I PROPERTY="TimeIntegrationMethod" VALUE="BackwardEuler"          />
-        <I PROPERTY="UpwindType"            VALUE="Roe"                />
+        <I PROPERTY="TimeIntegrationMethod" VALUE="BackwardEuler"       />
+        <I PROPERTY="UpwindType"            VALUE="Roe"                 />
         <I PROPERTY="ProblemType"           VALUE="General"             />
         <I PROPERTY="ViscosityType"         VALUE="Constant"            />
-        <I PROPERTY="LinIteratSovler"       VALUE="GMRES"               />
+        <I PROPERTY="LinSysIterSovler"      VALUE="GMRES"               />
     </SOLVERINFO>
 
     <VARIABLES>

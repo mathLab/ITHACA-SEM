@@ -254,7 +254,7 @@
             <V VAR="u">
                 <I PROPERTY="GlobalSysSoln"    VALUE="IterativeStaticCond" />
                 <I PROPERTY="Preconditioner"   VALUE="Diagonal"/>
-                <I PROPERTY="LinIteratSovler"   VALUE="GMRES"/>
+                <I PROPERTY="LinSysIterSovler" VALUE="GMRES"/>
             </V>
         </GLOBALSYSSOLNINFO>
 

@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_NONLINLINSYS_H
-#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_NONLINLINSYS_H
+#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_NekSys_H
+#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_NekSys_H
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/Vmath.hpp>
@@ -101,7 +101,7 @@ namespace Nektar
                 }
 
                 template<typename FuncPointerT, typename ObjectPointerT> 
-                    void DefineNonlinLinSysRhsEval(FuncPointerT func, 
+                    void DefineNekSysRhsEval(FuncPointerT func, 
                                                    ObjectPointerT obj)
                 {
                     m_functors1[0] =  std::bind(
@@ -109,7 +109,7 @@ namespace Nektar
                         std::placeholders::_3);
                 }
                 template<typename FuncPointerT, typename ObjectPointerT> 
-                    void DefineNonlinLinSysLhsEval(FuncPointerT func, 
+                    void DefineNekSysLhsEval(FuncPointerT func, 
                          ObjectPointerT obj)
                 {
                     m_functors1[1] =  std::bind(
@@ -117,7 +117,7 @@ namespace Nektar
                         std::placeholders::_3);
                 }
                 template<typename FuncPointerT, typename ObjectPointerT> 
-                    void DefineNonlinLinPrecond(FuncPointerT func, 
+                    void DefineNekSysPrecond(FuncPointerT func, 
                         ObjectPointerT obj)
                 {
                     m_functors1[2] =  std::bind(
@@ -125,7 +125,7 @@ namespace Nektar
                         std::placeholders::_3);
                 }
                 template<typename FuncPointerT, typename ObjectPointerT> 
-                    void DefineNonlinLinFixPointIte(FuncPointerT func, 
+                    void DefineNekSysFixPointIte(FuncPointerT func, 
                         ObjectPointerT obj)
                 {
                     m_functors2[0] =  std::bind(
@@ -133,27 +133,27 @@ namespace Nektar
                         std::placeholders::_3, std::placeholders::_4);
                 }
                 
-                inline void DoNonlinLinSysRhsEval(
+                inline void DoNekSysRhsEval(
                     InArrayType     &inarray, 
                     OutArrayType    &outarray,
                     const  bool     &flag = false) const
                 {
                     ASSERTL1(m_functors1[0],
-                    "DoNonlinLinSysRhsEval should be defined");
+                    "DoNekSysRhsEval should be defined");
                     m_functors1[0](inarray, outarray, flag);
                 }
                 
-                inline void DoNonlinLinSysLhsEval(
+                inline void DoNekSysLhsEval(
                     InArrayType     &inarray, 
                     OutArrayType    &outarray,
                     const  bool     &flag = false) const
                 {
                     ASSERTL1(m_functors1[1],
-                    "DoNonlinLinSysLhsEval should be defined");
+                    "DoNekSysLhsEval should be defined");
                     m_functors1[1](inarray, outarray, flag);
                 }
                 
-                inline void DoNonlinLinPrecond(
+                inline void DoNekSysPrecond(
                     InArrayType     &inarray, 
                     OutArrayType    &outarray,
                     const  bool     &flag = false) const
@@ -169,31 +169,31 @@ namespace Nektar
                     
                 }
 
-                inline void DoNonlinLinFixPointIte(
+                inline void DoNekSysFixPointIte(
                     InArrayType     &rhs, 
                     InArrayType     &xn, 
                     OutArrayType    &xn1,
                     const  bool     &flag = false) const
                 {
                     ASSERTL1(m_functors2[0],
-                    "DoNonlinLinFixPointIte should be defined");
+                    "DoNekSysFixPointIte should be defined");
                     m_functors2[0](rhs, xn, xn1, flag);
                 }
             protected:
                 /* Defines three operators 
-                    DoNonlinLinSysRhsEval   :   
+                    DoNekSysRhsEval   :   
                         evaluations the RHS of the Nonlinear/Linear system. 
                         May not be used for linear system.
-                    DoNonlinLinSysLhsEval   :   
+                    DoNekSysLhsEval   :   
                         evaluations the LHS of the Nonlinear/Linear system (Ax), 
                         where A is the matrix x is solution vector.
                         For linear system A is the coefficient matrix; 
                         For nonlinear system A is the coefficient matrix in 
                         each nonlinear iterations, for example A is the 
                         Jacobian matrix for Newton method; 
-                    DoNonlinLinPrecond      :   
+                    DoNekSysPrecond      :   
                         Preconditioning operator of the system.
-                    DoNonlinLinFixPointIte  :   
+                    DoNekSysFixPointIte  :   
                         Operator to calculate RHS of fix point iterations 
                         (x^{n+1}=M^{-1}(b-N*x^{n}), with M+N=A).
                 */
@@ -262,6 +262,8 @@ namespace Nektar
                 }
                 
             protected:
+                /// Maximum iterations
+                int                                         m_maxiter;
                 /// Tolerance of iterative solver.
                 NekDouble                                   m_tolerance;
                 /// Communicate.
@@ -275,7 +277,7 @@ namespace Nektar
                 /// Verbose
                 bool                                        m_verbose;
                 /// Operators
-                NekSysOperators                       m_operator;
+                NekSysOperators                             m_operator;
                 /// The dimension of the system
                 int                                         m_SysDimen;
 
@@ -293,7 +295,7 @@ namespace Nektar
                 {
                     boost::ignore_unused(nGlobal, pInput, pOutput, nDir,
                                          tol, factor);
-                    ASSERTL0(false, "LinIteratSovler NOT CORRECT.");
+                    ASSERTL0(false, "LinSysIterSovler NOT CORRECT.");
                     return 0;
                 }
 

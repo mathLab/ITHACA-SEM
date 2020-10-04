@@ -44,7 +44,7 @@ namespace Nektar
         /**
          * @class  NekNonlinSys
          *
-         * Solves a linear system using iterative methods.
+         * Solves a nonlinear system using iterative methods.
          */
 		NekNonlinSysFactory & GetNekNonlinSysFactory()
         {
@@ -52,7 +52,6 @@ namespace Nektar
             return instance;
         }
 
-        /// Constructor for full direct matrix solve.
         NekNonlinSys::NekNonlinSys(
             const LibUtilities::SessionReaderSharedPtr  &pSession,
             const LibUtilities::CommSharedPtr           &vComm,
@@ -64,15 +63,15 @@ namespace Nektar
             string variable = variables[0];
 
             if (pSession->DefinesGlobalSysSolnInfo(variable,
-                                              "NonlinIteratSolverTolerance"))
+                                              "NonlinSysIterSolverTolerance"))
             {
                 m_tolerance = boost::lexical_cast<NekDouble>(
                         pSession->GetGlobalSysSolnInfo(variable,
-                                "NonlinIteratSolverTolerance").c_str());
+                                "NonlinSysIterSolverTolerance").c_str());
             }
             else
             {
-                pSession->LoadParameter("NonlinIteratSolverTolerance",
+                pSession->LoadParameter("NonlinSysIterSolverTolerance",
                                         m_tolerance,
                                         NekConstants::kNekIterativeTol);
             }

@@ -134,16 +134,16 @@ namespace Nektar
         };
 
 
-        enum LinIteratSovler
+        enum LinSysIterSovler
         {
-            eNoLinIteratSovler,///< No Solution type specified
+            eNoLinSysIterSovler,///< No Solution type specified
             eConjugateGradient,
             eGMRES
         };
 
-        const char* const LinIteratSovlerMap[] =
+        const char* const LinSysIterSovlerMap[] =
         {
-            "NoLinIteratSovler",
+            "NoLinSysIterSovler",
             "ConjugateGradient",
             "GMRES"
         };

@@ -44,10 +44,9 @@ namespace Nektar
         /**
          * @class  NekSys
          *
-         * Solves a linear system using iterative methods.
+         * Solves a nonlinear or linear system.
          */
 
-        /// Constructor for full direct matrix solve.
         NekSys::NekSys(
             const LibUtilities::SessionReaderSharedPtr  &pSession,
             const LibUtilities::CommSharedPtr           &vComm,

@@ -156,7 +156,7 @@ namespace Nektar
 
         NekDouble                           m_BndEvaluateTime;
         NekDouble                           m_TimeIntegLambda;
-        NekDouble                           m_JFEps;
+        NekDouble                           m_JacobiFreeEps;
         NekDouble                           m_inArrayNorm = -1.0;
         NekDouble                           m_NewtonAbsoluteIteTol;
         int                                 m_TotNewtonIts = 0;

@@ -250,7 +250,6 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> >              &outarray,
             const NekDouble                                   &time)
     {
-        // int nq = m_Forcing[0].size();
         int ncoeff = outarray[m_NumVariable - 1].size();
         Array<OneD, NekDouble> tmp(ncoeff, 0.0);
         CalculateForcing(fields, inarray, time);

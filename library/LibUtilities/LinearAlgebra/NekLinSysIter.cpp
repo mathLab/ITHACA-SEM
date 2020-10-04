@@ -53,7 +53,6 @@ namespace Nektar
             return instance;
         }
 
-        /// Constructor for full direct matrix solve.
         NekLinSysIter::NekLinSysIter(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const LibUtilities::CommSharedPtr          &vComm,
@@ -65,15 +64,15 @@ namespace Nektar
             string variable = variables[0];
 
             if (pSession->DefinesGlobalSysSolnInfo(variable,
-                                    "LinIteratSolverTolerance"))
+                                    "LinSysIterSolverTolerance"))
             {
                 m_tolerance = boost::lexical_cast<NekDouble>(
                         pSession->GetGlobalSysSolnInfo(variable,
-                        "LinIteratSolverTolerance").c_str());
+                        "LinSysIterSolverTolerance").c_str());
             }
             else
             {
-               pSession->LoadParameter("LinIteratSolverTolerance",
+               pSession->LoadParameter("LinSysIterSolverTolerance",
                                         m_tolerance,
                                         NekConstants::kNekIterativeTol);
             }

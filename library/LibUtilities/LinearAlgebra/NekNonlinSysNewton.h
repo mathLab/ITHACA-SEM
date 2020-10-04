@@ -77,12 +77,11 @@ namespace Nektar
                 NekLinSysIterSharedPtr              m_linsol;
 
                 NekDouble                             m_NonlinIteTolRelativeL2;
-                // NekDouble                           m_NonlinIteTolRelativeL8;
                 NekDouble                             m_NonlinIteTolLinRelatTol;
                 NekDouble                             m_SysResNorm0;
                 NekDouble                             m_SysResNorm;
 
-                std::string                           m_LinIteratSovlerType;
+                std::string                           m_LinSysIterSovlerType;
 
                 virtual void v_InitObject();
 

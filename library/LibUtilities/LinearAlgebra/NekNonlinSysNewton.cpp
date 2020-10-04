@@ -52,7 +52,6 @@ namespace Nektar
             "Newton", NekNonlinSysNewton::create,
             "NekNonlinSysNewton solver.");
 
-        /// Constructor for full direct matrix solve.
         NekNonlinSysNewton::NekNonlinSysNewton(
             const LibUtilities::SessionReaderSharedPtr  &pSession,
             const LibUtilities::CommSharedPtr           &vComm,
@@ -91,20 +90,20 @@ namespace Nektar
                                         m_NonlinIteTolRelativeL2);
             }
 
-            m_LinIteratSovlerType = "GMRES";
+            m_LinSysIterSovlerType = "GMRES";
             if (pSession->DefinesGlobalSysSolnInfo(variable,
-                                                "LinIteratSovler"))
+                                                "LinSysIterSovler"))
             {
-                m_LinIteratSovlerType = pSession->GetGlobalSysSolnInfo(
+                m_LinSysIterSovlerType = pSession->GetGlobalSysSolnInfo(
                                         variable,
-                                        "LinIteratSovler");
+                                        "LinSysIterSovler");
             }
             else
             {
-                if (pSession->DefinesSolverInfo("LinIteratSovler"))
+                if (pSession->DefinesSolverInfo("LinSysIterSovler"))
                 {
-                    m_LinIteratSovlerType = pSession->GetSolverInfo(
-                    "LinIteratSovler");
+                    m_LinSysIterSovlerType = pSession->GetSolverInfo(
+                    "LinSysIterSovler");
                 }
             }
         }
@@ -116,12 +115,12 @@ namespace Nektar
             m_DeltSltn = Array<OneD, NekDouble> (m_SysDimen, 0.0);
 
             ASSERTL0(LibUtilities::GetNekLinSysIterFactory().
-                    ModuleExists(m_LinIteratSovlerType),
-                    "NekLinSysIter '" + m_LinIteratSovlerType + 
+                    ModuleExists(m_LinSysIterSovlerType),
+                    "NekLinSysIter '" + m_LinSysIterSovlerType + 
                     "' is not defined.\n");
 
             m_linsol = LibUtilities::GetNekLinSysIterFactory().CreateInstance(
-                                m_LinIteratSovlerType, 
+                                m_LinSysIterSovlerType, 
                                 m_session.lock(), m_Comm, m_SysDimen);
 
         }
@@ -159,7 +158,7 @@ namespace Nektar
             Vmath::Vcopy(ntotal, pInput, 1, m_Solution, 1);
             for (int k = 0; k < m_maxiter; ++k)
             {
-                m_operator.DoNonlinLinSysRhsEval(m_Solution, m_Residual);
+                m_operator.DoNekSysRhsEval(m_Solution, m_Residual);
                 
                 m_converged = v_ConvergenceCheck(k,m_Residual, tol);
                 if (m_converged) break;

@@ -52,7 +52,6 @@ namespace Nektar
             "GMRES", NekLinSysIterGMRES::create,
             "NekLinSysIterGMRES solver.");
 
-        /// Constructor for full direct matrix solve.
         NekLinSysIterGMRES::NekLinSysIterGMRES(
             const LibUtilities::SessionReaderSharedPtr  &pSession,
             const LibUtilities::CommSharedPtr           &vComm,
@@ -161,9 +160,6 @@ namespace Nektar
         * specific solver. Distributed math routines are used to support  
         * parallel execution of the solver.  
         *  
-        * The implemented algorithm uses a reduced-communication reordering of  
-        * the standard PCG method (Demmel, Heath and Vorst, 1993)  
-        *  
         * @param       pInput      Input residual  of all DOFs.  
         * @param       pOutput     Solution vector of all DOFs.  
         */
@@ -190,8 +186,6 @@ namespace Nektar
             // Should not be earlier in case input vector is same as
             // output and above copy has been peformed
             Vmath::Zero(nNonDir, &pOutput[nDir], 1);
-            //Vmath::Zero(nGlobal, &qk_a[iqk0],1);
-
 
             m_totalIterations = 0;
             m_converged       = false;
@@ -226,7 +220,7 @@ namespace Nektar
             if (m_verbose)
             {
                 Array<OneD, NekDouble> r0(nGlobal, 0.0);
-                m_operator.DoNonlinLinSysLhsEval(pOutput, r0,
+                m_operator.DoNekSysLhsEval(pOutput, r0,
                                                  m_DifferenceFlag0);
                 Vmath::Svtvp(nNonDir, -1.0, &r0[0] + nDir, 1,
                              &pInput[0] + nDir, 1, &r0[0] + nDir, 1);
@@ -309,7 +303,10 @@ namespace Nektar
             Array<OneD, int> id_start (m_maxstorage, 0);
             Array<OneD, int> id_end (m_maxstorage, 0);
             // Temporary variables
-            int idtem, starttem, endtem;
+            int idtem;
+            int starttem;
+            int endtem;
+            
             NekDouble beta, alpha;
             NekDouble vExchange = 0;
             // Temporary Array
@@ -324,7 +321,7 @@ namespace Nektar
             if (restarted)
             {
                 // This is tmp2=Ax
-                m_operator.DoNonlinLinSysLhsEval(pOutput, r0, m_DifferenceFlag0);
+                m_operator.DoNekSysLhsEval(pOutput, r0, m_DifferenceFlag0);
 
                 // The first search direction
                 beta = -1.0;
@@ -343,7 +340,7 @@ namespace Nektar
             {
                 tmp1 = r0 + nDir;
                 tmp2 = r0 + nDir;
-                m_operator.DoNonlinLinPrecond(tmp1, tmp2);
+                m_operator.DoNekSysPrecond(tmp1, tmp2);
             }
             
             // Norm of (r0)
@@ -419,7 +416,7 @@ namespace Nektar
                 {
                     tmp1 = V_total[nd] + nDir;
                     tmp2 = Vsingle1 + nDir;
-                    m_operator.DoNonlinLinPrecond(tmp1, tmp2);
+                    m_operator.DoNekSysPrecond(tmp1, tmp2);
                 }
                 else
                 {
@@ -478,7 +475,6 @@ namespace Nektar
             for (int i = 0; i < nswp; ++i)
             {
                 beta = y_total[i];
-                // Vmath::Svtvp(nNonDir, beta, &V_total[i][0] + nDir, 1, &pOutput[0] + nDir, 1, &pOutput[0] + nDir, 1);
                 Vmath::Svtvp(nNonDir, beta, &V_total[i][0] + nDir, 1,
                              &solution[0] + nDir, 1, &solution[0] + nDir, 1);
             }
@@ -487,7 +483,7 @@ namespace Nektar
             {
                 tmp1 = solution + nDir;
                 tmp2 = solution + nDir;
-                m_operator.DoNonlinLinPrecond(tmp1, tmp2);
+                m_operator.DoNekSysPrecond(tmp1, tmp2);
             }
             Vmath::Vadd(nNonDir, &solution[0] + nDir, 1,
                         &pOutput[0] + nDir, 1, &pOutput[0] + nDir, 1);
@@ -521,13 +517,13 @@ namespace Nektar
             // w=AV(:,nd)
             Array<OneD, NekDouble> w(nGlobal, 0.0);
 
-            m_operator.DoNonlinLinSysLhsEval(Vsingle1, w, m_DifferenceFlag1);
+            m_operator.DoNekSysLhsEval(Vsingle1, w, m_DifferenceFlag1);
 
             tmp1 = w + nDir;
             tmp2 = w + nDir;
             if (m_flag_LeftPrecond)
             {
-                m_operator.DoNonlinLinPrecond(tmp1, tmp2);
+                m_operator.DoNekSysPrecond(tmp1, tmp2);
             }
             
             Vmath::Smul(nNonDir, sqrt(m_prec_factor), tmp2, 1, tmp2, 1);

@@ -28,7 +28,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Demo for testing functionality of NodalUtil classes
+// Description: Demo for testing functionality of NekLinSysIter classes
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -58,20 +58,20 @@ class LinSysDemo
         {
             AllocateInitMatrix();
 
-            std::string LinIteratSovlerType = "FixedpointJacobi";
-            if (pSession->DefinesSolverInfo("LinIteratSovler"))
+            std::string LinSysIterSovlerType = "FixedpointJacobi";
+            if (pSession->DefinesSolverInfo("LinSysIterSovler"))
             {
-              LinIteratSovlerType = pSession->GetSolverInfo("LinIteratSovler");
+              LinSysIterSovlerType = pSession->GetSolverInfo("LinSysIterSovler");
             }
             
             ASSERTL0(LibUtilities::GetNekLinSysIterFactory().
-                ModuleExists(LinIteratSovlerType), "NekLinSysIter '" + 
-                LinIteratSovlerType + "' is not defined.\n");
+                ModuleExists(LinSysIterSovlerType), "NekLinSysIter '" + 
+                LinSysIterSovlerType + "' is not defined.\n");
             m_linsol = LibUtilities::GetNekLinSysIterFactory().CreateInstance(
-                            LinIteratSovlerType, m_session, m_comm, m_matDim);
+                            LinSysIterSovlerType, m_session, m_comm, m_matDim);
 
-            m_NekSysOp.DefineNonlinLinSysLhsEval(&LinSysDemo::DoLhs, this);
-            m_NekSysOp.DefineNonlinLinFixPointIte(&LinSysDemo::
+            m_NekSysOp.DefineNekSysLhsEval(&LinSysDemo::DoLhs, this);
+            m_NekSysOp.DefineNekSysFixPointIte(&LinSysDemo::
                 DoFixedPoint, this);
             m_linsol->setSysOperators(m_NekSysOp);
             UniqueMap();
@@ -144,8 +144,8 @@ class LinSysDemo
         {
             boost::ignore_unused(flag);
 
-            int ntmp = inarray.size();
-            ASSERTL0(m_matDim == ntmp, "m_matDim == ntmp not true");
+            ASSERTL1(m_matDim == inarray.size(), 
+                "CoeffMat dim not equal to NekSys dim in DoFixedPoint");
             NekVector<NekDouble> vecInn (m_matDim, inarray, eWrapper);
             NekVector<NekDouble> vecOut (m_matDim, outarray, eWrapper);
             vecOut = (*m_matrix) * vecInn;
@@ -165,8 +165,8 @@ class LinSysDemo
                     const  bool     &flag = false)
         {
             boost::ignore_unused(flag);
-            int ntmp = inarray.size();
-            ASSERTL0(m_matDim == ntmp,"m_matDim == ntmp not true");
+            ASSERTL1(m_matDim == inarray.size(),
+                "CoeffMat dim not equal to NekSys dim in DoLhs");
             NekVector<NekDouble> vecInn (m_matDim, inarray, eWrapper);
             NekVector<NekDouble> vecOut (m_matDim, outarray, eWrapper);
             vecOut = (*m_matrix) * vecInn;

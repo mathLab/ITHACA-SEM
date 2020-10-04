@@ -303,9 +303,9 @@ namespace Nektar
             /// Returns the method of solving global systems.
             MULTI_REGIONS_EXPORT GlobalSysSolnType GetGlobalSysSolnType() const;
             MULTI_REGIONS_EXPORT PreconditionerType GetPreconType() const;
-            MULTI_REGIONS_EXPORT LinIteratSovler  GetLinIteratSovler() const
+            MULTI_REGIONS_EXPORT LinSysIterSovler  GetLinSysIterSovler() const
             {
-                return m_LinIteratSovler;
+                return m_LinSysIterSovler;
             }
             MULTI_REGIONS_EXPORT NekDouble GetIterativeTolerance() const;
             MULTI_REGIONS_EXPORT int GetMaxIterations() const;
@@ -402,9 +402,9 @@ namespace Nektar
             /// Type type of preconditioner to use in iterative solver.
             PreconditionerType m_preconType;
 
-            /// Type type of linear system iterater method to use 
+            /// Type type of linear system iterative method to use 
             ///in iterative solver.
-            LinIteratSovler m_LinIteratSovler;
+            LinSysIterSovler m_LinSysIterSovler;
 
             /// Maximum iterations for iterative solver
             int m_maxIterations;

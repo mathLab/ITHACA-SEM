@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File:  NekLinSysIteratGMRES.cpp
+// File:  NekLinSysIterGMRES.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,11 +29,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description:  NekLinSysIteratGMRES definition
+// Description:  NekLinSysIterGMRES definition
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/LinearAlgebra/NekLinSysIteratGMRES.h>
+#include <LibUtilities/LinearAlgebra/NekLinSysIterGMRES.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 
 using namespace std;
@@ -43,21 +43,21 @@ namespace Nektar
     namespace LibUtilities
     {  
         /**
-         * @class  NekLinSysIteratGMRES
+         * @class  NekLinSysIterGMRES
          *
          * Solves a linear system using iterative methods.
          */
-        string NekLinSysIteratGMRES::className =
-        LibUtilities::GetNekLinSysIteratFactory().RegisterCreatorFunction(
-            "GMRES", NekLinSysIteratGMRES::create,
-            "NekLinSysIteratGMRES solver.");
+        string NekLinSysIterGMRES::className =
+        LibUtilities::GetNekLinSysIterFactory().RegisterCreatorFunction(
+            "GMRES", NekLinSysIterGMRES::create,
+            "NekLinSysIterGMRES solver.");
 
         /// Constructor for full direct matrix solve.
-        NekLinSysIteratGMRES::NekLinSysIteratGMRES(
+        NekLinSysIterGMRES::NekLinSysIterGMRES(
             const LibUtilities::SessionReaderSharedPtr  &pSession,
             const LibUtilities::CommSharedPtr           &vComm,
             const int                                   nDimen)
-            : NekLinSysIterat(pSession, vComm, nDimen)
+            : NekLinSysIter(pSession, vComm, nDimen)
         {
             m_maxstorage        =   30;
             m_maxhesband        =   30;
@@ -124,20 +124,20 @@ namespace Nektar
 
         }
 
-        void NekLinSysIteratGMRES::v_InitObject()
+        void NekLinSysIterGMRES::v_InitObject()
         {
-            NekLinSysIterat::v_InitObject();
+            NekLinSysIter::v_InitObject();
         }
 
 
-        NekLinSysIteratGMRES::~NekLinSysIteratGMRES()
+        NekLinSysIterGMRES::~NekLinSysIterGMRES()
         {
         }
 
         /**
          *
          */
-        int NekLinSysIteratGMRES::v_SolveSystem(
+        int NekLinSysIterGMRES::v_SolveSystem(
             const int                           nGlobal,
             const Array<OneD, const NekDouble>  &pInput,
             Array<OneD,      NekDouble>         &pOutput,
@@ -168,7 +168,7 @@ namespace Nektar
         * @param       pOutput     Solution vector of all DOFs.  
         */
 
-        int  NekLinSysIteratGMRES::DoGMRES(
+        int  NekLinSysIterGMRES::DoGMRES(
             const int                          nGlobal,
             const Array<OneD, const NekDouble> &pInput,
             Array<OneD,      NekDouble>        &pOutput,
@@ -265,7 +265,7 @@ namespace Nektar
             return m_totalIterations;
         }
 
-        NekDouble  NekLinSysIteratGMRES::DoGmresRestart(
+        NekDouble  NekLinSysIterGMRES::DoGmresRestart(
             const bool                          restarted,
             const bool                          truncted,
             const int                           nGlobal,
@@ -496,7 +496,7 @@ namespace Nektar
         }
 
         // Arnoldi Subroutine
-        void  NekLinSysIteratGMRES::DoArnoldi(
+        void  NekLinSysIterGMRES::DoArnoldi(
             const int starttem,
             const int endtem,
             const int nGlobal,
@@ -569,7 +569,7 @@ namespace Nektar
         }
 
         // QR factorization through Givens rotation
-        void  NekLinSysIteratGMRES::DoGivensRotation(
+        void  NekLinSysIterGMRES::DoGivensRotation(
             const int starttem,
             const int endtem,
             const int nGlobal,
@@ -626,7 +626,7 @@ namespace Nektar
         // Backward calculation
         // To notice, Hesssenburg matrix's column
         // and row changes due to use Array<OneD,Array<OneD,NekDouble>>
-        void  NekLinSysIteratGMRES::DoBackward(
+        void  NekLinSysIterGMRES::DoBackward(
             const int  number,
             Array<OneD, Array<OneD, NekDouble> > &A,
             const Array<OneD, const NekDouble> &b,

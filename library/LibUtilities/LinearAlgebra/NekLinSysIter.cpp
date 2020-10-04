@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File:  NekLinSysIterat.cpp
+// File:  NekLinSysIter.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,11 +29,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description:  NekLinSysIterat definition
+// Description:  NekLinSysIter definition
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/LinearAlgebra/NekLinSysIterat.h>
+#include <LibUtilities/LinearAlgebra/NekLinSysIter.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 
 using namespace std;
@@ -43,22 +43,22 @@ namespace Nektar
     namespace LibUtilities
     {    
         /**
-         * @class  NekLinSysIterat
+         * @class  NekLinSysIter
          *
          * Solves a linear system using iterative methods.
          */
-        NekLinSysIteratFactory & GetNekLinSysIteratFactory()
+        NekLinSysIterFactory & GetNekLinSysIterFactory()
         {
-            static NekLinSysIteratFactory instance;
+            static NekLinSysIterFactory instance;
             return instance;
         }
 
         /// Constructor for full direct matrix solve.
-        NekLinSysIterat::NekLinSysIterat(
+        NekLinSysIter::NekLinSysIter(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const LibUtilities::CommSharedPtr          &vComm,
             const int                                   nDimen)
-            : NekNonlinLinSys(pSession, vComm, nDimen)
+            : NekSys(pSession, vComm, nDimen)
         {
             std::vector<std::string>  variables(1);
             variables[0] =  pSession->GetVariable(0);
@@ -93,17 +93,17 @@ namespace Nektar
             }
         }
 
-        void NekLinSysIterat::v_InitObject()
+        void NekLinSysIter::v_InitObject()
         {
-            NekNonlinLinSys::v_InitObject();
+            NekSys::v_InitObject();
             setUniversalUniqueMap();
         }
 
-        NekLinSysIterat::~NekLinSysIterat()
+        NekLinSysIter::~NekLinSysIter()
         {
         }
 
-        void NekLinSysIterat::setUniversalUniqueMap(
+        void NekLinSysIter::setUniversalUniqueMap(
                                            Array<OneD, int> &map)
         {
             int nmap = map.size();
@@ -114,12 +114,12 @@ namespace Nektar
             Vmath::Vcopy(nmap, map, 1, m_map, 1);
         }
 
-        void NekLinSysIterat::setUniversalUniqueMap()
+        void NekLinSysIter::setUniversalUniqueMap()
         {
             m_map   =   Array<OneD, int>(m_SysDimen, 1);
         }
 
-        void  NekLinSysIterat::Set_Rhs_Magnitude(
+        void  NekLinSysIter::Set_Rhs_Magnitude(
             const NekVector<NekDouble> &pIn)
         {
             Array<OneD, NekDouble> vExchange(1, 0.0);

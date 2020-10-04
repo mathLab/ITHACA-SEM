@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File:  NekLinSysIteratCG.cpp
+// File:  NekLinSysIterCG.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,11 +29,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description:  NekLinSysIteratCG definition
+// Description:  NekLinSysIterCG definition
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/LinearAlgebra/NekLinSysIteratCG.h>
+#include <LibUtilities/LinearAlgebra/NekLinSysIterCG.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 
 using namespace std;
@@ -43,21 +43,21 @@ namespace Nektar
     namespace LibUtilities
     {  
         /**
-         * @class  NekLinSysIteratCG
+         * @class  NekLinSysIterCG
          *
          * Solves a linear system using iterative methods.
          */
-        string NekLinSysIteratCG::className =
-        LibUtilities::GetNekLinSysIteratFactory().RegisterCreatorFunction(
-            "ConjugateGradient", NekLinSysIteratCG::create,
-            "NekLinSysIteratCG solver.");
+        string NekLinSysIterCG::className =
+        LibUtilities::GetNekLinSysIterFactory().RegisterCreatorFunction(
+            "ConjugateGradient", NekLinSysIterCG::create,
+            "NekLinSysIterCG solver.");
 
         /// Constructor for full direct matrix solve.
-        NekLinSysIteratCG::NekLinSysIteratCG(
+        NekLinSysIterCG::NekLinSysIterCG(
             const LibUtilities::SessionReaderSharedPtr  &pSession,
             const LibUtilities::CommSharedPtr           &vComm,
             const int                                   nDimen)
-            : NekLinSysIterat(pSession, vComm, nDimen)
+            : NekLinSysIter(pSession, vComm, nDimen)
         {
             std::vector<std::string>  variables(1);
             variables[0] =  pSession->GetVariable(0);
@@ -88,20 +88,20 @@ namespace Nektar
 
         }
 
-        void NekLinSysIteratCG::v_InitObject()
+        void NekLinSysIterCG::v_InitObject()
         {
-            NekLinSysIterat::v_InitObject();
+            NekLinSysIter::v_InitObject();
         }
 
 
-        NekLinSysIteratCG::~NekLinSysIteratCG()
+        NekLinSysIterCG::~NekLinSysIterCG()
         {
         }
 
         /**
          *
          */
-        int NekLinSysIteratCG::v_SolveSystem(
+        int NekLinSysIterCG::v_SolveSystem(
             const int                           nGlobal,
             const Array<OneD, const NekDouble>  &pInput,
             Array<OneD,      NekDouble>         &pOutput,
@@ -132,7 +132,7 @@ namespace Nektar
          * right-hand sides arising from time-dependent discretisations.
          * (P.F.Fischer, Comput. Methods Appl. Mech. Engrg. 163, 1998)
          */
-        void NekLinSysIteratCG::DoAconjugateProjection(
+        void NekLinSysIterCG::DoAconjugateProjection(
                     const int nGlobal,
                     const Array<OneD,const NekDouble> &pInput,
                           Array<OneD,      NekDouble> &pOutput,
@@ -239,7 +239,7 @@ namespace Nektar
          * Calculating A-norm of an input vector,
          * A-norm(x) := sqrt( < x, Ax > )
          */
-        NekDouble NekLinSysIteratCG::CalculateAnorm(
+        NekDouble NekLinSysIterCG::CalculateAnorm(
                                         const int nGlobal,
                                         const Array<OneD,const NekDouble> &in,
                                         const int nDir)
@@ -264,7 +264,7 @@ namespace Nektar
          * Updates the storage of previously known solutions.
          * Performs normalisation of input vector wrt A-norm.
          */
-        void NekLinSysIteratCG::UpdateKnownSolutions(
+        void NekLinSysIterCG::UpdateKnownSolutions(
                                         const int nGlobal,
                                         const Array<OneD,const NekDouble> &newX,
                                         const int nDir)
@@ -363,7 +363,7 @@ namespace Nektar
          * @param       pInput      Input residual  of all DOFs.  
          * @param       pOutput     Solution vector of all DOFs.  
          */
-        void NekLinSysIteratCG::DoConjugateGradient(
+        void NekLinSysIterCG::DoConjugateGradient(
             const int                          nGlobal,
             const Array<OneD,const NekDouble> &pInput,
                   Array<OneD,      NekDouble> &pOutput,

@@ -157,11 +157,11 @@ namespace Nektar
         m_nonlinsol = LibUtilities::GetNekNonlinSysFactory().CreateInstance(
                             SovlerType, m_session, v_Comm,ntotal);
 
-        m_LinSysOprtors.DefineNonlinLinSysRhsEval(&CompressibleFlowSystem
+        m_NekSysOp.DefineNonlinLinSysRhsEval(&CompressibleFlowSystem
                                                   ::NonlinSysEvaluator1D, this);
-        m_LinSysOprtors.DefineNonlinLinSysLhsEval(&CompressibleFlowSystem::
+        m_NekSysOp.DefineNonlinLinSysLhsEval(&CompressibleFlowSystem::
                                          MatrixMultiply_MatrixFree_coeff, this);
-        m_nonlinsol->setSysOperators(m_LinSysOprtors);
+        m_nonlinsol->setSysOperators(m_NekSysOp);
     }
 
     /**

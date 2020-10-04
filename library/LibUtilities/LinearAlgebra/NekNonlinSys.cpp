@@ -57,7 +57,7 @@ namespace Nektar
             const LibUtilities::SessionReaderSharedPtr  &pSession,
             const LibUtilities::CommSharedPtr           &vComm,
             const int                                   nDimen)
-            : NekNonlinLinSys(pSession, vComm, nDimen)
+            : NekSys(pSession, vComm, nDimen)
         {
             std::vector<std::string>  variables(1);
             variables[0] =  pSession->GetVariable(0);
@@ -94,7 +94,7 @@ namespace Nektar
 
         void NekNonlinSys::v_InitObject()
         {
-            NekNonlinLinSys::v_InitObject();
+            NekSys::v_InitObject();
         }
 
         NekNonlinSys::~NekNonlinSys()

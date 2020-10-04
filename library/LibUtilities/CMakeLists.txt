@@ -223,11 +223,11 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/SparseMatrix.hpp
     ./LinearAlgebra/SparseMatrixFwd.hpp
     ./LinearAlgebra/SparseUtils.hpp
-    ./LinearAlgebra/NekLinSysIterat.h
-    ./LinearAlgebra/NekLinSysIteratGMRES.h
-    ./LinearAlgebra/NekLinSysIteratCG.h
-    ./LinearAlgebra/NekLinSysIteratFixedpointJacobi.h
-    ./LinearAlgebra/NekNonlinLinSys.h
+    ./LinearAlgebra/NekLinSysIter.h
+    ./LinearAlgebra/NekLinSysIterGMRES.h
+    ./LinearAlgebra/NekLinSysIterCG.h
+    ./LinearAlgebra/NekLinSysIterFixedpointJacobi.h
+    ./LinearAlgebra/NekSys.h
     ./LinearAlgebra/NekNonlinSys.h
     ./LinearAlgebra/NekNonlinSysNewton.h
 )
@@ -246,11 +246,11 @@ SET(LinearAlgebraSources
     ./LinearAlgebra/StorageSmvBsr.cpp
     ./LinearAlgebra/SparseDiagBlkMatrix.cpp
     ./LinearAlgebra/SparseMatrix.cpp
-    ./LinearAlgebra/NekLinSysIterat.cpp
-    ./LinearAlgebra/NekLinSysIteratGMRES.cpp
-    ./LinearAlgebra/NekLinSysIteratCG.cpp
-    ./LinearAlgebra/NekLinSysIteratFixedpointJacobi.cpp
-    ./LinearAlgebra/NekNonlinLinSys.cpp
+    ./LinearAlgebra/NekLinSysIter.cpp
+    ./LinearAlgebra/NekLinSysIterGMRES.cpp
+    ./LinearAlgebra/NekLinSysIterCG.cpp
+    ./LinearAlgebra/NekLinSysIterFixedpointJacobi.cpp
+    ./LinearAlgebra/NekSys.cpp
     ./LinearAlgebra/NekNonlinSys.cpp
     ./LinearAlgebra/NekNonlinSysNewton.cpp
 )

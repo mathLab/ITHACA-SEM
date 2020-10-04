@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File  NekLinSysIterat.h
+// File  NekLinSysIter.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,39 +29,39 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: NekLinSysIterat header
+// Description: NekLinSysIter header
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_H
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_H
 
-#include <LibUtilities/LinearAlgebra/NekNonlinLinSys.h>
+#include <LibUtilities/LinearAlgebra/NekSys.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 namespace Nektar
 {
     namespace LibUtilities
     {
 
-        class  NekLinSysIterat;
+        class  NekLinSysIter;
 
-        typedef std::shared_ptr<NekLinSysIterat> NekLinSysIteratSharedPtr;
+        typedef std::shared_ptr<NekLinSysIter> NekLinSysIterSharedPtr;
 
         typedef LibUtilities::NekFactory<
             std::string,
-            NekLinSysIterat,
+            NekLinSysIter,
             const LibUtilities::SessionReaderSharedPtr &,
             const LibUtilities::CommSharedPtr          &,
-            const int                                  > NekLinSysIteratFactory;
-            LIB_UTILITIES_EXPORT NekLinSysIteratFactory 
-            & GetNekLinSysIteratFactory();
+            const int                                  > NekLinSysIterFactory;
+            LIB_UTILITIES_EXPORT NekLinSysIterFactory 
+            & GetNekLinSysIterFactory();
         
-        class  NekLinSysIterat : public NekNonlinLinSys
+        class  NekLinSysIter : public NekSys
         {
         public:
 
             /// Support creation through MemoryManager.
-            friend class MemoryManager<NekLinSysIterat>;
+            friend class MemoryManager<NekLinSysIter>;
             /**
              * @brief Creates an instance of the SessionReader class.
              *
@@ -72,20 +72,20 @@ namespace Nektar
              * parallel communication, it also calls the main initialisation
              * of the object.
              */
-            LIB_UTILITIES_EXPORT static NekLinSysIteratSharedPtr CreateInstance(
+            LIB_UTILITIES_EXPORT static NekLinSysIterSharedPtr CreateInstance(
                 const LibUtilities::SessionReaderSharedPtr  &pSession,
                 const LibUtilities::CommSharedPtr           &vComm,
                 const int                                   nDimen)
             {
-                NekLinSysIteratSharedPtr p = MemoryManager<
-                NekLinSysIterat>::AllocateSharedPtr(pSession, vComm, nDimen);
+                NekLinSysIterSharedPtr p = MemoryManager<
+                NekLinSysIter>::AllocateSharedPtr(pSession, vComm, nDimen);
                 return p;
             }
-            LIB_UTILITIES_EXPORT NekLinSysIterat(
+            LIB_UTILITIES_EXPORT NekLinSysIter(
                 const LibUtilities::SessionReaderSharedPtr  &pSession,
                 const LibUtilities::CommSharedPtr           &vComm,
                 const int                                   nDimen);
-            LIB_UTILITIES_EXPORT virtual ~NekLinSysIterat();
+            LIB_UTILITIES_EXPORT virtual ~NekLinSysIter();
             
             LIB_UTILITIES_EXPORT void setUniversalUniqueMap(
                                       Array<OneD, int> &map);

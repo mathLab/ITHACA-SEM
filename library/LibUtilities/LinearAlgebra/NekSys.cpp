@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File:  NekNonlinLinSys.cpp
+// File:  NekSys.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,11 +29,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description:  NekNonlinLinSys definition
+// Description:  NekSys definition
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/LinearAlgebra/NekNonlinLinSys.h>
+#include <LibUtilities/LinearAlgebra/NekSys.h>
 
 using namespace std;
 
@@ -42,13 +42,13 @@ namespace Nektar
     namespace LibUtilities
     {
         /**
-         * @class  NekNonlinLinSys
+         * @class  NekSys
          *
          * Solves a linear system using iterative methods.
          */
 
         /// Constructor for full direct matrix solve.
-        NekNonlinLinSys::NekNonlinLinSys(
+        NekSys::NekSys(
             const LibUtilities::SessionReaderSharedPtr  &pSession,
             const LibUtilities::CommSharedPtr           &vComm,
             const int                                   nDimen)
@@ -70,11 +70,11 @@ namespace Nektar
             m_SysDimen = nDimen;
         }
 
-        NekNonlinLinSys::~NekNonlinLinSys()
+        NekSys::~NekSys()
         {
         }
 
-        bool NekNonlinLinSys::v_ConvergenceCheck(
+        bool NekSys::v_ConvergenceCheck(
             const int                           nIteration,
             const Array<OneD, const NekDouble>  &Residual,
             const NekDouble                     tol         )

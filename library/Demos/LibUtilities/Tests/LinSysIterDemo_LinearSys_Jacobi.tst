@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
-    <description>LinSysIteratDemo for a small linear problem of dimension 4</description>
-    <executable>LinSysIteratDemo</executable>
-    <parameters>LinSysIteratDemo_LinearSys_Jacobi.xml</parameters>
+    <description>LinSysIterDemo for a small linear problem of dimension 4</description>
+    <executable>LinSysIterDemo</executable>
+    <parameters>LinSysIterDemo_LinearSys_Jacobi.xml</parameters>
     <files>
-        <file description="Session File">LinSysIteratDemo_LinearSys_Jacobi.xml</file>
+        <file description="Session File">LinSysIterDemo_LinearSys_Jacobi.xml</file>
     </files>
 
     <metrics>

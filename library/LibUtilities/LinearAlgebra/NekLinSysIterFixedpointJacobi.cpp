@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File:  NekLinSysIteratFixedpointJacobi.cpp
+// File:  NekLinSysIterFixedpointJacobi.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,11 +29,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description:  NekLinSysIteratFixedpointJacobi definition
+// Description:  NekLinSysIterFixedpointJacobi definition
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/LinearAlgebra/NekLinSysIteratFixedpointJacobi.h>
+#include <LibUtilities/LinearAlgebra/NekLinSysIterFixedpointJacobi.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 
 using namespace std;
@@ -43,38 +43,38 @@ namespace Nektar
     namespace LibUtilities
     {  
         /**
-         * @class  NekLinSysIteratFixedpointJacobi
+         * @class  NekLinSysIterFixedpointJacobi
          *
          * Solves a linear system using iterative methods.
          */
-        string NekLinSysIteratFixedpointJacobi::className =
-        LibUtilities::GetNekLinSysIteratFactory().RegisterCreatorFunction(
-            "FixedpointJacobi", NekLinSysIteratFixedpointJacobi::create,
-            "NekLinSysIteratFixedpointJacobi solver.");
+        string NekLinSysIterFixedpointJacobi::className =
+        LibUtilities::GetNekLinSysIterFactory().RegisterCreatorFunction(
+            "FixedpointJacobi", NekLinSysIterFixedpointJacobi::create,
+            "NekLinSysIterFixedpointJacobi solver.");
 
         /// Constructor for full direct matrix solve.
-        NekLinSysIteratFixedpointJacobi::NekLinSysIteratFixedpointJacobi(
+        NekLinSysIterFixedpointJacobi::NekLinSysIterFixedpointJacobi(
             const LibUtilities::SessionReaderSharedPtr  &pSession,
             const LibUtilities::CommSharedPtr           &vComm,
             const int                                   nDimen)
-            : NekLinSysIterat(pSession, vComm, nDimen)
+            : NekLinSysIter(pSession, vComm, nDimen)
         {
         }
 
-        void NekLinSysIteratFixedpointJacobi::v_InitObject()
+        void NekLinSysIterFixedpointJacobi::v_InitObject()
         {
-            NekLinSysIterat::v_InitObject();
+            NekLinSysIter::v_InitObject();
         }
 
 
-        NekLinSysIteratFixedpointJacobi::~NekLinSysIteratFixedpointJacobi()
+        NekLinSysIterFixedpointJacobi::~NekLinSysIterFixedpointJacobi()
         {
         }
 
         /**
          *
          */
-        int NekLinSysIteratFixedpointJacobi::v_SolveSystem(
+        int NekLinSysIterFixedpointJacobi::v_SolveSystem(
             const int                           nGlobal,
             const Array<OneD, const NekDouble>  &pRhs,
             Array<OneD,      NekDouble>         &pSolution,

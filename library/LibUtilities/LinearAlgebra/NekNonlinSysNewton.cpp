@@ -111,16 +111,16 @@ namespace Nektar
 
         void NekNonlinSysNewton::v_InitObject()
         {
-            NekNonlinLinSys::v_InitObject();
+            NekSys::v_InitObject();
             m_Residual = Array<OneD, NekDouble> (m_SysDimen, 0.0);
             m_DeltSltn = Array<OneD, NekDouble> (m_SysDimen, 0.0);
 
-            ASSERTL0(LibUtilities::GetNekLinSysIteratFactory().
+            ASSERTL0(LibUtilities::GetNekLinSysIterFactory().
                     ModuleExists(m_LinIteratSovlerType),
-                    "NekLinSysIterat '" + m_LinIteratSovlerType + 
+                    "NekLinSysIter '" + m_LinIteratSovlerType + 
                     "' is not defined.\n");
 
-            m_linsol = LibUtilities::GetNekLinSysIteratFactory().CreateInstance(
+            m_linsol = LibUtilities::GetNekLinSysIterFactory().CreateInstance(
                                 m_LinIteratSovlerType, 
                                 m_session.lock(), m_Comm, m_SysDimen);
 

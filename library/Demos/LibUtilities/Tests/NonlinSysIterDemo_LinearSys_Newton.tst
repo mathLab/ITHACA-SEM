@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <test>
-    <description>NonlinSysIteratDemo for a small nonlinear problem of dimension 4</description>
-    <executable>NonlinSysIteratDemo</executable>
-    <parameters>NonlinSysIteratDemo_LinearSys_Newton.xml</parameters>
+    <description>NonlinSysIterDemo for a small nonlinear problem of dimension 4</description>
+    <executable>NonlinSysIterDemo</executable>
+    <parameters>NonlinSysIterDemo_LinearSys_Newton.xml</parameters>
     <files>
-        <file description="Session File">NonlinSysIteratDemo_LinearSys_Newton.xml</file>
+        <file description="Session File">NonlinSysIterDemo_LinearSys_Newton.xml</file>
     </files>
 
     <metrics>

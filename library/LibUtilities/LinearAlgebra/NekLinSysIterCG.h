@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File  NekLinSysIteratCG.h
+// File  NekLinSysIterCG.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,30 +29,30 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: NekLinSysIteratCG header
+// Description: NekLinSysIterCG header
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_CG_H
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_CG_H
 
-#include <LibUtilities/LinearAlgebra/NekLinSysIterat.h>
+#include <LibUtilities/LinearAlgebra/NekLinSysIter.h>
 #include <boost/circular_buffer.hpp>
 namespace Nektar
 {
     namespace LibUtilities
     {   
         /// A global linear system.
-        class  NekLinSysIteratCG;
+        class  NekLinSysIterCG;
 
-        typedef std::shared_ptr<NekLinSysIteratCG> NekLinSysIteratCGSharedPtr;
+        typedef std::shared_ptr<NekLinSysIterCG> NekLinSysIterCGSharedPtr;
         
-        class  NekLinSysIteratCG: public NekLinSysIterat
+        class  NekLinSysIterCG: public NekLinSysIter
         {
         public:
 
             /// Support creation through MemoryManager.
-            friend class MemoryManager<NekLinSysIteratCG>;
+            friend class MemoryManager<NekLinSysIterCG>;
             /**
              * @brief Creates an instance of the SessionReader class.
              *
@@ -64,23 +64,23 @@ namespace Nektar
              * of the object.
              */
 
-            LIB_UTILITIES_EXPORT static NekLinSysIteratSharedPtr create(
+            LIB_UTILITIES_EXPORT static NekLinSysIterSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr  &pSession,
                 const LibUtilities::CommSharedPtr           &vComm,
                 const int                                   nDimen)
             {
-                NekLinSysIteratCGSharedPtr p = MemoryManager<
-                NekLinSysIteratCG>::AllocateSharedPtr(pSession, vComm, nDimen);
+                NekLinSysIterCGSharedPtr p = MemoryManager<
+                NekLinSysIterCG>::AllocateSharedPtr(pSession, vComm, nDimen);
                 p->InitObject();
                 return p;
             }
             static std::string className;
             /// Constructor for full direct matrix solve.
-            LIB_UTILITIES_EXPORT NekLinSysIteratCG(
+            LIB_UTILITIES_EXPORT NekLinSysIterCG(
                 const LibUtilities::SessionReaderSharedPtr  &pSession,
                 const LibUtilities::CommSharedPtr           &vComm,
                 const int                                   nDimen);
-            LIB_UTILITIES_EXPORT ~NekLinSysIteratCG();
+            LIB_UTILITIES_EXPORT ~NekLinSysIterCG();
             
         protected:
 

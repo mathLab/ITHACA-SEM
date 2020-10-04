@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File  NekNonlinLinSys.h
+// File  NekSys.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: NekNonlinLinSys header
+// Description: NekSys header
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -46,11 +46,11 @@ namespace Nektar
     {
 
         // =====================================================================
-        // ==== DEFINITION OF THE CLASS  NonlinLinSysOperators
+        // ==== DEFINITION OF THE CLASS  NekSysOperators
         // ==== Defines operators needed by iterative solver of nonlinear or 
         // ==== linear system
         // =====================================================================
-        class NonlinLinSysOperators
+        class NekSysOperators
         {
             public:
                 typedef const Array<OneD, NekDouble> InArrayType;
@@ -66,12 +66,12 @@ namespace Nektar
                 static const int nfunctor1 = 3;
                 static const int nfunctor2 = 1;
                 
-                NonlinLinSysOperators(void):
+                NekSysOperators(void):
                 m_functors1(nfunctor1),
                 m_functors2(nfunctor2)
                 {
                 }
-                NonlinLinSysOperators(const NonlinLinSysOperators &in):
+                NekSysOperators(const NekSysOperators &in):
                 m_functors1(nfunctor1),
                 m_functors2(nfunctor2)
                 {
@@ -85,8 +85,8 @@ namespace Nektar
                     }
                 }
 
-                NonlinLinSysOperators &operator=(
-                    const NonlinLinSysOperators &in)
+                NekSysOperators &operator=(
+                    const NekSysOperators &in)
                 {
                     for (int i = 0; i < nfunctor1; ++i)
                     {
@@ -201,31 +201,31 @@ namespace Nektar
                 FunctorType2Array m_functors2;
         };
         
-        class  NekNonlinLinSys;
+        class  NekSys;
 
-        typedef std::shared_ptr<NekNonlinLinSys> NekNonlinLinSysSharedPtr;
+        typedef std::shared_ptr<NekSys> NekSysSharedPtr;
         
-        class  NekNonlinLinSys : public std::enable_shared_from_this<
-               NekNonlinLinSys>
+        class  NekSys : public std::enable_shared_from_this<
+               NekSys>
         {
             public:
 
                 /// Support creation through MemoryManager.
-                friend class MemoryManager<NekNonlinLinSys>;
+                friend class MemoryManager<NekSys>;
 
-                LIB_UTILITIES_EXPORT static NekNonlinLinSysSharedPtr 
+                LIB_UTILITIES_EXPORT static NekSysSharedPtr 
                     CreateInstance(
                     const LibUtilities::SessionReaderSharedPtr  &pSession,
                     const LibUtilities::CommSharedPtr           &vComm,
                     const int                                   nDimen)
                 {
-                    NekNonlinLinSysSharedPtr p = MemoryManager<
-                        NekNonlinLinSys>::AllocateSharedPtr(pSession, 
+                    NekSysSharedPtr p = MemoryManager<
+                        NekSys>::AllocateSharedPtr(pSession, 
                                                             vComm, 
                                                             nDimen);
                     return p;
                 }
-                LIB_UTILITIES_EXPORT NekNonlinLinSys(
+                LIB_UTILITIES_EXPORT NekSys(
                     const LibUtilities::SessionReaderSharedPtr  &pSession,
                     const LibUtilities::CommSharedPtr           &vComm,
                     const int                                   nDimen);
@@ -233,10 +233,10 @@ namespace Nektar
                 {
                     v_InitObject();
                 }
-                LIB_UTILITIES_EXPORT virtual ~NekNonlinLinSys();
+                LIB_UTILITIES_EXPORT virtual ~NekSys();
                 
                 LIB_UTILITIES_EXPORT inline void setSysOperators
-                    (const NonlinLinSysOperators &in)
+                    (const NekSysOperators &in)
                 {
                     m_operator = in;
                 }
@@ -275,7 +275,7 @@ namespace Nektar
                 /// Verbose
                 bool                                        m_verbose;
                 /// Operators
-                NonlinLinSysOperators                       m_operator;
+                NekSysOperators                       m_operator;
                 /// The dimension of the system
                 int                                         m_SysDimen;
 

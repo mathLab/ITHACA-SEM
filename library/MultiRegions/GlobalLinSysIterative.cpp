@@ -134,19 +134,19 @@ namespace Nektar
                 }
                 
                 // Check such a module exists for this equation.
-                ASSERTL0(LibUtilities::GetNekLinSysIteratFactory().
+                ASSERTL0(LibUtilities::GetNekLinSysIterFactory().
                 ModuleExists(LinIteratSovlerType),
-                    "NekLinSysIterat '" + LinIteratSovlerType + 
+                    "NekLinSysIter '" + LinIteratSovlerType + 
                     "' is not defined.\n");
-                m_linsol = LibUtilities::GetNekLinSysIteratFactory().
+                m_linsol = LibUtilities::GetNekLinSysIterFactory().
                            CreateInstance(LinIteratSovlerType, pSession,
                                           v_Comm, nGlobal - nDir);
 
-                m_LinSysOprtors.DefineNonlinLinSysLhsEval(
+                m_NekSysOp.DefineNonlinLinSysLhsEval(
                     &GlobalLinSysIterative::DoMatrixMultiplyFlag, this);
-                m_LinSysOprtors.DefineNonlinLinPrecond(
+                m_NekSysOp.DefineNonlinLinPrecond(
                     &GlobalLinSysIterative::DoPreconditionerFlag, this);
-                m_linsol->setSysOperators(m_LinSysOprtors);
+                m_linsol->setSysOperators(m_NekSysOp);
                     v_UniqueMap();
                 m_linsol->setUniversalUniqueMap(m_map);
             }

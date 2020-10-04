@@ -36,7 +36,7 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_NONLINSYS_H
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_NONLINSYS_H
 
-#include <LibUtilities/LinearAlgebra/NekNonlinLinSys.h>
+#include <LibUtilities/LinearAlgebra/NekSys.h>
 
 namespace Nektar
 {
@@ -54,7 +54,7 @@ namespace Nektar
             const int                                   > NekNonlinSysFactory;
         LIB_UTILITIES_EXPORT NekNonlinSysFactory& GetNekNonlinSysFactory();
 
-        class  NekNonlinSys : public NekNonlinLinSys 
+        class  NekNonlinSys : public NekSys 
         {
             public:
                 friend class MemoryManager<NekNonlinSys>;

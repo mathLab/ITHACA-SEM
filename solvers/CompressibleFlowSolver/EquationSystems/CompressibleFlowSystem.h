@@ -165,7 +165,7 @@ namespace Nektar
         Array<OneD, NekDouble>              m_magnitdEstimat;
 
         LibUtilities::NekNonlinSysSharedPtr         m_nonlinsol;
-        LibUtilities::NonlinLinSysOperators         m_LinSysOprtors;
+        LibUtilities::NekSysOperators         m_NekSysOp;
         
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession,

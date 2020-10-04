@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File  NekLinSysIteratGMRES.h
+// File  NekLinSysIterGMRES.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,27 +29,27 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: NekLinSysIteratGMRES header
+// Description: NekLinSysIterGMRES header
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_GMRES_H
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_GMRES_H
 
-#include <LibUtilities/LinearAlgebra/NekLinSysIterat.h>
+#include <LibUtilities/LinearAlgebra/NekLinSysIter.h>
 namespace Nektar
 {
     namespace LibUtilities
     {   
         /// A global linear system.
-        class  NekLinSysIteratGMRES;
+        class  NekLinSysIterGMRES;
 
-        class  NekLinSysIteratGMRES : public NekLinSysIterat
+        class  NekLinSysIterGMRES : public NekLinSysIter
         {
         public:
 
             /// Support creation through MemoryManager.
-            friend class MemoryManager<NekLinSysIteratGMRES>;
+            friend class MemoryManager<NekLinSysIterGMRES>;
             /**
              * @brief Creates an instance of the SessionReader class.
              *
@@ -61,13 +61,13 @@ namespace Nektar
              * of the object.
              */
 
-            LIB_UTILITIES_EXPORT static NekLinSysIteratSharedPtr create(
+            LIB_UTILITIES_EXPORT static NekLinSysIterSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr  &pSession,
                 const LibUtilities::CommSharedPtr           &vComm,
                 const int                                   nDimen)
             {
-                NekLinSysIteratSharedPtr p = MemoryManager<
-                    NekLinSysIteratGMRES>::AllocateSharedPtr(pSession,
+                NekLinSysIterSharedPtr p = MemoryManager<
+                    NekLinSysIterGMRES>::AllocateSharedPtr(pSession,
                                                              vComm, 
                                                              nDimen);
                 p->InitObject();
@@ -75,11 +75,11 @@ namespace Nektar
             }
             static std::string className;
             /// Constructor for full direct matrix solve.
-            LIB_UTILITIES_EXPORT NekLinSysIteratGMRES(
+            LIB_UTILITIES_EXPORT NekLinSysIterGMRES(
                 const LibUtilities::SessionReaderSharedPtr  &pSession,
                 const LibUtilities::CommSharedPtr           &vComm,
                 const int                                   nDimen);
-            LIB_UTILITIES_EXPORT ~NekLinSysIteratGMRES();
+            LIB_UTILITIES_EXPORT ~NekLinSysIterGMRES();
             
             LIB_UTILITIES_EXPORT int GetMaxLinIte()
             {

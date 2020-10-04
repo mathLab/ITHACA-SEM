@@ -130,7 +130,7 @@ namespace Nektar
             m_ode.DefineProjection(&CompressibleFlowSystem::
                                    DoOdeProjection, this);
             m_ode.DefineImplicitSolve(&CompressibleFlowSystem::
-                                      DoImplicitSolve_phy2coeff, this);
+                                      DoImplicitSolvePhysToCoeff, this);
 
             InitialiseNonlinSysSolver();
         }
@@ -160,7 +160,7 @@ namespace Nektar
         m_NekSysOp.DefineNonlinLinSysRhsEval(&CompressibleFlowSystem
                                                   ::NonlinSysEvaluator1D, this);
         m_NekSysOp.DefineNonlinLinSysLhsEval(&CompressibleFlowSystem::
-                                         MatrixMultiply_MatrixFree_coeff, this);
+                                         MatrixMultiply_MatrixFreeCoeff, this);
         m_nonlinsol->setSysOperators(m_NekSysOp);
     }
 
@@ -419,10 +419,10 @@ namespace Nektar
             in2D[i]    = inarray + offset;
             out2D[i]   = out + offset;
         }
-        NonlinSysEvaluator_coeff(in2D, out2D);
+        NonlinSysEvaluatorCoeff(in2D, out2D);
     }
 
-    void CompressibleFlowSystem::NonlinSysEvaluator_coeff(
+    void CompressibleFlowSystem::NonlinSysEvaluatorCoeff(
         TensorOfArray2D<NekDouble>  &inarray,
         TensorOfArray2D<NekDouble>  &out)
     {
@@ -442,7 +442,7 @@ namespace Nektar
         }
         
         DoOdeProjection(inpnts, inpnts, m_BndEvaluateTime);
-        DoOdeRhs_coeff(inpnts, out, m_BndEvaluateTime);
+        DoOdeRhsCoeff(inpnts, out, m_BndEvaluateTime);
 
         for (int i = 0; i < nvariable; ++i)
         {
@@ -458,7 +458,7 @@ namespace Nektar
     /**
      * @brief Compute the right-hand side.
      */
-    void CompressibleFlowSystem::DoOdeRhs_coeff(
+    void CompressibleFlowSystem::DoOdeRhsCoeff(
         const TensorOfArray2D<NekDouble>    &inarray,
         TensorOfArray2D<NekDouble>          &outarray,
         const NekDouble                     time)
@@ -486,7 +486,7 @@ namespace Nektar
         }
  
          // Calculate advection
-        DoAdvection_coeff(inarray, outarray, time, Fwd, Bwd);
+        DoAdvectionCoeff(inarray, outarray, time, Fwd, Bwd);
 
         // Negate results
         for (int i = 0; i < nvariables; ++i)
@@ -494,12 +494,12 @@ namespace Nektar
             Vmath::Neg(ncoeffs, outarray[i], 1);
         }
 
-        DoDiffusion_coeff(inarray, outarray, Fwd, Bwd);
+        DoDiffusionCoeff(inarray, outarray, Fwd, Bwd);
 
         // Add forcing terms
         for (auto &x : m_forcing)
         {
-            x->Apply_coeff(m_fields, inarray, outarray, time);
+            x->ApplyCoeff(m_fields, inarray, outarray, time);
         }
 
         if (m_useLocalTimeStep)
@@ -530,7 +530,7 @@ namespace Nektar
     /**
      * @brief Compute the advection terms for the right-hand side
      */
-    void CompressibleFlowSystem::DoAdvection_coeff(
+    void CompressibleFlowSystem::DoAdvectionCoeff(
         const TensorOfArray2D<NekDouble>    &inarray,
         TensorOfArray2D<NekDouble>          &outarray,
         const NekDouble                     time,
@@ -548,16 +548,16 @@ namespace Nektar
      * @brief Add the diffusions terms to the right-hand side
      * Similar to DoDiffusion() but with outarray in coefficient space
      */
-    void CompressibleFlowSystem::DoDiffusion_coeff(
+    void CompressibleFlowSystem::DoDiffusionCoeff(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
     {
-        v_DoDiffusion_coeff(inarray, outarray, pFwd, pBwd);
+        v_DoDiffusionCoeff(inarray, outarray, pFwd, pBwd);
     }
 
-    void CompressibleFlowSystem::DoImplicitSolve_phy2coeff(
+    void CompressibleFlowSystem::DoImplicitSolvePhysToCoeff(
         const TensorOfArray2D<NekDouble>    &inpnts,
         TensorOfArray2D<NekDouble>          &outpnt,
         const NekDouble                     time,
@@ -578,7 +578,7 @@ namespace Nektar
             m_fields[i]->FwdTrans(inpnts[i], tmpArray);
         }
 
-        DoImplicitSolve_coeff(inpnts, inarray, out, time, lambda);
+        DoImplicitSolveCoeff(inpnts, inarray, out, time, lambda);
 
         for (int i = 0; i < nvariables; ++i)
         {
@@ -588,7 +588,7 @@ namespace Nektar
         }
     }
 
-    void CompressibleFlowSystem::DoImplicitSolve_coeff(
+    void CompressibleFlowSystem::DoImplicitSolveCoeff(
             const TensorOfArray2D<NekDouble>    &inpnts,
             const TensorOfArray1D<NekDouble>    &inarray,
             TensorOfArray1D<NekDouble>          &out,
@@ -667,7 +667,7 @@ namespace Nektar
         }
     }
 
-    void CompressibleFlowSystem::MatrixMultiply_MatrixFree_coeff(
+    void CompressibleFlowSystem::MatrixMultiply_MatrixFreeCoeff(
             const TensorOfArray1D<NekDouble>    &inarray,
             TensorOfArray1D<NekDouble>          &out,
             const bool                          &flag)
@@ -705,7 +705,7 @@ namespace Nektar
                          refsol + noffset,1, solplus[i], 1);
         }
         
-        NonlinSysEvaluator_coeff(solplus,resplus);
+        NonlinSysEvaluatorCoeff(solplus,resplus);
 
         for (int i = 0; i < nvariables; ++i)
         {
@@ -1311,7 +1311,7 @@ namespace Nektar
         }
     }
 
-    void CompressibleFlowSystem::v_DoDiffusion_coeff(
+    void CompressibleFlowSystem::v_DoDiffusionCoeff(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                 Array<OneD,       Array<OneD, NekDouble> > &outarray,
         const Array<OneD, Array<OneD, NekDouble> >       &pFwd,

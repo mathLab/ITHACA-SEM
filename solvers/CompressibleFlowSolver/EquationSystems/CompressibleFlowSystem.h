@@ -84,26 +84,26 @@ namespace Nektar
             TensorOfArray1D<NekDouble>          &out,
             const bool                          &flag);
 
-        void NonlinSysEvaluator_coeff(
+        void NonlinSysEvaluatorCoeff(
             TensorOfArray2D<NekDouble>  &inarray,
             TensorOfArray2D<NekDouble>  &out);
-        void DoOdeRhs_coeff(
+        void DoOdeRhsCoeff(
             const TensorOfArray2D<NekDouble>    &inarray,
             TensorOfArray2D<NekDouble>          &outarray,
             const NekDouble                     time);
         
-        void DoAdvection_coeff(
+        void DoAdvectionCoeff(
             const TensorOfArray2D<NekDouble>    &inarray,
             TensorOfArray2D<NekDouble>          &outarray,
             const NekDouble                     time,
             const TensorOfArray2D<NekDouble>    &pFwd,
             const TensorOfArray2D<NekDouble>    &pBwd);
-        void DoImplicitSolve_phy2coeff(
+        void DoImplicitSolvePhysToCoeff(
             const TensorOfArray2D<NekDouble>    &inpnts,
             TensorOfArray2D<NekDouble>          &outpnt,
             const NekDouble                     time,
             const NekDouble                     lambda);
-        void DoImplicitSolve_coeff(
+        void DoImplicitSolveCoeff(
             const TensorOfArray2D<NekDouble>    &inpnts,
             const TensorOfArray1D<NekDouble>    &inarray,
             TensorOfArray1D<NekDouble>          &out,
@@ -198,12 +198,12 @@ namespace Nektar
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
-        void DoDiffusion_coeff(
+        void DoDiffusionCoeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
             Array<OneD, Array<OneD, NekDouble> >             &outarray,
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
-        void MatrixMultiply_MatrixFree_coeff(
+        void MatrixMultiply_MatrixFreeCoeff(
             const  TensorOfArray1D<NekDouble>   &inarray,
             TensorOfArray1D<NekDouble>          &out,
             const bool                          &flag = false);
@@ -257,7 +257,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
 
-        virtual void v_DoDiffusion_coeff(
+        virtual void v_DoDiffusionCoeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,

@@ -244,7 +244,7 @@ namespace SolverUtils
         }
     }
 
-    void ForcingAbsorption::v_Apply_coeff(
+    void ForcingAbsorption::v_ApplyCoeff(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
             Array<OneD, Array<OneD, NekDouble> >              &outarray,

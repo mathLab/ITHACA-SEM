@@ -212,7 +212,7 @@ namespace SolverUtils
         }
     }
 
-    void ForcingBody::v_Apply_coeff(
+    void ForcingBody::v_ApplyCoeff(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
             Array<OneD, Array<OneD, NekDouble> >              &outarray,

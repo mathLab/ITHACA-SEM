@@ -109,6 +109,23 @@ const std::string FieldIO::GetFileType(const std::string &filename,
         {
             fs::path p0file("P0000000.fld");
             fs::path fullpath = filename / p0file;
+            if(!fs::exists(fullpath))
+            {
+                for(int i = 1; i < 100; ++i)
+                {
+                    boost::format fname("P%1$07d.%2$s");
+                    fname % i % "fld";
+                    fs::path pfile(fname.str());
+                    fullpath = filename / pfile;
+                    if(fs::exists(fullpath))
+                    {
+                        break;
+                    }
+                }
+                ASSERTL0(i != 100,std::string("Failed to open any file from  "
+                                              "P0000000.fld to P0000099.fld "
+                                              "in directory: " + filename).c_str());
+            }
             datafilename      = PortablePath(fullpath);
         }
         else

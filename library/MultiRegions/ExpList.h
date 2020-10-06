@@ -898,9 +898,9 @@ namespace Nektar
                 bool DoExchange        = true);
 
             inline void FillBwdWithBoundCond(
-                Array<OneD, NekDouble> &Fwd,
+                const Array<OneD, NekDouble> &Fwd,
                 Array<OneD, NekDouble> &Bwd,
-                bool PutFwdInBwdOnBCs);
+                bool PutFwdInBwdOnBCs = false);
 
             /// Add Fwd and Bwd value to field,
             /// a reverse procedure of GetFwdBwdTracePhys
@@ -923,10 +923,6 @@ namespace Nektar
                 Array<OneD,       NekDouble>        &locTraceFwd,
                 Array<OneD,       NekDouble>        &locTraceBwd);
 
-            inline void FillBwdWithBoundCond(
-                const Array<OneD, const NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd);
-            
             inline void FillBwdWithBoundDeriv(
                 const int                          Dir,
                 const Array<OneD, const NekDouble> &Fwd,
@@ -1423,7 +1419,7 @@ namespace Nektar
                 bool DoExchange        = true);
 
             virtual void v_FillBwdWithBoundCond(
-                Array<OneD, NekDouble> &Fwd,
+                const Array<OneD, NekDouble> &Fwd,
                 Array<OneD, NekDouble> &Bwd,
                 bool PutFwdInBwdOnBCs);
             
@@ -1442,10 +1438,6 @@ namespace Nektar
                 const Array<OneD, const NekDouble>  &Bwd,
                 Array<OneD,       NekDouble>        &locTraceFwd,
                 Array<OneD,       NekDouble>        &locTraceBwd);
-                      
-            virtual void v_FillBwdWithBoundCond(
-                const Array<OneD, const NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd);
             
             virtual void v_FillBwdWithBoundDeriv(
                 const int                          Dir,
@@ -2590,7 +2582,7 @@ namespace Nektar
         }
 
         inline void ExpList::FillBwdWithBoundCond(
-            Array<OneD,NekDouble> &Fwd,
+            const Array<OneD,NekDouble> &Fwd,
             Array<OneD,NekDouble> &Bwd,
             bool PutFwdInBwdOnBCs)
         {
@@ -2612,13 +2604,6 @@ namespace Nektar
             Array<OneD,       NekDouble>        &locTraceBwd)
         {
             v_GetLocTraceFromTracePts(Fwd,Bwd,locTraceFwd,locTraceBwd);
-        }
-
-        inline void ExpList::FillBwdWithBoundCond(
-            const Array<OneD, const NekDouble> &Fwd,
-                  Array<OneD,       NekDouble> &Bwd)
-        {
-            v_FillBwdWithBoundCond(Fwd,Bwd);
         }
 
         inline void ExpList::FillBwdWithBoundDeriv(

@@ -660,59 +660,6 @@ namespace Nektar
         }
     }
 
-    void CompressibleFlowSystem::preconditioner_NumJac(
-        const Array<OneD, NekDouble>                                                &inarray,
-        Array<OneD, NekDouble >                                                     &outarray,
-        const Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >                        &PrecMatVars,
-        const Array<OneD, Array<OneD, NekDouble > >                                 &PrecMatVarsOffDiag)
-    {
-        const NekDouble SORParam        =   m_SORRelaxParam;
-        const NekDouble OmSORParam      =   1.0-SORParam;
-
-        unsigned int nvariables = m_TimeIntegtSol_n.size();
-        unsigned int npoints    = m_TimeIntegtSol_n[0].size();
-        unsigned int ntotpnt    = inarray.size();
-        
-        ASSERTL0(nvariables*npoints==ntotpnt,"nvariables*npoints==ntotpnt not satisfied in preconditioner_BlkSOR");
-
-        Array<OneD, NekDouble> rhs(ntotpnt);
-
-        Array<OneD, NekDouble>  outN(ntotpnt);
-        Array<OneD, NekDouble>  outTmp(ntotpnt);
-        Vmath::Vcopy(ntotpnt,&inarray[0],1,&rhs[0],1);
-
-        NekDouble tmpDouble = 0.0;
-        preconditioner_BlkDiag(rhs,outarray,PrecMatVars,tmpDouble);
-
-        int nSORTot   =   m_JFNKPrecondStep;
-        for(int nsor = 0; nsor < nSORTot-1; nsor++)
-        {
-            Vmath::Smul(ntotpnt,OmSORParam,outarray,1,outN,1);
-            
-            MinusOffDiag2RhsNumJac(nvariables,npoints,rhs,outarray,PrecMatVarsOffDiag);
-
-            preconditioner_BlkDiag(outarray,outTmp,PrecMatVars,tmpDouble);
-            Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
-        }
-    }
-
-    void CompressibleFlowSystem::MinusOffDiag2RhsNumJac(
-        const int                                                                   nvariables,
-        const int                                                                   nCoeffs,
-        const Array<OneD, NekDouble>                                                &rhs,
-        Array<OneD, NekDouble>                                                      &outarray,
-        const Array<OneD, Array<OneD, NekDouble > >                                 &PrecMatVarsOffDiag)
-    {
-        int nTotCoef = nvariables*nCoeffs;
-        Array<OneD, NekDouble> tmp (nTotCoef,0.0);
-        for(int i=0;i<nTotCoef;i++)
-        {
-            Vmath::Svtvp(nTotCoef,outarray[i],&PrecMatVarsOffDiag[i][0],1,&tmp[0],1,&tmp[0],1);
-        }
-
-        Vmath::Vsub(nTotCoef,&rhs[0],1,&tmp[0],1,&outarray[0],1);
-    }
-
     void CompressibleFlowSystem::preconditioner_BlkSOR_coeff(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&outarray,
@@ -2643,7 +2590,7 @@ namespace Nektar
         MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda,zero);
 
         ElmtVarInvMtrx(gmtxarray,gmtVar,zero);
-        
+
         TransTraceJacMatToArray(TraceJac,TraceJacDeriv,TraceJacArray, TraceJacDerivArray);
     }
 

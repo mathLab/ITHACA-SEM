@@ -208,19 +208,6 @@ namespace Nektar
             const TypeNekBlkMatSharedPtr     &PrecMatVars,
             const DataType                   &tmpDataType);
 
-        void preconditioner_NumJac(
-            const Array<OneD, NekDouble>      &inarray,
-            Array<OneD, NekDouble >           &outarray,
-            const Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >  &PrecMatVars,
-            const Array<OneD, Array<OneD, NekDouble > >  &PrecMatVarsOffDiag);
-
-        void MinusOffDiag2RhsNumJac(
-            const int                            nvariables,
-            const int                            nCoeffs,
-            const Array<OneD, NekDouble>         &inarray,
-            Array<OneD, NekDouble>               &outarray,
-            const Array<OneD, Array<OneD, NekDouble > >  &PrecMatVarsOffDiag);
-            
         void preconditioner_BlkSOR_coeff(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&outarray,

@@ -4376,7 +4376,7 @@ namespace Nektar
         }
 
         void ExpList::v_FillBwdWithBoundCond(
-            Array<OneD,NekDouble> &Fwd,
+            const Array<OneD,NekDouble> &Fwd,
             Array<OneD,NekDouble> &Bwd,
             bool PutFwdInBwdOnBCs)
         {
@@ -4958,14 +4958,6 @@ namespace Nektar
             boost::ignore_unused(ElmtID, EdgeID);
             NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
-        }
-
-        void ExpList::v_FillBwdWithBoundCond(
-            const Array<OneD, const NekDouble> &Fwd,
-                  Array<OneD,       NekDouble> &Bwd)
-        {
-            boost::ignore_unused(Fwd, Bwd);
-            ASSERTL0(false,"v_FillBwdWithBound not defined");
         }
 
         void ExpList::v_FillBwdWithBoundDeriv(

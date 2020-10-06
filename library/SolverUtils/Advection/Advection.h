@@ -43,6 +43,9 @@
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+#include <iomanip>
+
+using namespace std;
 
 namespace Nektar
 {

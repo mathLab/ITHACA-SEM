@@ -2925,7 +2925,7 @@ namespace Nektar
         }
 
         void DisContField::v_FillBwdWithBoundCond(
-            Array<OneD, NekDouble> &Fwd,
+            const Array<OneD, NekDouble> &Fwd,
             Array<OneD, NekDouble> &Bwd,
             bool PutFwdInBwdOnBCs)
         {
@@ -4342,6 +4342,40 @@ namespace Nektar
                 ppExp->BwdTrans(out.GetPtr(), work);
                 (*m_exp)[i]->FwdTrans(work, tmp_coeffs = outarray + m_coeff_offset[i]);
             }
+        }
+
+        void DisContField::v_GetLocTraceFromTracePts(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &locTraceFwd,
+                Array<OneD,       NekDouble>        &locTraceBwd)
+        {
+            switch(m_expType)
+            {
+            case e2D:
+                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(1, Bwd, locTraceBwd);
+                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(0, Fwd, locTraceFwd);
+                break;
+            case e3D:
+                m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(1, Bwd, locTraceBwd);
+                m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(0, Fwd, locTraceFwd);
+                break;
+            default:
+                ASSERTL0(false, "GetLocTraceFromTracePts not defined");
+            }
+        }
+
+        void DisContField::v_AddTraceIntegralToOffDiag(
+            const Array<OneD, const NekDouble> &FwdFlux, 
+            const Array<OneD, const NekDouble> &BwdFlux, 
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            Array<OneD, NekDouble> FCoeffs(m_trace->GetNcoeffs());
+
+            m_trace->IProductWRTBase(FwdFlux,FCoeffs);
+            m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(1,FCoeffs,outarray);
+            m_trace->IProductWRTBase(BwdFlux,FCoeffs);
+            m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(0,FCoeffs,outarray);
         }
     } // end of namespace
 } //end of namespace

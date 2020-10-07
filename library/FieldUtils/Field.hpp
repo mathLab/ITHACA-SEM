@@ -148,7 +148,7 @@ struct Field
                 m_numHomogeneousDir = m_fielddef[0]->m_numHomogeneousDir;
 
                 // Set up Expansion information to use mode order from field
-                m_graph->SetExpansions(m_fielddef);
+                m_graph->SetExpansionInfo(m_fielddef);
             }
             else
             {
@@ -200,7 +200,7 @@ struct Field
             if (vm.count("output-points"))
             {
                 int nPointsNew = vm["output-points"].as<int>();
-                m_graph->SetExpansionsToPointOrder(nPointsNew);
+                m_graph->SetExpansionInfoToPointOrder(nPointsNew);
             }
 
             if (m_verbose)

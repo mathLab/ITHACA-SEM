@@ -408,33 +408,6 @@ void Advection::v_AdvectCoeffs(
     ASSERTL0(false, "v_AdvectCoeffs not defined");
 }
 
-void Advection::v_NumCalRiemFluxJac( 
-        const int                                          nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-        const Array<OneD, Array<OneD, NekDouble> >        &AdvVel,
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
-        const Array<OneD, Array<OneD, NekDouble> >        &pBwd,
-        DNekBlkMatSharedPtr &FJac,
-        DNekBlkMatSharedPtr &BJac)
-{
-    boost::ignore_unused(nConvectiveFields, fields, AdvVel, inarray,  pFwd, pBwd,
-                         FJac,BJac);
-    ASSERTL0(false, "v_NumCalRiemFluxJac no defined");
-}
-
-void Advection::v_AddVolumJacToMat( 
-        const Array<OneD, MultiRegions::ExpListSharedPtr>     &pFields,
-        const int                                             &nConvectiveFields,
-        const Array<OneD, const Array<OneD,  Array<OneD,
-        Array<OneD,  Array<OneD,  NekDouble> > > > >          &ElmtJacArray,
-        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >        &gmtxarray)
-{
-    boost::ignore_unused(pFields,nConvectiveFields, ElmtJacArray,gmtxarray);
-    ASSERTL0(false,"v_AddVolumJacToMat NOT SPECIFIED");
-    return;
-}
-
 void Advection::v_AddVolumJacToMat( 
         const Array<OneD, MultiRegions::ExpListSharedPtr>     &pFields,
         const int                                             &nConvectiveFields,
@@ -445,50 +418,6 @@ void Advection::v_AddVolumJacToMat(
         boost::ignore_unused(pFields,nConvectiveFields,ElmtJacArray,gmtxarray);
         ASSERTL0(false,"v_AddVolumJacToMat NOT SPECIFIED");
         return;
-    }
-
-    void Advection::CalcTraceJac(
-        const int                                          nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-        const Array<OneD, Array<OneD, NekDouble> >        &AdvVel,
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
-        const Array<OneD, Array<OneD, NekDouble> >        &pBwd,
-        DNekBlkMatSharedPtr &FJac,
-        DNekBlkMatSharedPtr &BJac)
-    {
-        boost::ignore_unused(AdvVel);
-        // int nPointsTot      = fields[0]->GetTotPoints();
-        // int nCoeffs         = fields[0]->GetNcoeffs();
-        int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
-        
-        // Store forwards/backwards space along trace space
-        Array<OneD, Array<OneD, NekDouble> > Fwd    (nConvectiveFields);
-        Array<OneD, Array<OneD, NekDouble> > Bwd    (nConvectiveFields);
-
-        if (pFwd == NullNekDoubleArrayofArray ||
-            pBwd == NullNekDoubleArrayofArray)
-        {
-            for(int i = 0; i < nConvectiveFields; ++i)
-            {
-                Fwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
-                Bwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
-                fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
-            }
-        }
-        else
-        {
-            for(int i = 0; i < nConvectiveFields; ++i)
-            {
-                Fwd[i]     = pFwd[i];
-                Bwd[i]     = pBwd[i];
-            }
-        }
-
-        ASSERTL1(m_riemann,
-                    "Riemann solver must be provided for AdvectionWeakDG.");
-    
-        m_riemann->CalcFluxJacobian(m_spaceDim, Fwd, Bwd, FJac,BJac);
     }
 
 }

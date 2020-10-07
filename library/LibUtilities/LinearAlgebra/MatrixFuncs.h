@@ -103,13 +103,15 @@ namespace Nektar
                     case sizeof(NekSingle):
                         break;
                     default:
-                        ASSERTL0(false, "FullMatrixFuncs::Invert DataType is neither NekDouble nor NekSingle");
+                        ASSERTL0(false, 
+                        "Invert DataType is neither NekDouble nor NekSingle");
                         break;
                     }
                 }
                 else
                 {
-                    ASSERTL0(false, "FullMatrixFuncs::Invert DataType is not floating point");
+                    ASSERTL0(false, 
+                    "FullMatrixFuncs::Invert DataType is not floating point");
                 }
                 
                 Lapack::DoSgetrf(m, n, data.get(), m, ipivot.get(), info);

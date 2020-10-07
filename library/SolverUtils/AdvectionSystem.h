@@ -59,7 +59,8 @@ public:
         return m_advObject;
     }
 
-    SOLVER_UTILS_EXPORT Array<OneD, NekDouble>  GetElmtCFLVals(const bool FlagAcousticCFL = true);
+    SOLVER_UTILS_EXPORT Array<OneD, NekDouble>  GetElmtCFLVals(
+        const bool FlagAcousticCFL = true);
     SOLVER_UTILS_EXPORT NekDouble               GetCFLEstimate(int &elmtid);
 
 protected:

@@ -615,7 +615,8 @@ void LocTraceToTraceMap::CalcuLocTracephysToTraceIDMap_2D(
 
     m_LocTracephysToTraceIDMap      = Array<OneD, Array<OneD, int> > (2);
     m_LocTracephysToTraceIDMap[0]   = Array<OneD, int> (m_nFwdLocTracePts,-1);
-    m_LocTracephysToTraceIDMap[1]   = Array<OneD, int> (m_nLocTracePts-m_nFwdLocTracePts,-1);
+    m_LocTracephysToTraceIDMap[1]   = Array<OneD, int> (
+            m_nLocTracePts-m_nFwdLocTracePts,-1);
 
     Array<OneD, NekDouble> tracePnts(m_nTracePts,0.0);
     for(int nt=0; nt<ntotTrace;nt++)
@@ -630,7 +631,8 @@ void LocTraceToTraceMap::CalcuLocTracephysToTraceIDMap_2D(
        
     Array<OneD, Array<OneD, NekDouble> > loctracePntsLR(2);
     loctracePntsLR[0]   =   Array<OneD, NekDouble> (m_nFwdLocTracePts,0.0);
-    loctracePntsLR[1]   =   Array<OneD, NekDouble> (m_nLocTracePts-m_nFwdLocTracePts,0.0);
+    loctracePntsLR[1]   =   Array<OneD, NekDouble> (
+        m_nLocTracePts-m_nFwdLocTracePts,0.0);
 
     for(int dir = 0; dir<2;dir++)
     {
@@ -671,12 +673,15 @@ void LocTraceToTraceMap::CalcuLocTracephysToTraceIDMap_2D(
     {
         for(int i=0;i<loctracePntsLR[nlr].size();i++)
         {
-            m_LocTracephysToTraceIDMap[nlr][i] =   std::round(loctracePntsLR[nlr][i]);
-            error   +=   abs(loctracePntsLR[nlr][i] - NekDouble(m_LocTracephysToTraceIDMap[nlr][i]));
+            m_LocTracephysToTraceIDMap[nlr][i] =   
+                std::round(loctracePntsLR[nlr][i]);
+            error   +=   abs(loctracePntsLR[nlr][i] - NekDouble(
+                m_LocTracephysToTraceIDMap[nlr][i]));
         }
     }
     error = error/NekDouble(m_nLocTracePts);
-    ASSERTL0(error<NekConstants::kNekZeroTol,"m_LocTracephysToTraceIDMap may not be integer !!");
+    ASSERTL0(error<NekConstants::kNekZeroTol,
+        "m_LocTracephysToTraceIDMap may not be integer !!");
 }
 
 void LocTraceToTraceMap::CalcuLocTracephysToTraceIDMap_3D(
@@ -688,7 +693,8 @@ void LocTraceToTraceMap::CalcuLocTracephysToTraceIDMap_3D(
 
     m_LocTracephysToTraceIDMap      = Array<OneD, Array<OneD, int> > (2);
     m_LocTracephysToTraceIDMap[0]   = Array<OneD, int> (m_nFwdLocTracePts,-1);
-    m_LocTracephysToTraceIDMap[1]   = Array<OneD, int> (m_nLocTracePts-m_nFwdLocTracePts,-1);
+    m_LocTracephysToTraceIDMap[1]   = Array<OneD, int> (
+            m_nLocTracePts-m_nFwdLocTracePts,-1);
 
     Array<OneD, NekDouble> tracePnts(m_nTracePts,0.0);
     for(int nt=0; nt<ntotTrace;nt++)
@@ -703,7 +709,8 @@ void LocTraceToTraceMap::CalcuLocTracephysToTraceIDMap_3D(
        
     Array<OneD, Array<OneD, NekDouble> > loctracePntsLR(2);
     loctracePntsLR[0]   =   Array<OneD, NekDouble> (m_nFwdLocTracePts,0.0);
-    loctracePntsLR[1]   =   Array<OneD, NekDouble> (m_nLocTracePts-m_nFwdLocTracePts,0.0);
+    loctracePntsLR[1]   =   Array<OneD, NekDouble> (
+        m_nLocTracePts-m_nFwdLocTracePts,0.0);
 
     for(int dir = 0; dir<2;dir++)
     {
@@ -752,12 +759,15 @@ void LocTraceToTraceMap::CalcuLocTracephysToTraceIDMap_3D(
     {
         for(int i=0;i<loctracePntsLR[nlr].size();i++)
         {
-            m_LocTracephysToTraceIDMap[nlr][i] =   std::round(loctracePntsLR[nlr][i]);
-            error   +=   abs(loctracePntsLR[nlr][i] - NekDouble(m_LocTracephysToTraceIDMap[nlr][i]));
+            m_LocTracephysToTraceIDMap[nlr][i] =   
+                std::round(loctracePntsLR[nlr][i]);
+            error   +=   abs(loctracePntsLR[nlr][i] - NekDouble(
+                m_LocTracephysToTraceIDMap[nlr][i]));
         }
     }
     error = error/NekDouble(m_nLocTracePts);
-    ASSERTL0(error<NekConstants::kNekZeroTol,"m_LocTracephysToTraceIDMap may not be integer !!");
+    ASSERTL0(error<NekConstants::kNekZeroTol,
+        "m_LocTracephysToTraceIDMap may not be integer !!");
 }
 
 /**
@@ -775,7 +785,7 @@ void LocTraceToTraceMap::TraceLocToElmtLocCoeffMap(
     size_t ntrace = exptrac->size();
 
     Array<OneD, Array<OneD, int >> LRAdjExpid{2};
-    Array<OneD, Array<OneD, bool>> LRAdjflag(2);
+    Array<OneD, Array<OneD, bool>> LRAdjflag{2};
 
     TensorOfArray3D<int> elmtLRMap{2};
     TensorOfArray3D<int> elmtLRSign{2};
@@ -864,7 +874,8 @@ void LocTraceToTraceMap::FindElemNeighbs(
     }
 
     Array<OneD, int > ElemIndex(nexp,0);
-    for (std::set< std::pair<int, int> >::iterator it=neighborSet.begin(); it!=neighborSet.end(); ++it)
+    for (std::set< std::pair<int, int> >::iterator it=neighborSet.begin(); 
+        it!=neighborSet.end(); ++it)
     {
         int ncurrent   =  it->first;
         ElemIndex[ncurrent]++;
@@ -885,11 +896,11 @@ void LocTraceToTraceMap::FindElemNeighbs(
     {
         ElemIndex[ne]   =   0;
     }
-    for (std::set< std::pair<int, int> >::iterator it=neighborSet.begin(); it!=neighborSet.end(); ++it)
+    for (std::set< std::pair<int, int> >::iterator it=neighborSet.begin(); 
+        it!=neighborSet.end(); ++it)
     {
         int ncurrent   =  it->first;
         int neighbor   =  it->second;
-        // cout << " it->first= "<<it->first<<" it->second= "<<it->second<<endl;
         ElemNeighbsId[ncurrent][ ElemIndex[ncurrent] ]    = neighbor;
         ElemIndex[ncurrent]++;
     }
@@ -932,7 +943,8 @@ void LocTraceToTraceMap::FindElemNeighbs(
     {
         for(int nb =0; nb<ElemNeighbsNumb[ne]; nb++)
         {
-            ASSERTL0( (ElemNeighbsId[ne][nb]>=0)&&(ElemNeighbsId[ne][nb]<=nexp)," element id <0 or >number of total elements")
+            ASSERTL0( (ElemNeighbsId[ne][nb]>=0)&&(ElemNeighbsId[ne][nb]<=nexp),
+                "Element id <0 or >number of total elements")
         }
     }
 
@@ -1483,7 +1495,8 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
                 std::get<2>(m_interpPoints[dir][i]);
             LibUtilities::PointsKey toPointsKey1 =
                 std::get<3>(m_interpPoints[dir][i]);
-            // Here the f(from) and t(to) are chosen to be consistent with InterpLocFacesToTrace
+            // Here the f(from) and t(to) are chosen to be consistent with 
+            // InterpLocFacesToTrace
             int fnp0         = fromPointsKey0.GetNumPoints();
             int fnp1         = fromPointsKey1.GetNumPoints();
             int tnp0         = toPointsKey0.GetNumPoints();

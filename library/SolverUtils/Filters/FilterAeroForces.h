@@ -43,7 +43,6 @@ namespace Nektar
 {
 namespace SolverUtils
 {
-
 class FilterAeroForces : public Filter
 {
 public:

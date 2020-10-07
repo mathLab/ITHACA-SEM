@@ -56,7 +56,6 @@ namespace Nektar
         typedef std::function<
             NekDouble ()> RSParamFuncType;
             
-
         class RiemannSolver
         {
         public:

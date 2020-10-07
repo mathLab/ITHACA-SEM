@@ -31,14 +31,15 @@
 // Description: Expansion list top class definition
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #ifndef NEKTAR_LIBS_MULTIREGIONS_EXPLIST_H
 #define NEKTAR_LIBS_MULTIREGIONS_EXPLIST_H
+
 #include <boost/core/ignore_unused.hpp>
 
 #include <LibUtilities/Communication/Transposition.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/Kernel/kernel.h>
 #include <SpatialDomains/MeshGraph.h>
 #include <LocalRegions/Expansion.h>
 #include <Collections/Collection.h>
@@ -50,8 +51,8 @@
 #include <MultiRegions/GlobalLinSysKey.h>
 #include <MultiRegions/GlobalOptimizationParameters.h>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
+#include <LibUtilities/Kernel/kernel.h>
 #include <tinyxml.h>
-
 
 namespace Nektar
 {
@@ -332,15 +333,7 @@ namespace Nektar
                  const Array<OneD,
                  const NekDouble> &inarray,
                  Array<OneD,       NekDouble> &outarray);
-            
-            MULTI_REGIONS_EXPORT void MultiplyByElmtInvMassOnDiag(
-                const DNekBlkMatSharedPtr   &inmat,
-                DNekBlkMatSharedPtr         &outmat);
 
-            MULTI_REGIONS_EXPORT void RightMultiplyByElmtInvMassOnDiag(
-                const DNekBlkMatSharedPtr   &inmat,
-                DNekBlkMatSharedPtr         &outmat);
-            ///
             inline void MultiplyByInvMassMatrix(
                 const Array<OneD,const NekDouble> &inarray,
                 Array<OneD,      NekDouble> &outarray);
@@ -856,10 +849,6 @@ namespace Nektar
 
             inline void GetNormals(Array<OneD, Array<OneD, NekDouble> >&normals);
 
-            MULTI_REGIONS_EXPORT void GetTraceFwdBwdadjacentElmtEdgeNumbers(
-                Array<OneD, int >   &FwdElmtEdgeNumb,
-                Array<OneD, int >   &BwdElmtEdgeNumb);
-
             /// Get the length of elements in boundary normal direction
             MULTI_REGIONS_EXPORT void GetElmtNormalLength(
                 Array<OneD, NekDouble>  &lengthsFwd,
@@ -922,11 +911,6 @@ namespace Nektar
                 const Array<OneD, const NekDouble>  &Bwd,
                 Array<OneD,       NekDouble>        &locTraceFwd,
                 Array<OneD,       NekDouble>        &locTraceBwd);
-
-            inline void FillBwdWithBoundDeriv(
-                const int                          Dir,
-                const Array<OneD, const NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd);
 
             /// Fill Bwd with boundary conditions
             inline void FillBwdWithBwdWeight(
@@ -1137,8 +1121,6 @@ namespace Nektar
                 Array<OneD, const std::pair<int, int> >
                 &GetCoeffsToElmt() const;
 
-            MULTI_REGIONS_EXPORT void CoutStandardMat(DNekMatSharedPtr &loc_matNvar,const unsigned int nwidthcolm);
-
             MULTI_REGIONS_EXPORT void CalcuTracephysToLeftRightExpphysMap(
                     bool                                            &flag,
                     Array<OneD, Array<OneD, Array<OneD, int > > >   &T2Emap);
@@ -1147,18 +1129,7 @@ namespace Nektar
                 const Array<OneD, const DNekMatSharedPtr>  &FwdMat,
                 const Array<OneD, const DNekMatSharedPtr>  &BwdMat,
                 Array<OneD, DNekMatSharedPtr>  &fieldMat);
-
-            MULTI_REGIONS_EXPORT void GetMatIpwrtdbWeightBwd(
-                const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                const int nDirctn, Array<OneD, DNekMatSharedPtr> &mtxPerVar);
-
-            // MULTI_REGIONS_EXPORT void GetMatIpwrtdbWeightBwd(
-            //     const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-            //     Array<OneD, DNekMatSharedPtr> &mtxPerVar);
-            MULTI_REGIONS_EXPORT void GetMatIpwrtbWeightBwd(
-                const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                Array<OneD, DNekMatSharedPtr> &mtxPerVar);
-            
+         
             MULTI_REGIONS_EXPORT void GetMatIpwrtDeriveBase(
                 const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                 const int nDirctn, Array<OneD, DNekMatSharedPtr> &mtxPerVar);
@@ -1178,14 +1149,7 @@ namespace Nektar
             {
                 v_AddTraceIntegralToOffDiag(FwdFlux,BwdFlux,outarray);
             }
-
-            inline void CalcTraceJacMatIntegral(
-                const Array<OneD, const NekDouble> &Fn,
-                Array<OneD, NekDouble> &outarray)
-            {
-                v_CalcTraceJacMatIntegral(Fn,outarray);
-            }
-        
+      
             MULTI_REGIONS_EXPORT void AddRightIPTPhysDerivBase(
                 const    int                                    dir,
                 const    Array<OneD, const DNekMatSharedPtr>    ElmtJacQuad,
@@ -1193,7 +1157,7 @@ namespace Nektar
         
             MULTI_REGIONS_EXPORT void AddRightIPTBaseMatrix(
                 const    Array<OneD, const DNekMatSharedPtr>    ElmtJacQuad,
-                                         Array<OneD,       DNekMatSharedPtr>    ElmtJacCoef);
+                Array<OneD,       DNekMatSharedPtr>    ElmtJacCoef);
 
             MULTI_REGIONS_EXPORT inline const LocTraceToTraceMapSharedPtr
                 &GetLocTraceToTraceMap() const;
@@ -1438,12 +1402,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble>  &Bwd,
                 Array<OneD,       NekDouble>        &locTraceFwd,
                 Array<OneD,       NekDouble>        &locTraceBwd);
-            
-            virtual void v_FillBwdWithBoundDeriv(
-                const int                          Dir,
-                const Array<OneD, const NekDouble> &Fwd,
-                      Array<OneD,       NekDouble> &Bwd);
-            
+          
             virtual void v_FillBwdWithBwdWeight(
                 Array<OneD,       NekDouble> &weightave,
                 Array<OneD,       NekDouble> &weightjmp);
@@ -1779,10 +1738,6 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &BwdFlux, 
                       Array<OneD,       NekDouble> &outarray);
         
-
-            virtual void v_CalcTraceJacMatIntegral(
-                const Array<OneD, const NekDouble> &Fn,
-                      Array<OneD, NekDouble> &outarray);
         };
         
         /// An empty ExpList object.
@@ -1840,6 +1795,7 @@ namespace Nektar
 
             return returnval;
         }
+
 
         /**
          *
@@ -2102,6 +2058,7 @@ namespace Nektar
         {
              v_GetMovingFrames(MMFdir,CircCentre,outarray);
         }
+
 
         /**
          *
@@ -2606,14 +2563,6 @@ namespace Nektar
             v_GetLocTraceFromTracePts(Fwd,Bwd,locTraceFwd,locTraceBwd);
         }
 
-        inline void ExpList::FillBwdWithBoundDeriv(
-            const int                          Dir,
-            const Array<OneD, const NekDouble> &Fwd,
-                  Array<OneD,       NekDouble> &Bwd)
-        {
-            v_FillBwdWithBoundDeriv(Dir,Fwd,Bwd);
-        }
-
         inline void ExpList::FillBwdWithBwdWeight(
             Array<OneD,       NekDouble> &weightave,
             Array<OneD,       NekDouble> &weightjmp)
@@ -2667,6 +2616,35 @@ namespace Nektar
             v_EvaluateBoundaryConditions(time, varName, x2_in, x3_in);
         }
         
+        // Routines for continous matrix solution
+        /**
+         * This operation is equivalent to the evaluation of
+         * \f$\underline{\boldsymbol{M}}^e\boldsymbol{\hat{u}}_l\f$, that is,
+         * \f[ \left[
+         * \begin{array}{cccc}
+         * \boldsymbol{M}^1 & 0 & \hspace{3mm}0 \hspace{3mm}& 0 \\
+         * 0 & \boldsymbol{M}^2 & 0 & 0 \\
+         * 0 &  0 & \ddots &  0 \\
+         * 0 &  0 & 0 & \boldsymbol{M}^{N_{\mathrm{el}}} \end{array} \right]
+         *\left [ \begin{array}{c}
+         * \boldsymbol{\hat{u}}^{1} \\
+         * \boldsymbol{\hat{u}}^{2} \\
+         * \vdots \\
+         * \boldsymbol{\hat{u}}^{{{N_{\mathrm{el}}}}} \end{array} \right ]\f]
+         * where \f$\boldsymbol{M}^e\f$ are the local matrices of type
+         * specified by the key \a mkey. The decoupling of the local matrices
+         * allows for a local evaluation of the operation. However, rather than
+         * a local matrix-vector multiplication, the local operations are
+         * evaluated as implemented in the function
+         * StdRegions#StdExpansion#GeneralMatrixOp.
+         *
+         * @param   mkey            This key uniquely defines the type matrix
+         *                          required for the operation.
+         * @param   inarray         The vector \f$\boldsymbol{\hat{u}}_l\f$ of
+         *                          size \f$N_{\mathrm{eof}}\f$.
+         * @param   outarray        The resulting vector of size
+         *                          \f$N_{\mathrm{eof}}\f$.
+         */
         inline void ExpList::GeneralMatrixOp(
                                 const GlobalMatrixKey             &gkey,
                                 const Array<OneD,const NekDouble> &inarray,
@@ -2708,7 +2686,7 @@ namespace Nektar
             v_ExtractPhysToBndElmt(i, phys, bndElmt);
         }
     
-        inline void ExpList::ExtractPhysToBnd   (int i,
+        inline void ExpList::ExtractPhysToBnd(int i,
                             const Array<OneD, const NekDouble> &phys,
                             Array<OneD, NekDouble> &bnd)
         {
@@ -2722,6 +2700,7 @@ namespace Nektar
         }
     
       const static Array<OneD, ExpListSharedPtr> NullExpListSharedPtrArray;
+      
     } //end of namespace
 } //end of namespace
 

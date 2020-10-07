@@ -125,7 +125,6 @@ Array<OneD, NekDouble>  AdvectionSystem::GetElmtCFLVals(const bool FlagAcousticC
     {
         stdVelocity = v_GetMaxStdVelocity(0.0);
     }
-    
 
     Array<OneD, NekDouble> cfl(nelmt, 0.0);
     NekDouble order;

@@ -186,16 +186,6 @@ public:
         v_SetBaseFlow(inarray, fields);
     }
 
-    SOLVER_UTILS_EXPORT void CalcTraceJac(
-        const int                                          nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
-        const Array<OneD, Array<OneD, NekDouble> >        &pBwd,
-        DNekBlkMatSharedPtr &FJac,
-        DNekBlkMatSharedPtr &BJac);
-
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     SOLVER_UTILS_EXPORT void AddTraceJacToMat(
         const int                                           nConvectiveFields,
@@ -221,32 +211,9 @@ public:
         const int                                                               &nConvectiveFields,
         const Array<OneD, const Array<OneD,  Array<OneD, 
             Array<OneD,  Array<OneD,  NekDouble> > > > >                        &ElmtJacArray,
-        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >                          &gmtxarray)
-    {
-        v_AddVolumJacToMat(pFields,nConvectiveFields,ElmtJacArray,gmtxarray);
-    }
-
-    SOLVER_UTILS_EXPORT void AddVolumJacToMat( 
-        const Array<OneD, MultiRegions::ExpListSharedPtr>                       &pFields,
-        const int                                                               &nConvectiveFields,
-        const Array<OneD, const Array<OneD,  Array<OneD, 
-            Array<OneD,  Array<OneD,  NekDouble> > > > >                        &ElmtJacArray,
         Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >                          &gmtxarray)
     {
         v_AddVolumJacToMat(pFields,nConvectiveFields,ElmtJacArray,gmtxarray);
-    }
-
-    SOLVER_UTILS_EXPORT void NumCalRiemFluxJac( 
-        const int                                          nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-        const Array<OneD, Array<OneD, NekDouble> >        &AdvVel,
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
-        const Array<OneD, Array<OneD, NekDouble> >        &pBwd,
-        DNekBlkMatSharedPtr &FJac,
-        DNekBlkMatSharedPtr &BJac)
-    {
-        v_NumCalRiemFluxJac(nConvectiveFields,fields,AdvVel,inarray,pFwd,pBwd,FJac,BJac);
     }
 
 protected:
@@ -312,14 +279,7 @@ protected:
     SOLVER_UTILS_EXPORT virtual void v_SetBaseFlow(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
-    
-    SOLVER_UTILS_EXPORT virtual void v_AddVolumJacToMat( 
-        const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
-        const int                                           &nConvectiveFields,
-        const Array<OneD, const Array<OneD,  Array<OneD,
-        Array<OneD,  Array<OneD,  NekDouble> > > > >        &ElmtJacArray,
-        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >      &gmtxarray);
-    
+ 
     SOLVER_UTILS_EXPORT virtual void v_AddVolumJacToMat( 
         const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
         const int                                           &nConvectiveFields,
@@ -327,15 +287,6 @@ protected:
             Array<OneD,  Array<OneD,  NekDouble> > > > >    &ElmtJacArray,
         Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >      &gmtxarray);
 
-    SOLVER_UTILS_EXPORT virtual  void v_NumCalRiemFluxJac( 
-        const int                                          nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-        const Array<OneD, Array<OneD, NekDouble> >        &AdvVel,
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-        const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
-        const Array<OneD, Array<OneD, NekDouble> >        &pBwd,
-        DNekBlkMatSharedPtr &FJac,
-        DNekBlkMatSharedPtr &BJac);
 };
 
 /// A shared pointer to an Advection object.

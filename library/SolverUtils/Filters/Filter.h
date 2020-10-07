@@ -39,6 +39,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/EquationSystem.h>
+
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
 namespace Nektar
@@ -59,10 +60,8 @@ typedef LibUtilities::NekFactory<
     const std::weak_ptr<EquationSystem>&,
     const std::map<std::string, std::string>&
     > FilterFactory;
-
 SOLVER_UTILS_EXPORT FilterFactory& GetFilterFactory();
 
-    
 class Filter
 {
 public:
@@ -85,7 +84,7 @@ public:
 
 protected:
     LibUtilities::SessionReaderSharedPtr  m_session;
-    const std::weak_ptr<EquationSystem>   m_equ;
+    const std::weak_ptr<EquationSystem> m_equ;
 
     virtual void v_Initialise(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,

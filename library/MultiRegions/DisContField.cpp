@@ -4353,12 +4353,16 @@ namespace Nektar
             switch(m_expType)
             {
             case e2D:
-                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(1, Bwd, locTraceBwd);
-                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(0, Fwd, locTraceFwd);
+                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(1, Bwd, 
+                    locTraceBwd);
+                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(0, Fwd, 
+                    locTraceFwd);
                 break;
             case e3D:
-                m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(1, Bwd, locTraceBwd);
-                m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(0, Fwd, locTraceFwd);
+                m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(1, Bwd, 
+                    locTraceBwd);
+                m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(0, Fwd, 
+                    locTraceFwd);
                 break;
             default:
                 ASSERTL0(false, "GetLocTraceFromTracePts not defined");
@@ -4373,9 +4377,11 @@ namespace Nektar
             Array<OneD, NekDouble> FCoeffs(m_trace->GetNcoeffs());
 
             m_trace->IProductWRTBase(FwdFlux,FCoeffs);
-            m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(1,FCoeffs,outarray);
+            m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(1, FCoeffs, 
+                outarray);
             m_trace->IProductWRTBase(BwdFlux,FCoeffs);
-            m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(0,FCoeffs,outarray);
+            m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(0, FCoeffs, 
+                outarray);
         }
     } // end of namespace
 } //end of namespace

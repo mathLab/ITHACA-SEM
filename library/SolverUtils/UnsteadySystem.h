@@ -139,8 +139,6 @@ protected:
     Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >  m_PrecMatVarsSingle;
     SNekBlkMatSharedPtr                             m_PrecMatSingle;
     
-    bool                                            m_flagPrecMatVarsSingle;
-    bool                                            m_flagPrecondCacheOptmis;
     bool                                            m_flagImplItsStatistcs;
     
     Array<OneD, DNekBlkMatSharedPtr >               m_TraceJac;

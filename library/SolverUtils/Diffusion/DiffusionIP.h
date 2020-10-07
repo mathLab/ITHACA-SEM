@@ -245,20 +245,6 @@ protected:
         Array<OneD, Array<OneD, NekDouble>> &solution_Aver,
         Array<OneD, Array<OneD, NekDouble>> &solution_jump);
 
-    void ApplyFluxBndConds(
-         const int                                             nConvectiveFields,
-         const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
-         Array<OneD,       Array<OneD, NekDouble> >              &flux);
-            
-    void AddSecondDerivTOTrace(
-        const std::size_t nConvectiveFields, const size_t nDim,
-        const size_t nPts, const size_t nTracePts,
-        const NekDouble PenaltyFactor2,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-        const TensorOfArray3D<NekDouble> &qfield,
-        TensorOfArray3D<NekDouble> &numDerivFwd,
-        TensorOfArray3D<NekDouble> &numDerivBwd);
-
     /// Calculate numerical flux on traces
     void CalTraceNumFlux(
         const std::size_t nConvectiveFields, const size_t nDim,

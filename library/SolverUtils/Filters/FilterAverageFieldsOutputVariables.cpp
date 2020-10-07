@@ -89,7 +89,7 @@ void FilterAverageFieldsOutputVariables::v_ProcessSample(
     std::vector<std::string> variables(pFields.size());
 
     ASSERTL0(fieldcoeffs.size()==m_outFields.size(),
-             "FilterAverageFieldsOutputVariables:: fieldcoeffs.size()!=m_outFields.size()");
+        "FilterAverageFieldsOutputVariables:: fieldcoeffs.size()!=m_outFields.size()");
     
     for(int n = 0; n < m_outFields.size(); ++n)
     {

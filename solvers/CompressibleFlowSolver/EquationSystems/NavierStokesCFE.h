@@ -175,13 +175,7 @@ namespace Nektar
       void GetTracePhysicalAV();
       void Ducros( Array<OneD, NekDouble> &field );
       void C0Smooth(Array<OneD, NekDouble> &field);
-
-      virtual void v_MinusDiffusionFluxJacDirctn(
-        const int                                               nDirctn,
-        const Array<OneD, const Array<OneD, NekDouble> >        &inarray,
-        const Array<OneD, const Array<OneD, Array<OneD, NekDouble>> >   &qfields,
-        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > > > &ElmtJacArray);
-      
+  
       virtual void v_MinusDiffusionFluxJacDirctnElmt(
             const int                                  nConvectiveFields,
             const int                                  nElmtPnt,
@@ -359,6 +353,7 @@ namespace Nektar
         const Array<OneD, NekDouble> &temperature,
               Array<OneD, NekDouble> &mu,
               Array<OneD, NekDouble> &thermalCond);
+              
   };
 }
 #endif

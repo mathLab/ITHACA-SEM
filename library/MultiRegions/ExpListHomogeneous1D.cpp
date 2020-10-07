@@ -46,8 +46,8 @@ namespace Nektar
     namespace MultiRegions
     {
         // Forward declaration for typedefs
-        ExpListHomogeneous1D::ExpListHomogeneous1D():
-            ExpList(),
+        ExpListHomogeneous1D::ExpListHomogeneous1D(const ExpansionType type):
+            ExpList(type),
             m_homogeneousBasis(LibUtilities::NullBasisSharedPtr),
             m_lhom(1),
             m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr())
@@ -55,17 +55,21 @@ namespace Nektar
         }
 
         ExpListHomogeneous1D::ExpListHomogeneous1D(
-                   const LibUtilities::SessionReaderSharedPtr
-                   &pSession,const LibUtilities::BasisKey &HomoBasis,
+                   const ExpansionType type,
+                   const LibUtilities::SessionReaderSharedPtr &pSession,
+                   const LibUtilities::BasisKey &HomoBasis,
                    const NekDouble lhom,
                    const bool useFFT,
                    const bool dealiasing):
-            ExpList(pSession),
+            ExpList(type),
             m_useFFT(useFFT),
             m_lhom(lhom),
             m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr()),
             m_dealiasing(dealiasing)
         {
+            m_session = pSession;
+            m_comm    = pSession->GetComm();
+
             ASSERTL2(HomoBasis != LibUtilities::NullBasisKey,
                      "Homogeneous Basis is a null basis");
 
@@ -1470,6 +1474,23 @@ namespace Nektar
         Array<OneD, const unsigned int> ExpListHomogeneous1D::v_GetZIDs(void)
         {
             return m_transposition->GetPlanesIDs();
+        }
+
+        NekDouble ExpListHomogeneous1D::v_Integral(const Array<OneD,
+            const NekDouble> &inarray)
+        {
+            NekDouble val = 0.0;
+            int       i   = 0;
+
+            for (i = 0; i < (*m_exp).size(); ++i)
+            {
+                val += (*m_exp)[i]->Integral(inarray + m_phys_offset[i]);
+            }
+            val *= m_lhom/m_homogeneousBasis->GetNumModes();
+
+            m_comm->AllReduce(val, LibUtilities::ReduceSum);
+
+            return val;
         }
     } //end of namespace
 } //end of namespace

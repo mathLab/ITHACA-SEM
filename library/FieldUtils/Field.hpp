@@ -45,9 +45,7 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <SpatialDomains/MeshGraph.h>
 
-#include <MultiRegions/ContField1D.h>
-#include <MultiRegions/ContField2D.h>
-#include <MultiRegions/ContField3D.h>
+#include <MultiRegions/ContField.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
@@ -379,8 +377,8 @@ struct Field
                     if (m_declareExpansionAsContField ||
                         m_declareExpansionAsDisContField)
                     {
-                        ASSERTL0(false, "ContField2DHomogeneous1D or "
-                                        "DisContField2DHomogenenous1D has "
+                        ASSERTL0(false, "ContFieldHomogeneous1D or "
+                                        "DisContFieldHomogenenous1D has "
                                         "not been implemented");
                     }
 
@@ -459,18 +457,19 @@ struct Field
                 }
                 else
                 {
-                    MultiRegions::ExpList1DSharedPtr Exp1D;
+                    MultiRegions::ExpListSharedPtr Exp1D;
 
                     if (m_declareExpansionAsContField)
                     {
-                        Exp1D = MemoryManager<MultiRegions::ContField1D>::
+                        Exp1D = MemoryManager<MultiRegions::ContField>::
                             AllocateSharedPtr(m_session, m_graph,
                                               m_session->GetVariable(0),
+                                              true,false,
                                               Collections::eNoCollection);
                     }
                     else if (m_declareExpansionAsDisContField)
                     {
-                        Exp1D = MemoryManager<MultiRegions::DisContField1D>::
+                        Exp1D = MemoryManager<MultiRegions::DisContField>::
                             AllocateSharedPtr(m_session, m_graph,
                                               m_session->GetVariable(0),
                                               true,
@@ -478,9 +477,9 @@ struct Field
                     }
                     else
                     {
-                        Exp1D = MemoryManager<MultiRegions::ExpList1D>::
+                        Exp1D = MemoryManager<MultiRegions::ExpList>::
                             AllocateSharedPtr(m_session, m_graph,
-                                              true,
+                                              true,"DefaultVar",
                                               Collections::eNoCollection);
                     }
 
@@ -488,7 +487,7 @@ struct Field
                 }
             }
             break;
-            case 2:
+        case 2:
             {
                 ASSERTL0(NumHomogeneousDir <= 1,
                          "NumHomogeneousDir is only set up for 1");
@@ -502,7 +501,7 @@ struct Field
                     NekDouble lz;
                     LibUtilities::BasisType  btype;
                     LibUtilities::PointsType ptype =
-                            LibUtilities::eFourierEvenlySpaced;
+                        LibUtilities::eFourierEvenlySpaced;
 
                     if (fldfilegiven)
                     {
@@ -534,8 +533,7 @@ struct Field
                     }
                     // Choose points to be at evenly spaced points at
                     // nplanes points
-                    const LibUtilities::PointsKey Pkey(
-                        nplanes, ptype);
+                    const LibUtilities::PointsKey Pkey(nplanes, ptype);
 
                     const LibUtilities::BasisKey Bkey(btype, nplanes, Pkey);
 
@@ -572,11 +570,11 @@ struct Field
                 }
                 else
                 {
-                    MultiRegions::ExpList2DSharedPtr Exp2D;
+                    MultiRegions::ExpListSharedPtr Exp2D;
 
                     if (m_declareExpansionAsContField)
                     {
-                        Exp2D = MemoryManager<MultiRegions::ContField2D>::
+                        Exp2D = MemoryManager<MultiRegions::ContField>::
                             AllocateSharedPtr(m_session, m_graph,
                                               m_session->GetVariable(0),
                                               true,false,
@@ -585,7 +583,7 @@ struct Field
 
                     else if (m_declareExpansionAsDisContField)
                     {
-                        Exp2D = MemoryManager<MultiRegions::DisContField2D>::
+                        Exp2D = MemoryManager<MultiRegions::DisContField>::
                             AllocateSharedPtr(m_session, m_graph,
                                               m_session->GetVariable(0),
                                               true,true,
@@ -593,7 +591,7 @@ struct Field
                     }
                     else
                     {
-                        Exp2D = MemoryManager<MultiRegions::ExpList2D>::
+                        Exp2D = MemoryManager<MultiRegions::ExpList>::
                             AllocateSharedPtr(m_session, m_graph,
                                               true,
                                               "DefaultVar",
@@ -604,21 +602,22 @@ struct Field
                 }
             }
             break;
-            case 3:
+        case 3:
             {
-                MultiRegions::ExpList3DSharedPtr Exp3D;
+                MultiRegions::ExpListSharedPtr Exp3D;
 
                 if (m_declareExpansionAsContField)
                 {
-                    Exp3D = MemoryManager<MultiRegions::ContField3D>::
+                    Exp3D = MemoryManager<MultiRegions::ContField>::
                         AllocateSharedPtr(m_session, m_graph,
                                           m_session->GetVariable(0),
+                                          true,
                                           false,
                                           Collections::eNoCollection);
                 }
                 else if (m_declareExpansionAsDisContField)
                 {
-                    Exp3D = MemoryManager<MultiRegions::DisContField3D>::
+                    Exp3D = MemoryManager<MultiRegions::DisContField>::
                         AllocateSharedPtr(m_session, m_graph,
                                           m_session->GetVariable(0),
                                           true,
@@ -627,9 +626,10 @@ struct Field
                 else
                 {
                     Exp3D = MemoryManager<
-                        MultiRegions::ExpList3D>::AllocateSharedPtr(
+                        MultiRegions::ExpList>::AllocateSharedPtr(
                                                m_session,
                                                m_graph,
+                                               true,
                                                "DefaultVar",
                                                Collections::eNoCollection);
                 }
@@ -698,8 +698,8 @@ struct Field
                 {
                     ASSERTL0(!(m_declareExpansionAsContField ||
                                m_declareExpansionAsDisContField),
-                             "ContField2DHomogeneous1D or "
-                             "DisContField2DHomogenenous1D has not been "
+                             "ContFieldHomogeneous1D or "
+                             "DisContFieldHomogenenous1D has not been "
                              "implemented");
 
                     MultiRegions::ExpList2DHomogeneous1DSharedPtr tmp2 =
@@ -748,30 +748,30 @@ struct Field
                 {
                     if (m_declareExpansionAsContField)
                     {
-                        MultiRegions::ContField1DSharedPtr tmp2 =
+                        MultiRegions::ContFieldSharedPtr tmp2 =
                             std::dynamic_pointer_cast<
-                                MultiRegions::ContField1D>(m_exp[0]);
+                                MultiRegions::ContField>(m_exp[0]);
 
-                        tmp = MemoryManager<MultiRegions::ContField1D>::
+                        tmp = MemoryManager<MultiRegions::ContField>::
                             AllocateSharedPtr(m_session, m_graph, var);
                     }
                     else if (m_declareExpansionAsDisContField)
                     {
-                        MultiRegions::DisContField1DSharedPtr tmp2 =
+                        MultiRegions::DisContFieldSharedPtr tmp2 =
                             std::dynamic_pointer_cast<
-                                MultiRegions::DisContField1D>(m_exp[0]);
+                                MultiRegions::DisContField>(m_exp[0]);
 
-                        tmp = MemoryManager<MultiRegions::DisContField1D>::
+                        tmp = MemoryManager<MultiRegions::DisContField>::
                             AllocateSharedPtr(m_session, m_graph, var);
                     }
                     else
                     {
-                        MultiRegions::ExpList1DSharedPtr tmp2 =
+                        MultiRegions::ExpListSharedPtr tmp2 =
                             std::dynamic_pointer_cast<
-                                MultiRegions::ExpList1D>(m_exp[0]);
+                                MultiRegions::ExpList>(m_exp[0]);
 
                         tmp = MemoryManager<
-                            MultiRegions::ExpList1D>::AllocateSharedPtr(*tmp2);
+                            MultiRegions::ExpList>::AllocateSharedPtr(*tmp2);
                     }
                 }
             }
@@ -871,17 +871,17 @@ struct Field
                     {
                         if (NewField)
                         {
-                            tmp = MemoryManager<MultiRegions::ContField2D>::
+                            tmp = MemoryManager<MultiRegions::ContField>::
                                 AllocateSharedPtr(m_session, m_graph, var);
                         }
                         else // call copy constructor
                         {
 
-                            MultiRegions::ContField2DSharedPtr tmp2 =
+                            MultiRegions::ContFieldSharedPtr tmp2 =
                                 std::dynamic_pointer_cast<
-                                    MultiRegions::ContField2D>(m_exp[0]);
+                                    MultiRegions::ContField>(m_exp[0]);
 
-                            tmp = MemoryManager<MultiRegions::ContField2D>::
+                            tmp = MemoryManager<MultiRegions::ContField>::
                                 AllocateSharedPtr(*tmp2, m_graph, var);
                         }
                     }
@@ -889,27 +889,27 @@ struct Field
                     {
                         if (NewField)
                         {
-                            tmp = MemoryManager<MultiRegions::DisContField2D>::
+                            tmp = MemoryManager<MultiRegions::DisContField>::
                                 AllocateSharedPtr(m_session, m_graph, var);
                         }
                         else // call copy constructor
                         {
-                            MultiRegions::DisContField2DSharedPtr tmp2 =
+                            MultiRegions::DisContFieldSharedPtr tmp2 =
                                 std::dynamic_pointer_cast<
-                                    MultiRegions::DisContField2D>(m_exp[0]);
+                                    MultiRegions::DisContField>(m_exp[0]);
 
-                            tmp = MemoryManager<MultiRegions::DisContField2D>::
+                            tmp = MemoryManager<MultiRegions::DisContField>::
                                 AllocateSharedPtr(*tmp2, m_graph, var);
                         }
                     }
                     else
                     {
-                        MultiRegions::ExpList2DSharedPtr tmp2 =
+                        MultiRegions::ExpListSharedPtr tmp2 =
                             std::dynamic_pointer_cast<
-                                MultiRegions::ExpList2D>(m_exp[0]);
+                                MultiRegions::ExpList>(m_exp[0]);
 
                         tmp = MemoryManager<
-                            MultiRegions::ExpList2D>::AllocateSharedPtr(*tmp2);
+                            MultiRegions::ExpList>::AllocateSharedPtr(*tmp2);
                     }
                 }
             }
@@ -920,16 +920,16 @@ struct Field
                 {
                     if (NewField)
                     {
-                        tmp = MemoryManager<MultiRegions::ContField3D>::
+                        tmp = MemoryManager<MultiRegions::ContField>::
                             AllocateSharedPtr(m_session, m_graph, var);
                     }
                     else
                     {
-                        MultiRegions::ContField3DSharedPtr tmp2 =
+                        MultiRegions::ContFieldSharedPtr tmp2 =
                             std::dynamic_pointer_cast<
-                                MultiRegions::ContField3D>(m_exp[0]);
+                                MultiRegions::ContField>(m_exp[0]);
 
-                        tmp = MemoryManager<MultiRegions::ContField3D>::
+                        tmp = MemoryManager<MultiRegions::ContField>::
                             AllocateSharedPtr(*tmp2, m_graph, var);
                     }
                 }
@@ -937,27 +937,27 @@ struct Field
                 {
                     if (NewField)
                     {
-                        tmp = MemoryManager<MultiRegions::DisContField3D>::
+                        tmp = MemoryManager<MultiRegions::DisContField>::
                             AllocateSharedPtr(m_session, m_graph, var);
                     }
                     else
                     {
-                        MultiRegions::DisContField3DSharedPtr tmp2 =
+                        MultiRegions::DisContFieldSharedPtr tmp2 =
                             std::dynamic_pointer_cast<
-                                MultiRegions::DisContField3D>(m_exp[0]);
+                                MultiRegions::DisContField>(m_exp[0]);
 
-                        tmp = MemoryManager<MultiRegions::DisContField3D>::
+                        tmp = MemoryManager<MultiRegions::DisContField>::
                             AllocateSharedPtr(*tmp2, m_graph, var);
                     }
                 }
                 else
                 {
-                    MultiRegions::ExpList3DSharedPtr tmp2 =
-                        std::dynamic_pointer_cast<MultiRegions::ExpList3D>(
+                    MultiRegions::ExpListSharedPtr tmp2 =
+                        std::dynamic_pointer_cast<MultiRegions::ExpList>(
                             m_exp[0]);
 
                     tmp = MemoryManager<
-                        MultiRegions::ExpList3D>::AllocateSharedPtr(*tmp2);
+                        MultiRegions::ExpList>::AllocateSharedPtr(*tmp2);
                 }
             }
             break;
@@ -965,7 +965,7 @@ struct Field
                 ASSERTL0(false, "Expansion dimension not recognised");
                 break;
         }
-
+        
         return tmp;
     }
 

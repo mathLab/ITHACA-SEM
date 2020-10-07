@@ -1,0 +1,158 @@
+<!-- Taylor Green's problem - 3D -->
+<?xml version="1.0" encoding="utf-8"?>
+
+<NEKTAR>
+    <EXPANSIONS>
+        <E COMPOSITE="C[7]"
+           BASISTYPE="Modified_A,Modified_A,Modified_A"
+           NUMMODES="3,3,3"
+           POINTSTYPE="GaussLobattoLegendre,GaussLobattoLegendre,
+                       GaussLobattoLegendre"
+           NUMPOINTS="4,4,4"
+           FIELDS="u,v,w,p" />
+    </EXPANSIONS>
+    <FILTERS>
+    <FILTER TYPE="ModalEnergy">
+            <PARAM NAME="OutputFile"> TGV64MEnergy </PARAM>
+            <PARAM NAME="OutputFrequency"> 10 </PARAM>
+        </FILTER> 
+    <FILTER TYPE="Energy">
+            <PARAM NAME="OutputFile"> TGV64Energy </PARAM>
+            <PARAM NAME="OutputFrequency"> 10 </PARAM>
+        </FILTER> 
+    </FILTERS>
+    <CONDITIONS>
+        <SOLVERINFO>
+            <I PROPERTY="SolverType"            VALUE="VelocityCorrectionScheme"   />
+            <I PROPERTY="EqType"                VALUE="UnsteadyNavierStokes"       />
+            <I PROPERTY="AdvectionForm"         VALUE="Convective"                 />
+            <I PROPERTY="Projection"            VALUE="Galerkin"                   />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"                 />
+     <!--   <I PROPERTY="Homogeneous"           VALUE="1D"                         /> -->
+     <!--   <I PROPERTY="UseFFT"                VALUE="FFTW"                       /> -->
+     <!--   <I PROPERTY="GlobalSysSoln"         VALUE="DirectMultiLevelStaticCond" /> -->
+            <I PROPERTY="GlobalSysSoln"         VALUE="IterativeStaticCond" />
+            <I PROPERTY="SpectralHPDealiasing" 	VALUE="True" />
+            <I PROPERTY="SpectralVanishingViscosity"         VALUE="DGKernel" /> 
+      <!--  <I PROPERTY="SpectralVanishingViscosity"         VALUE="True" />  --> 
+        </SOLVERINFO>
+        <PARAMETERS>
+            <P> TimeStep       = 0.002    </P>
+            <P> FinalTime      = 20.0     </P>
+            <P> NumSteps       = 10 </P>
+            <P> IO_CheckSteps  = NumSteps/4     </P>
+            <P> IO_InfoSteps   = 1       </P>
+            <P> IO_CFLSteps    = 1       </P>
+     <!--   <P> IO_CFDWriteFld = 100      </P> -->
+            <P> Re             = 1600     </P>
+            <P> Kinvis         = 1/Re     </P>
+            <P> V0             = 1        </P>
+            <P> L              = 1        </P> 
+     <!--   <P> LZ             = 2*PI     </P> -->
+     <!--   <P> HomModesZ      = 64       </P> -->
+            <P> SVVCutoffRatio = 1      </P>  
+            <P> SVVDiffCoeff   = 1       </P>  
+	</PARAMETERS>
+	<GLOBALSYSSOLNINFO>
+	     <V VAR="u,v,w">
+	       <I PROPERTY="GlobalSysSoln"       VALUE="IterativeStaticCond" />
+	       <I PROPERTY="Preconditioner"       VALUE="LowEnergyBlock"/>
+	       <I PROPERTY="IterativeSolverTolerance"    VALUE="1e-9"/>
+	    </V>
+	    <V VAR="p">
+	       <I PROPERTY="GlobalSysSoln"         VALUE="IterativeStaticCond" />
+	       <I PROPERTY="Preconditioner"        VALUE="FullLinearSpaceWithLowEnergyBlock"/>
+	       <I PROPERTY="IterativeSolverTolerance"    VALUE="1e-9"/>
+	   </V>
+	</GLOBALSYSSOLNINFO>
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> v </V>
+            <V ID="2"> w </V>
+            <V ID="3"> p </V>
+        </VARIABLES>
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[3] </B>
+            <B ID="2"> C[2] </B>
+            <B ID="3"> C[4] </B>
+            <B ID="4"> C[5] </B>
+            <B ID="5"> C[6] </B>
+        </BOUNDARYREGIONS>
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <P VAR="u" VALUE="[2]" />
+                <P VAR="v" VALUE="[2]" />
+                <P VAR="w" VALUE="[2]" />
+                <P VAR="p" VALUE="[2]" />
+            </REGION>
+            <REGION REF="1">
+                <P VAR="u" VALUE="[3]" />
+                <P VAR="v" VALUE="[3]" />
+                <P VAR="w" VALUE="[3]" />
+                <P VAR="p" VALUE="[3]" />
+            </REGION>
+            <REGION REF="2">
+                <P VAR="u" VALUE="[0]" />
+                <P VAR="v" VALUE="[0]" />
+                <P VAR="w" VALUE="[0]" />
+                <P VAR="p" VALUE="[0]" />
+            </REGION>
+            <REGION REF="3">
+                <P VAR="u" VALUE="[1]" />
+                <P VAR="v" VALUE="[1]" />
+                <P VAR="w" VALUE="[1]" />
+                <P VAR="p" VALUE="[1]" />
+            </REGION>
+            <REGION REF="4">
+                <P VAR="u" VALUE="[5]" />
+                <P VAR="v" VALUE="[5]" />
+                <P VAR="w" VALUE="[5]" />
+                <P VAR="p" VALUE="[5]" />
+            </REGION>
+            <REGION REF="5">
+                <P VAR="u" VALUE="[4]" />
+                <P VAR="v" VALUE="[4]" />
+                <P VAR="w" VALUE="[4]" />
+                <P VAR="p" VALUE="[4]" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="V0 * sin(x/L)*cos(y/L)*cos(z/L)" />
+            <E VAR="v" VALUE="-1 * V0 * cos(x/L)*sin(y/L)*cos(z/L)" />
+            <E VAR="w" VALUE="0" />
+            <E VAR="p" VALUE="0" />
+        </FUNCTION>
+    </CONDITIONS>
+
+    <GEOMETRY DIM="3" SPACE="3">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64" XSCALE="2*PI" YSCALE="2*PI" ZSCALE="2*PI" >eJx90NsVgjAQBNCg4BN8K2Iz0yx9SQnTgfoTInPC7F9ys7tzEsJ/Dej6z6/eiDeFdWIRpqX9S+tEGXxVVomV5NMXa+vERs6af2ud2Inr/r11os7mS+8a68RBF0r/0TpxmrmPN2frxGVmb8x7lbP6LZsv+V3mT/9/wEM61FuZp/7M5ufoXTZX8pfMV/8C8tRqEgAA</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1k8dywkAQBUUyCIzJAhtscs5g/v/XuEwf6Cr28qq1M692gpLk9eRDc+LiG/4ILYgTxXH6oSX5Zconrxta1n0ntCJffFIxPlUxPjUxfp9i+lKXP/V/yZ86G/KnnqZ88WmJ8WmL8bEvfryDPnF6ofSTvmRi9xcmf6B43vetOPJ/9F7ih2LyRmLm+qt45venOPowDi0rfiImbxrK/JnrTMz+zpPXQ95CTP1L+dCvleL4vhYzp02o+7sVs687+bCXe8Xx/SBmH4+h/h9Ooew1dZ9DK7q/iNmnq5g6bqHev7uY/+dfzDsfoanun0EiCz8A</EDGE>
+        <FACE>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxdks1awkAQBKNRxKASEVBAE0BBRfAX3v/VvHQdqL3Ux9DTs9Obojg+J+FpWKrOOQ+74Zn60HfCS/WV0qOrwgv5lqr39L/vw7xK+o5012EdXmkOPjfhrfrwqaQbhH359FS/01x8uA/zBtLjMwzJZxSO5YuOvCbhfcg+9LP/NHwI2W+s+kx+7Mcc7juVvpaO+zbhY0gO9OPfhk8hOc1Un8uPHBv9bqUnt0W4LI7PcziSbhWuw5eQ3PDhu31VHzniz7u9yY/8mYNPV/qJdJvwI3wPyRcfvout+sgXf95tJz/yZg4+tfS802fI3uT/FTbSkcNP+B3yjvSR5690c/U7L/QL6dhvH/6FvCt97H+Qjv3oJ4dG+n/riBC1</Q>
+        </FACE>
+        <ELEMENT>
+            <H COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxdz8kOgzAUQ1GmEMpYaAu0zOX//5HNfQuczZGjyIqD4H5CjDDGBJ28s5yixwwfmEtvgaX0V1hjI/+w/JT+Fjt8Se8bP9jLjgFHdJK/+EPbO+Es9wuu0m97N9zRSz6k3/b+8cQLAA4DQQAA</H>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="1"> F[2,7,22,26] </C>
+            <C ID="2"> F[14,18,31,34] </C>
+            <C ID="3"> F[21,25,30,33] </C>
+            <C ID="4"> F[3,8,13,17] </C>
+            <C ID="5"> F[0,11,20,29] </C>
+            <C ID="6"> F[10,19,28,35] </C>
+            <C ID="7"> H[0-7] </C>
+        </COMPOSITE>
+        <DOMAIN> C[7] </DOMAIN>
+    </GEOMETRY>
+    <Metadata>
+        <Provenance>
+            <GitBranch>refs/heads/master</GitBranch>
+            <GitSHA1>21dc3e13700f49b1f702f47dec2aef90ff554701</GitSHA1>
+            <Hostname>Spencers-MacBook-Pro-4.local</Hostname>
+            <NektarVersion>5.0.0</NektarVersion>
+            <Timestamp>22-May-2020 21:46:41</Timestamp>
+        </Provenance>
+        <NekMeshCommandLine>-m peralign:surf1=1:surf2=2:dir=x:orient -m peralign:surf1=3:surf2=4:dir=y:orient -m peralign:surf1=5:surf2=6:dir=z:orient 3D.xml 3D_oriented.xml </NekMeshCommandLine>
+    </Metadata>
+</NEKTAR>

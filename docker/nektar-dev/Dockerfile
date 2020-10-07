@@ -1,11 +1,14 @@
-FROM nektarpp/nektar-env:latest AS build
+ARG NEKTAR_IMAGE=nektarpp/nektar:latest
+ARG ENV_IMAGE=nektarpp/nektar-env:latest
+FROM $NEKTAR_IMAGE as nektar
+FROM $ENV_IMAGE AS build
 
-LABEL maintainer="David Moxey <d.moxey@exeter.ac.uk>"
+LABEL maintainer="Nektar++ Development Team <nektar-users@imperial.ac.uk>"
 
 ARG INSTALL_PREFIX=/usr/local
 
 USER root
-COPY --from=nektarpp/nektar:latest ${INSTALL_PREFIX} ${INSTALL_PREFIX}
+COPY --from=nektar ${INSTALL_PREFIX} ${INSTALL_PREFIX}
 
 # Set up entrypoint for copying test files.
 COPY docker/nektar/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh

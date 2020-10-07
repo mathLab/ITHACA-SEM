@@ -22,10 +22,6 @@ IF( NEKTAR_SOLVER_PULSEWAVE )
         EquationSystems/TimeDependentInflow.cpp
         EquationSystems/QInflow.h
         EquationSystems/QInflow.cpp
-        EquationSystems/AInflow.h
-        EquationSystems/AInflow.cpp
-        EquationSystems/UInflow.h
-        EquationSystems/UInflow.cpp
         EquationSystems/TerminalOutflow.h
         EquationSystems/TerminalOutflow.cpp
         EquationSystems/ROutflow.h
@@ -34,14 +30,20 @@ IF( NEKTAR_SOLVER_PULSEWAVE )
         EquationSystems/RCROutflow.cpp
         EquationSystems/UndefinedInOutflow.h
         EquationSystems/UndefinedInOutflow.cpp
-        EquationSystems/LymphaticPressureArea.h
-        EquationSystems/LymphaticPressureArea.cpp
-        EquationSystems/ArterialPressureArea.h
-        EquationSystems/ArterialPressureArea.cpp
+        EquationSystems/BetaPressureArea.h
+        EquationSystems/BetaPressureArea.cpp
+        EquationSystems/EmpiricalPressureArea.h
+        EquationSystems/EmpiricalPressureArea.cpp
+        EquationSystems/PowerPressureArea.h
+        EquationSystems/PowerPressureArea.cpp
+        EquationSystems/AInflow.h
+        EquationSystems/AInflow.cpp
+        EquationSystems/UInflow.h
+        EquationSystems/UInflow.cpp
         RiemannSolvers/UpwindPulseSolver.cpp
         )
 
-    SUBDIRS(Utilities)
+        SUBDIRS(Utilities)
 
     ADD_NEKTAR_TEST(55_Artery_Network)
     ADD_NEKTAR_TEST(Bifurcation)
@@ -50,8 +52,11 @@ IF( NEKTAR_SOLVER_PULSEWAVE )
     ADD_NEKTAR_TEST(Merging)
     ADD_NEKTAR_TEST(VariableAreaTest)
     ADD_NEKTAR_TEST(VariableMatPropTest)
-    ADD_NEKTAR_TEST(Q_inflow)
-    ADD_NEKTAR_TEST(A_inflow)
-    ADD_NEKTAR_TEST(U_inflow)
+    ADD_NEKTAR_TEST(QInflow)
     ADD_NEKTAR_TEST(RCR_boundary)
+    ADD_NEKTAR_TEST(AInflow)
+    ADD_NEKTAR_TEST(UInflow)
+    ADD_NEKTAR_TEST(Viscoelasticity)
+    ADD_NEKTAR_TEST(EmpiricalPressure)
+    ADD_NEKTAR_TEST(PowerPressure)
 ENDIF( NEKTAR_SOLVER_PULSEWAVE )

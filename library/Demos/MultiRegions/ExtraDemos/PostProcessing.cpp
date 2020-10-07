@@ -1,4 +1,4 @@
-#include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/ExpList.h>
 #include <LibUtilities/Kernel/kernel.h>
 #include <SpatialDomains/MeshGraph.h>
 
@@ -22,11 +22,11 @@ int main(int argc, char *argv[])
 
 	/***********************************************************/
 
-	// Construct an object from the class ExpList1D.
+	// Construct an object from the class ExpList.
         // This is the class which represents a multi-elemental expansion
 	// This object can be constructed based on the input mesh
-        MultiRegions::ExpList1DSharedPtr u =
-            MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(vSession,graph1D);
+        MultiRegions::ExpListSharedPtr u =
+            MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr(vSession,graph1D);
 
 	/***********************************************************/
 	// Get the number of elements
@@ -63,11 +63,13 @@ int main(int argc, char *argv[])
 	/******************* Post-Processing ***********************/
 	// Construct the appropriate post-processed multi-element expansion object
 	int post_order = 2*order;
-	LibUtilities::PointsType pType = base[0]->GetPointsType();
-	LibUtilities::PointsKey  pKey(post_order+1,pType);
-	LibUtilities::BasisKey upost_bkey(base[0]->GetBasisType(),post_order,pKey);
-	MultiRegions::ExpList1DSharedPtr u_post =
-        MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(vSession,upost_bkey,graph1D);
+
+        // reset expansiosn to be of new order 
+        graph1D->SetExpansionInfosToPolyOrder(post_order);
+        
+        MultiRegions::ExpListSharedPtr u_post =
+            MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr(vSession,
+                                                                    graph1D);
 
 	// The post-processing for the first element
 	// Step1: Define the element ID on which the post-processing is done

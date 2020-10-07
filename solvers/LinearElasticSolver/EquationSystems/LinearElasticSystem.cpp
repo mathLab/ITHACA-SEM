@@ -38,8 +38,7 @@
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/NodalTriExp.h>
-#include <MultiRegions/ContField2D.h>
-#include <MultiRegions/ContField3D.h>
+#include <MultiRegions/ContField.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
 #include <MultiRegions/Preconditioner.h>
@@ -156,29 +155,14 @@ void LinearElasticSystem::v_InitObject()
 
     // Create a coupled assembly map which allows us to tie u, v and w
     // fields together.
-    if (nVel == 2)
-    {
-        MultiRegions::ContField2DSharedPtr u = std::dynamic_pointer_cast<
-            MultiRegions::ContField2D>(m_fields[0]);
-        m_assemblyMap = MemoryManager<CoupledAssemblyMap>
-            ::AllocateSharedPtr(m_session,
-                                m_graph,
-                                u->GetLocalToGlobalMap(),
-                                m_fields[0]->GetBndConditions(),
-                                m_fields);
-    }
-
-    if (nVel == 3)
-    {
-        MultiRegions::ContField3DSharedPtr u = std::dynamic_pointer_cast<
-            MultiRegions::ContField3D>(m_fields[0]);
-        m_assemblyMap = MemoryManager<CoupledAssemblyMap>
-            ::AllocateSharedPtr(m_session,
-                                m_graph,
-                                u->GetLocalToGlobalMap(),
-                                m_fields[0]->GetBndConditions(),
-                                m_fields);
-    }
+    MultiRegions::ContFieldSharedPtr u = std::dynamic_pointer_cast<
+        MultiRegions::ContField>(m_fields[0]);
+    m_assemblyMap = MemoryManager<CoupledAssemblyMap>
+        ::AllocateSharedPtr(m_session,
+                            m_graph,
+                            u->GetLocalToGlobalMap(),
+                            m_fields[0]->GetBndConditions(),
+                            m_fields);
 
     // Figure out size of our new matrix systems by looping over all expansions
     // and multiply number of coefficients by velocity components.

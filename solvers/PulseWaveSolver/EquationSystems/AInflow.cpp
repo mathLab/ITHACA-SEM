@@ -10,6 +10,7 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
+// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -40,30 +41,23 @@ namespace Nektar
 std::string AInflow::className = GetBoundaryFactory().RegisterCreatorFunction(
     "A-inflow", AInflow::create, "Area inflow boundary condition");
 
-/**
- *
- */
 AInflow::AInflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel,
                  const LibUtilities::SessionReaderSharedPtr pSession,
                  PulseWavePressureAreaSharedPtr pressureArea)
     : PulseWaveBoundary(pVessel, pSession, pressureArea)
 {
-    // Constructor
 }
 
-/**
- *
- */
 AInflow::~AInflow()
 {
-    // Destructor
 }
 
 void AInflow::v_DoBoundary(
     const Array<OneD, const Array<OneD, NekDouble>> &inarray,
-    Array<OneD, Array<OneD, NekDouble>> &A_0,
-    Array<OneD, Array<OneD, NekDouble>> &beta, const NekDouble time, int omega,
-    int offset, int n)
+    Array<OneD, Array<OneD, NekDouble> > &A_0,
+    Array<OneD, Array<OneD, NekDouble> > &beta,
+    Array<OneD, Array<OneD, NekDouble> > &alpha,
+    const NekDouble time, int omega, int offset, int n)
 {
     NekDouble A;
     NekDouble A_r;
@@ -89,6 +83,7 @@ void AInflow::v_DoBoundary(
     /* Fix the boundary conditions in the virtual vessel to ensure
        upwind state matches the boundary condition at the next time step */
     u_l = u_r;
+    // Needs to be updated to work with other tube laws
     A_l = pow(2 * sqrt(sqrt(A)) - sqrt(sqrt(A_r)), 4);
 
     // Store the updated values in the boundary condition

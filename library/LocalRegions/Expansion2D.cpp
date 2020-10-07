@@ -34,15 +34,14 @@
 
 #include <boost/core/ignore_unused.hpp>
 
-#include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion1D.h>
+#include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
 #include <SpatialDomains/Geometry.h>
 #include <SpatialDomains/Geometry2D.h>
 #include <LibUtilities/Foundations/InterpCoeff.h>
 #include <LocalRegions/MatrixKey.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
-
 using namespace std;
 
 namespace Nektar
@@ -52,8 +51,6 @@ namespace Nektar
         Expansion2D::Expansion2D(SpatialDomains::Geometry2DSharedPtr pGeom) :
             StdExpansion(), Expansion(pGeom), StdExpansion2D()
         {
-            m_elementFaceLeft  = -1;
-            m_elementFaceRight = -1;
         }
 
         void Expansion2D::v_AddEdgeNormBoundaryInt(
@@ -67,23 +64,23 @@ namespace Nektar
                      "Routine only set up for two-dimensions");
 
             const Array<OneD, const Array<OneD, NekDouble> > normals
-                                    = GetEdgeNormal(edge);
+                                    = GetTraceNormal(edge);
 
             if (m_requireNeg.size() == 0)
             {
-                m_requireNeg.resize(GetNedges());
+                int nedges = GetNtraces();
+                m_requireNeg.resize(nedges);
 
-                for (int i = 0; i < GetNedges(); ++i)
+                for (int i = 0; i < nedges;++i)
                 {
                     m_requireNeg[i] = false;
 
-                    Expansion1DSharedPtr edgeExp =
-                                    m_edgeExp[i].lock()->as<Expansion1D>();
+                    ExpansionSharedPtr edgeExp = m_traceExp[i].lock(); 
 
                     if (edgeExp->GetRightAdjacentElementExp())
                     {
-                        if (edgeExp->GetRightAdjacentElementExp()->GetGeom2D()
-                            ->GetGlobalID() == GetGeom2D()->GetGlobalID())
+                        if (edgeExp->GetRightAdjacentElementExp()->GetGeom()
+                            ->GetGlobalID() == GetGeom()->GetGlobalID())
                         {
                             m_requireNeg[i] = true;
                         }
@@ -128,19 +125,19 @@ namespace Nektar
 
             if (m_requireNeg.size() == 0)
             {
-                m_requireNeg.resize(GetNedges());
+                int nedges = GetNtraces();
+                m_requireNeg.resize(nedges);
 
-                for (i = 0; i < GetNedges(); ++i)
+                for (i = 0; i < nedges; ++i)
                 {
                     m_requireNeg[i] = false;
 
-                    Expansion1DSharedPtr edgeExp =
-                                m_edgeExp[i].lock()->as<Expansion1D>();
+                    ExpansionSharedPtr edgeExp = m_traceExp[i].lock();
 
                     if (edgeExp->GetRightAdjacentElementExp())
                     {
-                        if (edgeExp->GetRightAdjacentElementExp()->GetGeom2D()
-                            ->GetGlobalID() == GetGeom2D()->GetGlobalID())
+                        if (edgeExp->GetRightAdjacentElementExp()->GetGeom()
+                            ->GetGlobalID() == GetGeom()->GetGlobalID())
                         {
                             m_requireNeg[i] = true;
                         }
@@ -148,12 +145,11 @@ namespace Nektar
                 }
             }
 
-            StdRegions::IndexMapKey ikey(
-                StdRegions::eEdgeToElement, DetShapeType(),
-                GetBasisNumModes(0), GetBasisNumModes(1), 0,
-                edge, GetEorient(edge));
-            StdRegions::IndexMapValuesSharedPtr map =
-                StdExpansion::GetIndexMap(ikey);
+            IndexMapKey ikey(eEdgeToElement, DetShapeType(),
+                             GetBasisNumModes(0), GetBasisNumModes(1), 0,
+                             edge, GetTraceOrient(edge));
+
+            IndexMapValuesSharedPtr map = GetIndexMap(ikey);
 
             // Order of the element
             int order_e = map->size();
@@ -297,15 +293,15 @@ namespace Nektar
             Array<OneD, NekDouble> &inout)
         {
             int i, cnt = 0;
-            int nedges = GetNedges();
+            int nedges = GetNtraces();
             Array<OneD, NekDouble> e_tmp;
 
             for(i = 0; i < nedges; ++i)
             {
-                EdgeExp[i]->SetCoeffsToOrientation(GetEorient(i),
+                EdgeExp[i]->SetCoeffsToOrientation(GetTraceOrient(i),
                                                    e_tmp = inout + cnt,
                                                    e_tmp = inout + cnt);
-                cnt += GetEdgeNcoeffs(i);
+                cnt += GetTraceNcoeffs(i);
             }
         }
 
@@ -322,7 +318,7 @@ namespace Nektar
         {
             int i,e,cnt;
             int order_e,nquad_e;
-            int nedges = GetNedges();
+            int nedges = GetNtraces();
 
             cnt = 0;
             for(e = 0; e < nedges; ++e)
@@ -331,7 +327,7 @@ namespace Nektar
                 nquad_e = EdgeExp[e]->GetNumPoints(0);
 
                 const Array<OneD, const Array<OneD, NekDouble> > &normals
-                    = GetEdgeNormal(e);
+                    = GetTraceNormal(e);
                 Array<OneD, NekDouble> edgeCoeffs(order_e);
                 Array<OneD, NekDouble> edgePhys  (nquad_e);
 
@@ -388,7 +384,7 @@ namespace Nektar
         {
             int e;
             int nquad_e;
-            int nedges = GetNedges();
+            int nedges = GetNtraces();
 
             for(e = 0; e < nedges; ++e)
             {
@@ -396,7 +392,7 @@ namespace Nektar
 
                 Array<OneD, NekDouble> edgePhys(nquad_e);
                 const Array<OneD, const Array<OneD, NekDouble> > &normals
-                    = GetEdgeNormal(e);
+                    = GetTraceNormal(e);
 
                 EdgeExp[e]->BwdTrans(edgeCoeffs[e], edgePhys);
 
@@ -424,7 +420,7 @@ namespace Nektar
             Array<OneD,int> sign;
             Array<OneD, NekDouble> coeff(order_e);
 
-            GetEdgeToElementMap(edge, v_GetEorient(edge), map, sign);
+            GetTraceToElementMap(edge, map, sign, v_GetTraceOrient(edge));
 
             StdRegions::VarCoeffType VarCoeff[3] = {StdRegions::eVarCoeffD00,
                                                     StdRegions::eVarCoeffD11,
@@ -462,7 +458,7 @@ namespace Nektar
             ASSERTL0(&inarray[0] != &outarray[0],
                      "Input and output arrays use the same memory");
 
-            int e, cnt, order_e, nedges = GetNedges();
+            int e, cnt, order_e, nedges = GetNtraces();
             Array<OneD, const NekDouble> tmp;
 
             cnt = 0;
@@ -505,17 +501,17 @@ namespace Nektar
             Array<OneD, NekDouble> tmpcoeff(ncoeffs);
 
             const Array<OneD, const Array<OneD, NekDouble> > &normals
-                                = GetEdgeNormal(edge);
+                                = GetTraceNormal(edge);
 
             Array<OneD,unsigned int> emap;
             Array<OneD,int> sign;
 
-            StdRegions::Orientation edgedir = GetEorient(edge);
+            StdRegions::Orientation edgedir = GetTraceOrient(edge);
 
             DNekVec                Coeffs  (ncoeffs,outarray,eWrapper);
             DNekVec                Tmpcoeff(ncoeffs,tmpcoeff,eWrapper);
 
-            GetEdgeToElementMap(edge,edgedir,emap,sign);
+            GetTraceToElementMap(edge,emap,sign,edgedir);
 
             StdRegions::MatrixType DerivType[3] =
             {
@@ -661,8 +657,8 @@ namespace Nektar
             // Map to edge
             Array<OneD,unsigned int>    emap;
             Array<OneD, int>            sign;
-            StdRegions::Orientation edgedir = GetEorient(edge);
-            GetEdgeToElementMap(edge,edgedir,emap,sign);
+            StdRegions::Orientation edgedir = GetTraceOrient(edge);
+            GetTraceToElementMap(edge,emap,sign,edgedir);
 
             for (unsigned int i = 0; i < EdgeExp->GetNcoeffs(); ++i)
             {
@@ -698,7 +694,7 @@ namespace Nektar
                     NekDouble lambdaval = mkey.GetConstFactor(StdRegions::eFactorLambda);
                     NekDouble tau       = mkey.GetConstFactor(StdRegions::eFactorTau);
                     int       ncoeffs   = GetNcoeffs();
-                    int       nedges    = GetNedges();
+                    int       nedges    = GetNtraces();
                     int       shapedim  = 2;
                     const StdRegions::VarCoeffMap &varcoeffs
                                         = mkey.GetVarCoeffs();
@@ -710,7 +706,6 @@ namespace Nektar
                     Array<OneD,int> sign;
                     StdRegions::Orientation edgedir = StdRegions::eForwards;
                     ExpansionSharedPtr EdgeExp;
-                    ExpansionSharedPtr EdgeExp2;
 
                     int order_e, coordim = GetCoordim();
                     DNekScalMat  &invMass = *GetLocMatrix(StdRegions::eInvMass);
@@ -796,18 +791,18 @@ namespace Nektar
                     // Add tau*E_l using elemental mass matrices on each edge
                     for(i = 0; i < nedges; ++i)
                     {
-                        EdgeExp = GetEdgeExp(i);
-                        EdgeExp2 = GetEdgeExp(i);
-                        order_e = EdgeExp->GetNcoeffs();
+                        EdgeExp = GetTraceExp(i);
+                        order_e = EdgeExp->GetNcoeffs();  
+
                         int nq = EdgeExp->GetNumPoints(0);
-                        GetEdgeToElementMap(i,edgedir,emap,sign);
+                        GetTraceToElementMap(i,emap,sign,edgedir);
 
                         // @TODO: Document
                         StdRegions::VarCoeffMap edgeVarCoeffs;
                         if (mkey.HasVarCoeff(StdRegions::eVarCoeffD00))
                         {
                             Array<OneD, NekDouble> mu(nq);
-                            GetPhysEdgeVarCoeffsFromElement(i, EdgeExp2, mkey.GetVarCoeff(StdRegions::eVarCoeffD00), mu);
+                            GetPhysEdgeVarCoeffsFromElement(i, EdgeExp, mkey.GetVarCoeff(StdRegions::eVarCoeffD00), mu);
                             edgeVarCoeffs[StdRegions::eVarCoeffMass] = mu;
                         }
                         DNekScalMat &eMass = *EdgeExp->GetLocMatrix(StdRegions::eMass, StdRegions::NullConstFactorMap, edgeVarCoeffs);
@@ -829,7 +824,7 @@ namespace Nektar
                     int       i,j,k;
                     int       nbndry  = NumDGBndryCoeffs();
                     int       ncoeffs = GetNcoeffs();
-                    int       nedges  = GetNedges();
+                    int       nedges  = GetNtraces();
                     NekDouble tau     = mkey.GetConstFactor(StdRegions::eFactorTau);
 
                     Array<OneD,NekDouble> lambda(nbndry);
@@ -853,7 +848,7 @@ namespace Nektar
 
                     for(i = 0; i < nedges; ++i)
                     {
-                        EdgeExp[i] = GetEdgeExp(i);
+                        EdgeExp[i] = GetTraceExp(i);
                     }
 
                     // for each degree of freedom of the lambda space
@@ -898,7 +893,7 @@ namespace Nektar
                     int dir      = 0;
                     int nbndry   = NumDGBndryCoeffs();
                     int ncoeffs  = GetNcoeffs();
-                    int nedges   = GetNedges();
+                    int nedges   = GetNtraces();
                     int shapedim = 2;
 
                     Array<OneD,NekDouble> lambda(nbndry);
@@ -924,7 +919,7 @@ namespace Nektar
 
                     for(i = 0; i < nedges; ++i)
                     {
-                        EdgeExp[i] = GetEdgeExp(i);
+                        EdgeExp[i] = GetTraceExp(i);
                     }
 
                     //Weak Derivative matrix
@@ -1030,7 +1025,7 @@ namespace Nektar
                     int order_e, nquad_e;
                     int nbndry  = NumDGBndryCoeffs();
                     int coordim = GetCoordim();
-                    int nedges  = GetNedges();
+                    int nedges  = GetNtraces();
                     NekDouble tau = mkey.GetConstFactor(StdRegions::eFactorTau);
                     StdRegions::VarCoeffMap::const_iterator x;
                     const StdRegions::VarCoeffMap &varcoeffs
@@ -1076,7 +1071,7 @@ namespace Nektar
                     // Set up edge segment expansions from local geom info
                     for(i = 0; i < nedges; ++i)
                     {
-                        EdgeExp[i] = GetEdgeExp(i);
+                        EdgeExp[i] = GetTraceExp(i);
                     }
 
                     // Set up matrix derived from <mu, Q_lam.n - \tau (U_lam - Lam) >
@@ -1093,14 +1088,13 @@ namespace Nektar
                             order_e = EdgeExp[e]->GetNcoeffs();
                             nquad_e = EdgeExp[e]->GetNumPoints(0);
 
-                            normals = GetEdgeNormal(e);
-                            edgedir = GetEorient(e);
+                            normals = GetTraceNormal(e);
+                            edgedir = GetTraceOrient(e);
 
                             work = Array<OneD,NekDouble>(nquad_e);
                             varcoeff_work = Array<OneD, NekDouble>(nquad_e);
 
-                            GetEdgeToElementMap(e,edgedir,emap,sign);
-
+                            GetTraceToElementMap(e,emap,sign,edgedir);
 
                             StdRegions::VarCoeffType VarCoeff[3] = {StdRegions::eVarCoeffD00,
                                                                     StdRegions::eVarCoeffD11,
@@ -1211,10 +1205,10 @@ namespace Nektar
 
                             Vmath::Svtvp(nquad_e,-tau,edgePhys,1,
                                          work,1,work,1);
-/// TODO: Add variable coeffs
+                            /// TODO: Add variable coeffs
                             EdgeExp[e]->IProductWRTBase(work, edgeCoeffs);
 
-                            EdgeExp[e]->SetCoeffsToOrientation(edgeCoeffs, edgedir);
+                            EdgeExp[e]->SetCoeffsToOrientation(edgedir,edgeCoeffs,edgeCoeffs);
 
                             for(j = 0; j < order_e; ++j)
                             {
@@ -1309,7 +1303,7 @@ namespace Nektar
                      "Assuming that input matrix was square");
             int i,j;
             int id1,id2;
-            ExpansionSharedPtr edgeExp = m_edgeExp[edge].lock();
+            ExpansionSharedPtr edgeExp = m_traceExp[edge].lock();
             int order_e = edgeExp->GetNcoeffs();
 
             Array<OneD,unsigned int> map;
@@ -1337,14 +1331,14 @@ namespace Nektar
 
             if (rows == GetNcoeffs())
             {
-                GetEdgeToElementMap(edge,v_GetEorient(edge),map,sign);
+                GetTraceToElementMap(edge,map,sign,v_GetTraceOrient(edge));
             }
             else if(rows == NumBndryCoeffs())
             {
                 int nbndry = NumBndryCoeffs();
                 Array<OneD,unsigned int> bmap(nbndry);
 
-                GetEdgeToElementMap(edge,v_GetEorient(edge),map,sign);
+                GetTraceToElementMap(edge,map,sign,v_GetTraceOrient(edge));
 
                 GetBoundaryMap(bmap);
 
@@ -1370,7 +1364,7 @@ namespace Nektar
 
                 for(i = 0; i < edge; ++i)
                 {
-                    cnt += GetEdgeNcoeffs(i);
+                    cnt += GetTraceNcoeffs(i);
                 }
 
                 for(i = 0; i < order_e; ++i)
@@ -1378,7 +1372,7 @@ namespace Nektar
                     map[i] = cnt++;
                 }
                 // check for mapping reversal
-                if(GetEorient(edge) == StdRegions::eBackwards)
+                if(GetTraceOrient(edge) == StdRegions::eBackwards)
                 {
                     switch(edgeExp->GetBasis(0)->GetBasisType())
                     {
@@ -1426,7 +1420,7 @@ namespace Nektar
          * - multiplies the edge vector by the edge mass matrix
          * - maps the edge coefficients back onto the elemental coefficients
          */
-        void Expansion2D::v_AddRobinEdgeContribution(const int edgeid,
+        void Expansion2D::v_AddRobinTraceContribution(const int edgeid,
                                                      const Array<OneD,
                                                      const NekDouble> &primCoeffs,
                                                      const Array<OneD, NekDouble> &incoeffs,
@@ -1435,7 +1429,7 @@ namespace Nektar
             ASSERTL1(IsBoundaryInteriorExpansion(),
                      "Not set up for non boundary-interior expansions");
             int i;
-            ExpansionSharedPtr edgeExp = m_edgeExp[edgeid].lock();
+            ExpansionSharedPtr edgeExp = m_traceExp[edgeid].lock();
             int order_e = edgeExp->GetNcoeffs();
 
             Array<OneD,unsigned int> map;
@@ -1451,7 +1445,7 @@ namespace Nektar
 
             NekVector<NekDouble> vEdgeCoeffs (order_e);
 
-            GetEdgeToElementMap(edgeid,v_GetEorient(edgeid),map,sign);
+            GetTraceToElementMap(edgeid,map,sign,v_GetTraceOrient(edgeid));
 
             for (i = 0; i < order_e; ++i)
             {
@@ -1497,7 +1491,7 @@ namespace Nektar
             return m_vertexmatrix;
         }
 
-        Array<OneD, unsigned int> Expansion2D::v_GetEdgeInverseBoundaryMap(
+        Array<OneD, unsigned int> Expansion2D::GetTraceInverseBoundaryMap(
             int eid)
         {
             int n, j;
@@ -1516,7 +1510,7 @@ namespace Nektar
             }
 
             // Number of interior edge coefficients
-            nEdgeCoeffs = GetEdgeNcoeffs(eid) - 2;
+            nEdgeCoeffs = GetTraceNcoeffs(eid) - 2;
 
             const SpatialDomains::Geometry2DSharedPtr &geom = GetGeom2D();
 
@@ -1526,7 +1520,7 @@ namespace Nektar
             StdRegions::Orientation eOrient      = geom->GetEorient(eid);
 
             // maparray is the location of the edge within the matrix
-            GetEdgeInteriorMap(eid, eOrient, maparray, signarray);
+             GetTraceInteriorToElementMap(eid, maparray, signarray, eOrient);
 
             for (n = 0; n < nEdgeCoeffs; ++n)
             {
@@ -1538,31 +1532,25 @@ namespace Nektar
 
         void Expansion2D::v_SetUpPhysNormals(const int edge)
         {
-            ComputeEdgeNormal(edge);
+            v_ComputeTraceNormal(edge);
         }
 
-        const StdRegions::NormalVector &Expansion2D::v_GetEdgeNormal(const int edge) const
+        const NormalVector &Expansion2D::v_GetTraceNormal(
+                    const int edge) const
         {
-            std::map<int, StdRegions::NormalVector>::const_iterator x;
+            std::map<int, NormalVector>::const_iterator x;
             x = m_edgeNormals.find(edge);
-            ASSERTL0 (x != m_edgeNormals.end(),
+            ASSERTL1 (x != m_edgeNormals.end(),
                         "Edge normal not computed.");
             return x->second;
         }
 
-        const StdRegions::NormalVector &Expansion2D::v_GetSurfaceNormal(
-                const int id) const
+        void Expansion2D::v_ReOrientTracePhysMap
+                                (const StdRegions::Orientation orient,
+                                 Array<OneD, int> &idmap,
+                                 const int nq0,  const int nq1)
         {
-            return v_GetEdgeNormal(id);
-        }
-
-        void Expansion2D::ReOrientEdgePhysMap(
-            const int                                   nvert,
-            const StdRegions::Orientation               orient,
-            const int                                   nq0,
-            Array<OneD, int>                            &idmap)
-        {
-            boost::ignore_unused(nvert);
+            boost::ignore_unused(nq1);
 
             if (idmap.size() != nq0)
             {
@@ -1673,7 +1661,7 @@ namespace Nektar
         {
             const Array<OneD, const Array<OneD, NekDouble> >
                 &normals = GetLeftAdjacentElementExp()->
-                GetFaceNormal(GetLeftAdjacentElementFace());
+                GetTraceNormal(GetLeftAdjacentElementTrace());
 
             int nq = GetTotPoints();
             Array<OneD, NekDouble > Fn(nq);

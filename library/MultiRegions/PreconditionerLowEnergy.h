@@ -109,7 +109,7 @@ namespace Nektar
             typedef std::map<LibUtilities::ShapeType, DNekScalMatSharedPtr>
                 ShapeToDNekMap;
             typedef std::map<LibUtilities::ShapeType,
-                LocalRegions::ExpansionSharedPtr > ShapeToExpMap;
+                LocalRegions::Expansion3DSharedPtr > ShapeToExpMap;
             typedef std::map<LibUtilities::ShapeType,
                 Array<OneD, unsigned int> > ShapeToIntArrayMap;
             typedef std::map<LibUtilities::ShapeType,
@@ -145,9 +145,9 @@ namespace Nektar
                                    bool UseTetOnly);
             
             DNekMatSharedPtr ExtractLocMat(
-                          StdRegions::StdExpansionSharedPtr &locExp,
+                          LocalRegions::Expansion3DSharedPtr &locExp,
                           DNekScalMatSharedPtr              &maxRmat,
-                          LocalRegions::ExpansionSharedPtr  &expMax,
+                          LocalRegions::Expansion3DSharedPtr  &expMax,
                           Array<OneD, unsigned int>         &vertMapMaxR,
                           Array<OneD, Array<OneD, unsigned int> > &edgeMapMaxR);
             

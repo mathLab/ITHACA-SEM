@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="2" SPACE="2">
+        <VERTEX>
+            <V ID="0"> -1.0  0.0  0.0</V>
+            <V ID="1"> -0.8  0.0  0.0</V>
+            <V ID="2"> -0.6  0.0  0.0</V>
+            <V ID="3"> -0.4  0.0  0.0</V>
+            <V ID="4"> -0.2  0.0  0.0</V>
+            <V ID="5">  0.0  0.0  0.0</V>
+            <V ID="6">  0.2  0.0  0.0</V>
+            <V ID="7">  0.4  0.0  0.0</V>
+            <V ID="8">  0.6  0.0  0.0</V>
+            <V ID="9">  0.8  0.0  0.0</V>
+            <V ID="10"> 1.0  0.0  0.0</V>
+            <V ID="11"> -1.0  0.2  0.0</V>
+            <V ID="12"> -0.8  0.2  0.0</V>
+            <V ID="13"> -0.6  0.2  0.0</V>
+            <V ID="14"> -0.4  0.2  0.0</V>
+            <V ID="15"> -0.2  0.2  0.0</V>
+            <V ID="16">  0.0  0.2  0.0</V>
+            <V ID="17">  0.2  0.2  0.0</V>
+            <V ID="18">  0.4  0.2  0.0</V>
+            <V ID="19">  0.6  0.2  0.0</V>
+            <V ID="20">  0.8  0.2  0.0</V>
+            <V ID="21">  1.0  0.2  0.0</V>
+        </VERTEX>
+        <EDGE>
+            <E ID="0">    0     1 </E>
+            <E ID="1">    1     2 </E>
+            <E ID="2">    2     3 </E>
+            <E ID="3">    3     4 </E>
+            <E ID="4">    4     5 </E>
+            <E ID="5">    5     6 </E>
+            <E ID="6">    6     7 </E>
+            <E ID="7">    7     8 </E>
+            <E ID="8">    8     9 </E>
+            <E ID="9">    9    10 </E>
+            <E ID="10">   11   12 </E>
+            <E ID="11">   12   13 </E>
+            <E ID="12">   13   14 </E>
+            <E ID="13">   14   15 </E>
+            <E ID="14">   15   16 </E>
+            <E ID="15">   16   17 </E>
+            <E ID="16">   17   18 </E>
+            <E ID="17">   18   19 </E>
+            <E ID="18">   19   20 </E>
+            <E ID="19">   20   21 </E>
+            <E ID="20">    0  11   </E>
+            <E ID="21">    1  12   </E>
+            <E ID="22">    2  13   </E>
+            <E ID="23">    3  14   </E>
+            <E ID="24">    4  15   </E>
+            <E ID="25">    5  16  </E>
+            <E ID="26">    6  17  </E>
+            <E ID="27">    7  18   </E>
+            <E ID="28">    8  19   </E>
+            <E ID="29">    9  20   </E>
+            <E ID="30">   10  21   </E>
+        </EDGE>
+        <ELEMENT>
+            <Q ID="0">    0    21    10    20  </Q>
+            <Q ID="1">    1    22    11    21 </Q>
+            <Q ID="2">    2    23    12    22 </Q>
+            <Q ID="3">    3    24    13    23 </Q>
+            <Q ID="4">    4    25    14    24 </Q>
+            <Q ID="5">    5    26    15    25 </Q>
+            <Q ID="6">    6    27    16    26 </Q>
+            <Q ID="7">    7    28    17    27 </Q>
+            <Q ID="8">    8    29    18    28 </Q>
+            <Q ID="9">    9    30    19    29 </Q>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> Q[0-9] </C>
+            <C ID="1"> E[20] </C>
+            <C ID="2"> E[0,1,2,3,4,5,6,7,8,9] </C>
+            <C ID="3"> E[30] </C>
+            <C ID="4"> E[10,11,12,13,14,15,16,17,18,19] </C>
+        </COMPOSITE>
+        <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="4" FIELDS="u" TYPE="MODIFIED" />
+    </EXPANSIONS>
+    
+    <CONDITIONS>
+        <PARAMETERS>
+            <P> FinTime         = 2.00                  </P>
+            <P> TimeStep        = 0.01                  </P>
+            <P> NumSteps        = FinTime/TimeStep      </P>
+            <P> IO_CheckSteps   = 100000                </P>
+            <P> IO_InfoSteps    = 100000                </P>
+            <P> advx            = 1                     </P>
+            <P> advy            = 0                     </P>
+            <P> HomModesZ     = 8            </P>
+            <P> LZ            = 1.0          </P>
+        </PARAMETERS>
+        
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvection" />
+            <I PROPERTY="Projection"            VALUE="DisContinuous"     />
+            <I PROPERTY="HOMOGENEOUS"           VALUE="1D"                />
+            <I PROPERTY="AdvectionType"         VALUE="WeakDG3DHomogeneous1D" />
+            <I PROPERTY="UpwindType"            VALUE="Upwind"              />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
+        </SOLVERINFO> 
+        
+        <VARIABLES>
+            <V ID="0"> u </V> 
+            <V ID="1"> v </V> 
+        </VARIABLES>
+        
+        <BOUNDARYREGIONS>
+             <B ID="0"> C[1] </B>
+             <B ID="1"> C[2] </B>
+             <B ID="2"> C[3] </B>
+             <B ID="3"> C[4] </B>
+        </BOUNDARYREGIONS>
+        
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+              <P VAR="u" VALUE="[2]" />
+            </REGION>
+            <REGION REF="1">
+              <P VAR="u" VALUE="[3]" />
+            </REGION>
+            <REGION REF="2">
+              <P VAR="u" VALUE="[0]" />
+            </REGION>
+            <REGION REF="3">
+              <P VAR="u" VALUE="[1]" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+        
+        <FUNCTION NAME="AdvectionVelocity">
+            <E VAR="Vx" VALUE="1"  />
+            <E VAR="Vy" VALUE="1" />
+            <E VAR="Vz" VALUE="1" />
+        </FUNCTION>   
+        
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="exp(-20.0*x*x)" /> 
+        </FUNCTION>
+        
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="exp(-20.0*x*x)" /> 
+        </FUNCTION>
+        
+    </CONDITIONS>
+    
+</NEKTAR>

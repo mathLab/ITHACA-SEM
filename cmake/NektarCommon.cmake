@@ -12,6 +12,14 @@
 # `-llibname` to the linker flags. This avoids the issue of e.g. linking against
 # an outdated system zlib installation.
 #
+# On Windows, it is necessary to link using .lib files which will have been
+# generated based on whether the target library was built as STATIC or SHARED.
+# Where the library has been built as a SHARED library the associated DLLs
+# are used at runtime. The setting of LIBTYPE determines the file names to
+# link against so on Windows setting this to SHARED results in trying to link
+# against .dll files. LIBTYPE is therefore forced to be STATIC on WIN32
+# platforms to ensure linking against the .lib files.
+#
 # Arguments:
 #   - `varname`: variable name containing the third-party library name. On
 #     output will be altered to update the correct path.
@@ -24,7 +32,12 @@ MACRO(THIRDPARTY_LIBRARY varname)
     CMAKE_PARSE_ARGUMENTS(TPLIB "" "DESCRIPTION" "STATIC;SHARED" ${ARGN})
 
     IF(TPLIB_SHARED)
-        SET(LIBTYPE "SHARED")
+        IF(WIN32)
+            # Ensure linking against .lib files on Windows
+            SET(LIBTYPE "STATIC")
+        ELSE()
+            SET(LIBTYPE "SHARED")
+        ENDIF()
         SET(TPLIBS ${TPLIB_SHARED})
     ELSEIF(TPLIB_STATIC)
         SET(LIBTYPE "STATIC")
@@ -66,7 +79,7 @@ MACRO(SET_COMMON_PROPERTIES name)
     SET_TARGET_PROPERTIES(${name} PROPERTIES DEBUG_POSTFIX -g)
     SET_TARGET_PROPERTIES(${name} PROPERTIES MINSIZEREL_POSTFIX -ms)
     SET_TARGET_PROPERTIES(${name} PROPERTIES RELWITHDEBINFO_POSTFIX -rg)
-    
+
     IF (MSVC)
         # Enable production-level warnings
         TARGET_COMPILE_OPTIONS(${name} PRIVATE /W4)
@@ -84,6 +97,7 @@ MACRO(SET_COMMON_PROPERTIES name)
         IF (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
             # For GNU compilers add pedantic warnings
             TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wpedantic)
+            TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wnon-virtual-dtor)
         ENDIF()
         # Temporarily disable warnings about comparing signed and unsigned
         TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wno-sign-compare)
@@ -92,7 +106,7 @@ MACRO(SET_COMMON_PROPERTIES name)
         IF (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             TARGET_COMPILE_OPTIONS(${name} PRIVATE -fpermissive)
         ENDIF()
-        
+
         # Disable dignostic about partially overloaded virtual functions
         IF (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
             TARGET_COMPILE_OPTIONS(${name} PRIVATE -diag-disable 654)
@@ -117,19 +131,19 @@ MACRO(SET_COMMON_PROPERTIES name)
         SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_DEBUG")
 
         IF ( NEKTAR_FULL_DEBUG )
-            SET(CMAKE_CXX_FLAGS_DEBUG 
+            SET(CMAKE_CXX_FLAGS_DEBUG
                     "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_FULLDEBUG")
         ENDIF( NEKTAR_FULL_DEBUG)
-   
+
         # Define version
         SET_PROPERTY(TARGET ${name}
             APPEND PROPERTY COMPILE_DEFINITIONS
             NEKTAR_VERSION=\"${NEKTAR_VERSION}\")
 
-        SET(CMAKE_CXX_FLAGS_RELEASE 
+        SET(CMAKE_CXX_FLAGS_RELEASE
                 "${CMAKE_CXX_FLAGS_RELEASE} -DNEKTAR_RELEASE")
     ENDIF(NOT ${CMAKE_CXX_FLAGS_DEBUG} MATCHES ".*DNEKTAR_DEBUG.*")
-        
+
     IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
         # The static libraries must be compiled with position independent
         # code on 64 bit Linux.
@@ -260,7 +274,7 @@ ENDMACRO(ADD_NEKTAR_TEST)
 # Adds a new NekPy library with the given sources.
 #
 MACRO(ADD_NEKPY_LIBRARY name)
-    CMAKE_PARSE_ARGUMENTS(NEKPY "" "DEPENDS" "SOURCES" ${ARGN})
+    CMAKE_PARSE_ARGUMENTS(NEKPY "" "DEPENDS;LIBDEPENDS" "SOURCES" ${ARGN})
 
     # Create library.
     ADD_LIBRARY(_${name} SHARED ${NEKPY_SOURCES})
@@ -268,6 +282,8 @@ MACRO(ADD_NEKPY_LIBRARY name)
     # Python requires a .so extension, even on OS X.
     SET_TARGET_PROPERTIES(_${name} PROPERTIES PREFIX "")
     SET_TARGET_PROPERTIES(_${name} PROPERTIES SUFFIX ".so")
+    SET_TARGET_PROPERTIES(_${name} PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/NekPy/${name})
 
     ADD_DEPENDENCIES(_${name} boost-numpy)
 
@@ -276,8 +292,13 @@ MACRO(ADD_NEKPY_LIBRARY name)
         ${Boost_SYSTEM_LIBRARY}
         ${BOOST_PYTHON_LIB}
         ${BOOST_NUMPY_LIB}
-        ${PYTHON_LIBRARIES}
-        ${name})
+        ${PYTHON_LIBRARIES})
+
+    IF (NEKPY_LIBDEPENDS)
+        TARGET_LINK_LIBRARIES(_${name} ${NEKPY_LIBDEPENDS})
+    ELSE()
+        TARGET_LINK_LIBRARIES(_${name} ${name})
+    ENDIF()
 
     # Install __init__.py files.
     SET(TMPOUT "")
@@ -287,12 +308,36 @@ MACRO(ADD_NEKPY_LIBRARY name)
     SET(TMPOUT "${TMPOUT}from ._${name} import *")
 
     FILE(WRITE ${CMAKE_BINARY_DIR}/NekPy/${name}/__init__.py ${TMPOUT})
-    INSTALL(TARGETS _${name} DESTINATION ${CMAKE_BINARY_DIR}/NekPy/${name})
 ENDMACRO()
 
+#
+# ADD_NEKPY_EXECUTABLE(name source)
+#
+# Adds a NekPy Python-based executable. No compilation is obviously required
+# for Python scripts, so this macro simply copies the given file into the
+# appropriate install directory.
+#
 MACRO(ADD_NEKPY_EXECUTABLE name source)
     # Copy the files into binary directory.
     INSTALL(FILES ${source} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
     FILE(COPY ${source} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
     ADD_CUSTOM_TARGET(${name} SOURCES ${source})
 ENDMACRO()
+
+#
+# ADD_NEKPY_TEST(name)
+#
+# Adds a NekPy test with a given name. The Test Definition File should be in a
+# subdirectory called Tests relative to the CMakeLists.txt file calling this
+# macros. The test file should be called NAME.tst, where NAME is given as a
+# parameter to this macro.
+#
+# Arguments:
+#   - `name`: name of the test file
+#
+MACRO(ADD_NEKPY_TEST name)
+    GET_FILENAME_COMPONENT(dir ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+    ADD_TEST(NAME NekPy_${dir}_${name}
+             COMMAND Tester ${CMAKE_CURRENT_SOURCE_DIR}/Tests/${name}.tst)
+ENDMACRO(ADD_NEKPY_TEST)
+

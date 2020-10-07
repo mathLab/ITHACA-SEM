@@ -15,6 +15,9 @@ ENV LD_LIBRARY_PATH /usr/lib64/openmpi/lib/
 ENV PATH /usr/lib64/openmpi/bin/:$PATH
 
 RUN ln -s /usr/bin/ccache /usr/local/bin/cc && ln -s /usr/bin/ccache /usr/local/bin/c++ 
+# The cmake3 package installs cmake3, ctest3, cpack3 executables.
+# Create symlinks to provide expected cmake, ctest and cpack executables
+RUN ln -s /usr/bin/cmake3 /usr/bin/cmake && ln -s /usr/bin/ctest3 /usr/bin/ctest && ln -s /usr/bin/cpack3 /usr/bin/cpack
 
 RUN groupadd nektar && useradd -m -g nektar nektar
 USER nektar:nektar

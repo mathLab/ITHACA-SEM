@@ -245,10 +245,7 @@ NekDouble ProcessInnerProduct::IProduct(
                     m_f->m_exp[fid]->UpdatePhys(), 1);
 
         NekDouble iprod =
-            m_f->m_exp[fid]->PhysIntegral(m_f->m_exp[fid]->UpdatePhys());
-
-        // put in parallel summation
-        m_f->m_comm->AllReduce(iprod, Nektar::LibUtilities::ReduceSum);
+            m_f->m_exp[fid]->Integral(m_f->m_exp[fid]->UpdatePhys());
 
         totiprod += iprod;
     }

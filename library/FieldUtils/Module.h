@@ -195,6 +195,8 @@ public:
     }
     virtual void Process(po::variables_map &vm) = 0;
 
+    virtual ~Module() = default;
+
     virtual std::string GetModuleName() = 0;
 
     virtual std::string GetModuleDescription()

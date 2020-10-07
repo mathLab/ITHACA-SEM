@@ -139,7 +139,7 @@ void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
         e = m_f->m_exp[0]->GetExp(i);
         if (e->DetShapeType() == LibUtilities::ePrism)
         {
-            StdRegions::Orientation forient = e->GetForient(0);
+            StdRegions::Orientation forient = e->GetTraceOrient(0);
             int fid                         = e->GetGeom()->GetFid(0);
             if (face0orient.count(fid))
             { // face 1 meeting face 1 so reverse this id
@@ -173,7 +173,7 @@ void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
             if (face0orient.count(fid))
             {
                 // check to see how face 2 is orientated
-                StdRegions::Orientation forient2 = e->GetForient(2);
+                StdRegions::Orientation forient2 = e->GetTraceOrient(2);
                 StdRegions::Orientation forient0 = face0orient[fid];
 
                 // If dir 1 or forient2 is bwd then check agains

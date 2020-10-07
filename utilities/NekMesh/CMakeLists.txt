@@ -1,78 +1,8 @@
-SET(NekMeshSources
-    InputModules/InputGmsh.cpp
-    InputModules/InputNek.cpp
-    InputModules/InputNek5000.cpp
-    InputModules/InputNekpp.cpp
-    InputModules/InputPly.cpp
-    InputModules/InputSem.cpp
-    InputModules/InputSwan.cpp
-    InputModules/InputStarTec.cpp
-    NekMesh.cpp
-    OutputModules/OutputGmsh.cpp
-    OutputModules/OutputNekpp.cpp
-    OutputModules/OutputSTL.cpp
-    ProcessModules/ProcessBL.cpp
-    ProcessModules/ProcessCurve.cpp
-    ProcessModules/ProcessCurvedEdges.cpp
-    ProcessModules/ProcessCyl.cpp
-    ProcessModules/ProcessDetectSurf.cpp
-    ProcessModules/ProcessExtractSurf.cpp
-    ProcessModules/ProcessExtractTetPrismInterface.cpp
-    ProcessModules/ProcessJac.cpp
-    ProcessModules/ProcessLinkCheck.cpp
-    ProcessModules/ProcessLinear.cpp
-    ProcessModules/ProcessPerAlign.cpp
-    ProcessModules/ProcessScalar.cpp
-    ProcessModules/ProcessSpherigon.cpp
-    ProcessModules/ProcessTetSplit.cpp
-    ProcessModules/ProcessOptiExtract.cpp
-    ProcessModules/ProcessInsertSurface.cpp
-    ProcessModules/ProcessExtrude.cpp
-    ProcessModules/ProcessVarOpti/ProcessVarOpti.cpp
-    ProcessModules/ProcessVarOpti/PreProcessing.cpp
-    ProcessModules/ProcessVarOpti/NodeOpti.cpp
-    ProcessModules/ProcessVarOpti/ElUtil.cpp
-)
-
-IF (NEKTAR_USE_CFI)
-    ADD_DEFINITIONS(-DNEKTAR_USE_CFI)
-    SET(NekMeshSources ${NekMeshSources} InputModules/InputCADfix.cpp)
-    SET(NekMeshSources ${NekMeshSources} OutputModules/OutputCADfix.cpp)
-ENDIF (NEKTAR_USE_CFI)
-
-IF (NEKTAR_USE_CCM)
-    SET(NekMeshSources ${NekMeshSources} InputModules/InputStar.cpp)
-ENDIF (NEKTAR_USE_CCM)
-
-IF (NEKTAR_USE_VTK)
-    SET(NekMeshSources ${NekMeshSources} InputModules/InputVtk.cpp OutputModules/OutputVtk.cpp)
-ENDIF (NEKTAR_USE_VTK)
-
-IF (NEKTAR_USE_MESHGEN)
-    SET(NekMeshSources ${NekMeshSources}
-            ProcessModules/ProcessVarOpti/NodeOptiCAD.cpp
-            ProcessModules/ProcessProjectCAD.cpp
-            InputModules/InputMCF.cpp)
-ENDIF (NEKTAR_USE_MESHGEN)
-
-# Don't use macro -- this way we can just link against NekMeshUtils and
+# Don't use macro -- this way we can just link against NekMesh and
 # LocalRegions.
 ADD_UTILITIES_EXECUTABLE(NekMesh COMPONENT nekmesh
-    SOURCES ${NekMeshSources}
-    DEPENDS NekMeshUtils LocalRegions)
-
-IF (NEKTAR_USE_CCM)
-   TARGET_LINK_LIBRARIES(NekMesh LINK_PRIVATE ${CCMIO_LIBRARIES})
-   ADD_DEPENDENCIES(NekMesh libccmio-2.6.1)
-ENDIF (NEKTAR_USE_CCM)
-
-IF (NEKTAR_USE_VTK)
-    IF (VTK_MAJOR_VERSION LESS 6)
-        TARGET_LINK_LIBRARIES(NekMesh LINK_PUBLIC vtkCommon vtkIO vtkGraphics)
-    ELSE ()
-        TARGET_LINK_LIBRARIES(NekMesh LINK_PUBLIC vtkCommonCore vtkIOLegacy)
-    ENDIF ()
-ENDIF (NEKTAR_USE_VTK)
+    SOURCES NekMesh.cpp
+    DEPENDS libNekMesh)
 
 # Nektar++
 ADD_NEKTAR_TEST(Nektar++/bl_quad)

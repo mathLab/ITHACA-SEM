@@ -122,7 +122,7 @@ namespace Nektar
         {
             std::shared_ptr<MultiRegions::ExpList>
                 expList=((m_linsys.lock())->GetLocMat()).lock();
-            LocalRegions::ExpansionSharedPtr locExpansion;
+            LocalRegions::Expansion3DSharedPtr locExpansion;
             GlobalLinSysKey linSysKey=(m_linsys.lock())->GetKey();
 
             int i, j, k;
@@ -209,15 +209,15 @@ namespace Nektar
                     if (bndConditions[i]->GetBoundaryConditionType() ==
                         SpatialDomains::eDirichlet)
                     {
-                        for(k = 0; k < bndCondFaceExp->GetNedges(); k++)
+                        for(k = 0; k < bndCondFaceExp->GetNtraces(); k++)
                         {
-                            meshEdgeId = bndCondFaceExp->as<LocalRegions::Expansion2D>()->GetGeom2D()->GetEid(k);
+                            meshEdgeId = bndCondFaceExp->GetGeom()->GetEid(k);
                             if(edgeDirMap.count(meshEdgeId) == 0)
                             {
                                 edgeDirMap.insert(meshEdgeId);
                             }
                         }
-                        meshFaceId = bndCondFaceExp->as<LocalRegions::Expansion2D>()->GetGeom2D()->GetGlobalID();
+                        meshFaceId = bndCondFaceExp->GetGeom()->GetGlobalID();
                         faceDirMap.insert(meshFaceId);
                     }
                 }
@@ -237,9 +237,9 @@ namespace Nektar
             /// -  Count  edges, face and add up min edges and min face sizes
             for(n = 0; n < n_exp; ++n)
             {
-                locExpansion = expList->GetExp(n);
+                locExpansion = expList->GetExp(n)->as<LocalRegions::Expansion3D>();
 
-                nEdges = locExpansion->GetNedges();
+                nEdges = locExpansion->GetNedges(); 
                 for(j = 0; j < nEdges; ++j)
                 {
                     int nEdgeInteriorCoeffs = locExpansion->GetEdgeNcoeffs(j) - 2;
@@ -256,18 +256,19 @@ namespace Nektar
                     }
                 }
 
-                nFaces = locExpansion->GetNfaces();
+                nFaces = locExpansion->GetNtraces();
                 for(j = 0; j < nFaces; ++j)
                 {
-                    int nFaceInteriorCoeffs = locExpansion->GetFaceIntNcoeffs(j);
-                    meshFaceId = locExpansion->as<LocalRegions::Expansion3D>()
-                        ->GetGeom3D()->GetFid(j);
+                    int nFaceInteriorCoeffs = locExpansion->GetTraceIntNcoeffs(j);
+                    meshFaceId = locExpansion->GetGeom3D()->GetFid(j);
+                    
                     if(FaceSize.count(meshFaceId) == 0)
                     {
                         FaceSize[meshFaceId] = nFaceInteriorCoeffs;
 
                         int m0,m1;
-                        locExpansion->GetFaceNumModes(j,locExpansion->GetForient(j),m0,m1);
+                        locExpansion->GetTraceNumModes(j,m0,m1,locExpansion->
+                                                       GetTraceOrient(j));
                         FaceModes[meshFaceId] = pair<int,int>(m0,m1);
                     }
                     else
@@ -276,7 +277,8 @@ namespace Nektar
                         {
                             FaceSize[meshFaceId] =  nFaceInteriorCoeffs;
                             int m0,m1;
-                            locExpansion->GetFaceNumModes(j,locExpansion->GetForient(j),m0,m1);
+                            locExpansion->GetTraceNumModes(j,m0,m1,locExpansion->
+                                                          GetTraceOrient(j));
                             FaceModes[meshFaceId] = pair<int,int>(m0,m1);
                         }
                     }
@@ -388,11 +390,11 @@ namespace Nektar
 
             for(cnt=n=0; n < n_exp; ++n)
             {
-                locExpansion = expList->GetExp(n);
+                locExpansion = expList->GetExp(n)->as<LocalRegions::Expansion3D>();
 
                 for (j = 0; j < locExpansion->GetNedges(); ++j)
                 {
-                    meshEdgeId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetEid(j);
+                    meshEdgeId = locExpansion->GetGeom()->GetEid(j);
                     dof    = EdgeSize[meshEdgeId];
                     maxEdgeDof = (dof > maxEdgeDof ? dof : maxEdgeDof);
 
@@ -464,12 +466,11 @@ namespace Nektar
 
             for(cnt=n=0; n < n_exp; ++n)
             {
-                locExpansion = expList->GetExp(n);
+                locExpansion = expList->GetExp(n)->as<LocalRegions::Expansion3D>();
 
-                for (j = 0; j < locExpansion->GetNfaces(); ++j)
+                for (j = 0; j < locExpansion->GetNtraces(); ++j)
                 {
-                    meshFaceId = locExpansion->as<LocalRegions::Expansion3D>()->
-                        GetGeom3D()->GetFid(j);
+                    meshFaceId = locExpansion->GetGeom()->GetFid(j);
 
                     dof        = FaceSize[meshFaceId];
                     maxFaceDof = (dof > maxFaceDof ? dof : maxFaceDof);
@@ -524,14 +525,13 @@ namespace Nektar
 
             for(n=0; n < n_exp; ++n)
             {
-                locExpansion = expList->GetExp(n);
+                locExpansion = expList->GetExp(n)->as<LocalRegions::Expansion3D>();
 
                 //loop over the edges of the expansion
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
                 {
                     //get mesh edge id
-                    meshEdgeId = locExpansion->as<LocalRegions::Expansion3D>()
-                        ->GetGeom3D()->GetEid(j);
+                    meshEdgeId = locExpansion->GetGeom()->GetEid(j);
 
                     nedgemodes = EdgeSize[meshEdgeId];
 
@@ -565,11 +565,10 @@ namespace Nektar
                 Array<OneD, unsigned int>           faceInteriorMap;
                 Array<OneD, int>                    faceInteriorSign;
                 //loop over the faces of the expansion
-                for(j = 0; j < locExpansion->GetNfaces(); ++j)
+                for(j = 0; j < locExpansion->GetNtraces(); ++j)
                 {
                     //get mesh face id
-                    meshFaceId = locExpansion->as<LocalRegions::Expansion3D>()
-                        ->GetGeom3D()->GetFid(j);
+                    meshFaceId = locExpansion->GetGeom()->GetFid(j);
 
                     nfacemodes = FaceSize[meshFaceId];
 
@@ -621,7 +620,7 @@ namespace Nektar
             //matrices.
             for(cnt=n=0; n < n_exp; ++n)
             {
-                locExpansion = expList->GetExp(n);
+                locExpansion = expList->GetExp(n)->as<LocalRegions::Expansion3D>();
                 nCoeffs=locExpansion->NumBndryCoeffs();
 
                 //Get correct transformation matrix for element type
@@ -697,7 +696,7 @@ namespace Nektar
                                     += sign1*sign2*RSRT(vMap1,vMap2);
 
 
-                                meshVertId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetVid(v);
+                                meshVertId = locExpansion->GetGeom()->GetVid(v);
 
                                 auto pIt = periodicVerts.find(meshVertId);
                                 if (pIt != periodicVerts.end())
@@ -785,7 +784,7 @@ namespace Nektar
                         {
                             Array<OneD, unsigned int> facemodearray;
                             StdRegions::Orientation faceOrient =
-                                locExpansion->GetForient(fid);
+                                locExpansion->GetTraceOrient(fid);
 
                             auto pIt = periodicFaces.find(meshFaceId);
                             if (pIt != periodicFaces.end())
@@ -797,7 +796,7 @@ namespace Nektar
                                 }
                             }
 
-                            facemodearray = locExpansion->GetFaceInverseBoundaryMap
+                            facemodearray = locExpansion->GetTraceInverseBoundaryMap
                                 (fid,faceOrient,FaceModes[meshFaceId].first,
                                  FaceModes[meshFaceId].second);
 
@@ -907,8 +906,8 @@ namespace Nektar
                 if(nmodes)
                 {
                     DNekMatSharedPtr tmp_mat =
-                    MemoryManager<DNekMat>::AllocateSharedPtr
-                    (nmodes,nmodes,zero,storage);
+                        MemoryManager<DNekMat>::AllocateSharedPtr
+                        (nmodes,nmodes,zero,storage);
 
                     tmp_mat=m_BlkMat->GetBlock(i,i);
                     tmp_mat->Invert();
@@ -924,8 +923,8 @@ namespace Nektar
          * routine
          */
         void PreconditionerLowEnergy::v_DoPreconditioner(
-                const Array<OneD, NekDouble>& pInput,
-                      Array<OneD, NekDouble>& pOutput)
+                                                         const Array<OneD, NekDouble>& pInput,
+                                                         Array<OneD, NekDouble>& pOutput)
         {
             int nDir    = m_locToGloMap.lock()->GetNumGlobalDirBndCoeffs();
             int nGlobal = m_locToGloMap.lock()->GetNumGlobalBndCoeffs();
@@ -948,14 +947,14 @@ namespace Nektar
         {
             std::shared_ptr<MultiRegions::ExpList>
                 expList=((m_linsys.lock())->GetLocMat()).lock();
-            StdRegions::StdExpansionSharedPtr locExp;
-            StdRegions::StdExpansionSharedPtr locExpSav;
+            LocalRegions::Expansion3DSharedPtr locExp;
+            LocalRegions::Expansion3DSharedPtr locExpSav;
             map<int,int> EdgeSize;
 
             int n;
 
             std::map<ShapeType, DNekScalMatSharedPtr>         maxRmat;
-            map<ShapeType, LocalRegions::ExpansionSharedPtr > maxElmt;
+            map<ShapeType, LocalRegions::Expansion3DSharedPtr > maxElmt;
             map<ShapeType, Array<OneD, unsigned int> >        vertMapMaxR;
             map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > edgeMapMaxR;
 
@@ -987,7 +986,8 @@ namespace Nektar
             // are
             for(n=0; n < n_exp; ++n)
             {
-                locExp = expList->GetExp(n);
+                locExp = expList->GetExp(n)->as<LocalRegions::Expansion3D>();
+
                 ShapeType eltype = locExp->DetShapeType();
 
                 int nbndcoeffs = locExp->NumBndryCoeffs();
@@ -1103,7 +1103,7 @@ namespace Nektar
          * i.e. \f$\mathbf{x}=\mathbf{R^{T}}\mathbf{\overline{x}}\f$.
          */
         void PreconditionerLowEnergy::v_DoTransformCoeffsFromLowEnergy(
-                              Array<OneD, NekDouble>& pInOut)
+                                                                       Array<OneD, NekDouble>& pInOut)
         {
             int nLocBndDofs   = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
 
@@ -1143,8 +1143,8 @@ namespace Nektar
          */ 
         
         void PreconditionerLowEnergy::v_DoTransformBasisFromLowEnergy(
-                const Array<OneD, NekDouble>& pInput,
-                Array<OneD, NekDouble>& pOutput)
+                                                                      const Array<OneD, NekDouble>& pInput,
+                                                                      Array<OneD, NekDouble>& pOutput)
         {
             int nLocBndDofs    = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
 
@@ -1182,8 +1182,8 @@ namespace Nektar
          * In JCP 2001 paper on low energy this is seen as (C^T)^{-1}
          */ 
         void PreconditionerLowEnergy::v_DoTransformCoeffsToLowEnergy(
-                        const Array<OneD, NekDouble>& pInput,
-                        Array<OneD, NekDouble>& pOutput)
+                                                                     const Array<OneD, NekDouble>& pInput,
+                                                                     Array<OneD, NekDouble>& pOutput)
         {
             int nLocBndDofs     = m_locToGloMap.lock()->GetNumLocalBndCoeffs();
 
@@ -1310,8 +1310,8 @@ namespace Nektar
 	    const int three=3;
             const int nVerts = 6;
             const double point[][3] = {
-                {-1,-1,0}, {1,-1,0}, {1,1,0},
-                {-1,1,0}, {0,-1,sqrt(double(3))}, {0,1,sqrt(double(3))},
+                                       {-1,-1,0}, {1,-1,0}, {1,1,0},
+                                       {-1,1,0}, {0,-1,sqrt(double(3))}, {0,1,sqrt(double(3))},
             };
 
             //std::shared_ptr<SpatialDomains::PointGeom> verts[6];
@@ -1323,8 +1323,8 @@ namespace Nektar
             }
             const int nEdges = 9;
             const int vertexConnectivity[][2] = {
-                {0,1}, {1,2}, {3,2}, {0,3}, {0,4},
-                {1,4}, {2,5}, {3,5}, {4,5}
+                                                 {0,1}, {1,2}, {3,2}, {0,3}, {0,4},
+                                                 {1,4}, {2,5}, {3,5}, {4,5}
             };
 
             // Populate the list of edges
@@ -1391,8 +1391,8 @@ namespace Nektar
 
             const int nVerts = 5;
             const double point[][3] = {
-                {-1,-1,0}, {1,-1,0}, {1,1,0},
-                {-1,1,0}, {0,0,sqrt(double(2))}
+                                       {-1,-1,0}, {1,-1,0}, {1,1,0},
+                                       {-1,1,0}, {0,0,sqrt(double(2))}
             };
 
             //boost::shared_ptr<SpatialDomains::PointGeom> verts[6];
@@ -1405,8 +1405,8 @@ namespace Nektar
             }
             const int nEdges = 8;
             const int vertexConnectivity[][2] = {
-                {0,1}, {1,2}, {2,3}, {3,0},
-                {0,4}, {1,4}, {2,4}, {3,4}
+                                                 {0,1}, {1,2}, {2,3}, {3,0},
+                                                 {0,4}, {1,4}, {2,4}, {3,4}
             };
 
             // Populate the list of edges
@@ -1477,10 +1477,10 @@ namespace Nektar
 	    const int three=3;
             const int nVerts = 4;
             const double point[][3] = {
-                {-1,-1/sqrt(double(3)),-1/sqrt(double(6))},
-                {1,-1/sqrt(double(3)),-1/sqrt(double(6))},
-                {0,2/sqrt(double(3)),-1/sqrt(double(6))},
-                {0,0,3/sqrt(double(6))}};
+                                       {-1,-1/sqrt(double(3)),-1/sqrt(double(6))},
+                                       {1,-1/sqrt(double(3)),-1/sqrt(double(6))},
+                                       {0,2/sqrt(double(3)),-1/sqrt(double(6))},
+                                       {0,0,3/sqrt(double(6))}};
 
             std::shared_ptr<SpatialDomains::PointGeom> verts[4];
 	    for(i=0; i < nVerts; ++i)
@@ -1498,7 +1498,7 @@ namespace Nektar
             // SegGeom (int id, const int coordim), EdgeComponent(id, coordim)
             const int nEdges = 6;
             const int vertexConnectivity[][2] = {
-                {0,1},{1,2},{0,2},{0,3},{1,3},{2,3}
+                                                 {0,1},{1,2},{0,2},{0,3},{1,3},{2,3}
             };
 
             // Populate the list of edges
@@ -1522,7 +1522,7 @@ namespace Nektar
 
             const int nFaces = 4;
             const int edgeConnectivity[][3] = {
-                {0,1,2}, {0,4,3}, {1,5,4}, {2,5,3}
+                                               {0,1,2}, {0,4,3}, {1,5,4}, {2,5,3}
             };
 
             // Populate the list of faces
@@ -1561,8 +1561,8 @@ namespace Nektar
 
             const int nVerts = 8;
             const double point[][3] = {
-                {0,0,0}, {1,0,0}, {1,1,0}, {0,1,0},
-                {0,0,1}, {1,0,1}, {1,1,1}, {0,1,1}
+                                       {0,0,0}, {1,0,0}, {1,1,0}, {0,1,0},
+                                       {0,0,1}, {1,0,1}, {1,1,1}, {0,1,1}
             };
 
             // Populate the list of verts
@@ -1580,8 +1580,8 @@ namespace Nektar
             // SegGeom (int id, const int coordim), EdgeComponent(id, coordim)
             const int nEdges = 12;
             const int vertexConnectivity[][2] = {
-                {0,1}, {1,2}, {2,3}, {0,3}, {0,4}, {1,5},
-                {2,6}, {3,7}, {4,5}, {5,6}, {6,7}, {4,7}
+                                                 {0,1}, {1,2}, {2,3}, {0,3}, {0,4}, {1,5},
+                                                 {2,6}, {3,7}, {4,5}, {5,6}, {6,7}, {4,7}
             };
 
             // Populate the list of edges
@@ -1601,8 +1601,8 @@ namespace Nektar
 
             const int nFaces = 6;
             const int edgeConnectivity[][4] = {
-                {0,1,2,3}, {0,5,8,4}, {1,6,9,5},
-                {2,7,10,6}, {3,7,11,4}, {8,9,10,11}
+                                               {0,1,2,3}, {0,5,8,4}, {1,6,9,5},
+                                               {2,7,10,6}, {3,7,11,4}, {8,9,10,11}
             };
 
             // Populate the list of faces
@@ -1629,9 +1629,9 @@ namespace Nektar
 	 *
          * Sets up multiple reference elements based on the element expansion.
 	 */
-        void PreconditionerLowEnergy::SetUpReferenceElements(
-                 std::map<ShapeType, DNekScalMatSharedPtr> &maxRmat,
-                 map<ShapeType, LocalRegions::ExpansionSharedPtr > &maxElmt,
+        void PreconditionerLowEnergy::SetUpReferenceElements
+                (std::map<ShapeType, DNekScalMatSharedPtr> &maxRmat,
+                 map<ShapeType, LocalRegions::Expansion3DSharedPtr > &maxElmt,
                  map<ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
                  map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR)
         {
@@ -1664,8 +1664,8 @@ namespace Nektar
             m_comm->AllReduce(nummodesmax, ReduceMax);
             m_comm->AllReduce(Shapes, ReduceMax);
 
-            if(Shapes[ePyramid]) // if Pyramids used then need Tet and Hex expansion
-	    {
+            if(Shapes[ePyramid] || Shapes[ePrism]) // if Pyramids or Prisms used then need Tet and Hex expansion
+            {
                 Shapes[eTetrahedron] = 1;
                 Shapes[eHexahedron]  = 1;
             }
@@ -1694,11 +1694,11 @@ namespace Nektar
                 SpatialDomains::HexGeomSharedPtr   hexgeom   = CreateRefHexGeom();
                 //Bases for Hex element
                 const BasisKey HexBa(eModified_A, nummodesmax,
-                                 PointsKey(nummodesmax+1, eGaussLobattoLegendre));
+                                     PointsKey(nummodesmax+1, eGaussLobattoLegendre));
                 const BasisKey HexBb(eModified_A, nummodesmax,
-                                 PointsKey(nummodesmax+1,  eGaussLobattoLegendre));
+                                     PointsKey(nummodesmax+1,  eGaussLobattoLegendre));
                 const BasisKey HexBc(eModified_A, nummodesmax,
-                               PointsKey(nummodesmax+1,  eGaussLobattoLegendre));
+                                     PointsKey(nummodesmax+1,  eGaussLobattoLegendre));
 
                 //Create reference Hexahdedral expansion
                 LocalRegions::HexExpSharedPtr HexExp;
@@ -1796,11 +1796,11 @@ namespace Nektar
                 SpatialDomains::PrismGeomSharedPtr prismgeom = CreateRefPrismGeom();
                 //Bases for Prism element
                 const BasisKey PrismBa(eModified_A, nummodesmax,
-                                  PointsKey(nummodesmax+1, eGaussLobattoLegendre));
+                                       PointsKey(nummodesmax+1, eGaussLobattoLegendre));
                 const BasisKey PrismBb(eModified_A, nummodesmax,
-                                  PointsKey(nummodesmax+1, eGaussLobattoLegendre));
+                                       PointsKey(nummodesmax+1, eGaussLobattoLegendre));
                 const BasisKey PrismBc(eModified_B, nummodesmax,
-                                  PointsKey(nummodesmax,   eGaussRadauMAlpha1Beta0));
+                                       PointsKey(nummodesmax,   eGaussRadauMAlpha1Beta0));
 
                 //Create reference prismatic expansion
                 LocalRegions::PrismExpSharedPtr PrismExp;
@@ -1843,11 +1843,11 @@ namespace Nektar
         }
 
         void PreconditionerLowEnergy::SetUpPyrMaxRMat(int nummodesmax,
-                             LocalRegions::PyrExpSharedPtr &PyrExp,
-                             std::map<ShapeType, DNekScalMatSharedPtr> &maxRmat,
-                             std::map<ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
-                             std::map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR,
-                             std::map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &faceMapMaxR)
+                                                      LocalRegions::PyrExpSharedPtr &PyrExp,
+                                                      std::map<ShapeType, DNekScalMatSharedPtr> &maxRmat,
+                                                      std::map<ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
+                                                      std::map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR,
+                                                      std::map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &faceMapMaxR)
         {
             int nRows = PyrExp->NumBndryCoeffs();
             NekDouble val;
@@ -1881,8 +1881,8 @@ namespace Nektar
                         // Note this is using wrong shape but gives
                         // answer that seems to have correct error!
                         val = (*maxRmat[eHexahedron])(
-                                    vertMapMaxR[eHexahedron][VEHexVert[v][e]],
-                                    edgeMapMaxR[eHexahedron][VEHexEdge[v][e]][i]);
+                                                      vertMapMaxR[eHexahedron][VEHexVert[v][e]],
+                                                      edgeMapMaxR[eHexahedron][VEHexEdge[v][e]][i]);
                         newmat->SetValue(vertMapMaxR[ePyramid][v],
                                          edgeMapMaxR[ePyramid][VEPyrEdge[v][e]][i],val);
                     }
@@ -1979,11 +1979,11 @@ namespace Nektar
 
 
         void PreconditionerLowEnergy::ReSetTetMaxRMat(int nummodesmax,
-                             LocalRegions::TetExpSharedPtr &TetExp,
-                             std::map<ShapeType, DNekScalMatSharedPtr> &maxRmat,
-                             std::map<ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
-                             std::map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR,
-                             std::map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &faceMapMaxR)
+                                                      LocalRegions::TetExpSharedPtr &TetExp,
+                                                      std::map<ShapeType, DNekScalMatSharedPtr> &maxRmat,
+                                                      std::map<ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
+                                                      std::map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR,
+                                                      std::map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &faceMapMaxR)
         {
             boost::ignore_unused(faceMapMaxR);
 
@@ -2022,11 +2022,11 @@ namespace Nektar
                         // Note this is using wrong shape but gives
                         // answer that seems to have correct error!
                         val = (*maxRmat[eHexahedron])(
-                                    vertMapMaxR[eHexahedron][VEHexVert[v][e]],
-                                    edgeMapMaxR[eHexahedron][VEHexEdge[v][e]][i]);
+                                                      vertMapMaxR[eHexahedron][VEHexVert[v][e]],
+                                                      edgeMapMaxR[eHexahedron][VEHexEdge[v][e]][i]);
                         newmat->SetValue(vertMapMaxR[eTetrahedron][v],
-                                    edgeMapMaxR[eTetrahedron][VETetEdge[v][e]][i],
-                                                        val);
+                                         edgeMapMaxR[eTetrahedron][VETetEdge[v][e]][i],
+                                         val);
                     }
                 }
             }
@@ -2038,12 +2038,12 @@ namespace Nektar
         }
 
         void PreconditionerLowEnergy::ReSetPrismMaxRMat(int nummodesmax,
-                             LocalRegions::PrismExpSharedPtr &PrismExp,
-                             std::map<ShapeType, DNekScalMatSharedPtr> &maxRmat,
-                             std::map<ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
-                             std::map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR,
-                             std::map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &faceMapMaxR,
-                             bool UseTetOnly)
+                                                        LocalRegions::PrismExpSharedPtr &PrismExp,
+                                                        std::map<ShapeType, DNekScalMatSharedPtr> &maxRmat,
+                                                        std::map<ShapeType, Array<OneD, unsigned int> >        &vertMapMaxR,
+                                                        std::map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &edgeMapMaxR,
+                                                        std::map<ShapeType, Array<OneD, Array<OneD, unsigned int> > > &faceMapMaxR,
+                                                        bool UseTetOnly)
         {
             int nRows = PrismExp->NumBndryCoeffs();
             NekDouble val;
@@ -2081,8 +2081,8 @@ namespace Nektar
                             // Note this is using wrong shape but gives
                             // answer that seems to have correct error!
                             val = (*maxRmat[eTetrahedron])(
-                                   vertMapMaxR[eTetrahedron][VETetVert[v][e]],
-                                   edgeMapMaxR[eTetrahedron][VETetEdge[v][e]][i]);
+                                                           vertMapMaxR[eTetrahedron][VETetVert[v][e]],
+                                                           edgeMapMaxR[eTetrahedron][VETetEdge[v][e]][i]);
                             newmat->
                                 SetValue(vertMapMaxR[ePrism][v],
                                          edgeMapMaxR[ePrism][VEPrismEdge[v][e]][i],
@@ -2125,8 +2125,8 @@ namespace Nektar
                             // Note this is using wrong shape but gives
                             // answer that seems to have correct error!
                             val = (*maxRmat[eHexahedron])(
-                                    vertMapMaxR[eHexahedron][VEHexVert[v][e]],
-                                    edgeMapMaxR[eHexahedron][VEHexEdge[v][e]][i]);
+                                                          vertMapMaxR[eHexahedron][VEHexVert[v][e]],
+                                                          edgeMapMaxR[eHexahedron][VEHexEdge[v][e]][i]);
                             newmat->SetValue(vertMapMaxR[ePrism][v],
                                              edgeMapMaxR[ePrism][VEPrismEdge[v][e]][i],
                                              val);
@@ -2151,8 +2151,8 @@ namespace Nektar
                         for(int i = 0; i < nfacemodes; ++i)
                         {
                             val = (*maxRmat[eHexahedron])(
-                                             vertMapMaxR[eHexahedron][VFHexVert[v][f]],
-                                             faceMapMaxR[eHexahedron][VFHexFace[v][f]][i]);
+                                                          vertMapMaxR[eHexahedron][VFHexVert[v][f]],
+                                                          faceMapMaxR[eHexahedron][VFHexFace[v][f]][i]);
                             newmat->SetValue(vertMapMaxR[ePrism][VQFPrismVert[v][f]],
                                              faceMapMaxR[ePrism][VQFPrismFace[v][f]][i],val);
                         }
@@ -2242,9 +2242,9 @@ namespace Nektar
         }
 
         DNekMatSharedPtr PreconditionerLowEnergy::
-        ExtractLocMat(StdRegions::StdExpansionSharedPtr &locExp,
+        ExtractLocMat(LocalRegions::Expansion3DSharedPtr &locExp,
                       DNekScalMatSharedPtr              &maxRmat,
-                      LocalRegions::ExpansionSharedPtr  &maxExp,
+                      LocalRegions::Expansion3DSharedPtr &maxExp,
                       Array<OneD, unsigned int>         &vmap,
                       Array<OneD, Array<OneD, unsigned int> > &emap)
         {
@@ -2270,7 +2270,7 @@ namespace Nektar
 
             int nverts = locExp->GetNverts();
             int nedges = locExp->GetNedges();
-            int nfaces = locExp->GetNfaces();
+            int nfaces = locExp->GetNtraces();
 
             // fill vertex to edge coupling
             for(int e = 0; e < nedges; ++e)
@@ -2293,12 +2293,12 @@ namespace Nektar
                 StdRegions::Orientation FwdOrient = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
                 int m0,m1; //Local face expansion orders.
 
-                int nFaceInteriorCoeffs = locExp->GetFaceIntNcoeffs(f);
+                int nFaceInteriorCoeffs = locExp->GetTraceIntNcoeffs(f);
 
-                locExp->GetFaceNumModes(f,FwdOrient,m0,m1);
+                locExp->GetTraceNumModes(f,m0,m1,FwdOrient);
 
                 Array<OneD, unsigned int> fmapRmat = maxExp->
-                    GetFaceInverseBoundaryMap(f,FwdOrient, m0,m1);
+                    GetTraceInverseBoundaryMap(f,FwdOrient, m0,m1);
 
                 // fill in vertex to face coupling
                 for(int v = 0; v < nverts; ++v)

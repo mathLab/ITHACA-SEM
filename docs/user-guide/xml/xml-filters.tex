@@ -133,6 +133,56 @@ During the execution a file named \inltt{DragLift.fce} will be created and the
 value of the aerodynamic forces on boundaries 1 and 2, defined in the
 \inltt{GEOMETRY} section, will be output every 10 time steps.
 
+\subsubsection{Extension for the SPM formulation}\label{filters:sub:ForcesSPM}
+
+\begin{notebox}
+    This filter is only supported for the incompressible Navier-Stokes solver
+    with the Smoothed Profile Method.
+\end{notebox}
+
+The lack of physical boundaries in the Smoothed Profile Method requires an
+alternative formulation to calculate the aerodynamic forces. Since the method
+imposes the boundary geometry by adding an impulse to the flow proportional to
+the difference between the flow velocity and the expected velocity of the
+immersed bodies, the forces in this filter are computed by integrating this
+difference where $\Phi \neq 0$~\cite{LuoSPM}:
+
+\begin{equation*}
+    \frac{\mathbf{F}^n}{\rho} = \frac{1}{\Delta t} \int_{\Omega}
+        \Phi^{n+1}(\mathbf{u^*} - \mathbf{u^n}_p)~\text{d}\Omega
+\end{equation*}
+
+\begin{center}
+  \begin{tabularx}{0.99\textwidth}{lllX}
+    \toprule
+    \textbf{Option name} & \textbf{Required} & \textbf{Default} &
+    \textbf{Description} \\
+    \midrule
+    \inltt{OutputFile}      & \xmark   & \inltt{session} &
+    Prefix of the output filename to which the forces are written.\\
+    \inltt{Frequency}       & \xmark   & 1 &
+    Number of timesteps after which the output is written.\\
+    \inltt{StartTime}       & \xmark   & 0 &
+    Forces before this instant are not written to the output.\\
+    \bottomrule
+  \end{tabularx}
+\end{center}
+
+For instance, a block like the following
+
+\begin{lstlisting}[style=XMLStyle]
+  <FILTER TYPE="AeroForcesSPM">
+      <PARAM NAME="OutputFile"> Forces </PARAM>
+      <PARAM NAME="OutputFrequency"> 10 </PARAM>
+      <PARAM NAME="StartTime"> 50.0 </PARAM>
+  </FILTER>
+\end{lstlisting}
+
+will generate a file called \inltt{Forces.fce} with the values of the forces
+in the ($X,Y,Z$) directions, that must be scaled with the density of the
+fluid to get the real values. It is important to remark that the computed
+values are the sum of all the boundaries defined by $\Phi$.
+
 \subsection{Benchmark}\label{filters:Benchmark}
 
 \begin{notebox}

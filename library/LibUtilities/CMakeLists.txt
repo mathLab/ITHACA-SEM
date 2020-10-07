@@ -414,7 +414,7 @@ IF( NEKTAR_USE_MPI )
             PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} ${MPI_CXX_COMPILE_FLAGS}")
     ENDIF()
 
-    ADD_DEPENDENCIES(LibUtilities gsmpi-1.2.1)
+    ADD_DEPENDENCIES(LibUtilities gsmpi-1.2.1_2)
 
     IF (THIRDPARTY_BUILD_MPI)
         ADD_DEPENDENCIES(LibUtilities openmpi-1.10.3)

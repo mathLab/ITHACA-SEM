@@ -137,10 +137,9 @@ void ProcessWSS::Process(po::variables_map &vm)
             int nqb = BndExp[0]->GetTotPoints();
             int nqe = BndElmtExp[0]->GetTotPoints();
 
-            // Initialise local arrays for the velocity gradients, and stress
-            // components
-            // size of total number of quadrature points for elements in this
-            // bnd
+            // Initialise local arrays for the velocity gradients, and
+            // stress components size of total number of quadrature
+            // points for elements in this bnd
             for (i = 0; i < ngrad; ++i)
             {
                 grad[i] = Array<OneD, NekDouble>(nqe);

@@ -33,10 +33,6 @@ IF (NEKTAR_USE_HDF5)
         "NEKTAR_USE_HDF5" OFF)
 
     IF(THIRDPARTY_BUILD_HDF5)
-        IF (CMAKE_VERSION VERSION_LESS 3.1.0)
-            MESSAGE(FATAL_ERROR "HDF5 compilation requires CMake 3.1.0 or later.")
-        ENDIF()
-
         INCLUDE(ExternalProject)
         EXTERNALPROJECT_ADD(
             hdf5-1.8.16

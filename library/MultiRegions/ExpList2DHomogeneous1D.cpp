@@ -29,12 +29,12 @@
 // DEALINGS IN THE SOFTWARE.
 //
 // Description: An ExpList2D which is homogeneous in 1 direction and so
-// uses much of the functionality from a ExpList1D and its daughters
+// uses much of the functionality from a ExpList and its daughters
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
-#include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/ExpList.h>
 
 using namespace std;
 
@@ -44,9 +44,8 @@ namespace Nektar
     {
         // Forward declaration for typedefs
         ExpList2DHomogeneous1D::ExpList2DHomogeneous1D():
-            ExpListHomogeneous1D()
+            ExpListHomogeneous1D(e2DH1D)
         {
-            SetExpType(e2DH1D);
         }
 
         // Constructor for ExpList2DHomogeneous1D to act as a Explist2D field
@@ -58,9 +57,9 @@ namespace Nektar
             const bool                                  dealiasing,
             const Array<OneD, ExpListSharedPtr>        &planes,
             const LibUtilities::CommSharedPtr comm)
-            : ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
+            : ExpListHomogeneous1D(e2DH1D,pSession,HomoBasis,
+                                   lhom,useFFT,dealiasing)
         {
-            SetExpType(e2DH1D);
             int i, n, cnt;
 
             if (comm)
@@ -98,15 +97,15 @@ namespace Nektar
             const bool dealiasing,
             const SpatialDomains::MeshGraphSharedPtr &graph1D,
             const Collections::ImplementationType ImpType):
-            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
+            ExpListHomogeneous1D(e2DH1D, pSession,HomoBasis,
+                                 lhom,useFFT,dealiasing)
         {
-            SetExpType(e2DH1D);
             int n, j, nel;
-            ExpList1DSharedPtr plane_zero;
+            ExpListSharedPtr plane_zero;
 
             // note that nzplanes can be larger than nzmodes
-            m_planes[0] = plane_zero = MemoryManager<ExpList1D>::
-                AllocateSharedPtr(m_session, graph1D, false, ImpType);
+            m_planes[0] = plane_zero = MemoryManager<ExpList>::
+                AllocateSharedPtr(m_session, graph1D, false, "DefaultVar", ImpType);
 
             m_exp = MemoryManager<LocalRegions::ExpansionVector>::AllocateSharedPtr();
 
@@ -119,7 +118,7 @@ namespace Nektar
 
             for (n = 1; n < m_planes.size(); ++n)
             {
-                m_planes[n] = MemoryManager<ExpList1D>::
+                m_planes[n] = MemoryManager<ExpList>::
                     AllocateSharedPtr(*plane_zero, false);
                 for(j = 0; j < nel; ++j)
                 {
@@ -138,13 +137,12 @@ namespace Nektar
             const ExpList2DHomogeneous1D &In):
             ExpListHomogeneous1D(In)
         {
-            SetExpType(e2DH1D);
-            ExpList1DSharedPtr zero_plane =
-                std::dynamic_pointer_cast<ExpList1D> (In.m_planes[0]);
+            ExpListSharedPtr zero_plane =
+                std::dynamic_pointer_cast<ExpList> (In.m_planes[0]);
 
             for (int n = 0; n < m_planes.size(); ++n)
             {
-                m_planes[n] = MemoryManager<ExpList1D>::
+                m_planes[n] = MemoryManager<ExpList>::
                     AllocateSharedPtr(*zero_plane, false);
             }
 
@@ -486,23 +484,6 @@ namespace Nektar
                                  &normals[i][n*nPtsPlane], 1);
                 }
             }
-        }
-
-        NekDouble ExpList2DHomogeneous1D::v_Integral(const Array<OneD,
-            const NekDouble> &inarray)
-        {
-            NekDouble val = 0.0;
-            int       i   = 0;
-
-            for (i = 0; i < (*m_exp).size(); ++i)
-            {
-                val += (*m_exp)[i]->Integral(inarray + m_phys_offset[i]);
-            }
-            val *= m_lhom/m_homogeneousBasis->GetNumModes();
-
-            m_comm->AllReduce(val, LibUtilities::ReduceSum);
-
-            return val;
         }
     } //end of namespace
 } //end of namespace

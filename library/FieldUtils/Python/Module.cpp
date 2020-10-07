@@ -31,8 +31,8 @@
 // Description: Python wrapper for Module.
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LibUtilities/Python/NekPyConfig.hpp>
 #include <FieldUtils/Module.h>
+#include <LibUtilities/Python/NekPyConfig.hpp>
 #include <boost/program_options.hpp>
 
 using namespace Nektar;
@@ -42,7 +42,7 @@ using namespace Nektar::FieldUtils;
  * @brief Module wrapper to handle virtual function calls in @c Module and its
  * subclasses as defined by the template parameter @tparam MODTYPE.
  */
-template<class MODTYPE>
+template <class MODTYPE>
 struct ModuleWrap : public MODTYPE, public py::wrapper<MODTYPE>
 {
     /**
@@ -64,12 +64,14 @@ struct ModuleWrap : public MODTYPE, public py::wrapper<MODTYPE>
 
     std::string GetModuleName() override
     {
-      this->get_override("GetModuleName");
+        py::override f = this->get_override("GetModuleName");
+        return py::call<std::string>(f.ptr());
     }
 
     ModulePriority GetModulePriority() override
     {
-      this->get_override("GetModulePriority");
+        py::override f = this->get_override("GetModulePriority");
+        return py::call<ModulePriority>(f.ptr());
     }
 
     /**
@@ -96,55 +98,50 @@ struct ModuleWrap : public MODTYPE, public py::wrapper<MODTYPE>
 // Performs switching of m_comm if nparts > 1.
 void Module_Process(ModuleSharedPtr m)
 {
-	if (m->m_f->m_nParts > 1)
-	{
-		if (m->GetModulePriority() == eOutput)
-		{
-			m->m_f->m_comm = m->m_f->m_partComm;
-			if (m->GetModuleName() != "OutputInfo")
-			{
-				m->RegisterConfig("writemultiplefiles");
-			}
-		}
-		else if (m->GetModulePriority() == eCreateGraph)
-		{
-			m->m_f->m_comm = m->m_f->m_partComm;
-		}
-		else
-		{
-			m->m_f->m_comm = m->m_f->m_defComm;
-		}
-	}
-	m->SetDefaults();
-	m->Process(m->m_f->m_vm);
+    if (m->m_f->m_nParts > 1)
+    {
+        if (m->GetModulePriority() == eOutput)
+        {
+            m->m_f->m_comm = m->m_f->m_partComm;
+            if (m->GetModuleName() != "OutputInfo")
+            {
+                m->RegisterConfig("writemultiplefiles");
+            }
+        }
+        else if (m->GetModulePriority() == eCreateGraph)
+        {
+            m->m_f->m_comm = m->m_f->m_partComm;
+        }
+        else
+        {
+            m->m_f->m_comm = m->m_f->m_defComm;
+        }
+    }
+    m->SetDefaults();
+    m->Process(m->m_f->m_vm);
 }
 
-template<typename T>
-T Module_GetConfig(std::shared_ptr<Module> mod,
-                   const std::string &key)
+template <typename T>
+T Module_GetConfig(std::shared_ptr<Module> mod, const std::string &key)
 {
     return mod->GetConfigOption(key).as<T>();
 }
 
-template<typename MODTYPE>
-struct ModuleTypeProxy
+template <typename MODTYPE> struct ModuleTypeProxy
 {
 };
 
-template<>
-struct ModuleTypeProxy<InputModule>
+template <> struct ModuleTypeProxy<InputModule>
 {
     static const ModuleType value = eInputModule;
 };
 
-template<>
-struct ModuleTypeProxy<ProcessModule>
+template <> struct ModuleTypeProxy<ProcessModule>
 {
     static const ModuleType value = eProcessModule;
 };
 
-template<>
-struct ModuleTypeProxy<OutputModule>
+template <> struct ModuleTypeProxy<OutputModule>
 {
     static const ModuleType value = eOutputModule;
 };
@@ -161,11 +158,11 @@ const ModuleType ModuleTypeProxy<OutputModule>::value;
  * @param  field    Field that will be passed between modules.
  * @tparam MODTYPE  Subclass of Module (e.g #InputModule, #OutputModule)
  */
-template<typename MODTYPE>
+template <typename MODTYPE>
 ModuleSharedPtr Module_Create(py::tuple args, py::dict kwargs)
 {
-    std::string modName  = py::extract<std::string>(args[0]);
-    ModuleKey modKey     = std::make_pair(ModuleTypeProxy<MODTYPE>::value, modName);
+    std::string modName = py::extract<std::string>(args[0]);
+    ModuleKey modKey = std::make_pair(ModuleTypeProxy<MODTYPE>::value, modName);
     FieldSharedPtr field = py::extract<FieldSharedPtr>(args[1]);
     ModuleSharedPtr mod  = GetModuleFactory().CreateInstance(modKey, field);
 
@@ -203,18 +200,21 @@ ModuleSharedPtr Module_Create(py::tuple args, py::dict kwargs)
         if (arg == "infile" && modKey.first == eInputModule)
         {
             py::dict ftype_fname_dict = py::extract<py::dict>(items[i][1]);
-            py::list ft_fn_items = ftype_fname_dict.items();
-            for (int i  = 0; i < py::len(ft_fn_items); ++i)
+            py::list ft_fn_items      = ftype_fname_dict.items();
+            for (int i = 0; i < py::len(ft_fn_items); ++i)
             {
-                std::string f_type = py::extract<std::string>(ft_fn_items[i][0]);
-                std::string f_name = py::extract<std::string>(ft_fn_items[i][1].attr("__str__")());
+                std::string f_type =
+                    py::extract<std::string>(ft_fn_items[i][0]);
+                std::string f_name = py::extract<std::string>(
+                    ft_fn_items[i][1].attr("__str__")());
                 mod->RegisterConfig(arg, f_name);
                 mod->AddFile(f_type, f_name);
             }
         }
         else
         {
-            std::string val = py::extract<std::string>(items[i][1].attr("__str__")());
+            std::string val =
+                py::extract<std::string>(items[i][1].attr("__str__")());
             mod->RegisterConfig(arg, val);
         }
     }
@@ -231,19 +231,17 @@ ModuleSharedPtr Module_Create(py::tuple args, py::dict kwargs)
  * @param key    Configuration key.
  * @param value  Optional value (some configuration options are boolean).
  */
-void Module_RegisterConfig(std::shared_ptr<Module> mod,
-                           std::string const &key,
+void Module_RegisterConfig(std::shared_ptr<Module> mod, std::string const &key,
                            std::string const &value)
 {
     mod->RegisterConfig(key, value);
 }
 
-template<typename MODTYPE>
+template <typename MODTYPE>
 void ModuleWrap_AddConfigOption(std::shared_ptr<ModuleWrap<MODTYPE>> mod,
                                 std::string const &key,
                                 std::string const &defValue,
-                                std::string const &desc,
-                                bool isBool)
+                                std::string const &desc, bool isBool)
 {
     mod->AddConfigOption(key, defValue, desc, isBool);
 }
@@ -308,8 +306,7 @@ void ModuleCapsuleDestructor(PyObject *ptr)
  *   instance, and register this in the global namespace of the current
  *   module. This then ties the capsule to the lifetime of the module.
  */
-void Module_Register(ModuleType const  &modType,
-                     std::string const &modName,
+void Module_Register(ModuleType const &modType, std::string const &modName,
                      py::object &obj)
 {
     // Create a module register helper, which will call the C++ function to
@@ -319,9 +316,8 @@ void Module_Register(ModuleType const  &modType,
     // Register this with the module factory using std::bind to grab a function
     // pointer to that particular object's function.
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(modType, modName),
-        std::bind(
-            &ModuleRegisterHelper::create, helper, std::placeholders::_1));
+        ModuleKey(modType, modName), std::bind(&ModuleRegisterHelper::create,
+                                               helper, std::placeholders::_1));
 
     // Create a capsule that will be embedded in the __main__ namespace. So
     // deallocation will occur, but only once Python ends or the Python module
@@ -341,8 +337,7 @@ void Module_Register(ModuleType const  &modType,
     py::import("__main__").attr(modkey.c_str()) = capsule;
 }
 
-template <typename MODTYPE>
-struct ModuleWrapConverter
+template <typename MODTYPE> struct ModuleWrapConverter
 {
     ModuleWrapConverter()
     {
@@ -353,36 +348,31 @@ struct ModuleWrapConverter
         py::objects::class_value_wrapper<
             std::shared_ptr<MODTYPE>,
             py::objects::make_ptr_instance<
-                MODTYPE,
-                py::objects::pointer_holder<std::shared_ptr<MODTYPE>, MODTYPE>>
-            >();
+                MODTYPE, py::objects::pointer_holder<std::shared_ptr<MODTYPE>,
+                                                     MODTYPE>>>();
     }
 };
 
-template <typename MODTYPE>
-struct PythonModuleClass
+template <typename MODTYPE> struct PythonModuleClass
 {
     PythonModuleClass(std::string modName)
     {
-        py::class_<ModuleWrap<MODTYPE>,
-                   std::shared_ptr<ModuleWrap<MODTYPE>>,
-                   py::bases<Module>,
-                   boost::noncopyable>(
-                       modName.c_str(), py::init<FieldSharedPtr>())
+        py::class_<ModuleWrap<MODTYPE>, std::shared_ptr<ModuleWrap<MODTYPE>>,
+                   py::bases<Module>, boost::noncopyable>(
+            modName.c_str(), py::init<FieldSharedPtr>())
 
-            .def("AddConfigOption", ModuleWrap_AddConfigOption<MODTYPE>, (
-                     py::arg("key"), py::arg("defValue"), py::arg("desc"),
-                     py::arg("isBool") = false))
+            .def("AddConfigOption", ModuleWrap_AddConfigOption<MODTYPE>,
+                 (py::arg("key"), py::arg("defValue"), py::arg("desc"),
+                  py::arg("isBool") = false))
 
             // Allow direct access to field object through a property.
             .def_readwrite("field", &ModuleWrap<MODTYPE>::m_f)
 
             // Process function for this module.
             .def("Process", py::pure_virtual(&Module_Process))
-    				.def("Run", py::pure_virtual(&Module_Process))
+            .def("Run", py::pure_virtual(&Module_Process))
             .def("Create", py::raw_function(Module_Create<MODTYPE>))
-            .staticmethod("Create")
-            ;
+            .staticmethod("Create");
 
         ModuleWrapConverter<MODTYPE>();
     }
@@ -409,36 +399,32 @@ void export_Module()
     // us. In the lightweight wrappers above, we therefore need to ensure we're
     // passing std::shared_ptr<Module> as the first argument, otherwise they
     // won't accept objects constructed from Python.
-    py::class_<ModuleWrap<Module>,
-               std::shared_ptr<ModuleWrap<Module>>,
-               boost::noncopyable>(
-                   "Module", py::init<FieldSharedPtr>())
+    py::class_<ModuleWrap<Module>, std::shared_ptr<ModuleWrap<Module>>,
+               boost::noncopyable>("Module", py::init<FieldSharedPtr>())
 
         // Process function for this module.
         .def("Process", py::pure_virtual(&Module_Process))
-				.def("Run", py::pure_virtual(&Module_Process))
+        .def("Run", py::pure_virtual(&Module_Process))
 
         // Configuration options.
-        .def("RegisterConfig", Module_RegisterConfig, (
-                 py::arg("key"), py::arg("value") = ""))
+        .def("RegisterConfig", Module_RegisterConfig,
+             (py::arg("key"), py::arg("value") = ""))
         .def("PrintConfig", &Module::PrintConfig)
         .def("SetDefaults", &Module::SetDefaults)
         .def("GetStringConfig", Module_GetConfig<std::string>)
         .def("GetFloatConfig", Module_GetConfig<double>)
         .def("GetIntConfig", Module_GetConfig<int>)
         .def("GetBoolConfig", Module_GetConfig<bool>)
-        .def("AddConfigOption", ModuleWrap_AddConfigOption<Module>, (
-                 py::arg("key"), py::arg("defValue"), py::arg("desc"),
-                 py::arg("isBool") = false))
-
+        .def("AddConfigOption", ModuleWrap_AddConfigOption<Module>,
+             (py::arg("key"), py::arg("defValue"), py::arg("desc"),
+              py::arg("isBool") = false))
 
         // Allow direct access to field object through a property.
         .def_readwrite("field", &ModuleWrap<Module>::m_f)
 
         // Factory functions.
         .def("Register", &Module_Register)
-        .staticmethod("Register")
-        ;
+        .staticmethod("Register");
 
     ModuleWrapConverter<Module>();
 

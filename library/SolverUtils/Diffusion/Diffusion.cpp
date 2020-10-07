@@ -228,8 +228,7 @@ namespace Nektar
               const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
               const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
         {
-            boost::ignore_unused(fields, inarray, qfields, pFwd, pBwd);
-            ASSERTL0(false, "Not defined for this class .");
+            v_DiffuseCalculateDerivative(fields, inarray, qfields, pFwd, pBwd);
         }
 
 

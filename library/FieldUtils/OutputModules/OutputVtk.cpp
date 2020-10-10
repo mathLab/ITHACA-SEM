@@ -244,8 +244,8 @@ void OutputVtk::OutputFromExp(po::variables_map &vm)
     // Homogeneous strip variant
     for (int s = 0; s < nstrips; ++s)
     {
-        // For each field write out field data for each expansion.        //
-        for (i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)  				
+        // For each field write out field data for each expansion.
+        for (i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
         {
             m_f->m_exp[0]->WriteVtkPieceHeader(outfile, i, s);
 

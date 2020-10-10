@@ -95,21 +95,21 @@ protected:
                                     po::variables_map &vm);
 
     /// True if writing binary field output
-    bool            m_binary;
+    bool             m_binary;
     /// True if writing a single output file
-    bool            m_oneOutputFile;
+    bool             m_oneOutputFile;
     /// True if writing header
-    bool            m_writeHeader;
+    bool             m_writeHeader;
     /// Tecplot zone type of output
-    TecplotZoneType m_zoneType;
+    TecplotZoneType  m_zoneType;
     /// Number of points per block in Tecplot file
-    std::vector<int>     m_numPoints;
+    std::vector<int> m_numPoints;
     /// Number of blocks in Tecplot file
-    int             m_numBlocks;
+    int              m_numBlocks;
     /// Coordinate dimension of output
-    int             m_coordim;
+    int              m_coordim;
     /// Total number of connectivity entries
-    int             m_totConn;
+    int              m_totConn;
     /// Connectivty for each block: one per element
     std::vector<Array<OneD, int> > m_conn;
     /// Each rank's field sizes

@@ -92,7 +92,6 @@ void ProcessHomogeneousStretch::Process(po::variables_map &vm)
 
     int nstrips;
     m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
-    cout << nstrips << endl;
 
     for (int s = 0; s < nstrips; ++s)
     {

@@ -416,13 +416,6 @@ int main(int argc, char* argv[])
         mod->SetDefaults();
     }
 
-    // Include dummy module to create m_exp
-    //module.first  = eProcessModule;
-    //module.second = string("createExp");
-    //mod = GetModuleFactory().CreateInstance(module, f);
-    //modules.push_back(mod);
-    //mod->SetDefaults();
-
     // Include equispacedoutput module if needed
     Array< OneD, int>  modulesCount(SIZE_ModulePriority,0);
     for (int i = 0; i < modules.size(); ++i)
@@ -466,13 +459,13 @@ int main(int argc, char* argv[])
         if(nParts > 1)
         {
             cout << endl << "Processing partition: " << p << endl;
-            
+
             int rank = p;
             f->ClearField();
             partComm = std::shared_ptr<FieldConvertComm>(
                              new FieldConvertComm(argc, argv, nParts,rank));
         }
-        
+
         // Run field process.
         for (int n = 0; n < SIZE_ModulePriority; ++n)
         {
@@ -482,11 +475,11 @@ int main(int argc, char* argv[])
             {
                 if(((priority == eCreateGraph)||(priority == eOutput)))
                 {
-					f->m_comm = partComm;
+                    f->m_comm = partComm;
                 }
                 else
                 {
-					f->m_comm = defComm;
+                    f->m_comm = defComm;
                 }
             }
 

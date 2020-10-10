@@ -46,6 +46,7 @@
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/Communication/CommSerial.h>
+#include <FieldUtils/FieldConvertComm.hpp>
 #include <StdRegions/StdNodalTriExp.h>
 
 #include "Field.hpp"
@@ -88,10 +89,11 @@ enum ModulePriority
     SIZE_ModulePriority
 };
 
-const char *const ModulePriorityMap[] =
-	{"CreateGraph", "CreateFieldData", "ModifyFieldData", "CreateExp",
-		"FillExp", "ModifyExp", "BndExtraction", "CreatePts",
-		"ConvertExpToPts", "ModifyPts", "Output"};
+const char *const ModulePriorityMap[] = {
+    "CreateGraph", "CreateFieldData", "ModifyFieldData", "CreateExp",
+    "FillExp", "ModifyExp", "BndExtraction", "CreatePts",
+    "ConvertExpToPts", "ModifyPts", "Output"
+};
 
 /**
  * @brief Swap endian ordering of the input variable.
@@ -295,58 +297,6 @@ typedef LibUtilities::NekFactory<ModuleKey, Module, FieldSharedPtr>
 
 FIELD_UTILS_EXPORT ModuleFactory &GetModuleFactory();
 
-class FieldConvertComm : public LibUtilities::CommSerial
-{
-public:
-    FieldConvertComm(int argc, char *argv[], int size, int rank)
-        : CommSerial(argc, argv)
-    {
-        m_size = size;
-        m_rank = rank;
-       m_type = "FieldConvert parallel";
-    }
-    FieldConvertComm(int size, int rank) : CommSerial(0, NULL)
-    {
-        m_size = size;
-        m_rank = rank;
-       m_type = "FieldConvert parallel";
-    }
-    virtual ~FieldConvertComm()
-    {
-    }
-    void v_SplitComm(int pRows, int pColumns)
-    {
-        // Compute row and column in grid.
-        m_commRow = std::shared_ptr<FieldConvertComm>(
-            new FieldConvertComm(pColumns, m_rank));
-        m_commColumn =
-            std::shared_ptr<FieldConvertComm>(new FieldConvertComm(pRows, 0));
-    }
-
-protected:
-    int v_GetRank(void)
-    {
-        return m_rank;
-    }
-
-    bool v_TreatAsRankZero(void)
-    {
-        return true;
-    }
-
-    bool v_IsSerial(void)
-    {
-        return true;
-    }
-
-    bool v_RemoveExistingFiles(void)
-    {
-        return false;
-    }
-
-private:
-    int m_rank;
-};
 }
 }
 

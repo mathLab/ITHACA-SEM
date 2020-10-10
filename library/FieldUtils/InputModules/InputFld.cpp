@@ -112,7 +112,7 @@ void InputFld::Process(po::variables_map &vm)
 
         if (!IDs.size())
         {
-			return;
+            return;
         }
 
         // Move to an array to match FieldIO interface

@@ -34,6 +34,7 @@
 
 #include <FieldUtils/Module.h>
 #include <LibUtilities/Python/NekPyConfig.hpp>
+#include <boost/python/raw_function.hpp>
 #include <boost/program_options.hpp>
 
 using namespace Nektar;

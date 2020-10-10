@@ -64,7 +64,6 @@ void ProcessCreateExp::Process(po::variables_map &vm)
 {
     if(m_f->m_graph)
     {
-        //int i, j;
         LibUtilities::Timer timerpart;
         if (m_f->m_verbose)
         {
@@ -92,7 +91,7 @@ void ProcessCreateExp::Process(po::variables_map &vm)
         {
             if (m_f->m_session->DefinesSolverInfo("HOMOGENEOUS"))
             {
-                std::string HomoStr = 
+                std::string HomoStr =
                         m_f->m_session->GetSolverInfo("HOMOGENEOUS");
 
                 if ((HomoStr == "HOMOGENEOUS1D") ||
@@ -183,16 +182,15 @@ void ProcessCreateExp::Process(po::variables_map &vm)
 
         if (fldfilegiven)
         {
-			LoadFieldData(vm.count("useSessionVariables"));
-
+            LoadFieldData(vm.count("useSessionVariables"));
         }
     }
 
 }
 
 void ProcessCreateExp::LoadFieldData(bool useSessionVariables)
-{	
-	int i, j;
+{
+    int i, j;
     int nfields, nstrips;
     m_f->m_session->LoadParameter("Strip_Z", nstrips, 1);
     vector<string> vars = m_f->m_session->GetVariables();
@@ -200,51 +198,49 @@ void ProcessCreateExp::LoadFieldData(bool useSessionVariables)
     //if (vm.count("useSessionVariables"))
     if (useSessionVariables)
     {
-		m_f->m_variables = vars;
+        m_f->m_variables = vars;
     }
     nfields = m_f->m_variables.size();
 
     m_f->m_exp.resize(nfields * nstrips);
-	// declare other fields;
+    // declare other fields;
     for (int s = 0; s < nstrips; ++s) // homogeneous strip varient
-	{
-		for (i = 0; i < nfields; ++i)
-		{
-			if (i < vars.size())
+    {
+        for (i = 0; i < nfields; ++i)
+        {
+            if (i < vars.size())
             {
-				// check to see if field already defined
-				if (!m_f->m_exp[s * nfields + i])
+                // check to see if field already defined
+                if (!m_f->m_exp[s * nfields + i])
                 {
-					m_f->m_exp[s * nfields + i] = m_f->AppendExpList(
-                    m_f->m_numHomogeneousDir, vars[i]);
+                    m_f->m_exp[s * nfields + i] = m_f->AppendExpList(
+                        m_f->m_numHomogeneousDir, vars[i]);
                 }
-                
             }
             else
             {
-				if (vars.size())
-                {	
-					m_f->m_exp[s * nfields + i] = m_f->AppendExpList(
-                    m_f->m_numHomogeneousDir, vars[0]);
+                if (vars.size())
+                {
+                    m_f->m_exp[s * nfields + i] = m_f->AppendExpList(
+                        m_f->m_numHomogeneousDir, vars[0]);
                 }
                 else
                 {
-					m_f->m_exp[s * nfields + i] = m_f->AppendExpList(
-                    m_f->m_numHomogeneousDir);
+                    m_f->m_exp[s * nfields + i] = m_f->AppendExpList(
+                        m_f->m_numHomogeneousDir);
                 }
-                
             }
-		}		
-	}
+        }
+    }
 
-     // Extract data to coeffs and bwd transform
-     for (int s = 0; s < nstrips; ++s) // homogeneous strip varient
-     {
-		for (j = 0; j < nfields; ++j)
+    // Extract data to coeffs and bwd transform
+    for (int s = 0; s < nstrips; ++s) // homogeneous strip varient
+    {
+        for (j = 0; j < nfields; ++j)
         {
-			for (i = 0; i < m_f->m_data.size() / nstrips; ++i)
+            for (i = 0; i < m_f->m_data.size() / nstrips; ++i)
             {
-				int n = i * nstrips + s;
+                int n = i * nstrips + s;
                 // In case of multiple flds, we might not have a
                 //   variable in this m_data[n] -> skip in this case
                 auto it = find (m_f->m_fielddef[n]->m_fields.begin(),
@@ -252,22 +248,22 @@ void ProcessCreateExp::LoadFieldData(bool useSessionVariables)
                                 m_f->m_variables[j]);
                 if(it !=m_f->m_fielddef[n]->m_fields.end())
                 {
-					m_f->m_exp[s * nfields + j]->ExtractDataToCoeffs(
-                    m_f->m_fielddef[n],
-                    m_f->m_data[n],
-                    m_f->m_variables[j],
-                    m_f->m_exp[s * nfields + j]->UpdateCoeffs());
-				}
-			}
+                    m_f->m_exp[s * nfields + j]->ExtractDataToCoeffs(
+                        m_f->m_fielddef[n],
+                        m_f->m_data[n],
+                        m_f->m_variables[j],
+                        m_f->m_exp[s * nfields + j]->UpdateCoeffs());
+                }
+            }
             m_f->m_exp[s * nfields + j]->BwdTrans(
-            m_f->m_exp[s * nfields + j]->GetCoeffs(),
-            m_f->m_exp[s * nfields + j]->UpdatePhys());
+                m_f->m_exp[s * nfields + j]->GetCoeffs(),
+                m_f->m_exp[s * nfields + j]->UpdatePhys());
         }
-	}
-    // Clear fielddef and data
-    //    (they should not be used after running this module)
+    }
+    // Clear fielddef and data (they should not be used after running this
+    // module)
     m_f->m_fielddef = vector<LibUtilities::FieldDefinitionsSharedPtr>();
-	m_f->m_data     = vector<std::vector<NekDouble> >();
+    m_f->m_data     = vector<std::vector<NekDouble> >();
 }
 
 

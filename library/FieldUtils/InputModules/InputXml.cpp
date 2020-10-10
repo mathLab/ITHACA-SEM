@@ -76,7 +76,7 @@ InputXml::~InputXml()
  *
  */
 void InputXml::Process(po::variables_map &vm)
-{		
+{
     LibUtilities::Timer timerpart;
     if (m_f->m_verbose)
     {
@@ -192,7 +192,7 @@ void InputXml::Process(po::variables_map &vm)
     }
 
     if (vm.count("part-only"))
-    {cout << "part-only" << endl;
+    {
         cmdArgs.push_back("--part-only");
         cmdArgs.push_back(
             boost::lexical_cast<string>(vm["part-only"].as<int>()));
@@ -220,7 +220,6 @@ void InputXml::Process(po::variables_map &vm)
 
     m_f->m_session = LibUtilities::SessionReader::CreateInstance(
         argc, (char **)argv, files, m_f->m_comm);
-    
 
     if (vm.count("nparts"))
     {

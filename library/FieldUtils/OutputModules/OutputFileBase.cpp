@@ -60,12 +60,8 @@ OutputFileBase::~OutputFileBase()
 
 void OutputFileBase::Process(po::variables_map &vm)
 {
-	m_f->SetUpExp(vm);
-	//if (vm.count("nparts"))
-	//{
-		//m_f->m_comm = m_f->m_partComm;
-	//}
-	
+    m_f->SetUpExp(vm);
+
     string filename = m_config["outfile"].as<string>();
 
     if (m_f->m_fieldPts != LibUtilities::NullPtsField)
@@ -224,10 +220,8 @@ void OutputFileBase::Process(po::variables_map &vm)
             // Restore m_exp
             exp.swap(m_f->m_exp);
         }
-        
         else
         {
-
             if (WriteFile(filename, vm))
             {
                 OutputFromExp(vm);

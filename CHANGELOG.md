@@ -22,7 +22,7 @@ v5.1.0
   for parallel DG simulations (!1112)
 - Add phifile module to compute shape functions for the SPM solver (!1065)
 - Fix mean and innerProduct modules in 3DH1D cases (!1157)
-- Fix wss module with nparts option (!1197)
+- Fix wss module with nparts option and reading of parallel xml files when the root partition is missing(!1197)
 
 **CardiacEPSolver**
 - Added additional parameter sets to Fenton-Karma model (!1119)

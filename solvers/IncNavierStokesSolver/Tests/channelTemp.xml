@@ -15,7 +15,7 @@
             <I PROPERTY="TimeIntegrationMethod"         VALUE="IMEXOrder2"              />
             <I PROPERTY="Driver"                        VALUE="Standard"                />
             <I PROPERTY="SpectralVanishingViscosity"    VALUE="True"                    />
-	    	<I PROPERTY="SPECTRALHPDEALIASING"          VALUE="True"                    />
+	    <I PROPERTY="SPECTRALHPDEALIASING"          VALUE="True"                    />
        </SOLVERINFO>
        
        <PARAMETERS>

@@ -33,7 +33,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <string>
-#include <chrono>
 #include <boost/algorithm/string.hpp>
 #include <LibUtilities/BasicConst/GitRevision.h>
 #include <LibUtilities/BasicUtils/Timer.h>
@@ -41,13 +40,13 @@
 #include <boost/asio/ip/host_name.hpp>
 #include <boost/format.hpp>
 
-#include <NekMeshUtils/Module/Module.h>
+#include <NekMesh/Module/Module.h>
 
 using namespace std;
-using namespace Nektar::NekMeshUtils;
+using namespace Nektar::NekMesh;
 
 namespace po = boost::program_options;
-namespace ip    = boost::asio::ip;
+namespace ip = boost::asio::ip;
 
 int main(int argc, char* argv[])
 {
@@ -59,7 +58,7 @@ int main(int argc, char* argv[])
              "Print options for a module.")
         ("module,m",       po::value<vector<string> >(),
              "Specify modules which are to be used.")
-        ("verbose,v",      "Enable verbose mode.");
+        ("verbose,v",      "Enable verbose output.");
 
     po::options_description hidden("Hidden options");
     hidden.add_options()
@@ -88,6 +87,10 @@ int main(int argc, char* argv[])
         cerr << desc;
         return 1;
     }
+
+    // Create a logger.
+    auto logOutput = std::make_shared<StreamOutput>(std::cout);
+    Logger log(logOutput, vm.count("verbose") ? VERBOSE : INFO);
 
     // Print available modules.
     if (vm.count("modules-list"))
@@ -133,6 +136,7 @@ int main(int argc, char* argv[])
         ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
             ModuleKey(t, tmp1[1]), m);
         cerr << "Options for module " << tmp1[1] << ":" << endl;
+        mod->SetLogger(log);
         mod->PrintConfig();
         return 1;
     }
@@ -175,11 +179,6 @@ int main(int argc, char* argv[])
     vector<ModuleSharedPtr> modules;
     vector<string>          modcmds;
 
-    if (vm.count("verbose"))
-    {
-        mesh->m_verbose = true;
-    }
-
     if (vm.count("module"))
     {
         modcmds = vm["module"].as<vector<string> >();
@@ -188,6 +187,9 @@ int main(int argc, char* argv[])
     // Add input and output modules to beginning and end of this vector.
     modcmds.insert   (modcmds.begin(), inout[0]);
     modcmds.push_back(inout[1]);
+
+    // Keep track of maximum string length for nicer verbose output.
+    size_t maxModName = 0;
 
     for (int i = 0; i < modcmds.size(); ++i)
     {
@@ -239,6 +241,7 @@ int main(int argc, char* argv[])
 
         // Create module.
         ModuleSharedPtr mod = GetModuleFactory().CreateInstance(module,mesh);
+        mod->SetLogger(log);
         modules.push_back(mod);
 
         // Set options for this module.
@@ -259,26 +262,39 @@ int main(int argc, char* argv[])
             {
                 cerr << "ERROR: Invalid module configuration: format is "
                      << "either :arg or :arg=val" << endl;
-                abort();
+                return 1;
             }
         }
 
         // Ensure configuration options have been set.
         mod->SetDefaults();
+
+        // Track maximum module name length.
+        std::string modName = mod->GetModuleName();
+        maxModName = std::max(maxModName, modName.length());
     }
+
+    log.SetPrefixLen(maxModName);
 
     // Run mesh process.
     for (int i = 0; i < modules.size(); ++i)
     {
         Nektar::LibUtilities::Timer t;
         t.Start();
-        modules[i]->Process();
+        try
+        {
+            modules[i]->GetLogger().SetPrefixLen(maxModName);
+            modules[i]->Process();
+        }
+        catch (NekMeshError &e)
+        {
+            return 1;
+        }
         t.Stop();
 
-        if (mesh->m_verbose)
-        {
-            std::cout << "Module elapsed time: " << t.TimePerTest(1) << std::endl;
-        }
+        log.SetPrefix(modules[i]->GetModuleName());
+        log(VERBOSE) << "  - Elapsed time: "
+                     << t.TimePerTest(1) << "s." << std::endl;
     }
 
     return 0;

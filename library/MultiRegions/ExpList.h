@@ -642,21 +642,21 @@ namespace Nektar
             }
 
             /// This function returns the transposition class
-            /// associaed with the homogeneous expansion.
+            /// associated with the homogeneous expansion.
             LibUtilities::TranspositionSharedPtr GetTransposition(void)
             {
                 return v_GetTransposition();
             }
 
             /// This function returns the Width of homogeneous direction
-            /// associaed with the homogeneous expansion.
+            /// associated with the homogeneous expansion.
             NekDouble GetHomoLen(void)
             {
                 return v_GetHomoLen();
             }
 
             /// This function sets the Width of homogeneous direction
-            /// associaed with the homogeneous expansion.
+            /// associated with the homogeneous expansion.
             void SetHomoLen(const NekDouble lhom)
             {
                 return v_SetHomoLen(lhom);
@@ -726,7 +726,8 @@ namespace Nektar
             MULTI_REGIONS_EXPORT int GetExpIndex(
                 const Array<OneD, const NekDouble> &gloCoord,
                 NekDouble tol = 0.0,
-                bool returnNearestElmt = false);
+                bool returnNearestElmt = false,
+                int cachedId = -1);
 
             /** This function returns the index and the Local
              * Cartesian Coordinates \a locCoords of the local
@@ -737,7 +738,8 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &gloCoords,
                 Array<OneD, NekDouble>       &locCoords,
                 NekDouble tol = 0.0,
-                bool returnNearestElmt = false);
+                bool returnNearestElmt = false,
+                int cachedId = -1);
 
             /** This function return the expansion field value
              * at the coordinates given as input.

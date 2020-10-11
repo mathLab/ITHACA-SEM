@@ -148,6 +148,142 @@ the element. Whilst a resulting simulation may run, the results may not be valid
 because of this problem, or excessively large amounts of time may be needed to
 solve the resulting linear system.
 
+
+\section{NekMesh in NekPy}
+
+The Python interface allows the user to instantiate input,
+output, and process modules by calling the static \verb+Create+ method of the
+\verb+InputModule+, \verb+ProcessModule+, and \verb+OutputModule+,
+register configuration options, and process them.
+Consider the following example:
+
+\begin{lstlisting}[style=C++Style, language=Python]
+import sys
+from NekPy.NekMesh import Mesh, ProcessModule, OutputModule
+
+mesh          = Mesh()
+mesh.expDim   = 3
+mesh.spaceDim = 3
+mesh.nummode  = 5
+mesh.verbose  = True
+
+# Load the CAD file
+ProcessModule.Create("loadcad", mesh, \
+                     filename="input.stp", verbose=True).Process()
+# Load the octree
+ProcessModule.Create("loadoctree", mesh, mindel=0.04,\
+                      maxdel=0.2, eps=0.02).Process()
+# Create a surface mesh
+ProcessModule.Create("surfacemesh", mesh).Process()
+# Output a 2D manifold mesh
+mesh.expDim = 2
+# Create a high-order surface
+ProcessModule.Create("hosurface", mesh).Process()
+# Dump out elemental Jacobians
+ProcessModule.Create("jac", mesh, list=True).Process()
+# Dump out the surface mesh.
+OutputModule.Create("xml", mesh, test=True,\
+                     outfile="output.xml").Process()
+\end{lstlisting}
+
+After importing the \verb+Mesh+, \verb+ProcessModule+, and \verb+OutputModule+
+classes, first we create a \verb+Mesh+ object by calling the constructor.
+This object will be shared by the modules.
+Then we manipulate the \verb+Mesh+ object by creating different
+\verb+ProcessModule+s, at the end we write out the result into a xml file
+using an \verb+OutputModule+.
+The configuration options for a given module are passed to the static
+\verb+Create+ method of the \verb+InputModule+, \verb+ProcessModule+, and
+\verb+OutputModule+. This creates the corresponding module and the
+modules can be processed immediately after instantiation. Note that the first
+parameter of the \verb+Create+ method has to be the key for a given module,
+the second is the previously created \verb+Mesh+ object. The remaining keyword
+arguments can specify additional parameters for a module.
+
+The Python interface allows the user to create new modules by inheriting from
+one of the possible base classes
+(\verb+InputModule+, \verb+ProcessModule+, \verb+OutputModule+).
+
+The following is a simple example when we inherit from the \verb+InputModule+
+and override the \verb+Process+ method:
+\begin{lstlisting}[style=C++Style, language=Python]
+import sys
+from NekPy.LibUtilities import ShapeType
+import NekPy.NekMesh as NekMesh
+import numpy as np
+
+# StructuredGrid creates a 2D structured grid of triangles.
+class StructuredGrid(NekMesh.InputModule):
+    def __init__(self, mesh):
+        super(StructuredGrid, self).__init__(mesh)
+        self.mesh.spaceDim = 2
+        self.mesh.expDim = 2
+        # Define some configuration options for this module.
+        self.AddConfigOption("nx", "2", "Number of points in x direction")
+        self.AddConfigOption("ny", "2", "Number of points in y direction")
+        self.AddConfigOption("lx", "0", "Lower-left x-coordinate")
+        self.AddConfigOption("rx", "0", "Upper-right x-coordinate")
+        self.AddConfigOption("ly", "0", "Lower-left y-coordinate")
+        self.AddConfigOption("ry", "0", "Upper-right y-coordinate")
+        self.AddConfigOption("compid", "0", "Composite ID")
+
+    def Process(self):
+        # Get the input variables from our configuration options.
+        coord_1x   = self.GetFloatConfig("lx")
+        coord_1y   = self.GetFloatConfig("ly")
+        coord_2x   = self.GetFloatConfig("rx")
+        coord_2y   = self.GetFloatConfig("ry")
+        nx         = self.GetIntConfig("nx")
+        ny         = self.GetIntConfig("ny")
+        compID     = self.GetIntConfig("compid")
+        x_points   = np.linspace(coord_1x, coord_2x, nx)
+        y_points   = np.linspace(coord_1y, coord_2y, ny)
+
+        nodes = []
+        id_cnt = 0
+
+        for y in range(ny):
+            tmp = []
+            for x in range(nx):
+                tmp.append(NekMesh.Node(id_cnt, x_points[x], y_points[y], 0.0))
+                id_cnt += 1
+            nodes.append(tmp)
+        self._create_triangles(nodes, nx, ny, compID)
+        # Call the Module functions to create all of the edges, faces and
+        # composites.
+        self.ProcessVertices()
+        self.ProcessEdges()
+        self.ProcessFaces()
+        self.ProcessElements()
+        self.ProcessComposites()
+
+    def _create_triangles(self, nodes, nx, ny, compID):
+        ...
+
+# Register our TestInput module with the factory.
+NekMesh.Module.Register(
+    NekMesh.ModuleType.Input, "StructuredGrid", StructuredGrid)
+
+if __name__ == '__main__':
+    # Create a 'pipeline' of the input and output modules.
+    mesh = NekMesh.Mesh()
+
+    # First, call our input module's create function from the NekMesh factory.
+    NekMesh.InputModule.Create(
+        "StructuredGrid", mesh,
+        nx = sys.argv[1], ny = sys.argv[2], lx = sys.argv[3],
+        ly = sys.argv[4], rx = sys.argv[5], ry = sys.argv[6],
+        compid = sys.argv[7], shape = sys.argv[8]).Process()
+
+    # Then ensure there's no negative Jacobians.
+    NekMesh.ProcessModule.Create("jac", mesh, list=True).Process()
+
+    # Finally, output the resulting file
+    NekMesh.OutputModule.Create(
+        "xml", mesh, test=True, outfile=sys.argv[9]).Process()
+\end{lstlisting}
+
+
 \section{NekMesh modules}
 
 \nm is designed to provide a pipeline approach to mesh generation. To do this,

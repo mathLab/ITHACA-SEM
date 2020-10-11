@@ -97,6 +97,7 @@ MACRO(SET_COMMON_PROPERTIES name)
         IF (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
             # For GNU compilers add pedantic warnings
             TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wpedantic)
+            TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wnon-virtual-dtor)
         ENDIF()
         # Temporarily disable warnings about comparing signed and unsigned
         TARGET_COMPILE_OPTIONS(${name} PRIVATE -Wno-sign-compare)
@@ -274,7 +275,7 @@ ENDMACRO(ADD_NEKTAR_TEST)
 # Adds a new NekPy library with the given sources.
 #
 MACRO(ADD_NEKPY_LIBRARY name)
-    CMAKE_PARSE_ARGUMENTS(NEKPY "" "DEPENDS" "SOURCES" ${ARGN})
+    CMAKE_PARSE_ARGUMENTS(NEKPY "" "DEPENDS;LIBDEPENDS" "SOURCES" ${ARGN})
 
     # Create library.
     ADD_LIBRARY(_${name} SHARED ${NEKPY_SOURCES})
@@ -282,6 +283,8 @@ MACRO(ADD_NEKPY_LIBRARY name)
     # Python requires a .so extension, even on OS X.
     SET_TARGET_PROPERTIES(_${name} PROPERTIES PREFIX "")
     SET_TARGET_PROPERTIES(_${name} PROPERTIES SUFFIX ".so")
+    SET_TARGET_PROPERTIES(_${name} PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/NekPy/${name})
 
     ADD_DEPENDENCIES(_${name} boost-numpy)
 
@@ -290,8 +293,13 @@ MACRO(ADD_NEKPY_LIBRARY name)
         ${Boost_SYSTEM_LIBRARY}
         ${BOOST_PYTHON_LIB}
         ${BOOST_NUMPY_LIB}
-        ${PYTHON_LIBRARIES}
-        ${name})
+        ${PYTHON_LIBRARIES})
+
+    IF (NEKPY_LIBDEPENDS)
+        TARGET_LINK_LIBRARIES(_${name} ${NEKPY_LIBDEPENDS})
+    ELSE()
+        TARGET_LINK_LIBRARIES(_${name} ${name})
+    ENDIF()
 
     # Install __init__.py files.
     SET(TMPOUT "")
@@ -301,12 +309,36 @@ MACRO(ADD_NEKPY_LIBRARY name)
     SET(TMPOUT "${TMPOUT}from ._${name} import *")
 
     FILE(WRITE ${CMAKE_BINARY_DIR}/NekPy/${name}/__init__.py ${TMPOUT})
-    INSTALL(TARGETS _${name} DESTINATION ${CMAKE_BINARY_DIR}/NekPy/${name})
 ENDMACRO()
 
+#
+# ADD_NEKPY_EXECUTABLE(name source)
+#
+# Adds a NekPy Python-based executable. No compilation is obviously required
+# for Python scripts, so this macro simply copies the given file into the
+# appropriate install directory.
+#
 MACRO(ADD_NEKPY_EXECUTABLE name source)
     # Copy the files into binary directory.
     INSTALL(FILES ${source} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
     FILE(COPY ${source} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
     ADD_CUSTOM_TARGET(${name} SOURCES ${source})
 ENDMACRO()
+
+#
+# ADD_NEKPY_TEST(name)
+#
+# Adds a NekPy test with a given name. The Test Definition File should be in a
+# subdirectory called Tests relative to the CMakeLists.txt file calling this
+# macros. The test file should be called NAME.tst, where NAME is given as a
+# parameter to this macro.
+#
+# Arguments:
+#   - `name`: name of the test file
+#
+MACRO(ADD_NEKPY_TEST name)
+    GET_FILENAME_COMPONENT(dir ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+    ADD_TEST(NAME NekPy_${dir}_${name}
+             COMMAND Tester ${CMAKE_CURRENT_SOURCE_DIR}/Tests/${name}.tst)
+ENDMACRO(ADD_NEKPY_TEST)
+

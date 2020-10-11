@@ -17,5 +17,3 @@
         </metric>
     </metrics>
 </test>
-
-

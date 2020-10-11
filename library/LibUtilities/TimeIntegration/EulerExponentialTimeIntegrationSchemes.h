@@ -45,12 +45,12 @@
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeData.h>
 
-#include <utilities/NekMesh/ProcessModules/ProcessVarOpti/Evaluator.hxx>
+#include <NekMesh/Module/ProcessModules/ProcessVarOpti/Evaluator.hxx>
 
 namespace Nektar
 {
 
-using namespace Utilities;
+using namespace NekMesh;
 
 namespace LibUtilities
 {

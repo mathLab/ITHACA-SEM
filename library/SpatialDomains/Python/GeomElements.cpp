@@ -65,9 +65,6 @@ void export_Geom(const char* name)
         .def("__init__", py::make_constructor(
                  &Geometry_Init<T, S>, py::default_call_policies(), (
                      py::arg("id"), py::arg("segments")=py::list())));
-
-    NEKPY_SHPTR_FIX(T, PARENT);
-    NEKPY_SHPTR_FIX(T, Geometry);
 }
 
 SegGeomSharedPtr SegGeom_Init(int id, int coordim, py::list &points,
@@ -125,11 +122,5 @@ void export_GeomElements()
     export_Geom<PrismGeom, Geometry2D, Geometry3D>("PrismGeom");
     export_Geom<PyrGeom, Geometry2D, Geometry3D>("PyrGeom");
     export_Geom<HexGeom, QuadGeom, Geometry3D>("HexGeom");
-
-    NEKPY_SHPTR_FIX(Geometry1D, Geometry);
-    NEKPY_SHPTR_FIX(Geometry2D, Geometry);
-    NEKPY_SHPTR_FIX(Geometry3D, Geometry);
-    NEKPY_SHPTR_FIX(SegGeom, Geometry);
-    NEKPY_SHPTR_FIX(PointGeom, Geometry);
 }
 

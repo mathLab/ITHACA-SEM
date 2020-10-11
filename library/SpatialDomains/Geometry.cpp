@@ -486,8 +486,9 @@ void Geometry::ClampLocCoords(Array<OneD, NekDouble> &locCoord,
                                   NekDouble tol)
 {
     // Validation checks
-    ASSERTL1(locCoord.size() == GetShapeDim(),
-             "Expects same number of local coordinates as shape dimension.");
+    ASSERTL1(locCoord.size() >= GetShapeDim(),
+             "Expects local coordinates to be same or "
+             "larger than shape dimension.");
 
     // If out of range clamp locCoord to be within [-1,1]^dim
     // since any larger value will be very oscillatory if

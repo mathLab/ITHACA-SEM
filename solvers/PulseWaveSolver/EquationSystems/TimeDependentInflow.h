@@ -10,6 +10,7 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
+// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,49 +35,53 @@
 #ifndef NEKTAR_TIMEDEPENDENTINFLOW_H
 #define NEKTAR_TIMEDEPENDENTINFLOW_H
 
-#include <string>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <PulseWaveSolver/EquationSystems/PulseWaveBoundary.h>
+#include <string>
 
 namespace Nektar
 {
-    // Forward declarations
-    class TimeDependentInflow;
 
-    /// Pointer to a PulseWaveOutflow object.
-    typedef std::shared_ptr<TimeDependentInflow> TimeDependentInflowSharedPtr;
-    
-    /// A global linear system.
-    class TimeDependentInflow : public PulseWaveBoundary
-    {
+// Forward declarations
+class TimeDependentInflow;
+
+// Pointer to a PulseWaveOutflow object.
+typedef std::shared_ptr<TimeDependentInflow> TimeDependentInflowSharedPtr;
+
+// A global linear system.
+class TimeDependentInflow : public PulseWaveBoundary
+{
     public:
-        /// Creates an instance of this class
-      static PulseWaveBoundarySharedPtr create(Array<OneD, MultiRegions::ExpListSharedPtr>& pVessel, 
-                                               const LibUtilities::SessionReaderSharedPtr& pSession,
-                                               PulseWavePressureAreaSharedPtr& pressureArea)
+        // Creates an instance of this class
+        static PulseWaveBoundarySharedPtr
+        create(Array<OneD, MultiRegions::ExpListSharedPtr> &pVessel,
+               const LibUtilities::SessionReaderSharedPtr &pSession,
+               PulseWavePressureAreaSharedPtr &pressureArea)
         {
-            return MemoryManager<TimeDependentInflow>::AllocateSharedPtr(pVessel,pSession,pressureArea);
+            return MemoryManager<TimeDependentInflow>::AllocateSharedPtr(
+                                              pVessel, pSession, pressureArea);
         }
 
         /// Name of class
         static std::string className;
-        
-        TimeDependentInflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
+
+        TimeDependentInflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel,
                             const LibUtilities::SessionReaderSharedPtr pSession,
-                            PulseWavePressureAreaSharedPtr pressureArea); 
+                            PulseWavePressureAreaSharedPtr pressureArea);
 
         virtual ~TimeDependentInflow();
-    protected:
-        virtual void v_DoBoundary(
-            const Array<OneD,const Array<OneD, NekDouble> > &inarray,
-            Array<OneD, Array<OneD, NekDouble> > &A_0,
-            Array<OneD, Array<OneD, NekDouble> > &beta,
-            const NekDouble time,
-            int omega,int offset,int n);
-        
-    private:
 
-    };
-}
+    protected:
+        virtual void
+        v_DoBoundary(const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+                     Array<OneD, Array<OneD, NekDouble>> &A_0,
+                     Array<OneD, Array<OneD, NekDouble>> &beta,
+                     Array<OneD, Array<OneD, NekDouble> > &alpha,
+                     const NekDouble time, int omega, int offset, int n);
+
+    private:
+};
+
+} // namespace Nektar
 
 #endif

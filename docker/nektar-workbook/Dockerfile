@@ -1,5 +1,7 @@
 FROM jupyter/scipy-notebook:ae5f7e104dd5 AS build
 
+LABEL maintainer="Nektar++ Development Team <nektar-users@imperial.ac.uk>"
+
 USER root
 RUN apt-get update && \
     apt-get install -y libtinyxml-dev && \

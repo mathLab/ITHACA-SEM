@@ -2365,16 +2365,7 @@ namespace Nektar
         LocalRegions::ExpansionSharedPtr& ExpList::GetExp(
                     const Array<OneD, const NekDouble> &gloCoord)
         {
-            Array<OneD, NekDouble> stdCoord(GetCoordim(0),0.0);
-            for (int i = 0; i < (*m_exp).size(); ++i)
-            {
-                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoord))
-                {
-                    return (*m_exp)[i];
-                }
-            }
-            ASSERTL0(false, "Cannot find element for this point.");
-            return (*m_exp)[0]; // avoid warnings
+            return GetExp(GetExpIndex(gloCoord));
         }
 
 
@@ -2386,11 +2377,12 @@ namespace Nektar
         int ExpList::GetExpIndex(
                                  const Array<OneD, const NekDouble> &gloCoord,
                                  NekDouble tol,
-                                 bool returnNearestElmt)
+                                 bool returnNearestElmt,
+                                 int cachedId)
         {
             Array<OneD, NekDouble> Lcoords(gloCoord.size());
 
-            return GetExpIndex(gloCoord,Lcoords,tol,returnNearestElmt);
+            return GetExpIndex(gloCoord,Lcoords,tol,returnNearestElmt,cachedId);
         }
 
 
@@ -2398,7 +2390,8 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &gloCoords,
                       Array<OneD, NekDouble> &locCoords,
                 NekDouble tol,
-                bool returnNearestElmt)
+                bool returnNearestElmt,
+                int cachedId)
         {
             if (GetNumElmts() == 0)
             {
@@ -2416,6 +2409,31 @@ namespace Nektar
                 }
             }
 
+            NekDouble nearpt     = 1e6;
+            NekDouble nearpt_min = 1e6;
+            int       min_id     = 0;
+            Array<OneD, NekDouble> savLocCoords(locCoords.size());
+
+            if(cachedId >= 0 && cachedId < (*m_exp).size())
+            {
+                if((*m_exp)[cachedId]->
+                           GetGeom()->ContainsPoint(gloCoords,
+                                                    locCoords,
+                                                    tol, nearpt))
+                {
+                    return cachedId;
+                }
+                else if(returnNearestElmt)
+                {
+                    // If it does not lie within, keep track of which element
+                    // is nearest.
+                    min_id     = cachedId;
+                    nearpt_min = nearpt;
+                    Vmath::Vcopy(locCoords.size(),locCoords,    1,
+                                                          savLocCoords, 1);
+                }
+            }
+
             NekDouble x = (gloCoords.size() > 0 ? gloCoords[0] : 0.0);
             NekDouble y = (gloCoords.size() > 1 ? gloCoords[1] : 0.0);
             NekDouble z = (gloCoords.size() > 2 ? gloCoords[2] : 0.0);
@@ -2427,28 +2445,28 @@ namespace Nektar
             // point.
             std::vector<int> elmts = m_graph->GetElementsContainingPoint(p);
 
-            NekDouble nearpt     = 1e6;
-            NekDouble nearpt_min = 1e6;
-            int       min_id     = 0;
-            Array<OneD, NekDouble> savLocCoords(locCoords.size());
-
             // Check each element in turn to see if point lies within it.
             for (int i = 0; i < elmts.size(); ++i)
             {
-                if ((*m_exp)[m_elmtToExpId[elmts[i]]]->
+                int id = m_elmtToExpId[elmts[i]];
+                if(id == cachedId)
+                {
+                    continue;
+                }
+                if ((*m_exp)[id]->
                             GetGeom()->ContainsPoint(gloCoords,
                                                      locCoords,
                                                      tol, nearpt))
                 {
-                    return m_elmtToExpId[elmts[i]];
+                    return id;
                 }
-                else
+                else if(returnNearestElmt)
                 {
                     // If it does not lie within, keep track of which element
                     // is nearest.
                     if(nearpt < nearpt_min)
                     {
-                        min_id     = m_elmtToExpId[elmts[i]];
+                        min_id     = id;
                         nearpt_min = nearpt;
                         Vmath::Vcopy(locCoords.size(),locCoords,    1,
                                                               savLocCoords, 1);

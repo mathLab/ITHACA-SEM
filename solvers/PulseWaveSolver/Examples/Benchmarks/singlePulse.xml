@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="1" SPACE="2">
+        <VERTEX>
+            <V ID="0"> 0.0      0.0   0.0 </V>
+            <V ID="1"> 1000.0   0.0   0.0 </V>
+        </VERTEX>
+
+        <ELEMENT>
+            <S ID="0"> 0 1 </S>
+        </ELEMENT>
+
+        <COMPOSITE>
+            <C ID="0"> S[0] </C>
+            <C ID="1"> V[0] </C>
+            <C ID="2"> V[1] </C>
+        </COMPOSITE>
+
+        <DOMAIN>
+            <D ID="0"> C[0] </D>
+        </DOMAIN>
+    </GEOMETRY>
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="A, u" TYPE="MODIFIED" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+        <PARAMETERS>
+            <P> TimeStep       = 1E-4               </P>
+            <P> FinTime        = 15                 </P>
+            <P> NumSteps       = FinTime / TimeStep </P>
+            <P> IO_CheckSteps  = NumSteps / 500     </P>
+            <P> IO_InfoSteps   = 100                </P>
+            <P> rho            = 1.050E-03          </P> <!-- Density [kg/cm^3]-->
+            <P> nue            = 0.5                </P> <!-- Poisson's ratio -->
+            <P> pext           = 0.0                </P> <!-- External pressure - can substitute for reference pressure if using different reference area: here it is the diasotlic pressure -->
+            <P> pout           = 0.0                </P> <!-- Outflow pressure for RCR model -->
+            <P> A1             = PI                 </P> <!-- Area -->
+            <P> E1             = 4000               </P> <!-- Elastic modulus -->
+            <P> Varphi1        = 0                  </P> <!-- Viscoelastic modulus set to zero to neglect viscoelasticity. Actual value: Varphi1 = 60 -->
+            <P> h1             = 0.15               </P> <!-- Wall thickness-->
+        </PARAMETERS>
+
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE"                VALUE="PulseWavePropagation" />
+            <I PROPERTY="Projection"            VALUE="DisContinuous" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="RungeKutta2_ImprovedEuler" />
+            <I PROPERTY="UpwindTypePulse"       VALUE="UpwindPulse" />
+        </SOLVERINFO>
+
+        <VARIABLES>
+            <V ID="0"> A </V>
+            <V ID="1"> u </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">    <!-- Inflow condition -->
+                <D VAR="A" USERDEFINEDTYPE="Q-inflow" VALUE="exp(-10000 * (t - 0.05) * (t - 0.05))" />
+                <D VAR="u" USERDEFINEDTYPE="Q-inflow" VALUE="1.0" />
+            </REGION>
+
+            <REGION REF="1">
+                <D VAR="A" USERDEFINEDTYPE="Terminal" VALUE="0" />
+                <D VAR="u" USERDEFINEDTYPE="Terminal" VALUE="0" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="A" DOMAIN="0" VALUE="A1" />
+            <E VAR="u" DOMAIN="0" VALUE="0.0"  />
+        </FUNCTION>
+
+        <FUNCTION NAME="A_0">
+            <E VAR="A_0" DOMAIN="0" VALUE="A1" />
+        </FUNCTION>
+
+        <FUNCTION NAME="MaterialProperties">
+            <E VAR="beta" DOMAIN="0" VALUE="(4 / 3) * sqrt(PI) * E1 * h1 / A1" />
+        </FUNCTION>
+
+        <FUNCTION NAME="Viscoelasticity">
+            <E VAR="gamma" DOMAIN="0" VALUE="(2 / 3) * sqrt(PI) * Varphi1 * h1 / A1" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="A" DOMAIN="0" VALUE="0" />
+            <E VAR="u" DOMAIN="0" VALUE="0" />
+        </FUNCTION>
+    </CONDITIONS>
+
+</NEKTAR>

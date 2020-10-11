@@ -213,14 +213,8 @@ bool CoalescedGeomData::IsDeformed(
         const Array<OneD, const NekDouble> jac =
             lep->GetMetricInfo()->GetJac(ptsKeys);
 
-        if( lep->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed )
-        {
-            m_deformed = true;
-        }
-        else
-        {
-           m_deformed = false;
-        }
+        m_deformed = lep->GetMetricInfo()->GetGtype() ==
+            SpatialDomains::eDeformed;
     }
 
     return m_deformed;

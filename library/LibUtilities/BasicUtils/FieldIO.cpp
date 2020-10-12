@@ -34,6 +34,7 @@
 
 #include <boost/asio/ip/host_name.hpp>
 #include <boost/format.hpp>
+#include <boost/regex.hpp>
 
 #include <LibUtilities/BasicConst/GitRevision.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
@@ -107,8 +108,26 @@ const std::string FieldIO::GetFileType(const std::string &filename,
         // If input is a directory, check for root processor file.
         if (fs::is_directory(filename))
         {
-            fs::path p0file("P0000000.fld");
-            fs::path fullpath = filename / p0file;
+            fs::path fullpath = filename;
+
+            fs::path d = fullpath;
+            boost::regex expr("P\\d{7}.fld");
+            boost::smatch what;
+            
+            bool found = false;
+            for (auto &f : fs::directory_iterator(d))
+            {
+                if (boost::regex_match(f.path().filename().string(), what, expr))
+                {
+                    found = true;
+                    fullpath = f.path();
+                    break;
+                }
+            }
+
+            ASSERTL0(found,std::string("Failed to open a PXXXXXXX.fld file "
+                                       "in directory: " + filename).c_str()); 
+
             datafilename      = PortablePath(fullpath);
         }
         else

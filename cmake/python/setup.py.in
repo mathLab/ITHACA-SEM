@@ -1,6 +1,11 @@
 from distutils.core import setup
 
-libs = ['LibUtilities', 'StdRegions', 'SpatialDomains', 'LocalRegions', 'MultiRegions']
+libs = ['LibUtilities',   \
+        'StdRegions',     \
+        'SpatialDomains', \
+        'LocalRegions',   \
+        'MultiRegions',   \
+        'NekMesh']
 
 setup(name='NekPy',
       version='${NEKTAR_VERSION}',

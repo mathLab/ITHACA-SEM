@@ -6,12 +6,13 @@ v5.1.0
 **Library**
 - Restructure library to use local coefficient storage down to the GlobalLinSys
   level. Removed GlobalCoeffs functionality (!963, !1145)
-- Restructure library to use local coefficient storage down to the GlobalLinSys level. Removed GlobalCeoffs functionality (!963)
-- Corrected the use of communicator in AssemblyMapDG and AssemblyCommDG which was not using GetRowComm() (!1144)
+- Corrected the use of communicator in AssemblyMapDG and AssemblyCommDG which
+  was not using GetRowComm() (!1144)
 - Add interior penalty method to DG framework (!1101)
 - Add an error filter for the time-evolution of the L2 and Linf errors (!1147)
 - Add cachedId in GetExpIndex and use in Fieldconvert (!1167)
 - Fix bug in PreconditionerLowEnergy (!1161)
+- Fix intel c compiler error in AeroFilters (!1198)
 
 **FieldConvert**
 - Refactored time integration code using factory pattern (!1034)
@@ -20,10 +21,9 @@ v5.1.0
   num_elements with size() (!1127, !1137, !1141)
 - Use base MPI functions instead of the GS library in the trace exchange
   for parallel DG simulations (!1112)
-
-**FieldConvert**:
 - Add phifile module to compute shape functions for the SPM solver (!1065)
 - Fix mean and innerProduct modules in 3DH1D cases (!1157)
+- Fix wss module with nparts option and reading of parallel xml files when the root partition is missing(!1197)
 
 **CardiacEPSolver**
 - Added additional parameter sets to Fenton-Karma model (!1119)
@@ -46,6 +46,7 @@ v5.1.0
 - Improved boundary layer splitting and output to CADfix (!938)
 - Improve .geo reader and support 3D geometries with voids (!1031)
 - Added r-adaptation code (!1109)
+- Added Python bindings, change NekMeshUtils to NekMesh (!1149)
 
 **BuildSystem**
 - Toggle build type (!1135)

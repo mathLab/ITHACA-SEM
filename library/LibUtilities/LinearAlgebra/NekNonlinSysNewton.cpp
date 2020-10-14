@@ -63,31 +63,31 @@ namespace Nektar
             string variable = variables[0];
 
             if (pSession->DefinesGlobalSysSolnInfo(variable,
-                                                "NonlinIteTolRelativeL2"))
+                                                "NewtonIterTolRelativeL2"))
             {
-                m_NonlinIteTolRelativeL2 = boost::lexical_cast<int>(
+                m_NewtonIterTolRelativeL2 = boost::lexical_cast<int>(
                         pSession->GetGlobalSysSolnInfo(variable,
-                                "NonlinIteTolRelativeL2").c_str());
+                                "NewtonIterTolRelativeL2").c_str());
             }
             else
             {
-                pSession->LoadParameter("NonlinIteTolRelativeL2",
-                                        m_NonlinIteTolRelativeL2,
+                pSession->LoadParameter("NewtonIterTolRelativeL2",
+                                        m_NewtonIterTolRelativeL2,
                                         1.0E-10);
             }
 
             if (pSession->DefinesGlobalSysSolnInfo(variable,
-                                                   "NonlinIteTolLinRelatTol"))
+                                        "LinSysRelativeTolInNewton"))
             {
-                m_NonlinIteTolLinRelatTol = boost::lexical_cast<int>(
+                m_LinSysRelativeTolInNewton = boost::lexical_cast<int>(
                         pSession->GetGlobalSysSolnInfo(variable,
-                                "NonlinIteTolLinRelatTol").c_str());
+                                "LinSysRelativeTolInNewton").c_str());
             }
             else
             {
-                pSession->LoadParameter("NonlinIteTolLinRelatTol",
-                                        m_NonlinIteTolLinRelatTol,
-                                        m_NonlinIteTolRelativeL2);
+                pSession->LoadParameter("LinSysRelativeTolInNewton",
+                                        m_LinSysRelativeTolInNewton,
+                                        m_NewtonIterTolRelativeL2);
             }
 
             m_LinSysIterSovlerType = "GMRES";
@@ -106,13 +106,6 @@ namespace Nektar
                     "LinSysIterSovler");
                 }
             }
-        }
-
-        void NekNonlinSysNewton::v_InitObject()
-        {
-            NekSys::v_InitObject();
-            m_Residual = Array<OneD, NekDouble> (m_SysDimen, 0.0);
-            m_DeltSltn = Array<OneD, NekDouble> (m_SysDimen, 0.0);
 
             ASSERTL0(LibUtilities::GetNekLinSysIterFactory().
                     ModuleExists(m_LinSysIterSovlerType),
@@ -121,8 +114,14 @@ namespace Nektar
 
             m_linsol = LibUtilities::GetNekLinSysIterFactory().CreateInstance(
                                 m_LinSysIterSovlerType, 
-                                m_session.lock(), m_Comm, m_SysDimen);
+                                pSession, m_Comm, m_SysDimen);
+        }
 
+        void NekNonlinSysNewton::v_InitObject()
+        {
+            NekSys::v_InitObject();
+            m_Residual = Array<OneD, NekDouble> (m_SysDimen, 0.0);
+            m_DeltSltn = Array<OneD, NekDouble> (m_SysDimen, 0.0);
         }
 
         NekNonlinSysNewton::~NekNonlinSysNewton()
@@ -163,7 +162,7 @@ namespace Nektar
                 m_converged = v_ConvergenceCheck(k,m_Residual, tol);
                 if (m_converged) break;
 
-                NekDouble   LinSysTol = m_NonlinIteTolLinRelatTol * 
+                NekDouble   LinSysTol = m_LinSysRelativeTolInNewton * 
                                         sqrt(m_SysResNorm);
                 int ntmpGMRESIts =  m_linsol->SolveSystem(ntotal, 
                                                           m_Residual,
@@ -197,8 +196,6 @@ namespace Nektar
                 const NekDouble                     tol         )
         {
             bool converged = false;
-            // int nwidthcolm = 12;
-            // NekDouble resmaxm  = 0.0;
             NekDouble resratio = 1.0;
             int ntotal = Residual.size();
 
@@ -215,7 +212,7 @@ namespace Nektar
                 resratio = m_SysResNorm / m_SysResNorm0;
             }
 
-            if (resratio < (m_NonlinIteTolRelativeL2 * m_NonlinIteTolRelativeL2) 
+            if (resratio < (m_NewtonIterTolRelativeL2 * m_NewtonIterTolRelativeL2) 
                 || m_SysResNorm < tol)
             {
                 converged = true;

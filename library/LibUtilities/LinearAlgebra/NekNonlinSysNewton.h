@@ -76,8 +76,8 @@ namespace Nektar
 
                 NekLinSysIterSharedPtr              m_linsol;
 
-                NekDouble                             m_NonlinIteTolRelativeL2;
-                NekDouble                             m_NonlinIteTolLinRelatTol;
+                NekDouble                             m_NewtonIterTolRelativeL2;
+                NekDouble                             m_LinSysRelativeTolInNewton;
                 NekDouble                             m_SysResNorm0;
                 NekDouble                             m_SysResNorm;
 

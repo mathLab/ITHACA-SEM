@@ -73,7 +73,7 @@ namespace Nektar
             
             LIB_UTILITIES_EXPORT int GetMaxLinIte()
             {
-                return (m_maxrestart*m_maxstorage);
+                return (m_maxrestart*m_GMRESMaxStorage);
             }
         
         protected:
@@ -81,13 +81,13 @@ namespace Nektar
             int                                    m_maxrestart;
             // This is  maximum gmres search directions for one restart
             // (determines the max storage usage)
-            int                                    m_maxstorage;
+            int                                    m_GMRESMaxStorage;
             // This is maximum bandwidth of Hessenburg matrix 
             // if use truncted Gmres(m)
-            int                                    m_maxhesband;
+            int                                    m_GMRESMaxHessMatBand;
             
-            bool                                   m_flag_LeftPrecond   = false;
-            bool                                   m_flag_RightPrecond  = true;
+            bool                                   m_GMRESLeftPrecond   = false;
+            bool                                   m_GMRESRightPrecond  = true;
 
             bool                                   m_DifferenceFlag0  = false;
             bool                                   m_DifferenceFlag1  = false;

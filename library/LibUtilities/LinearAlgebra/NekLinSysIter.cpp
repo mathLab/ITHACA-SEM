@@ -64,15 +64,15 @@ namespace Nektar
             string variable = variables[0];
 
             if (pSession->DefinesGlobalSysSolnInfo(variable,
-                                    "LinSysIterSolverTolerance"))
+                                    "NekLinSysTolerance"))
             {
                 m_tolerance = boost::lexical_cast<NekDouble>(
                         pSession->GetGlobalSysSolnInfo(variable,
-                        "LinSysIterSolverTolerance").c_str());
+                        "NekLinSysTolerance").c_str());
             }
             else
             {
-               pSession->LoadParameter("LinSysIterSolverTolerance",
+               pSession->LoadParameter("NekLinSysTolerance",
                                         m_tolerance,
                                         NekConstants::kNekIterativeTol);
             }

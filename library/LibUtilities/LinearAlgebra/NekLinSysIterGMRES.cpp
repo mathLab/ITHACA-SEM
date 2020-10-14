@@ -58,53 +58,54 @@ namespace Nektar
             const int                                   nDimen)
             : NekLinSysIter(pSession, vComm, nDimen)
         {
-            m_maxstorage        =   30;
-            m_maxhesband        =   30;
+            m_GMRESMaxStorage        =   30;
+            m_GMRESMaxHessMatBand        =   30;
             std::vector<std::string>  variables(1);
             variables[0] = pSession->GetVariable(0);
             string variable = variables[0];
 
             pSession->MatchSolverInfo(
-                "flag_LeftPrecond", "True", m_flag_LeftPrecond, false);
+                "GMRESLeftPrecond", "True", m_GMRESLeftPrecond, false);
             pSession->MatchSolverInfo(
-                "flag_RightPrecond", "False", m_flag_RightPrecond, true);
+                "GMRESRightPrecond", "False", m_GMRESRightPrecond, true);
             
             if (pSession->DefinesGlobalSysSolnInfo(variable,
-                                                   "MaxStorage"))
+                                                   "GMRESMaxStorage"))
             {
-                m_maxstorage = boost::lexical_cast<int>(
+                m_GMRESMaxStorage = boost::lexical_cast<int>(
                         pSession->GetGlobalSysSolnInfo(variable,
-                                "MaxStorage").c_str());
+                                "GMRESMaxStorage").c_str());
             }
             else
             {
-                pSession->LoadParameter("MaxStorage",
-                                        m_maxstorage,
+                pSession->LoadParameter("GMRESMaxStorage",
+                                        m_GMRESMaxStorage,
                                         30);
             }
             if (pSession->DefinesGlobalSysSolnInfo(variable, 
-                                                  "MaxHesband"))
+                                                  "GMRESMaxHessMatBand"))
             {
-                m_maxhesband = boost::lexical_cast<int>(
+                m_GMRESMaxHessMatBand = boost::lexical_cast<int>(
                         pSession->GetGlobalSysSolnInfo(variable,
-                                "MaxHesband").c_str());
+                                "GMRESMaxHessMatBand").c_str());
             }
             else
             {
-                pSession->LoadParameter("MaxHesband",
-                                        m_maxhesband,
-                                        m_maxstorage + 1);
+                pSession->LoadParameter("GMRESMaxHessMatBand",
+                                        m_GMRESMaxHessMatBand,
+                                        m_GMRESMaxStorage + 1);
             }
 
-            m_maxrestart = ceil(NekDouble(m_maxiter) / NekDouble(m_maxstorage));
-            m_maxstorage = min(m_maxiter, m_maxstorage);
+            m_maxrestart = ceil(NekDouble(m_maxiter) / 
+                            NekDouble(m_GMRESMaxStorage));
+            m_GMRESMaxStorage = min(m_maxiter, m_GMRESMaxStorage);
 
-            int flaguseCentralDifference = 0;
-            pSession->LoadParameter("flaguseCentralDifference",
-                                     flaguseCentralDifference,
+            int GMRESCentralDifference = 0;
+            pSession->LoadParameter("GMRESCentralDifference",
+                                     GMRESCentralDifference,
                                      0);
             
-            switch (flaguseCentralDifference)
+            switch (GMRESCentralDifference)
             {
             case 1:
                 m_DifferenceFlag0 = true;
@@ -193,7 +194,7 @@ namespace Nektar
             bool restarted = false;
             bool truncted = false;
 
-            if (m_maxhesband > 0)
+            if (m_GMRESMaxHessMatBand > 0)
             {
                 truncted = true;
             }
@@ -271,37 +272,37 @@ namespace Nektar
 
             // Allocate array storage of coefficients
             // Hessenburg matrix
-            Array<OneD, Array<OneD, NekDouble> > hes    (m_maxstorage);
-            for (int i = 0; i < m_maxstorage; ++i)
+            Array<OneD, Array<OneD, NekDouble> > hes    (m_GMRESMaxStorage);
+            for (int i = 0; i < m_GMRESMaxStorage; ++i)
             {
-                hes[i] = Array<OneD, NekDouble>(m_maxstorage + 1, 0.0);
+                hes[i] = Array<OneD, NekDouble>(m_GMRESMaxStorage + 1, 0.0);
             }
             // Hesseburg matrix after rotation
-            Array<OneD, Array<OneD, NekDouble> >  Upper  (m_maxstorage);
-            for (int i = 0; i < m_maxstorage; ++i)
+            Array<OneD, Array<OneD, NekDouble> >  Upper  (m_GMRESMaxStorage);
+            for (int i = 0; i < m_GMRESMaxStorage; ++i)
             {
-                Upper[i] = Array<OneD, NekDouble>(m_maxstorage + 1, 0.0);
+                Upper[i] = Array<OneD, NekDouble>(m_GMRESMaxStorage + 1, 0.0);
             }
             // Total search directions
-            Array<OneD, Array<OneD, NekDouble> >  V_total(m_maxstorage + 1);
-            for (int i = 0; i < m_maxstorage + 1; ++i)
+            Array<OneD, Array<OneD, NekDouble> >  V_total(m_GMRESMaxStorage + 1);
+            for (int i = 0; i < m_GMRESMaxStorage + 1; ++i)
             {
                 V_total[i] = Array<OneD, NekDouble>(nGlobal, 0.0);
             }
             // Residual
-            Array<OneD, NekDouble> eta    (m_maxstorage + 1, 0.0);
+            Array<OneD, NekDouble> eta    (m_GMRESMaxStorage + 1, 0.0);
             // Givens rotation c
-            Array<OneD, NekDouble> cs     (m_maxstorage, 0.0);
+            Array<OneD, NekDouble> cs     (m_GMRESMaxStorage, 0.0);
             // Givens rotation s
-            Array<OneD, NekDouble> sn     (m_maxstorage, 0.0);
+            Array<OneD, NekDouble> sn     (m_GMRESMaxStorage, 0.0);
             // Total coefficients, just for check
-            Array<OneD, NekDouble> y_total     (m_maxstorage, 0.0);
+            Array<OneD, NekDouble> y_total     (m_GMRESMaxStorage, 0.0);
             // Residual
             NekDouble eps;
             // Search direction order
-            Array<OneD, int> id (m_maxstorage, 0);
-            Array<OneD, int> id_start (m_maxstorage, 0);
-            Array<OneD, int> id_end (m_maxstorage, 0);
+            Array<OneD, int> id (m_GMRESMaxStorage, 0);
+            Array<OneD, int> id_start (m_GMRESMaxStorage, 0);
+            Array<OneD, int> id_end (m_GMRESMaxStorage, 0);
             // Temporary variables
             int idtem;
             int starttem;
@@ -336,7 +337,7 @@ namespace Nektar
                 Vmath::Vcopy(nNonDir, &pInput[0] + nDir, 1, &r0[0] + nDir, 1);
             }
             
-            if (m_flag_LeftPrecond)
+            if (m_GMRESLeftPrecond)
             {
                 tmp1 = r0 + nDir;
                 tmp2 = r0 + nDir;
@@ -356,7 +357,7 @@ namespace Nektar
             {
                 if (m_prec_factor == NekConstants::kNekUnsetDouble)
                 {
-                    if (m_flag_LeftPrecond)
+                    if (m_GMRESLeftPrecond)
                     {
                         // Evaluate initial residual error for exit check
                         vExchange    = Vmath::Dot2(nNonDir,
@@ -379,11 +380,11 @@ namespace Nektar
             eta[0] = sqrt(eps);
 
             // Give an order for the entries in Hessenburg matrix
-            for (int nd = 0; nd < m_maxstorage; ++nd)
+            for (int nd = 0; nd < m_GMRESMaxStorage; ++nd)
             {
                 id[nd] = nd;
                 id_end[nd] = nd + 1;
-                starttem = id_end[nd] - m_maxhesband;
+                starttem = id_end[nd] - m_GMRESMaxHessMatBand;
                 if (truncted && (starttem) > 0)
                 {
                     id_start[nd] = starttem;
@@ -402,17 +403,17 @@ namespace Nektar
 
             // restarted Gmres(m) process
             int nswp = 0;
-            if (m_flag_RightPrecond)
+            if (m_GMRESRightPrecond)
             {
                 Vsingle1    =   Array<OneD, NekDouble>(nGlobal, 0.0);
             }
 
-            for (int nd = 0; nd < m_maxstorage; ++nd)
+            for (int nd = 0; nd < m_GMRESMaxStorage; ++nd)
             {
                 Vsingle2 = V_total[nd + 1];
                 hsingle1 = hes[nd];
 
-                if (m_flag_RightPrecond)
+                if (m_GMRESRightPrecond)
                 {
                     tmp1 = V_total[nd] + nDir;
                     tmp2 = Vsingle1 + nDir;
@@ -436,7 +437,7 @@ namespace Nektar
                 }
 
                 hsingle2 = Upper[nd];
-                Vmath::Vcopy(m_maxstorage + 1, &hsingle1[0], 1,
+                Vmath::Vcopy(m_GMRESMaxStorage + 1, &hsingle1[0], 1,
                              &hsingle2[0], 1);
                 DoGivensRotation(starttem, endtem, nGlobal, nDir,
                                  cs, sn, hsingle2, eta);
@@ -445,7 +446,7 @@ namespace Nektar
                 // This Gmres merge truncted Gmres to accelerate.
                 // If truncted, cannot jump out because 
                 // the last term of eta is not residual
-                if ((!truncted) || (nd < m_maxhesband))
+                if ((!truncted) || (nd < m_GMRESMaxHessMatBand))
                 {
                     // If (eps * m_prec_factor < m_tolerance *
                     // m_tolerance * m_rhs_magnitude )
@@ -479,7 +480,7 @@ namespace Nektar
                              &solution[0] + nDir, 1, &solution[0] + nDir, 1);
             }
 
-            if (m_flag_RightPrecond)
+            if (m_GMRESRightPrecond)
             {
                 tmp1 = solution + nDir;
                 tmp2 = solution + nDir;
@@ -521,7 +522,7 @@ namespace Nektar
 
             tmp1 = w + nDir;
             tmp2 = w + nDir;
-            if (m_flag_LeftPrecond)
+            if (m_GMRESLeftPrecond)
             {
                 m_operator.DoNekSysPrecond(tmp1, tmp2);
             }

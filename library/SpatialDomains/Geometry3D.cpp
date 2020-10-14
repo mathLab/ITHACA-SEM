@@ -188,6 +188,21 @@ void Geometry3D::NewtonIterationForLocCoord(
         }
     }
 
+    Array<OneD, NekDouble> clampLcoords(3);
+    clampLcoords[0] = Lcoords[0];
+    clampLcoords[1] = Lcoords[1];
+    clampLcoords[2] = Lcoords[2];
+    m_xmap->LocCoordToLocCollapsed(clampLcoords, eta);
+    I[0] = m_xmap->GetBasis(0)->GetI(eta);
+    I[1] = m_xmap->GetBasis(1)->GetI(eta + 1);
+    I[2] = m_xmap->GetBasis(2)->GetI(eta + 2);
+    // calculate the global point `corresponding to Lcoords
+    xmap = m_xmap->PhysEvaluate(I, ptsx);
+    ymap = m_xmap->PhysEvaluate(I, ptsy);
+    zmap = m_xmap->PhysEvaluate(I, ptsz);
+    F1 = coords[0] - xmap;
+    F2 = coords[1] - ymap;
+    F3 = coords[2] - zmap;
     resid = sqrt(F1 * F1 + F2 * F2 + F3 * F3);
 
     if (cnt >= MaxIterations)

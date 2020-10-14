@@ -144,6 +144,8 @@ void Geometry2D::NewtonIterationForLocCoord(
 
         if (fabs(Lcoords[0]) > LcoordDiv || fabs(Lcoords[1]) > LcoordDiv)
         {
+            Lcoords[0] = init0;
+            Lcoords[1] = init1;
             break; // lcoords have diverged so stop iteration
         }
     }

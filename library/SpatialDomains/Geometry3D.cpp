@@ -195,6 +195,7 @@ void Geometry3D::NewtonIterationForLocCoord(
     clampLcoords[0] = Lcoords[0];
     clampLcoords[1] = Lcoords[1];
     clampLcoords[2] = Lcoords[2];
+    ClampLocCoords(clampLcoords, 0.);
     m_xmap->LocCoordToLocCollapsed(clampLcoords, eta);
     I[0] = m_xmap->GetBasis(0)->GetI(eta);
     I[1] = m_xmap->GetBasis(1)->GetI(eta + 1);

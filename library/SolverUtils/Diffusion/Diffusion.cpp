@@ -326,6 +326,11 @@ namespace Nektar
             Array<OneD, NekDouble>              tmp3(nPts, 0.0);
             Array<OneD, NekDouble>              tmp4(nPts, 0.0);
 
+            // Zero the variables for the current iteration step
+            Vmath::Zero(nPts, m_divVel,        1);
+            Vmath::Zero(nPts, m_divVelSquare,  1);
+            Vmath::Zero(nPts, m_curlVelSquare, 1);
+            
             // div vel
             for (int j = 0; j < nDim; ++j)
             {

@@ -593,8 +593,8 @@ namespace Nektar
         }
         
                     // Set up wrapper to all fields data storage.
-            fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps/10 + 1);  
-            global_fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps/10 + 1);  
+            fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps + 1);  
+            global_fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps + 1);  
          
       //      Array<OneD, Array<OneD, NekDouble> > last_added_field(m_nConvectiveFields); 
             last_added_field = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields); 
@@ -621,7 +621,7 @@ namespace Nektar
             }
             cout << "globalNcoeff at VelocityCorrectionSchemeROM::v_DoInitialise " << globalNcoeff << endl;
             
-            for (int i = 0; i < m_steps/10 + 1; ++i)
+            for (int i = 0; i < m_steps + 1; ++i)
             {
             	fields_time_trajectory[i] = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields);
             	global_fields_time_trajectory[i] = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields);
@@ -753,6 +753,8 @@ namespace Nektar
         const NekDouble time,
         const NekDouble aii_Dt)
     {
+        LibUtilities::Timer         my_timer_solve_velocity_whole_func;
+        my_timer_solve_velocity_whole_func.Start();
         // Set up flowrate if we're starting for the first time or the value of
         // aii_Dt has changed.
         if (m_flowrate > 0.0 && (aii_Dt != m_flowrateAiidt))
@@ -832,6 +834,7 @@ namespace Nektar
             			// collect the fields from here
 		// if (!(step % 100))
                 if (cos_angle < 0.99985)
+         //       if (1)                
 		{
 		    cout << "adding at step no. at VCS " << step << endl;
 		    last_added_field[0] = current_phys_field[0];
@@ -854,6 +857,41 @@ namespace Nektar
 		}
 		
 		step++;
+		
+		
+	if (step == m_steps)
+	{
+            std::ofstream myfile_fields_TT_x ("VCS_fields_TT_x.txt");
+            std::ofstream myfile_fields_TT_y ("VCS_fields_TT_y.txt");
+            
+            if (myfile_fields_TT_x.is_open())
+	    {
+		for(int n = 0; n < m_steps; ++n)
+		{
+		    for(int counter_nphys = 0; counter_nphys < m_fields[m_intVariables[0]]->GetNpoints(); ++counter_nphys)
+		    {
+                        myfile_fields_TT_x << std::setprecision(17) << fields_time_trajectory[n][0][counter_nphys] << " ";
+		    }
+		    myfile_fields_TT_x << endl;
+                }
+	        myfile_fields_TT_x.close();
+            }
+	    else std::cout << "Unable to open file";
+	    
+            if (myfile_fields_TT_y.is_open())
+	    {
+		for(int n = 0; n < m_steps; ++n)
+		{
+		    for(int counter_nphys = 0; counter_nphys < m_fields[m_intVariables[1]]->GetNpoints(); ++counter_nphys)
+		    {
+                        myfile_fields_TT_y << std::setprecision(17) << fields_time_trajectory[n][1][counter_nphys] << " ";
+		    }
+		    myfile_fields_TT_y << endl;
+                }
+	        myfile_fields_TT_y.close();
+            }
+	    else std::cout << "Unable to open file";
+	}	
 
 
         // Apply flowrate correction
@@ -874,6 +912,11 @@ namespace Nektar
                 m_fields[i]->GlobalToLocal();
             }
         }
+
+        my_timer_solve_velocity_whole_func.Stop();
+//	cout << "my_timer_solve_velocity_whole_func Elapsed() in implicit part " << my_timer_solve_velocity_whole_func.Elapsed().count() << endl;
+
+
     }
 
     /**

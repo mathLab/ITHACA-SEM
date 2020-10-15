@@ -202,7 +202,7 @@ namespace Nektar
                 const NekDouble                                   &time)
         {
             boost::ignore_unused(fields, inarray, outarray, time);
-            ASSERTL0(false, "v_Apply_coeff not defined");
+            ASSERTL0(false, "v_ApplyCoeff not defined");
         }
     }
 }

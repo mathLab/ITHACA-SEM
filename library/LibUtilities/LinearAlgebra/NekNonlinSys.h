@@ -40,64 +40,59 @@
 
 namespace Nektar
 {
-    namespace LibUtilities
+namespace LibUtilities
+{
+class NekNonlinSys;
+
+typedef std::shared_ptr<NekNonlinSys> NekNonlinSysSharedPtr;
+
+typedef LibUtilities::NekFactory<std::string, NekNonlinSys,
+                                 const LibUtilities::SessionReaderSharedPtr &,
+                                 const LibUtilities::CommSharedPtr &, const int>
+    NekNonlinSysFactory;
+LIB_UTILITIES_EXPORT NekNonlinSysFactory &GetNekNonlinSysFactory();
+
+class NekNonlinSys : public NekSys
+{
+public:
+    friend class MemoryManager<NekNonlinSys>;
+    LIB_UTILITIES_EXPORT static NekNonlinSysSharedPtr CreateInstance(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen)
     {
-        class NekNonlinSys;
-
-        typedef std::shared_ptr<NekNonlinSys> NekNonlinSysSharedPtr;
-        
-		typedef LibUtilities::NekFactory<
-            std::string,
-            NekNonlinSys,
-            const LibUtilities::SessionReaderSharedPtr  &,
-            const LibUtilities::CommSharedPtr           &,
-            const int                                   > NekNonlinSysFactory;
-        LIB_UTILITIES_EXPORT NekNonlinSysFactory& GetNekNonlinSysFactory();
-
-        class  NekNonlinSys : public NekSys 
-        {
-            public:
-                friend class MemoryManager<NekNonlinSys>;
-                LIB_UTILITIES_EXPORT static NekNonlinSysSharedPtr CreateInstance
-                (
-                    const LibUtilities::SessionReaderSharedPtr  &pSession,
-                    const LibUtilities::CommSharedPtr           &vComm,
-                    const int                                   nDimen)
-                {
-                    NekNonlinSysSharedPtr p = MemoryManager<
-                        NekNonlinSys>::AllocateSharedPtr(pSession,
-                                                         vComm, nDimen);
-                    return p;
-                }
-                LIB_UTILITIES_EXPORT NekNonlinSys(
-                    const LibUtilities::SessionReaderSharedPtr  &pSession,
-                    const LibUtilities::CommSharedPtr           &vComm,
-                    const int                                   nDimen);
-                LIB_UTILITIES_EXPORT ~NekNonlinSys();
-
-                LIB_UTILITIES_EXPORT const Array<OneD, const NekDouble> 
-                & GetRefSolution() const
-                {
-                    return m_Solution;
-                }
-
-                LIB_UTILITIES_EXPORT const Array<OneD, const NekDouble> 
-                & GetRefResidual() const
-                {
-                    return m_Residual;
-                }
-                
-            protected:
-
-                int                                       m_totalIterations = 0;
-
-                Array<OneD, NekDouble>  m_Solution;
-                Array<OneD, NekDouble>  m_Residual;
-                Array<OneD, NekDouble>  m_DeltSltn;
-
-                virtual void v_InitObject();
-            private:
-        };
+        NekNonlinSysSharedPtr p =
+            MemoryManager<NekNonlinSys>::AllocateSharedPtr(pSession, vComm,
+                                                           nDimen);
+        return p;
     }
-}
+    LIB_UTILITIES_EXPORT NekNonlinSys(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen);
+    LIB_UTILITIES_EXPORT ~NekNonlinSys();
+
+    LIB_UTILITIES_EXPORT const Array<OneD, const NekDouble> &GetRefSolution()
+        const
+    {
+        return m_Solution;
+    }
+
+    LIB_UTILITIES_EXPORT const Array<OneD, const NekDouble> &GetRefResidual()
+        const
+    {
+        return m_Residual;
+    }
+
+protected:
+    int m_totalIterations = 0;
+
+    Array<OneD, NekDouble> m_Solution;
+    Array<OneD, NekDouble> m_Residual;
+    Array<OneD, NekDouble> m_DeltSltn;
+
+    virtual void v_InitObject();
+
+private:
+};
+} // namespace LibUtilities
+} // namespace Nektar
 #endif

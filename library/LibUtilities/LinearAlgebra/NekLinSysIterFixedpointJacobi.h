@@ -39,55 +39,48 @@
 #include <LibUtilities/LinearAlgebra/NekLinSysIter.h>
 namespace Nektar
 {
-    namespace LibUtilities
-    {   
-        /// A global linear system.
-        class  NekLinSysIterFixedpointJacobi;
+namespace LibUtilities
+{
+/// A global linear system.
+class NekLinSysIterFixedpointJacobi;
 
-        typedef std::shared_ptr<NekLinSysIterFixedpointJacobi> 
-                    NekLinSysIterFixedpointJacobiSharedPtr;
-        
-        class  NekLinSysIterFixedpointJacobi: public NekLinSysIter
-        {
-        public:
+typedef std::shared_ptr<NekLinSysIterFixedpointJacobi>
+    NekLinSysIterFixedpointJacobiSharedPtr;
 
-            /// Support creation through MemoryManager.
-            friend class MemoryManager<NekLinSysIterFixedpointJacobi>;
+class NekLinSysIterFixedpointJacobi : public NekLinSysIter
+{
+public:
+    /// Support creation through MemoryManager.
+    friend class MemoryManager<NekLinSysIterFixedpointJacobi>;
 
-            LIB_UTILITIES_EXPORT static NekLinSysIterSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr  &pSession,
-                const LibUtilities::CommSharedPtr           &vComm,
-                const int                                   nDimen)
-            {
-                NekLinSysIterFixedpointJacobiSharedPtr p = MemoryManager<
-                    NekLinSysIterFixedpointJacobi>::AllocateSharedPtr(
-                    pSession, vComm, nDimen);
-                p->InitObject();
-                return p;
-            }
-            static std::string className;
-
-            LIB_UTILITIES_EXPORT NekLinSysIterFixedpointJacobi(
-                const LibUtilities::SessionReaderSharedPtr  &pSession,
-                const LibUtilities::CommSharedPtr           &vComm,
-                const int                                   nDimen);
-            LIB_UTILITIES_EXPORT ~NekLinSysIterFixedpointJacobi();
-            
-        protected:
-
-            virtual void v_InitObject();
-
-            virtual int v_SolveSystem(
-                const int                           nGlobal,
-                const Array<OneD, const NekDouble>  &pInput,
-                Array<OneD,      NekDouble>         &pOutput,
-                const int                           nDir,
-                const NekDouble                     tol    ,
-                const NekDouble                     factor);
-        private:
-            
-        };
+    LIB_UTILITIES_EXPORT static NekLinSysIterSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen)
+    {
+        NekLinSysIterFixedpointJacobiSharedPtr p =
+            MemoryManager<NekLinSysIterFixedpointJacobi>::AllocateSharedPtr(
+                pSession, vComm, nDimen);
+        p->InitObject();
+        return p;
     }
-}
-    
+    static std::string className;
+
+    LIB_UTILITIES_EXPORT NekLinSysIterFixedpointJacobi(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen);
+    LIB_UTILITIES_EXPORT ~NekLinSysIterFixedpointJacobi();
+
+protected:
+    virtual void v_InitObject();
+
+    virtual int v_SolveSystem(const int nGlobal,
+                              const Array<OneD, const NekDouble> &pInput,
+                              Array<OneD, NekDouble> &pOutput, const int nDir,
+                              const NekDouble tol, const NekDouble factor);
+
+private:
+};
+} // namespace LibUtilities
+} // namespace Nektar
+
 #endif

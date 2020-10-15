@@ -32,15 +32,15 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <string>
-#include <boost/algorithm/string.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
-#include <LibUtilities/LinearAlgebra/NekVector.hpp>
 #include <LibUtilities/LinearAlgebra/NekNonlinSys.h>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <LibUtilities/LinearAlgebra/NekVector.hpp>
+#include <boost/algorithm/string.hpp>
+#include <iostream>
+#include <string>
 using namespace std;
 using namespace Nektar;
 using namespace Nektar::LibUtilities;
@@ -48,103 +48,98 @@ using namespace Nektar::LibUtilities;
 class LinSysDemo
 {
     typedef const Array<OneD, NekDouble> InArrayType;
-    typedef       Array<OneD, NekDouble> OutArrayType;
-    public:
-        LinSysDemo(
-            const LibUtilities::SessionReaderSharedPtr        &pSession,
-            const LibUtilities::CommSharedPtr                 &pComm     )
-            : m_session(pSession),
-              m_comm(pComm)
+    typedef Array<OneD, NekDouble> OutArrayType;
+
+public:
+    LinSysDemo(const LibUtilities::SessionReaderSharedPtr &pSession,
+               const LibUtilities::CommSharedPtr &pComm)
+        : m_session(pSession), m_comm(pComm)
+    {
+        AllocateInitMatrix();
+
+        std::string SovlerType = "Newton";
+        ASSERTL0(
+            LibUtilities::GetNekNonlinSysFactory().ModuleExists(SovlerType),
+            "NekNonlinSys '" + SovlerType + "' is not defined.\n");
+        m_nonlinsol = LibUtilities::GetNekNonlinSysFactory().CreateInstance(
+            SovlerType, m_session, m_comm, m_matDim);
+
+        m_NekSysOp.DefineNekSysRhsEval(&LinSysDemo::DoRhs, this);
+        m_NekSysOp.DefineNekSysLhsEval(&LinSysDemo::DoLhs, this);
+        m_nonlinsol->setSysOperators(m_NekSysOp);
+    }
+    ~LinSysDemo()
+    {
+    }
+
+    void DoSolve()
+    {
+        Array<OneD, NekDouble> pOutput(m_matDim, 0.9);
+
+        int ntmpIts =
+            m_nonlinsol->SolveSystem(m_matDim, pOutput, pOutput, 0, 1.0E-9);
+
+        int ndigits    = 9;
+        int nothers    = 10;
+        int nwidthcolm = nothers + ndigits - 1;
+        cout << "ntmpIts = " << ntmpIts << endl
+             << std::scientific << std::setw(nwidthcolm)
+             << std::setprecision(ndigits - 1);
+
+        string vars = "uvwx";
+        for (int i = 0; i < m_matDim; ++i)
         {
-            AllocateInitMatrix();
-
-            std::string SovlerType = "Newton";
-            ASSERTL0(LibUtilities::GetNekNonlinSysFactory().
-                     ModuleExists(SovlerType),
-                     "NekNonlinSys '" + SovlerType + "' is not defined.\n");
-            m_nonlinsol = LibUtilities::GetNekNonlinSysFactory().CreateInstance(
-                          SovlerType, m_session, m_comm, m_matDim);
-
-            m_NekSysOp.DefineNekSysRhsEval(&LinSysDemo::DoRhs, this);
-            m_NekSysOp.DefineNekSysLhsEval(&LinSysDemo::DoLhs, this);
-            m_nonlinsol->setSysOperators(m_NekSysOp);
+            cout << "L 2 error (variable " << vars[i] << ") : " << pOutput[i]
+                 << endl;
         }
-        ~LinSysDemo()
-        {
-        }
+    }
 
-        void DoSolve()
-        {
-            Array<OneD, NekDouble> pOutput(m_matDim, 0.9);
+    void AllocateInitMatrix()
+    {
+        m_matDim = 2;
+    }
 
-            int ntmpIts =  m_nonlinsol->SolveSystem(m_matDim, pOutput, 
-                                                    pOutput, 0, 1.0E-9);
+    void DoLhs(InArrayType &inarray, OutArrayType &outarray,
+               const bool &flag = false)
+    {
+        boost::ignore_unused(flag);
+        const Array<OneD, const NekDouble> refsol =
+            m_nonlinsol->GetRefSolution();
 
-            int ndigits     = 9;  
-            int nothers     = 10; 
-            int nwidthcolm  = nothers + ndigits - 1; 
-            cout    << "ntmpIts = " << ntmpIts << endl
-                    << std::scientific << std::setw(nwidthcolm) <<
-                       std::setprecision(ndigits - 1);
+        NekDouble x = refsol[0];
+        NekDouble y = refsol[1];
 
-            string vars = "uvwx";
-            for (int i = 0;i < m_matDim; ++i)
-            {
-                cout << "L 2 error (variable " << vars[i] << ") : " <<
-                         pOutput[i] << endl;
-            }
-        }
+        NekDouble f1 = 3.0 * x * x * inarray[0] + inarray[1];
+        NekDouble f2 = 3.0 * y * y * inarray[1] - inarray[0];
 
-        void AllocateInitMatrix()
-        {
-            m_matDim = 2; 
-        }
+        outarray[0] = f1;
+        outarray[1] = f2;
+    }
 
-        void DoLhs(
-                    InArrayType     &inarray, 
-                    OutArrayType    &outarray,
-                    const  bool     &flag = false)
-        {
-            boost::ignore_unused(flag);
-            const Array<OneD, const NekDouble> refsol = 
-                                               m_nonlinsol->GetRefSolution();
+    void DoRhs(InArrayType &inarray, OutArrayType &outarray,
+               const bool &flag = false)
+    {
+        boost::ignore_unused(flag);
+        ASSERTL1(m_matDim == inarray.size(),
+                 "CoeffMat dim not equal to NekSys dim in DoRhs");
+        NekDouble x  = inarray[0];
+        NekDouble y  = inarray[1];
+        NekDouble f1 = x * x * x + y - 1.0;
+        NekDouble f2 = -x + y * y * y + 1.0;
+        outarray[0]  = f1;
+        outarray[1]  = f2;
+    }
 
-            NekDouble x = refsol[0];
-            NekDouble y = refsol[1];
-
-            NekDouble f1 = 3.0 * x * x * inarray[0] + inarray[1];
-            NekDouble f2 = 3.0 * y * y * inarray[1] - inarray[0];
-
-            outarray[0] =  f1;
-            outarray[1] =  f2;
-        }
-
-        void DoRhs(
-                    InArrayType     &inarray, 
-                    OutArrayType    &outarray,
-                    const  bool     &flag = false)
-        {
-            boost::ignore_unused(flag);
-            ASSERTL1(m_matDim == inarray.size(), 
-                "CoeffMat dim not equal to NekSys dim in DoRhs");
-            NekDouble x = inarray[0];
-            NekDouble y = inarray[1];
-            NekDouble f1 = x * x * x + y - 1.0;
-            NekDouble f2 = -x + y * y * y + 1.0;
-            outarray[0]  = f1;
-            outarray[1]  = f2;
-        }
-
-    protected:
-        int                                         m_matDim;
-        DNekMatSharedPtr                            m_matrix;
-        Array<OneD, NekDouble>                      m_matDat;
-        Array<OneD, NekDouble>                      m_SysRhs;
-        NekNonlinSysSharedPtr                       m_nonlinsol;
-        LibUtilities::NekSysOperators         m_NekSysOp;
-        LibUtilities::SessionReaderSharedPtr        m_session;
-        LibUtilities::CommSharedPtr                 m_comm;
-        Array<OneD, int>                            m_map;
+protected:
+    int m_matDim;
+    DNekMatSharedPtr m_matrix;
+    Array<OneD, NekDouble> m_matDat;
+    Array<OneD, NekDouble> m_SysRhs;
+    NekNonlinSysSharedPtr m_nonlinsol;
+    LibUtilities::NekSysOperators m_NekSysOp;
+    LibUtilities::SessionReaderSharedPtr m_session;
+    LibUtilities::CommSharedPtr m_comm;
+    Array<OneD, int> m_map;
 };
 
 int main(int argc, char *argv[])

@@ -38,58 +38,54 @@
 using namespace std;
 
 namespace Nektar
-{       
-    namespace LibUtilities
+{
+namespace LibUtilities
+{
+/**
+ * @class  NekSys
+ *
+ * Solves a nonlinear or linear system.
+ */
+
+NekSys::NekSys(const LibUtilities::SessionReaderSharedPtr &pSession,
+               const LibUtilities::CommSharedPtr &vComm, const int nDimen)
+{
+    m_tolerance = NekConstants::kNekIterativeTol;
+    m_verbose   = false;
+    m_root      = false;
+    m_Comm      = vComm;
+
+    if (0 == m_Comm->GetRank())
     {
-        /**
-         * @class  NekSys
-         *
-         * Solves a nonlinear or linear system.
-         */
-
-        NekSys::NekSys(
-            const LibUtilities::SessionReaderSharedPtr  &pSession,
-            const LibUtilities::CommSharedPtr           &vComm,
-            const int                                   nDimen)
-        {
-            m_tolerance         =   NekConstants::kNekIterativeTol;
-            m_verbose           =   false;
-            m_root              =   false;
-            m_Comm              =   vComm;
-
-            if (0 == m_Comm->GetRank())
-            {
-                m_root              =   true;
-            }
-            m_verbose   =   pSession->DefinesCmdLineArgument("verbose");
-
-            m_converged = false;
-
-            m_SysDimen = nDimen;
-        }
-
-        NekSys::~NekSys()
-        {
-        }
-
-        bool NekSys::v_ConvergenceCheck(
-            const int                           nIteration,
-            const Array<OneD, const NekDouble>  &Residual,
-            const NekDouble                     tol         )
-        {
-            bool converged = false;
-            int ntotal = Residual.size();
-            boost::ignore_unused(nIteration);
-
-            NekDouble   SysResNorm = Vmath::Dot(ntotal, Residual, Residual);
-            m_Comm->AllReduce(SysResNorm, Nektar::LibUtilities::ReduceSum);
-
-            if (SysResNorm < tol)
-            {
-                converged = true;
-            }
-            return converged;
-        }
+        m_root = true;
     }
+    m_verbose = pSession->DefinesCmdLineArgument("verbose");
+
+    m_converged = false;
+
+    m_SysDimen = nDimen;
 }
 
+NekSys::~NekSys()
+{
+}
+
+bool NekSys::v_ConvergenceCheck(const int nIteration,
+                                const Array<OneD, const NekDouble> &Residual,
+                                const NekDouble tol)
+{
+    bool converged = false;
+    int ntotal     = Residual.size();
+    boost::ignore_unused(nIteration);
+
+    NekDouble SysResNorm = Vmath::Dot(ntotal, Residual, Residual);
+    m_Comm->AllReduce(SysResNorm, Nektar::LibUtilities::ReduceSum);
+
+    if (SysResNorm < tol)
+    {
+        converged = true;
+    }
+    return converged;
+}
+} // namespace LibUtilities
+} // namespace Nektar

@@ -36,71 +36,63 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_NONLINSYS_NEWTON_H
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_NONLINSYS_NEWTON_H
 
-#include <LibUtilities/LinearAlgebra/NekNonlinSys.h>
 #include <LibUtilities/LinearAlgebra/NekLinSysIter.h>
+#include <LibUtilities/LinearAlgebra/NekNonlinSys.h>
 
 namespace Nektar
 {
-    namespace LibUtilities
+namespace LibUtilities
+{
+
+class NekNonlinSysNewton;
+
+class NekNonlinSysNewton : public NekNonlinSys
+{
+public:
+    /// Constructor for full direct matrix solve.
+    friend class MemoryManager<NekNonlinSysNewton>;
+
+    LIB_UTILITIES_EXPORT static NekNonlinSysSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen)
     {
-
-        class  NekNonlinSysNewton;
-
-        class  NekNonlinSysNewton: public NekNonlinSys
-        {
-            public:
-
-                /// Constructor for full direct matrix solve.
-				friend class MemoryManager<NekNonlinSysNewton>;
-                
-				LIB_UTILITIES_EXPORT static NekNonlinSysSharedPtr create(
-                    const LibUtilities::SessionReaderSharedPtr  &pSession,
-                    const LibUtilities::CommSharedPtr           &vComm,
-                    const int                                   nDimen)
-                {
-                    NekNonlinSysSharedPtr p = MemoryManager<
-                        NekNonlinSysNewton>::AllocateSharedPtr(pSession, vComm, 
-                                                               nDimen);
-                    p->InitObject();
-                    return p;
-                }
-
-                static std::string className;
-                LIB_UTILITIES_EXPORT NekNonlinSysNewton(
-                    const LibUtilities::SessionReaderSharedPtr  &pSession,
-                    const LibUtilities::CommSharedPtr           &vComm,
-                    const int                                   nscale);
-                LIB_UTILITIES_EXPORT ~NekNonlinSysNewton();
-            
-            protected:
-
-                NekLinSysIterSharedPtr              m_linsol;
-
-                NekDouble                             m_NewtonIterTolRelativeL2;
-                NekDouble                             m_LinSysRelativeTolInNewton;
-                NekDouble                             m_SysResNorm0;
-                NekDouble                             m_SysResNorm;
-
-                std::string                           m_LinSysIterSovlerType;
-
-                virtual void v_InitObject();
-
-                virtual int v_SolveSystem(
-                    const int                           nGlobal,
-                    const Array<OneD, const NekDouble>  &pInput,
-                    Array<OneD,      NekDouble>         &pOutput,
-                    const int                           nDir,
-                    const NekDouble                     tol    ,
-                    const NekDouble                     factor );
-                
-                virtual bool v_ConvergenceCheck(
-                    const int                           nIteration,
-                    const Array<OneD, const NekDouble>  &Residual,
-                    const NekDouble                     tol         );
-                
-            private:
-        };
+        NekNonlinSysSharedPtr p =
+            MemoryManager<NekNonlinSysNewton>::AllocateSharedPtr(pSession,
+                                                                 vComm, nDimen);
+        p->InitObject();
+        return p;
     }
-}
-    
+
+    static std::string className;
+    LIB_UTILITIES_EXPORT NekNonlinSysNewton(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::CommSharedPtr &vComm, const int nscale);
+    LIB_UTILITIES_EXPORT ~NekNonlinSysNewton();
+
+protected:
+    NekLinSysIterSharedPtr m_linsol;
+
+    NekDouble m_NewtonIterTolRelativeL2;
+    NekDouble m_LinSysRelativeTolInNewton;
+    NekDouble m_SysResNorm0;
+    NekDouble m_SysResNorm;
+
+    std::string m_LinSysIterSovlerType;
+
+    virtual void v_InitObject();
+
+    virtual int v_SolveSystem(const int nGlobal,
+                              const Array<OneD, const NekDouble> &pInput,
+                              Array<OneD, NekDouble> &pOutput, const int nDir,
+                              const NekDouble tol, const NekDouble factor);
+
+    virtual bool v_ConvergenceCheck(
+        const int nIteration, const Array<OneD, const NekDouble> &Residual,
+        const NekDouble tol);
+
+private:
+};
+} // namespace LibUtilities
+} // namespace Nektar
+
 #endif

@@ -38,67 +38,62 @@
 using namespace std;
 
 namespace Nektar
-{       
-    namespace LibUtilities
+{
+namespace LibUtilities
+{
+/**
+ * @class  NekNonlinSys
+ *
+ * Solves a nonlinear system using iterative methods.
+ */
+NekNonlinSysFactory &GetNekNonlinSysFactory()
+{
+    static NekNonlinSysFactory instance;
+    return instance;
+}
+
+NekNonlinSys::NekNonlinSys(const LibUtilities::SessionReaderSharedPtr &pSession,
+                           const LibUtilities::CommSharedPtr &vComm,
+                           const int nDimen)
+    : NekSys(pSession, vComm, nDimen)
+{
+    std::vector<std::string> variables(1);
+    variables[0]    = pSession->GetVariable(0);
+    string variable = variables[0];
+
+    if (pSession->DefinesGlobalSysSolnInfo(variable, "NekNonlinSysTolerance"))
     {
-        /**
-         * @class  NekNonlinSys
-         *
-         * Solves a nonlinear system using iterative methods.
-         */
-		NekNonlinSysFactory & GetNekNonlinSysFactory()
-        {
-            static NekNonlinSysFactory instance;
-            return instance;
-        }
+        m_tolerance = boost::lexical_cast<NekDouble>(
+            pSession->GetGlobalSysSolnInfo(variable, "NekNonlinSysTolerance")
+                .c_str());
+    }
+    else
+    {
+        pSession->LoadParameter("NekNonlinSysTolerance", m_tolerance,
+                                NekConstants::kNekIterativeTol);
+    }
 
-        NekNonlinSys::NekNonlinSys(
-            const LibUtilities::SessionReaderSharedPtr  &pSession,
-            const LibUtilities::CommSharedPtr           &vComm,
-            const int                                   nDimen)
-            : NekSys(pSession, vComm, nDimen)
-        {
-            std::vector<std::string>  variables(1);
-            variables[0] =  pSession->GetVariable(0);
-            string variable = variables[0];
-
-            if (pSession->DefinesGlobalSysSolnInfo(variable,
-                                              "NekNonlinSysTolerance"))
-            {
-                m_tolerance = boost::lexical_cast<NekDouble>(
-                        pSession->GetGlobalSysSolnInfo(variable,
-                                "NekNonlinSysTolerance").c_str());
-            }
-            else
-            {
-                pSession->LoadParameter("NekNonlinSysTolerance",
-                                        m_tolerance,
-                                        NekConstants::kNekIterativeTol);
-            }
-
-            if (pSession->DefinesGlobalSysSolnInfo(variable,
-                                                  "NonlinIteratMaxIterations"))
-            {
-                m_maxiter = boost::lexical_cast<int>(
-                        pSession->GetGlobalSysSolnInfo(variable,
-                                "NonlinIteratMaxIterations").c_str());
-            }
-            else
-            {
-                pSession->LoadParameter("NonlinIteratMaxIterations",
-                                        m_maxiter,
-                                        5000);
-            }
-        }
-
-        void NekNonlinSys::v_InitObject()
-        {
-            NekSys::v_InitObject();
-        }
-
-        NekNonlinSys::~NekNonlinSys()
-        {
-        }
+    if (pSession->DefinesGlobalSysSolnInfo(variable,
+                                           "NonlinIteratMaxIterations"))
+    {
+        m_maxiter = boost::lexical_cast<int>(
+            pSession
+                ->GetGlobalSysSolnInfo(variable, "NonlinIteratMaxIterations")
+                .c_str());
+    }
+    else
+    {
+        pSession->LoadParameter("NonlinIteratMaxIterations", m_maxiter, 5000);
     }
 }
 
+void NekNonlinSys::v_InitObject()
+{
+    NekSys::v_InitObject();
+}
+
+NekNonlinSys::~NekNonlinSys()
+{
+}
+} // namespace LibUtilities
+} // namespace Nektar

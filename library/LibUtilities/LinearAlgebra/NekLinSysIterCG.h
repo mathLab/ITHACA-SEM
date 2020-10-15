@@ -40,88 +40,76 @@
 #include <boost/circular_buffer.hpp>
 namespace Nektar
 {
-    namespace LibUtilities
-    {   
-        /// A global linear system.
-        class  NekLinSysIterCG;
+namespace LibUtilities
+{
+/// A global linear system.
+class NekLinSysIterCG;
 
-        typedef std::shared_ptr<NekLinSysIterCG> NekLinSysIterCGSharedPtr;
-        
-        class  NekLinSysIterCG: public NekLinSysIter
-        {
-        public:
+typedef std::shared_ptr<NekLinSysIterCG> NekLinSysIterCGSharedPtr;
 
-            /// Support creation through MemoryManager.
-            friend class MemoryManager<NekLinSysIterCG>;
+class NekLinSysIterCG : public NekLinSysIter
+{
+public:
+    /// Support creation through MemoryManager.
+    friend class MemoryManager<NekLinSysIterCG>;
 
-            LIB_UTILITIES_EXPORT static NekLinSysIterSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr  &pSession,
-                const LibUtilities::CommSharedPtr           &vComm,
-                const int                                   nDimen)
-            {
-                NekLinSysIterCGSharedPtr p = MemoryManager<
-                NekLinSysIterCG>::AllocateSharedPtr(pSession, vComm, nDimen);
-                p->InitObject();
-                return p;
-            }
-            static std::string className;
-            /// Constructor for full direct matrix solve.
-            LIB_UTILITIES_EXPORT NekLinSysIterCG(
-                const LibUtilities::SessionReaderSharedPtr  &pSession,
-                const LibUtilities::CommSharedPtr           &vComm,
-                const int                                   nDimen);
-            LIB_UTILITIES_EXPORT ~NekLinSysIterCG();
-            
-        protected:
-
-            int                                         m_successiveRHS;
-            /// Whether to apply projection technique
-            bool                                        m_useProjection = false;
-
-             /// Storage for solutions to previous linear problems
-            boost::circular_buffer<Array<OneD, NekDouble> > m_prevLinSol;
-
-            /// Total counter of previous solutions
-            int m_numPrevSols = 0;
-
-            virtual void v_InitObject();
-
-            virtual int v_SolveSystem(
-                const int                           nGlobal,
-                const Array<OneD, const NekDouble>  &pInput,
-                Array <OneD,      NekDouble>        &pOutput,
-                const int                           nDir,
-                const NekDouble                     tol,
-                const NekDouble                     factor );
-            
-        private:
-            
-            /// A-conjugate projection technique
-            void DoAconjugateProjection(
-                    const int pNumRows,
-                    const Array<OneD, const NekDouble> &pInput,
-                          Array<OneD,       NekDouble> &pOutput,
-                    const int pNumDir);
-
-            /// Actual iterative solve
-            void DoConjugateGradient(
-                    const int pNumRows,
-                    const Array<OneD,const NekDouble> &pInput,
-                          Array<OneD,      NekDouble> &pOutput,
-                    const int pNumDir);
-
-            void UpdateKnownSolutions(
-                    const int pGlobalBndDofs,
-                    const Array<OneD,const NekDouble> &pSolution,
-                    const int pNumDirBndDofs);
-
-            NekDouble CalculateAnorm(
-                    const int nGlobal,
-                    const Array<OneD,const NekDouble> &in,
-                    const int nDir);
-
-        };
+    LIB_UTILITIES_EXPORT static NekLinSysIterSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen)
+    {
+        NekLinSysIterCGSharedPtr p =
+            MemoryManager<NekLinSysIterCG>::AllocateSharedPtr(pSession, vComm,
+                                                              nDimen);
+        p->InitObject();
+        return p;
     }
-}
-    
+    static std::string className;
+    /// Constructor for full direct matrix solve.
+    LIB_UTILITIES_EXPORT NekLinSysIterCG(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen);
+    LIB_UTILITIES_EXPORT ~NekLinSysIterCG();
+
+protected:
+    int m_successiveRHS;
+    /// Whether to apply projection technique
+    bool m_useProjection = false;
+
+    /// Storage for solutions to previous linear problems
+    boost::circular_buffer<Array<OneD, NekDouble>> m_prevLinSol;
+
+    /// Total counter of previous solutions
+    int m_numPrevSols = 0;
+
+    virtual void v_InitObject();
+
+    virtual int v_SolveSystem(const int nGlobal,
+                              const Array<OneD, const NekDouble> &pInput,
+                              Array<OneD, NekDouble> &pOutput, const int nDir,
+                              const NekDouble tol, const NekDouble factor);
+
+private:
+    /// A-conjugate projection technique
+    void DoAconjugateProjection(const int pNumRows,
+                                const Array<OneD, const NekDouble> &pInput,
+                                Array<OneD, NekDouble> &pOutput,
+                                const int pNumDir);
+
+    /// Actual iterative solve
+    void DoConjugateGradient(const int pNumRows,
+                             const Array<OneD, const NekDouble> &pInput,
+                             Array<OneD, NekDouble> &pOutput,
+                             const int pNumDir);
+
+    void UpdateKnownSolutions(const int pGlobalBndDofs,
+                              const Array<OneD, const NekDouble> &pSolution,
+                              const int pNumDirBndDofs);
+
+    NekDouble CalculateAnorm(const int nGlobal,
+                             const Array<OneD, const NekDouble> &in,
+                             const int nDir);
+};
+} // namespace LibUtilities
+} // namespace Nektar
+
 #endif

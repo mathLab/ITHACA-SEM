@@ -33,118 +33,108 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/LinearAlgebra/NekLinSysIter.h>
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <LibUtilities/LinearAlgebra/NekLinSysIter.h>
 
 using namespace std;
 
 namespace Nektar
-{   
-    namespace LibUtilities
-    {    
-        /**
-         * @class  NekLinSysIter
-         *
-         * Solves a linear system using iterative methods.
-         */
-        NekLinSysIterFactory & GetNekLinSysIterFactory()
-        {
-            static NekLinSysIterFactory instance;
-            return instance;
-        }
+{
+namespace LibUtilities
+{
+/**
+ * @class  NekLinSysIter
+ *
+ * Solves a linear system using iterative methods.
+ */
+NekLinSysIterFactory &GetNekLinSysIterFactory()
+{
+    static NekLinSysIterFactory instance;
+    return instance;
+}
 
-        NekLinSysIter::NekLinSysIter(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const LibUtilities::CommSharedPtr          &vComm,
-            const int                                   nDimen)
-            : NekSys(pSession, vComm, nDimen)
-        {
-            std::vector<std::string>  variables(1);
-            variables[0] =  pSession->GetVariable(0);
-            string variable = variables[0];
+NekLinSysIter::NekLinSysIter(
+    const LibUtilities::SessionReaderSharedPtr &pSession,
+    const LibUtilities::CommSharedPtr &vComm, const int nDimen)
+    : NekSys(pSession, vComm, nDimen)
+{
+    std::vector<std::string> variables(1);
+    variables[0]    = pSession->GetVariable(0);
+    string variable = variables[0];
 
-            if (pSession->DefinesGlobalSysSolnInfo(variable,
-                                    "NekLinSysTolerance"))
-            {
-                m_tolerance = boost::lexical_cast<NekDouble>(
-                        pSession->GetGlobalSysSolnInfo(variable,
-                        "NekLinSysTolerance").c_str());
-            }
-            else
-            {
-               pSession->LoadParameter("NekLinSysTolerance",
-                                        m_tolerance,
-                                        NekConstants::kNekIterativeTol);
-            }
+    if (pSession->DefinesGlobalSysSolnInfo(variable, "NekLinSysTolerance"))
+    {
+        m_tolerance = boost::lexical_cast<NekDouble>(
+            pSession->GetGlobalSysSolnInfo(variable, "NekLinSysTolerance")
+                .c_str());
+    }
+    else
+    {
+        pSession->LoadParameter("NekLinSysTolerance", m_tolerance,
+                                NekConstants::kNekIterativeTol);
+    }
 
-            if (pSession->DefinesGlobalSysSolnInfo(variable,
-                                                  "MaxIterations"))
-            {
-                m_maxiter = boost::lexical_cast<int>(
-                        pSession->GetGlobalSysSolnInfo(variable,
-                                "MaxIterations").c_str());
-            }
-            else
-            {
-                pSession->LoadParameter("MaxIterations",
-                                        m_maxiter,
-                                        5000);
-            }
-        }
-
-        void NekLinSysIter::v_InitObject()
-        {
-            NekSys::v_InitObject();
-            setUniversalUniqueMap();
-        }
-
-        NekLinSysIter::~NekLinSysIter()
-        {
-        }
-
-        void NekLinSysIter::setUniversalUniqueMap(
-                                           Array<OneD, int> &map)
-        {
-            int nmap = map.size();
-            if (m_map.size() != nmap)
-            {
-                m_map   =   Array<OneD, int>(nmap, 0);
-            }
-            Vmath::Vcopy(nmap, map, 1, m_map, 1);
-        }
-
-        void NekLinSysIter::setUniversalUniqueMap()
-        {
-            m_map   =   Array<OneD, int>(m_SysDimen, 1);
-        }
-
-        void  NekLinSysIter::Set_Rhs_Magnitude(
-            const NekVector<NekDouble> &pIn)
-        {
-            Array<OneD, NekDouble> vExchange(1, 0.0);
-            if (m_map.size() > 0)
-            {
-                vExchange[0] = Vmath::Dot2(pIn.GetDimension(),
-                                           &pIn[0], &pIn[0], &m_map[0]);
-            }
-            m_Comm->AllReduce(vExchange, LibUtilities::ReduceSum);
-
-            // To ensure that very different rhs values are not being
-            // used in subsequent solvers such as the velocit solve in
-            // INC NS. If this works we then need to work out a better
-            // way to control this.
-            NekDouble new_rhs_mag = (vExchange[0] > 1e-6) ? vExchange[0] : 1.0;
-
-            if (m_rhs_magnitude == NekConstants::kNekUnsetDouble)
-            {
-                m_rhs_magnitude = new_rhs_mag;
-            }
-            else
-            {
-                m_rhs_magnitude = (m_rhs_mag_sm * (m_rhs_magnitude) +
-                                  (1.0 - m_rhs_mag_sm) * new_rhs_mag);
-            }
-        }
+    if (pSession->DefinesGlobalSysSolnInfo(variable, "MaxIterations"))
+    {
+        m_maxiter = boost::lexical_cast<int>(
+            pSession->GetGlobalSysSolnInfo(variable, "MaxIterations").c_str());
+    }
+    else
+    {
+        pSession->LoadParameter("MaxIterations", m_maxiter, 5000);
     }
 }
 
+void NekLinSysIter::v_InitObject()
+{
+    NekSys::v_InitObject();
+    setUniversalUniqueMap();
+}
+
+NekLinSysIter::~NekLinSysIter()
+{
+}
+
+void NekLinSysIter::setUniversalUniqueMap(Array<OneD, int> &map)
+{
+    int nmap = map.size();
+    if (m_map.size() != nmap)
+    {
+        m_map = Array<OneD, int>(nmap, 0);
+    }
+    Vmath::Vcopy(nmap, map, 1, m_map, 1);
+}
+
+void NekLinSysIter::setUniversalUniqueMap()
+{
+    m_map = Array<OneD, int>(m_SysDimen, 1);
+}
+
+void NekLinSysIter::Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn)
+{
+    Array<OneD, NekDouble> vExchange(1, 0.0);
+    if (m_map.size() > 0)
+    {
+        vExchange[0] =
+            Vmath::Dot2(pIn.GetDimension(), &pIn[0], &pIn[0], &m_map[0]);
+    }
+    m_Comm->AllReduce(vExchange, LibUtilities::ReduceSum);
+
+    // To ensure that very different rhs values are not being
+    // used in subsequent solvers such as the velocit solve in
+    // INC NS. If this works we then need to work out a better
+    // way to control this.
+    NekDouble new_rhs_mag = (vExchange[0] > 1e-6) ? vExchange[0] : 1.0;
+
+    if (m_rhs_magnitude == NekConstants::kNekUnsetDouble)
+    {
+        m_rhs_magnitude = new_rhs_mag;
+    }
+    else
+    {
+        m_rhs_magnitude = (m_rhs_mag_sm * (m_rhs_magnitude) +
+                           (1.0 - m_rhs_mag_sm) * new_rhs_mag);
+    }
+}
+} // namespace LibUtilities
+} // namespace Nektar

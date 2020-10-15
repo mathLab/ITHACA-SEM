@@ -96,6 +96,10 @@ void OutputInfo::Process(po::variables_map &vm)
 
         fs::path fullpath              = pinfilename / s;
         string fname                   = LibUtilities::PortablePath(fullpath);
+        if(!fs::exists(fname))
+        {
+            continue;
+        }
         LibUtilities::DataSourceSharedPtr dataSource =
             LibUtilities::XmlDataSource::create(fname);
 

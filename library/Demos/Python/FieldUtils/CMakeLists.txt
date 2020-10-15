@@ -1,13 +1,4 @@
-#ADD_NEKTAR_TEST(chan3D_tec)  # This test is covered in bfs_tec
-#ADD_NEKTAR_TEST(chan3D_vtu)  # This does not currently work -- hash metric
-#ADD_NEKTAR_TEST(chan3D_vort) # This is covered by bfs_vort
-
-#ADD_NEKTAR_TEST(chan3D_isocontour_win)
-#ADD_NEKTAR_TEST(chan3D_probe_win)
-#ADD_NEKTAR_TEST(chan3D_equispacedoutput_win)
-
 ADD_NEKPY_EXECUTABLE(bfs_probe.py bfs_probe.py)
-
 ADD_NEKPY_EXECUTABLE(bfs_tec.py bfs_tec.py)
 ADD_NEKPY_EXECUTABLE(bfs_tec_rng.py bfs_tec_rng.py)
 ADD_NEKPY_EXECUTABLE(bfs_vort.py bfs_vort.py)
@@ -15,24 +6,18 @@ ADD_NEKPY_EXECUTABLE(bfs_vort_rng.py bfs_vort_rng.py)
 ADD_NEKPY_EXECUTABLE(chan3D_csv.py chan3D_csv.py)
 ADD_NEKPY_EXECUTABLE(chan3D_csvTopts.py chan3D_csvTopts.py)
 ADD_NEKPY_EXECUTABLE(chan3D_equispacedoutput.py chan3D_equispacedoutput.py)
-#ADD_NEKPY_EXECUTABLE(chan3D_equispacedoutput_win.py chan3D_equispacedoutput_win.py)
 ADD_NEKPY_EXECUTABLE(chan3D_interppointdatatofld.py chan3D_interppointdatatofld.py)
 ADD_NEKPY_EXECUTABLE(chan3D_interppointdatatofld_interpcoord.py chan3D_interppointdatatofld_interpcoord.py)
 ADD_NEKPY_EXECUTABLE(chan3D_interppointsbox.py chan3D_interppointsbox.py)
 ADD_NEKPY_EXECUTABLE(chan3D_interppointsplane.py chan3D_interppointsplane.py)
 ADD_NEKPY_EXECUTABLE(chan3D_isocontour.py chan3D_isocontour.py)
-#ADD_NEKPY_EXECUTABLE(chan3D_isocontour_win.py chan3D_isocontour_win.py)
 ADD_NEKPY_EXECUTABLE(chan3D_modp.py chan3D_modp.py)
 ADD_NEKPY_EXECUTABLE(chan3D_npart_tec.py chan3D_npart_tec.py)
 ADD_NEKPY_EXECUTABLE(chan3D_part_only.py chan3D_part_only.py)
 ADD_NEKPY_EXECUTABLE(chan3D_probe.py chan3D_probe.py)
-#ADD_NEKPY_EXECUTABLE(chan3D_probe_win.py chan3D_probe_win.py)
 ADD_NEKPY_EXECUTABLE(chan3D_pts.py chan3D_pts.py)
 ADD_NEKPY_EXECUTABLE(chan3D_ptsTocsv.py chan3D_ptsTocsv.py)
-#ADD_NEKPY_EXECUTABLE(chan3D_tec.py chan3D_tec.py)
 ADD_NEKPY_EXECUTABLE(chan3D_tec_n10.py chan3D_tec_n10.py)
-#ADD_NEKPY_EXECUTABLE(chan3D_vort.py chan3D_vort.py)
-#ADD_NEKPY_EXECUTABLE(chan3D_vtu.py chan3D_vtu.py)
 ADD_NEKPY_EXECUTABLE(chan3DH1D_meanmode.py chan3DH1D_meanmode.py)
 ADD_NEKPY_EXECUTABLE(chan3DH1D_plane.py chan3DH1D_plane.py)
 ADD_NEKPY_EXECUTABLE(chan3DH1D_stretch.py chan3DH1D_stretch.py)
@@ -88,4 +73,3 @@ IF (NEKTAR_BUILD_TESTS)
         ADD_NEKPY_TEST(Tet_channel_npart_wss)
     ENDIF()
 ENDIF()
-

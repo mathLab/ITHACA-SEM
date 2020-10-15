@@ -110,7 +110,9 @@ void Module::RegisterConfig(string key, string val)
         conf.m_beenSet = true;
         conf.m_value   = val;
         m_config[key] = conf;
-    } else {
+    }
+    else
+    {
         it->second.m_beenSet = true;
 
         if (it->second.m_isBool && val=="")

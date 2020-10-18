@@ -106,7 +106,6 @@ void Geometry2D::NewtonIterationForLocCoord(
 
     while (cnt++ < MaxIterations)
     {
-        printf("newton iteration %d (%20.12lf,%20.12lf))\n", cnt, Lcoords[0], Lcoords[1]);
         //  evaluate lagrange interpolant at Lcoords
         m_xmap->LocCoordToLocCollapsed(Lcoords, eta);
         I[0] = m_xmap->GetBasis(0)->GetI(eta);

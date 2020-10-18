@@ -36,7 +36,7 @@ stages:
   <<: *execution-conditions
   stage: build-env
   image: docker:19.03.6
-  timeout: 30m
+  timeout: 1h
 
 .build-and-test-template: &build-and-test-template
   <<: *execution-conditions

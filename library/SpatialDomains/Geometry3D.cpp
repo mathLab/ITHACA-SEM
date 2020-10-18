@@ -184,9 +184,6 @@ void Geometry3D::NewtonIterationForLocCoord(
         if (fabs(Lcoords[0]) > LcoordDiv || fabs(Lcoords[1]) > LcoordDiv ||
             fabs(Lcoords[0]) > LcoordDiv)
         {
-            Lcoords[0] = init0;
-            Lcoords[1] = init1;
-            Lcoords[2] = init2;
             break; // lcoords have diverged so stop iteration
         }
     }

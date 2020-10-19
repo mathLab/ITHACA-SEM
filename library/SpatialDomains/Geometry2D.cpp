@@ -148,11 +148,8 @@ void Geometry2D::NewtonIterationForLocCoord(
         }
     }
 
-    Array<OneD, NekDouble> clampLcoords(2);
-    clampLcoords[0] = Lcoords[0];
-    clampLcoords[1] = Lcoords[1];
-    ClampLocCoords(clampLcoords, 0.);
-    m_xmap->LocCoordToLocCollapsed(clampLcoords, eta);
+    m_xmap->LocCoordToLocCollapsed(Lcoords, eta);
+    ClampLocCoords(eta, 0.);
     I[0] = m_xmap->GetBasis(0)->GetI(eta);
     I[1] = m_xmap->GetBasis(1)->GetI(eta + 1);
     // calculate the global point `corresponding to Lcoords

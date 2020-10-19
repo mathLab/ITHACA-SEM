@@ -12,6 +12,7 @@ v5.1.0
 - Add an error filter for the time-evolution of the L2 and Linf errors (!1147)
 - Add cachedId in GetExpIndex and use in Fieldconvert (!1167)
 - Fix bug in PreconditionerLowEnergy (!1161)
+- Fix intel c compiler error in AeroFilters (!1198)
 
 **FieldConvert**
 - Refactored time integration code using factory pattern (!1034)
@@ -22,6 +23,7 @@ v5.1.0
   for parallel DG simulations (!1112)
 - Add phifile module to compute shape functions for the SPM solver (!1065)
 - Fix mean and innerProduct modules in 3DH1D cases (!1157)
+- Fix wss module with nparts option and reading of parallel xml files when the root partition is missing(!1197)
 
 **CardiacEPSolver**
 - Added additional parameter sets to Fenton-Karma model (!1119)

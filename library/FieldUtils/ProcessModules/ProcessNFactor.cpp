@@ -135,7 +135,7 @@ void ProcessNFactor::Process(po::variables_map &vm)
     //Array<OneD, NekDouble> y(nqb);
     //cout << m_f->m_exp.size() << endl;
     //cout << m_f->m_exp[0]->GetCoordim(0) <<endl;
-    m_f->m_exp[0]->GetCoords(x,y,z);
+    BndExp[0]->GetCoords(x,y,z);
     
 
     //----------

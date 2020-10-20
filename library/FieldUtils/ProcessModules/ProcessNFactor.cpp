@@ -36,6 +36,8 @@
 #include <string>
 
 #include "ProcessNFactor.h"
+#include <NekMesh/CADSystem/CADCurve.h>
+
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
@@ -128,15 +130,108 @@ void ProcessNFactor::Process(po::variables_map &vm)
     cout << "nqb = " << nqb << ", nqe = " << nqe <<endl;
     
     
-    Array<OneD, NekDouble> x(nqb);
-    Array<OneD, NekDouble> y(nqb);
-    Array<OneD, NekDouble> z(nqb);
-    cout << x.size() <<", "<< y.size() <<endl;
-    //Array<OneD, NekDouble> y(nqb);
+    Array<OneD, NekDouble> x_bnd(nqb);
+    Array<OneD, NekDouble> y_bnd(nqb);
+    Array<OneD, NekDouble> z_bnd(nqb);
+    cout << x_bnd.size() <<", "<< y_bnd.size() << ", " << z_bnd.size() << endl;
+    // m_f->m_exp[0]->GetCoords(x,y,z); // is the coordinates of the whole field 
     //cout << m_f->m_exp.size() << endl;
-    //cout << m_f->m_exp[0]->GetCoordim(0) <<endl;
-    BndExp[0]->GetCoords(x,y,z);
+    //cout << m_f->m_exp[0]->GetCoordim(0) <<endl; // output  = 2
+    BndExp[0]->GetCoords(x_bnd,y_bnd,z_bnd);
+    // cout << BndExp.size() << endl; // 4 for u,v,w,p
+    // cout << BndExp[0]->GetCoordim(0) << endl; // 2 for expansion in the x-y plane
+    for (int i=8;i<16;++i){   // 0 ~ nqb/4, where 4 if for HomModesZ=4
+        cout << i << " - " <<x_bnd[i] <<", "<<y_bnd[i]<<", "<<z_bnd[i]<<endl;
+    }
+
+    // Sampling setting
+    const NekDouble distance_n = 0.005; // from wall to wall + H in normal direction
+    const NekDouble x0 = 0.19;
+    const NekDouble x1 = 0.4;
+    const NekInt npts_n     = 21;    // npts in wall normal direction, use npts points for export
+    const NekInt npts_x     = 3;     // npts in x direction
+
+    cout << distance_n << ", " << npts_n<<", "<< x1-x0 << npts_x << endl;
+
+    // Sampling points
+    // h = 1- tanh((1-ksi)*atanh(sqrt(1-delta)))/sqrt(1-delta), ksi in [0,1]
+    // from Agrawal's paper
+    Array<OneD, NekDouble> h(npts_n);
+    const NekDouble delta = 0.1;
+    NekDouble tmp1;
+    const NekDouble tmp2 = 1.0/(static_cast<NekDouble>(npts_n)-1.0); // 1/(npts-1)
+    const NekDouble tmp3 = sqrt(1.0-delta);
+    const NekDouble tmp4 = atanh(tmp3);
+    const NekDouble tmp5 = 1.0/tmp3;
+    for (int i=0;i<npts_n;++i){
+        tmp1 = 1.0 - i * tmp2; // tmp1 = 1-ksi, ksi = i/(npts_n-1) belonging to [0,1]
+        h[i] = 1 - tanh(tmp1*tmp4)*tmp5;
+        cout << i<<" - ksi = "<<1-tmp1<<", h = "<< h[i] <<endl;
+    }
+
+    // Get the sampled y/z on the wall according to given x
+    // Call NekMesh or OpenCascade routine to get y/z based on x array
+    // or directly interpolate using the available x/y/z/normals data on the bnd
+    // temporarily use the following point, assume it's already on the wall
+    NekDouble x_middle = (x1+x0)/2;
+    NekDouble y_middle = 0.0;
+    NekDouble z_middle = 0.0;
+    NekDouble normals_x = 0.0;
+    NekDouble normals_y = 1.0;
+    NekDouble normals_z = 0.0;
+
+
+    // Get target x/y/z array
+    Array<OneD, NekDouble> x_target(npts_n, x_middle);
+    Array<OneD, NekDouble> y_target(npts_n, y_middle);
+    Array<OneD, NekDouble> z_target(npts_n, z_middle);
+
+    for (int i=0;i<npts_n;++i){
+        x_target[i] = x_target[i] + distance_n * h[i] * normals_x;
+        y_target[i] = y_target[i] + distance_n * h[i] * normals_y;
+        z_target[i] = z_target[i] + distance_n * h[i] * normals_z;
+    }
+
+    for(int i=0;i<npts_n;++i){
+         cout << "#"<<i<<"-- "<<x_target[i]<<", "<<y_target[i]<<", "<<z_target[i]<<endl;
+    }
+   
+
+    // Get variables' value
+    // Mimic the interpolation procedure in 
+    // /disk_two/Nek_Test/nektar++/library/FieldUtils/Interpolator.cpp
+    Array<OneD, NekDouble> Lcoords(2, 0.0); 
+    Array<OneD, NekDouble> coords(2);
+    coords[0] = x_target[0];
+    coords[1] = y_target[0];
+    //coords[2] = z_target[0];
+
+    cout << "Point: "<<coords[0]<<", "<< coords[1]<<endl;//", "<<coords[2]<<endl;
+
+    // Get donor element
+    int elmtid = -1;
+    elmtid = m_f->m_exp[0]->GetExpIndex(
+            coords, Lcoords, NekConstants::kGeomFactorsTol, false, elmtid); // Get donor elmt 
+    cout <<"elmtid = "<<elmtid<<endl;
     
+    // limit Lcoords to avoid warnings, ref Interpolator.cpp
+    for (int j = 0; j < 2; ++j) {
+        Lcoords[j] = std::max(Lcoords[j], -1.0);
+        Lcoords[j] = std::min(Lcoords[j], 1.0);
+    }
+
+    if (elmtid >= 0) {
+
+
+    }
+    else {
+        cout << "Not coded yet."<<endl;
+    }
+
+
+
+
+
 
     //----------
     /*

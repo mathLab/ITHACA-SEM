@@ -394,7 +394,7 @@ int NumSteps          = 1000;
 
 YourClass solver(Input);
     
-LibUtilities::TimeIntegrationMethod  TIME_SCHEME;
+LibUtilities::TimeIntegrationScheme  TIME_SCHEME;
 LibUtilities::TimeIntegrationSchemeOperators ODE;
 
 ODE.DefineOdeRhs(&YourClass::YourExplicitOperatorFunction,solver);
@@ -429,7 +429,7 @@ int NumSteps          = 1000;
 
 YourClass equation(Input);
     
-LibUtilities::TimeIntegrationMethod  TIME_SCHEME;
+LibUtilities::TimeIntegrationScheme  TIME_SCHEME;
 LibUtilities::TimeIntegrationSchemeOperators ODE;
 
 ODE.DefineOdeRhs(&YourClass::YourExplicitOperatorFunction,equation);

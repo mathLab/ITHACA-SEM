@@ -36,7 +36,7 @@
 #include <string>
 
 #include "ProcessNFactor.h"
-#include <NekMesh/CADSystem/CADCurve.h>
+//include <NekMesh/CADSystem/CADCurve.h>
 
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -200,29 +200,80 @@ void ProcessNFactor::Process(po::variables_map &vm)
     // Get variables' value
     // Mimic the interpolation procedure in 
     // /disk_two/Nek_Test/nektar++/library/FieldUtils/Interpolator.cpp
-    Array<OneD, NekDouble> Lcoords(2, 0.0); 
-    Array<OneD, NekDouble> coords(2);
-    coords[0] = x_target[0];
-    coords[1] = y_target[0];
-    //coords[2] = z_target[0];
+    int nCoordDim = m_f->m_exp[0]->GetCoordim(0); // tell the difference between nCoorDim and Dimension of the space
+    cout << "Dimension = " << nCoordDim <<endl;
 
-    cout << "Point: "<<coords[0]<<", "<< coords[1]<<endl;//", "<<coords[2]<<endl;
+    Array<OneD, NekDouble> Lcoords(nCoordDim, 0.0); 
+    Array<OneD, NekDouble> coords(3);
+    coords[0] = x_target[20]; //0
+    coords[1] = y_target[20]; //
+    coords[2] = z_target[20]; //
+
+    cout << "Point: "<<coords[0]<<", "<< coords[1]<<", "<<coords[2]<<endl;
 
     // Get donor element
     int elmtid = -1;
     elmtid = m_f->m_exp[0]->GetExpIndex(
             coords, Lcoords, NekConstants::kGeomFactorsTol, false, elmtid); // Get donor elmt 
     cout <<"elmtid = "<<elmtid<<endl;
-    
+    cout <<"Local coord: "<< Lcoords[0] <<", "<< Lcoords[1]<<endl;//", "<< Lcoords[2]<<endl;
+
+    // Homogeneous case, need to find the right plane
+    int targetPlane = -1;
+    if (m_f->m_exp[0]->GetExpType() == MultiRegions::e3DH1D) {
+
+        cout << "e3DH1D" << endl;
+
+        int nPlanes    = m_f->m_exp[0]->GetHomogeneousBasis()->GetZ().size();
+        NekDouble lHom = m_f->m_exp[0]->GetHomoLen();
+        targetPlane = std::round((coords[2]*nPlanes)/lHom);
+
+        cout << "Plane = " << targetPlane << endl;
+
+        // Reset from last plane to plane 0 (same physical result)
+        if(targetPlane == nPlanes) {
+            targetPlane = 0;
+        }
+    }
+
     // limit Lcoords to avoid warnings, ref Interpolator.cpp
     for (int j = 0; j < 2; ++j) {
         Lcoords[j] = std::max(Lcoords[j], -1.0);
         Lcoords[j] = std::min(Lcoords[j], 1.0);
     }
-
+    
+    // interpolate the value for each field
+    int offset;
+    NekDouble value;
     if (elmtid >= 0) {
+        // Get offset
+        offset = m_f->m_exp[0]->GetPhys_Offset(elmtid);
+        
+        // interpolate each field
+        for (int f = 0; f < m_f->m_exp.size(); ++f) {
+            // interpolate a field
+            if (m_f->m_exp[0]->GetExpType() == MultiRegions::e3DH1D){
+                // 2.5D case, interpolate on the target plane
+                auto planeExp = m_f->m_exp[f]->GetPlane(targetPlane);
+                value         = planeExp->GetExp(elmtid)->StdPhysEvaluate(
+                    Lcoords, planeExp->GetPhys() + offset);
+            }
+            else {
+                // 1D/2D/3D and other cases [?]
+                value = m_f->m_exp[f]->GetExp(elmtid)->StdPhysEvaluate(
+                    Lcoords, m_f->m_exp[f]->GetPhys() + offset);
+            }
 
-
+            // Check and save
+            if ((boost::math::isnan)(value)){
+                ASSERTL0(false, "new value is not a number");
+            }    
+            else {
+                // Save the value
+                //m_ptsOutField->SetPointVal(m_ptsOutField->GetDim() + f, i, value);
+                cout <<value <<endl;
+            }
+        }
     }
     else {
         cout << "Not coded yet."<<endl;

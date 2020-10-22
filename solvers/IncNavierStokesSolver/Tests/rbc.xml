@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="u,v,T,p" TYPE="GLL_LAGRANGE_SEM" />
+    </EXPANSIONS>
+
+
+    <CONDITIONS>
+        <SOLVERINFO>
+          <I PROPERTY="SOLVERTYPE"              VALUE="VelocityCorrectionScheme"/>
+          <I PROPERTY="EQTYPE"                  VALUE="UnsteadyNavierStokes"    />
+          <I PROPERTY="Projection"              VALUE="Continuous"              />
+          <I PROPERTY="EvolutionOperator"       VALUE="Nonlinear"               />
+          <I PROPERTY="TimeIntegrationMethod"   VALUE="IMEXOrder3"              />
+          <I PROPERTY="Driver"                  VALUE="Standard"                />
+        </SOLVERINFO>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> v </V>
+            <V ID="2"> T </V>
+            <V ID="3"> p </V>
+        </VARIABLES>
+
+        <PARAMETERS>
+            <P> TimeStep      = 0.001   </P>
+            <P> T_Final = 10</P>
+            <P> NumSteps      = 100     </P>
+            <P> IO_TimeStep = 5</P>
+            <P> IO_CheckSteps = IO_TimeStep/TimeStep     </P>
+            <P> Energy_TimeStep = 0.01 </P>
+            <P> IO_InfoSteps  = 100       </P>
+            <P> Ra            = 5000      </P>
+            <P> Pr            = 0.71      </P>
+            <P> Kinvis        = Pr    </P>
+        </PARAMETERS>
+
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+            <B ID="2"> C[3] </B>
+            <B ID="3"> C[4] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="T" VALUE="1" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="1">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="T" VALUE="0" />
+                <N VAR="p" USERDEFINEDTYPE="H"  VALUE="0" />
+            </REGION>
+            <REGION REF="2">
+                <P VAR="u" VALUE="[3]" />
+                <P VAR="v" VALUE="[3]" />
+                <P VAR="T" VALUE="[3]" />
+                <P VAR="p" VALUE="[3]" />
+            </REGION>
+            <REGION REF="3">
+                <P VAR="u" VALUE="[2]" />
+                <P VAR="v" VALUE="[2]" />
+                <P VAR="T" VALUE="[2]" />
+                <P VAR="p" VALUE="[2]" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="0" />
+            <E VAR="T" VALUE="1-y" />
+            <E VAR="p" VALUE="0" />
+        </FUNCTION>
+
+        <FUNCTION NAME="BodyForce">
+            <E VAR="u" VALUE="0" EVARS="u v T p" />
+            <E VAR="v" VALUE="Ra*Pr*T" EVARS="u v T p" />
+            <E VAR="T" VALUE="0" EVARS="u v T p"  />
+        </FUNCTION>
+
+        <FUNCTION NAME="DiffusionCoefficient">
+            <E VAR="T" VALUE="1.0" />
+        </FUNCTION>
+    </CONDITIONS>
+
+    <FILTERS>
+        <FILTER TYPE="HistoryPoints">
+            <PARAM NAME="OutputFile">rbc</PARAM>
+            <PARAM NAME="OutputFrequency">10</PARAM>
+            <PARAM NAME="Points">
+                0.2 0.5 0
+                0.5 0.5 0
+                1.0 0.5 0
+                1.5 0.5 0
+                1.8 0.5 0
+            </PARAM>
+        </FILTER>
+
+    </FILTERS>
+
+    <FORCING>
+        <FORCE TYPE="Body">
+            <BODYFORCE> BodyForce </BODYFORCE>
+        </FORCE>
+    </FORCING>
+
+
+    <GEOMETRY DIM="2" SPACE="2">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxt139M1HUcx/GL5IfgD0BBIAp/RZyQ4JEHSPEVhEAuEAgFOSBEQH4YXAQXQyOTnCFKLBOXUagYM2TkrLUZzpLVBrrKysaUWE4iRVs7aTrQQQXv1/14v9f3v/cee9+45/cz4KNS0aPOfqf3XoBqLUZV888xHp++oVI9InzP4P4j63d8rJjdDu5lbxe413NSmbjN/VH4oVnk8vNnYXZPGbm8dHBCKX3A9+3hA8nkct8B8/cf9BnPt91Xfp19gO07wnveJ5f7Tph//+OUb1bB30qaN9+fDZ8cJpf7zphDQqf7mJTeAL7vAq8LJpf7czDf8Jv+fqOKNpzvz4U/8CaX+/Mw665O/3zDSmc8358Pf3iFXO67Yr6pnv78q4pPBt93gzctJ5f77pjLQqe9X2kq4vsL4FdWksv9hSrxGPm+h3Sx74nZfD4rFrq/OXqzx7K/CG7C+ZwbxN0L7pJG56t9HXdvuH8bnZ9oPXcfeMMdOh8Dldwfg3tH0Puv3sfdF56mpvfrcpz74/Dg6/T+PjnL/Qm4QUPvR/mRux/83BrqP3SL+2LRdYdqAfMlom/Kpn2tP/VctPhSeKAj9b1h4L4Mfj+d+tY0cl8O9z1BfZ07uD8JLx+jvq1fc/eHj0RTX80g96fguWHU95t73APglbepb5ZrI3O1+fsr1Ne0gvsK+Ik46rs7jnug6OuVxz1I9L14aty3e+wXiz8NH3CivlO93FfChzOp76pr3IPhvZ3Ud+td7iHwzx9S3xanCear4J8lUd9+P+4aeFQi9Z3Ucg+Fh49TX00y92fgSgr1zS/kvhquS6e+h3Zy14q+fQe5h4m+zoZ//nt+s3g4/JIz9Q1q5h4Br8uhvimnua+Bv3uG+houc4+ENzl0zfQ9aOL+LLxRT331M3+Qrlv8OXhWHvUt8+IeBdc7dc30fT2Au/kXbmwB9T0Qzn0tvKKQ+rYlcI8WfU9nco8RfWtj6u+edBix+Dr4V3Oob5+OeyzcJ5/6em7kHgfP+ZL65udyfx5e4kZ9z2zjHg8vKKG+UwbuCfAqI/VNruW+Hr7Li/oeqeeeCE+oob639nPXwd8zUl9tC/cXRN+32rgnib6G4KFMl9RRiyfDy+ZR30oN9w1wxyLqW7Waewrc6QL1NYZzT4V3+1BfYyT3NLi2mvrWRnF/EZ7aQH1ro7mnm/v5U9+dsdw3wrMbqG9dPPdN8LA91HdXIvcM0Xd3EvdM0beifegHu/o/Lb4Z3jmf+i4SngUfK6a+F45z18OnvqW+xcKzzedjCfV1FZ4Dd6ijvmePcc+F5x2mvluEvwR/O4T6OgrPg3u0UN/uo9y3wJc1U9/NwvNFX5XwraJvrzqjSHfyL4sXwOtcqW+H8EL4nVLq2yC8yHy++qlvufBt8Ah/6rtBeLH58+vx/4PwEvh3R6mvp/BSeFkY9R0P4F4GP/YR9b0mfDu86jD1PS/8ZZG3XXi56EuTyeIVcHs32/uX1Q1w/+229yurvwIvvGR7f7J6JXyxusvmfmT1V+Ef7rW9/1i9Cv5Fh+39xurV8HORXTb3F6sb4RPttvcTq78Gd2y1vX9YvUb1f4/V/wXHSOVS</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1llO3XEEUBm9s2xPb9sS2PbFt27Zt27bt5M/kpeshtda5L73qW+f2nJnavXcnJf3/lyxiTR6xpohY+Uup5+FUEZxazH5p9DzPpRXzXDox+6WP+P8MYv4/Y8R+mfQ8+2YWs28WMftl1fN8XjYxn5ddzH459DzvkVPMe+QSs19uPc/75RHzfnnF7JdPz/Pe+cW8dwEx+xXU83yfQmK+T2Ex+xUJK/XM94yJ+Z5FxdRvMeV8/+Ji6rSEcn6XkmLqsZRyfq/SYuqujHJ+x7Ji6quccn7f8mLqqIJyfveKYuqlknJ8VBZTF1WU46mqGP/VlMfCWl1MXdQIK37xWlOM11piPNdWju86YjzXVU4d1BPjub5y6qOBGM8NlVM3jcR4bqyceoqL8dxEOXXWVIznZsqpv+ZiPLdQTl22FOO5lXLqtbU4FtY2YcUvddxWTB23E+O5vXLqu4MYzx2VU/edxHjurJzz0EWM567KOSfdxHjurpzz00OM557KOVe9xHjurZzz1keM577KOYf9xHjur5zzOUCM/4FhxS/ndpCYc5sQ43mwcs7zEDGehyrnnA8T43m4cs7/CDGeRyqnL4wS43m0cvrFGDGexyqnj4wT43m8cvrLBDGeJyqPh3WSGM+TldOPpojxPzWs+KVPTRPTp6aL8TxDOf1rphjPs5TT12aL8TxHOf1urhjP85TTB+eL8bxAOf1xoRjPi5TTNxeL8bxEOf10qRjPy5TTZ5eL42FdoZz+u1KM/1VhxS99ebWYvrxGjOe1yunX68R4Xq+cPr5BjOeNyunvm8R43qycvr9FjOetypkH28R43q6cObFDjOedypkfu8R43q2cubJHjOe9ypk3+8T43x9W/DKHDoiZQwfFeD6knPl0WIznI8qZW0fFeD6mnHl2XIznE8qZcyfFeD6lnPl3WoznM8qZi2fFeD6nPBHW82I8X1DOHL0oxvMl5czXy2L8Xwkrfpm7V8XM3WtiPF9Xzjy+IcbzTeXM6VtiPN9Wzvy+I8bzXeXM9XtiPN9Xzrx/IMbzQ+XcAx6J8fxYOfeDJ+JEWJ8q597wTIzn58q5T7wQ4/9lWPHLPeOVmHvGazGe3yjn/vFWjOd3yrmXvBfj+YNy7isfxXj+pJx7zGcxnr8o537zVYznb8q593wX4/mHcu5DP8V4/qWce9JvMZ7/KOf+9FeM/3/uUMT6</EDGE>
+        <ELEMENT>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx11dVTlGEAhXHswC5CVBRExQAlFAzAQlHAwg7A7u7C7u7u7u7u7v5nvHnOhWfGvfnNPDvz7bvf2QgI+PdRCAtjkf/0olgMi9vz6iWwJJay66qXxkAsY6+jXhbLYXl7PfUKWBEr2TnVK2MVrGrnVq+GQRhs51cPwVCsjqWsh2ENrIm6D7UwHGujdgi0XgcjUPetjPVIrIt6n2WtR2E9O1c56/WxgV2nvPVobIgVTPVG2Bi1T0XrTTAGtU8l67HYFLVPZevNMA61j/aPxwRMxHCsar05tkDtU816Eiaj9gmy3hJbofYJtt4a26D2CbGegqmofUKtp2Fb1D7VrbfD9qh9wqx3wI6ofWpYT8dOqH30PemMGdgFtU8t610xE7VPuPUszEbtU9t6N+yO2qeO9R7YE7VPhPVemIPaJ9J6b+yD2qeu9b7YD7VPlPX+OAC1Tz3rA3EQah99vgbjEMxF7dPAeh7mo/aJtj4Uh6H2aWh9OI5A7dPI+kgchdqnsfXROAa1TxPrY3Ecap8Y6+NxAmqfWOsTcRJqn6bWJ+MU1D76nkzFaTgdtU+c9Rk4E7VPvPVZOBu1T4L1OTgXtU+i9Xk4H7VPc+sLcCFqnxbWC3ARap8k64txCWqfZOtLcRlqn5bWl+MK1D76XV6Jq3A1ap/W1tfgWtQ+bayvw/WofVKsb8CNqH1SrW/Czah90qxvwa2ofdpa34bbsQDbWd+BO1H7tLe+C3ej9ulgfQ/uRe2j/5d9uB8PoPZJt34QD6H26WT9MB5B7dPZ+lE8htonw/pxPIHap4v1k3gKtU9X66fxDGqfTOtn8Rxqnyzr5/ECap9s6xfxEmof/U5fxit4FbVPd+vX8DoexB7Wb+BN1D49rd/C26h9elm/g3dR++RYv4f3Ufv0tv4AH6L26WP9ET5G7dPX+hN8itqnn/Vn+By1j/5vXuBLfIXaZ4D11/gGtc9A62/xHWqfQdbf4wfUPoOtf8RPqH2GWP+MX1D75Fr/it9Q++RZ/44/UPvkW/+Jv1D7DLX+G/+g9vkL54O91QAA</Q>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> Q[0-99] </C>
+            <C ID="1"> E[30,27,24,21,18,15,12,9,6,3] </C>
+            <C ID="2"> E[200,202,204,206,208,210,212,214,216,218]</C>
+            <C ID="3"> E[219,198,177,156,135,114,93,72,51,29] </C>
+            <C ID="4"> E[199,178,157,136,115,94,73,52,31,0] </C>
+        </COMPOSITE>
+        <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+</NEKTAR>

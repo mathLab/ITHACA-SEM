@@ -45,6 +45,8 @@ namespace SolverUtils
 class FluidInterface
 {
 public:
+    virtual ~FluidInterface() = default;
+
     /// Extract array with velocity from physfield
     SOLVER_UTILS_EXPORT virtual void GetVelocity(
         const Array<OneD, const Array<OneD, NekDouble> > &physfield,

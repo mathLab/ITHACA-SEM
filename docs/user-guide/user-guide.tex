@@ -1,17 +1,17 @@
-%%% DOCUMENTCLASS 
+%%% DOCUMENTCLASS
 %%%-------------------------------------------------------------------------------
 \documentclass[
 a4paper, % Stock and paper size.
 11pt, % Type size.
 % article,
-% oneside, 
+% oneside,
 onecolumn, % Only one column of text on a page.
 % openright, % Each chapter will start on a recto page.
 % openleft, % Each chapter will start on a verso page.
 openany, % A chapter may start on either a recto or verso page.
 ]{memoir}
 
-%%% PACKAGES 
+%%% PACKAGES
 %%%------------------------------------------------------------------------------
 
 \usepackage[utf8]{inputenc} % If utf8 encoding
@@ -32,7 +32,7 @@ openany, % A chapter may start on either a recto or verso page.
 \usepackage{makeidx}
 \usepackage{import}
 
-%%% PAGE LAYOUT 
+%%% PAGE LAYOUT
 %%%-----------------------------------------------------------------------------
 \setlrmarginsandblock{0.15\paperwidth}{*}{1} % Left and right margin
 \setulmarginsandblock{0.2\paperwidth}{*}{1}  % Upper and lower margin
@@ -103,7 +103,7 @@ openany, % A chapter may start on either a recto or verso page.
 \setlength{\absleftindent}{0.1\textwidth} % Width of abstract
 \setlength{\absrightindent}{\absleftindent}
 
-%%% HEADER AND FOOTER 
+%%% HEADER AND FOOTER
 %%%------------------------------------------------------------------------------
 
 \makepagestyle{standard} % Make standard pagestyle
@@ -178,6 +178,25 @@ openany, % A chapter may start on either a recto or verso page.
   rulecolor=\color{black!30},
   aboveskip=10pt,
   autogobble=true
+}
+\lstdefinestyle{C++Style}{
+  language=C++,
+  basicstyle=\ttfamily\footnotesize,
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=3pt,
+  frame=,
+  columns=fullflexible,
+  backgroundcolor=\color{black!05},
+  linewidth=0.95\linewidth,
+  xleftmargin=0.1\linewidth,
+  showspaces=false,
+  showstringspaces=false,
+  breaklines=true,
+  keywordstyle=\color{blue}\ttfamily,
+  stringstyle=\color{red}\ttfamily,
+  commentstyle=\color{violet}\ttfamily,
+  morecomment=[l][\color{teal}]{\#}
 }
 \definecolor{gray}{rgb}{0.4,0.4,0.4}
 \definecolor{darkblue}{rgb}{0.0,0.0,0.6}
@@ -355,7 +374,7 @@ pdfauthor={I am the Author} % author
     \hbox{%
       \hspace*{0.1\textwidth}%
       \rule{1pt}{\dimexpr\textheight-28pt\relax}%
-      \hspace*{0.05\textwidth}% 
+      \hspace*{0.05\textwidth}%
       \parbox[b]{0.85\textwidth}{%
         \vbox{%
           {\includegraphics[width=0.2\textwidth]{img/icon-blue.png}\par}

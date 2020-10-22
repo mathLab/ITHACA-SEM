@@ -40,6 +40,7 @@
 #include <string>
 #include <sstream>
 #include <memory>
+#include <functional>
 
 #ifdef NEKTAR_USE_THREAD_SAFETY
 #include <boost/thread/shared_mutex.hpp>
@@ -109,7 +110,7 @@ public:
     typedef std::shared_ptr<tBase> tBaseSharedPtr;
     /// CreatorFunction type which takes parameter and returns base class shared
     /// pointer.
-    typedef tBaseSharedPtr (*CreatorFunction) (tParam...);
+    typedef std::function<tBaseSharedPtr(tParam...)> CreatorFunction;
 
     /// Define a struct to hold the information about a module.
     struct ModuleEntry
@@ -299,7 +300,7 @@ protected:
      * @brief Ensure the factory's map is created.
      * @returns                 The factory's map.
      */
-    TMapFactory* getMapFactory() 
+    TMapFactory* getMapFactory()
     {
         return &mMapFactory;
     }

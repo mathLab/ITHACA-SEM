@@ -46,12 +46,12 @@
 #include <LibUtilities/TimeIntegration/TimeIntegrationAlgorithmGLM.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeGLM.h>
 
-#include <utilities/NekMesh/ProcessModules/ProcessVarOpti/Evaluator.hxx>
+#include <NekMesh/Module/ProcessModules/ProcessVarOpti/Evaluator.hxx>
 
 namespace Nektar
 {
 
-using namespace Utilities;
+using namespace NekMesh;
 
 namespace LibUtilities
 {

@@ -111,6 +111,7 @@ stages:
   stage: build-env-default
   variables:
     OS_DISTRO: debian
+    REMOVE_UCX: 0
   script:
     - OS_VERSION=$(echo $CI_JOB_NAME | cut -d- -f 1)
     - BUILD_TYPE=$(echo $CI_JOB_NAME | cut -d- -f 2)
@@ -118,7 +119,7 @@ stages:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - export IMAGE=$CI_REGISTRY_IMAGE:env-${OS_VERSION}-${BUILD_TYPE}
     - docker pull $IMAGE || true
-    - docker build --pull -t $IMAGE .
+    - docker build --pull --build-arg REMOVE_UCX=${REMOVE_UCX} -t $IMAGE .
     - docker push $IMAGE
 
 .build-env-debian-template-full: &build-env-debian-template-full
@@ -130,6 +131,9 @@ bullseye-default-build-env:
 
 bullseye-full_py3-build-env:
   <<: *build-env-debian-template-full
+  variables:
+    OS_DISTRO: debian
+    REMOVE_UCX: 1
   needs: ["bullseye-default-build-env"]
 
 buster-default-build-env:

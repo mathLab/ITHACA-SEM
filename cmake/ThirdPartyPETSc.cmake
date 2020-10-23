@@ -56,7 +56,6 @@ IF (NEKTAR_USE_PETSC)
             ENDIF()
             # we use a MUMPS build in ordering here, in the future it might make
             # sense to hook it up with metis/scotch since this MIGHT be faster
-            # disabled MUMPS due to bug in SCALAPACK
             SET(PETSC_MUMPS --download-scalapack --download-mumps)
             SET(PETSC_DEPS "")
 

@@ -57,7 +57,7 @@ stages:
     - export ENV_IMAGE=$(docker build -q -f Dockerfile_tmp .)
     - mkdir -p log
     - if [ ! -d $CCACHE_DIR ]; then mkdir -p $CCACHE_DIR && chown 1000:1000 $CCACHE_DIR; fi
-    - docker run --name $CONTAINER_NAME -v ccache:/cache --shm-size=256000000
+    - docker run --name $CONTAINER_NAME -v ccache:/cache
       -e "BUILD_TYPE=$BUILD_TYPE"
       -e "NUM_CPUS=$NUM_CPUS"
       -e "CCACHE_DIR=$CCACHE_DIR"

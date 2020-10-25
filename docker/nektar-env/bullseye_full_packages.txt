@@ -12,5 +12,6 @@ libtet1.5-dev
 libtriangle-dev
 mpi-default-dev
 petsc-dev
+python3-dev
 python3.9-dev
 python3-numpy

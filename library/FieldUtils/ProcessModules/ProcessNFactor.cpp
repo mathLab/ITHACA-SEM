@@ -63,6 +63,37 @@ ProcessNFactor::~ProcessNFactor()
 {
 }
 
+
+/* To heapify (max-haeading) a subtree rooted with node i
+   A[0~5][0~currentLength-1] is the data to be heapified
+   A.size()=6; A[0~5] for x/y/z/nx/ny/nz respectively
+   The heap is adjusted regards to A[0] (x-value)
+*/
+void heapify_max(Array<OneD, Array<OneD, NekDouble> > A, 
+                 const int currentLength, 
+                 const int i) {
+    
+    int largest = i;   // Initialize the largest as root 
+    const int l = 2 * i + 1; // left  child = 2*i + 1 
+    const int r = 2 * i + 2; // right child = 2*i + 2 
+
+    // Check if left child exists and it is larger than root
+    // Then check if right child exits and it is larger than largest  
+    if (l < currentLength && A[0][l] > A[0][largest]) { largest = l; } 
+    if (r < currentLength && A[0][r] > A[0][largest]) { largest = r; }
+
+    // If largest is not the root, swap values at [largest] and [i]
+    // then recursively heapify the affected sub-tree 
+    if (largest != i) {
+        for (int j=0; j<6; ++j) { std::swap(A[j][i], A[j][largest]); }
+
+        heapify_max(A, currentLength, largest);
+    }
+}
+
+
+
+
 void ProcessNFactor::Process(po::variables_map &vm)
 {
     ProcessBoundaryExtract::Process(vm);
@@ -146,118 +177,11 @@ void ProcessNFactor::Process(po::variables_map &vm)
 
 
     //=========================================================================
-    //const int ExpDim = m_f->m_exp[0]->GetExp(0)->GetNumBases();
-    //const int expDim = BndExp[0]->GetExp(0)->GetNumBases(); // =m_base.size() =1
-    //cout <<"1 = " <<ExpDim << ", 2 = " << expDim <<endl;
-
-    //=========================================================================
-    //-------------------------------test--------------------------------------
-    /*
-    // Ref: ExpList::GetExpIndex() in ExpList.cpp
-    SpatialDomains::PointGeomSharedPtr p
-     = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(2, -1, 0.295, -0.001, 0.0);
-    SpatialDomains::PointGeomSharedPtr q
-     = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(2, -1, 0.295, 0.0, 0.0); // y=0/-0.001 
-
-    // Get the list of elements whose bounding box contains the desired point.
-    std::vector<int> elmts = m_f->m_graph->GetElementsContainingPoint(q);
-    cout << "Elmts size = "<< elmts.size()<<endl;
-    for (int i=0;i<elmts.size();++i){
-        cout << elmts[i]<<endl;
-    }
-    
-    // GetGraph failed[!]
-    //cout <<"---BndExp[0]->GetGraph---"<<endl;
-    //cout <<BndExp[0]->GetGraph()->GetMeshDimension() << endl;
-    //cout <<BndExp[0]->GetGraph()->GetSpaceDimension()<< endl;
-    //cout <<BndExp[0]->GetGraph()->Get<< endl;
- 
-    // graph for bndExp does not exist?
-    std::vector<int> elmts2 = BndExp[0]->GetGraph()->GetElementsContainingPoint(q);
-    cout << "Elmts2 size = "<< elmts2.size()<<endl;
-    for (int i=0;i<elmts2.size();++i){
-        cout << elmts2[i]<<endl;
-    }
-    */
-    
-    /*
-    // set expansion array
-    SpatialDomains::GeometrySharedPtr  m_geom;
-    m_geom = BndExp[0]->GetExp(0)->GetGeom();
-    m_geom->FillGeom(); // get physical points defined in Geom
-
-    const int expDim = BndExp[0]->GetExp(0)->GetNumBases(); // =m_base.size() =1
-    int       nqGeom = 1;
-    Array<OneD, LibUtilities::BasisSharedPtr> CBasis(expDim);
-    for (int i = 0; i < expDim; ++i) {
-        CBasis[i] = m_geom->GetXmap()->GetBasis(i);
-        nqGeom   *= CBasis[i]->GetNumPoints(); // number of quadrature points; for 1D, = <Order> in .mcf +1
-    }
-
-    cout << "CBasis pts = " << CBasis[0]->GetPointsKey().GetNumPoints() << endl;
-    cout << "expDim = " << expDim <<", nqGeom = " << nqGeom <<endl;//=1D, 2 points
-    cout << "m_geo_dim = " << m_geom->GetCoordim() << endl;  //=2, 2D line segment but 1D expansion
-
-    Array<OneD, NekDouble> tmpGeom(nqGeom); // physical points
-    Array<OneD, NekDouble> tmpGeom2(2);
-
-    
-    m_geom->GetXmap()->BwdTrans(m_geom->GetCoeffs(0), tmpGeom);   
-
-    for (int i=0; i<tmpGeom.size(); ++i){
-        cout <<"x1 = " << tmpGeom[i] <<endl;
-    }
-
-    LibUtilities::Interp1D(from_key, &tmpGeom[0], to_key, &tmpGeom2[0]);
-    
-    for (int i=0; i<tmpGeom2.size(); ++i){
-        cout <<"x2 = " << tmpGeom2[i] <<endl;
-    }
-    */
-
-    /*
-    Array<OneD, NekDouble> from_ptsInElmt_0 (from_nPtsPerElmt); //offset=0,8,16,...,328
-    Array<OneD, NekDouble> from_ptsInElmt_1 (from_nPtsPerElmt);
-    Array<OneD, NekDouble> from_ptsInElmt_2 (from_nPtsPerElmt); 
-    Array<OneD, NekDouble> to_ptsInElmt_0 (to_nPtsPerElmt); 
-    Array<OneD, NekDouble> to_ptsInElmt_1 (to_nPtsPerElmt);
-    Array<OneD, NekDouble> to_ptsInElmt_2 (to_nPtsPerElmt);
-
-    // Interp1D
-    // set point key
-    int nPtsPerElmt = 11; // number of points per element, key parameter
-    LibUtilities::PointsKey from_key = BndExp[0]->GetExp(0)->GetBasis(0)->GetPointsKey();
-    LibUtilities::PointsKey to_key(nPtsPerElmt, LibUtilities::PointsType::ePolyEvenlySpaced); //[!] important!
-    
-    cout << "from key NumPoints = " << from_key.GetNumPoints() 
-         <<", PointsType = "<< from_key.GetPointsType() << endl;
-    cout << "to Key NumPoints = " << to_key.GetNumPoints() 
-         <<", PointsType = "<< to_key.GetPointsType() << endl;
-
-    Array<OneD, NekDouble> from_ptsInElmt(from_key.GetNumPoints()); // points in the donor element
-    Array<OneD, NekDouble> to_ptsInElmt(to_nPtsPerElmt); // array to save the interpolated coordinates
-    
-    from_ptsInElmt_0[0] = 0.365;
-    from_ptsInElmt_0[1] = 0.36532;
-    from_ptsInElmt_0[2] = 0.36602;
-    from_ptsInElmt_0[3] = 0.366976;
-    from_ptsInElmt_0[4] = 0.368023;
-    from_ptsInElmt_0[5] = 0.368979;
-    from_ptsInElmt_0[6] = 0.369679;
-    from_ptsInElmt_0[7] = 0.37;
-    LibUtilities::Interp1D(from_key, &from_ptsInElmt_0[0], to_key, &to_ptsInElmt_0[0]);
-    for (int i=0; i<to_ptsInElmt_0.size(); ++i){
-        cout <<"---interpolated--- = " << to_ptsInElmt_0[i] <<endl;
-    }
-    */
-
-    //-------------------------------------------------------------------------
+    //------------------------------ Set origins ------------------------------
     // set dimensions
     const int dim_para = BndExp[0]->GetExp(0)->GetNumBases(); // dimension for parametric coordinate system, eg. =1
     const int dim_phys = BndExp[0]->GetCoordim(0); // dimension for the physical space that the parametric coordinate system located on, eg. =2
     cout << "dim_para = " << dim_para <<", dim_coor = " << dim_phys <<endl;
-
- 
 
     // input parameters
     // use prefix const later
@@ -266,7 +190,7 @@ void ProcessNFactor::Process(po::variables_map &vm)
     range_x[1] = 0.401;
 
     // set point key
-    const int to_nPtsPerElmt = 2; // number of points per element, key parameter, better to be odd
+    const int to_nPtsPerElmt = 6; // number of points per element, key parameter, better to be odd
     LibUtilities::PointsKey from_key = BndExp[0]->GetExp(0)->GetBasis(0)->GetPointsKey();
     LibUtilities::PointsKey to_key( to_nPtsPerElmt, LibUtilities::PointsType::ePolyEvenlySpaced ); //[!] important!
     const int from_nPtsPerElmt = from_key.GetNumPoints();
@@ -315,15 +239,57 @@ void ProcessNFactor::Process(po::variables_map &vm)
         ptr = ptr + to_nPtsPerElmt;
 
     }
+ 
 
-        
-    for (int j=0; j<nOrigs; ++j){
-        cout <<"-array- " << origs[0][j] <<", "<< origs[1][j]<<", "<< origs[2][j] <<", "
-                          << origs[3][j] <<", "<< origs[4][j]<<", "<< origs[5][j] <<endl;
-    }   
+    // build max heap and sort
+    // Build max heap, starting from the last non-leaf node
+    for (int i = floor(nOrigs / 2) - 1; i >= 0; --i) {
+        heapify_max(origs, nOrigs, i);
+    }
+    // Move current root to end [0]->[length-1]
+    // and adjust the reduced heap, startig from root
+    for (int length = nOrigs; length > 1; --length) {
+        for (int j=0; j<6; ++j) { std::swap(origs[j][0], origs[j][length-1]); }
 
-    // heap sort and remove repeated origin points 
-   
+        heapify_max(origs, length-1, 0);
+    }
+
+    // remove repeated origin points 
+    int nOrigs_new = nOrigs; // new length
+    for (int i=1; i<nOrigs; ++i) {
+        // For each i, check indax smaller than i
+        for (int j=i-1; j>=0; --j) {
+            
+            if ( abs(origs[0][i]-origs[0][j])>NekConstants::kNekZeroTol ) {
+                break; // The array has already sorted regards to x
+            }
+            else {
+                if (abs(origs[1][i]-origs[1][i-1])<NekConstants::kNekZeroTol &&
+                    abs(origs[2][i]-origs[2][i-1])<NekConstants::kNekZeroTol) {
+                    
+                    // repeated points found, [i]==[j]
+                    // move [i+1] to [nOrigs-1] forword
+                    for (int k=0; k<6; ++k) {
+                        for (int t=i+1; t<nOrigs; ++t) {
+                            origs[k][t-1] = origs[k][t];
+                        }
+                        origs[k][nOrigs-1] = origs[k][j];
+                    }
+
+                    --nOrigs_new; // key origins -- 
+                    --i;         // check the same i again
+                }
+            }
+
+        }
+    }
+
+    cout << "len1 = "<< nOrigs <<", len2 = " << nOrigs_new << endl;
+
+    for (int j=0; j<nOrigs_new; ++j){
+        cout <<"-array_3- " << origs[0][j] <<", "<< origs[1][j]<<", "<< origs[2][j] <<", "
+                            << origs[3][j] <<", "<< origs[4][j]<<", "<< origs[5][j] <<endl;
+    }  
 
 
 

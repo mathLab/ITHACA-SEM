@@ -1302,6 +1302,89 @@ namespace Nektar
     	cout << " ... finished loading ROM parameters" << endl;
 	
     }
+    
+    Array<OneD, Array<OneD, NekDouble> > CoupledLinearNS_ROM::DoSolve_at_param(Array<OneD, NekDouble> init_snapshot_x, Array<OneD, NekDouble> init_snapshot_y, NekDouble parameter)
+    {
+//	DoInitialise();
+//	DoSolve();
+	bool snapshot_computation_plot_rel_errors = 1;
+	double rel_err = 1.0;
+	ROM_started = 1;
+	while (rel_err > 1e-11)
+	{
+		Set_m_kinvis( parameter );
+		DoInitialiseAdv(init_snapshot_x, init_snapshot_y); // replaces .DoInitialise();
+		DoSolve();
+		// compare the accuracy
+		Array<OneD, MultiRegions::ExpListSharedPtr> m_fields_t = UpdateFields();
+		m_fields_t[0]->BwdTrans(m_fields_t[0]->GetCoeffs(), m_fields_t[0]->UpdatePhys());
+		m_fields_t[1]->BwdTrans(m_fields_t[1]->GetCoeffs(), m_fields_t[1]->UpdatePhys());
+		Array<OneD, NekDouble> out_field_trafo_x(GetNpoints(), 0.0);
+		Array<OneD, NekDouble> out_field_trafo_y(GetNpoints(), 0.0);
+
+		Eigen::VectorXd csx0_trafo(GetNpoints());
+		Eigen::VectorXd csy0_trafo(GetNpoints());
+		Eigen::VectorXd csx0(GetNpoints());
+		Eigen::VectorXd csy0(GetNpoints());
+
+		CopyFromPhysField(0, out_field_trafo_x); 
+		CopyFromPhysField(1, out_field_trafo_y);
+
+		for( int index_conv = 0; index_conv < GetNpoints(); ++index_conv)
+		{
+			csx0_trafo(index_conv) = out_field_trafo_x[index_conv];
+			csy0_trafo(index_conv) = out_field_trafo_y[index_conv];
+			csx0(index_conv) = init_snapshot_x[index_conv];
+			csy0(index_conv) = init_snapshot_y[index_conv];
+		}
+
+//		cout << "csx0.norm() " << csx0.norm() << endl;
+//		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
+//		cout << "csy0.norm() " << csy0.norm() << endl;
+//		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
+		rel_err = (csx0_trafo - csx0).norm() / csx0.norm() + (csy0_trafo - csy0).norm() / csy0.norm();
+		if (snapshot_computation_plot_rel_errors)
+		{
+			cout << "rel_err euclidean norm " << rel_err << endl;
+		}
+
+		init_snapshot_x = out_field_trafo_x;
+		init_snapshot_y = out_field_trafo_y;
+	}
+
+
+
+	Array<OneD, Array<OneD, NekDouble> > converged_solution( 2 );
+	converged_solution[0] = Array<OneD, NekDouble>(GetNpoints(), 0.0);
+	converged_solution[1] = Array<OneD, NekDouble>(GetNpoints(), 0.0);
+	converged_solution[0] = init_snapshot_x;
+	converged_solution[1] = init_snapshot_y;
+
+//	cout << " curr_f_bnd.size()+curr_f_int.size() " <<  curr_f_bnd.size()+curr_f_int.size() << endl;
+//	cout << " GetNcoeffs() " <<  GetNcoeffs() << endl;
+	ROM_started = 0;
+	return converged_solution;
+    }
+
+    
+    void CoupledLinearNS_ROM::compute_snapshots_kinvis(void)
+    {
+    	Array<OneD, NekDouble> zero_phys_init(GetNpoints(), 0.0);
+	snapshot_x_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+	snapshot_y_collection = Array<OneD, Array<OneD, NekDouble> > (number_of_snapshots);
+        for(int i = 0; i < number_of_snapshots; ++i)
+	{
+
+		Array<OneD, Array<OneD, NekDouble> > converged_solution = DoSolve_at_param(zero_phys_init, zero_phys_init, param_vector[i]);
+		snapshot_x_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		snapshot_y_collection[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+		for (int j=0; j < GetNpoints(); ++j)
+		{
+			snapshot_x_collection[i][j] = converged_solution[0][j];
+			snapshot_y_collection[i][j] = converged_solution[1][j];
+		}
+	}
+    }
 
     void CoupledLinearNS_ROM::v_DoInitialise(void)
     {
@@ -1322,8 +1405,23 @@ namespace Nektar
 	}
 	else
 	{
-		cout << "ROM error, expected to load snapshots from files" << endl;
-		return;
+		if  (parameter_space_dimension == 1)
+		{
+			if (parameter_types[0] == 0)
+			{
+				compute_snapshots_kinvis();
+			}
+			else if (parameter_types[0] == 1)
+			{
+				cout << "missing compute snapshots geo para" << endl;
+				return;
+			}
+		}
+		else
+		{
+			cout << "ROM error, expected parameter_space_dimension == 1 when computing snapshots" << endl;
+			return;
+		}
 	}
 	
         switch(m_equationType)

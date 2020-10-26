@@ -37,7 +37,7 @@
             <P> IO_InfoSteps = 1000       </P>
             <P> Kinvis = 10    </P>
             <P> Kinvis_max = 123       </P>
-            <P> load_snapshot_data_from_files = 1       </P>
+            <P> load_snapshot_data_from_files = 0       </P>
             <P> number_of_snapshots = 4       </P>
             <P> param0 = 0.1       </P>
             <P> param1 = 0.5       </P>
@@ -96,21 +96,6 @@
             <E VAR="p" VALUE="0" />
         </FUNCTION>  
 
-	<FUNCTION NAME="TestSnap1">
-	      <F FILE="OseenROM_sol0p1.fld" />
-	</FUNCTION>  
-
-	<FUNCTION NAME="TestSnap2">
-	      <F FILE="OseenROM_sol0p5.fld" />
-	</FUNCTION>  
-
-	<FUNCTION NAME="TestSnap3">
-	      <F FILE="OseenROM_sol1.fld" />
-	</FUNCTION>  
-
-	<FUNCTION NAME="TestSnap4">
-	      <F FILE="OseenROM_sol10.fld" />
-	</FUNCTION>  
 
         <FUNCTION NAME="Mapping">
             <E VAR="x" VALUE="x + sin(2*PI*t) * 0.05 * (exp(-( abs(x-0.5) + abs(y-0.5) ) ))" />

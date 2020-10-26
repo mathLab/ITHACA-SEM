@@ -166,6 +166,9 @@ namespace Nektar
         Eigen::MatrixXd gen_affine_mat_proj(double current_nu);
         Eigen::VectorXd gen_affine_vec_proj(double current_nu, int current_index);
         Eigen::VectorXd reconstruct_solution_w_dbc(Eigen::VectorXd reprojected_solve);
+        void compute_snapshots_kinvis(void);
+        Array<OneD, Array<OneD, NekDouble> > DoSolve_at_param(Array<OneD, NekDouble> init_snapshot_x, Array<OneD, NekDouble> init_snapshot_y, NekDouble parameter);
+        
 //	int get_curr_elem_pos(int curr_elem);
 
 

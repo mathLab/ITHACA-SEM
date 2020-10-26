@@ -60,7 +60,7 @@ PyObject* CreateExceptionClass(const char* name,
     std::string qualifiedName0 = std::string("NekPy.LibUtilities.") + name;
 
     PyObject* typeObj = PyErr_NewException(
-        qualifiedName0.c_str(), baseTypeObj, 0);
+        const_cast<char*>(qualifiedName0.c_str()), baseTypeObj, 0);
 
     if (!typeObj)
     {

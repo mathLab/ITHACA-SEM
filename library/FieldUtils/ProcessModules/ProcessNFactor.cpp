@@ -28,7 +28,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes the N-factor along the surface.
+//  Description: Export data in the wall normal direction along the surface.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,7 +36,8 @@
 #include <string>
 
 #include "ProcessNFactor.h"
-//include <NekMesh/CADSystem/CADCurve.h>
+
+#include <LibUtilities/Foundations/Interp.h>
 
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -52,7 +53,7 @@ namespace FieldUtils
 ModuleKey ProcessNFactor::className = GetModuleFactory().RegisterCreatorFunction(
     ModuleKey(eProcessModule, "nf"),
     ProcessNFactor::create,
-    "Computes the N-factor along the surface.");
+    "Export data in the wall normal direction along the surface.");
 
 ProcessNFactor::ProcessNFactor(FieldSharedPtr f) : ProcessBoundaryExtract(f)
 {
@@ -66,6 +67,10 @@ void ProcessNFactor::Process(po::variables_map &vm)
 {
     ProcessBoundaryExtract::Process(vm);
 
+
+    // Input paramaters (move to other routines later)
+    
+
     int i;
     int nfields = m_f->m_variables.size();
     int expdim  = m_f->m_graph->GetSpaceDimension();
@@ -76,11 +81,12 @@ void ProcessNFactor::Process(po::variables_map &vm)
     std::cout<< m_f->m_exp[0]->GetNumElmts() <<std::endl;
 
     // Declare arrays
-    Array<OneD, MultiRegions::ExpListSharedPtr> BndExp(m_spacedim + 1); //[?]
+    // This part needs to be updated to suitable for compressible cases. [!]
+    Array<OneD, MultiRegions::ExpListSharedPtr> BndExp(m_spacedim + 1); //uvw+p
     Array<OneD, MultiRegions::ExpListSharedPtr> BndElmtExp(nfields);
 
 
-    // Create map of boundary ids for partitioned domains [?]
+    // Create map of boundary ids for partitioned domains
     SpatialDomains::BoundaryConditions bcs(m_f->m_session,
                                            m_f->m_exp[0]->GetGraph());
     const SpatialDomains::BoundaryRegionCollection bregions =
@@ -95,11 +101,10 @@ void ProcessNFactor::Process(po::variables_map &vm)
     // m_f->m_bndRegionsToWrite.size() is the number of input bnd
     // eg. =3 if bnd=0,1,2; =1 if bnd=0
     int bnd = BndRegionMap[m_f->m_bndRegionsToWrite[0]];
-    cout << bnd << endl;
+    cout << "bnd = " << bnd << endl;
 
     // Get expansion list for boundary and for elements containing this
     // bnd
-    // But why there is m_exp[m_spacedim] [?]
     for (i = 0; i < (m_spacedim + 1); ++i) {
         BndExp[i] = m_f->m_exp[i]->UpdateBndCondExpansion(bnd);
     }
@@ -113,36 +118,234 @@ void ProcessNFactor::Process(po::variables_map &vm)
     // where numPoints = numModes + 1 = P + 2 by default
     // and nqe = nqb * numPoints. Why is this?
     int nqb = BndExp[0]->GetTotPoints();
-    int nqe = BndElmtExp[0]->GetTotPoints();
+    int nqe = BndElmtExp[0]->GetTotPoints(); // seems to be not used [!]
 
     // Get inward-pointing wall-normal vectors 
     Array<OneD, Array<OneD, NekDouble> > normals; 
     m_f->m_exp[0]->GetBoundaryNormals(bnd, normals);
     // Reverse normals, to get correct orientation for the body
-    // normals[i][j], where i is direction varying from 0 to 2;
+    // normals[i][j], where i is direction (x/y/z) varying from 0 to 2;
     // j is the point varying from 0 to (nqb-1)
-    for (i = 0; i < m_spacedim; ++i)
-    {
+    for (i = 0; i < m_spacedim; ++i) {
         Vmath::Neg(nqb, normals[i], 1);
     }
     
     cout <<"normals1 "<< normals[1][nqb-2]<<" "<< normals[1][nqb-1] << endl; 
     cout << "nqb = " << nqb << ", nqe = " << nqe <<endl;
-    
-    
-    Array<OneD, NekDouble> x_bnd(nqb);
-    Array<OneD, NekDouble> y_bnd(nqb);
-    Array<OneD, NekDouble> z_bnd(nqb);
-    cout << x_bnd.size() <<", "<< y_bnd.size() << ", " << z_bnd.size() << endl;
-    // m_f->m_exp[0]->GetCoords(x,y,z); // is the coordinates of the whole field 
-    //cout << m_f->m_exp.size() << endl;
-    //cout << m_f->m_exp[0]->GetCoordim(0) <<endl; // output  = 2
-    BndExp[0]->GetCoords(x_bnd,y_bnd,z_bnd);
-    // cout << BndExp.size() << endl; // 4 for u,v,w,p
-    // cout << BndExp[0]->GetCoordim(0) << endl; // 2 for expansion in the x-y plane
-    for (int i=8;i<16;++i){   // 0 ~ nqb/4, where 4 if for HomModesZ=4
-        cout << i << " - " <<x_bnd[i] <<", "<<y_bnd[i]<<", "<<z_bnd[i]<<endl;
+
+
+    Array<OneD, Array<OneD, NekDouble> > xyz_bnd(3);
+    for (int i=0; i<3; ++i) {
+        xyz_bnd[i] = Array<OneD, NekDouble>(nqb, 0.0);
     }
+    BndExp[0]->GetCoords(xyz_bnd[0],xyz_bnd[1],xyz_bnd[2]);
+
+    for (int i=0;i<nqb/4;++i){   // 0 ~ nqb/4, where 4 if for HomModesZ=4
+        cout << i << " - " <<xyz_bnd[0][i] <<", "<<xyz_bnd[1][i]<<", "<<xyz_bnd[2][i]<<endl;
+    }
+
+
+    //=========================================================================
+    //const int ExpDim = m_f->m_exp[0]->GetExp(0)->GetNumBases();
+    //const int expDim = BndExp[0]->GetExp(0)->GetNumBases(); // =m_base.size() =1
+    //cout <<"1 = " <<ExpDim << ", 2 = " << expDim <<endl;
+
+    //=========================================================================
+    //-------------------------------test--------------------------------------
+    /*
+    // Ref: ExpList::GetExpIndex() in ExpList.cpp
+    SpatialDomains::PointGeomSharedPtr p
+     = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(2, -1, 0.295, -0.001, 0.0);
+    SpatialDomains::PointGeomSharedPtr q
+     = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(2, -1, 0.295, 0.0, 0.0); // y=0/-0.001 
+
+    // Get the list of elements whose bounding box contains the desired point.
+    std::vector<int> elmts = m_f->m_graph->GetElementsContainingPoint(q);
+    cout << "Elmts size = "<< elmts.size()<<endl;
+    for (int i=0;i<elmts.size();++i){
+        cout << elmts[i]<<endl;
+    }
+    
+    // GetGraph failed[!]
+    //cout <<"---BndExp[0]->GetGraph---"<<endl;
+    //cout <<BndExp[0]->GetGraph()->GetMeshDimension() << endl;
+    //cout <<BndExp[0]->GetGraph()->GetSpaceDimension()<< endl;
+    //cout <<BndExp[0]->GetGraph()->Get<< endl;
+ 
+    // graph for bndExp does not exist?
+    std::vector<int> elmts2 = BndExp[0]->GetGraph()->GetElementsContainingPoint(q);
+    cout << "Elmts2 size = "<< elmts2.size()<<endl;
+    for (int i=0;i<elmts2.size();++i){
+        cout << elmts2[i]<<endl;
+    }
+    */
+    
+    /*
+    // set expansion array
+    SpatialDomains::GeometrySharedPtr  m_geom;
+    m_geom = BndExp[0]->GetExp(0)->GetGeom();
+    m_geom->FillGeom(); // get physical points defined in Geom
+
+    const int expDim = BndExp[0]->GetExp(0)->GetNumBases(); // =m_base.size() =1
+    int       nqGeom = 1;
+    Array<OneD, LibUtilities::BasisSharedPtr> CBasis(expDim);
+    for (int i = 0; i < expDim; ++i) {
+        CBasis[i] = m_geom->GetXmap()->GetBasis(i);
+        nqGeom   *= CBasis[i]->GetNumPoints(); // number of quadrature points; for 1D, = <Order> in .mcf +1
+    }
+
+    cout << "CBasis pts = " << CBasis[0]->GetPointsKey().GetNumPoints() << endl;
+    cout << "expDim = " << expDim <<", nqGeom = " << nqGeom <<endl;//=1D, 2 points
+    cout << "m_geo_dim = " << m_geom->GetCoordim() << endl;  //=2, 2D line segment but 1D expansion
+
+    Array<OneD, NekDouble> tmpGeom(nqGeom); // physical points
+    Array<OneD, NekDouble> tmpGeom2(2);
+
+    
+    m_geom->GetXmap()->BwdTrans(m_geom->GetCoeffs(0), tmpGeom);   
+
+    for (int i=0; i<tmpGeom.size(); ++i){
+        cout <<"x1 = " << tmpGeom[i] <<endl;
+    }
+
+    LibUtilities::Interp1D(from_key, &tmpGeom[0], to_key, &tmpGeom2[0]);
+    
+    for (int i=0; i<tmpGeom2.size(); ++i){
+        cout <<"x2 = " << tmpGeom2[i] <<endl;
+    }
+    */
+
+    /*
+    Array<OneD, NekDouble> from_ptsInElmt_0 (from_nPtsPerElmt); //offset=0,8,16,...,328
+    Array<OneD, NekDouble> from_ptsInElmt_1 (from_nPtsPerElmt);
+    Array<OneD, NekDouble> from_ptsInElmt_2 (from_nPtsPerElmt); 
+    Array<OneD, NekDouble> to_ptsInElmt_0 (to_nPtsPerElmt); 
+    Array<OneD, NekDouble> to_ptsInElmt_1 (to_nPtsPerElmt);
+    Array<OneD, NekDouble> to_ptsInElmt_2 (to_nPtsPerElmt);
+
+    // Interp1D
+    // set point key
+    int nPtsPerElmt = 11; // number of points per element, key parameter
+    LibUtilities::PointsKey from_key = BndExp[0]->GetExp(0)->GetBasis(0)->GetPointsKey();
+    LibUtilities::PointsKey to_key(nPtsPerElmt, LibUtilities::PointsType::ePolyEvenlySpaced); //[!] important!
+    
+    cout << "from key NumPoints = " << from_key.GetNumPoints() 
+         <<", PointsType = "<< from_key.GetPointsType() << endl;
+    cout << "to Key NumPoints = " << to_key.GetNumPoints() 
+         <<", PointsType = "<< to_key.GetPointsType() << endl;
+
+    Array<OneD, NekDouble> from_ptsInElmt(from_key.GetNumPoints()); // points in the donor element
+    Array<OneD, NekDouble> to_ptsInElmt(to_nPtsPerElmt); // array to save the interpolated coordinates
+    
+    from_ptsInElmt_0[0] = 0.365;
+    from_ptsInElmt_0[1] = 0.36532;
+    from_ptsInElmt_0[2] = 0.36602;
+    from_ptsInElmt_0[3] = 0.366976;
+    from_ptsInElmt_0[4] = 0.368023;
+    from_ptsInElmt_0[5] = 0.368979;
+    from_ptsInElmt_0[6] = 0.369679;
+    from_ptsInElmt_0[7] = 0.37;
+    LibUtilities::Interp1D(from_key, &from_ptsInElmt_0[0], to_key, &to_ptsInElmt_0[0]);
+    for (int i=0; i<to_ptsInElmt_0.size(); ++i){
+        cout <<"---interpolated--- = " << to_ptsInElmt_0[i] <<endl;
+    }
+    */
+
+    //-------------------------------------------------------------------------
+    // set dimensions
+    const int dim_para = BndExp[0]->GetExp(0)->GetNumBases(); // dimension for parametric coordinate system, eg. =1
+    const int dim_phys = BndExp[0]->GetCoordim(0); // dimension for the physical space that the parametric coordinate system located on, eg. =2
+    cout << "dim_para = " << dim_para <<", dim_coor = " << dim_phys <<endl;
+
+ 
+
+    // input parameters
+    // use prefix const later
+    Array<OneD, NekDouble> range_x(2); //output range, 0-lower and 1-upper limit
+    range_x[0] = 0.189;
+    range_x[1] = 0.401;
+
+    // set point key
+    const int to_nPtsPerElmt = 2; // number of points per element, key parameter, better to be odd
+    LibUtilities::PointsKey from_key = BndExp[0]->GetExp(0)->GetBasis(0)->GetPointsKey();
+    LibUtilities::PointsKey to_key( to_nPtsPerElmt, LibUtilities::PointsType::ePolyEvenlySpaced ); //[!] important!
+    const int from_nPtsPerElmt = from_key.GetNumPoints();
+
+    // declare arrays to save points
+    Array<OneD, Array<OneD, NekDouble> > from_ptsInElmt(3); // 3 for 3D,//offset=0,8,16,...,328
+    Array<OneD, Array<OneD, NekDouble> > to_ptsInElmt(3);
+    Array<OneD, Array<OneD, NekDouble> > to_normalsInElmt(3);
+    for (int i=0; i<3; ++i) {
+        from_ptsInElmt[i]   = Array<OneD, NekDouble>(from_nPtsPerElmt, 0.0);
+        to_ptsInElmt[i]     = Array<OneD, NekDouble>(to_nPtsPerElmt, 0.0);
+        to_normalsInElmt[i] = Array<OneD, NekDouble>(to_nPtsPerElmt, 0.0);
+    }
+
+    const int nElmts = BndExp[0]->GetNumElmts(); //42
+    const int nOrigs = to_nPtsPerElmt * nElmts;
+    Array<OneD, Array<OneD, NekDouble> > origs(6); // samping origins (have same points), 6 for x/y/z/nx/ny/nz
+    for (int i=0; i<6; ++i) {
+        origs[i] = Array<OneD, NekDouble>(nOrigs, 0.0); 
+    }
+    
+    int ptr = 0;
+    // loop the element on the bnd
+    for ( int i = 0; i < nElmts; ++i ) { //i < nElmts
+
+        // obtain the points in the element
+        BndExp[0]->GetExp(i)->GetCoords( from_ptsInElmt[0], from_ptsInElmt[1], from_ptsInElmt[2] ); 
+
+        // skip some elements, needs further improved
+        if (from_ptsInElmt[0][0]<range_x[0] || from_ptsInElmt[0][from_nPtsPerElmt-1]>range_x[1]) { continue; } 
+
+        // interp x/y/z and nx/ny/nz
+        // needs to be further improved for cases with different dimensions
+        // dim_phys determins times (xy/xyz) to loop
+        // dim_para determins functions (Interp1D/Interp2D) to ues
+        // ref: Expansion::v_GetCoords in Expansion.cpp
+        for (int j = 0; j < dim_phys; ++j ) {
+            LibUtilities::Interp1D(from_key, &from_ptsInElmt[j][0], to_key, &to_ptsInElmt[j][0]); //x/y/z
+            //LibUtilities::Interp1D(from_key, &xyz_bnd[j][i*from_nPtsPerElmt], to_key, &to_ptsInElmt[j][0]); //alternative code
+            LibUtilities::Interp1D(from_key, &normals[j][i*from_nPtsPerElmt], to_key, &to_normalsInElmt[j][0]);
+
+            // save the interpolated results
+            Vmath::Vcopy( to_nPtsPerElmt, &to_ptsInElmt[j][0],     1, &origs[j][ptr],   1); // copy coordinates
+            Vmath::Vcopy( to_nPtsPerElmt, &to_normalsInElmt[j][0], 1, &origs[j+3][ptr], 1); // copy coordinates
+        }
+        ptr = ptr + to_nPtsPerElmt;
+
+    }
+
+        
+    for (int j=0; j<nOrigs; ++j){
+        cout <<"-array- " << origs[0][j] <<", "<< origs[1][j]<<", "<< origs[2][j] <<", "
+                          << origs[3][j] <<", "<< origs[4][j]<<", "<< origs[5][j] <<endl;
+    }   
+
+    // heap sort and remove repeated origin points 
+   
+
+
+
+
+    /*
+    Array<OneD, NekDouble> test_tmpGeom(8); // physical points
+    Array<OneD, NekDouble> test_tmpGeom2(15);
+    test_tmpGeom[0] = 0.365;
+    test_tmpGeom[1] = 0.36532;
+    test_tmpGeom[2] = 0.36602;
+    test_tmpGeom[3] = 0.366976;
+    test_tmpGeom[4] = 0.368023;
+    test_tmpGeom[5] = 0.368979;
+    test_tmpGeom[6] = 0.369679;
+    test_tmpGeom[7] = 0.37;
+    LibUtilities::Interp1D(from_key, &test_tmpGeom[0], to_key, &test_tmpGeom2[0]);
+    for (int i=0; i<test_tmpGeom2.size(); ++i){
+        cout <<"---x2--- = " << test_tmpGeom2[i] <<endl;
+    }
+    */
+    //-------------------------------------------------------------------------
+    //=========================================================================
 
     // Sampling setting
     const NekDouble distance_n = 0.005; // from wall to wall + H in normal direction
@@ -150,7 +353,6 @@ void ProcessNFactor::Process(po::variables_map &vm)
     const NekDouble x1 = 0.4;
     const NekInt npts_n     = 21;    // npts in wall normal direction, use npts points for export
     const NekInt npts_x     = 3;     // npts in x direction
-
     cout << distance_n << ", " << npts_n<<", "<< x1-x0 << npts_x << endl;
 
     // Sampling points
@@ -166,7 +368,7 @@ void ProcessNFactor::Process(po::variables_map &vm)
     for (int i=0;i<npts_n;++i){
         tmp1 = 1.0 - i * tmp2; // tmp1 = 1-ksi, ksi = i/(npts_n-1) belonging to [0,1]
         h[i] = 1 - tanh(tmp1*tmp4)*tmp5;
-        cout << i<<" - ksi = "<<1-tmp1<<", h = "<< h[i] <<endl;
+        //cout << i<<" - ksi = "<<1-tmp1<<", h = "<< h[i] <<endl;
     }
 
     // Get the sampled y/z on the wall according to given x
@@ -211,7 +413,7 @@ void ProcessNFactor::Process(po::variables_map &vm)
 
     cout << "Point: "<<coords[0]<<", "<< coords[1]<<", "<<coords[2]<<endl;
 
-    // Get donor element
+    // Get donor element and local coordinates
     int elmtid = -1;
     elmtid = m_f->m_exp[0]->GetExpIndex(
             coords, Lcoords, NekConstants::kGeomFactorsTol, false, elmtid); // Get donor elmt 

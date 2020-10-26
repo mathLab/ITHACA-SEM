@@ -28,7 +28,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes the N-factor along the surface.
+//  Description: Export data in the wall normal direction along the surface.
 //
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -82,6 +82,14 @@ namespace Nektar
         typedef std::map<std::string, std::string>   GloSysInfoMap;
         typedef std::map<std::string, GloSysInfoMap> GloSysSolnInfoList;
 
+        struct TimeIntScheme
+        {
+            std::string method = "";
+            std::string variant = "";
+            unsigned int order = 1;
+            std::vector<NekDouble> freeParams;
+        };
+
         enum FunctionType
         {
             eFunctionTypeExpression,
@@ -111,7 +119,7 @@ namespace Nektar
 
         class SessionReader;
         typedef std::shared_ptr<SessionReader> SessionReaderSharedPtr;
-        
+
         /// Reads and parses information from a Nektar++ XML session file.
         class SessionReader
         {
@@ -287,6 +295,9 @@ namespace Nektar
                 const std::string &variable,
                 const std::string &property) const;
 
+            /* ------ TIME INTEGRATION INFORMATION ----- */
+            LIB_UTILITIES_EXPORT bool DefinesTimeIntScheme() const;
+            LIB_UTILITIES_EXPORT const TimeIntScheme &GetTimeIntScheme() const;
 
             /* ------ GEOMETRIC INFO ------ */
             LIB_UTILITIES_EXPORT std::string GetGeometryType() const;
@@ -449,6 +460,8 @@ namespace Nektar
             TagMap                                    m_tags;
             /// Filters map.
             FilterMap                                 m_filters;
+            /// Time integration scheme information.
+            TimeIntScheme                             m_timeIntScheme;
             /// Be verbose
             bool                                      m_verbose;
             /// Running on a shared filesystem
@@ -500,6 +513,9 @@ namespace Nektar
             LIB_UTILITIES_EXPORT void ReadSolverInfo(TiXmlElement *conditions);
             /// Reads the GLOBALSYSSOLNINFO section of the XML document.
             LIB_UTILITIES_EXPORT void ReadGlobalSysSolnInfo(
+                    TiXmlElement *conditions);
+            /// Reads the TIMEINTEGRATIONSCHEME section of the XML document.
+            LIB_UTILITIES_EXPORT void ReadTimeIntScheme(
                     TiXmlElement *conditions);
             /// Reads the EXPRESSIONS section of the XML document.
             LIB_UTILITIES_EXPORT void ReadExpressions(TiXmlElement *conditions);

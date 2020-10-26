@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File TimeIntegrationSolution.cpp
+// File TimeIntegrationSolutionGLM.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -32,28 +32,33 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationSolution.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeGLM.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSolutionGLM.h>
 
 namespace Nektar
 {
 namespace LibUtilities
 {
-TimeIntegrationSolution::TimeIntegrationSolution(
-    const TimeIntegrationSchemeData *schemeData, const DoubleArray &y,
+
+TimeIntegrationSolutionGLM::TimeIntegrationSolutionGLM(
+    const TimeIntegrationAlgorithmGLM *schemeAlgorithm, const DoubleArray &y,
     const NekDouble time, const NekDouble timestep)
-    : m_schemeData(schemeData), m_solVector(m_schemeData->m_numsteps),
-      m_t(m_schemeData->m_numsteps)
+    : m_schemeAlgorithm( schemeAlgorithm ),
+      m_solVector( m_schemeAlgorithm->m_numsteps ),
+      m_t( m_schemeAlgorithm->m_numsteps )
 {
     m_solVector[0] = y;
     m_t[0]         = time;
 
-    int nsteps = m_schemeData->m_numsteps;
+    int nsteps = m_schemeAlgorithm->m_numsteps;
 
     int nvar           = y.size();
     int npoints        = y[0].size();
-    int nMultiStepVals = m_schemeData->GetNmultiStepValues();
+    int nMultiStepVals = m_schemeAlgorithm->GetNmultiStepValues();
+
     const Array<OneD, const unsigned int> &timeLevels =
-        m_schemeData->GetTimeLevelOffset();
+        m_schemeAlgorithm->GetTimeLevelOffset();
 
     for (int i = 1; i < nsteps; i++)
     {
@@ -73,23 +78,23 @@ TimeIntegrationSolution::TimeIntegrationSolution(
     }
 }
 
-TimeIntegrationSolution::TimeIntegrationSolution(
-    const TimeIntegrationSchemeData *schemeData, const TripleArray &y,
+TimeIntegrationSolutionGLM::TimeIntegrationSolutionGLM(
+    const TimeIntegrationAlgorithmGLM *schemeAlgorithm, const TripleArray &y,
     const Array<OneD, NekDouble> &t)
-    : m_schemeData(schemeData), m_solVector(y), m_t(t)
+    : m_schemeAlgorithm(schemeAlgorithm), m_solVector(y), m_t(t)
 {
-    ASSERTL1(y.size() == m_schemeData->m_numsteps,
+    ASSERTL1(y.size() == m_schemeAlgorithm->m_numsteps,
              "Amount of Entries does not match number of (multi-) steps");
 }
 
-TimeIntegrationSolution::TimeIntegrationSolution(
-    const TimeIntegrationSchemeData *schemeData, const unsigned int nvar,
+TimeIntegrationSolutionGLM::TimeIntegrationSolutionGLM(
+    const TimeIntegrationAlgorithmGLM *schemeAlgorithm, const unsigned int nvar,
     const unsigned int npoints)
-    : m_schemeData(schemeData),
-      m_solVector(schemeData->m_numsteps),
-      m_t(schemeData->m_numsteps)
+    : m_schemeAlgorithm(schemeAlgorithm),
+      m_solVector(schemeAlgorithm->m_numsteps),
+      m_t(schemeAlgorithm->m_numsteps)
 {
-    for (int i = 0; i < m_schemeData->m_numsteps; i++)
+    for (int i = 0; i < m_schemeAlgorithm->m_numsteps; i++)
     {
         m_solVector[i] = Array<OneD, Array<OneD, NekDouble>>(nvar);
         for (int j = 0; j < nvar; j++)
@@ -99,16 +104,11 @@ TimeIntegrationSolution::TimeIntegrationSolution(
     }
 }
 
-TimeIntegrationSolution::TimeIntegrationSolution(
-    const TimeIntegrationSchemeData *schemeData)
-    : m_schemeData(schemeData), m_solVector(m_schemeData->m_numsteps),
-      m_t(m_schemeData->m_numsteps)
+TimeIntegrationSolutionGLM::TimeIntegrationSolutionGLM(
+    const TimeIntegrationAlgorithmGLM *schemeAlgorithm)
+    : m_schemeAlgorithm(schemeAlgorithm), m_solVector(m_schemeAlgorithm->m_numsteps),
+      m_t(m_schemeAlgorithm->m_numsteps)
 {
-}
-
-std::string TimeIntegrationSolution::GetName() const
-{
-    return m_schemeData->m_parent->GetFullName();
 }
 
 } // end namespace LibUtilities

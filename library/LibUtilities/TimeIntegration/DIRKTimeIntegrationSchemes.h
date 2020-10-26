@@ -38,11 +38,13 @@
 // integrator with the Time Integration Scheme Facatory in
 // SchemeInitializor.cpp.
 
-#pragma once
-
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#ifndef NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_DIRK_TIME_INTEGRATION_SCHEME
+#define NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_DIRK_TIME_INTEGRATION_SCHEME
 
 #define LUE LIB_UTILITIES_EXPORT
+
+#include <LibUtilities/TimeIntegration/TimeIntegrationAlgorithmGLM.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeGLM.h>
 
 namespace Nektar
 {
@@ -51,35 +53,38 @@ namespace LibUtilities
 
 ///////////////////////////////////////////////////////////////////////////////
 // DIRK Order N
-class DIRKTimeIntegrationScheme : public TimeIntegrationScheme
+class DIRKTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
-  DIRKTimeIntegrationScheme(std::string variant, unsigned int order,
-                            std::vector<NekDouble> freeParams) :
-    TimeIntegrationScheme(variant, order, freeParams)
+    DIRKTimeIntegrationScheme(std::string variant, unsigned int order,
+                              std::vector<NekDouble> freeParams)
+        : TimeIntegrationSchemeGLM(variant, order, freeParams)
     {
         // Currently 2nd and 3rd order are implemented.
         ASSERTL1(2 <= order && order <= 3,
-                 "Runge Kutta Time Diagonally Implicit integration scheme bad order (2-3): " +
-                 std::to_string(order));
+                 "Diagonally Implicit Runge Kutta integration scheme bad order "
+                 "(2-3): " +
+                     std::to_string(order));
 
-        m_integration_phases    = TimeIntegrationSchemeDataVector(1);
-        m_integration_phases[0] = TimeIntegrationSchemeDataSharedPtr(
-            new TimeIntegrationSchemeData(this));
+        m_integration_phases    = TimeIntegrationAlgorithmGLMVector(1);
+        m_integration_phases[0] = TimeIntegrationAlgorithmGLMSharedPtr(
+            new TimeIntegrationAlgorithmGLM(this));
 
-        DIRKTimeIntegrationScheme::SetupSchemeData( m_integration_phases[0],
-                                                    order);
+        DIRKTimeIntegrationScheme::SetupSchemeData(m_integration_phases[0],
+                                                   order);
     }
 
     virtual ~DIRKTimeIntegrationScheme()
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-                                                 std::vector<NekDouble> freeParams)
+    static TimeIntegrationSchemeSharedPtr create(
+        std::string variant, unsigned int order,
+        std::vector<NekDouble> freeParams)
     {
-         TimeIntegrationSchemeSharedPtr p =
-           MemoryManager<DIRKTimeIntegrationScheme>::AllocateSharedPtr(variant, order, freeParams);
+        TimeIntegrationSchemeSharedPtr p =
+            MemoryManager<DIRKTimeIntegrationScheme>::AllocateSharedPtr(
+                variant, order, freeParams);
         return p;
     }
 
@@ -95,13 +100,13 @@ public:
         return 1.0;
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase,
+    LUE static void SetupSchemeData(TimeIntegrationAlgorithmGLMSharedPtr &phase,
                                     unsigned int order)
     {
         phase->m_schemeType = eDiagonallyImplicit;
-        phase->m_order = order;
-        phase->m_name = std::string("DIRKOrder" +
-                                    std::to_string(phase->m_order));
+        phase->m_order      = order;
+        phase->m_name =
+            std::string("DIRKOrder" + std::to_string(phase->m_order));
 
         phase->m_numsteps  = 1;
         phase->m_numstages = phase->m_order;
@@ -112,13 +117,13 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  1.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
 
-        switch( phase->m_order )
+        switch (phase->m_order)
         {
             case 2:
             {
@@ -176,26 +181,27 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 // Backwards compatibility
-class DIRKOrder2TimeIntegrationScheme :
-    public DIRKTimeIntegrationScheme
+class DIRKOrder2TimeIntegrationScheme : public DIRKTimeIntegrationScheme
 {
 public:
     DIRKOrder2TimeIntegrationScheme(std::string variant, unsigned int order,
-                                    std::vector<NekDouble> freeParams) :
-        DIRKTimeIntegrationScheme("", 2, freeParams)
+                                    std::vector<NekDouble> freeParams)
+        : DIRKTimeIntegrationScheme("", 2, freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-                                                 std::vector<NekDouble> freeParams)
+    static TimeIntegrationSchemeSharedPtr create(
+        std::string variant, unsigned int order,
+        std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
 
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            DIRKTimeIntegrationScheme>::AllocateSharedPtr("", 2, freeParams);
+        TimeIntegrationSchemeSharedPtr p =
+            MemoryManager<DIRKTimeIntegrationScheme>::AllocateSharedPtr(
+                "", 2, freeParams);
 
         return p;
     }
@@ -204,27 +210,27 @@ public:
 
 }; // end class DIRKOrder2TimeIntegrationScheme
 
-
-class DIRKOrder3TimeIntegrationScheme :
-    public DIRKTimeIntegrationScheme
+class DIRKOrder3TimeIntegrationScheme : public DIRKTimeIntegrationScheme
 {
 public:
     DIRKOrder3TimeIntegrationScheme(std::string variant, unsigned int order,
-                                    std::vector<NekDouble> freeParams) :
-        DIRKTimeIntegrationScheme("", 3, freeParams)
+                                    std::vector<NekDouble> freeParams)
+        : DIRKTimeIntegrationScheme("", 3, freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-                                                 std::vector<NekDouble> freeParams)
+    static TimeIntegrationSchemeSharedPtr create(
+        std::string variant, unsigned int order,
+        std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
 
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            DIRKTimeIntegrationScheme>::AllocateSharedPtr("", 3, freeParams);
+        TimeIntegrationSchemeSharedPtr p =
+            MemoryManager<DIRKTimeIntegrationScheme>::AllocateSharedPtr(
+                "", 3, freeParams);
 
         return p;
     }
@@ -233,6 +239,7 @@ public:
 
 }; // end class DIRKOrder3TimeIntegrationScheme
 
-
 } // end namespace LibUtilities
 } // end namespace Nektar
+
+#endif

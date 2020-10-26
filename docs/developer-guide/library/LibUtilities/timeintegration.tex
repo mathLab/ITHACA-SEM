@@ -1,38 +1,49 @@
 %
 \section{Time Integration}
 
-This directory consists of the following files:
+This directory consists of the following primary files:
 
 
 \begin{center}
 \begin{tabular}{|c | c | } \hline
-TimeIntegrationScheme.h & TimeIntegrationScheme.cpp	\\ \hline 
-TimeIntegrationWrapper.h & TimeIntegrationWrapper.cpp \\ \hline
+TimeIntegrationScheme.h & TimeIntegrationScheme.cpp \\ \hline 
+TimeIntegrationGLM.h & TimeIntegrationGLM.cpp \\ \hline
+*TimeIntegrationSchemes.h & Specific GLM schemes, e.g. AB, RK, IMEX, etc. \\ \hline
+TimeIntegrationFIT.h & TimeIntegrationFIT.cpp \\ \hline
 \end{tabular}
 \end{center}
 
-The original time-stepping classes (found in TimeIntegrationScheme)
-where implemented by Vos et al. \cite{Vostime} and a detailed
-explanation of the mathematics and computer science concepts are
-provided there.  After the original implementation, Cantwell et
-al. extended Vos' original work by adding the time-stepping routines
-into a factory pattern (found in TimeIntegrationWrapper).
+The original time-stepping interface (found in the parent class
+TimeIntegrationScheme) where implemented by Vos et al. \cite{Vostime}
+and a detailed explanation of the mathematics and computer science
+concepts are provided there.  After the original implementation, the
+time-stepping routines were refactored into a factory pattern (found
+in the child class TimeIntegrationGLM with specific GLM schemes
+covering both traditional and exponential schemes (compartmentalize in
+the *TimeIntegrationSchemes classes). Each GLM scheme sets up one or
+more (linear multistep methods) phases using the
+TimeIntegrationAlgorithmGLM class, which is where the GLM algorithm is
+performed using the helper class TimeIntegrationSolutionGLM.
+
+
+More recently Fractional-in-time schemes have been added as a sibbling
+class to the GLM class (found in the child class
+TimeIntegrationFIT). The Fractional-in-time schemes makes use of its
+own separate algorithm.
 
 \subsection{General Linear Methods}
-General linear methods (GLMs) can be considered as the generalization of a broad
-range of different numerical methods for ordinary differential equations.  They
-were introduced by Butcher and they provide a unified formulation for
-traditional methods such as the Runge-Kutta methods and the linear multi-step
-methods such as Adams-Bashforth.  
-From an implementation point of view, this means that all these
-numerical methods can be abstracted in a similar way. As this allows a high
-level of generality, it is chosen in {\nek} to cast all time integration
-schemes in the framework of general linear methods.
+\label{subsectionGeneralLinearMethods}
+General linear methods (GLMs) can be considered as the generalization
+of a broad range of different numerical methods for ordinary
+differential equations.  They were introduced by Butcher and they
+provide a unified formulation for traditional methods such as the
+Runge-Kutta methods and the linear multi-step methods such as
+Adams-Bashforth.  From an implementation point of view, all these
+numerical methods can be abstracted similarly and allows a high level
+of generality which is the case in {\nek}. For background information
+about general linear methods, see \cite{Bu06}.
 
-For background information about general linear methods, please consult
-\cite{Bu06}.
-
-\subsection{Introduction}
+\subsubsection{Introduction}
 The standard initial value problem can written in the form
 \begin{align*}
 \frac{d\boldsymbol{y}}{dt} = \boldsymbol{f}(t,\boldsymbol{y}),\quad
@@ -48,7 +59,7 @@ the ODE in autonomous form, i.e.
 \boldsymbol{\hat{y}}(t_0)= \boldsymbol{\hat{y}}_0.
 \end{align*}
 
-\subsection{Formulation}
+\subsubsection{Formulation}
 Suppose the governing differential equation is given in autonomous form, the
 $n^{th}$ step of the GLM comprising
 \begin{itemize}
@@ -83,7 +94,7 @@ $(s+r)\times(s+r)$ matrix
 \end{align*}
 
 
-\subsection{Matrix notation}
+\subsubsection{Matrix notation}
 Adopting the notation:
 \begin{align*}
 \boldsymbol{\hat{y}}^{[n-1]}= \left[\begin{array}{c}
@@ -121,7 +132,7 @@ t\boldsymbol{F}\\
 where $I_N$ is the identity matrix of dimension $N\times N$.
 
 
-\subsection{General Linear Methods in Nektar++}
+\subsubsection{General Linear Methods in Nektar++}
 Although the GLM is essentially presented for ODE's in its autonomous form, in
 Nektar++ it will be used to solve ODE's formulated in non-autonomous form.
 Given the ODE,
@@ -181,129 +192,192 @@ $t^{[n]}$ is also updated
 For a detailed description of the formulation and a deeper insight of the
 numerical method see \cite{Vostime}.
 
-
-\subsection{Types of time Integration Schemes}
-Nektar++ contains various classes and methods which implement the concept of
-GLMs. This toolbox is capable of numerically solving the generalised ODE using a
-broad range of different time-stepping methods. We distinguish the following
-types of general linear methods:
+\subsubsection{Types of GLM time Integration Schemes}
+Nektar++ contains various classes and methods which implement the
+concept of GLMs. This toolbox is capable of numerically solving the
+generalised ODE using a broad range of different time-stepping
+methods. We distinguish the following types of general linear methods:
 \begin{itemize}
 \item \textbf{Formally Explicit Methods}: These types of methods are
-considered explicit from an ODE point of view. They are characterised by a lower
-  triangular coefficient matrix $A$, ''i.e.'' $a_{ij} = 0$
-  for $j\geq i$. To avoid confusion, we make a further distinction:
+  considered explicit from an ODE point of view. They are
+  characterised by a lower triangular coefficient matrix $A$, ''i.e.''
+  $a_{ij} = 0$ for $j\geq i$. To avoid confusion, we make a further
+  distinction:
   \begin{itemize}
-    \item \textbf{direct explicit method}: Only forward operators are required.
-    \item \textbf{indirect explicit method}: The inverse operator is required.
+    \item \textbf{direct explicit method}: Only forward operators are
+      required.
+    \item \textbf{indirect explicit method}: The inverse operator is
+      required.
   \end{itemize}
-  \item \textbf{Diagonally Implicit Methods}: Compared to explicit methods,
-  the coefficient matrix $A$ has now non-zero entries on the diagonal.
-  This means that each stage value depend on the stage derivative at the same
-  stage, requiring an implicit step. However, the calculation of the different
-  stage values is still uncoupled. Best known are the DIRK schemes.
-  \item \textbf{IMEX schemes}: These schemes support the concept of being able
-  to split right hand forcing term into an explicit and implicit component. This is
-  useful in advection diffusion type problems where the advection is handled
-  explicitly and the diffusion is handled implicit.
-  \item \textbf{Fully Implicit Methods Methods}: The coefficient matrix has a
-  non-zero upper triangular part. The calculation of all stages values is fully coupled.
+  \item \textbf{Diagonally Implicit Methods}: Compared to explicit
+    methods, the coefficient matrix $A$ has now non-zero entries on
+    the diagonal.  This means that each stage value depend on the
+    stage derivative at the same stage, requiring an implicit
+    step. However, the calculation of the different stage values is
+    still uncoupled. Best known are the DIRK schemes.
+  \item \textbf{IMEX schemes}: These schemes support the concept of
+    being able to split right hand forcing term into an explicit and
+    implicit component. This is useful in advection diffusion type
+    problems where the advection is handled explicitly and the
+    diffusion is handled implicit.
+  \item \textbf{Fully Implicit Methods}: The coefficient matrix has a
+    non-zero upper triangular part. The calculation of all stages
+    values is fully coupled.
+  \item \textbf{Exponential Methods}: A forward Euler method has been
+    extended to the exponential setting. These types of methods are
+    considered explicit from an ODE point of view. They are
+    characterized by a coefficient matrix of exponential values for
+    each variable. Two first order schemes have been implemented:
+  \begin{itemize}
+    \item \textbf{Lawson-Euler explicit method}: $y_n =
+      \varphi_0(z)N(y_{n-1},t_{n-1}) + \varphi_0(z)y_{n-1}$
+    \item \textbf{N{\o}rsett-Euler explicit method}: $y_n =
+      \varphi_1(z)N(y_{n-1},t_{n-1}) + \varphi_0(z)y_{n-1}$
+  \end{itemize}
+where $\varphi_0(z) = e^{z}$ for $k = 0$, $\varphi_{k}(z) =
+\frac{\varphi_{k-1}(z) - \varphi_{k-1}(0)}{z}$ for $k \geq 1$.
 \end{itemize}
 
 The aim in {\nek} is to fully support the first three types of GLMs.
-Fully implicit methods are currently not implemented.
+Fully implicit methods are currently not implemented. {\nek} also
+fully supports Exponential Methods using GLMs.
+
+\subsection{Fractional-in-time Integration Schemes}
+
+In addition to the GLMs {\nek} also supports fractional methods:
+\begin{itemize}
+  \item \textbf{Fractional-in-time Methods}: A fast convolution
+    algorithm for computing solutions to (Caputo) time-fractional
+    differential equations. This is an explicit solver that expresses
+    the solution as an integral over a Talbot curve, which is
+    discretized with quadrature. First-order quadrature is currently
+    implemented (Soon be expanded to forth order).
+\end{itemize}
+
+The Fractional methods follow the same paradigm as the GLMs, that is
+both have the same parent class and as such have the same interface.
 
 \subsection{Usage}
-The goal of abstracting the concept of general linear methods is to provide
-users with a single interface for time-stepping, independent of the chosen
-method. The classes tree allows the user to numerically integrate ODE's using
-high-order complex schemes, as if it was done using the Forward-Euler method.
-Switching between time-stepping schemes is as easy as changing a parameter in an
-input file.
+The goal of abstracting the concept of general linear methods and
+fractional methods is to provide users with a single interface for
+time-stepping, independent of the chosen method. The classes tree
+allows the user to numerically integrate ODE's using high-order
+complex schemes, as if it was done using the Forward-Euler method.
+Switching between time-stepping schemes is as easy as changing a
+parameter in an input file.
 
-In the already implemented solvers the time-integration schemes have been set up
-according to the nature of the equations.
-For example the incompressible Navier-Stokes equations solver allows the use of
-three different Implicit-Explicit time-schemes if solving the equations with a
-splitting-scheme.
-This is because this kind of scheme has an explicit and an implicit operator
-that combined solve the ODE's system.
+In the already implemented solvers the time-integration schemes have
+been set up according to the nature of the equations.  For example the
+incompressible Navier-Stokes equations solver allows the use of three
+different Implicit-Explicit time-schemes if solving the equations with
+a splitting-scheme.  This is because this kind of scheme has an
+explicit and an implicit operator that combined solve the ODE's
+system.
 
-Once aware of the problem's nature and implementation, the user can easily
-switch between some (depending on the problem) of the following
+Once aware of the problem's nature and implementation, the user can
+easily switch between some (depending on the problem) of the following
 time-integration schemes:
 
 \begin{center}
 \footnotesize
-\begin{tabular}{p{4cm}p{10cm}}
+\begin{tabular}{p{2.5cm}p{1cm}p{10cm}}
 \toprule
-AdamsBashforthOrder1 & Adams-Bashforth Forward multi-step scheme of order 1\\
-AdamsBashforthOrder2 & Adams-Bashforth Forward multi-step scheme of order 2\\
-AdamsBashforthOrder3 & Adams-Bashforth Forward multi-step scheme of order 3\\
-AdamsBashforthOrder4 & Adams-Bashforth Forward multi-step scheme of order 4\\
-AdamsMoultonOrder1   & Adams-Moulton Forward multi-step scheme of order 1\\
-AdamsMoultonOrder2   & Adams-Moulton Forward multi-step scheme of order 2\\
-AdamsMoultonOrder3   & Adams-Moulton Forward multi-step scheme of order 3\\
-AdamsMoultonOrder4   & Adams-Moulton Forward multi-step scheme of order 4\\
-BDFImplicitOrder1    & BDF multi-step scheme of order 1 (implicit)\\
-BDFImplicitOrder2    & BDF multi-step scheme of order 2 (implicit)\\
-ClassicalRungeKutta4 & Runge-Kutta multi-stage scheme 4th order explicit (old name)\\
-RungeKutta4          & Runge-Kutta multi-stage scheme 4th order explicit (new name for ClassicalRungeKutta4)\\
-RungeKutta3\_SSP     & Nonlinear SSP RungeKutta3 explicit\\
-RungeKutta2\_ImprovedEuler & Improved RungeKutta2 explicit (old name meaning Heun's method)\\
-RungeKutta2\_SSP     & Nonlinear SSP RungeKutta2 explicit (surrogate for RungeKutta2\_ImprovedEuler)\\
-RungeKutta2          & Classical RungeKutta2 method (new name for Midpoint)\\
-Midpoint             & Midpoint method (old name)\\
-ForwardEuler         & Forward-Euler scheme\\
-BackwardEuler        & Backward Euler scheme\\
-IMEXOrder1           & IMEX 1st order scheme using Euler Backwards Euler
-                       Forwards \\
-IMEXOrder2           & IMEX 2nd order scheme using Backward Different Formula \&
-                       Extrapolation\\
-IMEXOrder3           & IMEX 3rd order scheme using Backward Different Formula \&
-                       Extrapolation\\
-IMEXOrder4           & IMEX 4rd order scheme using Backward Different Formula \&
-                       Extrapolation\\
-DIRKOrder2           & Diagonally Implicit Runge-Kutta scheme of order 2\\
-DIRKOrder3           & Diagonally Implicit Runge-Kutta scheme of order 3\\
-CNAB                 & Crank-Nicolson-Adams-Bashforth Order 2 (CNAB)\\
-IMEXGear             & IMEX Gear Order 2\\
-MCNAB                & Modified Crank-Nicolson-Adams-Bashforth Order 2 (MCNAB)\\
-IMEXdirk\_1\_1\_1    & Forward-Backward Euler, first order IMEX DIRK(1,1,1)\\
-IMEXdirk\_1\_2\_1    & Forward-Backward Euler, first order IMEX DIRK(1,2,1)\\
-IMEXdirk\_1\_2\_2    & Implicit-Explicit Midpoint, second order IMEX DIRK(1,2,2)\\
-IMEXdirk\_2\_2\_2    & L-stable, two stage, second order IMEX DIRK(2,2,2)\\
-IMEXdirk\_2\_3\_2    & L-stable, two stage, second order IMEX DIRK(2,3,2)\\
-IMEXdirk\_2\_3\_3    & L-stable, two stage, third order IMEX DIRK(2,3,3)\\
-IMEXdirk\_3\_4\_3    & L-stable, three stage, third order IMEX DIRK(3,4,3)\\
-IMEXdirk\_4\_4\_3    & L-stable, four stage, third order IMEX DIRK(4,4,3)\\
+Method         & Variant & Order / Free Parameters \\
+ForwardEuler   &      & Forward-Euler scheme\\
+BackwardEuler  &      & Backward-Euler scheme\\
+
+AdamsBashforth &      & Adams-Bashforth Forward multi-step scheme of order 1-4\\
+
+AdamsMoulton   &      & Adams-Moulton Forward multi-step scheme of order 1-4\\
+
+BDFImplicit    &      & BDF multi-step implicit scheme of order 1-4\\
+
+RungeKutta     &      & Runge-Kutta multi-stage explicit scheme of
+                        order 1-5, (2 - midpoint, 3 - Ralston's, 4 - Classic)\\
+
+RungeKutta     & SSP  & Strong Stability Preserving (SSP) variant of
+                        the RungeKutta multi-stage explicit scheme of
+                        order 1-3\\
+
+DIRK           &      & Diagonally Implicit Runge-Kutta (DIRK) scheme of
+                        order 2-3\\
+
+CNAB           &      & Crank-Nicolson-Adams-Bashforth (CNAB) of order 2\\
+
+MCNAB          &      & Modified Crank-Nicolson-Adams-Bashforth (MCNAB)
+                        of order 2\\
+
+IMEX           &      & Implicit-Explicit (IMEX) scheme using Backward
+                        Different Formula Extrapolation of order 1-4\\
+
+IMEX           & Gear & IMEX Gear variant of order 2\\
+
+IMEX           & dirk & IMEX DIRK variant with free parameters (s, sigma), 
+                        where s is the number of implicit stage schemes,
+                        sigma is the number of explicit stage scheme and
+                        p is the combined order of the scheme.\\
+
+               & dirk & Forward-Backward Euler, first order, free parameters (1,1)\\
+               & dirk & Forward-Backward Euler, first order, free parameters (1,2)\\
+               & dirk & Implicit-Explicit Midpoint, second order, free parameters (1,2)\\
+               & dirk & L-stable, two stage, second order, free parameters (2,2)\\
+               & dirk & L-stable, two stage, second order, free parameters (2,3)\\
+               & dirk & L-stable, two stage, third order, free parameters (2,3)\\
+               & dirk & L-stable, three stage, third order, free parameters (3,4)\\
+               & dirk & L-stable, four stage, third order, free parameters (4,4)\\
+
+EulerExponential & Lawson  & Exponential Euler scheme using the
+                             Lawson variant of order 1 \\
+
+                  & N{\o}rsett & Exponential Euler scheme using the
+                              N{\o}rsett variant of order 1-4
+                              (Higher order not yet properly seeded) \\
+
+FractionalInTime  &         & Fractional-in-time scheme of order 1-4
+                              (Higher order not yet properly seeded) \\
+                    
 \bottomrule
 \end{tabular}
 \end{center}
 
-{\nek} input file for your problem will ask you just the string corresponding
-the time-stepping scheme you want to use (between quotation marks in the
-previous list), and few parameters to define your integration in time (time-step
-and number of steps or final time). For example:\\
+Note: in many cases the first order schemes reduce to either a forward
+or backward Euler scheme.
+
+{\nek} input file for your problem will require a string corresponding
+to the time-stepping method and the order, and optionally the variant and
+free parameters. In addition, parameters that define your integration
+in time, the time-step and number of steps or final time. For
+example:\\
 \begin{lstlisting}[style=XMLStyle]
-<SOLVERINFO>
+ <TIMEINTEGRATIONSCHEME>
+   <METHOD> IMEX </METHOD>
+   <VARIANT> DIRK </VARIANT>
+   <ORDER> 2 </ORDER>
+   <FREEPARAMETERS> 2 3 </FREEPARAMETERS>
+ </TIMEINTEGRATIONSCHEME>
+
+ <SOLVERINFO>
    <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
    <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
    <I PROPERTY="AdvectionForm" VALUE="Convective" /> 
    <I PROPERTY="Projection" VALUE="Galerkin" /> 
-   <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
  </SOLVERINFO>
  
  <PARAMETERS>
-   <P> TimeStep = 0.001     </P> 
-   <P> NumSteps = 1000      </P> 
-   <P> Kinvis = 1           </P>
+   <P> TimeStep = 0.001 </P> 
+   <P> NumSteps = 1000 </P> 
+   <P> Kinvis = 1 </P>
 </PARAMETERS>
 \end{lstlisting}
 
+The old schema which specified the method, variant, order, and free
+parameters as a single string has been deprecated but remains
+backwards compatible.
+
 
 \subsection{Implementation of a time-dependent problem}
-In order to implement a new solver which takes advantage of the time-integration
-class in {\nek}, two main ingredients are required:
+In order to implement a new solver which takes advantage of the
+time-integration class in {\nek}, two main ingredients are required:
 \begin{itemize}
 \item A main files in which the time-integration of you ODE's system is
 initialized and performed.
@@ -320,7 +394,7 @@ int NumSteps          = 1000;
 
 YourClass solver(Input);
     
-LibUtilities::TimeIntegrationMethod  TIME_SCHEME;
+LibUtilities::TimeIntegrationScheme  TIME_SCHEME;
 LibUtilities::TimeIntegrationSchemeOperators ODE;
 
 ODE.DefineOdeRhs(&YourClass::YourExplicitOperatorFunction,solver);
@@ -355,7 +429,7 @@ int NumSteps          = 1000;
 
 YourClass equation(Input);
     
-LibUtilities::TimeIntegrationMethod  TIME_SCHEME;
+LibUtilities::TimeIntegrationScheme  TIME_SCHEME;
 LibUtilities::TimeIntegrationSchemeOperators ODE;
 
 ODE.DefineOdeRhs(&YourClass::YourExplicitOperatorFunction,equation);
@@ -574,24 +648,41 @@ for the unknown vector $\boldsymbol{y}$. This can be done in three steps:
  \boldsymbol{H}^{\mathcal{HD}}\boldsymbol{y}^{\mathcal{D}}$
 \end{itemize}
 
-\subsection{How to add a new time-stepping method}
+\subsection{How to add a new GLM time-stepping method}
 
-To add a new time integration scheme, follow the steps below:
+To add a new GLM time integration scheme, follow the steps below:
 \begin{itemize}
-\item Choose a name for the method and add it to the
-\texttt{TimeIntegrationMethod} enum list.
-\item Populate the switch statement in the \texttt{TimeIntegrationScheme}
-constructor with the coefficients of the new method.
-\item Use ( or modify) the function \texttt{InitializeScheme} to select (or
-implement) a proper initialisation strategy for the method.
-\item Add documentation for the method (especially indicating what the auxiliary
- parameters of the input and output vectors of the multi-step method represent)
+\item Choose a name for the method, and create a header starting with
+  the method name followed by \texttt{TimeIntegrationScheme.h}.  Add the
+  header file to the \texttt{SchemeInitializor.cpp} and register the
+  method name with the factory, via REGISTER.
+\item Add the header file of the \texttt{CmakeLists.txt} in the parent
+  directory.
+\item In the header file create a new class starting with the method
+  name followed by \texttt{TimeIntegrationScheme}. The class must be
+  able to handle any variants, orders, and free parameters. A simple
+  example is in \texttt{EulerTimeIntegrationSchemes.h} which has two
+  variants, Forward and Backward. In general the class must have the
+  following methods:
+\begin{itemize}
+  \item Constructor - creates the number of phases required and set
+    the scheme data via a call to \texttt{SetupSchemeData}.
+  \item \texttt{GetName} - returns the method name.
+  \item \texttt{GetTimeStability} - returns time stability.
+  \item \texttt{SetupSchemeData} - sets up the Butcher tableau for
+    each phase of the sheme (TimeIntegrationAlgorithmGLM).
+\end{itemize}
+
+\item Add documentation for the method (especially indicating what the
+  auxiliary parameters of the input and output vectors of the
+  multi-step method represent)
 \end{itemize}
 
 \subsection{Examples of already implemented time stepping schemes}
 
-Here we show some examples time-stepping schemes implemented in {\nek}, to give an idea of what is required
-to add one of them.
+What follows are some examples time-stepping schemes currently
+implemented in {\nek}, to give an idea of what is required to add one
+of them.
 
 \subsubsection{Forward Euler}
 \begin{align*}
@@ -635,7 +726,7 @@ A & U \\
 \end{array}\right]
 \end{align*}
 
-\subsubsection{2$^{nd}$ order Adams-Bashforth}
+\subsubsection{2$^{nd}$ order Adams-Bashforth compact form}
 \begin{align*}
 \left[\begin{array}{c|c}
 A & U \\
@@ -655,9 +746,43 @@ B & V
 \end{array}\right]=
 \left[\begin{array}{c}
 \boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)\\
-\Delta t \boldsymbol{l}(t^{n-1},\boldsymbol{y}^{n-1})
+\Delta t \boldsymbol{l}\left(t^{n-1},\boldsymbol{y}^{n-1}\right)
 \end{array}\right]
 \end{align*}
+
+\subsubsection{2$^{nd}$ order Adams-Bashforth classic form}
+\begin{align*}
+\left[\begin{array}{c|c}
+A & U \\
+\hline
+B & V
+\end{array}\right] =
+\left[\begin{array}{c|ccc}
+0 & 1 & \frac{3}{2} & \frac{-1}{2} \\
+\hline
+0 & 1 & \frac{3}{2} & \frac{-1}{2} \\
+1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 0 \\
+\end{array}\right],\qquad
+\boldsymbol{y}^{[n]}=
+\left[\begin{array}{c}
+\boldsymbol{y}^{[n]}_0\\
+\boldsymbol{y}^{[n]}_1\\
+\boldsymbol{y}^{[n]}_2
+\end{array}\right]=
+\left[\begin{array}{c}
+\boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right) \\
+\Delta t \boldsymbol{l}\left(t^n,\boldsymbol{y}^{n}\right)\\
+\Delta t \boldsymbol{l}\left(t^{n-1},\boldsymbol{y}^{n-1}\right)
+\end{array}\right]
+\end{align*}
+
+\begin{notebox}
+Adams-Bashforth and other explicit methods can be writen using a
+compact Bucther Tableau that reduces the number of steps. Throughout
+{\nek} this compact form is utilized. This classic form is shown for
+educational purposes only.
+\end{notebox}
 
 \subsubsection{1$^{st}$ order IMEX Euler-Backward/ Euler-Forward}
 \begin{align*}
@@ -933,4 +1058,49 @@ with
   \end{array}\right]
 \end{align*}
 
+\subsubsection{1$^{st}$ order Lawson Euler Exponential}
+\begin{align*}
+\left[\begin{array}{c|c}
+A & U \\
+\hline
+B & V
+\end{array}\right] =
+\left[\begin{array}{c|c}
+0 & 1 \\
+\hline
+\varphi_0(z) & \varphi_0(z)
+\end{array}\right],\qquad
+\boldsymbol{y}^{[n]}=
+\left[\begin{array}{c}
+\boldsymbol{y}^{[n]}_0
+\end{array}\right]=
+\left[\begin{array}{c}
+\boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)
+\end{array}\right]
+\end{align*}
 
+\subsubsection{1$^{st}$ order N{\o}rsett Euler Exponential}
+\begin{align*}
+\left[\begin{array}{c|c}
+A & U \\
+\hline
+B & V
+\end{array}\right] =
+\left[\begin{array}{c|c}
+0 & 1 \\
+\hline
+\varphi_1(z) & \varphi_0(z)
+\end{array}\right],\qquad
+\boldsymbol{y}^{[n]}=
+\left[\begin{array}{c}
+\boldsymbol{y}^{[n]}_0
+\end{array}\right]=
+\left[\begin{array}{c}
+\boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)
+\end{array}\right]
+\end{align*}
+
+\begin{notebox}
+The phi functions, $\varphi_0(z)$ and $\varphi_1(z)$ are defined as
+part of the discussion of GLM in Section \ref{subsectionGeneralLinearMethods}.
+\end{notebox}

@@ -50,6 +50,8 @@
 
 #include <LibUtilities/TimeIntegration/EulerExponentialTimeIntegrationSchemes.h>
 
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeFIT.h>
+
 namespace Nektar
 {
 namespace LibUtilities
@@ -82,11 +84,17 @@ REGISTER(BDFImplicitOrder1);
 REGISTER(BDFImplicitOrder2);
 
 // EulerTimeIntegrationSchemes.h
+REGISTER(Euler);
 REGISTER(BackwardEuler);
 REGISTER(ForwardEuler);
 
-// EulerExponentialTimeIntegrationSchemes.h
+// FITTimeIntegrationSchemes.h
 REGISTER(EulerExponential);
+
+// TimeIntegrationSchemesFIT.h
+std::string FractionalInTimeIntegrationScheme::className =
+    GetTimeIntegrationSchemeFactory().RegisterCreatorFunction(
+        "FractionalInTime", FractionalInTimeIntegrationScheme::create);
 
 // CNABTimeIntegrationScheme.h
 REGISTER(CNAB);

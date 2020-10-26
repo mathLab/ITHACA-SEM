@@ -32,8 +32,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_PROCESSINTERPDATATOFLD
-#define FIELDUTILS_PROCESSINTERPDATATOFLD
+#ifndef FIELDUTILS_PROCESSPOINTDATATOFLD
+#define FIELDUTILS_PROCESSPOINTDATATOFLD
 
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
 

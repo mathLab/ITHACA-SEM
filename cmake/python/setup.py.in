@@ -5,6 +5,7 @@ libs = ['LibUtilities',   \
         'SpatialDomains', \
         'LocalRegions',   \
         'MultiRegions',   \
+        'FieldUtils',     \
         'NekMesh']
 
 setup(name='NekPy',

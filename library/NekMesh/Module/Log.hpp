@@ -75,9 +75,17 @@ enum LogLevel
 class NekMeshError : public std::runtime_error
 {
 public:
-    NekMeshError(const std::string& message) : std::runtime_error(message)
+    NekMeshError(const std::string& message) : std::runtime_error(message),
+                                               m_message(message)
     {
     }
+
+    std::string GetMessage()
+    {
+        return m_message;
+    }
+protected:
+    std::string m_message;
 };
 
 /**

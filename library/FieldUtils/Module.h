@@ -71,7 +71,7 @@ enum ModuleType
     SIZE_ModuleType
 };
 
-const char *const ModuleTypeMap[] = {"Input", "Process", "Output"};
+const std::string ModuleTypeMap[] = {"Input", "Process", "Output"};
 
 enum ModulePriority
 {

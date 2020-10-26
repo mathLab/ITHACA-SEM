@@ -163,34 +163,50 @@ const ModuleType ModuleTypeProxy<OutputModule>::value;
 template <typename MODTYPE>
 ModuleSharedPtr Module_Create(py::tuple args, py::dict kwargs)
 {
+    ModuleType modType = ModuleTypeProxy<MODTYPE>::value;
+
+    using NekError = ErrorUtil::NekError;
+
+    if (modType == eProcessModule && py::len(args) != 2)
+    {
+        throw NekError("ProcessModule.Create() requires two arguments: "
+                       "module name and a Field object.");
+    }
+    else if (modType != eProcessModule && py::len(args) < 2)
+    {
+        throw NekError(ModuleTypeMap[modType] + "Module.Create() requires "
+                       "two arguments: module name and a Field object; "
+                       "optionally a filename.");
+    }
+
     std::string modName = py::extract<std::string>(args[0]);
-    ModuleKey modKey = std::make_pair(ModuleTypeProxy<MODTYPE>::value, modName);
+    ModuleKey modKey = std::make_pair(modType, modName);
+
+    if (!py::extract<FieldSharedPtr>(args[1]).check())
+    {
+        throw NekError("Second argument to Create() should be a Field object.");
+    }
+
     FieldSharedPtr field = py::extract<FieldSharedPtr>(args[1]);
     ModuleSharedPtr mod  = GetModuleFactory().CreateInstance(modKey, field);
 
-    // for input modules we can try to interpret
-    // the remaining arguments as input files
-    if (modKey.first == eInputModule)
+    if (modType == eInputModule)
     {
-        const std::string infile_arg{"infile"};
-        // assume that the file's type is identical with
-        // the module name
-        const std::string infile_type = modName;
+        // For input modules we can try to interpret the remaining arguments as
+        // input files. Assume that the file's type is identical to the module
+        // name.
         for (int i = 2; i < py::len(args); ++i)
         {
             std::string in_fname = py::extract<std::string>(args[i]);
-            mod->RegisterConfig(infile_arg, in_fname);
-            mod->AddFile(infile_type, in_fname);
+            mod->RegisterConfig("infile", in_fname);
+            mod->AddFile(modName, in_fname);
         }
     }
-
-    // for output modules we can try to interpret the
-    // remaining argument as an output file
-    if (modKey.first == eOutputModule && py::len(args) >= 3)
+    else if (modType == eOutputModule && py::len(args) >= 3)
     {
-        const std::string outfile_arg{"outfile"};
-        std::string out_fname = py::extract<std::string>(args[2]);
-        mod->RegisterConfig(outfile_arg, out_fname);
+        // For output modules we can try to interpret the remaining argument as
+        // an output file.
+        mod->RegisterConfig("outfile", py::extract<std::string>(args[2]));
     }
 
     // Process keyword arguments.
@@ -199,8 +215,16 @@ ModuleSharedPtr Module_Create(py::tuple args, py::dict kwargs)
     for (int i = 0; i < py::len(items); ++i)
     {
         std::string arg = py::extract<std::string>(items[i][0]);
+
         if (arg == "infile" && modKey.first == eInputModule)
         {
+            py::extract<py::dict> dict_check(items[i][1]);
+
+            if (!dict_check.check())
+            {
+                throw NekError("infile should be a dictionary.");
+            }
+
             py::dict ftype_fname_dict = py::extract<py::dict>(items[i][1]);
             py::list ft_fn_items      = ftype_fname_dict.items();
             for (int i = 0; i < py::len(ft_fn_items); ++i)
@@ -383,7 +407,7 @@ template <typename MODTYPE> struct PythonModuleClass
 void export_Module()
 {
     // Export ModuleType enum.
-    NEKPY_WRAP_ENUM(ModuleType, ModuleTypeMap);
+    NEKPY_WRAP_ENUM_STRING(ModuleType, ModuleTypeMap);
 
     // Define ModuleWrap to be implicitly convertible to a Module, since it
     // seems that doesn't sometimes get picked up.

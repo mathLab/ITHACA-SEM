@@ -33,6 +33,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/Python/NekPyConfig.hpp>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <sstream>
 
 void export_Basis();
 void export_Comm();
@@ -47,12 +49,46 @@ void export_SharedArray();
 template<typename T>
 void export_NekMatrix();
 
+PyObject *NekErrorType = nullptr;
+std::stringstream errorStream;
+
+using NekError = Nektar::ErrorUtil::NekError;
+
+PyObject* CreateExceptionClass(const char* name,
+                               PyObject* baseTypeObj = PyExc_Exception)
+{
+    std::string qualifiedName0 = std::string("NekPy.LibUtilities.") + name;
+
+    PyObject* typeObj = PyErr_NewException(
+        qualifiedName0.c_str(), baseTypeObj, 0);
+
+    if (!typeObj)
+    {
+        py::throw_error_already_set();
+    }
+
+    py::scope().attr(name) = py::handle<>(py::borrowed(typeObj));
+    return typeObj;
+}
+
+void TranslateNekError(NekError const &e)
+{
+    PyErr_SetString(NekErrorType, e.what());
+}
+
+
 BOOST_PYTHON_MODULE(_LibUtilities)
 {
     np::initialize();
 
+    // Register the NekError exception.
+    NekErrorType = CreateExceptionClass("NekError");
+    py::register_exception_translator<NekError>(&TranslateNekError);
+
+    // Set a stringstream as an error sink to avoid duplicate output.
+    Nektar::ErrorUtil::SetErrorStream(errorStream);
+
     export_Basis();
-    export_Comm();
     export_Points();
     export_SessionReader();
     export_ShapeType();

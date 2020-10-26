@@ -2,7 +2,7 @@
 from NekPy.LibUtilities import ShapeType
 from NekPy.NekMesh import Node, Element, ElmtConfig, NodeSet, Mesh, \
                           Module, ProcessModule, ModuleType,        \
-                          InputModule, OutputModule
+                          InputModule, OutputModule, NekMeshError
 import numpy as np
 import unittest
 import sys
@@ -165,6 +165,45 @@ class TestModule(unittest.TestCase):
             msg += "FAIL"
             print(msg)
             raise
+
+    def testCreateExceptionUnknownModule(self):
+        msg = self.getCN() + "::testCreateExceptionUnknownModule: "
+        try:
+            mod1 = ProcessModule.Create("unknown_module", self.mesh)
+        except NekMeshError:
+            msg += "PASS"
+            print(msg)
+            return
+
+        msg += "FAIL"
+        print(msg)
+        raise
+
+    def testCreateExceptionWrongArgs(self):
+        msg = self.getCN() + "::testCatereExceptionWrongArgs: "
+        try:
+            mod1 = InputModule.Create("xml", self.mesh)
+        except NekMeshError:
+            msg += "PASS"
+            print(msg)
+            return
+
+        msg += "FAIL"
+        print(msg)
+        raise
+
+    def testExceptionNoMesh(self):
+        msg = self.getCN() + "::testExceptionNoMesh: "
+        try:
+            mod1 = ProcessModule.Create("jac", "wrong_argument")
+        except NekMeshError:
+            msg += "PASS"
+            print(msg)
+            return
+
+        msg += "FAIL"
+        print(msg)
+        raise
 
 if __name__ == '__main__':
     unittest.main()

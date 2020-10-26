@@ -241,7 +241,7 @@ void MMFAdvection::v_DoSolve()
     }
 
     // Initialise time integration scheme
-    m_intScheme->InitializeScheme( m_timestep, fields, m_time, m_ode );
+    m_intScheme->InitializeScheme(m_timestep, fields, m_time, m_ode);
 
     // Check uniqueness of checkpoint output
     ASSERTL0((m_checktime == 0.0 && m_checksteps == 0) ||

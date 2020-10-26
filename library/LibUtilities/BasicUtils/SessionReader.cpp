@@ -972,17 +972,12 @@ namespace Nektar
          */
         bool SessionReader::DefinesTimeIntScheme() const
         {
-            if (m_timeIntScheme.method != "")
-            {
-                return true;
-            }
-
-            return false;
+            return m_timeIntScheme.method != "";
         }
 
-
         /**
-         *
+         * @brief Returns the time integration scheme structure #m_timeIntScheme
+         * from the session file.
          */
         const TimeIntScheme &SessionReader::GetTimeIntScheme() const
         {
@@ -1972,7 +1967,7 @@ namespace Nektar
         }
 
         /**
-         *
+         * @brief Read the time-integration scheme structure, if present.
          */
         void SessionReader::ReadTimeIntScheme(TiXmlElement *conditions)
         {
@@ -2020,7 +2015,7 @@ namespace Nektar
                          "string '" + orderStr + "' to an unsigned integer.");
             }
 
-            if( variant )
+            if (variant)
             {
                 m_timeIntScheme.variant = variant->GetText();
             }
@@ -2073,7 +2068,6 @@ namespace Nektar
                 }
             }
         }
-
 
         /**
          *

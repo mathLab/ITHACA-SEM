@@ -58,34 +58,36 @@ class EulerTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
     EulerTimeIntegrationScheme(std::string variant, unsigned int order,
-                               std::vector<NekDouble> freeParams) :
-        TimeIntegrationSchemeGLM(variant, 1, freeParams)
+                               std::vector<NekDouble> freeParams)
+        : TimeIntegrationSchemeGLM(variant, 1, freeParams)
     {
         boost::ignore_unused(order);
 
         ASSERTL1(variant == "Backward" || variant == "Forward",
-                 "Euler Time integration scheme unknown variant: "
-                 + variant + ". Must be 'Backward' or 'Forward'");
+                 "Euler Time integration scheme unknown variant: " + variant +
+                     ". Must be 'Backward' or 'Forward'");
 
         m_integration_phases    = TimeIntegrationAlgorithmGLMVector(1);
         m_integration_phases[0] = TimeIntegrationAlgorithmGLMSharedPtr(
             new TimeIntegrationAlgorithmGLM(this));
 
-        EulerTimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0], variant);
+        EulerTimeIntegrationScheme::SetupSchemeData(m_integration_phases[0],
+                                                    variant);
     }
 
     virtual ~EulerTimeIntegrationScheme()
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-                                                 std::vector<NekDouble> freeParams)
+    static TimeIntegrationSchemeSharedPtr create(
+        std::string variant, unsigned int order,
+        std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(order);
 
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<
-          EulerTimeIntegrationScheme>::AllocateSharedPtr(variant, 1, freeParams);
+        TimeIntegrationSchemeSharedPtr p =
+            MemoryManager<EulerTimeIntegrationScheme>::AllocateSharedPtr(
+                variant, 1, freeParams);
         return p;
     }
 
@@ -93,7 +95,7 @@ public:
 
     LUE virtual std::string GetFullName() const
     {
-        return m_integration_phases[m_integration_phases.size()-1]->m_name;
+        return m_integration_phases[m_integration_phases.size() - 1]->m_name;
     }
 
     LUE virtual std::string GetName() const
@@ -103,7 +105,7 @@ public:
 
     LUE virtual NekDouble GetTimeStability() const
     {
-        if( GetVariant() == "Backward" )
+        if (GetVariant() == "Backward")
         {
             return 1.0;
         }
@@ -118,21 +120,23 @@ public:
     {
         double A = 0;
 
-        if( variant == "Backward" ) {
+        if (variant == "Backward")
+        {
             phase->m_schemeType = eDiagonallyImplicit;
 
             A = 1;
         }
-        else if( variant == "Forward" ) {
+        else if (variant == "Forward")
+        {
             phase->m_schemeType = eExplicit;
 
             A = 0;
         }
 
-        phase->m_variant  = variant;
-        phase->m_order = 1;
-        phase->m_name = variant + std::string("EulerOrder") +
-          std::to_string(phase->m_order);
+        phase->m_variant = variant;
+        phase->m_order   = 1;
+        phase->m_name    = variant + std::string("EulerOrder") +
+                        std::to_string(phase->m_order);
 
         phase->m_numsteps  = 1;
         phase->m_numstages = 1;
@@ -141,13 +145,13 @@ public:
         phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
 
         phase->m_A[0] =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, A  );
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, A);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 1.0);
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  1.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 1.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  1.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 1.0);
 
         phase->m_numMultiStepValues = 1;
         phase->m_numMultiStepDerivs = 0;
@@ -161,26 +165,27 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 // Backwards compatibility
-class BackwardEulerTimeIntegrationScheme :
-    public EulerTimeIntegrationScheme
+class BackwardEulerTimeIntegrationScheme : public EulerTimeIntegrationScheme
 {
 public:
     BackwardEulerTimeIntegrationScheme(std::string variant, unsigned int order,
-                                       std::vector<NekDouble> freeParams) :
-      EulerTimeIntegrationScheme("Backward", 1, freeParams)
+                                       std::vector<NekDouble> freeParams)
+        : EulerTimeIntegrationScheme("Backward", 1, freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-                                                 std::vector<NekDouble> freeParams)
+    static TimeIntegrationSchemeSharedPtr create(
+        std::string variant, unsigned int order,
+        std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
 
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            EulerTimeIntegrationScheme>::AllocateSharedPtr("Backward", 1, freeParams);
+        TimeIntegrationSchemeSharedPtr p =
+            MemoryManager<EulerTimeIntegrationScheme>::AllocateSharedPtr(
+                "Backward", 1, freeParams);
         return p;
     }
 
@@ -188,26 +193,27 @@ public:
 
 }; // end class BackwardEulerTimeIntegrationScheme
 
-class ForwardEulerTimeIntegrationScheme :
-    public EulerTimeIntegrationScheme
+class ForwardEulerTimeIntegrationScheme : public EulerTimeIntegrationScheme
 {
 public:
     ForwardEulerTimeIntegrationScheme(std::string variant, unsigned int order,
-                                       std::vector<NekDouble> freeParams) :
-      EulerTimeIntegrationScheme("Forward", 1, freeParams)
+                                      std::vector<NekDouble> freeParams)
+        : EulerTimeIntegrationScheme("Forward", 1, freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-                                                 std::vector<NekDouble> freeParams)
+    static TimeIntegrationSchemeSharedPtr create(
+        std::string variant, unsigned int order,
+        std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
 
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            EulerTimeIntegrationScheme>::AllocateSharedPtr("Forward", 1, freeParams);
+        TimeIntegrationSchemeSharedPtr p =
+            MemoryManager<EulerTimeIntegrationScheme>::AllocateSharedPtr(
+                "Forward", 1, freeParams);
         return p;
     }
 

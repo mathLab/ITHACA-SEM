@@ -310,10 +310,12 @@ protected:
 
 }; // end class FractionalInTimeIntegrator
 
-LUE std::ostream &operator<<(std::ostream &os,
-                             const FractionalInTimeIntegrationScheme &rhs);
-LUE std::ostream &operator<<(std::ostream &os,
-                             const FractionalInTimeIntegrationSchemeSharedPtr &rhs);
+LUE std::ostream &operator<<(
+    std::ostream &os,
+    const FractionalInTimeIntegrationScheme &rhs);
+LUE std::ostream &operator<<(
+    std::ostream &os,
+    const FractionalInTimeIntegrationSchemeSharedPtr &rhs);
 
 } // end namespace LibUtilities
 } // end namespace Nektar

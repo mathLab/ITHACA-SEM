@@ -80,7 +80,7 @@ namespace Nektar
         vel.push_back("Vz");
         vel.resize(m_spacedim);
 
-        GetFunction( "AdvectionVelocity")->Evaluate(vel,  m_velocity);
+        GetFunction("AdvectionVelocity")->Evaluate(vel,  m_velocity);
 
         m_session->MatchSolverInfo(
             "SpectralVanishingViscosity", "True", m_useSpecVanVisc, false);
@@ -563,11 +563,10 @@ namespace Nektar
 
         // Set to 1 for first step and it will then be increased in
         // time advance routines
-        if( (IntegrationScheme->GetName() == "Euler" &&
+        if ((IntegrationScheme->GetName() == "Euler" &&
              IntegrationScheme->GetVariant() == "Backward") ||
-
             (IntegrationScheme->GetName() == "BDFImplicit" &&
-             (order == 1 || order == 2)) )
+             (order == 1 || order == 2)))
         {
             // Note RK first order SSP is just Forward Euler.
             m_subStepIntegrationScheme =

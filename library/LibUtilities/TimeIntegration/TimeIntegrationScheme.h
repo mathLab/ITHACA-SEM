@@ -92,19 +92,18 @@ public:
     /**
      * \brief Gets the solution vector of the ODE
      */
-    inline virtual const TripleArray &GetSolutionVector() const = 0;
+    virtual const TripleArray &GetSolutionVector() const = 0;
 
     /**
      * \brief Sets the solution vector of the ODE
      */
-    inline virtual void SetSolutionVector(const int Offset,
-                                          const DoubleArray &y) = 0;
+    virtual void SetSolutionVector(const int Offset, const DoubleArray &y) = 0;
 
     // The worker methods
     /**
      * \brief Explicit integration of an ODE.
      *
-     * This function explicitely perfroms a signle integration step of the ODE
+     * This function explicitely perfroms a single integration step of the ODE
      * system:
      * \f[
      * \frac{d\boldsymbol{y}}{dt}=\boldsymbol{f}(t,\boldsymbol{y})

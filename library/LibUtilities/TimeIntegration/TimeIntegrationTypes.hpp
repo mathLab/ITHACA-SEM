@@ -44,38 +44,38 @@ namespace LibUtilities
 {
 
 // Typedefs double arrays
-typedef const Array<OneD, const Array<OneD, Array<OneD, NekDouble>>> ConstTripleArray;
-typedef       Array<OneD,       Array<OneD, Array<OneD, NekDouble>>>      TripleArray;
-typedef const Array<OneD, const Array<OneD,             NekDouble>>  ConstDoubleArray;
-typedef       Array<OneD,       Array<OneD,             NekDouble>>       DoubleArray;
-typedef const Array<OneD, const                         NekDouble>   ConstSingleArray;
-typedef       Array<OneD,                               NekDouble>        SingleArray;
+template <class T> using AT = Array<OneD, T>;
 
-// Typedefs complex double arrays
-typedef       Array<OneD,       Array<OneD, Array<OneD, std::complex<NekDouble>>>>      ComplexTripleArray;
-typedef const Array<OneD, const Array<OneD,             std::complex<NekDouble>>>  ConstComplexDoubleArray;
-typedef       Array<OneD,       Array<OneD,             std::complex<NekDouble>>>       ComplexDoubleArray;
-typedef const Array<OneD, const                         std::complex<NekDouble>>   ConstComplexSingleArray;
-typedef       Array<OneD,                               std::complex<NekDouble>>        ComplexSingleArray;
+// clang-format off
+typedef const AT<const AT<AT<NekDouble>>> ConstTripleArray;
+typedef       AT<      AT<AT<NekDouble>>>      TripleArray;
+typedef const AT<const AT<   NekDouble>>  ConstDoubleArray;
+typedef       AT<      AT<   NekDouble>>       DoubleArray;
+typedef const AT<      const NekDouble>   ConstSingleArray;
+typedef       AT<            NekDouble>        SingleArray;
+
+typedef       AT<      AT<AT<std::complex<NekDouble>>>>      ComplexTripleArray;
+typedef const AT<const AT<   std::complex<NekDouble>>>  ConstComplexDoubleArray;
+typedef       AT<      AT<   std::complex<NekDouble>>>       ComplexDoubleArray;
+typedef const AT<      const std::complex<NekDouble>>   ConstComplexSingleArray;
+typedef       AT<            std::complex<NekDouble>>        ComplexSingleArray;
+// clang-format on
 
 // Functors
-typedef std::function<void(ConstDoubleArray &, DoubleArray &,
-                           const NekDouble)>
+typedef std::function<void(ConstDoubleArray &, DoubleArray &, const NekDouble)>
     FunctorType1;
-typedef std::function<void(ConstDoubleArray &, DoubleArray &,
-                           const NekDouble, const NekDouble)>
+typedef std::function<void(ConstDoubleArray &, DoubleArray &, const NekDouble,
+                           const NekDouble)>
     FunctorType2;
 
 // Shared pointers
 class TimeIntegrationScheme;
 
-typedef std::shared_ptr<TimeIntegrationScheme>
-    TimeIntegrationSchemeSharedPtr;
+typedef std::shared_ptr<TimeIntegrationScheme> TimeIntegrationSchemeSharedPtr;
 
-typedef std::vector<TimeIntegrationSchemeSharedPtr>
-    TimeIntegrationSchemeVector;
+typedef std::vector<TimeIntegrationSchemeSharedPtr> TimeIntegrationSchemeVector;
 
-  //
+//
 class FractionalInTimeIntegrationScheme;
 
 typedef std::shared_ptr<FractionalInTimeIntegrationScheme>
@@ -86,7 +86,7 @@ typedef std::vector<FractionalInTimeIntegrationSchemeSharedPtr>
 
 //
 class TimeIntegrationSchemeGLM;
-  
+
 typedef std::shared_ptr<TimeIntegrationSchemeGLM>
     TimeIntegrationSchemeGLMSharedPtr;
 

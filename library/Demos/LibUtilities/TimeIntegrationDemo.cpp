@@ -95,12 +95,12 @@
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/TimeIntegration/EulerExponentialTimeIntegrationSchemes.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationSchemeOperators.h>
-#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 
-#include <time.h>       /* time */
+#include <time.h> /* time */
 
 using namespace Nektar;
 using namespace Nektar::LibUtilities;
@@ -113,14 +113,14 @@ class DemoSolver
 public:
     // -----------------------------------------------------------------
     // Constructor based upon the discretisation details
-    DemoSolver(int nVars, int nPoints, int nTimeSteps, bool test) :
-      m_nVars(nVars),
+    DemoSolver(int nVars, int nPoints, int nTimeSteps, bool test)
+        : m_nVars(nVars),
 
-      m_x0(0.0), m_xend(1.0), m_nPoints(nPoints),
-      m_dx((m_xend - m_x0) / ((double)m_nPoints - 1.0)),
+          m_x0(0.0), m_xend(1.0), m_nPoints(nPoints),
+          m_dx((m_xend - m_x0) / ((double)m_nPoints - 1.0)),
 
-      m_t0(0.0), m_tend(1.0), m_nTimeSteps(nTimeSteps),
-      m_dt((m_tend - m_t0) / (double)m_nTimeSteps)
+          m_t0(0.0), m_tend(1.0), m_nTimeSteps(nTimeSteps),
+          m_dt((m_tend - m_t0) / (double)m_nTimeSteps)
     {
         boost::ignore_unused(test);
 
@@ -134,7 +134,7 @@ public:
         m_maxL2Norm = -std::numeric_limits<double>::max();
     }
 
-    virtual ~DemoSolver() {};
+    virtual ~DemoSolver(){};
 
     // -----------------------------------------------------------------
     // Exact solution and project (identity)
@@ -143,27 +143,25 @@ public:
         const NekDouble time) const = 0;
 
     virtual void Project(const Array<OneD, const Array<OneD, double>> &inarray,
-                               Array<OneD,       Array<OneD, double>> &outarray,
+                         Array<OneD, Array<OneD, double>> &outarray,
                          const NekDouble time) const;
 
     // -----------------------------------------------------------------
     // Misc functions for error and outputing
-    void GetMinMaxValues(
-        const Array<OneD, const Array<OneD, double>> &exact,
-        const Array<OneD, const Array<OneD, double>> &approx,
-        bool print );
+    void GetMinMaxValues(const Array<OneD, const Array<OneD, double>> &exact,
+                         const Array<OneD, const Array<OneD, double>> &approx,
+                         bool print);
 
-    double EvaluateL2Error(
-        const Array<OneD, const Array<OneD, double>> &exact,
-        const Array<OneD, const Array<OneD, double>> &approx,
-        bool print );
+    double EvaluateL2Error(const Array<OneD, const Array<OneD, double>> &exact,
+                           const Array<OneD, const Array<OneD, double>> &approx,
+                            bool print);
 
-    void AppendOutput(
-        std::ofstream &outfile, std::ofstream &errorfile, std::ofstream &L2normfile,
-        const int timeStepNumber, const NekDouble time,
-        const Array<OneD, const Array<OneD, double>> &exact,
-        const Array<OneD, const Array<OneD, double>> &approx,
-        const double L2Norm) const;
+    void AppendOutput(std::ofstream &outfile, std::ofstream &errorfile,
+                      std::ofstream &L2normfile, const int timeStepNumber,
+                      const NekDouble time,
+                      const Array<OneD, const Array<OneD, double>> &exact,
+                      const Array<OneD, const Array<OneD, double>> &approx,
+                      const double L2Norm) const;
 
     void GenerateGnuplotScript(const std::string &method) const;
 
@@ -174,7 +172,7 @@ public:
         return m_t0;
     }
 
-    double GetFinialTime() const
+    double GetFinalTime() const
     {
         return m_tend;
     }
@@ -189,7 +187,7 @@ public:
         return m_fileName;
     }
 
-    void SetSchemeName( std::string name )
+    void SetSchemeName(std::string name)
     {
         m_schemeName = name;
     }
@@ -197,7 +195,6 @@ public:
     // -----------------------------------------------------------------
 
 protected:
-
     std::string m_fileName;
     std::string m_schemeName;
     std::string m_title;
@@ -239,12 +236,13 @@ class OneDFiniteDiffAdvDiffSolver : public DemoSolver
 public:
     // constructor based upon the discretisation details
     OneDFiniteDiffAdvDiffSolver(int nVars, int nPoints, int nTimeSteps,
-                                bool test) :
-      DemoSolver(nVars, nPoints, nTimeSteps, test),
-        m_wavenumber(1.0), m_V(1.0), m_D(0.05)
+                                bool test)
+        : DemoSolver(nVars, nPoints, nTimeSteps, test), m_wavenumber(1.0),
+          m_V(1.0), m_D(0.05)
     {
         m_fileName = std::string("OneDFiniteDiffAdvDiffSolver");
-        m_title = std::string("Finite Difference Solution to the 1D advection-diffusion equation");
+        m_title    = std::string("Finite Difference Solution to the 1D "
+                              "advection-diffusion equation");
     }
 
     // -----------------------------------------------------------------
@@ -252,13 +250,12 @@ public:
     // used by the TimeIntegration framework (and are required for
     // using it).
     void HelmSolve(const Array<OneD, const Array<OneD, double>> &inarray,
-                         Array<OneD,       Array<OneD, double>> &outarray,
+                   Array<OneD, Array<OneD, double>> &outarray,
                    const NekDouble time, const NekDouble lambda) const;
 
     void EvaluateAdvectionTerm(
         const Array<OneD, const Array<OneD, double>> &inarray,
-              Array<OneD,       Array<OneD, double>> &outarray,
-        const NekDouble time) const;
+        Array<OneD, Array<OneD, double>> &outarray, const NekDouble time) const;
 
     // -----------------------------------------------------------------
     void EvaluateExactSolution(Array<OneD, Array<OneD, double>> &outarray,
@@ -284,15 +281,15 @@ class OneDSinusoidSolver : public DemoSolver
 {
 public:
     // constructor based upon the discretisation details
-    OneDSinusoidSolver(int nVars, int nPoints, int nTimeSteps, bool test) :
-        DemoSolver(nVars, nPoints, nTimeSteps, test)
+    OneDSinusoidSolver(int nVars, int nPoints, int nTimeSteps, bool test)
+        : DemoSolver(nVars, nPoints, nTimeSteps, test)
     {
         m_fileName = std::string("OneDSinusoidSolver");
-        m_title = std::string("Solution to the 1D Sinusoid equation");
+        m_title    = std::string("Solution to the 1D Sinusoid equation");
 
         // Frequencies and phases for the sinusoidal solver.
-        m_freqs  = Array<OneD, double>(m_nVars, 0.0 );
-        m_phases = Array<OneD, double>(m_nVars, 0.0 );
+        m_freqs  = Array<OneD, double>(m_nVars, 0.0);
+        m_phases = Array<OneD, double>(m_nVars, 0.0);
 
         // Assumption: the two-dimensional Lambda matrix is a diagonal
         // matrix thus values are non zero if and only i=j. As such,
@@ -306,28 +303,28 @@ public:
         m_z0 = Array<OneD, NekDouble>(m_nVars, 0.0);
 
         // Initialize a random seed using the time.
-        if( test )
-          srand( 0 );
+        if (test)
+            srand(0);
         else
-          srand( time(NULL) );
+            srand(time(NULL));
 
         // Randomly generate the jacobian in a way that essentially
         // ensures diagonalizability with real eigenvalues and
         // invertibility. Real eigenvalues aren't necessary, but keep
         // things real-valued for ease.
-        DNekMat jac     (m_nVars, m_nVars, 0.0, eFULL);
-        DNekMat jacDiag (m_nVars, m_nVars, 0.0, eDIAGONAL);
+        DNekMat jac(m_nVars, m_nVars, 0.0, eFULL);
+        DNekMat jacDiag(m_nVars, m_nVars, 0.0, eDIAGONAL);
         DNekMat jacInvert(m_nVars, m_nVars, 0.0, eFULL);
 
-        DNekMat metric  (m_nVars, m_nVars, 0.0, eFULL);
+        DNekMat metric(m_nVars, m_nVars, 0.0, eFULL);
 
         for (int k = 0; k < m_nVars; ++k)
         {
-            jacDiag(k,k) = (double) rand() / (double) RAND_MAX;
+            jacDiag(k, k) = (double)rand() / (double)RAND_MAX;
 
             for (int l = 0; l < m_nVars; ++l)
             {
-                jac(l,k) = (double) rand() / (double) RAND_MAX;
+                jac(l, k) = (double)rand() / (double)RAND_MAX;
             }
         }
 
@@ -338,27 +335,26 @@ public:
         // Compute eigenvalues/eigenvectors of the metric tensor using
         // ideal mapping.
         char jobvl = 'N', jobvr = 'V';
-        int worklen = 8*m_nVars, info;
+        int worklen = 8 * m_nVars, info;
 
-        DNekMat eval(m_nVars, m_nVars, 0.0, eDIAGONAL);  // Eigen Values
-        DNekMat evec(m_nVars, m_nVars, 0.0, eFULL);      // Eigen Vectors
-        Array<OneD, NekDouble> vl  (m_nVars*m_nVars);
+        DNekMat eval(m_nVars, m_nVars, 0.0, eDIAGONAL); // Eigen Values
+        DNekMat evec(m_nVars, m_nVars, 0.0, eFULL);     // Eigen Vectors
+        Array<OneD, NekDouble> vl(m_nVars * m_nVars);
         Array<OneD, NekDouble> work(worklen);
-        Array<OneD, NekDouble> wi  (m_nVars);
+        Array<OneD, NekDouble> wi(m_nVars);
 
         Lapack::Dgeev(jobvl, jobvr, m_nVars, metric.GetRawPtr(), m_nVars,
                       &(eval.GetPtr())[0], &wi[0], &vl[0], m_nVars,
-                      &(evec.GetPtr())[0], m_nVars,
-                      &work[0], worklen, info);
+                      &(evec.GetPtr())[0], m_nVars, &work[0], worklen, info);
 
         for (int k = 0; k < m_nVars; k++)
         {
-            m_freqs [k] = (double) rand() / (double) RAND_MAX;
-            m_phases[k] = (double) rand() / (double) RAND_MAX;
+            m_freqs[k]  = (double)rand() / (double)RAND_MAX;
+            m_phases[k] = (double)rand() / (double)RAND_MAX;
 
-            m_lambda[k] = eval(k,k);
+            m_lambda[k] = eval(k, k);
 
-            m_z0[k] = (double) rand() / (double) RAND_MAX;
+            m_z0[k] = (double)rand() / (double)RAND_MAX;
         }
     }
 
@@ -368,8 +364,7 @@ public:
     // using it).
     void EvaluateSinusoidTerm(
         const Array<OneD, const Array<OneD, double>> &inarray,
-              Array<OneD,       Array<OneD, double>> &outarray,
-        const NekDouble time) const;
+        Array<OneD, Array<OneD, double>> &outarray, const NekDouble time) const;
 
     // -----------------------------------------------------------------
     void EvaluateExactSolution(Array<OneD, Array<OneD, double>> &outarray,
@@ -399,18 +394,18 @@ class OneDFDESolver : public DemoSolver
 {
 public:
     // constructor based upon the discretisation details
-    OneDFDESolver(int nVars, int nPoints, int nTimeSteps, bool test) :
-        DemoSolver(nVars, nPoints, nTimeSteps, test)
+    OneDFDESolver(int nVars, int nPoints, int nTimeSteps, bool test)
+        : DemoSolver(nVars, nPoints, nTimeSteps, test)
     {
         m_fileName = std::string("OneDFDESolver");
-        m_title = std::string("Solution to the 1D constant equation");
+        m_title    = std::string("Solution to the 1D constant equation");
 
         m_alpha = 0.3;
 
-        if( test )
-          srand( 0 );
+        if (test)
+            srand(0);
         else
-          srand( time(NULL) );
+            srand(time(NULL));
 
         // Initial values set to zero
         m_u0 = Array<OneD, Array<OneD, NekDouble>>(m_nVars);
@@ -421,7 +416,7 @@ public:
 
             for (int j = 0; j < m_nPoints; j++)
             {
-                m_u0[i][j] = (double) rand() / (double) RAND_MAX;
+                m_u0[i][j] = (double)rand() / (double)RAND_MAX;
             }
         }
     }
@@ -430,10 +425,9 @@ public:
     // These functions/methods below are the routines which will be
     // used by the TimeIntegration framework (and are required for
     // using it).
-    void EvaluateFDETerm(
-        const Array<OneD, const Array<OneD, double>> &inarray,
-              Array<OneD,       Array<OneD, double>> &outarray,
-        const NekDouble time) const;
+    void EvaluateFDETerm(const Array<OneD, const Array<OneD, double>> &inarray,
+                         Array<OneD, Array<OneD, double>> &outarray,
+                         const NekDouble time) const;
 
     // -----------------------------------------------------------------
     void EvaluateExactSolution(Array<OneD, Array<OneD, double>> &outarray,
@@ -456,19 +450,19 @@ int main(int argc, char *argv[])
 
     po::options_description desc("Usage:");
 
-    desc.add_options()
-      ("help,h", "Produce this help message.")
-      ("test,t", "Run in regession test mode.")
-      ("butcher,b", "Print the Butcher Tableau for each phase.")
-      ("solution,s", "Print the solution values for each time step.")
-      ("L2,l", "Print the L2 error for each time step.")
-      ("dof,d", po::value<int>(), "Number of degrees of freedom (points or values).")
-      ("timesteps,t", po::value<int>(), "Number of timesteps.")
-      ("order,o", po::value<int>(), "Order of the scheme.")
-      ("parameter,p", po::value<std::vector<NekDouble>>()->multitoken(),
-       "Free parameters for the scheme.")
-      ("variant,v", po::value<std::string>(),
-       "Method variant."
+    desc.add_options()("help,h", "Produce this help message.")(
+        "test,t", "Run in regession test mode.")(
+        "butcher,b", "Print the Butcher Tableau for each phase.")(
+        "solution,s", "Print the solution values for each time step.")(
+        "L2,l", "Print the L2 error for each time step.")(
+        "dof,d", po::value<int>(),
+        "Number of degrees of freedom (points or values).")(
+        "timesteps,t", po::value<int>(), "Number of timesteps.")(
+        "order,o", po::value<int>(), "Order of the scheme.")(
+        "parameter,p", po::value<std::vector<NekDouble>>()->multitoken(),
+        "Free parameters for the scheme.")(
+        "variant,v", po::value<std::string>(),
+        "Method variant."
         "- Forward:  1st order Forward  Euler\n"
         "- Backward: 1st order Backward Euler\n"
         "  \n"
@@ -478,9 +472,9 @@ int main(int argc, char *argv[])
         "- DIRK: 1st-4th order multi-stage IMEX DIRK scheme\n"
         "  \n"
         "- Lawson:  1st order multi-step Lawson-Euler  exponential scheme\n"
-        "- Norsett: 1st-4th order multi-step Norsett-Euler exponential scheme\n"
-       )
-      ("method,m", po::value<std::string>(),
+        "- Norsett: 1st-4th order multi-step Norsett-Euler exponential "
+        "scheme\n")(
+        "method,m", po::value<std::string>(),
         "Name of the time-integration scheme:\n"
         "- Euler -variant Forward:  1st order Forward  Euler\n"
         "- Euler -variant Backward: 1st order Backward Euler\n"
@@ -489,7 +483,8 @@ int main(int argc, char *argv[])
         "     (MCNAB)\n"
         "  \n"
         "- RungeKutta: 1st-5th order multi-stage Runga-Kutta scheme\n"
-        "- RungeKutta -variant SSP: 1st-4th order multi-stage Runga-Kutta SSP scheme\n"
+        "- RungeKutta -variant SSP: 1st-4th order multi-stage Runga-Kutta SSP "
+        "scheme\n"
         "- DIRK:1st-4th order multi-stage Diagonally Implicit\n"
         "      Runga-Kutta scheme (DIRK)\n"
         "- AdamsBashforth: 1st-4th order multi-step Adams-Bashforth scheme\n"
@@ -499,58 +494,59 @@ int main(int argc, char *argv[])
         "- IMEX -variant Gear: 2nd order IMEX Gear (Extrapolated Gear/SBDF-2)\n"
         "- IMEX -variant DIRK: 1st-3rd order multi-stage IMEX DIRK scheme\n"
         "  \n"
-        "- EulerExponential -variant Lawson: 1st order multi-step Lawson-Euler exponential scheme\n"
-        "- EulerExponential -variant Norsett:1st-4th order multi-step Norsett-Euler exponential scheme\n"
+        "- EulerExponential -variant Lawson: 1st order multi-step Lawson-Euler "
+        "exponential scheme\n"
+        "- EulerExponential -variant Norsett:1st-4th order multi-step "
+        "Norsett-Euler exponential scheme\n"
         "  \n"
-        "- FractionalInTime: 1st-4th order multi-step Fractional In Time scheme\n"
-       );
+        "- FractionalInTime: 1st-4th order multi-step Fractional In Time "
+        "scheme\n");
 
     po::variables_map vm;
     try
     {
-        po::store(po::command_line_parser(argc, argv).options(desc)
-                  .style(po_style::unix_style|po_style::case_insensitive)
-                  .run(), vm);
+        po::store(po::command_line_parser(argc, argv)
+                      .options(desc)
+                      .style(po_style::unix_style | po_style::case_insensitive)
+                      .run(),
+                  vm);
         po::notify(vm);
     }
     catch (const std::exception &e)
     {
-        std::cerr << e.what() << std::endl
-                  << desc;
+        std::cerr << e.what() << std::endl << desc;
         return 1;
     }
 
     // These three parameters are manditory.
-    if (!vm.count("dof") || !vm.count("timesteps") || !vm.count("method") )
+    if (!vm.count("dof") || !vm.count("timesteps") || !vm.count("method"))
     {
         std::cout << std::endl
                   << "Please specify the number of dof and timesteps "
                   << "along with the order and method.";
 
-      std::cout << std::endl << std::endl
-                << desc;
+        std::cout << std::endl << std::endl << desc;
 
-      return 1;
+        return 1;
     }
 
-    int nDoF               = vm["dof"].as<int>();
-    int nTimeSteps         = vm["timesteps"].as<int>();
-    std::string sMethod    = vm["method"].as<std::string>();
+    int nDoF            = vm["dof"].as<int>();
+    int nTimeSteps      = vm["timesteps"].as<int>();
+    std::string sMethod = vm["method"].as<std::string>();
 
-    if( nDoF < 2 )
+    if (nDoF < 2)
     {
         std::cout << "Please specify the number of "
-                  << "dof to be greater than 1."
-                  << std::endl << std::endl
+                  << "dof to be greater than 1." << std::endl
+                  << std::endl
                   << desc;
         return 1;
     }
 
     // Maybe needed parameters
-    std::string sVariant   =
-      vm.count("variant")   ? vm["variant"].as<std::string>() : "" ;
-    int nOrder             =
-      vm.count("order")     ? vm["order"].as<int>() : 0;
+    std::string sVariant =
+        vm.count("variant") ? vm["variant"].as<std::string>() : "";
+    int nOrder = vm.count("order") ? vm["order"].as<int>() : 0;
 
     // Check the varaibles and parse the free parameters which are in
     // a string.
@@ -569,53 +565,55 @@ int main(int argc, char *argv[])
     // Bullet proofing.
 
     // These methods need the order only
-    if( ( (sMethod == "RungeKutta" ||
-           sMethod == "DIRK" ||
-           sMethod == "AdamsBashforth" ||
-           sMethod == "AdamsMoulton" ||
-           sMethod == "BDFImplicit" ||
-           sMethod == "EulerExponential")
-         && nOrder == 0 ) ||
+    if (((sMethod == "RungeKutta" || sMethod == "DIRK" ||
+          sMethod == "AdamsBashforth" || sMethod == "AdamsMoulton" ||
+          sMethod == "BDFImplicit" || sMethod == "EulerExponential") &&
+         nOrder == 0) ||
 
         // No variant but the order
-        ( sMethod == "IMEX" && sVariant == "" && nOrder == 0 ) ||
+        (sMethod == "IMEX" && sVariant == "" && nOrder == 0) ||
 
         // Needs an order and parameters
-        ( sMethod == "IMEX" && sVariant == "DIRK" &&
-          (nOrder == 0 || freeParams.size() == 0) ) ||
+        (sMethod == "IMEX" && sVariant == "DIRK" &&
+         (nOrder == 0 || freeParams.size() == 0)) ||
 
         // Needs a variant
-        ( sMethod == "Euler" && sVariant == "" ) ||
+        (sMethod == "Euler" && sVariant == "") ||
 
         // Needs a variant and order
-        ( sMethod == "EulerExponential" && sVariant == "" && nOrder == 0 ) ||
+        (sMethod == "EulerExponential" && sVariant == "" && nOrder == 0) ||
 
         vm.count("help"))
     {
-      std::cout << std::endl
-                << "Please specify the number of dof and timesteps "
-                << "along with the ";
+        std::cout << std::endl
+                  << "Please specify the number of dof and timesteps "
+                  << "along with the ";
 
-      if( sMethod == "IMEX" && sVariant == "" && nOrder == 0 )
-          std::cout << "method and order.";
+        if (sMethod == "IMEX" && sVariant == "" && nOrder == 0)
+        {
+            std::cout << "method and order.";
+        }
+        else if (sMethod == "IMEX" && sVariant == "DIRK" &&
+                 (nOrder == 0 || freeParams.size() == 0))
+        {
+            std::cout << "method, order, and free parameters in quotes.";
+        }
+        else if (sMethod == "Euler")
+        {
+            std::cout << "method and variant.";
+        }
+        else if (sMethod == "EulerExponential")
+        {
+            std::cout << "method, variant, and order.";
+        }
+        else
+        {
+            std::cout << "method and order.";
+        }
 
-      else if( sMethod == "IMEX" && sVariant == "DIRK" &&
-          (nOrder == 0 || freeParams.size() == 0) )
-          std::cout << "method, order, and free parameters in quotes.";
+        std::cout << std::endl << std::endl << desc;
 
-      else if( sMethod == "Euler")
-          std::cout << "method and variant.";
-
-      else if( sMethod == "EulerExponential")
-          std::cout << "method, variant, and order.";
-
-      else
-          std::cout << "method and order.";
-
-      std::cout << std::endl << std::endl
-                << desc;
-
-      return 1;
+        return vm.count("help") ? 0 : 1;
     }
 
     // -------------------------------------------------------------------------
@@ -628,7 +626,7 @@ int main(int argc, char *argv[])
         LibUtilities::GetTimeIntegrationSchemeFactory();
 
     LibUtilities::TimeIntegrationSchemeSharedPtr tiScheme =
-      factory.CreateInstance(sMethod, sVariant, nOrder, freeParams);
+        factory.CreateInstance(sMethod, sVariant, nOrder, freeParams);
 
     int nVariables;
     int nPoints;
@@ -641,34 +639,34 @@ int main(int argc, char *argv[])
 
     std::shared_ptr<DemoSolver> solverSharedPtr;
 
-    if( tiScheme->GetIntegrationSchemeType() == eFractionalInTime )
+    if (tiScheme->GetIntegrationSchemeType() == eFractionalInTime)
     {
         nVariables = nDoF;
         nPoints    = 1;
 
         OneDFDESolver *tmpSolver =
-          new OneDFDESolver(nVariables, nPoints, nTimeSteps, test);
+            new OneDFDESolver(nVariables, nPoints, nTimeSteps, test);
 
         ode.DefineOdeRhs(&OneDFDESolver::EvaluateFDETerm, tmpSolver);
 
-        solverSharedPtr = std::shared_ptr<DemoSolver> (tmpSolver);
+        solverSharedPtr = std::shared_ptr<DemoSolver>(tmpSolver);
     }
-    else if( tiScheme->GetIntegrationSchemeType() == eExponential )
+    else if (tiScheme->GetIntegrationSchemeType() == eExponential)
     {
         nVariables = nDoF;
         nPoints    = 1;
 
         OneDSinusoidSolver *tmpSolver =
-          new OneDSinusoidSolver(nVariables, nPoints, nTimeSteps, test);
+            new OneDSinusoidSolver(nVariables, nPoints, nTimeSteps, test);
 
         ode.DefineOdeRhs(&OneDSinusoidSolver::EvaluateSinusoidTerm, tmpSolver);
 
-        solverSharedPtr = std::shared_ptr<DemoSolver> (tmpSolver);
+        solverSharedPtr = std::shared_ptr<DemoSolver>(tmpSolver);
 
         // For exponential integrators, the coefficents for each
         // variable needs to be set.
-        ((EulerExponentialTimeIntegrationScheme *) (&(*tiScheme)))->
-            SetExponentialCoefficients(tmpSolver->GetLambda());
+        ((EulerExponentialTimeIntegrationScheme *)(&(*tiScheme)))
+            ->SetExponentialCoefficients(tmpSolver->GetLambda());
     }
     else
     {
@@ -676,7 +674,8 @@ int main(int argc, char *argv[])
         nPoints    = nDoF;
 
         OneDFiniteDiffAdvDiffSolver *tmpSolver =
-          new OneDFiniteDiffAdvDiffSolver(nVariables, nPoints, nTimeSteps, test);
+            new OneDFiniteDiffAdvDiffSolver(nVariables, nPoints, nTimeSteps,
+                                            test);
 
         // After this spatial discretisation, the PDE has actually
         // been reduced (through the method-of-lines) to an ODE. In
@@ -693,7 +692,7 @@ int main(int argc, char *argv[])
         ode.DefineImplicitSolve(&OneDFiniteDiffAdvDiffSolver::HelmSolve,
                                 tmpSolver);
 
-        solverSharedPtr = std::shared_ptr<DemoSolver> (tmpSolver);
+        solverSharedPtr = std::shared_ptr<DemoSolver>(tmpSolver);
     }
 
     ode.DefineProjection(&DemoSolver::Project, solverSharedPtr);
@@ -711,9 +710,9 @@ int main(int argc, char *argv[])
     // Array containing the approximate solution
     Array<OneD, Array<OneD, double>> approxSol(nVariables);
     // Array containing the exact solution
-    Array<OneD, Array<OneD, double>>  exactSol(nVariables);
+    Array<OneD, Array<OneD, double>> exactSol(nVariables);
 
-    for( int k=0; k<nVariables; ++k )
+    for (int k = 0; k < nVariables; ++k)
     {
         approxSol[k] = Array<OneD, double>(nPoints);
         exactSol[k]  = Array<OneD, double>(nPoints);
@@ -723,16 +722,16 @@ int main(int argc, char *argv[])
     double t0 = solverSharedPtr->GetInitialTime();
 
     solverSharedPtr->EvaluateExactSolution(approxSol, t0);
-    solverSharedPtr->EvaluateExactSolution(exactSol,  t0);
+    solverSharedPtr->EvaluateExactSolution(exactSol, t0);
 
     // 3.1 Initialize the time-integration scheme.
     double dt = solverSharedPtr->GetDeltaT();
 
     // The Fractional in Time needs the end time whereas the GLMs need
     // the initial time.
-    if( tiScheme->GetIntegrationSchemeType() == eFractionalInTime )
+    if (tiScheme->GetIntegrationSchemeType() == eFractionalInTime)
     {
-        double t1 = solverSharedPtr->GetFinialTime();
+        double t1 = solverSharedPtr->GetFinalTime();
         tiScheme->InitializeScheme(dt, approxSol, t1, ode);
     }
     else
@@ -742,22 +741,22 @@ int main(int argc, char *argv[])
 
     // 4. Open a file for writing the solution
     std::ofstream outfile, errorfile, L2Normfile;
-    outfile.open( solverSharedPtr->GetFileName() + ".dat");
-    errorfile.open( solverSharedPtr->GetFileName() + "Error.dat");
-    L2Normfile.open( solverSharedPtr->GetFileName() + "L2Norm.dat");
+    outfile.open(solverSharedPtr->GetFileName() + ".dat");
+    errorfile.open(solverSharedPtr->GetFileName() + "Error.dat");
+    L2Normfile.open(solverSharedPtr->GetFileName() + "L2Norm.dat");
 
     // Save the scheme name for outputting.
-    solverSharedPtr->SetSchemeName( tiScheme->GetName() );
+    solverSharedPtr->SetSchemeName(tiScheme->GetName());
 
     // Time step and time values
     int timeStep = 0;
-    double time = t0;
+    double time  = t0;
 
     LibUtilities::Timer timer;
     NekDouble intTime = 0.0;
 
     // Write the time step and time
-    if( printS || L2 )
+    if (printS || L2)
         std::cout << "Time step: " << timeStep << "  "
                   << "Time: " << time << std::endl;
 
@@ -766,11 +765,11 @@ int main(int argc, char *argv[])
     double L2Norm = solverSharedPtr->EvaluateL2Error(exactSol, approxSol, L2);
 
     // Write the initial conditions, error, and L2 Norm to the output file.
-    solverSharedPtr->AppendOutput( outfile, errorfile, L2Normfile,
-                                   0, 0, exactSol, approxSol, L2Norm);
+    solverSharedPtr->AppendOutput(outfile, errorfile, L2Normfile, 0, 0,
+                                  exactSol, approxSol, L2Norm);
 
     // 5. Do the time integration.
-    while( timeStep < nTimeSteps )
+    while (timeStep < nTimeSteps)
     {
         // Time integration for one time step
         timer.Start();
@@ -791,24 +790,30 @@ int main(int argc, char *argv[])
         // true the values will be dumped to screen.
 
         // Write the time step and time
-        if( printS || L2 )
+        if (printS || L2)
+        {
             std::cout << "Time step: " << timeStep << "  "
                       << "Time: " << time << std::endl;
+        }
 
         solverSharedPtr->GetMinMaxValues(exactSol, approxSol, printS);
 
         L2Norm = solverSharedPtr->EvaluateL2Error(exactSol, approxSol, L2);
 
         // Save the solutions, error, and L2 Norm to the output file
-        solverSharedPtr->AppendOutput(outfile, errorfile, L2Normfile,
-                                      timeStep, time, exactSol, approxSol, L2Norm);
+        solverSharedPtr->AppendOutput(outfile, errorfile, L2Normfile, timeStep,
+                                      time, exactSol, approxSol, L2Norm);
     }
 
     // Printing preable so the user knows what was done.
-    if( printBT )
-      tiScheme->printFull(std::cout);
+    if (printBT)
+    {
+        tiScheme->printFull(std::cout);
+    }
     else
-      std::cout << tiScheme << std::endl;
+    {
+        std::cout << tiScheme << std::endl;
+    }
 
     std::cout << "Number of time steps performed: " << timeStep << std::endl
               << "Time increment: " << dt << std::endl
@@ -829,10 +834,9 @@ int main(int argc, char *argv[])
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void DemoSolver::Project(
-    const Array<OneD, const Array<OneD, double>> &inarray,
-          Array<OneD,       Array<OneD, double>> &outarray,
-    const NekDouble time) const
+void DemoSolver::Project(const Array<OneD, const Array<OneD, double>> &inarray,
+                         Array<OneD, Array<OneD, double>> &outarray,
+                         const NekDouble time) const
 {
     boost::ignore_unused(time);
 
@@ -850,15 +854,18 @@ void DemoSolver::Project(
 // norm).
 void DemoSolver::GetMinMaxValues(
     const Array<OneD, const Array<OneD, double>> &exact,
-    const Array<OneD, const Array<OneD, double>> &approx,
-    bool print )
+    const Array<OneD, const Array<OneD, double>> &approx, bool print)
 {
     // Get the min and max value and write the exact solution
-    if( print )
+    if (print)
+    {
         std::cout << "  exact       ";
+    }
 
-    if( print && m_nVars > 1 && m_nPoints > 1 )
+    if (print && m_nVars > 1 && m_nPoints > 1)
+    {
         std::cout << std::endl;
+    }
 
     for (int k = 0; k < m_nVars; k++)
     {
@@ -867,29 +874,43 @@ void DemoSolver::GetMinMaxValues(
             // Get the min/max values only from the exact solution
             // becasue the approximate solution can blow up which
             // casues the axis to be infinite.
-            if( m_minValue > exact[k][i] )
+            if (m_minValue > exact[k][i])
+            {
                 m_minValue = exact[k][i];
+            }
 
-            if( m_maxValue < exact[k][i] )
+            if (m_maxValue < exact[k][i])
+            {
                 m_maxValue = exact[k][i];
+            }
 
-            if( print )
+            if (print)
+            {
                 std::cout << exact[k][i] << "  ";
+            }
         }
 
-        if( print && m_nVars > 1 && m_nPoints > 1 )
+        if (print && m_nVars > 1 && m_nPoints > 1)
+        {
             std::cout << std::endl;
+        }
     }
 
-    if( print )
+    if (print)
+    {
         std::cout << std::endl;
+    }
 
     // Get the min and max value and write the approximate solution
-    if( print )
+    if (print)
+    {
         std::cout << "  approximate ";
+    }
 
-    if( print && m_nVars > 1 && m_nPoints > 1 )
+    if (print && m_nVars > 1 && m_nPoints > 1)
+    {
         std::cout << std::endl;
+    }
 
     for (int k = 0; k < m_nVars; k++)
     {
@@ -899,24 +920,29 @@ void DemoSolver::GetMinMaxValues(
             // solution becasue it can blow up which casues the axis
             // to be infinite.
 
-            if( print )
+            if (print)
+            {
                 std::cout << approx[k][i] << "  ";
+            }
         }
 
-        if( print && m_nVars > 1 && m_nPoints > 1 )
+        if (print && m_nVars > 1 && m_nPoints > 1)
+        {
             std::cout << std::endl;
+        }
     }
 
-    if( print )
+    if (print)
+    {
         std::cout << std::endl;
+    }
 }
 
 // Calculate the Relative Error L2 Norm (as opposed to the absolute L2
 // norm).
 double DemoSolver::EvaluateL2Error(
     const Array<OneD, const Array<OneD, double>> &exact,
-    const Array<OneD, const Array<OneD, double>> &approx,
-    bool print )
+    const Array<OneD, const Array<OneD, double>> &approx, bool print)
 {
     // Calcualate the sum of squares for the L2 Norm.
     double a = 0.0;
@@ -928,11 +954,15 @@ double DemoSolver::EvaluateL2Error(
         {
             double diff = approx[k][i] - exact[k][i];
 
-            if( m_minError > diff )
+            if (m_minError > diff)
+            {
                 m_minError = diff;
+            }
 
-            if( m_maxError < diff )
+            if (m_maxError < diff)
+            {
                 m_maxError = diff;
+            }
 
             a += diff * diff;
             b += exact[k][i] * exact[k][i];
@@ -942,16 +972,20 @@ double DemoSolver::EvaluateL2Error(
     // Calculate the relative error L2 Norm.
     double norm = sqrt(a / b);
 
-    if( m_minL2Norm > norm )
-      m_minL2Norm = norm;
-
-    if( m_maxL2Norm < norm )
-      m_maxL2Norm = norm;
-
-    if( print )
+    if (m_minL2Norm > norm)
     {
-        ASSERTL1( b > DBL_EPSILON,
-                  "Exact solution is near zero. L2 Norm is invalid" );
+        m_minL2Norm = norm;
+    }
+
+    if (m_maxL2Norm < norm)
+    {
+        m_maxL2Norm = norm;
+    }
+
+    if (print)
+    {
+        ASSERTL1(b > DBL_EPSILON,
+                 "Exact solution is near zero. L2 Norm is invalid");
 
         std::cout << "L 2 error :" << norm << std::endl;
     }
@@ -964,7 +998,7 @@ void DemoSolver::AppendOutput(
     int timeStepNumber, const NekDouble time,
     const Array<OneD, const Array<OneD, double>> &exact,
     const Array<OneD, const Array<OneD, double>> &approx,
-    const double L2Norm ) const
+    const double L2Norm) const
 {
     if (timeStepNumber == 0)
     {
@@ -974,10 +1008,8 @@ void DemoSolver::AppendOutput(
                 << "# a blank line between each data set for each time step)."
                 << std::endl
                 << "#" << std::endl
-                << "# Delta T: " << m_dt
-                << std::endl
-                << "# Method:  " << m_schemeName
-                << std::endl
+                << "# Delta T: " << m_dt << std::endl
+                << "# Method:  " << m_schemeName << std::endl
                 << "#" << std::endl
                 << "# There are 3 columns with the following headers:"
                 << std::endl
@@ -989,10 +1021,8 @@ void DemoSolver::AppendOutput(
                   << "# a blank line between each data set for each time step)."
                   << std::endl
                   << "#" << std::endl
-                  << "# Delta T: " << m_dt
-                  << std::endl
-                  << "# Method:  " << m_schemeName
-                  << std::endl
+                  << "# Delta T: " << m_dt << std::endl
+                  << "# Method:  " << m_schemeName << std::endl
                   << "#" << std::endl
                   << "# There are 2 columns with the following headers:"
                   << std::endl
@@ -1000,104 +1030,87 @@ void DemoSolver::AppendOutput(
 
         // Save some data provenance and other useful info in output file...
         L2Normfile << "# Data in this file consists of " << m_nTimeSteps
-                   << " time steps."
-                   << std::endl
+                   << " time steps." << std::endl
                    << "#" << std::endl
-                   << "# Delta T: " << m_dt
-                   << std::endl
-                   << "# Method:  " << m_schemeName
-                   << std::endl
+                   << "# Delta T: " << m_dt << std::endl
+                   << "# Method:  " << m_schemeName << std::endl
                    << "#" << std::endl
                    << "# There are 2 columns with the following headers:"
                    << std::endl
                    << "#" << std::endl
-                   << "#     Time      |      L2 Norm"
-                   << std::endl
+                   << "#     Time      |      L2 Norm" << std::endl
                    << "#" << std::endl;
 
-        if( m_nVars > 1 )
+        if (m_nVars > 1)
         {
             outfile << "#   Variable";
             errorfile << "#   Variable";
         }
-        else if( m_nPoints > 1 )
+        else if (m_nPoints > 1)
         {
             outfile << "#   Location";
             errorfile << "#   Location";
         }
 
-        outfile << "  |  Exact Solution  |  Approximate Solution"
+        outfile << "  |  Exact Solution  |  Approximate Solution" << std::endl
+                << "#" << std::endl
                 << std::endl
-                << "#"
-                << std::endl << std::endl
-                << "# Initial condition (at time " << time << "):"
-                << std::endl;
+                << "# Initial condition (at time " << time << "):" << std::endl;
 
-        errorfile << "  |  Error (approx-exact)"
+        errorfile << "  |  Error (approx-exact)" << std::endl
+                  << "#" << std::endl
                   << std::endl
-                  << "#"
-                  << std::endl << std::endl
-                  << "# Initial condition (at time " << time << "):"
-                  << std::endl;
+                  << "# Initial condition (at time " << time
+                  << "):" << std::endl;
     }
     else
     {
         outfile << "# Time step: " << timeStepNumber << ", time: " << time
                 << std::endl;
         errorfile << "# Time step: " << timeStepNumber << ", time: " << time
-                << std::endl;
+                  << std::endl;
     }
 
-    L2Normfile << std::scientific
-               << std::setw(17) << std::setprecision(10)
-               << time << "  " << L2Norm
-               << std::endl;
+    L2Normfile << std::scientific << std::setw(17) << std::setprecision(10)
+               << time << "  " << L2Norm << std::endl;
 
     for (int k = 0; k < m_nVars; k++)
     {
         for (int i = 0; i < m_nPoints; i++)
         {
-            if( m_nVars > 1 )
+            if (m_nVars > 1)
             {
-                outfile << std::scientific
-                        << std::setw(17) << std::setprecision(10)
-                        << k
-                        << "  " << exact[k][i] << "  " << approx[k][i]
-                        << std::endl;
+                outfile << std::scientific << std::setw(17)
+                        << std::setprecision(10) << k << "  " << exact[k][i]
+                        << "  " << approx[k][i] << std::endl;
 
-                errorfile << std::scientific
-                          << std::setw(17) << std::setprecision(10)
-                          << k
-                          << "  " << approx[k][i] - exact[k][i]
-                          << std::endl;
+                errorfile << std::scientific << std::setw(17)
+                          << std::setprecision(10) << k << "  "
+                          << approx[k][i] - exact[k][i] << std::endl;
             }
-            else if( m_nPoints > 1 )
+            else if (m_nPoints > 1)
             {
-                outfile << std::scientific
-                        << std::setw(17) << std::setprecision(10)
-                        << m_x0 + i * m_dx
-                        << "  " << exact[k][i] << "  " << approx[k][i]
-                        << std::endl;
+                outfile << std::scientific << std::setw(17)
+                        << std::setprecision(10) << m_x0 + i * m_dx << "  "
+                        << exact[k][i] << "  " << approx[k][i] << std::endl;
 
-                errorfile << std::scientific
-                          << std::setw(17) << std::setprecision(10)
-                          << m_x0 + i * m_dx
-                          << "  " << approx[k][i] - exact[k][i]
-                          << std::endl;
+                errorfile << std::scientific << std::setw(17)
+                          << std::setprecision(10) << m_x0 + i * m_dx << "  "
+                          << approx[k][i] - exact[k][i] << std::endl;
             }
         }
     }
 
     // Gnuplot uses two blank lines between each set of data.
-    outfile   << std::endl << std::endl;
+    outfile << std::endl << std::endl;
     errorfile << std::endl << std::endl;
 }
 
 void DemoSolver::GenerateGnuplotScript(const std::string &method) const
 {
-    std::vector< std::string > fileSuffix{"", "Error", "L2Norm"};
+    std::vector<std::string> fileSuffix{"", "Error", "L2Norm"};
 
-    for( int j=0; j<3; ++j )
+    for (int j = 0; j < 3; ++j)
     {
         std::ofstream outfile;
         outfile.open(m_fileName + fileSuffix[j] + ".p");
@@ -1107,14 +1120,14 @@ void DemoSolver::GenerateGnuplotScript(const std::string &method) const
                 << "unset label" << std::endl
                 << "set xtic auto" << std::endl
                 << "set ytic auto" << std::endl;
-          // FIXME
-          // << "set title 'Finite Difference Solution to the 1D "
-          // << "advection-diffusion equation "
-        if( j == 0 )
+        // FIXME
+        // << "set title 'Finite Difference Solution to the 1D "
+        // << "advection-diffusion equation "
+        if (j == 0)
         {
             outfile << "set title 'Approximate vs exact solution using method ";
 
-            if( m_nVars > 1 )
+            if (m_nVars > 1)
                 outfile << method << "'" << std::endl
                         << "set xlabel 'variable'" << std::endl
                         << "set ylabel 'u'" << std::endl;
@@ -1123,11 +1136,11 @@ void DemoSolver::GenerateGnuplotScript(const std::string &method) const
                         << "set xlabel 'x'" << std::endl
                         << "set ylabel 'u'" << std::endl;
         }
-        else if( j == 0 )
+        else if (j == 0)
         {
             outfile << "set title 'Error using method ";
 
-            if( m_nVars > 1 )
+            if (m_nVars > 1)
                 outfile << method << "'" << std::endl
                         << "set xlabel 'variable'" << std::endl
                         << "set ylabel 'u'" << std::endl;
@@ -1136,7 +1149,7 @@ void DemoSolver::GenerateGnuplotScript(const std::string &method) const
                         << "set xlabel 'x'" << std::endl
                         << "set ylabel 'u'" << std::endl;
         }
-        else if( j == 1 )
+        else if (j == 1)
         {
             outfile << "set title 'L2Norm using method ";
 
@@ -1148,34 +1161,34 @@ void DemoSolver::GenerateGnuplotScript(const std::string &method) const
         double minValue;
         double maxValue;
 
-        if( j == 0 )
+        if (j == 0)
         {
             minValue = m_minValue;
             maxValue = m_maxValue;
         }
-        else if( j == 1 )
+        else if (j == 1)
         {
             minValue = m_minError;
             maxValue = m_maxError;
         }
-        else if( j == 2 )
+        else if (j == 2)
         {
             minValue = m_minL2Norm;
             maxValue = m_maxL2Norm;
         }
 
-        if( j == 0 || j == 1 )
+        if (j == 0 || j == 1)
         {
-            if( m_nVars > 1 )
+            if (m_nVars > 1)
             {
-                outfile << "set xr [" << 0        << ":" << m_nVars-1<< "]"
+                outfile << "set xr [" << 0 << ":" << m_nVars - 1 << "]"
                         << std::endl
                         << "set yr [" << minValue << ":" << maxValue << "]"
                         << std::endl;
             }
-            else if( m_nPoints > 1 )
+            else if (m_nPoints > 1)
             {
-                outfile << "set xr [" << m_x0     << ":" << m_xend   << "]"
+                outfile << "set xr [" << m_x0 << ":" << m_xend << "]"
                         << std::endl
                         << "set yr [" << minValue << ":" << maxValue << "]"
                         << std::endl;
@@ -1183,44 +1196,38 @@ void DemoSolver::GenerateGnuplotScript(const std::string &method) const
         }
         else
         {
-            outfile << "set xr [" << m_t0     << ":" << m_tend   << "]"
-                    << std::endl
+            outfile << "set xr [" << m_t0 << ":" << m_tend << "]" << std::endl
                     << "set yr [" << minValue << ":" << maxValue << "]"
                     << std::endl;
 
-            outfile << "plot '"
-                    << m_fileName << fileSuffix[j] << ".dat' using 1:2 index "
-                    << 0 << " title 'L2 Norm' with linespoints "
-                    << std::endl;
+            outfile << "plot '" << m_fileName << fileSuffix[j]
+                    << ".dat' using 1:2 index " << 0
+                    << " title 'L2 Norm' with linespoints " << std::endl;
         }
 
         for (int i = 0; i <= m_nTimeSteps; i++)
         {
             double t = m_t0 + (i * m_dt);
 
-            if( j == 0 )
+            if (j == 0)
             {
-                outfile << "plot '"
-                        << m_fileName << fileSuffix[j] << ".dat' using 1:2 index "
-                        << i << " title 'Exact Solution (t=" << t
+                outfile << "plot '" << m_fileName << fileSuffix[j]
+                        << ".dat' using 1:2 index " << i
+                        << " title 'Exact Solution (t=" << t
                         << ")' with linespoints "
-                        << ", '"
-                        << m_fileName << fileSuffix[j] << ".dat' using 1:3 index "
-                        << i << " title 'Approximate Solution (t=" << t
-                        << ")' with linespoints "
-                        << std::endl
-                        << "pause " << 4.0 / m_nTimeSteps
-                        << std::endl;
+                        << ", '" << m_fileName << fileSuffix[j]
+                        << ".dat' using 1:3 index " << i
+                        << " title 'Approximate Solution (t=" << t
+                        << ")' with linespoints " << std::endl
+                        << "pause " << 4.0 / m_nTimeSteps << std::endl;
             }
-            else if( j == 1 )
+            else if (j == 1)
             {
-                outfile << "plot '"
-                        << m_fileName << fileSuffix[j] << ".dat' using 1:2 index "
-                        << i << " title 'Error (t=" << t
-                        << ")' with linespoints "
+                outfile << "plot '" << m_fileName << fileSuffix[j]
+                        << ".dat' using 1:2 index " << i
+                        << " title 'Error (t=" << t << ")' with linespoints "
                         << std::endl
-                        << "pause " << 4.0 / m_nTimeSteps
-                        << std::endl;
+                        << "pause " << 4.0 / m_nTimeSteps << std::endl;
             }
         }
 
@@ -1230,7 +1237,6 @@ void DemoSolver::GenerateGnuplotScript(const std::string &method) const
         outfile.close();
     }
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 void OneDFiniteDiffAdvDiffSolver::HelmSolve(
@@ -1249,9 +1255,8 @@ void OneDFiniteDiffAdvDiffSolver::HelmSolve(
     // - Next, we solve for the interior grid-points. The associated tridiagonal
     //   system is solved based upon the Thomas algorithm
     double a = -m_D * lambda / (m_dx * m_dx); // off diagonal term
-    double b = 1.0 +
-               2.0 * lambda * m_D /
-                   (m_dx * m_dx); // diagonal term of triadiagonal matrix
+    double b = 1.0 + 2.0 * lambda * m_D /
+                         (m_dx * m_dx); // diagonal term of triadiagonal matrix
 
     int nIntPoints = m_nPoints - 2;
 
@@ -1267,15 +1272,15 @@ void OneDFiniteDiffAdvDiffSolver::HelmSolve(
         solveTriDiagMatrix(nIntPoints, a, b, C, invD_C);
 
         outarray[k][0] =
-          (inarray[k][0] - a * (invD_f[0] + invD_f[nIntPoints - 1])) /
-          (b - a * (invD_C[0] + invD_C[nIntPoints - 1]));
+            (inarray[k][0] - a * (invD_f[0] + invD_f[nIntPoints - 1])) /
+            (b - a * (invD_C[0] + invD_C[nIntPoints - 1]));
         outarray[k][m_nPoints - 1] = outarray[k][0];
 
         Array<OneD, double> f(nIntPoints);
         for (int i = 0; i < nIntPoints; i++)
-          {
+        {
             f[i] = inarray[k][i + 1];
-          }
+        }
         f[0] -= outarray[k][0] * a;
         f[nIntPoints - 1] -= outarray[k][0] * a;
 
@@ -1287,8 +1292,7 @@ void OneDFiniteDiffAdvDiffSolver::HelmSolve(
 
 void OneDFiniteDiffAdvDiffSolver::EvaluateAdvectionTerm(
     const Array<OneD, const Array<OneD, double>> &inarray,
-          Array<OneD,       Array<OneD, double>> &outarray,
-    const NekDouble time) const
+    Array<OneD, Array<OneD, double>> &outarray, const NekDouble time) const
 {
     boost::ignore_unused(time);
 
@@ -1306,14 +1310,16 @@ void OneDFiniteDiffAdvDiffSolver::EvaluateAdvectionTerm(
             // 2nd point (index 1) and 2nd to last point are used.
 
             // Central differences:
-            outarray[k][0] =
-              -m_V * (inarray[k][1] - inarray[k][m_nPoints - 2]) / (2.0 * m_dx);
+            outarray[k][0] = -m_V *
+                             (inarray[k][1] - inarray[k][m_nPoints - 2]) /
+                             (2.0 * m_dx);
             outarray[k][m_nPoints - 1] = outarray[k][0];
 
             for (int i = 1; i < m_nPoints - 1; i++)
             {
-                outarray[k][i] =
-                  -m_V * (inarray[k][i + 1] - inarray[k][i - 1]) / (2.0 * m_dx);
+                outarray[k][i] = -m_V *
+                                 (inarray[k][i + 1] - inarray[k][i - 1]) /
+                                 (2.0 * m_dx);
             }
         }
         else
@@ -1322,7 +1328,7 @@ void OneDFiniteDiffAdvDiffSolver::EvaluateAdvectionTerm(
             for (int i = 1; i < m_nPoints; i++)
             {
                 outarray[k][i] =
-                  -m_V * (inarray[k][i] - inarray[k][i - 1]) / (m_dx);
+                    -m_V * (inarray[k][i] - inarray[k][i - 1]) / (m_dx);
             }
 
             outarray[k][0] = outarray[k][m_nPoints - 1];
@@ -1331,9 +1337,8 @@ void OneDFiniteDiffAdvDiffSolver::EvaluateAdvectionTerm(
 }
 
 void OneDFiniteDiffAdvDiffSolver::solveTriDiagMatrix(
-    int n, double a, double b,
-    const Array<OneD, const double> &inarray,
-          Array<OneD,       double> &outarray) const
+    int n, double a, double b, const Array<OneD, const double> &inarray,
+    Array<OneD, double> &outarray) const
 {
     // Implementation of the Thomas algorithm for Tridiaginol systems
     Array<OneD, double> cprime(n);
@@ -1363,7 +1368,7 @@ void OneDFiniteDiffAdvDiffSolver::EvaluateExactSolution(
     {
         for (int i = 0; i < m_nPoints; i++)
         {
-            double x = m_x0 + i * m_dx;
+            double x  = m_x0 + i * m_dx;
             double wn = 2.0 * M_PI * m_wavenumber;
             outarray[k][i] =
                 exp(-m_D * wn * wn * time) * sin(wn * (x - m_V * time));
@@ -1374,8 +1379,7 @@ void OneDFiniteDiffAdvDiffSolver::EvaluateExactSolution(
 ///////////////////////////////////////////////////////////////////////////////
 void OneDSinusoidSolver::EvaluateSinusoidTerm(
     const Array<OneD, const Array<OneD, double>> &inarray,
-          Array<OneD,       Array<OneD, double>> &outarray,
-    const NekDouble time) const
+    Array<OneD, Array<OneD, double>> &outarray, const NekDouble time) const
 {
     boost::ignore_unused(inarray);
 
@@ -1383,7 +1387,7 @@ void OneDSinusoidSolver::EvaluateSinusoidTerm(
     {
         for (int i = 0; i < m_nPoints; i++)
         {
-            outarray[k][i] = sin(m_freqs[k]*time + m_phases[k]);
+            outarray[k][i] = sin(m_freqs[k] * time + m_phases[k]);
         }
     }
 }
@@ -1391,7 +1395,7 @@ void OneDSinusoidSolver::EvaluateSinusoidTerm(
 void OneDSinusoidSolver::EvaluateExactSolution(
     Array<OneD, Array<OneD, double>> &outarray, const NekDouble time) const
 {
-    if( time == GetInitialTime() )
+    if (time == GetInitialTime())
     {
         for (int k = 0; k < m_nVars; k++)
         {
@@ -1418,46 +1422,48 @@ void OneDSinusoidSolver::EvaluateExactSolution(
         {
             for (int i = 0; i < m_nPoints; i++)
             {
-                double v = cos( m_phases[k] );
-                double w = sin( m_phases[k] );
+                double v = cos(m_phases[k]);
+                double w = sin(m_phases[k]);
 
-                double sinft = sin(m_freqs[k]*time);
-                double cosft = cos(m_freqs[k]*time);
+                double sinft = sin(m_freqs[k] * time);
+                double cosft = cos(m_freqs[k] * time);
 
-                double lambdaFreq2 =
-                  m_freqs[k]*m_freqs[k] + m_lambda[k].real()*m_lambda[k].real();
+                double lambdaFreq2 = m_freqs[k] * m_freqs[k] +
+                                     m_lambda[k].real() * m_lambda[k].real();
 
                 outarray[k][i] =
-                  // exp(lambda*T) term
-                  (std::exp(m_lambda[k].real() * time) *
-                   (m_z0[k] + (m_lambda[k].real() * w + m_freqs[k] * v) / lambdaFreq2)) +
+                    // exp(lambda*T) term
+                    (std::exp(m_lambda[k].real() * time) *
+                     (m_z0[k] + (m_lambda[k].real() * w + m_freqs[k] * v) /
+                                    lambdaFreq2)) +
 
-                  // sin(f*T) term
-                  ((( m_freqs[k] * w - m_lambda[k].real() * v) / lambdaFreq2) * sinft) +
+                    // sin(f*T) term
+                    (((m_freqs[k] * w - m_lambda[k].real() * v) / lambdaFreq2) *
+                     sinft) +
 
-                  // cos(f*T) term
-                  (((-m_lambda[k].real() * w - m_freqs[k] * v) / lambdaFreq2) * cosft);
+                    // cos(f*T) term
+                    (((-m_lambda[k].real() * w - m_freqs[k] * v) /
+                      lambdaFreq2) *
+                     cosft);
             }
         }
     }
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////
 void OneDFDESolver::EvaluateFDETerm(
     const Array<OneD, const Array<OneD, double>> &inarray,
-          Array<OneD,       Array<OneD, double>> &outarray,
-    const NekDouble time) const
+    Array<OneD, Array<OneD, double>> &outarray, const NekDouble time) const
 {
     boost::ignore_unused(inarray, time);
 
     for (int i = 0; i < m_nVars; i++)
     {
-        NekDouble w = (NekDouble) (m_nVars-i) / (NekDouble) (m_nVars);
+        NekDouble w = (NekDouble)(m_nVars - i) / (NekDouble)(m_nVars);
 
         for (int j = 0; j < m_nPoints; j++)
         {
-            outarray[i][j] = w * tgamma( m_alpha + 1.0 );
+            outarray[i][j] = w * tgamma(m_alpha + 1.0);
         }
     }
 }
@@ -1474,11 +1480,11 @@ void OneDFDESolver::EvaluateExactSolution(
     // Compute right-hand side of the normal equations
     for (int i = 0; i < m_nVars; i++)
     {
-        NekDouble w = (NekDouble) (m_nVars-i) / (NekDouble) (m_nVars);
+        NekDouble w = (NekDouble)(m_nVars - i) / (NekDouble)(m_nVars);
 
         for (int j = 0; j < m_nPoints; j++)
         {
-            outarray[i][j] = m_u0[i][j] + w * std::pow( time, m_alpha );
+            outarray[i][j] = m_u0[i][j] + w * std::pow(time, m_alpha);
         }
     }
 }

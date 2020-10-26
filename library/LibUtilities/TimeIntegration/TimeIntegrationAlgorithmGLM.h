@@ -52,8 +52,8 @@ namespace LibUtilities
 class TimeIntegrationAlgorithmGLM
 {
 public:
-    TimeIntegrationAlgorithmGLM(const TimeIntegrationScheme *parent):
-        m_parent(parent)
+    TimeIntegrationAlgorithmGLM(const TimeIntegrationScheme *parent)
+        : m_parent(parent)
     {
     }
 
@@ -62,25 +62,20 @@ public:
     }
 
     /**
-     * \brief This function initialises the time integration
-     * scheme
+     * \brief This function initialises the time integration scheme.
      *
-     * Given the solution at the initial time level
-     * \f$\boldsymbol{y}(t_0)\f$, this function generates the
-     * vectors \f$\boldsymbol{y}^{[n]}\f$ and \f$t^{[n]}\f$
-     * needed to evaluate the time integration scheme
-     * formulated as a General Linear Method. These vectors
-     * are embedded in an object of the class
-     * TimeIntegrationSolutionGLM. This class is the abstraction
-     * of the input and output vectors of the General Linear
-     * Method.
+     * Given the solution at the initial time level \f$\boldsymbol{y}(t_0)\f$,
+     * this function generates the vectors \f$\boldsymbol{y}^{[n]}\f$ and
+     * \f$t^{[n]}\f$ needed to evaluate the time integration scheme formulated
+     * as a General Linear Method. These vectors are embedded in an object of
+     * the class TimeIntegrationSolutionGLM. This class is the abstraction of
+     * the input and output vectors of the General Linear Method.
      *
-     * For single-step methods, this function is trivial as it
-     * just wraps a TimeIntegrationSolutionGLM object around the
-     * given initial values and initial time.  However, for
-     * multistep methods, actual time stepping is being done
-     * to evaluate the necessary parameters at multiple time
-     * levels needed to start the actual integration.
+     * For single-step methods, this function is trivial as it just wraps a
+     * TimeIntegrationSolutionGLM object around the given initial values and
+     * initial time.  However, for multistep methods, actual time stepping is
+     * being done to evaluate the necessary parameters at multiple time levels
+     * needed to start the actual integration.
      *
      * \param timestep The size of the timestep, i.e. \f$\Delta t\f$.
      * \param time on input: the initial time, i.e. \f$t_0\f$.
@@ -96,14 +91,12 @@ public:
      *       to evaluate the right hand side \f$f(t,\boldsymbol{y})\f$ of the
      * ODE.
      * \param y_0 the initial value \f$\boldsymbol{y}(t_0)\f$
-     * \return An object of the class TimeIntegrationSolutionGLM which represents
-     * the vectors \f$\boldsymbol{y}^{[n]}\f$ and \f$t^{[n]}\f$
-     *  that can be used to start the actual integration.
+     * \return An object of the class TimeIntegrationSolutionGLM which
+     * represents the vectors \f$\boldsymbol{y}^{[n]}\f$ and \f$t^{[n]}\f$ that
+     * can be used to start the actual integration.
      */
     LUE TimeIntegrationSolutionGLMSharedPtr InitializeData(
-        const NekDouble deltaT,
-        ConstDoubleArray &y_0,
-        const NekDouble time,
+        const NekDouble deltaT, ConstDoubleArray &y_0, const NekDouble time,
         const TimeIntegrationSchemeOperators &op);
 
     /**
@@ -131,16 +124,13 @@ public:
      *    (which in fact is also embedded in the argument y).
      */
     LUE ConstDoubleArray &TimeIntegrate(
-        const NekDouble deltaT,
-        TimeIntegrationSolutionGLMSharedPtr &y,
+        const NekDouble deltaT, TimeIntegrationSolutionGLMSharedPtr &y,
         const TimeIntegrationSchemeOperators &op);
 
     // Does the actual multi-stage multi-step integration.
-    LUE void TimeIntegrate(const NekDouble deltaT,
-                           ConstTripleArray &y_old,
-                           ConstSingleArray &t_old,
-                           TripleArray      &y_new,
-                           SingleArray      &t_new,
+    LUE void TimeIntegrate(const NekDouble deltaT, ConstTripleArray &y_old,
+                           ConstSingleArray &t_old, TripleArray &y_new,
+                           SingleArray &t_new,
                            const TimeIntegrationSchemeOperators &op);
 
     inline TimeIntegrationSchemeType GetIntegrationSchemeType() const
@@ -177,7 +167,7 @@ public:
     std::string m_name;
     std::string m_variant;
     unsigned int m_order{0};
-    std::vector< NekDouble > m_freeParams;
+    std::vector<NekDouble> m_freeParams;
 
     // Type of time integration scheme (Explicit, Implicit, IMEX, etc)
     TimeIntegrationSchemeType m_schemeType{eNoTimeIntegrationSchemeType};
@@ -190,7 +180,7 @@ public:
                                           // to VALUES at previous time levels
     unsigned int m_numMultiStepDerivs{0}; // number of entries in input and
                                           // output vector that correspond
-                                          // to DERIVATIVES at previous time levels
+                                          // to DERIVATIVES at previous levels
     Array<OneD, unsigned int>
         m_timeLevelOffset; // denotes to which time-level the entries in both
                            // input and output vector correspond, e.g.
@@ -209,7 +199,7 @@ public:
     Array<TwoD, NekDouble> m_V;
 
     // Arrays used for the exponential integrators.
-    Array<OneD, std::complex<NekDouble>> m_L;  // Lambda
+    Array<OneD, std::complex<NekDouble>> m_L; // Lambda
 
     Array<OneD, Array<TwoD, NekDouble>> m_A_phi;
     Array<OneD, Array<TwoD, NekDouble>> m_B_phi;
@@ -223,29 +213,29 @@ public:
     NekDouble m_lastDeltaT{0}; /// Last delta T
     NekDouble m_lastNVars{0};  /// Last number of vars
 
-    int  m_nvars;       ///< The number of variables in integration scheme.
-    int  m_npoints;     ///< The size of inner data which is stored for reuse.
+    int m_nvars;   ///< The number of variables in integration scheme.
+    int m_npoints; ///< The size of inner data which is stored for reuse.
 
     // Friend classes
     LUE friend std::ostream &operator<<(std::ostream &os,
                                         const TimeIntegrationScheme &rhs);
-    LUE friend std::ostream &operator<<(std::ostream &os,
-        const TimeIntegrationSchemeSharedPtr &rhs);
+    LUE friend std::ostream &operator<<(
+        std::ostream &os, const TimeIntegrationSchemeSharedPtr &rhs);
 
     LUE friend std::ostream &operator<<(std::ostream &os,
                                         const TimeIntegrationAlgorithmGLM &rhs);
-    LUE friend std::ostream &operator<<(std::ostream &os,
-        const TimeIntegrationAlgorithmGLMSharedPtr &rhs);
+    LUE friend std::ostream &operator<<(
+        std::ostream &os, const TimeIntegrationAlgorithmGLMSharedPtr &rhs);
 
 private:
-    DoubleArray m_Y;       /// Array containing the stage values
-    DoubleArray m_tmp;     /// Explicit RHS of each stage equation
+    DoubleArray m_Y;   /// Array containing the stage values
+    DoubleArray m_tmp; /// Explicit RHS of each stage equation
 
-    TripleArray m_F;       /// Array corresponding to the stage Derivatives
-    TripleArray m_F_IMEX;  /// Used to store the Explicit stage derivative of
-                           /// IMEX schemes
+    TripleArray m_F;      /// Array corresponding to the stage Derivatives
+    TripleArray m_F_IMEX; /// Used to store the Explicit stage derivative of
+                          /// IMEX schemes
 
-    NekDouble m_T{0};      ///  Time at the different stages
+    NekDouble m_T{0}; ///  Time at the different stages
 
     bool m_firstStageEqualsOldSolution{false}; //< Optimisation-flag
     bool m_lastStageEqualsNewSolution{false};  //< Optimisation-flag
@@ -310,7 +300,7 @@ LUE std::ostream &operator<<(std::ostream &os,
                              const TimeIntegrationAlgorithmGLM &rhs);
 
 LUE std::ostream &operator<<(std::ostream &os,
-    const TimeIntegrationAlgorithmGLMSharedPtr &rhs);
+                             const TimeIntegrationAlgorithmGLMSharedPtr &rhs);
 
 // =========================================================================
 

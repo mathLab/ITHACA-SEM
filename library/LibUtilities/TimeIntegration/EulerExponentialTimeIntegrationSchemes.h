@@ -62,33 +62,35 @@ namespace LibUtilities
 class EulerExponentialTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
-    EulerExponentialTimeIntegrationScheme(std::string variant, unsigned int order,
-                                          std::vector<NekDouble> freeParams) :
-        TimeIntegrationSchemeGLM(variant, order, freeParams)
+    EulerExponentialTimeIntegrationScheme(std::string variant,
+                                          unsigned int order,
+                                          std::vector<NekDouble> freeParams)
+        : TimeIntegrationSchemeGLM(variant, order, freeParams)
     {
         // Currently up to 4th order is implemented because the number
         // of steps is the same as the order.
         // Currently up to 4th order is implemented.
         ASSERTL1(variant == "Lawson" || variant == "Norsett",
                  "EulerExponential Time integration scheme unknown variant: " +
-                 variant + ". Must be 'Lawson' or 'Norsett'.");
+                     variant + ". Must be 'Lawson' or 'Norsett'.");
 
-        ASSERTL1(((variant == "Lawson"  && 1 <= order && order <= 1) ||
+        ASSERTL1(((variant == "Lawson" && 1 <= order && order <= 1) ||
                   (variant == "Norsett" && 1 <= order && order <= 4)),
                  "EulerExponential Time integration scheme bad order, "
-                 "Lawson (1) or Norsett (1-4): " + std::to_string(order));
+                 "Lawson (1) or Norsett (1-4): " +
+                     std::to_string(order));
 
         m_integration_phases = TimeIntegrationAlgorithmGLMVector(order);
 
         // Currently the next lowest order is used to seed the current
         // order. This is not correct but is an okay approximation.
-        for( unsigned int n=0; n<order; ++n )
+        for (unsigned int n = 0; n < order; ++n)
         {
             m_integration_phases[n] = TimeIntegrationAlgorithmGLMSharedPtr(
                 new TimeIntegrationAlgorithmGLM(this));
 
             EulerExponentialTimeIntegrationScheme::SetupSchemeData(
-                m_integration_phases[n], variant, n+1);
+                m_integration_phases[n], variant, n + 1);
         }
     }
 
@@ -96,11 +98,13 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-                                                 std::vector<NekDouble> freeParams)
+    static TimeIntegrationSchemeSharedPtr create(
+        std::string variant, unsigned int order,
+        std::vector<NekDouble> freeParams)
     {
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            EulerExponentialTimeIntegrationScheme>::AllocateSharedPtr(variant, order, freeParams);
+        TimeIntegrationSchemeSharedPtr p =
+            MemoryManager<EulerExponentialTimeIntegrationScheme>::
+                AllocateSharedPtr(variant, order, freeParams);
 
         return p;
     }
@@ -112,7 +116,7 @@ public:
         return std::string("EulerExponential");
     }
 
-    LUE virtual std::string GetFullName () const
+    LUE virtual std::string GetFullName() const
     {
         return GetVariant() + GetName() + "Order" + std::to_string(GetOrder());
     }
@@ -126,14 +130,14 @@ public:
                                     std::string variant, int order)
     {
         phase->m_schemeType = eExponential;
-        phase->m_variant  = variant;
-        phase->m_order = order;
-        phase->m_name = variant + std::string("EulerExponentialOrder") +
-          std::to_string(phase->m_order);
+        phase->m_variant    = variant;
+        phase->m_order      = order;
+        phase->m_name       = variant + std::string("EulerExponentialOrder") +
+                        std::to_string(phase->m_order);
 
         // Parameters for the compact 1 step implementation.
         phase->m_numstages = 1;
-        phase->m_numsteps  = phase->m_order;  // Okay up to 4th order.
+        phase->m_numsteps  = phase->m_order; // Okay up to 4th order.
 
         phase->m_A = Array<OneD, Array<TwoD, NekDouble>>(1);
         phase->m_B = Array<OneD, Array<TwoD, NekDouble>>(1);
@@ -141,12 +145,12 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
 
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  0.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 0.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 0.0);
 
         // Coefficients
 
@@ -157,8 +161,10 @@ public:
         phase->m_B[0][0][0] = 1.0 / phase->m_order; // phi_func(0 or 1)
 
         // B evaluation value shuffling second row first column
-        if( phase->m_order > 1 )
-          phase->m_B[0][1][0] = 1.0; // constant 1
+        if (phase->m_order > 1)
+        {
+            phase->m_B[0][1][0] = 1.0; // constant 1
+        }
 
         // U Curent time step evaluation first row first column
         phase->m_U[0][0] = 1.0; // constant 1
@@ -167,24 +173,24 @@ public:
         phase->m_V[0][0] = 1.0; // phi_func(0)
 
         // V Phi function for first row additional columns
-        for( int n=1; n<phase->m_order; ++n )
+        for (int n = 1; n < phase->m_order; ++n)
         {
             phase->m_V[0][n] = 1.0 / phase->m_order; // phi_func(n+1)
         }
 
         // V evaluation value shuffling row n column n-1
-        for( int n=2; n<phase->m_order; ++n )
+        for (int n = 2; n < phase->m_order; ++n)
         {
-            phase->m_V[n][n-1] = 1.0; // constant 1
+            phase->m_V[n][n - 1] = 1.0; // constant 1
         }
 
         phase->m_numMultiStepValues = 1;
-        phase->m_numMultiStepDerivs = phase->m_order-1;
+        phase->m_numMultiStepDerivs = phase->m_order - 1;
         phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
         phase->m_timeLevelOffset[0] = 0;
 
         // For order > 1 derivatives are needed.
-        for( int n=1; n<phase->m_order; ++n )
+        for (int n = 1; n < phase->m_order; ++n)
         {
             phase->m_timeLevelOffset[n] = n;
         }
@@ -215,22 +221,21 @@ public:
 
         Array<OneD, NekDouble> phi = Array<OneD, NekDouble>(phase->m_order);
 
-        for( unsigned int k=0; k<phase->m_nvars; ++k )
+        for (unsigned int k = 0; k < phase->m_nvars; ++k)
         {
             // B Phi function for first row first column
-            if( phase->m_variant == "Lawson" )
+            if (phase->m_variant == "Lawson")
             {
                 phi[0] = phi_function(0, deltaT * phase->m_L[k]).real();
             }
-            else if( phase->m_variant == "Norsett" )
+            else if (phase->m_variant == "Norsett")
             {
                 phi[0] = phi_function(1, deltaT * phase->m_L[k]).real();
             }
             else
             {
-              ASSERTL1(false,
-                       "Cannot call EulerExponential directly "
-                       "use the variant 'Lawson' or 'Norsett'.");
+                ASSERTL1(false, "Cannot call EulerExponential directly "
+                                "use the variant 'Lawson' or 'Norsett'.");
             }
 
             // Set up for multiple steps. For multiple steps one needs
@@ -240,12 +245,12 @@ public:
             // For order N the weights are an N x N matrix with
             // values: W[j][i] = std::pow(i, j) and phi_func = W phi.
             // There are other possible wieghting schemes.
-            if( phase->m_order == 1 )
+            if (phase->m_order == 1)
             {
                 // Nothing to do as the value is set above and the
                 // weight is just 1.
             }
-            else if( phase->m_order == 2 )
+            else if (phase->m_order == 2)
             {
                 // For Order 2 the weights are simply : 1 1
                 //                                      0 1
@@ -257,25 +262,25 @@ public:
 
                 phi[0] -= phi[1];
             }
-            else if( phase->m_order == 3 )
+            else if (phase->m_order == 3)
             {
                 Array<OneD, NekDouble> phi_func =
-                  Array<OneD, NekDouble>(phase->m_order);
+                    Array<OneD, NekDouble>(phase->m_order);
 
                 phi_func[0] = phi[0];
 
-                for( unsigned int m=1; m<phase->m_order; ++m )
+                for (unsigned int m = 1; m < phase->m_order; ++m)
                 {
                     phi_func[m] =
-                      phi_function(m+1, deltaT * phase->m_L[k]).real();
+                        phi_function(m + 1, deltaT * phase->m_L[k]).real();
                 }
 
                 NekDouble W[3][3];
 
                 // Set up the wieghts and calculate the determinant.
-                for( unsigned int j=0; j<phase->m_order; ++j )
+                for (unsigned int j = 0; j < phase->m_order; ++j)
                 {
-                    for( unsigned int i=0; i<phase->m_order; ++i )
+                    for (unsigned int i = 0; i < phase->m_order; ++i)
                     {
                         W[j][i] = std::pow(i, j);
                     }
@@ -284,12 +289,12 @@ public:
                 NekDouble W_det = Determinant<3>(W);
 
                 // Solve the series of equations using Cramer's rule.
-                for( unsigned int m=0; m<phase->m_order; ++m )
+                for (unsigned int m = 0; m < phase->m_order; ++m)
                 {
                     // Assemble the working matrix for this solution.
-                    for( unsigned int j=0; j<phase->m_order; ++j )
+                    for (unsigned int j = 0; j < phase->m_order; ++j)
                     {
-                        for( unsigned int i=0; i<phase->m_order; ++i )
+                        for (unsigned int i = 0; i < phase->m_order; ++i)
                         {
                             // Fill in the mth column for the mth
                             // solution using the phi function value
@@ -302,24 +307,25 @@ public:
                     phi[m] = Determinant<3>(W) / W_det;
                 }
             }
-            else if( phase->m_order == 4 )
+            else if (phase->m_order == 4)
             {
                 Array<OneD, NekDouble> phi_func =
-                  Array<OneD, NekDouble>(phase->m_order);
+                    Array<OneD, NekDouble>(phase->m_order);
 
                 phi_func[0] = phi[0];
 
-                for( unsigned int m=1; m<phase->m_order; ++m )
+                for (unsigned int m = 1; m < phase->m_order; ++m)
                 {
-                    phi_func[m] = phi_function(m+1, deltaT * phase->m_L[k]).real();
+                    phi_func[m] =
+                        phi_function(m + 1, deltaT * phase->m_L[k]).real();
                 }
 
                 NekDouble W[4][4];
 
                 // Set up the weights and calculate the determinant.
-                for( unsigned int j=0; j<phase->m_order; ++j )
+                for (unsigned int j = 0; j < phase->m_order; ++j)
                 {
-                    for( unsigned int i=0; i<phase->m_order; ++i )
+                    for (unsigned int i = 0; i < phase->m_order; ++i)
                     {
                         W[j][i] = std::pow(i, j);
                     }
@@ -328,12 +334,12 @@ public:
                 NekDouble W_det = Determinant<4>(W);
 
                 // Solve the series of equations using Cramer's rule.
-                for( unsigned int m=0; m<phase->m_order; ++m )
+                for (unsigned int m = 0; m < phase->m_order; ++m)
                 {
                     // Assemble the working matrix for this solution.
-                    for( unsigned int j=0; j<phase->m_order; ++j )
+                    for (unsigned int j = 0; j < phase->m_order; ++j)
                     {
-                        for( unsigned int i=0; i<phase->m_order; ++i )
+                        for (unsigned int i = 0; i < phase->m_order; ++i)
                         {
                             // Fill in the mth column for the mth
                             // solution using the phi function value
@@ -354,44 +360,45 @@ public:
             // Create the phi based Butcher tableau matrices. Note
             // these matrices are set up using a general formational
             // based on the number of steps (i.e. the order).
-            phase->m_A_phi[k] =
-              Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
-            phase->m_B_phi[k] =
-              Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
-            phase->m_U_phi[k] =
-              Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 0.0);
-            phase->m_V_phi[k] =
-              Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 0.0);
+            phase->m_A_phi[k] = Array<TwoD, NekDouble>(phase->m_numstages,
+                                                       phase->m_numstages, 0.0);
+            phase->m_B_phi[k] = Array<TwoD, NekDouble>(phase->m_numsteps,
+                                                       phase->m_numstages, 0.0);
+            phase->m_U_phi[k] = Array<TwoD, NekDouble>(phase->m_numstages,
+                                                       phase->m_numsteps, 0.0);
+            phase->m_V_phi[k] = Array<TwoD, NekDouble>(phase->m_numsteps,
+                                                       phase->m_numsteps, 0.0);
 
             // B Phi function for first row first column.
             phase->m_B_phi[k][0][0] = phi[0];
 
             // B evaluation value shuffling second row first column.
-            if( phase->m_order > 1 )
+            if (phase->m_order > 1)
                 phase->m_B_phi[k][1][0] = 1.0; // constant 1
 
             // U Curent time step evaluation first row first column.
             phase->m_U_phi[k][0][0] = 1.0; // constant 1
 
             // V Phi function for first row first column.
-            phase->m_V_phi[k][0][0] = phi_function(0, deltaT * phase->m_L[k]).real();
+            phase->m_V_phi[k][0][0] =
+                phi_function(0, deltaT * phase->m_L[k]).real();
 
             // V Phi function for first row additional columns.
-            for( int n=1; n<phase->m_order; ++n )
+            for (int n = 1; n < phase->m_order; ++n)
             {
                 phase->m_V_phi[k][0][n] = phi[n];
             }
 
             // V evaluation value shuffling row n column n-1.
-            for( int n=2; n<phase->m_order; ++n )
+            for (int n = 2; n < phase->m_order; ++n)
             {
-                phase->m_V_phi[k][n][n-1] = 1.0; // constant 1
+                phase->m_V_phi[k][n][n - 1] = 1.0; // constant 1
             }
         }
     }
 
-    LUE void SetExponentialCoefficients(Array<OneD,
-                                        std::complex<NekDouble>> &Lambda)
+    LUE void SetExponentialCoefficients(
+        Array<OneD, std::complex<NekDouble>> &Lambda)
     {
         ASSERTL0(!m_integration_phases.empty(), "No scheme")
 
@@ -418,8 +425,7 @@ public:
     }
 
 private:
-
-    inline NekDouble factorial( unsigned int n ) const
+    inline NekDouble factorial(unsigned int n) const
     {
         return (n == 1 || n == 0) ? 1 : n * factorial(n - 1);
     }
@@ -441,19 +447,19 @@ private:
          * 2: (exp(z) - z - 1.0) / (z * z);
          */
 
-        if( z == 0.0 )
+        if (z == 0.0)
         {
-            return 1.0 / factorial( order );
+            return 1.0 / factorial(order);
         }
 
-        if( order == 0 )
+        if (order == 0)
         {
-            return exp( z );
+            return exp(z);
         }
         else
         {
-            return (phi_function( order-1, z) -
-                    1.0 / factorial( order-1 ) ) / z;
+            return (phi_function(order - 1, z) - 1.0 / factorial(order - 1)) /
+                   z;
         }
 
         return 0;

@@ -56,8 +56,8 @@ class IMEXGearTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
     IMEXGearTimeIntegrationScheme(std::string variant, unsigned int order,
-                                  std::vector<NekDouble> freeParams) :
-        TimeIntegrationSchemeGLM("", 2, freeParams)
+                                  std::vector<NekDouble> freeParams)
+        : TimeIntegrationSchemeGLM("", 2, freeParams)
     {
         boost::ignore_unused(order);
         boost::ignore_unused(variant);
@@ -69,7 +69,7 @@ public:
             new TimeIntegrationAlgorithmGLM(this));
 
         IMEXdirkTimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0], 2, std::vector<NekDouble> {2, 2});
+            m_integration_phases[0], 2, std::vector<NekDouble>{2, 2});
         IMEXGearTimeIntegrationScheme::SetupSchemeData(m_integration_phases[1]);
     }
 
@@ -77,14 +77,16 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-                                                 std::vector<NekDouble> freeParams)
+    static TimeIntegrationSchemeSharedPtr create(
+        std::string variant, unsigned int order,
+        std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(order);
         boost::ignore_unused(variant);
 
         TimeIntegrationSchemeSharedPtr p =
-            MemoryManager<IMEXGearTimeIntegrationScheme>::AllocateSharedPtr("", 2, freeParams);
+            MemoryManager<IMEXGearTimeIntegrationScheme>::AllocateSharedPtr(
+                "", 2, freeParams);
 
         return p;
     }
@@ -104,10 +106,10 @@ public:
     LUE static void SetupSchemeData(TimeIntegrationAlgorithmGLMSharedPtr &phase)
     {
         phase->m_schemeType = eIMEX;
-        phase->m_variant = "Gear";
-        phase->m_order = 2;
-        phase->m_name = std::string("IMEXGearOrder" +
-                                    std::to_string(phase->m_order));
+        phase->m_variant    = "Gear";
+        phase->m_order      = 2;
+        phase->m_name =
+            std::string("IMEXGearOrder" + std::to_string(phase->m_order));
 
         phase->m_numsteps  = 3;
         phase->m_numstages = 1;

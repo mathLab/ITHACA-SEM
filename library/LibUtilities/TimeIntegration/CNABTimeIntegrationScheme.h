@@ -56,8 +56,8 @@ class CNABTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
     CNABTimeIntegrationScheme(std::string variant, unsigned int order,
-                                      std::vector<NekDouble> freeParams) :
-        TimeIntegrationSchemeGLM("", 2, freeParams)
+                              std::vector<NekDouble> freeParams)
+        : TimeIntegrationSchemeGLM("", 2, freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
@@ -71,9 +71,9 @@ public:
             new TimeIntegrationAlgorithmGLM(this));
 
         IMEXdirkTimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[0], 3, std::vector<NekDouble>{3, 4}); // dirk 3 4 3
+            m_integration_phases[0], 3, {3.0, 4.0}); // dirk 3 4 3
         IMEXdirkTimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[1], 3, std::vector<NekDouble>{3, 4}); // dirk 3 4 3
+            m_integration_phases[1], 3, {3.0, 4.0}); // dirk 3 4 3
         CNABTimeIntegrationScheme::SetupSchemeData(
             m_integration_phases[2]); // CNAB
     }
@@ -82,14 +82,16 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-                                                 std::vector<NekDouble> freeParams)
+    static TimeIntegrationSchemeSharedPtr create(
+        std::string variant, unsigned int order,
+        std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
 
         TimeIntegrationSchemeSharedPtr p =
-          MemoryManager<CNABTimeIntegrationScheme>::AllocateSharedPtr("", 2, freeParams);
+            MemoryManager<CNABTimeIntegrationScheme>::AllocateSharedPtr(
+                "", 2, freeParams);
 
         return p;
     }
@@ -109,9 +111,9 @@ public:
     LUE static void SetupSchemeData(TimeIntegrationAlgorithmGLMSharedPtr &phase)
     {
         phase->m_schemeType = eIMEX;
-        phase->m_order = 2;
-        phase->m_name = std::string("CNABOrder" +
-                                    std::to_string(phase->m_order));
+        phase->m_order      = 2;
+        phase->m_name =
+            std::string("CNABOrder" + std::to_string(phase->m_order));
 
         phase->m_numsteps  = 4;
         phase->m_numstages = 1;
@@ -122,16 +124,16 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
         phase->m_A[1] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[1] =
-            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
 
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  0.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 0.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 0.0);
 
         phase->m_A[0][0][0] = 1.0 / 2.0;
         phase->m_B[0][0][0] = 1.0 / 2.0;
@@ -139,14 +141,14 @@ public:
 
         phase->m_B[1][2][0] = 1.0;
 
-        phase->m_U[0][0] =  2.0 / 2.0;
-        phase->m_U[0][1] =  1.0 / 2.0;
-        phase->m_U[0][2] =  3.0 / 2.0;
+        phase->m_U[0][0] = 2.0 / 2.0;
+        phase->m_U[0][1] = 1.0 / 2.0;
+        phase->m_U[0][2] = 3.0 / 2.0;
         phase->m_U[0][3] = -1.0 / 2.0;
 
-        phase->m_V[0][0] =  2.0 / 2.0;
-        phase->m_V[0][1] =  1.0 / 2.0;
-        phase->m_V[0][2] =  3.0 / 2.0;
+        phase->m_V[0][0] = 2.0 / 2.0;
+        phase->m_V[0][1] = 1.0 / 2.0;
+        phase->m_V[0][2] = 3.0 / 2.0;
         phase->m_V[0][3] = -1.0 / 2.0;
 
         phase->m_V[3][2] = 1.0;

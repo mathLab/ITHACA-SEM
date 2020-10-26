@@ -1262,6 +1262,7 @@ namespace Nektar
     	cout << " Loading ROM parameters ..." << endl;
     
     	ROM_started = 0;
+    	ongoing_snapshot_computation = 0;
     
     	load_snapshot_data_from_files = m_session->GetParameter("load_snapshot_data_from_files");
 	number_of_snapshots = m_session->GetParameter("number_of_snapshots");
@@ -1309,7 +1310,7 @@ namespace Nektar
 //	DoSolve();
 	bool snapshot_computation_plot_rel_errors = 1;
 	double rel_err = 1.0;
-	ROM_started = 1;
+	ongoing_snapshot_computation = 1;
 	while (rel_err > 1e-11)
 	{
 		Set_m_kinvis( parameter );
@@ -1362,7 +1363,7 @@ namespace Nektar
 
 //	cout << " curr_f_bnd.size()+curr_f_int.size() " <<  curr_f_bnd.size()+curr_f_int.size() << endl;
 //	cout << " GetNcoeffs() " <<  GetNcoeffs() << endl;
-	ROM_started = 0;
+	ongoing_snapshot_computation = 0;
 	return converged_solution;
     }
 
@@ -1694,7 +1695,7 @@ namespace Nektar
             ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS_ROM");
         }
         
-        if (!ROM_started)
+        if ((!ROM_started) && (!ongoing_snapshot_computation))
         {
         	ROM_started = 1;
         	ROM_offline_phase();

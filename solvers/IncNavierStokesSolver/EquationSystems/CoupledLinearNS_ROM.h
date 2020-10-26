@@ -233,6 +233,7 @@ namespace Nektar
 	Eigen::MatrixXd collect_f_all;
 	Array<OneD, Array<OneD, NekDouble> > myAdvField;
 	bool ROM_started;
+	bool ongoing_snapshot_computation;	
 	bool debug_mode;
 	int RBsize;
 	int no_dbc_in_loc;

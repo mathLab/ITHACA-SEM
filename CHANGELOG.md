@@ -89,6 +89,7 @@ v5.0.1
 **CI**
 - Added checked conversion from double to int in SessionReader (!1113)
 - Switched to Gitlab CI (!1120, !1120, !1128, !1129, !1131, !1141)
+- Updated bullseye build to remove UCX components (!1203)
 
 v5.0.0
 ------

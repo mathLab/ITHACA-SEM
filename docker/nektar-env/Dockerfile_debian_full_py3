@@ -1,4 +1,5 @@
 FROM %%REGISTRY%%:env-%%OS_VERSION%%-default
+ARG REMOVE_UCX
 
 LABEL maintainer="Nektar++ Development Team <nektar-users@imperial.ac.uk>"
 
@@ -10,5 +11,6 @@ RUN echo "deb http://deb.debian.org/debian ${DEBIAN_VERSION} non-free" > \
         apt-get update && \
         apt-get install -y $(cat packages.txt) \
         && rm -rf /var/lib/apt/lists/*
+RUN if [ "$REMOVE_UCX" = "1" ]; then rm -f /usr/lib/x86_64-linux-gnu/openmpi/lib/*ucx* && rm /usr/lib/x86_64-linux-gnu/openmpi/lib/openmpi3/*ucx*; fi
 
 USER nektar:nektar

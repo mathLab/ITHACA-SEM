@@ -72,6 +72,18 @@ public:
         return "Calculating N-factor along the surface";
     }
 
+    // functions for organizing the data locally in this module
+    void Heapify_max(Array<OneD, Array<OneD, NekDouble> > A, 
+                                     const int curLen, 
+                                     const int rootId);
+
+    void HeapSort(Array<OneD, Array<OneD, NekDouble> > A);
+
+
+    int CleanRepeatedPts(Array<OneD, Array<OneD, NekDouble> > A);
+
+
+
 protected:
 
 private:

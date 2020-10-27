@@ -64,31 +64,92 @@ ProcessNFactor::~ProcessNFactor()
 }
 
 
-/* To heapify (max-haeading) a subtree rooted with node i
+/* To heapify (max-haeading) a subtree rooted with node rootId
    A[0~5][0~currentLength-1] is the data to be heapified
    A.size()=6; A[0~5] for x/y/z/nx/ny/nz respectively
    The heap is adjusted regards to A[0] (x-value)
 */
-void heapify_max(Array<OneD, Array<OneD, NekDouble> > A, 
-                 const int currentLength, 
-                 const int i) {
-    
-    int largest = i;   // Initialize the largest as root 
-    const int l = 2 * i + 1; // left  child = 2*i + 1 
-    const int r = 2 * i + 2; // right child = 2*i + 2 
+void ProcessNFactor::Heapify_max(Array<OneD, Array<OneD, NekDouble> > A, 
+                                 const int curLen, 
+                                 const int rootId)
+{
+    const int dataDim = A.size();
+    int maxId = rootId;   // Initialize the maximum as root 
+    const int leftId  = 2 * rootId + 1; // left  child = 2*i + 1 
+    const int rightId = 2 * rootId + 2; // right child = 2*i + 2 
 
     // Check if left child exists and it is larger than root
     // Then check if right child exits and it is larger than largest  
-    if (l < currentLength && A[0][l] > A[0][largest]) { largest = l; } 
-    if (r < currentLength && A[0][r] > A[0][largest]) { largest = r; }
+    if (leftId  < curLen && A[0][leftId]  > A[0][maxId]) { maxId = leftId;  } 
+    if (rightId < curLen && A[0][rightId] > A[0][maxId]) { maxId = rightId; }
 
-    // If largest is not the root, swap values at [largest] and [i]
-    // then recursively heapify the affected sub-tree 
-    if (largest != i) {
-        for (int j=0; j<6; ++j) { std::swap(A[j][i], A[j][largest]); }
-
-        heapify_max(A, currentLength, largest);
+    // If largest is not the root, swap values at [maxId] and [rootId]
+    // then recursively heapify the affected sub-tree, rooted at [maxId] 
+    if (maxId != rootId) {
+        for (int j=0; j<dataDim; ++j) { std::swap(A[j][rootId], A[j][maxId]); }
+        Heapify_max(A, curLen, maxId);
     }
+
+}
+
+/* Sort the array using heap*/
+void ProcessNFactor::HeapSort(Array<OneD, Array<OneD, NekDouble> > A)
+{
+    const int dataDim = A.size();
+    const int totLen  = A[0].size();
+    
+    // Build max heap, starting from the last non-leaf node
+    for (int i = floor(totLen / 2) - 1; i >= 0; --i) {
+        Heapify_max(A, totLen, i);
+    }
+    // Move current root to end [0]->[currentlength-1]
+    // and adjust the reduced heap, startig from root
+    for (int curLen = totLen; curLen > 1; --curLen) {
+        for (int j=0; j<dataDim; ++j) { std::swap(A[j][0], A[j][curLen-1]); }
+
+        Heapify_max(A, curLen-1, 0);
+    }
+
+}
+
+/* clean the repeated points in the array
+   put the repeated points in the end 
+   return the array length without repeated points
+*/
+int ProcessNFactor::CleanRepeatedPts(Array<OneD, Array<OneD, NekDouble> > A)
+{
+    const int dataDim = A.size();
+    const int totLen = A[0].size();
+    int       newLen = totLen; // initialize the new length as the total length
+    for (int i=1; i<newLen; ++i) {
+        // For each i, check indax smaller than i
+        for (int j=i-1; j>=0; --j) {
+            
+            if ( abs(A[0][i]-A[0][j]) > NekConstants::kNekZeroTol ) {
+                break; // The array has already sorted regards to x
+            }
+            else {
+                if ( abs(A[1][i]-A[1][i-1]) < NekConstants::kNekZeroTol &&
+                     abs(A[2][i]-A[2][i-1]) < NekConstants::kNekZeroTol ) {
+                    
+                    // repeated points found, [i]==[j]
+                    // move [i+1] to [totLen-1] forword
+                    for (int k=0; k<dataDim; ++k) {
+                        for (int t=i+1; t<totLen; ++t) {
+                            A[k][t-1] = A[k][t];
+                        }
+                        A[k][totLen-1] = A[k][j];
+                    }
+
+                    --newLen; // key origins -- 
+                    --i;      // check the same i again
+                }
+            }
+
+        }
+    }
+
+    return (newLen);
 }
 
 
@@ -98,10 +159,24 @@ void ProcessNFactor::Process(po::variables_map &vm)
 {
     ProcessBoundaryExtract::Process(vm);
 
+    //---------- Input paramaters (move to upstream routines later) -----------
+    // sampling origins setting
+    const int to_nPtsPerElmt = 6; // needed number of points per element
+    Array<OneD, NekDouble> boundingBox(6); // use origins inside the box
+    boundingBox[0] = 0.189;                               // x_lower
+    boundingBox[1] = 0.401;                               // x_upper
+    boundingBox[2] = -abs(NekConstants::kNekUnsetDouble); // y_lower
+    boundingBox[3] =  abs(NekConstants::kNekUnsetDouble); // y_upper
+    boundingBox[4] = -abs(NekConstants::kNekUnsetDouble); // z_lower
+    boundingBox[5] =  abs(NekConstants::kNekUnsetDouble); // z_upper
 
-    // Input paramaters (move to other routines later)
+    // Sampling setting
+    const NekDouble distance_n = 0.005; // from wall to wall + H in normal direction
+    const int       npts_n     = 21;    // npts in wall normal direction, use npts points for export
+    const NekDouble delta = 0.1;        //
+    //-------------------------------------------------------------------------
+
     
-
     int i;
     int nfields = m_f->m_variables.size();
     int expdim  = m_f->m_graph->GetSpaceDimension();
@@ -183,14 +258,7 @@ void ProcessNFactor::Process(po::variables_map &vm)
     const int dim_phys = BndExp[0]->GetCoordim(0); // dimension for the physical space that the parametric coordinate system located on, eg. =2
     cout << "dim_para = " << dim_para <<", dim_coor = " << dim_phys <<endl;
 
-    // input parameters
-    // use prefix const later
-    Array<OneD, NekDouble> range_x(2); //output range, 0-lower and 1-upper limit
-    range_x[0] = 0.189;
-    range_x[1] = 0.401;
-
     // set point key
-    const int to_nPtsPerElmt = 6; // number of points per element, key parameter, better to be odd
     LibUtilities::PointsKey from_key = BndExp[0]->GetExp(0)->GetBasis(0)->GetPointsKey();
     LibUtilities::PointsKey to_key( to_nPtsPerElmt, LibUtilities::PointsType::ePolyEvenlySpaced ); //[!] important!
     const int from_nPtsPerElmt = from_key.GetNumPoints();
@@ -220,7 +288,8 @@ void ProcessNFactor::Process(po::variables_map &vm)
         BndExp[0]->GetExp(i)->GetCoords( from_ptsInElmt[0], from_ptsInElmt[1], from_ptsInElmt[2] ); 
 
         // skip some elements, needs further improved
-        if (from_ptsInElmt[0][0]<range_x[0] || from_ptsInElmt[0][from_nPtsPerElmt-1]>range_x[1]) { continue; } 
+        if (from_ptsInElmt[0][0]<boundingBox[0] ||
+            from_ptsInElmt[0][from_nPtsPerElmt-1]>boundingBox[1]) { continue; } 
 
         // interp x/y/z and nx/ny/nz
         // needs to be further improved for cases with different dimensions
@@ -240,8 +309,8 @@ void ProcessNFactor::Process(po::variables_map &vm)
 
     }
  
-
-    // build max heap and sort
+    // sort array 
+    /*
     // Build max heap, starting from the last non-leaf node
     for (int i = floor(nOrigs / 2) - 1; i >= 0; --i) {
         heapify_max(origs, nOrigs, i);
@@ -253,10 +322,13 @@ void ProcessNFactor::Process(po::variables_map &vm)
 
         heapify_max(origs, length-1, 0);
     }
+    */
+    HeapSort(origs);
 
-    // remove repeated origin points 
+    // remove repeated origin points
+    /*
     int nOrigs_new = nOrigs; // new length
-    for (int i=1; i<nOrigs; ++i) {
+    for (int i=1; i<nOrigs_new; ++i) {
         // For each i, check indax smaller than i
         for (int j=i-1; j>=0; --j) {
             
@@ -283,49 +355,24 @@ void ProcessNFactor::Process(po::variables_map &vm)
 
         }
     }
+    */
+    int nOrigs_new = CleanRepeatedPts(origs);
 
     cout << "len1 = "<< nOrigs <<", len2 = " << nOrigs_new << endl;
-
     for (int j=0; j<nOrigs_new; ++j){
         cout <<"-array_3- " << origs[0][j] <<", "<< origs[1][j]<<", "<< origs[2][j] <<", "
                             << origs[3][j] <<", "<< origs[4][j]<<", "<< origs[5][j] <<endl;
     }  
-
-
-
-
-    /*
-    Array<OneD, NekDouble> test_tmpGeom(8); // physical points
-    Array<OneD, NekDouble> test_tmpGeom2(15);
-    test_tmpGeom[0] = 0.365;
-    test_tmpGeom[1] = 0.36532;
-    test_tmpGeom[2] = 0.36602;
-    test_tmpGeom[3] = 0.366976;
-    test_tmpGeom[4] = 0.368023;
-    test_tmpGeom[5] = 0.368979;
-    test_tmpGeom[6] = 0.369679;
-    test_tmpGeom[7] = 0.37;
-    LibUtilities::Interp1D(from_key, &test_tmpGeom[0], to_key, &test_tmpGeom2[0]);
-    for (int i=0; i<test_tmpGeom2.size(); ++i){
-        cout <<"---x2--- = " << test_tmpGeom2[i] <<endl;
-    }
-    */
     //-------------------------------------------------------------------------
     //=========================================================================
 
-    // Sampling setting
-    const NekDouble distance_n = 0.005; // from wall to wall + H in normal direction
-    const NekDouble x0 = 0.19;
-    const NekDouble x1 = 0.4;
-    const NekInt npts_n     = 21;    // npts in wall normal direction, use npts points for export
-    const NekInt npts_x     = 3;     // npts in x direction
-    cout << distance_n << ", " << npts_n<<", "<< x1-x0 << npts_x << endl;
+    
 
     // Sampling points
     // h = 1- tanh((1-ksi)*atanh(sqrt(1-delta)))/sqrt(1-delta), ksi in [0,1]
     // from Agrawal's paper
     Array<OneD, NekDouble> h(npts_n);
-    const NekDouble delta = 0.1;
+    
     NekDouble tmp1;
     const NekDouble tmp2 = 1.0/(static_cast<NekDouble>(npts_n)-1.0); // 1/(npts-1)
     const NekDouble tmp3 = sqrt(1.0-delta);
@@ -334,14 +381,14 @@ void ProcessNFactor::Process(po::variables_map &vm)
     for (int i=0;i<npts_n;++i){
         tmp1 = 1.0 - i * tmp2; // tmp1 = 1-ksi, ksi = i/(npts_n-1) belonging to [0,1]
         h[i] = 1 - tanh(tmp1*tmp4)*tmp5;
-        //cout << i<<" - ksi = "<<1-tmp1<<", h = "<< h[i] <<endl;
+        cout << i<<" - ksi = "<<1-tmp1<<", h = "<< h[i] <<endl;
     }
 
     // Get the sampled y/z on the wall according to given x
     // Call NekMesh or OpenCascade routine to get y/z based on x array
     // or directly interpolate using the available x/y/z/normals data on the bnd
     // temporarily use the following point, assume it's already on the wall
-    NekDouble x_middle = (x1+x0)/2;
+    NekDouble x_middle = (0.19+0.4)/2;
     NekDouble y_middle = 0.0;
     NekDouble z_middle = 0.0;
     NekDouble normals_x = 0.0;

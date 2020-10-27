@@ -6,6 +6,10 @@ ADD_NEKTAR_EXECUTABLE(TimeIntegrationDemo
     COMPONENT demos DEPENDS LibUtilities SOURCES TimeIntegrationDemo.cpp)
 ADD_NEKTAR_EXECUTABLE(ErrorStream
     COMPONENT demos DEPENDS LibUtilities SOURCES ErrorStream.cpp)
+ADD_NEKTAR_EXECUTABLE(LinSysIterDemo
+    COMPONENT demos DEPENDS LibUtilities SOURCES LinSysIterDemo.cpp)
+ADD_NEKTAR_EXECUTABLE(NonlinSysIterDemo
+    COMPONENT demos DEPENDS LibUtilities SOURCES NonlinSysIterDemo.cpp)
 
 IF(NEKTAR_USE_MPI)
     ADD_NEKTAR_EXECUTABLE(FieldIOBenchmarker
@@ -65,3 +69,6 @@ ADD_NEKTAR_TEST(TimeIntegrationDemoLawsonEulerExponential)
 ADD_NEKTAR_TEST(TimeIntegrationDemoNorsettEulerExponential)
 ADD_NEKTAR_TEST(TimeIntegrationDemoFractionalInTime)
 ADD_NEKTAR_TEST(ErrorStream)
+ADD_NEKTAR_TEST(LinSysIterDemo_LinearSys_Jacobi)
+ADD_NEKTAR_TEST(LinSysIterDemo_LinearSys_GMRES)
+ADD_NEKTAR_TEST(NonlinSysIterDemo_LinearSys_Newton)

@@ -192,7 +192,7 @@ public:
     }
 
     LUE static void SetupSchemeDataESDIRK(
-        TimeIntegrationSchemeDataSharedPtr &phase,
+        TimeIntegrationAlgorithmGLMSharedPtr &phase, 
         std::string                         variant,
         unsigned int                        order,
         std::vector<NekDouble>              freeParams)

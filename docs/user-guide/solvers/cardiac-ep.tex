@@ -100,12 +100,13 @@ CardiacEPSolver session.xml
     
     \item \inltt{Projection} Specifies the Galerkin projection type to use. Only
 \inltt{Continuous} has been extensively tested.
-    \item \inltt{TimeIntegrationMethod} Specifies the time integration
-    scheme to use for advancing the PDE system. This must be an IMEX scheme. 
-    Suitable choices are: \inltt{IMEXOrder1}, \inltt{IMEXOrder2},
-    \inltt{IMEXOrder3}, \inltt{IMEXdirk\_3\_4\_3}. The cell model state
-    variables are time advanced using Forward Euler for the ion concentrations, and 
-    Rush-Larsen for the cell model gating variables.
+    \item \inltt{TimeIntegrationScheme} Specifies the time integration
+      scheme to use for advancing the PDE system. This must be an IMEX
+      scheme.  Suitable choices are: \inltt{IMEX Order 1,2,3},
+      \inltt{IMEX, Variant dirk, Order 3, Free Parameters 3 4}. The
+      cell model state variables are time advanced using Forward Euler
+      for the ion concentrations, and Rush-Larsen for the cell model
+      gating variables.
     \item \inltt{DiffusionAdvancement} Specifies whether the diffusion is
     handled implicitly or explicitly in the time integration scheme. The current
     code only supports \inltt{Implicit} integration of the diffusion term. The

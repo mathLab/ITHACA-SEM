@@ -62,7 +62,7 @@ ProcessMapping::~ProcessMapping()
 
 void ProcessMapping::Process(po::variables_map &vm)
 {
-    boost::ignore_unused(vm);
+    m_f->SetUpExp(vm);
 
     // Determine dimensions of mesh, solution, etc...
     int npoints  = m_f->m_exp[0]->GetNpoints();

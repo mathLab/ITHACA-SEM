@@ -33,6 +33,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ADRSolver/EquationSystems/UnsteadyDiffusion.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <iostream>
 #include <iomanip>
 

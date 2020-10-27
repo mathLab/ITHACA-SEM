@@ -75,9 +75,9 @@ public:
 
 private:
     void ReadTecplotFEBlockZone(std::ifstream &datFile,
-                                string &line,
+                                std::string &line,
                                 Array<OneD, Array<OneD, NekDouble> > &pts,
-                                vector<Array<OneD, int> > &ptsConn);
+                                std::vector<Array<OneD, int> > &ptsConn);
 };
 }
 }

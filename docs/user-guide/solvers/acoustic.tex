@@ -167,12 +167,28 @@ Under this section it is possible to set the parameters of the simulation.
     \item \inltt{IO\_CFLSteps} sets the number of steps between successive Courant number stats are printed to screen;
 \end{itemize}
 
+\subsection{Time Integration Scheme}
+\begin{lstlisting}[style=XmlStyle]
+<TIMEINTEGRATIONSCHEME>
+  <METHOD> RungeKutta </METHOD>
+  <VARIANT> SSP </VARIANT>
+  <ORDER> 3 </ORDER>
+</TIMEINTEGRATIONSCHEME>
+\end{lstlisting}
+
+\begin{itemize}
+    \item \inltt{Method} is the time-integration method. 
+    Note that only an explicit discretisation is supported.
+    \item \inltt{Order} is the order of the time-integration method. 
+    \item \inltt{Variant} is the variant of the time-integration
+      method (variables for Runga Kutta: \inltt{Blank, SSP}). 
+\end{itemize}
+
 \subsection{Solver Info}
 \begin{lstlisting}[style=XmlStyle]
 <SOLVERINFO>
   <I PROPERTY="EQType"                VALUE="APE"                  />
   <I PROPERTY="Projection"            VALUE="DisContinuous"        />
-  <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
   <I PROPERTY="UpwindType"            VALUE="LaxFriedrichs"        />
 </SOLVERINFO>
 \end{lstlisting}
@@ -184,8 +200,6 @@ Under this section it is possible to set the parameters of the simulation.
     \end{itemize}
     \item \inltt{Projection} is the type of projection we want to use. Currently, only \inltt{DisContinuous} is supported.
     \item \inltt{AdvectionType} is the advection operator. Currently, only \inltt{WeakDG} (classical DG in weak form) is supported.
-    \item \inltt{TimeIntegrationMethod} is the time-integration scheme we want to use. 
-    Note that only an explicit discretisation is supported:
     \item \inltt{UpwindType} is the numerical interface flux (i.e. Riemann solver) 
     we want to use for the advection operator (see \cite{La18} for the implemented formulations):
     \begin{itemize}
@@ -280,13 +294,17 @@ of $64$ quadrilateral elements.
 
 \subsubsection{Input file}
 We require a discontinuous Galerkin projection and use an explicit
-fourth-order Runge-Kutta time integration scheme. We therefore set the following
-solver information:
+fourth-order Runge-Kutta time integration scheme. We therefore set the
+following time integration schem and solver information:
 \begin{lstlisting}[style=XmlStyle]
+<TIMEINTEGRATIONSCHEME>
+    <METHOD> RungeKutta </METHOD>
+    <ORDER> 4 </ORDER>
+</TIMEINTEGRATIONSCHEME>
+
 <SOLVERINFO>
     <I PROPERTY="EQType"                VALUE="APE"/>
     <I PROPERTY="Projection"            VALUE="DisContinuous"/>
-    <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
     <I PROPERTY="UpwindType"            VALUE="LaxFriedrichs"/>
 </SOLVERINFO>
 \end{lstlisting}

@@ -61,13 +61,21 @@ ShallowWaterSolver session.xml
 
 \section{Session file configuration}
 
+\subsection{Time Integration Scheme}
+
+\begin{itemize}
+\item \inltt{Method} the time-stepping method.
+\item \inltt{Variant} the variant to the method. 
+\item \inltt{Order} the order of the method.
+\item \inltt{FreeParameters} any free parameters required.
+\end{itemize}
+
 \subsection{Solver Info}
 \begin{itemize}
 \item \inltt{Eqtype}: Specifies the equation to solve. This should be set
 to \inltt{NonlinearSWE}.
 \item \inltt{UpwindType}
 \item \inltt{Projection}
-\item \inltt{TimeIntegrationScheme}
 \end{itemize}
 
 \subsection{Parameters}
@@ -91,15 +99,22 @@ Rossby modon.
 \subsubsection{Input Options}
 
 For what concern the ShallowWaterSolver the
-\inltt{<SOLVERINFO>} section allows us to specify the solver, the type of
-projection (continuous or discontinuous), the explicit time integration scheme to
-use and (in the case the discontinuous Galerkin method is used) 
-the choice of numerical flux. A typical example would be:
+\inltt{<TIMEINTEGRATIONSCHEME>} and \inltt{<SOLVERINFO>} section
+allows us to specify the solver, the type of projection (continuous or
+discontinuous), the explicit time integration scheme to use and (in
+the case the discontinuous Galerkin method is used) the choice of
+numerical flux. A typical example would be:
+\begin{lstlisting}[style=XmlStyle]
+ <TIMEINTEGRATIONSCHEME>
+    <METHOD> RungeKutta </METHOD>
+    <ORDER> 4 </ORDER>
+ </TIMEINTEGRATIONSCHEME>
+\end{lstlisting}
+    
 \begin{lstlisting}[style=XmlStyle]
  <SOLVERINFO>
    <I PROPERTY="EqType"                VALUE="NonlinearSWE"         />
    <I PROPERTY="Projection"            VALUE="DisContinuous"        />
-   <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
    <I PROPERTY="UpwindType"            VALUE="HLLC"                 />
  </SOLVERINFO>
 \end{lstlisting}

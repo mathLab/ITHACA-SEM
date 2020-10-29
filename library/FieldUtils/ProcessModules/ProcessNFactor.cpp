@@ -157,7 +157,7 @@ void ProcessNFactor::Process(po::variables_map &vm)
 
     //---------- Input paramaters (move to upstream routines later) -----------
     // sampling origins setting
-    const int to_nPtsPerElmt = 6; // needed number of points per element
+    const int to_nPtsPerEdge = 6; // needed number of points per element
     Array<OneD, NekDouble> boundingBox(6); // use origins inside the box
     boundingBox[0] = 0.189;                               // x_lower
     boundingBox[1] = 0.401;                               // x_upper
@@ -169,13 +169,13 @@ void ProcessNFactor::Process(po::variables_map &vm)
     // Sampling setting
     const NekDouble distance_n = 0.005; // from wall to wall + H in normal direction
     const int       npts_n     = 21;    // npts in wall normal direction, use npts points for export
-    const NekDouble delta = 0.1;        // needs to be smaller than 1.
+    const NekDouble delta      = 0.1;   // needs to be smaller than 1.
     //-------------------------------------------------------------------------
 
     // Step 1 - get data type
-    int nfields = m_f->m_variables.size();
-    int expdim  = m_f->m_graph->GetSpaceDimension();
-    m_spacedim  = expdim + m_f->m_numHomogeneousDir;
+    int nfields   = m_f->m_variables.size();
+    int nCoordDim = m_f->m_exp[0]->GetCoordim(0);
+    m_spacedim    = nCoordDim + m_f->m_numHomogeneousDir;
 
     string str_inc = "u";
     string str_com = "rho";
@@ -216,42 +216,38 @@ void ProcessNFactor::Process(po::variables_map &vm)
         Vmath::Neg(nqb, normals[i], 1);
     }
  
-    // Get coordinates for all points on the bnd
+    /*// Get coordinates for all points on the bnd (not used, just to check)
     Array<OneD, Array<OneD, NekDouble> > xyz_bnd(3);
     for (int i=0; i<3; ++i) {
         xyz_bnd[i] = Array<OneD, NekDouble>(nqb, 0.0);
     }
     BndExp[0]->GetCoords(xyz_bnd[0], xyz_bnd[1], xyz_bnd[2]);
+    */
 
     //=========================================================================
     // Step 3 - set origins for sampling
     // only support 1D interpolation now
-    // set dimensions
+    // set dimensions bndElmtDim_para bndElmtDim_phys
     const int dim_para = BndExp[0]->GetExp(0)->GetNumBases(); // dimension for parametric coordinate system, eg. =1
-    const int dim_phys = BndExp[0]->GetCoordim(0); // dimension for the physical space that the parametric coordinate system located on, eg. =2
+    const int dim_phys = nCoordDim; // dimension for the physical space that the parametric coordinate system located on, eg. =2
     
     // set point key
+    //const int to_nPtsPerElmt = 6; // needed number of points per element
+    //LibUtilities::PointsKey from_key = BndExp[0]->GetExp(0)->GetBasis(0)->GetPointsKey();
+    //const int from_nPtsPerElmt = from_key.GetNumPoints();
     LibUtilities::PointsType to_pointstype = LibUtilities::PointsType::ePolyEvenlySpaced;
-    /*
-    if (dim_para==1) {
-        to_pointstype = LibUtilities::PointsType::ePolyEvenlySpaced;
-    } 
-    else {
-        // dim_para=2, the bnd element could be quadrilateral or triangular  
-        if () {
-
-        }
-        else {
-
-        }
+    LibUtilities::PointsKey  to_key(to_nPtsPerEdge, to_pointstype);
+    Array<OneD, LibUtilities::PointsKey> from_key(dim_para);
+    int from_nPtsPerElmt = 1;
+    int to_nPtsPerElmt   = 1; 
+    for (int i=0; i<dim_para; ++i) {
+        from_key[i] = BndExp[0]->GetExp(0)->GetBasis(i)->GetPointsKey();
+        from_nPtsPerElmt *= from_key[i].GetNumPoints();
+        to_nPtsPerElmt   *= to_nPtsPerEdge;
     }
-    */
-    LibUtilities::PointsKey from_key = BndExp[0]->GetExp(0)->GetBasis(0)->GetPointsKey();
-    LibUtilities::PointsKey to_key(to_nPtsPerElmt, to_pointstype); //[!] important!
-    const int from_nPtsPerElmt = from_key.GetNumPoints();
 
     // declare arrays to save points
-    Array<OneD, Array<OneD, NekDouble> > from_ptsInElmt(3); // 3 for 3D,//offset=0,8,16,...,328
+    Array<OneD, Array<OneD, NekDouble> > from_ptsInElmt(3);
     Array<OneD, Array<OneD, NekDouble> > to_ptsInElmt(3);
     Array<OneD, Array<OneD, NekDouble> > to_normalsInElmt(3);
     for (int i=0; i<3; ++i) {
@@ -267,36 +263,66 @@ void ProcessNFactor::Process(po::variables_map &vm)
         origs[i] = Array<OneD, NekDouble>(nOrigs, 0.0); 
     }
     
-    int ptr = 0;
     // loop the element on the bnd
+    int ptr = 0; // pointed to head to copy the arrays
     for ( int i = 0; i < nElmts; ++i ) { //i < nElmts
 
         // obtain the points in the element
-        BndExp[0]->GetExp(i)->GetCoords( from_ptsInElmt[0], from_ptsInElmt[1], from_ptsInElmt[2] ); 
+        BndExp[0]->GetExp(i)->GetCoords(from_ptsInElmt[0], from_ptsInElmt[1], from_ptsInElmt[2]); 
 
         // skip some elements, needs further improved
         if (from_ptsInElmt[0][0]<boundingBox[0] ||
             from_ptsInElmt[0][from_nPtsPerElmt-1]>boundingBox[1]) { continue; } 
 
         // interp x/y/z and nx/ny/nz
-        // needs to be further improved for cases with different dimensions
-        // dim_phys determins times (xy/xyz) to loop
-        // dim_para determins functions (Interp1D/Interp2D) to ues
+        // dim_phys determins the times (xy/xyz) to loop
+        // dim_para determins the interpolation function (Interp1D/Interp2D) to ues
         // ref: Expansion::v_GetCoords in Expansion.cpp
         for (int j = 0; j < dim_phys; ++j ) {
-            LibUtilities::Interp1D(from_key, &from_ptsInElmt[j][0], to_key, &to_ptsInElmt[j][0]); //x/y/z
             //LibUtilities::Interp1D(from_key, &xyz_bnd[j][i*from_nPtsPerElmt], to_key, &to_ptsInElmt[j][0]); //alternative code
-            LibUtilities::Interp1D(from_key, &normals[j][i*from_nPtsPerElmt], to_key, &to_normalsInElmt[j][0]);
+            //LibUtilities::Interp1D(from_key, &from_ptsInElmt[j][0], to_key, &to_ptsInElmt[j][0]); //x/y/z
+            //LibUtilities::Interp1D(from_key, &normals[j][i*from_nPtsPerElmt], to_key, &to_normalsInElmt[j][0]);
+            switch (dim_para) {
+                case 1: {
+                    // ksi - line segement element on bnd
+                    LibUtilities::Interp1D(
+                        from_key[0], &from_ptsInElmt[j][0], 
+                        to_key,      &to_ptsInElmt[j][0]); //x/y/z
+                    LibUtilities::Interp1D(
+                        from_key[0], &normals[j][i*from_nPtsPerElmt], 
+                        to_key,      &to_normalsInElmt[j][0]); // nx/ny/nz
+                    break;
+                }
+                case 2: {
+                    // ksi and eta - tri or quad element on bnd
+                    LibUtilities::Interp2D(
+                        from_key[0], from_key[1], 
+                        &from_ptsInElmt[j][0], 
+                        to_key,      to_key,      
+                        &to_ptsInElmt[j][0]); //x/y/z
+                    LibUtilities::Interp2D(
+                        from_key[0], from_key[1], 
+                        &normals[j][i*from_nPtsPerElmt], 
+                        to_key,      to_key,      
+                        &to_normalsInElmt[j][0]);
+                    break;
+                }
+                default: {
+                    ASSERTL0(false, "Dimension error.");
+                }
+            }
 
             // save the interpolated results
-            Vmath::Vcopy( to_nPtsPerElmt, &to_ptsInElmt[j][0],     1, &origs[j][ptr],   1); // copy coordinates
-            Vmath::Vcopy( to_nPtsPerElmt, &to_normalsInElmt[j][0], 1, &origs[j+3][ptr], 1); // copy coordinates
+            Vmath::Vcopy(to_nPtsPerElmt, &to_ptsInElmt[j][0],
+                         1, &origs[j][ptr],   1); // copy coordinates
+            Vmath::Vcopy(to_nPtsPerElmt, &to_normalsInElmt[j][0],
+                         1, &origs[j+3][ptr], 1); // copy coordinates
         }
-        ptr = ptr + to_nPtsPerElmt;
+        ptr += to_nPtsPerElmt;
 
     }
  
-    // sort array and remove repeated origin points
+    // sort array regards to x-value and remove repeated origin points
     HeapSort(origs);
     int nOrigs_new = CleanRepeatedPts(origs);
      
@@ -304,8 +330,8 @@ void ProcessNFactor::Process(po::variables_map &vm)
     //=========================================================================
 
     // Step 4 - set sampling points
+    // Expression in Agrawal's paper:
     // h = 1- tanh((1-ksi)*atanh(sqrt(1-delta)))/sqrt(1-delta), ksi in [0,1]
-    // from Agrawal's paper
     Array<OneD, NekDouble> h(npts_n);
     NekDouble tmp1;
     const NekDouble tmp2 = 1.0/(static_cast<NekDouble>(npts_n)-1.0); // 1/(npts-1)
@@ -315,7 +341,7 @@ void ProcessNFactor::Process(po::variables_map &vm)
     for (int i=0; i<npts_n; ++i){
         tmp1 = 1.0 - i * tmp2; // tmp1 = 1-ksi, ksi = i/(npts_n-1) belonging to [0,1]
         h[i] = 1 - tanh(tmp1*tmp4)*tmp5;
-        cout << i<<" - ksi = "<<1-tmp1<<", h = "<< h[i] <<endl;
+        //cout << i <<" - ksi = "<<1-tmp1<<", h = "<< h[i] <<endl;
     }
 
     // declare the data array and fill in the coordinates
@@ -334,9 +360,8 @@ void ProcessNFactor::Process(po::variables_map &vm)
     }
 
     // Step 5 - interpolate the variables for each point
-    int nCoordDim = m_f->m_exp[0]->GetCoordim(0);
-    Array<OneD, NekDouble> Lcoords(nCoordDim, 0.0); 
-    Array<OneD, NekDouble> coords(3);
+    Array<OneD, NekDouble> Lcoords(nCoordDim, 0.0); // 2.5D=2, 3D=3
+    Array<OneD, NekDouble> coords(3);               // directly use 3
    
     for (int i=0; i<nOrigs_new; ++i) {
         for (int j=0; j<npts_n; ++j) {
@@ -405,8 +430,20 @@ void ProcessNFactor::Process(po::variables_map &vm)
     } // loop i for orgins 
     
 
+    //---------------------------------------------------------------
+    // To do list (done)
+    // 1. Will the following 3 expressions always the same?
+    //    m_f->m_graph->GetSpaceDimension()
+    //    m_f->m_exp[0]->GetCoordim(0)
+    //    BndExp[0]->GetCoordim(0)
+    // 2. PointTypes for quad bnd mesh and tri mesh on the boundary?
+    //    PointsKey only accept 1 pointtype but there are 2 directions.
+    // 3. Does this routine give the parametric dimension?
+    //    BndExp[0]->GetExp(0)->GetNumBases()
+
+    // ans:
+
     //---------------output some  middle results --------------------
-    std::cout<< nfields<< ", " << expdim << ", " << m_spacedim <<std::endl;
     std::cout << "dim_para = " << dim_para <<", dim_coor = " << dim_phys <<std::endl;
     std::cout<< m_f->m_exp[0]->GetNumElmts() <<std::endl;
     std::cout<< m_f->m_variables[0]<<", "<<m_f->m_variables[1]<<", "
@@ -415,19 +452,19 @@ void ProcessNFactor::Process(po::variables_map &vm)
 
     cout << "bnd = " << bnd << endl;
     cout << "nqb = " << nqb << endl;
-    cout << "normals1 "<< normals[1][nqb-2]<<" "<< normals[1][nqb-1] << endl; 
+    cout << "normals_y = " << normals[1][nqb-2]<<" "<< normals[1][nqb-1] << endl; 
     cout << "Dimension = " << nCoordDim <<endl;
 
+    /*
     for (int i=0;i<nqb/4;++i){   // 0 ~ nqb/4, where 4 if for HomModesZ=4
         cout << i << " - " <<xyz_bnd[0][i] <<", "<<xyz_bnd[1][i]<<", "<<xyz_bnd[2][i]<<endl;
-    }
+    }*/
 
     cout << "len1 = "<< nOrigs <<", len2 = " << nOrigs_new << endl;
     for (int j=0; j<nOrigs_new; ++j){
         cout <<"-array_3- " << origs[0][j] <<", "<< origs[1][j]<<", "<< origs[2][j] <<", "
                             << origs[3][j] <<", "<< origs[4][j]<<", "<< origs[5][j] <<endl;
     } 
-
 
     //---------------------------------------------------------------
     int i=0;

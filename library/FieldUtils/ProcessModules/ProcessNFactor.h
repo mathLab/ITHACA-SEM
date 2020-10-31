@@ -82,7 +82,10 @@ public:
 
     int CleanRepeatedPts(Array<OneD, Array<OneD, NekDouble> > A);
 
-
+    // write data in pts format
+    void WriteDataInPts(const std::string &outFile, 
+        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > > data, 
+        const int len);
 
 protected:
 

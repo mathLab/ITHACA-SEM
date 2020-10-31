@@ -55,6 +55,12 @@ ModuleKey ProcessNFactor::className = GetModuleFactory().RegisterCreatorFunction
 
 ProcessNFactor::ProcessNFactor(FieldSharedPtr f) : ProcessBoundaryExtract(f)
 {
+    // here is the place to register new options!!!
+    // have fun
+    // h,nh,ne,x1,x2,y1,y2,z1,z2
+    //================================================
+    m_config["newConfig"] = ConfigOption(false, "NotSet", "test the new option");
+
 }
 
 ProcessNFactor::~ProcessNFactor()
@@ -151,6 +157,67 @@ int ProcessNFactor::CleanRepeatedPts(Array<OneD, Array<OneD, NekDouble> > A)
 }
 
 
+void ProcessNFactor::WriteDataInPts(const std::string &outFile, 
+    const Array<OneD, Array<OneD, Array<OneD, NekDouble> > > data, 
+    const int len)
+{
+
+    // Step 1 - settings
+    bool is2D;  // true=2D, false=3D
+    bool isInc; // true=incompressible. false=compressible
+    int nfields = m_f->m_variables.size();
+
+    if      (boost::iequals(m_f->m_variables[0], "u"  )) { isInc = true;  }
+    else if (boost::iequals(m_f->m_variables[0], "rho")) { isInc = false; }
+    else { cout << "Other types of field. Might be an issue." << endl; }
+ 
+    if (isInc==true){
+        if      (nfields==3) { is2D = true;  }
+        else if (nfields==4) { is2D = false; }
+        else  { cout << "Incorrect dimension." << endl; }
+    }
+    else {
+        if      (nfields==4) { is2D = true; }
+        else if (nfields==5) { is2D = false; }
+        else  { cout << "Incorrect dimension." << endl; }
+    }
+
+
+    // Step 2 - outpput
+    std::ofstream ptsFile;
+    ptsFile.open(outFile.c_str());
+    ptsFile << "<?xml version=\"1.0\" encoding=\"utf-8\" ?>" << endl;
+    ptsFile << "<NEKTAR>" << endl;
+    ptsFile << "  <POINTS ";
+    ptsFile << "DIM=\"" << (is2D ? 2 : 3) << "\" ";
+    ptsFile << "FIELDS=\"";
+    for (int i=0; i<nfields; ++i){
+        ptsFile << m_f->m_variables[i];
+        if (i < nfields-1) {
+            ptsFile << ",";
+        }
+    }
+    ptsFile << "\">" << endl;
+
+    for (size_t i = 0; i<len; ++i){
+        for (size_t j=0; j<data[0].size(); ++j) {
+            ptsFile << "    ";
+            ptsFile << data[i][j][0] << " " << data[i][j][1] << " ";
+            if (is2D==false) { ptsFile << data[i][j][2] << " "; }
+            for (int k=0; k<nfields; ++k){
+                ptsFile << data[i][j][3+k];
+                if (k < nfields-1) { ptsFile << " "; }
+            }
+            ptsFile << endl;
+        }
+    }
+
+    ptsFile << "  </POINTS>" << endl;
+    ptsFile << "</NEKTAR>" << endl;
+    ptsFile.close();
+}
+
+
 void ProcessNFactor::Process(po::variables_map &vm)
 {
     ProcessBoundaryExtract::Process(vm);
@@ -177,11 +244,13 @@ void ProcessNFactor::Process(po::variables_map &vm)
     int nCoordDim = m_f->m_exp[0]->GetCoordim(0);
     m_spacedim    = nCoordDim + m_f->m_numHomogeneousDir;
 
-    string str_inc = "u";
-    string str_com = "rho";
-    if      (m_f->m_variables[0].compare(str_inc)==0){cout <<"incompressible"<<endl;}
-    else if (m_f->m_variables[0].compare(str_com)==0){cout <<"compressible"<<endl;}
-    else {ASSERTL0(false, "Other type of fields, not coded yet.");}
+    //string str_inc = "u";
+    //string str_com = "rho";
+    //if      (m_f->m_variables[0].compare(str_inc)==0){cout <<"incompressible"<<endl;}
+    //else if (m_f->m_variables[0].compare(str_com)==0){cout <<"compressible"<<endl;}
+    //else {ASSERTL0(false, "Other type of fields, not coded yet.");}
+    //if(boost::iequals(m_f->m_variables[0], "u"))
+    //if(boost::iequals(m_f->m_variables[0], "rho") && boost::iequals(m_f->m_variables[1], "rhou")
 
 
     // Step 2 - get boundary info
@@ -420,7 +489,7 @@ void ProcessNFactor::Process(po::variables_map &vm)
                         data[i][j][3+f] = value;
                     }
 
-                } // loop f for diferent field
+                } // loop f for diferent fields
             }
             else {
                 ASSERTL0(false, "Incorrect Id for donor element.");
@@ -429,6 +498,85 @@ void ProcessNFactor::Process(po::variables_map &vm)
         } // loop j for normal array
     } // loop i for orgins 
     
+
+    // Export data in pts format
+    WriteDataInPts("111.pts", data, nOrigs_new);  //nOrigs_new
+
+    
+    //=========================================================================
+    //vector<NekDouble> values;
+    //bool test = ParseUtils::GenerateVector(m_config["plane"].as<string>(), values);
+
+    /*
+     * Process list of modules. Each element of the vector of module
+     * strings can be in the following form:
+     *
+     * modname:arg1=a:arg2=b:arg3=c:arg4:arg5=asd
+     * 
+     * wallNormalDat:bnd=0:ne=11:h=0.001:nh=21 mesh.xml session.xml field.fld data.pts
+     * 
+     *
+     * where the only required argument is 'modname', specifing the
+     * name of the module to load.
+     */
+    
+    vector<string> inout   = vm["input-file"].as<vector<string> >();
+    vector<string> modcmds = vm["module"].as<vector<string> >();
+
+
+    cout << "input.size = " << inout.size() << endl;
+    for (int i=0; i<inout.size(); ++i){
+        cout << "inout " << i << " = " << inout[i] << endl;
+    }
+
+    cout << "modcmds.size =" << modcmds.size() << endl;
+    for (int i=0; i<modcmds.size(); ++i){
+        cout << "modcmds " << i << " = " << modcmds[i] << endl;
+    }
+
+
+    cout << "---" << endl;
+    vector<string> tmpStr1;
+    boost::split(tmpStr1, modcmds[0], boost::is_any_of(":"));
+    cout << "tmpStr1.size = " << tmpStr1.size() << endl;
+    for (int i=0; i<tmpStr1.size(); ++i){
+        cout << "tmpStr1 " << i << " = " << tmpStr1[i] << endl;
+        vector<string> tmpStr2;
+        boost::split(tmpStr2, tmpStr1[i], boost::is_any_of("="));
+        for (int j=0; j<tmpStr2.size(); ++j){
+            cout << "tmpStr2 " << j << " = " << tmpStr2[j] << endl;
+        }
+    }
+
+
+    cout << "----" << endl;
+    if ( m_config["bnd"].as<string>().compare("0") == 0 ) {
+        cout << "0000" << endl;
+    }
+    else {
+        cout << "1111" << endl;
+    }
+
+    if ( m_config["addnormals"].as<string>().compare("2") == 0 ) {
+        cout << "0000" << endl;
+    }
+    else {
+        cout << "1111" << endl;
+    }
+    if ( m_config["newConfig"].as<string>().compare("333") == 0 ) {
+        cout << "0000" << endl;
+    }
+    else {
+        cout << "1111" << endl;
+    }
+
+
+
+
+
+
+
+
 
     //---------------------------------------------------------------
     // To do list (done)
@@ -444,6 +592,7 @@ void ProcessNFactor::Process(po::variables_map &vm)
     // ans:
 
     //---------------output some  middle results --------------------
+    /*
     std::cout << "dim_para = " << dim_para <<", dim_coor = " << dim_phys <<std::endl;
     std::cout<< m_f->m_exp[0]->GetNumElmts() <<std::endl;
     std::cout<< m_f->m_variables[0]<<", "<<m_f->m_variables[1]<<", "
@@ -454,12 +603,12 @@ void ProcessNFactor::Process(po::variables_map &vm)
     cout << "nqb = " << nqb << endl;
     cout << "normals_y = " << normals[1][nqb-2]<<" "<< normals[1][nqb-1] << endl; 
     cout << "Dimension = " << nCoordDim <<endl;
-
+    */
     /*
     for (int i=0;i<nqb/4;++i){   // 0 ~ nqb/4, where 4 if for HomModesZ=4
         cout << i << " - " <<xyz_bnd[0][i] <<", "<<xyz_bnd[1][i]<<", "<<xyz_bnd[2][i]<<endl;
     }*/
-
+    /*
     cout << "len1 = "<< nOrigs <<", len2 = " << nOrigs_new << endl;
     for (int j=0; j<nOrigs_new; ++j){
         cout <<"-array_3- " << origs[0][j] <<", "<< origs[1][j]<<", "<< origs[2][j] <<", "
@@ -482,6 +631,7 @@ void ProcessNFactor::Process(po::variables_map &vm)
         cin >> i;
     }
     //---------------------------------------------------------------
+    */
 
 }
 

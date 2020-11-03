@@ -49,6 +49,7 @@ IF ( NEKTAR_USE_CWIPI )
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPSRC}/cwipi-0.8.2
             PATCH_COMMAND patch -p 0 < ${PROJECT_SOURCE_DIR}/cmake/thirdparty-patches/cwipi_fix-compile.patch
+            COMMAND patch -p 1 < ${PROJECT_SOURCE_DIR}/cmake/thirdparty-patches/cwipi_mpi3.patch
             BINARY_DIR ${TPBUILD}/cwipi-0.8.2
             TMP_DIR ${TPBUILD}/cwipi-0.8.2-tmp
             INSTALL_DIR ${TPDIST}

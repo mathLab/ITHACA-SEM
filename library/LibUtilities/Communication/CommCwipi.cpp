@@ -49,7 +49,7 @@ std::string CommCwipi::className = GetCommFactory().RegisterCreatorFunction(
 /**
  *
  */
-CommCwipi::CommCwipi(int narg, char *arg[]) : CommMpi()
+CommCwipi::CommCwipi(int narg, char *arg[]) : CommMpi(narg, arg)
 {
     int init = 0;
     MPI_Initialized(&init);

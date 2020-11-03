@@ -33,6 +33,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef NEKTAR_USING_PETSC
+#include "petscsys.h"
+#endif
+
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Communication/CommCwipi.h>
 
@@ -68,6 +72,10 @@ CommCwipi::CommCwipi(int narg, char *arg[]) : CommMpi(narg, arg)
     MPI_Comm_size(m_comm, &m_size);
     MPI_Comm_rank(m_comm, &m_rank);
 
+#ifdef NEKTAR_USING_PETSC
+    PETSC_COMM_WORLD = m_comm;
+    PetscInitializeNoArguments();
+#endif
     m_type = "Parallel MPI with CWIPI";
 }
 

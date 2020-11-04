@@ -36,6 +36,7 @@
 #include <string>
 
 #include "ProcessNFactor.h"
+#include "ProcessInterpPtsToPts.h"
 
 #include <LibUtilities/Foundations/Interp.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -55,12 +56,24 @@ ModuleKey ProcessNFactor::className = GetModuleFactory().RegisterCreatorFunction
 
 ProcessNFactor::ProcessNFactor(FieldSharedPtr f) : ProcessBoundaryExtract(f)
 {
-    // here is the place to register new options!!!
-    // have fun
-    // h,nh,ne,x1,x2,y1,y2,z1,z2
-    //================================================
-    m_config["newConfig"] = ConfigOption(false, "NotSet", "test the new option");
+    f->m_writeBndFld = false; // turned on in the upstream ProcessBoundaryExtract
 
+    // Necessary parameters
+    m_config["h"]  = ConfigOption(false, "NotSet", 
+                    "Sampling distance along the wall normals.");
+    m_config["nh"] = ConfigOption(false, "NotSet", 
+                    "Number of sampling points along the wall normals.");
+    m_config["ne"] = ConfigOption(false, "NotSet", 
+                    "Number of sampling points on each edge of an element.");
+    
+    // Optional parameters
+    m_config["d"]  = ConfigOption(false, "0.1", "Refinement control, delta<1");
+    m_config["x0"] = ConfigOption(false, "-10000000.0", "Lower bound of x.");
+    m_config["x1"] = ConfigOption(false,  "10000000.0", "Upper bound of x.");
+    m_config["y0"] = ConfigOption(false, "-10000000.0", "Lower bound of y.");
+    m_config["y1"] = ConfigOption(false,  "10000000.0", "Upper bound of y.");
+    m_config["z0"] = ConfigOption(false, "-10000000.0", "Lower bound of z.");
+    m_config["z1"] = ConfigOption(false,  "10000000.0", "Upper bound of z.");
 }
 
 ProcessNFactor::~ProcessNFactor()
@@ -156,7 +169,8 @@ int ProcessNFactor::CleanRepeatedPts(Array<OneD, Array<OneD, NekDouble> > A)
     return (newLen);
 }
 
-
+/* data.size() > len bacause of the repeated points
+*/
 void ProcessNFactor::WriteDataInPts(const std::string &outFile, 
     const Array<OneD, Array<OneD, Array<OneD, NekDouble> > > data, 
     const int len)
@@ -218,42 +232,67 @@ void ProcessNFactor::WriteDataInPts(const std::string &outFile,
 }
 
 
+void ProcessNFactor::CreateFieldPts(
+    const Array<OneD, Array<OneD, Array<OneD, NekDouble> > > data, 
+    const int len)
+{
+    
+    int npts_n  = data[0].size(); // number of points in normal direction
+    int npts    = len * npts_n;   // len is number of sampling origins
+    int totvars = m_spacedim + m_f->m_variables.size();
+    Array<OneD, Array<OneD, NekDouble> > pts(totvars);
+
+    for (int i = 0; i < totvars; ++i)
+    {
+        pts[i] = Array<OneD, NekDouble>(npts);
+    }
+
+    int idx_o, idx_n, idx_v;
+    for (int i = 0; i < npts; ++i)
+    {
+        idx_n = i%npts_n;         // idx for normal direction
+        idx_o = (i-idx_n)/npts_n; // idx for origin
+        idx_v = 0;                // idx for variable
+        for (int j = 0; j < totvars; ++j)
+        {
+            pts[j][i] = data[idx_o][idx_n][idx_v];
+            ++idx_v;
+            if(m_spacedim==2 && j==1){++idx_v;}
+        }
+    }
+
+    m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(m_spacedim, m_f->m_variables, pts, LibUtilities::NullPtsInfoMap);
+
+}
+
+
 void ProcessNFactor::Process(po::variables_map &vm)
 {
     ProcessBoundaryExtract::Process(vm);
 
-    //---------- Input paramaters (move to upstream routines later) -----------
-    // sampling origins setting
-    const int to_nPtsPerEdge = 6; // needed number of points per element
+    // Step 1 - Get sampling parameters
+    const NekDouble distance_n = m_config["h"].as<NekDouble>(); //0.005
+    const int       npts_n     = m_config["nh"].as<int>();      //21
+    const int to_nPtsPerEdge   = m_config["ne"].as<int>();      //6
+    const NekDouble delta      = m_config["d"].as<NekDouble>(); //0.1
+
     Array<OneD, NekDouble> boundingBox(6); // use origins inside the box
-    boundingBox[0] = 0.189;                               // x_lower
-    boundingBox[1] = 0.401;                               // x_upper
-    boundingBox[2] = -abs(NekConstants::kNekUnsetDouble); // y_lower
-    boundingBox[3] =  abs(NekConstants::kNekUnsetDouble); // y_upper
-    boundingBox[4] = -abs(NekConstants::kNekUnsetDouble); // z_lower
-    boundingBox[5] =  abs(NekConstants::kNekUnsetDouble); // z_upper
+    boundingBox[0] = m_config["x0"].as<NekDouble>(); 
+    boundingBox[1] = m_config["x1"].as<NekDouble>();
+    boundingBox[2] = m_config["y0"].as<NekDouble>();
+    boundingBox[3] = m_config["y1"].as<NekDouble>();
+    boundingBox[4] = m_config["z0"].as<NekDouble>();
+    boundingBox[5] = m_config["z1"].as<NekDouble>();
+    
 
-    // Sampling setting
-    const NekDouble distance_n = 0.005; // from wall to wall + H in normal direction
-    const int       npts_n     = 21;    // npts in wall normal direction, use npts points for export
-    const NekDouble delta      = 0.1;   // needs to be smaller than 1.
-    //-------------------------------------------------------------------------
-
-    // Step 1 - get data type
+    // Step 2 - Get data dimension
     int nfields   = m_f->m_variables.size();
     int nCoordDim = m_f->m_exp[0]->GetCoordim(0);
     m_spacedim    = nCoordDim + m_f->m_numHomogeneousDir;
 
-    //string str_inc = "u";
-    //string str_com = "rho";
-    //if      (m_f->m_variables[0].compare(str_inc)==0){cout <<"incompressible"<<endl;}
-    //else if (m_f->m_variables[0].compare(str_com)==0){cout <<"compressible"<<endl;}
-    //else {ASSERTL0(false, "Other type of fields, not coded yet.");}
-    //if(boost::iequals(m_f->m_variables[0], "u"))
-    //if(boost::iequals(m_f->m_variables[0], "rho") && boost::iequals(m_f->m_variables[1], "rhou")
 
 
-    // Step 2 - get boundary info
+    // Step 3 - Get boundary info
     // Create map of boundary ids for partitioned domains
     SpatialDomains::BoundaryConditions bcs(m_f->m_session,
                                            m_f->m_exp[0]->GetGraph());
@@ -294,7 +333,7 @@ void ProcessNFactor::Process(po::variables_map &vm)
     */
 
     //=========================================================================
-    // Step 3 - set origins for sampling
+    // Step 4 - set origins for sampling
     // only support 1D interpolation now
     // set dimensions bndElmtDim_para bndElmtDim_phys
     const int dim_para = BndExp[0]->GetExp(0)->GetNumBases(); // dimension for parametric coordinate system, eg. =1
@@ -398,7 +437,7 @@ void ProcessNFactor::Process(po::variables_map &vm)
     //-------------------------------------------------------------------------
     //=========================================================================
 
-    // Step 4 - set sampling points
+    // Step 5 - set sampling points
     // Expression in Agrawal's paper:
     // h = 1- tanh((1-ksi)*atanh(sqrt(1-delta)))/sqrt(1-delta), ksi in [0,1]
     Array<OneD, NekDouble> h(npts_n);
@@ -498,85 +537,15 @@ void ProcessNFactor::Process(po::variables_map &vm)
         } // loop j for normal array
     } // loop i for orgins 
     
-
-    // Export data in pts format
-    WriteDataInPts("111.pts", data, nOrigs_new);  //nOrigs_new
-
     
-    //=========================================================================
-    //vector<NekDouble> values;
-    //bool test = ParseUtils::GenerateVector(m_config["plane"].as<string>(), values);
+    // create m_fieldPts for OutputPts module to write
+    CreateFieldPts(data, nOrigs_new);
 
-    /*
-     * Process list of modules. Each element of the vector of module
-     * strings can be in the following form:
-     *
-     * modname:arg1=a:arg2=b:arg3=c:arg4:arg5=asd
-     * 
-     * wallNormalDat:bnd=0:ne=11:h=0.001:nh=21 mesh.xml session.xml field.fld data.pts
-     * 
-     *
-     * where the only required argument is 'modname', specifing the
-     * name of the module to load.
-     */
+    // Export data in pts format directly in the current module
+    // can be used to check the output file by OutputPts module
+    //WriteDataInPts("outTest.pts", data, nOrigs_new);
+    //========================================================================= 
     
-    vector<string> inout   = vm["input-file"].as<vector<string> >();
-    vector<string> modcmds = vm["module"].as<vector<string> >();
-
-
-    cout << "input.size = " << inout.size() << endl;
-    for (int i=0; i<inout.size(); ++i){
-        cout << "inout " << i << " = " << inout[i] << endl;
-    }
-
-    cout << "modcmds.size =" << modcmds.size() << endl;
-    for (int i=0; i<modcmds.size(); ++i){
-        cout << "modcmds " << i << " = " << modcmds[i] << endl;
-    }
-
-
-    cout << "---" << endl;
-    vector<string> tmpStr1;
-    boost::split(tmpStr1, modcmds[0], boost::is_any_of(":"));
-    cout << "tmpStr1.size = " << tmpStr1.size() << endl;
-    for (int i=0; i<tmpStr1.size(); ++i){
-        cout << "tmpStr1 " << i << " = " << tmpStr1[i] << endl;
-        vector<string> tmpStr2;
-        boost::split(tmpStr2, tmpStr1[i], boost::is_any_of("="));
-        for (int j=0; j<tmpStr2.size(); ++j){
-            cout << "tmpStr2 " << j << " = " << tmpStr2[j] << endl;
-        }
-    }
-
-
-    cout << "----" << endl;
-    if ( m_config["bnd"].as<string>().compare("0") == 0 ) {
-        cout << "0000" << endl;
-    }
-    else {
-        cout << "1111" << endl;
-    }
-
-    if ( m_config["addnormals"].as<string>().compare("2") == 0 ) {
-        cout << "0000" << endl;
-    }
-    else {
-        cout << "1111" << endl;
-    }
-    if ( m_config["newConfig"].as<string>().compare("333") == 0 ) {
-        cout << "0000" << endl;
-    }
-    else {
-        cout << "1111" << endl;
-    }
-
-
-
-
-
-
-
-
 
     //---------------------------------------------------------------
     // To do list (done)
@@ -608,6 +577,39 @@ void ProcessNFactor::Process(po::variables_map &vm)
     for (int i=0;i<nqb/4;++i){   // 0 ~ nqb/4, where 4 if for HomModesZ=4
         cout << i << " - " <<xyz_bnd[0][i] <<", "<<xyz_bnd[1][i]<<", "<<xyz_bnd[2][i]<<endl;
     }*/
+    
+    /*
+    // create m_fieldPts for OutputPts module to write
+    m_f->m_fieldPts = LibUtilities::NullPtsField;
+    vector<string> fieldNames = {"u","v","w","p"};
+    int totvars = m_spacedim + fieldNames.size();
+    Array<OneD, Array<OneD, NekDouble> > pts(totvars);
+    int npts = nOrigs_new*npts_n;
+    for (int i = 0; i < totvars; ++i)
+    {
+        pts[i] = Array<OneD, NekDouble>(npts);
+    }
+
+    int idx_o, idx_n, idx_v;
+    for (int i = 0; i < npts; ++i)
+    {
+        idx_n = i%npts_n;
+        idx_o = (i-idx_n)/npts_n;
+        idx_v = 0;
+        for (int j = 0; j < totvars; ++j)
+        {
+            pts[j][i] = data[idx_o][idx_n][idx_v];
+            ++idx_v;
+            if(m_spacedim==2 && j==1){++idx_v;}
+        }
+    }
+
+    m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(m_spacedim, fieldNames, pts, LibUtilities::NullPtsInfoMap);
+    
+    
+    
+    */
+       
     /*
     cout << "len1 = "<< nOrigs <<", len2 = " << nOrigs_new << endl;
     for (int j=0; j<nOrigs_new; ++j){
@@ -632,6 +634,37 @@ void ProcessNFactor::Process(po::variables_map &vm)
     }
     //---------------------------------------------------------------
     */
+    /*
+    vector<string> inout   = vm["input-file"].as<vector<string> >();
+    vector<string> modcmds = vm["module"].as<vector<string> >();
+    cout << "input.size = " << inout.size() << endl;
+    for (int i=0; i<inout.size(); ++i){
+        cout << "inout " << i << " = " << inout[i] << endl;
+    }
+    cout << "modcmds.size =" << modcmds.size() << endl;
+    for (int i=0; i<modcmds.size(); ++i){
+        cout << "modcmds " << i << " = " << modcmds[i] << endl;
+    }
+    
+    cout << "bnd = " << m_config["bnd"].as<int>() << endl;
+    cout << "in  = " << m_config["infile"].as<string>() << endl;
+    cout << "out = " << m_config["outfile"].as<string>() << endl;
+
+    cout <<"h = " << distance_n <<", nh = " << npts_n 
+         << ", ne = " << to_nPtsPerEdge << ", delta = " << delta << endl;
+
+    cout << "[x0,x1] = [" << boundingBox[0] << "," << boundingBox[1] << "]" << endl;
+    cout << "[y0,y1] = [" << boundingBox[2] << "," << boundingBox[3] << "]" << endl;
+    cout << "[z0,z1] = [" << boundingBox[4] << "," << boundingBox[5] << "]" << endl;
+
+
+    cout << "\nHi there. " << this->GetModuleName() << endl;
+
+    if (m_f->m_fieldPts){cout << "fieldPts np = " << m_f->m_fieldPts->GetNpoints() << endl;}
+    else {cout << "Not created!"<<endl;}
+    */
+    //---------------------------------------------------------------
+
 
 }
 

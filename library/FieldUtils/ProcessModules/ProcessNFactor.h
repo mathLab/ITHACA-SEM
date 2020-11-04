@@ -87,6 +87,10 @@ public:
         const Array<OneD, Array<OneD, Array<OneD, NekDouble> > > data, 
         const int len);
 
+    void CreateFieldPts(
+        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > > data, 
+        const int len);
+
 protected:
 
 private:

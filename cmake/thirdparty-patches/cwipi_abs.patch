@@ -1,0 +1,30 @@
+diff -rNau cwipi-0.8.2.old/src/geomUtilities.cxx cwipi-0.8.2/src/geomUtilities.cxx
+--- cwipi-0.8.2.old/src/geomUtilities.cxx	2014-12-10 15:16:36.000000000 +0000
++++ cwipi-0.8.2/src/geomUtilities.cxx	2020-11-04 07:01:35.938895669 +0000
+@@ -626,7 +626,7 @@
+       int nPolyhedraVertices = 0;
+       for (int iface = 0; iface < nPolyFace; iface++) {
+ 
+-        const int face          = abs(cellToFaceConnectivity[polyIdx + iface]) - 1;
++        const int face          = std::abs(cellToFaceConnectivity[polyIdx + iface]) - 1;
+         const int faceIdx       = faceConnectivityIdx[face];
+         const int nFaceVertices = faceConnectivityIdx[face+1] - faceIdx;
+ 
+@@ -677,7 +677,7 @@
+ 
+       for (int iface = 0; iface < nPolyFace; iface++) {
+ 
+-        const int face          = abs(cellToFaceConnectivity[polyIdx + iface]) - 1;
++        const int face          = std::abs(cellToFaceConnectivity[polyIdx + iface]) - 1;
+         const int direction     = (cellToFaceConnectivity[polyIdx + iface] < 0) ? -1 : 1;
+ 
+         const int faceIdx       = faceConnectivityIdx[face];
+@@ -772,7 +772,7 @@
+ 
+       for (int iface = 0; iface < nPolyFace; iface++) {
+ 
+-        const int face          = abs(cellToFaceConnectivity[polyIdx + iface]) - 1;
++        const int face          = std::abs(cellToFaceConnectivity[polyIdx + iface]) - 1;
+         const int direction     = (cellToFaceConnectivity[polyIdx + iface] < 0) ? -1 : 1;
+         const double*surfaceVector_f = surfaceVector + 3*face;
+ 

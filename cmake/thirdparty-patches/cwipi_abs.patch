@@ -1,7 +1,15 @@
 diff -rNau cwipi-0.8.2.old/src/geomUtilities.cxx cwipi-0.8.2/src/geomUtilities.cxx
 --- cwipi-0.8.2.old/src/geomUtilities.cxx	2014-12-10 15:16:36.000000000 +0000
-+++ cwipi-0.8.2/src/geomUtilities.cxx	2020-11-04 07:01:35.938895669 +0000
-@@ -626,7 +626,7 @@
++++ cwipi-0.8.2/src/geomUtilities.cxx	2020-11-04 10:28:49.372555332 +0000
+@@ -20,6 +20,7 @@
+ #include <algorithm>
+ #include <vector>
+ #include <cstdio>
++#include <cstdlib>
+ 
+ #include <bftc_printf.h>
+ 
+@@ -626,7 +627,7 @@
        int nPolyhedraVertices = 0;
        for (int iface = 0; iface < nPolyFace; iface++) {
  
@@ -10,7 +18,7 @@ diff -rNau cwipi-0.8.2.old/src/geomUtilities.cxx cwipi-0.8.2/src/geomUtilities.c
          const int faceIdx       = faceConnectivityIdx[face];
          const int nFaceVertices = faceConnectivityIdx[face+1] - faceIdx;
  
-@@ -677,7 +677,7 @@
+@@ -677,7 +678,7 @@
  
        for (int iface = 0; iface < nPolyFace; iface++) {
  
@@ -19,7 +27,7 @@ diff -rNau cwipi-0.8.2.old/src/geomUtilities.cxx cwipi-0.8.2/src/geomUtilities.c
          const int direction     = (cellToFaceConnectivity[polyIdx + iface] < 0) ? -1 : 1;
  
          const int faceIdx       = faceConnectivityIdx[face];
-@@ -772,7 +772,7 @@
+@@ -772,7 +773,7 @@
  
        for (int iface = 0; iface < nPolyFace; iface++) {
  

@@ -340,7 +340,7 @@ NekDouble SegGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
                                   Array<OneD, NekDouble> &Lcoords)
 {
     int i;
-    NekDouble resid = 0.0;
+    NekDouble ptdist = 1e6;
     SegGeom::v_FillGeom();
 
     // calculate local coordinate for coord
@@ -357,7 +357,11 @@ NekDouble SegGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
             m_xmap->BwdTrans(m_coeffs[i], pts);
             len += (pts[npts - 1] - pts[0]) * (pts[npts - 1] - pts[0]);
             xi += (coords[i] - pts[0]) * (pts[npts-1] - pts[0]);
+            ptdist += (coords[i] - pts[npts - 1]) * (pts[npts-1] - pts[npts - 1]);
         }
+        len = sqrt(len);
+        xi  = sqrt(xi);
+        ptdist = min(sqrt(ptdist), xi);
 
         Lcoords[0] = 2 * xi / len - 1.0;
     }

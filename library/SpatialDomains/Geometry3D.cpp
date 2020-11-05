@@ -193,7 +193,7 @@ void Geometry3D::NewtonIterationForLocCoord(
     I[0] = m_xmap->GetBasis(0)->GetI(eta);
     I[1] = m_xmap->GetBasis(1)->GetI(eta + 1);
     I[2] = m_xmap->GetBasis(2)->GetI(eta + 2);
-    // calculate the global point `corresponding to Lcoords
+    // calculate the global point corresponding to Lcoords
     xmap = m_xmap->PhysEvaluate(I, ptsx);
     ymap = m_xmap->PhysEvaluate(I, ptsy);
     zmap = m_xmap->PhysEvaluate(I, ptsz);

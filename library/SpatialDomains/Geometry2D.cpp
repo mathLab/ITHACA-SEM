@@ -152,7 +152,7 @@ void Geometry2D::NewtonIterationForLocCoord(
     ClampLocCoords(eta, 0.);
     I[0] = m_xmap->GetBasis(0)->GetI(eta);
     I[1] = m_xmap->GetBasis(1)->GetI(eta + 1);
-    // calculate the global point `corresponding to Lcoords
+    // calculate the global point corresponding to Lcoords
     xmap = m_xmap->PhysEvaluate(I, ptsx);
     ymap = m_xmap->PhysEvaluate(I, ptsy);
     F1 = coords[0] - xmap;

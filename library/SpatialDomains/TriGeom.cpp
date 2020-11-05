@@ -479,7 +479,7 @@ void TriGeom::v_FillGeom()
 NekDouble TriGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
                                   Array<OneD, NekDouble> &Lcoords)
 {
-    NekDouble resid = 0.0;
+    NekDouble ptdist = 1e6;
     TriGeom::v_FillGeom();
 
     // calculate local coordinate for coord
@@ -509,6 +509,12 @@ NekDouble TriGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         Lcoords[0] = 2 * Lcoords[0] - 1;
         Lcoords[1] = xin.dot(orth1) / dv2.dot(orth1);
         Lcoords[1] = 2 * Lcoords[1] - 1;
+
+        // Set ptdist to distance to nearest vertex
+        for (int i = 0; i < 3; ++i)
+        {
+            ptdist = min(ptdist, xin.dist(*m_verts[i]));
+        }
     }
     else
     {
@@ -538,9 +544,9 @@ NekDouble TriGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         Lcoords[0] = (1.0 + Lcoords[0]) * (1.0 - Lcoords[1]) / 2 - 1.0;
 
         // Perform newton iteration to find local coordinates
-        NewtonIterationForLocCoord(coords, ptsx, ptsy, Lcoords, resid);
+        NewtonIterationForLocCoord(coords, ptsx, ptsy, Lcoords, ptdist);
     }
-    return resid;
+    return ptdist;
 }
 
 bool TriGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,

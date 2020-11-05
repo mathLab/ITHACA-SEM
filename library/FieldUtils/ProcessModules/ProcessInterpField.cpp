@@ -83,7 +83,7 @@ ProcessInterpField::~ProcessInterpField()
 
 void ProcessInterpField::Process(po::variables_map &vm)
 {
-    boost::ignore_unused(vm);
+    m_f->SetUpExp(vm);
 
     FieldSharedPtr fromField = std::shared_ptr<Field>(new Field());
 

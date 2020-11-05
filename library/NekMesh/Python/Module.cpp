@@ -199,10 +199,47 @@ const ModuleType ModuleTypeProxy<OutputModule>::value;
 template<typename MODTYPE>
 ModuleSharedPtr Module_Create(py::tuple args, py::dict kwargs)
 {
+    ModuleType modType = ModuleTypeProxy<MODTYPE>::value;
+
+    if (modType == eProcessModule && py::len(args) != 2)
+    {
+        throw NekMeshError("ProcessModule.Create() requires two arguments: "
+                           "module name and a Mesh object.");
+    }
+    else if (modType != eProcessModule && py::len(args) != 3)
+    {
+        throw NekMeshError(ModuleTypeMap[modType] + "Module.Create() requires "
+                           "three arguments: module name, a Mesh object, and a "
+                           "filename");
+    }
+
     std::string modName = py::extract<std::string>(args[0]);
-    ModuleKey modKey = std::make_pair(ModuleTypeProxy<MODTYPE>::value, modName);
+    ModuleKey modKey = std::make_pair(modType, modName);
+
+    if (!py::extract<MeshSharedPtr>(args[1]).check())
+    {
+        throw NekMeshError("Second argument to Create() should be a mesh "
+                           "object.");
+    }
+
     MeshSharedPtr mesh = py::extract<MeshSharedPtr>(args[1]);
+
+    if (!GetModuleFactory().ModuleExists(modKey))
+    {
+        throw NekMeshError("Module '" + modName + "' does not exist.");
+    }
+
     ModuleSharedPtr mod = GetModuleFactory().CreateInstance(modKey, mesh);
+
+    // First argument for input/output module should be the filename.
+    if (modKey.first == eInputModule)
+    {
+        mod->RegisterConfig("infile", py::extract<std::string>(args[2]));
+    }
+    else if (modKey.first == eOutputModule)
+    {
+        mod->RegisterConfig("outfile", py::extract<std::string>(args[2]));
+    }
 
     // Process keyword arguments.
     py::list items = kwargs.items();
@@ -444,7 +481,7 @@ struct PythonModuleClass
 void export_Module()
 {
     // Export ModuleType enum.
-    NEKPY_WRAP_ENUM(ModuleType, ModuleTypeMap);
+    NEKPY_WRAP_ENUM_STRING(ModuleType, ModuleTypeMap);
 
     // Define ModuleWrap to be implicitly convertible to a Module, since it
     // seems that doesn't sometimes get picked up.

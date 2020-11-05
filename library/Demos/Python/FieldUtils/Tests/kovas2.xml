@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="2" SPACE="2">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAGD/aj0gwMjAzYAEKeCas8AjDj0AcDLCi8D/bo6lixyiMAG3b3wdWxY7UfIc+B3X64PAAZCxDJ</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAFjDhoJhw0Mw4aBljQzIHxWXHw2dD4MHvY0fgwdRxofJg6TjQ+zF1caObD9HPjMA8AP9gAngAA</EDGE>
+        <ELEMENT>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAFjFCaCUozo4mzQGlWKM2GQx+MZofSHFCaE81cmH4uKM2Npg8AFAgAWQAA</Q>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> Q[0-3] </C>
+            <C ID="1"> E[0,4-5,10-11,8-9,3] </C>
+        </COMPOSITE>
+        <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="8" TYPE="GLL_LAGRANGE_SEM" FIELDS="u,v,w,p" />
+    </EXPANSIONS>
+    <CONDITIONS>
+        <SOLVERINFO>
+            <I PROPERTY="HOMOGENEOUS" VALUE="1D" />
+        </SOLVERINFO>
+        <PARAMETERS>
+            <P> HomModesZ = 4 </P>
+            <P> LZ = 2*PI </P>
+        </PARAMETERS>
+        <VARIABLES>
+            <V ID="0">u</V>
+            <V ID="1">v</V>
+            <V ID="2">w</V>
+            <V ID="3">p</V>
+        </VARIABLES>
+        <BOUNDARYREGIONS>
+            <B ID="0">C[1]</B>
+        </BOUNDARYREGIONS>
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="1-exp(LAMBDA*x)*cos(2*PI*y)" />
+                <D VAR="v" VALUE="LAMBDA/(2*PI)*exp(LAMBDA*x)*sin(2*PI*y)" />
+                <D VAR="w" VALUE="0.0" />
+                <N VAR="p" VALUE="0" USERDEFINEDTYPE="H" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+    </CONDITIONS>
+</NEKTAR>

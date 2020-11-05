@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <Metadata>
+        <Provenance>
+            <GitBranch>refs/heads/fix/FillBndCondFromField</GitBranch>
+            <GitSHA1>1cca95ab1e5de48590e3b104a6568e2e8ed595a4</GitSHA1>
+            <Hostname>gcastigl</Hostname>
+            <NektarVersion>4.5.0</NektarVersion>
+            <Timestamp>23-May-2019 01:02:49</Timestamp>
+        </Provenance>
+        <ChkFileNum>0</ChkFileNum>
+        <SessionName0>square_curved_3D_al.xml</SessionName0>
+        <SessionName1>swlbli_conditions.xml</SessionName1>
+        <Time>0</Time>
+    </Metadata>
+    <ELEMENTS FIELDS="rho,rhou,rhov,rhow,E" SHAPE="Prism" BASIS="Modified_A,Modified_A,Modified_B" NUMMODESPERDIR="UNIORDER:2,2,2" ID="1-2" COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx7xLl8yuaomfY/ofQPKP0MSn+B0h+g9Fso/QlKv0OTR6fffPlX9iZUyuE9mNZy+ADlv4Hyv0D5L6D0E6j4SxT1Wg6f0PTDaIYhDppUutW22u1waIfSLVC6DUp3oNEw9a1o4m1o+mHiADTjlBEA</ELEMENTS>
+    <ELEMENTS FIELDS="rho,rhou,rhov,rhow,E" SHAPE="Hexahedron" BASIS="Modified_A,Modified_A,Modified_A" NUMMODESPERDIR="UNIORDER:2,2,2" ID="0" COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJy7z7l8yuaomfZvoPQ7KP0HSv+D0l/Q6A9QmiN6dm7Gvrf7D0Bpg+ZfZW9CpRwsoPSFKIh4A1TeASquAaUZBhhUqnSrbbXb4dALpdugdA+U7kPjT4HSDVAaADVnXQ0A</ELEMENTS>
+</NEKTAR>

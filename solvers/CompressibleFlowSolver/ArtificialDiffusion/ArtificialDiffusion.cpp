@@ -108,14 +108,14 @@ void ArtificialDiffusion::v_DoArtificialDiffusion(
     }
 }
 
-void ArtificialDiffusion::DoArtificialDiffusion_coeff(
+void ArtificialDiffusion::DoArtificialDiffusionCoeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
             Array<OneD,       Array<OneD, NekDouble> > &outarray)
 {
-    v_DoArtificialDiffusion_coeff(inarray, outarray);
+    v_DoArtificialDiffusionCoeff(inarray, outarray);
 }
 
-void ArtificialDiffusion::v_DoArtificialDiffusion_coeff(
+void ArtificialDiffusion::v_DoArtificialDiffusionCoeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
             Array<OneD,       Array<OneD, NekDouble> > &outarray)
 {

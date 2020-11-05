@@ -55,24 +55,24 @@ class Diffusion
 
         void TimeIntegrate();
 
-        void DoImplicitSolve( const Array<OneD, const Array<OneD, NekDouble> > & inarray,
-                                    Array<OneD, Array<OneD, NekDouble> >       & outarray,
-                              const NekDouble                                    time,
-                              const NekDouble                                    lambda );
+        void DoImplicitSolve(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD, Array<OneD, NekDouble> >       &outarray,
+            const NekDouble                                   time,
+            const NekDouble                                   lambda);
 
     private:
         LibUtilities::SessionReaderSharedPtr            session;
         LibUtilities::FieldIOSharedPtr                  fld;
         string                                          sessionName;
         SpatialDomains::MeshGraphSharedPtr              graph;
-        MultiRegions::ContFieldSharedPtr              field;
+        MultiRegions::ContFieldSharedPtr                field;
 
-        LibUtilities::TimeIntegrationSchemeSharedPtr    m_IntScheme;
-        LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr  m_u;
+        LibUtilities::TimeIntegrationSchemeSharedPtr    intScheme;
         LibUtilities::TimeIntegrationSchemeOperators    ode;
         Array<OneD, Array<OneD, NekDouble> >            fields;
 
-        string                                          m_scheme_name;
+        LibUtilities::TimeIntScheme                     timeInt;
         unsigned int                                    nSteps;
         NekDouble                                       delta_t;
         NekDouble                                       epsilon;
@@ -86,7 +86,7 @@ class Diffusion
 Diffusion::Diffusion( int argc, char* argv[] )
 {
     // Create session reader.
-    session     = LibUtilities::SessionReader::CreateInstance( argc, argv );
+    session     = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
     // Read the geometry and the expansion information
     graph       = SpatialDomains::MeshGraph::Read(session);
@@ -96,10 +96,20 @@ Diffusion::Diffusion( int argc, char* argv[] )
 
     // Get some information from the session
     sessionName   = session->GetSessionName();
-    m_scheme_name = session->GetSolverInfo( "TimeIntegrationMethod" );
-    nSteps        = session->GetParameter( "NumSteps" );
-    delta_t       = session->GetParameter( "TimeStep" );
-    epsilon       = session->GetParameter( "epsilon" );
+
+    // Create time integration scheme.
+    if (session->DefinesTimeIntScheme())
+    {
+        timeInt = session->GetTimeIntScheme();
+    }
+    else
+    {
+        timeInt.method = session->GetSolverInfo("TimeIntegrationMethod");
+    }
+
+    nSteps        = session->GetParameter("NumSteps");
+    delta_t       = session->GetParameter("TimeStep");
+    epsilon       = session->GetParameter("epsilon");
     lambda        = 1.0 / delta_t / epsilon;
 
     // Set up the field
@@ -127,24 +137,23 @@ Diffusion::~Diffusion()
 
 void Diffusion::TimeIntegrate()
 {
-    LibUtilities::TimeIntegrationSchemeFactory & fac =
-        LibUtilities::GetTimeIntegrationSchemeFactory();
+    intScheme = LibUtilities::GetTimeIntegrationSchemeFactory().
+        CreateInstance(timeInt.method, timeInt.variant, timeInt.order,
+                       timeInt.freeParams);
 
-    m_IntScheme = fac.CreateInstance( m_scheme_name, "", 0,
-				      std::vector<NekDouble>() );
-
-    ode.DefineImplicitSolve( &Diffusion::DoImplicitSolve, this );
+    ode.DefineImplicitSolve(&Diffusion::DoImplicitSolve, this);
 
     // Initialise the scheme for actual time integration scheme
-    m_u = m_IntScheme->InitializeScheme( delta_t, fields, 0.0, ode );
+    intScheme->InitializeScheme(delta_t, fields, 0.0, ode);
 
     // Zero field coefficients for initial guess for linear solver.
     Vmath::Zero(field->GetNcoeffs(), field->UpdateCoeffs(), 1);
 
     for (int n = 0; n < nSteps; ++n)
     {
-      fields = m_IntScheme->TimeIntegrate( n, delta_t, m_u, ode );
+        fields = intScheme->TimeIntegrate( n, delta_t, ode );
     }
+
     Vmath::Vcopy(field->GetNpoints(), fields[0], 1, field->UpdatePhys(), 1);
 
     WriteSolution();

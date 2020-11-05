@@ -33,6 +33,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <iomanip>
+#include <boost/algorithm/string.hpp>
 
 #include "Module.h"
 
@@ -69,7 +70,7 @@ OutputModule::OutputModule(FieldSharedPtr m) : Module(m)
     m_config["outfile"] = ConfigOption(false, "", "Output filename.");
 }
 
-void InputModule::AddFile(string fileType, string fileName)
+void Module::AddFile(string fileType, string fileName)
 {
     // Check to see if this file type is allowed
     if (m_allowedFiles.count(fileType) == 0)
@@ -80,6 +81,7 @@ void InputModule::AddFile(string fileType, string fileName)
 
     m_f->m_inputfiles[fileType].push_back(fileName);
 }
+
 /**
  * @brief Open a file for output.
  */
@@ -104,17 +106,23 @@ void Module::RegisterConfig(string key, string val)
     {
         cerr << "WARNING: Unrecognised config option " << key
              << ", proceeding anyway." << endl;
-    }
-
-    it->second.m_beenSet = true;
-
-    if (it->second.m_isBool && val=="")
-    {
-        it->second.m_value = "1";
+        ConfigOption conf(false, "", "");
+        conf.m_beenSet = true;
+        conf.m_value   = val;
+        m_config[key] = conf;
     }
     else
     {
-        it->second.m_value = val;
+        it->second.m_beenSet = true;
+
+        if (it->second.m_isBool && val=="")
+        {
+            it->second.m_value = "1";
+        }
+        else
+        {
+            it->second.m_value = val;
+        }
     }
 }
 

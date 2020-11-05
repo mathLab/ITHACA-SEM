@@ -61,7 +61,7 @@ ProcessStreamFunction::~ProcessStreamFunction()
 
 void ProcessStreamFunction::Process(po::variables_map &vm)
 {
-    boost::ignore_unused(vm);
+    m_f->SetUpExp(vm);
 
     int nfields  = m_f->m_variables.size();
     // Append field name

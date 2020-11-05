@@ -60,6 +60,8 @@ OutputFileBase::~OutputFileBase()
 
 void OutputFileBase::Process(po::variables_map &vm)
 {
+    m_f->SetUpExp(vm);
+
     string filename = m_config["outfile"].as<string>();
 
     if (m_f->m_fieldPts != LibUtilities::NullPtsField)
@@ -83,7 +85,6 @@ void OutputFileBase::Process(po::variables_map &vm)
         {
             ConvertExpToEquispaced(vm);
         }
-
         if (m_f->m_writeBndFld)
         {
             if (m_f->m_verbose && m_f->m_comm->TreatAsRankZero())
@@ -346,6 +347,7 @@ void OutputFileBase::ConvertExpToEquispaced(po::variables_map &vm)
             }
         }
     }
+    m_f->m_fielddef = std::vector<LibUtilities::FieldDefinitionsSharedPtr>();
 }
 
 void OutputFileBase::PrintErrorFromPts()

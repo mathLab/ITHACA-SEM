@@ -966,6 +966,24 @@ namespace Nektar
             return iter1->second;
         }
 
+        /**
+         * @brief Returns true if the TIMEINTEGRATIONSCHEME section is defined
+         * in the session file.
+         */
+        bool SessionReader::DefinesTimeIntScheme() const
+        {
+            return m_timeIntScheme.method != "";
+        }
+
+        /**
+         * @brief Returns the time integration scheme structure #m_timeIntScheme
+         * from the session file.
+         */
+        const TimeIntScheme &SessionReader::GetTimeIntScheme() const
+        {
+            return m_timeIntScheme;
+        }
+
         std::string SessionReader::GetGeometryType() const
         {
             TiXmlElement *xmlGeom = m_xmlDoc->FirstChildElement("NEKTAR")
@@ -1571,6 +1589,7 @@ namespace Nektar
             ReadParameters        (e);
             ReadSolverInfo        (e);
             ReadGlobalSysSolnInfo (e);
+            ReadTimeIntScheme     (e);
             ReadExpressions       (e);
             ReadVariables         (e);
             ReadFunctions         (e);
@@ -1947,6 +1966,108 @@ namespace Nektar
             }
         }
 
+        /**
+         * @brief Read the time-integration scheme structure, if present.
+         */
+        void SessionReader::ReadTimeIntScheme(TiXmlElement *conditions)
+        {
+            if (!conditions)
+            {
+                return;
+            }
+
+            TiXmlElement *timeInt = conditions->FirstChildElement(
+                "TIMEINTEGRATIONSCHEME");
+
+            if (!timeInt)
+            {
+                return;
+            }
+
+            TiXmlElement *method = timeInt->FirstChildElement("METHOD");
+            TiXmlElement *variant = timeInt->FirstChildElement("VARIANT");
+            TiXmlElement *order = timeInt->FirstChildElement("ORDER");
+            TiXmlElement *params = timeInt->FirstChildElement("FREEPARAMETERS");
+
+            // Only the method and order are required.
+            ASSERTL0(method, "Missing METHOD tag inside "
+                     "TIMEINTEGRATIONSCHEME.");
+            ASSERTL0(order, "Missing ORDER tag inside "
+                     "TIMEINTEGRATIONSCHEME.");
+
+            m_timeIntScheme.method = method->GetText();
+
+            std::string orderStr = order->GetText();
+
+            // Only the method and order are required.
+            ASSERTL0(m_timeIntScheme.method.size() > 0,
+                     "Empty text inside METHOD tag in TIMEINTEGRATIONSCHEME.");
+            ASSERTL0(orderStr.size() > 0,
+                     "Empty text inside ORDER tag in TIMEINTEGRATIONSCHEME.");
+            try
+            {
+                m_timeIntScheme.order = boost::lexical_cast<unsigned int>(
+                    orderStr);
+            }
+            catch(...)
+            {
+                NEKERROR(ErrorUtil::efatal, "In ORDER tag, unable to convert "
+                         "string '" + orderStr + "' to an unsigned integer.");
+            }
+
+            if (variant)
+            {
+                m_timeIntScheme.variant = variant->GetText();
+            }
+
+            if (params)
+            {
+                std::string paramsStr = params->GetText();
+                ASSERTL0(paramsStr.size() > 0,
+                         "Empty text inside FREEPARAMETERS tag in "
+                         "TIMEINTEGRATIONSCHEME.");
+
+                std::vector<std::string> pSplit;
+                boost::split(pSplit, paramsStr, boost::is_any_of(" "));
+
+                m_timeIntScheme.freeParams.resize(pSplit.size());
+                for (size_t i = 0; i < pSplit.size(); ++i)
+                {
+                    try
+                    {
+                        m_timeIntScheme.freeParams[i] = boost::lexical_cast<
+                            NekDouble>(pSplit[i]);
+                    }
+                    catch (...)
+                    {
+                        NEKERROR(ErrorUtil::efatal, "In FREEPARAMETERS tag, "
+                                 "unable to convert string '" + pSplit[i] + "' "
+                                 "to a floating-point value.");
+                    }
+                }
+            }
+
+            if (m_verbose && m_comm)
+            {
+                if (m_comm->GetRank() == 0)
+                {
+                    cout << "Trying to use time integration scheme:" << endl;
+                    cout << "\t Method : " << m_timeIntScheme.method << endl;
+                    cout << "\t Variant: " << m_timeIntScheme.variant << endl;
+                    cout << "\t Order  : " << m_timeIntScheme.order << endl;
+
+                    if (m_timeIntScheme.freeParams.size() > 0)
+                    {
+                        cout << "\t Params :";
+                        for (auto &x : m_timeIntScheme.freeParams)
+                        {
+                            cout << " " << x;
+                        }
+                        cout << endl;
+                    }
+                }
+            }
+        }
 
         /**
          *

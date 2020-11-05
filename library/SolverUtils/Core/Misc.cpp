@@ -39,8 +39,6 @@
 #include <boost/format.hpp>
 #include <SolverUtils/Core/Misc.h>
 
-using namespace std;
-
 namespace Nektar {
 namespace SolverUtils {
     /**
@@ -73,5 +71,5 @@ namespace SolverUtils {
             name, str(boost::format("%g") % value)));
     }
 
-}
-}
+} // end namespace SolverUtils
+} // end namespace Nektar

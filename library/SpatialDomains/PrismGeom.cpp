@@ -98,37 +98,6 @@ int PrismGeom::v_GetDir(const int faceidx, const int facedir) const
     }
 }
 
-bool PrismGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
-                                Array<OneD, NekDouble> &locCoord,
-                                NekDouble tol,
-                                NekDouble &resid)
-{
-    //Rough check if within twice min/max point
-    if (GetMetricInfo()->GetGtype() != eRegular)
-    {
-        if (!MinMaxCheck(gloCoord))
-        {
-            return false;
-        }
-    }
-
-    // Convert to the local Cartesian coordinates.
-    resid = GetLocCoords(gloCoord, locCoord);
-
-    // Check local coordinate is within std region bounds.
-    if (locCoord[0] >= -(1 + tol) && locCoord[1] >= -(1 + tol) &&
-        locCoord[2] >= -(1 + tol) && locCoord[1] <= (1 + tol) &&
-        locCoord[0] + locCoord[2] <= tol)
-    {
-        return true;
-    }
-
-    //Clamp local coords
-    ClampLocCoords(locCoord, tol);
-
-    return false;
-}
-
 void PrismGeom::v_GenGeomFactors()
 {
     if(!m_setupState)

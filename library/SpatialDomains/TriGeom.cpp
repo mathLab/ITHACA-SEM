@@ -473,35 +473,6 @@ void TriGeom::v_FillGeom()
     m_state = ePtsFilled;
 }
 
-bool TriGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
-                              Array<OneD, NekDouble> &stdCoord,
-                              NekDouble tol,
-                              NekDouble &resid)
-{
-    //Rough check if within twice min/max point
-    if (GetMetricInfo()->GetGtype() != eRegular)
-    {
-        if (!MinMaxCheck(gloCoord))
-        {
-            return false;
-        }
-    }
-
-    // Convert to the local (eta) coordinates.
-    resid = GetLocCoords(gloCoord, stdCoord);
-
-    if (stdCoord[0] >= -(1 + tol) && stdCoord[1] >= -(1 + tol) &&
-        stdCoord[0] + stdCoord[1] <= tol)
-    {
-        return true;
-    }
-
-    //Clamp local coords
-    ClampLocCoords(stdCoord, tol);
-
-    return false;
-}
-
 int TriGeom::v_GetDir(const int i, const int j) const
 {
     boost::ignore_unused(j); // required in 3D shapes

@@ -149,39 +149,6 @@ void HexGeom::v_GenGeomFactors()
     }
 }
 
-bool HexGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
-                              Array<OneD, NekDouble> &locCoord,
-                              NekDouble tol,
-                              NekDouble &resid)
-{
-    boost::ignore_unused(resid);
-
-    //Rough check if within twice min/max point
-    if (GetMetricInfo()->GetGtype() != eRegular)
-    {
-        if (!MinMaxCheck(gloCoord))
-        {
-            return false;
-        }
-    }
-
-    // Convert to the local Cartesian coordinates.
-    resid = GetLocCoords(gloCoord, locCoord);
-
-    // Check local coordinate is within cartesian bounds.
-    if (locCoord[0] >= -(1 + tol) && locCoord[0] <= 1 + tol &&
-        locCoord[1] >= -(1 + tol) && locCoord[1] <= 1 + tol &&
-        locCoord[2] >= -(1 + tol) && locCoord[2] <= 1 + tol)
-    {
-        return true;
-    }
-
-    //Clamp local coords
-    ClampLocCoords(locCoord, tol);
-
-    return false;
-}
-
 int HexGeom::v_GetVertexEdgeMap(const int i, const int j) const
 {
     return VertexEdgeConnectivity[i][j];

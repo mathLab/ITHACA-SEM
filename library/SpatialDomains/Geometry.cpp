@@ -253,10 +253,22 @@ bool Geometry::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                NekDouble tol,
                                NekDouble &resid)
 {
-    boost::ignore_unused(gloCoord, locCoord, tol, resid);
-    NEKERROR(ErrorUtil::efatal,
-             "This function has not been defined for this geometry");
-    return false;
+    //Rough check if within twice min/max point
+    if (GetMetricInfo()->GetGtype() != eRegular)
+    {
+        if (!MinMaxCheck(gloCoord))
+        {
+            return false;
+        }
+    }
+
+    // Convert to the local (eta) coordinates.
+    resid = GetLocCoords(gloCoord, locCoord);
+    Array<OneD, NekDouble> eta(GetShapeDim(), 0.);
+    m_xmap->LocCoordToLocCollapsed(locCoord, eta);
+    bool contains = ClampLocCoords(eta, tol);
+    m_xmap->LocCollapsedToLocCoord(eta, locCoord);
+    return contains;
 }
 
 /**
@@ -482,7 +494,7 @@ bool Geometry::MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord)
  *
  * @param Lcoords  Corresponding local coordinates
  */
-void Geometry::ClampLocCoords(Array<OneD, NekDouble> &locCoord,
+bool Geometry::ClampLocCoords(Array<OneD, NekDouble> &locCoord,
                                   NekDouble tol)
 {
     // Validation checks
@@ -494,18 +506,22 @@ void Geometry::ClampLocCoords(Array<OneD, NekDouble> &locCoord,
     // since any larger value will be very oscillatory if
     // called by 'returnNearestElmt' option in
     // ExpList::GetExpIndex
+    bool noaction = true;
     for (int i = 0; i < GetShapeDim(); ++i)
     {
         if (locCoord[i] < -(1 + tol))
         {
             locCoord[i] = -(1 + tol);
+            noaction = false;
         }
 
         if (locCoord[i] > (1 + tol))
         {
             locCoord[i] = 1 + tol;
+            noaction = false;
         }
     }
+    return noaction;
 }
 
 

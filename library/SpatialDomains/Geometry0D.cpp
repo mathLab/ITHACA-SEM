@@ -56,5 +56,16 @@ int Geometry0D::v_GetShapeDim() const
 	return 0;
 }
 
+bool Geometry0D::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
+                               Array<OneD, NekDouble> &locCoord,
+                               NekDouble tol,
+                               NekDouble &resid)
+{
+    boost::ignore_unused(gloCoord, locCoord, tol, resid);
+    NEKERROR(ErrorUtil::efatal,
+             "This function has not been defined for 0D geometry");
+    return false;
+}
+
 } // end of namespace
 } // end of namespace

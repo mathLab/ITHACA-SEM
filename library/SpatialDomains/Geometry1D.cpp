@@ -56,5 +56,44 @@ int Geometry1D::v_GetShapeDim() const
     return 1;
 }
 
+NekDouble Geometry1D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
+                                  Array<OneD, NekDouble> &Lcoords)
+{
+    NekDouble resid = 0.;
+    v_FillGeom();
+
+    // calculate local coordinate for coord
+    if (GetMetricInfo()->GetGtype() == eRegular)
+    {
+        NekDouble len = 0.0;
+        NekDouble xi = 0.0;
+
+        const int npts = m_xmap->GetTotPoints();
+        Array<OneD, NekDouble> pts(npts);
+
+        for (int i = 0; i < m_coordim; ++i)
+        {
+            m_xmap->BwdTrans(m_coeffs[i], pts);
+            len += (pts[npts - 1] - pts[0]) * (pts[npts - 1] - pts[0]);
+            xi += (coords[i] - pts[0]) * (pts[npts-1] - pts[0]);
+        }
+        xi = xi / len;
+        if(xi<0.)
+        {
+            resid = - xi * sqrt(len);
+        } else if(xi>1.)
+        {
+            resid = (xi - 1.) * sqrt(len);
+        }
+
+        Lcoords[0] = 2. * xi - 1.0;
+    }
+    else
+    {
+        NEKERROR(ErrorUtil::efatal,
+                 "inverse mapping must be set up to use this call");
+    }
+    return resid;
+}
 }
 }

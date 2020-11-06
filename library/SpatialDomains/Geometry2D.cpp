@@ -188,7 +188,6 @@ NekDouble Geometry2D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
                                    Array<OneD, NekDouble> &Lcoords)
 {
     NekDouble resid = 0.;
-    v_FillGeom();
     if (GetMetricInfo()->GetGtype() == eRegular)
     {
         int v2;
@@ -243,6 +242,7 @@ NekDouble Geometry2D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
     }
     else
     {
+        v_FillGeom();
         // Determine nearest point of coords  to values in m_xmap
         int npts = m_xmap->GetTotPoints();
         Array<OneD, NekDouble> ptsx(npts), ptsy(npts);

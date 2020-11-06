@@ -244,8 +244,8 @@ NekDouble Geometry3D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         } else if(m_shapeType == LibUtilities::ePrism)
         {
             v1 = 1;
-            v2 = 2;
-            v3 = 3;
+            v2 = 3;
+            v3 = 4;
         } else if(m_shapeType == LibUtilities::ePyramid)
         {
             v1 = 1;
@@ -260,7 +260,7 @@ NekDouble Geometry3D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         }
         else
         {
-            ASSERTL0(false, "unrecognized 2D element type");
+            ASSERTL0(false, "unrecognized 3D element type");
         }
         // Point inside tetrahedron
         PointGeom r(m_coordim, 0, coords[0], coords[1], coords[2]);
@@ -296,7 +296,7 @@ NekDouble Geometry3D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         for (int i = 0; i < m_coordim; ++i)
         {
             NekDouble tmp = xi[0]*e10[i] + xi[1]*e20[i]
-                          + xi[3]*e30[i] - er0[i];
+                          + xi[2]*e30[i] - er0[i];
             resid += tmp * tmp;
         }
         resid = sqrt(resid);

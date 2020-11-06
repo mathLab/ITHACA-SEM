@@ -191,7 +191,7 @@ NekDouble Geometry2D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
     v_FillGeom();
     if (GetMetricInfo()->GetGtype() == eRegular)
     {
-        int v2 = 3;
+        int v2;
         if(m_shapeType == LibUtilities::eTriangle)
         {
             v2 = 2;

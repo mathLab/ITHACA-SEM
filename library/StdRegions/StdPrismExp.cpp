@@ -701,6 +701,15 @@ namespace Nektar
             }
         }
 
+        void StdPrismExp::v_LocCollapsedToLocCoord(
+                const Array<OneD, const NekDouble>& eta,
+                Array<OneD, NekDouble>& xi)
+        {
+            xi[0] = (1.0 + eta[0]) * (1.0 - eta[2]) * 0.5 - 1.0;
+            xi[1] = eta[1];
+            xi[2] = eta[2];
+        }
+
         void StdPrismExp::v_GetCoords(Array<OneD, NekDouble>& xi_x,
                                       Array<OneD, NekDouble>& xi_y,
                                       Array<OneD, NekDouble>& xi_z)

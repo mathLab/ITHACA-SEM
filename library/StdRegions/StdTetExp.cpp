@@ -902,6 +902,15 @@ namespace Nektar
             }
         }
 
+        void StdTetExp::v_LocCollapsedToLocCoord(
+                                        const Array<OneD, const NekDouble>& eta,
+                                        Array<OneD, NekDouble>& xi)
+        {
+            xi[1] = (1.0 + eta[0]) * (   1.0 - eta[2]) * 0.5 - 1.0;
+            xi[0] = (1.0 + eta[0]) * (-xi[1] - eta[2]) * 0.5 - 1.0;
+            xi[2] = eta[2];
+        }
+
         void StdTetExp::v_FillMode(
             const int                     mode,
                   Array<OneD, NekDouble> &outarray)

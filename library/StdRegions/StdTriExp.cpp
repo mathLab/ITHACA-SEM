@@ -690,6 +690,13 @@ namespace Nektar
             }
         }
 
+        void StdTriExp::v_LocCollapsedToLocCoord(const Array<OneD, const NekDouble>& eta,
+                                                 Array<OneD, NekDouble>& xi)
+        {
+            xi[0] = (1.0 + eta[0]) * (1.0 - eta[1]) / 2 - 1.0;
+            xi[1] = eta[1];
+        }
+
         void StdTriExp::v_FillMode(
             const int mode, Array<OneD, NekDouble> &outarray)
         {

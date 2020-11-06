@@ -202,26 +202,26 @@ NekDouble PrismGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         PointGeom r(m_coordim, 0, coords[0], coords[1], coords[2]);
 
         // Edges
-        PointGeom er0, e10, e30, e40;
+        PointGeom er0, e10, e20, e30;
         er0.Sub(r, *m_verts[0]);
         e10.Sub(*m_verts[1], *m_verts[0]);
+        e20.Sub(*m_verts[2], *m_verts[0]);
         e30.Sub(*m_verts[3], *m_verts[0]);
-        e40.Sub(*m_verts[4], *m_verts[0]);
 
         // Cross products (Normal times area)
-        PointGeom cp1030, cp3040, cp4010;
-        cp1030.Mult(e10, e30);
-        cp3040.Mult(e30, e40);
-        cp4010.Mult(e40, e10);
+        PointGeom cp1020, cp2030, cp3010;
+        cp1020.Mult(e10, e20);
+        cp2030.Mult(e20, e30);
+        cp3010.Mult(e30, e10);
 
         // Barycentric coordinates (relative volume)
-        NekDouble V = e40.dot(cp1030); // Prism Volume = {(e40)dot(e10)x(e30)}/2
+        NekDouble V = e30.dot(cp1020); // Prism Volume = {(e30)dot(e10)x(e20)}/2
         NekDouble beta =
-            er0.dot(cp3040) / (2.0 * V); // volume1 = {(er0)dot(e30)x(e40)}/4
+            er0.dot(cp2030) / V; // volume1 = {(er0)dot(e20)x(e30)}/2
         NekDouble gamma =
-            er0.dot(cp4010) / (3.0 * V); // volume2 = {(er0)dot(e40)x(e10)}/6
+            er0.dot(cp3010) / V; // volume2 = {(er0)dot(e30)x(e10)}/2
         NekDouble delta =
-            er0.dot(cp1030) / (2.0 * V); // volume3 = {(er0)dot(e10)x(e30)}/4
+            er0.dot(cp1020) / V; // volume3 = {(er0)dot(e10)x(e20)}/2
 
         // Make Prism bigger
         Lcoords[0] = 2.0 * beta - 1.0;

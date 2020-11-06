@@ -424,6 +424,7 @@ NekDouble QuadGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         NekDouble coords2 = (m_coordim == 3) ? coords[2] : 0.0;
         PointGeom dv1, dv2, norm, orth1, orth2;
         PointGeom xin(m_coordim, 0, coords[0], coords[1], coords2);
+        Array<OneD, NekDouble> ratio(2, 0.);
 
         // Calculate edge vectors from 0-1 and 0-3 edges.
         dv1.Sub(*m_verts[1], *m_verts[0]);
@@ -441,16 +442,30 @@ NekDouble QuadGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
 
         // Calculate length using L/|dv1| = (x-v0).n1/(dv1.n1) for coordiante 1
         // Then rescale to [-1,1].
-        Lcoords[0] = xin.dot(orth2) / dv1.dot(orth2);
-        Lcoords[0] = 2 * Lcoords[0] - 1;
-        Lcoords[1] = xin.dot(orth1) / dv2.dot(orth1);
-        Lcoords[1] = 2 * Lcoords[1] - 1;
+        ratio[0]   = xin.dot(orth2) / dv1.dot(orth2);
+        Lcoords[0] = 2. * ratio[0] - 1.;
+        ratio[1]   = xin.dot(orth1) / dv2.dot(orth1);
+        Lcoords[1] = 2. * ratio[1] - 1.;
 
         // Set ptdist to distance to nearest vertex
-        for (int i = 0; i < 4; ++i)
+        ptdist = 0.;
+        for (int i = 0; i < 2; ++i)
         {
-            ptdist = min(ptdist, xin.dist(*m_verts[i]));
+            if(ratio[i]<0.)
+            {
+                ratio[i] = 0.;
+            }
+            else if(ratio[i]>1.)
+            {
+                ratio[i] = 1.;
+            }
         }
+        for (int i = 0; i < m_coordim; ++i)
+        {
+            NekDouble tmp = ratio[0]*dv1[i] + ratio[1]*dv2[i] - xin[i];
+            ptdist += tmp * tmp;
+        }
+        ptdist = sqrt(ptdist);
     }
     else
     {

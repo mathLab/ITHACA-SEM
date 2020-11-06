@@ -160,50 +160,37 @@ NekDouble HexGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
     // calculate local coordinate for coord
     if (GetMetricInfo()->GetGtype() == eRegular)
     {
-        NekDouble len0 = 0.0;
-        NekDouble len1 = 0.0;
-        NekDouble len2 = 0.0;
-        NekDouble xi0 = 0.0;
-        NekDouble xi1 = 0.0;
-        NekDouble xi2 = 0.0;
-        Array<OneD, NekDouble> pts(m_xmap->GetTotPoints());
-        int nq0, nq1, nq2;
-
-        // get points;
-        // find end points
-        for (i = 0; i < m_coordim; ++i)
-        {
-            nq0 = m_xmap->GetNumPoints(0);
-            nq1 = m_xmap->GetNumPoints(1);
-            nq2 = m_xmap->GetNumPoints(2);
-
-            m_xmap->BwdTrans(m_coeffs[i], pts);
-
-            // use projection to side 1 to determine xi_1 coordinate based on
-            // length
-            len0 += (pts[nq0 - 1] - pts[0]) * (pts[nq0 - 1] - pts[0]);
-            xi0 += (coords[i] - pts[0]) * (pts[nq0 - 1] - pts[0]);
-
-            // use projection to side 4 to determine xi_2 coordinate based on
-            // length
-            len1 += (pts[nq0 * (nq1 - 1)] - pts[0]) *
-                    (pts[nq0 * (nq1 - 1)] - pts[0]);
-            xi1 += (coords[i] - pts[0]) * (pts[nq0 * (nq1 - 1)] - pts[0]);
-
-            // use projection to side 4 to determine xi_3 coordinate based on
-            // length
-            len2 += (pts[nq0 * nq1 * (nq2 - 1)] - pts[0]) *
-                    (pts[nq0 * nq1 * (nq2 - 1)] - pts[0]);
-            xi2 += (coords[i] - pts[0]) * (pts[nq0 * nq1 * (nq2 - 1)] - pts[0]);
-        }
-
-        Lcoords[0] = 2 * xi0 / len0 - 1.0;
-        Lcoords[1] = 2 * xi1 / len1 - 1.0;
-        Lcoords[2] = 2 * xi2 / len2 - 1.0;
-
-        // Set ptdist to distance to nearest vertex
         // Point inside tetrahedron
         PointGeom r(m_coordim, 0, coords[0], coords[1], coords[2]);
+
+        // Edges
+        PointGeom er0, e10, e30, e40;
+        er0.Sub(r, *m_verts[0]);
+        e10.Sub(*m_verts[1], *m_verts[0]);
+        e30.Sub(*m_verts[3], *m_verts[0]);
+        e40.Sub(*m_verts[4], *m_verts[0]);
+
+        // Cross products (Normal times area)
+        PointGeom cp1030, cp3040, cp4010;
+        cp1030.Mult(e10, e30);
+        cp3040.Mult(e30, e40);
+        cp4010.Mult(e40, e10);
+
+        // Barycentric coordinates (relative volume)
+        NekDouble V = e30.dot(cp1020); // Hex Volume = {(e30)dot(e10)x(e20)}
+        NekDouble beta =
+            er0.dot(cp3040) / V; // volume1 = {(er0)dot(e20)x(e30)}
+        NekDouble gamma =
+            er0.dot(cp4010) / V; // volume2 = {(er0)dot(e30)x(e10)}
+        NekDouble delta =
+            er0.dot(cp1030) / V; // volume3 = {(er0)dot(e10)x(e20)}
+
+        // Make Prism bigger
+        Lcoords[0] = 2.0 * beta - 1.0;
+        Lcoords[1] = 2.0 * gamma - 1.0;
+        Lcoords[2] = 2.0 * delta - 1.0;
+
+        // Set ptdist to distance to nearest vertex
         for (int i = 0; i < 8; ++i)
         {
             ptdist = min(ptdist, r.dist(*m_verts[i]));
@@ -234,9 +221,6 @@ NekDouble HexGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
 
         int min_i = Vmath::Imin(npts, tmp1, 1);
 
-        // distance from coordinate to nearest point for return value.
-        ptdist = sqrt(tmp1[min_i]);
-
         // Get Local coordinates
         int qa = za.size(), qb = zb.size();
         Lcoords[2] = zc[min_i / (qa * qb)];
@@ -245,8 +229,7 @@ NekDouble HexGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         Lcoords[0] = za[min_i % qa];
 
         // Perform newton iteration to find local coordinates
-        NekDouble resid = 0.0;
-        NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords, resid);
+        NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords, ptdist);
     }
     return ptdist;
 }

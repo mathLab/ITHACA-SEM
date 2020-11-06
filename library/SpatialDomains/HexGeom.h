@@ -62,8 +62,6 @@ public:
 
 protected:
     virtual void v_GenGeomFactors();
-    virtual NekDouble v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
-                                     Array<OneD, NekDouble> &Lcoords);
     virtual bool v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                  Array<OneD, NekDouble> &locCoord,
                                  NekDouble tol,

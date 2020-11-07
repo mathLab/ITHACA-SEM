@@ -63,12 +63,8 @@ IF ( NEKTAR_USE_CWIPI )
             BUILD_COMMAND make -j 1
         )
 
-        THIRDPARTY_LIBRARY(CWIPI_LIBRARY SHARED cwipi
+        THIRDPARTY_LIBRARY(CWIPI_LIBRARY SHARED cwp
             DESCRIPTION "CWIPI main library")
-        THIRDPARTY_LIBRARY(CWIPI_LIBRARY_FVMC SHARED fvmc
-            DESCRIPTION "CWIPI fvmc library")
-        THIRDPARTY_LIBRARY(CWIPI_LIBRARY_BFTC SHARED bftc
-            DESCRIPTION "CWIPI bftc library")
 
         SET(CWIPI_INCLUDE_DIR ${TPDIST}/include CACHE FILEPATH
             "CWIPI include" FORCE)

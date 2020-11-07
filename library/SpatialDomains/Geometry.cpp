@@ -251,7 +251,7 @@ StdRegions::StdExpansionSharedPtr Geometry::v_GetXmap() const
 bool Geometry::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                Array<OneD, NekDouble> &locCoord,
                                NekDouble tol,
-                               NekDouble &resid)
+                               NekDouble &dist)
 {
     //Rough check if within twice min/max point
     if (GetMetricInfo()->GetGtype() != eRegular)
@@ -263,7 +263,11 @@ bool Geometry::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
     }
 
     // Convert to the local (eta) coordinates.
-    resid = GetLocCoords(gloCoord, locCoord);
+    dist = GetLocCoords(gloCoord, locCoord);
+    if(dist<tol+1e-15)
+    {
+        return true;
+    }
     Array<OneD, NekDouble> eta(GetShapeDim(), 0.);
     m_xmap->LocCoordToLocCollapsed(locCoord, eta);
     if(ClampLocCoords(eta, tol))

@@ -63,7 +63,7 @@ protected:
     virtual bool v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                  Array<OneD, NekDouble> &locCoord,
                                  NekDouble tol,
-                                 NekDouble &resid);
+                                 NekDouble &dist);
     virtual int v_GetShapeDim() const;
 };
 

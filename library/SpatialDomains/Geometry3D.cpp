@@ -75,7 +75,7 @@ void Geometry3D::NewtonIterationForLocCoord(
     const Array<OneD, const NekDouble> &ptsy,
     const Array<OneD, const NekDouble> &ptsz,
     Array<OneD, NekDouble> &Lcoords,
-    NekDouble &resid)
+    NekDouble &dist)
 {
     // maximum iterations for convergence
     const int MaxIterations = 51;
@@ -119,7 +119,7 @@ void Geometry3D::NewtonIterationForLocCoord(
     Array<OneD, NekDouble> eta(3);
 
     F1 = F2 = F3 = 2000; // Starting value of Function
-
+    NekDouble resid;
     while (cnt++ < MaxIterations)
     {
         //  evaluate lagrange interpolant at Lcoords
@@ -189,18 +189,24 @@ void Geometry3D::NewtonIterationForLocCoord(
     }
 
     m_xmap->LocCoordToLocCollapsed(Lcoords, eta);
-    ClampLocCoords(eta, 1E-15);
-    I[0] = m_xmap->GetBasis(0)->GetI(eta);
-    I[1] = m_xmap->GetBasis(1)->GetI(eta + 1);
-    I[2] = m_xmap->GetBasis(2)->GetI(eta + 2);
-    // calculate the global point corresponding to Lcoords
-    xmap = m_xmap->PhysEvaluate(I, ptsx);
-    ymap = m_xmap->PhysEvaluate(I, ptsy);
-    zmap = m_xmap->PhysEvaluate(I, ptsz);
-    F1 = coords[0] - xmap;
-    F2 = coords[1] - ymap;
-    F3 = coords[2] - zmap;
-    resid = sqrt(F1 * F1 + F2 * F2 + F3 * F3);
+    if(ClampLocCoords(eta, 1E-15))
+    {
+        I[0] = m_xmap->GetBasis(0)->GetI(eta);
+        I[1] = m_xmap->GetBasis(1)->GetI(eta + 1);
+        I[2] = m_xmap->GetBasis(2)->GetI(eta + 2);
+        // calculate the global point corresponding to Lcoords
+        xmap = m_xmap->PhysEvaluate(I, ptsx);
+        ymap = m_xmap->PhysEvaluate(I, ptsy);
+        zmap = m_xmap->PhysEvaluate(I, ptsz);
+        F1 = coords[0] - xmap;
+        F2 = coords[1] - ymap;
+        F3 = coords[2] - zmap;
+        dist = sqrt(F1 * F1 + F2 * F2 + F3 * F3);
+    }
+    else
+    {
+        dist = 0.;
+    }
 
     if (cnt >= MaxIterations)
     {
@@ -230,22 +236,13 @@ void Geometry3D::NewtonIterationForLocCoord(
 NekDouble Geometry3D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
                                   Array<OneD, NekDouble> &Lcoords)
 {
-    NekDouble resid = 0.;
+    NekDouble dist = 0.;
     if (GetMetricInfo()->GetGtype() == eRegular)
     {
         int v1, v2, v3;
-        if(m_shapeType == LibUtilities::eHexahedron)
-        {
-            v1 = 1;
-            v2 = 3;
-            v3 = 4;
-
-        } else if(m_shapeType == LibUtilities::ePrism)
-        {
-            v1 = 1;
-            v2 = 3;
-            v3 = 4;
-        } else if(m_shapeType == LibUtilities::ePyramid)
+        if(m_shapeType == LibUtilities::eHexahedron ||
+           m_shapeType == LibUtilities::ePrism      ||
+           m_shapeType == LibUtilities::ePyramid)
         {
             v1 = 1;
             v2 = 3;
@@ -283,7 +280,7 @@ NekDouble Geometry3D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         Lcoords[1] = er0.dot(cp3010) * iV - 1.0;
         Lcoords[2] = er0.dot(cp1020) * iV - 1.0;
 
-        // Set resid
+        // Set distance
         Array<OneD, NekDouble> eta(3, 0.);
         m_xmap->LocCoordToLocCollapsed(Lcoords, eta);
         if(ClampLocCoords(eta, 1E-15))
@@ -297,9 +294,9 @@ NekDouble Geometry3D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
             {
                 NekDouble tmp = xi[0]*e10[i] + xi[1]*e20[i]
                             + xi[2]*e30[i] - er0[i];
-                resid += tmp * tmp;
+                dist += tmp * tmp;
             }
-            resid = sqrt(resid);
+            dist = sqrt(dist);
         }
     }
     else
@@ -339,9 +336,9 @@ NekDouble Geometry3D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         m_xmap->LocCollapsedToLocCoord(eta, Lcoords);
 
         // Perform newton iteration to find local coordinates
-        NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords, resid);
+        NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords, dist);
     }
-    return resid;
+    return dist;
 }
 
 /**

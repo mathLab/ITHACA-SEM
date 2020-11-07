@@ -88,7 +88,7 @@ protected:
                                     const Array<OneD, const NekDouble> &ptsx,
                                     const Array<OneD, const NekDouble> &ptsy,
                                     Array<OneD, NekDouble> &Lcoords,
-                                    NekDouble &resid);
+                                    NekDouble &dist);
 
 private:
     //---------------------------------------

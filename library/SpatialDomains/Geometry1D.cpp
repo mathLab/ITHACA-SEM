@@ -59,7 +59,7 @@ int Geometry1D::v_GetShapeDim() const
 NekDouble Geometry1D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
                                   Array<OneD, NekDouble> &Lcoords)
 {
-    NekDouble resid = 0.;
+    NekDouble dist = 0.;
     v_FillGeom();
 
     // calculate local coordinate for coord
@@ -80,10 +80,10 @@ NekDouble Geometry1D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         xi = xi / len;
         if(xi<0.)
         {
-            resid = - xi * sqrt(len);
+            dist = - xi * sqrt(len);
         } else if(xi>1.)
         {
-            resid = (xi - 1.) * sqrt(len);
+            dist = (xi - 1.) * sqrt(len);
         }
 
         Lcoords[0] = 2. * xi - 1.0;
@@ -93,7 +93,7 @@ NekDouble Geometry1D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         NEKERROR(ErrorUtil::efatal,
                  "inverse mapping must be set up to use this call");
     }
-    return resid;
+    return dist;
 }
 }
 }

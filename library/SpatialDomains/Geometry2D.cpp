@@ -67,7 +67,7 @@ void Geometry2D::NewtonIterationForLocCoord(
     const Array<OneD, const NekDouble> &ptsx,
     const Array<OneD, const NekDouble> &ptsy,
     Array<OneD, NekDouble> &Lcoords,
-    NekDouble &resid)
+    NekDouble &dist)
 {
     // Maximum iterations for convergence
     const int MaxIterations = 51;
@@ -103,7 +103,7 @@ void Geometry2D::NewtonIterationForLocCoord(
     Array<OneD, NekDouble> eta(2);
 
     F1 = F2 = 2000; // Starting value of Function
-
+    NekDouble resid;
     while (cnt++ < MaxIterations)
     {
         //  evaluate lagrange interpolant at Lcoords
@@ -149,15 +149,21 @@ void Geometry2D::NewtonIterationForLocCoord(
     }
 
     m_xmap->LocCoordToLocCollapsed(Lcoords, eta);
-    ClampLocCoords(eta, 1E-15);
-    I[0] = m_xmap->GetBasis(0)->GetI(eta);
-    I[1] = m_xmap->GetBasis(1)->GetI(eta + 1);
-    // calculate the global point corresponding to Lcoords
-    xmap = m_xmap->PhysEvaluate(I, ptsx);
-    ymap = m_xmap->PhysEvaluate(I, ptsy);
-    F1 = coords[0] - xmap;
-    F2 = coords[1] - ymap;
-    resid = sqrt(F1 * F1 + F2 * F2);
+    if(ClampLocCoords(eta, 1E-15))
+    {
+        I[0] = m_xmap->GetBasis(0)->GetI(eta);
+        I[1] = m_xmap->GetBasis(1)->GetI(eta + 1);
+        // calculate the global point corresponding to Lcoords
+        xmap = m_xmap->PhysEvaluate(I, ptsx);
+        ymap = m_xmap->PhysEvaluate(I, ptsy);
+        F1 = coords[0] - xmap;
+        F2 = coords[1] - ymap;
+        dist = sqrt(F1 * F1 + F2 * F2);
+    }
+    else
+    {
+        dist = 0.;
+    }
 
     if (cnt >= MaxIterations)
     {
@@ -187,7 +193,7 @@ void Geometry2D::NewtonIterationForLocCoord(
 NekDouble Geometry2D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
                                    Array<OneD, NekDouble> &Lcoords)
 {
-    NekDouble resid = 0.;
+    NekDouble dist = 0.;
     if (GetMetricInfo()->GetGtype() == eRegular)
     {
         int v2;
@@ -225,7 +231,7 @@ NekDouble Geometry2D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         Lcoords[1] = er0.dot(orth1) / e20.dot(orth1);
         Lcoords[1] = 2. * Lcoords[1] - 1.;
 
-        // Set resid
+        // Set distance
         Array<OneD, NekDouble> eta(2, 0.);
         m_xmap->LocCoordToLocCollapsed(Lcoords, eta);
         if(ClampLocCoords(eta, 1E-15))
@@ -237,9 +243,9 @@ NekDouble Geometry2D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
             for (int i = 0; i < m_coordim; ++i)
             {
                 NekDouble tmp = xi[0]*e10[i] + xi[1]*e20[i] - er0[i];
-                resid += tmp * tmp;
+                dist += tmp * tmp;
             }
-            resid = sqrt(resid);
+            dist = sqrt(dist);
         }
     }
     else
@@ -270,9 +276,9 @@ NekDouble Geometry2D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         m_xmap->LocCollapsedToLocCoord(eta, Lcoords);
 
         // Perform newton iteration to find local coordinates
-        NewtonIterationForLocCoord(coords, ptsx, ptsy, Lcoords, resid);
+        NewtonIterationForLocCoord(coords, ptsx, ptsy, Lcoords, dist);
     }
-    return resid;
+    return dist;
 }
 
 int Geometry2D::v_GetNumVerts() const

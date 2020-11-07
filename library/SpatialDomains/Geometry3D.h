@@ -98,7 +98,7 @@ protected:
                                     const Array<OneD, const NekDouble> &ptsy,
                                     const Array<OneD, const NekDouble> &ptsz,
                                     Array<OneD, NekDouble> &Lcoords,
-                                    NekDouble &resid);
+                                    NekDouble &dist);
 
     virtual void v_FillGeom();
     virtual NekDouble v_GetCoord(const int i,

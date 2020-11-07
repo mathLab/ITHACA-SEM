@@ -13,7 +13,7 @@ v5.1.0
 - Add cachedId in GetExpIndex and use in Fieldconvert (!1167)
 - Fix bug in PreconditionerLowEnergy (!1161)
 - Fix intel c compiler error in AeroFilters (!1198)
-- Fix residual in v_GetLocCoords (!1200)
+- Fix distance in ContainsPoint and GetLocCoords (!1200)
 
 **FieldConvert**
 - Refactored time integration code using factory pattern (!1034)

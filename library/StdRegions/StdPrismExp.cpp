@@ -684,21 +684,14 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& xi,
                 Array<OneD, NekDouble>& eta)
         {
-            if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
+            NekDouble d2 = 1.0 - xi[2];
+            if( fabs(d2) < NekConstants::kNekZeroTol)
             {
-                // Very top point of the prism
-                eta[0] = -1.0;
-                eta[1] = xi[1];
-                eta[2] = 1.0;
+                d2 = NekConstants::kNekZeroTol;
             }
-            else
-            {
-                // Third basis function collapsed to "pr" direction instead of
-                // "qr" direction
-                eta[2] = xi[2]; // eta_z = xi_z
-                eta[1] = xi[1]; //eta_y = xi_y
-                eta[0] = 2.0*(1.0 + xi[0])/(1.0 - xi[2]) - 1.0;
-            }
+            eta[2] = xi[2]; // eta_z = xi_z
+            eta[1] = xi[1]; //eta_y = xi_y
+            eta[0] = 2.0*(1.0 + xi[0])/d2 - 1.0;
         }
 
         void StdPrismExp::v_LocCollapsedToLocCoord(

@@ -677,17 +677,13 @@ namespace Nektar
         void StdTriExp::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,
                                                  Array<OneD, NekDouble>& eta)
         {
-            // set up local coordinate system
-            if (fabs(xi[1]-1.0) < NekConstants::kNekZeroTol)
+            NekDouble d1 = 1.-xi[1];
+            if( fabs(d1) < NekConstants::kNekZeroTol)
             {
-                eta[0] = -1.0;
-                eta[1] =  1.0;
+                d1 = NekConstants::kNekZeroTol;
             }
-            else
-            {
-                eta[0] = 2*(1+xi[0])/(1-xi[1])-1.0;
-                eta[1] = xi[1];
-            }
+            eta[0] = 2.*(1.+xi[0])/d1-1.0;
+            eta[1] = xi[1];
         }
 
         void StdTriExp::v_LocCollapsedToLocCoord(const Array<OneD, const NekDouble>& eta,

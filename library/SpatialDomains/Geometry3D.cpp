@@ -287,18 +287,20 @@ NekDouble Geometry3D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         Array<OneD, NekDouble> eta(3, 0.);
         Array<OneD, NekDouble> xi(3, 0.);
         m_xmap->LocCoordToLocCollapsed(Lcoords, eta);
-        ClampLocCoords(eta, 0.);
-        m_xmap->LocCollapsedToLocCoord(eta, xi);
-        xi[0] = (xi[0] + 1.) * 0.5; //re-scaled to ratio [0, 1]
-        xi[1] = (xi[1] + 1.) * 0.5;
-        xi[2] = (xi[2] + 1.) * 0.5;
-        for (int i = 0; i < m_coordim; ++i)
+        if(ClampLocCoords(eta, 0.))
         {
-            NekDouble tmp = xi[0]*e10[i] + xi[1]*e20[i]
-                          + xi[2]*e30[i] - er0[i];
-            resid += tmp * tmp;
+            m_xmap->LocCollapsedToLocCoord(eta, xi);
+            xi[0] = (xi[0] + 1.) * 0.5; //re-scaled to ratio [0, 1]
+            xi[1] = (xi[1] + 1.) * 0.5;
+            xi[2] = (xi[2] + 1.) * 0.5;
+            for (int i = 0; i < m_coordim; ++i)
+            {
+                NekDouble tmp = xi[0]*e10[i] + xi[1]*e20[i]
+                            + xi[2]*e30[i] - er0[i];
+                resid += tmp * tmp;
+            }
+            resid = sqrt(resid);
         }
-        resid = sqrt(resid);
     }
     else
     {

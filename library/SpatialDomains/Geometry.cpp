@@ -266,9 +266,15 @@ bool Geometry::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
     resid = GetLocCoords(gloCoord, locCoord);
     Array<OneD, NekDouble> eta(GetShapeDim(), 0.);
     m_xmap->LocCoordToLocCollapsed(locCoord, eta);
-    bool contains = ClampLocCoords(eta, tol);
-    m_xmap->LocCollapsedToLocCoord(eta, locCoord);
-    return contains;
+    if(ClampLocCoords(eta, tol))
+    {
+        m_xmap->LocCollapsedToLocCoord(eta, locCoord);
+        return false;
+    }
+    else
+    {
+        return true;
+    }
 }
 
 /**
@@ -506,22 +512,22 @@ bool Geometry::ClampLocCoords(Array<OneD, NekDouble> &locCoord,
     // since any larger value will be very oscillatory if
     // called by 'returnNearestElmt' option in
     // ExpList::GetExpIndex
-    bool noaction = true;
+    bool clamp = false;
     for (int i = 0; i < GetShapeDim(); ++i)
     {
         if (locCoord[i] < -(1 + tol))
         {
             locCoord[i] = -(1 + tol);
-            noaction = false;
+            clamp = true;
         }
 
         if (locCoord[i] > (1 + tol))
         {
             locCoord[i] = 1 + tol;
-            noaction = false;
+            clamp = true;
         }
     }
-    return noaction;
+    return clamp;
 }
 
 

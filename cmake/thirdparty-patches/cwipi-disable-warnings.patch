@@ -1,0 +1,39 @@
+diff -Naur cwipi-0.11.1.old/cmake/modules/default_flags.cmake cwipi-0.11.1/cmake/modules/default_flags.cmake
+--- cwipi-0.11.1.old/cmake/modules/default_flags.cmake	2020-03-27 10:29:35.000000000 +0000
++++ cwipi-0.11.1/cmake/modules/default_flags.cmake	2020-11-07 20:53:28.256197580 +0000
+@@ -16,7 +16,7 @@
+ 
+   link_libraries("m")
+ 
+-  set (CMAKE_Fortran_FLAGS "-fPIC -Wall -pedantic -std=gnu -Wno-unused-dummy-argument -Wno-maybe-uninitialized")
++  set (CMAKE_Fortran_FLAGS "-w -fPIC")
+ 
+   set (CMAKE_Fortran_FLAGS_RELEASE         "-O3")
+   set (CMAKE_Fortran_FLAGS_DEBUG           "-O0 -g -fcheck=bounds -fbacktrace")
+@@ -29,7 +29,7 @@
+ 
+ elseif (CMAKE_Fortran_COMPILER_ID STREQUAL "Intel")
+ 
+-  set (CMAKE_Fortran_FLAGS "-cpp -fpic -warn -diag-disable 7712")
++  set (CMAKE_Fortran_FLAGS "-w -cpp -fpic -warn -diag-disable 7712")
+ 
+   set (CMAKE_Fortran_FLAGS_RELEASE "-O3")
+ 
+@@ -143,7 +143,7 @@
+ 
+   link_libraries ("m")
+ 
+-  set (CMAKE_C_FLAGS "-std=gnu99 -fPIC -funsigned-char -pedantic -W -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Wunused -Wfloat-equal  -Wno-unused-dummy-argument")
++  set (CMAKE_C_FLAGS "-w -std=gnu99 -fPIC -funsigned-char -pedantic")
+ 
+   set (CMAKE_C_FLAGS_RELEASE         "-O3")
+   set (CMAKE_C_FLAGS_DEBUG           "-O0 -g")
+@@ -240,7 +240,7 @@
+ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+ 
+   link_libraries ("m")
+-  set (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -funsigned-char -W -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wunused -Wno-long-long -Wfloat-equal -Wno-unused-dummy-argument")
++  set (CMAKE_CXX_FLAGS "-w -std=c++11 -fPIC -funsigned-char")
+ 
+   set (CMAKE_CXX_FLAGS_RELEASE         "-O3")
+   set (CMAKE_CXX_FLAGS_DEBUG           "-O0 -g")

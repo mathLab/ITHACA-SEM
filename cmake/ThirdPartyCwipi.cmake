@@ -51,9 +51,11 @@ IF ( NEKTAR_USE_CWIPI )
             BINARY_DIR ${TPBUILD}/cwipi-0.11.1
             TMP_DIR ${TPBUILD}/cwipi-0.11.1-tmp
             INSTALL_DIR ${TPDIST}
+            PATCH_COMMAND patch -p1 < ${PROJECT_SOURCE_DIR}/cmake/thirdparty-patches/cwipi-disable-warnings.patch
+            COMMAND patch -p1 < ${PROJECT_SOURCE_DIR}/cmake/thirdparty-patches/cwipi-disable-fortran.patch
             CONFIGURE_COMMAND
-                CFLAGS=-std=c99
-                CXXFLAGS=-std=c++11
+                CFLAGS=-w
+                CXXFLAGS=-w
                 CC=${MPI_C_COMPILER}
                 CXX=${MPI_CXX_COMPILER}
                 FC=${MPI_Fortran_COMPILER}

@@ -20,12 +20,10 @@ elif [[ $BUILD_TYPE == "full" ]] || [[ $BUILD_TYPE == "full_py3" ]]; then
         -DNEKTAR_USE_HDF5:BOOL=ON \
         -DNEKTAR_USE_MESHGEN:BOOL=ON \
         -DNEKTAR_USE_CCM:BOOL=ON \
+        -DNEKTAR_USE_CWIPI:BOOL=ON \
         -DNEKTAR_BUILD_PYTHON:BOOL=ON \
         -DNEKTAR_TEST_USE_HOSTFILE=ON \
         -DNEKTAR_ERROR_ON_WARNINGS=OFF"
-    if [[ $OS_VERSION != "osx" ]]; then
-        BUILD_OPTS="$BUILD_OPTS -DNEKTAR_USE_CWIPI:BOOL=ON"
-    fi
     if [[ $BUILD_TYPE == "full_py3" ]]; then
         BUILD_OPTS="$BUILD_OPTS -DNEKTAR_USE_PYTHON3:BOOL=ON"
     fi

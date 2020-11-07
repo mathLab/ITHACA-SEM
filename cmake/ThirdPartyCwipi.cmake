@@ -42,31 +42,24 @@ IF ( NEKTAR_USE_CWIPI )
         ENDIF()
 
         EXTERNALPROJECT_ADD(
-            cwipi-0.8.2
-            URL ${TPURL}/cwipi-0.8.2.tgz
-            URL_MD5 "cd28dbea20a08d71f5ff4b4770867268"
+            cwipi-0.11.1
+            URL ${TPURL}/cwipi-0.11.1.tgz
+            URL_MD5 "bf51abe03a1007fd084cea670d79d2d5"
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
-            SOURCE_DIR ${TPSRC}/cwipi-0.8.2
-            PATCH_COMMAND patch -p 0 < ${PROJECT_SOURCE_DIR}/cmake/thirdparty-patches/cwipi_fix-compile.patch
-            COMMAND patch -p 1 < ${PROJECT_SOURCE_DIR}/cmake/thirdparty-patches/cwipi_mpi3.patch
-            COMMAND patch -p 1 < ${PROJECT_SOURCE_DIR}/cmake/thirdparty-patches/cwipi_abs.patch
-            BINARY_DIR ${TPBUILD}/cwipi-0.8.2
-            TMP_DIR ${TPBUILD}/cwipi-0.8.2-tmp
+            SOURCE_DIR ${TPSRC}/cwipi-0.11.1
+            BINARY_DIR ${TPBUILD}/cwipi-0.11.1
+            TMP_DIR ${TPBUILD}/cwipi-0.11.1-tmp
             INSTALL_DIR ${TPDIST}
             CONFIGURE_COMMAND
-                OMPI_FC=${CMAKE_Fortran_COMPILER}
-                OMPI_CC=${CMAKE_C_COMPILER}
-                OMPI_CXX=${CMAKE_CXX_COMPILER}
                 CFLAGS=-std=c99
                 CXXFLAGS=-std=c++11
-                ${TPSRC}/cwipi-0.8.2/configure
                 CC=${MPI_C_COMPILER}
                 CXX=${MPI_CXX_COMPILER}
                 FC=${MPI_Fortran_COMPILER}
-                --prefix=${TPDIST}
-                --libdir=${TPDIST}/lib
-                --quiet
+                ${CMAKE_COMMAND}
+                    -DCMAKE_INSTALL_PREFIX=${TPDIST}
+                    ${TPSRC}/cwipi-0.11.1
             BUILD_COMMAND make -j 1
         )
 

@@ -685,9 +685,16 @@ namespace Nektar
                 Array<OneD, NekDouble>& eta)
         {
             NekDouble d2 = 1.0 - xi[2];
-            if( fabs(d2) < NekConstants::kNekZeroTol)
+            if(fabs(d2) < NekConstants::kNekZeroTol)
             {
-                d2 = NekConstants::kNekZeroTol;
+                if(d2>=0.)
+                {
+                    d2 =  NekConstants::kNekZeroTol;
+                }
+                else
+                {
+                    d2 = -NekConstants::kNekZeroTol;
+                }
             }
             eta[2] = xi[2]; // eta_z = xi_z
             eta[1] = xi[1]; //eta_y = xi_y

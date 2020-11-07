@@ -876,13 +876,27 @@ namespace Nektar
         {
             NekDouble d2 = 1.0-xi[2];
             NekDouble d12 = -xi[1]-xi[2];
-            if( fabs(d2) < NekConstants::kNekZeroTol)
+            if(fabs(d2) < NekConstants::kNekZeroTol)
             {
-                d2 = NekConstants::kNekZeroTol;
+                if(d2>=0.)
+                {
+                    d2 =  NekConstants::kNekZeroTol;
+                }
+                else
+                {
+                    d2 = -NekConstants::kNekZeroTol;
+                }
             }
-            if (fabs(d12) < NekConstants::kNekZeroTol)
+            if(fabs(d12) < NekConstants::kNekZeroTol)
             {
-                d12 = NekConstants::kNekZeroTol;
+                if(d12>=0.)
+                {
+                    d12 =  NekConstants::kNekZeroTol;
+                }
+                else
+                {
+                    d12 = -NekConstants::kNekZeroTol;
+                }
             }
             eta[0] = 2.0*(1.0+xi[0])/d12 - 1.0;
             eta[1] = 2.0*(1.0+xi[1])/d2 - 1.0;

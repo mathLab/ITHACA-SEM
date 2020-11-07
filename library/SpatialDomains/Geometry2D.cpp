@@ -149,7 +149,7 @@ void Geometry2D::NewtonIterationForLocCoord(
     }
 
     m_xmap->LocCoordToLocCollapsed(Lcoords, eta);
-    if(ClampLocCoords(eta, 1E-15))
+    if(ClampLocCoords(eta, 2.22E-16))
     {
         I[0] = m_xmap->GetBasis(0)->GetI(eta);
         I[1] = m_xmap->GetBasis(1)->GetI(eta + 1);
@@ -234,7 +234,7 @@ NekDouble Geometry2D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         // Set distance
         Array<OneD, NekDouble> eta(2, 0.);
         m_xmap->LocCoordToLocCollapsed(Lcoords, eta);
-        if(ClampLocCoords(eta, 1E-15))
+        if(ClampLocCoords(eta, 2.22E-16))
         {
             Array<OneD, NekDouble> xi(2, 0.);
             m_xmap->LocCollapsedToLocCoord(eta, xi);

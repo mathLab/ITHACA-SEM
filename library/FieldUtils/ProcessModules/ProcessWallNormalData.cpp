@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessNFactor.cpp
+//  File: ProcessWallNormalData.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -35,9 +35,9 @@
 #include <iostream>
 #include <string>
 
-#include "ProcessNFactor.h"
-#include "ProcessInterpPtsToPts.h"
+#include "ProcessWallNormalData.h"
 
+#include <FieldUtils/Interpolator.h>
 #include <LibUtilities/Foundations/Interp.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
@@ -49,34 +49,26 @@ namespace Nektar
 namespace FieldUtils
 {
 
-ModuleKey ProcessNFactor::className = GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eProcessModule, "nf"),
-    ProcessNFactor::create,
+ModuleKey ProcessWallNormalData::className = GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eProcessModule, "wnd"),
+    ProcessWallNormalData::create,
     "Export data in the wall normal direction along the surface.");
 
-ProcessNFactor::ProcessNFactor(FieldSharedPtr f) : ProcessBoundaryExtract(f)
+ProcessWallNormalData::ProcessWallNormalData(FieldSharedPtr f) : ProcessBoundaryExtract(f)
 {
-    f->m_writeBndFld = false; // turned on in the upstream ProcessBoundaryExtract
+    f->m_writeBndFld = false; // turned on in upstream ProcessBoundaryExtract
 
-    // Necessary parameters
-    m_config["h"]  = ConfigOption(false, "NotSet", 
-                    "Sampling distance along the wall normals.");
-    m_config["nh"] = ConfigOption(false, "NotSet", 
-                    "Number of sampling points along the wall normals.");
-    m_config["ne"] = ConfigOption(false, "NotSet", 
-                    "Number of sampling points on each edge of an element.");
-    
-    // Optional parameters
-    m_config["d"]  = ConfigOption(false, "0.1", "Refinement control, delta<1");
-    m_config["x0"] = ConfigOption(false, "-10000000.0", "Lower bound of x.");
-    m_config["x1"] = ConfigOption(false,  "10000000.0", "Upper bound of x.");
-    m_config["y0"] = ConfigOption(false, "-10000000.0", "Lower bound of y.");
-    m_config["y1"] = ConfigOption(false,  "10000000.0", "Upper bound of y.");
-    m_config["z0"] = ConfigOption(false, "-10000000.0", "Lower bound of z.");
-    m_config["z1"] = ConfigOption(false,  "10000000.0", "Upper bound of z.");
+    m_config["h"]  = ConfigOption(false, "0.01", 
+                     "Sampling distance along the wall normals.");
+    m_config["nh"] = ConfigOption(false, "3", 
+                     "Number of sampling points along the wall normals.");
+    m_config["ne"] = ConfigOption(false, "3", 
+                     "Number of sampling points on each edge of an element.");
+    m_config["d"]  = ConfigOption(false, "0.1", 
+                     "Points distribution control in h direction, in (0,1)");
 }
 
-ProcessNFactor::~ProcessNFactor()
+ProcessWallNormalData::~ProcessWallNormalData()
 {
 }
 
@@ -86,7 +78,7 @@ ProcessNFactor::~ProcessNFactor()
    A.size()=6; A[0~5] for x/y/z/nx/ny/nz respectively
    The heap is adjusted regards to A[0] (x-value)
 */
-void ProcessNFactor::Heapify_max(Array<OneD, Array<OneD, NekDouble> > A, 
+void ProcessWallNormalData::Heapify_max(Array<OneD, Array<OneD, NekDouble> > A, 
                                  const int curLen, 
                                  const int rootId)
 {
@@ -102,7 +94,8 @@ void ProcessNFactor::Heapify_max(Array<OneD, Array<OneD, NekDouble> > A,
 
     // If largest is not the root, swap values at [maxId] and [rootId]
     // then recursively heapify the affected sub-tree, rooted at [maxId] 
-    if (maxId != rootId) {
+    if (maxId != rootId)
+    {
         for (int j=0; j<dataDim; ++j) { std::swap(A[j][rootId], A[j][maxId]); }
         Heapify_max(A, curLen, maxId);
     }
@@ -110,18 +103,21 @@ void ProcessNFactor::Heapify_max(Array<OneD, Array<OneD, NekDouble> > A,
 }
 
 /* Sort the array using heap*/
-void ProcessNFactor::HeapSort(Array<OneD, Array<OneD, NekDouble> > A)
+void ProcessWallNormalData::HeapSort(Array<OneD, Array<OneD, NekDouble> > A)
 {
     const int dataDim = A.size();
     const int totLen  = A[0].size();
     
     // Build max heap, starting from the last non-leaf node
-    for (int i = floor(totLen / 2) - 1; i >= 0; --i) {
+    for (int i = floor(totLen / 2) - 1; i >= 0; --i)
+    {
         Heapify_max(A, totLen, i);
     }
+
     // Move current root to end [0]->[currentlength-1]
     // and adjust the reduced heap, startig from root
-    for (int curLen = totLen; curLen > 1; --curLen) {
+    for (int curLen = totLen; curLen > 1; --curLen)
+    {
         for (int j=0; j<dataDim; ++j) { std::swap(A[j][0], A[j][curLen-1]); }
 
         Heapify_max(A, curLen-1, 0);
@@ -129,11 +125,11 @@ void ProcessNFactor::HeapSort(Array<OneD, Array<OneD, NekDouble> > A)
 
 }
 
-/* clean the repeated points in the array
+/* Clean the repeated points in the array
    put the repeated points in the end 
-   return the array length without repeated points
+   return the non-repeated array length
 */
-int ProcessNFactor::CleanRepeatedPts(Array<OneD, Array<OneD, NekDouble> > A)
+int ProcessWallNormalData::CleanRepeatedPts(Array<OneD, Array<OneD, NekDouble> > A)
 {
     const int dataDim = A.size();
     const int totLen = A[0].size();
@@ -141,26 +137,24 @@ int ProcessNFactor::CleanRepeatedPts(Array<OneD, Array<OneD, NekDouble> > A)
     for (int i=1; i<newLen; ++i) {
         // For each i, check indax smaller than i
         for (int j=i-1; j>=0; --j) {
-            
-            if ( abs(A[0][i]-A[0][j]) > NekConstants::kNekZeroTol ) {
-                break; // The array has already sorted regards to x
-            }
-            else {
-                if ( abs(A[1][i]-A[1][i-1]) < NekConstants::kNekZeroTol &&
-                     abs(A[2][i]-A[2][i-1]) < NekConstants::kNekZeroTol ) {
-                    
-                    // repeated points found, [i]==[j]
-                    // move [i+1] to [totLen-1] forword
-                    for (int k=0; k<dataDim; ++k) {
-                        for (int t=i+1; t<totLen; ++t) {
-                            A[k][t-1] = A[k][t];
-                        }
-                        A[k][totLen-1] = A[k][j];
-                    }
 
-                    --newLen; // key origins -- 
-                    --i;      // check the same i again
+            if (abs(A[0][i]-A[0][j]) < NekConstants::kNekZeroTol &&
+                abs(A[1][i]-A[1][j]) < NekConstants::kNekZeroTol &&
+                abs(A[2][i]-A[2][j]) < NekConstants::kNekZeroTol)
+            {
+                // repeated point found, [i]==[j]
+                // move element [i+1] to [totLen-1] forword
+                for (int k=0; k<dataDim; ++k)
+                {
+                    for (int t=i+1; t<totLen; ++t)
+                    {
+                        A[k][t-1] = A[k][t];
+                    }
+                    A[k][totLen-1] = A[k][j];
                 }
+
+                --newLen; // key origins -- 
+                --i;      // check the same i again
             }
 
         }
@@ -169,9 +163,8 @@ int ProcessNFactor::CleanRepeatedPts(Array<OneD, Array<OneD, NekDouble> > A)
     return (newLen);
 }
 
-/* data.size() > len bacause of the repeated points
-*/
-void ProcessNFactor::WriteDataInPts(const std::string &outFile, 
+
+void ProcessWallNormalData::WriteDataInPts(const std::string &outFile, 
     const Array<OneD, Array<OneD, Array<OneD, NekDouble> > > data, 
     const int len)
 {
@@ -185,12 +178,14 @@ void ProcessNFactor::WriteDataInPts(const std::string &outFile,
     else if (boost::iequals(m_f->m_variables[0], "rho")) { isInc = false; }
     else { cout << "Other types of field. Might be an issue." << endl; }
  
-    if (isInc==true){
+    if (isInc==true)
+    {
         if      (nfields==3) { is2D = true;  }
         else if (nfields==4) { is2D = false; }
         else  { cout << "Incorrect dimension." << endl; }
     }
-    else {
+    else
+    {
         if      (nfields==4) { is2D = true; }
         else if (nfields==5) { is2D = false; }
         else  { cout << "Incorrect dimension." << endl; }
@@ -205,22 +200,32 @@ void ProcessNFactor::WriteDataInPts(const std::string &outFile,
     ptsFile << "  <POINTS ";
     ptsFile << "DIM=\"" << (is2D ? 2 : 3) << "\" ";
     ptsFile << "FIELDS=\"";
-    for (int i=0; i<nfields; ++i){
+    for (int i=0; i<nfields; ++i)
+    {
         ptsFile << m_f->m_variables[i];
-        if (i < nfields-1) {
+        if (i < nfields-1)
+        {
             ptsFile << ",";
         }
     }
     ptsFile << "\">" << endl;
 
-    for (size_t i = 0; i<len; ++i){
-        for (size_t j=0; j<data[0].size(); ++j) {
+    for (size_t i = 0; i<len; ++i)
+    {
+        for (size_t j=0; j<data[0].size(); ++j)
+        {
             ptsFile << "    ";
             ptsFile << data[i][j][0] << " " << data[i][j][1] << " ";
-            if (is2D==false) { ptsFile << data[i][j][2] << " "; }
-            for (int k=0; k<nfields; ++k){
+            if (is2D==false)
+            { 
+                ptsFile << data[i][j][2] << " ";
+            }
+            for (int k=0; k<nfields; ++k)
+            {
                 ptsFile << data[i][j][3+k];
-                if (k < nfields-1) { ptsFile << " "; }
+                if (k < nfields-1) {
+                    ptsFile << " "; 
+                }
             }
             ptsFile << endl;
         }
@@ -232,13 +237,13 @@ void ProcessNFactor::WriteDataInPts(const std::string &outFile,
 }
 
 
-void ProcessNFactor::CreateFieldPts(
+void ProcessWallNormalData::CreateFieldPts(
     const Array<OneD, Array<OneD, Array<OneD, NekDouble> > > data, 
     const int len)
 {
     
-    int npts_n  = data[0].size(); // number of points in normal direction
-    int npts    = len * npts_n;   // len is number of sampling origins
+    int npts_h  = data[0].size(); // number of points in normal direction
+    int npts    = len * npts_h;   // len is number of sampling origins
     int totvars = m_spacedim + m_f->m_variables.size();
     Array<OneD, Array<OneD, NekDouble> > pts(totvars);
 
@@ -250,8 +255,8 @@ void ProcessNFactor::CreateFieldPts(
     int idx_o, idx_n, idx_v;
     for (int i = 0; i < npts; ++i)
     {
-        idx_n = i%npts_n;         // idx for normal direction
-        idx_o = (i-idx_n)/npts_n; // idx for origin
+        idx_n = i%npts_h;         // idx for normal direction
+        idx_o = (i-idx_n)/npts_h; // idx for origin
         idx_v = 0;                // idx for variable
         for (int j = 0; j < totvars; ++j)
         {
@@ -266,30 +271,23 @@ void ProcessNFactor::CreateFieldPts(
 }
 
 
-void ProcessNFactor::Process(po::variables_map &vm)
+// $NEK/build-g/dist/bin/FieldConvert-g -m wnd:bnd=0:h=0.005:nh=21:ne=11 mesh.xml session.xml field.fld/ data.pts
+
+void ProcessWallNormalData::Process(po::variables_map &vm)
 {
     ProcessBoundaryExtract::Process(vm);
 
     // Step 1 - Get sampling parameters
-    const NekDouble distance_n = m_config["h"].as<NekDouble>(); //0.005
-    const int       npts_n     = m_config["nh"].as<int>();      //21
+    const NekDouble distance_h = m_config["h"].as<NekDouble>(); //0.005
+    const int       npts_h     = m_config["nh"].as<int>();      //21
     const int to_nPtsPerEdge   = m_config["ne"].as<int>();      //6
     const NekDouble delta      = m_config["d"].as<NekDouble>(); //0.1
 
-    Array<OneD, NekDouble> boundingBox(6); // use origins inside the box
-    boundingBox[0] = m_config["x0"].as<NekDouble>(); 
-    boundingBox[1] = m_config["x1"].as<NekDouble>();
-    boundingBox[2] = m_config["y0"].as<NekDouble>();
-    boundingBox[3] = m_config["y1"].as<NekDouble>();
-    boundingBox[4] = m_config["z0"].as<NekDouble>();
-    boundingBox[5] = m_config["z1"].as<NekDouble>();
-    
 
     // Step 2 - Get data dimension
     int nfields   = m_f->m_variables.size();
     int nCoordDim = m_f->m_exp[0]->GetCoordim(0);
     m_spacedim    = nCoordDim + m_f->m_numHomogeneousDir;
-
 
 
     // Step 3 - Get boundary info
@@ -308,6 +306,7 @@ void ProcessNFactor::Process(po::variables_map &vm)
     // Get boundary id
     // m_f->m_bndRegionsToWrite.size() is the number of input bnd
     // eg. =3 if bnd=0,1,2; =1 if bnd=0
+    // ref. ProcedureWSS.cpp
     int bnd = BndRegionMap[m_f->m_bndRegionsToWrite[0]];
     
     // Get expansion list for boundary and the number of points
@@ -332,23 +331,23 @@ void ProcessNFactor::Process(po::variables_map &vm)
     BndExp[0]->GetCoords(xyz_bnd[0], xyz_bnd[1], xyz_bnd[2]);
     */
 
-    //=========================================================================
-    // Step 4 - set origins for sampling
-    // only support 1D interpolation now
-    // set dimensions bndElmtDim_para bndElmtDim_phys
-    const int dim_para = BndExp[0]->GetExp(0)->GetNumBases(); // dimension for parametric coordinate system, eg. =1
-    const int dim_phys = nCoordDim; // dimension for the physical space that the parametric coordinate system located on, eg. =2
-    
-    // set point key
-    //const int to_nPtsPerElmt = 6; // needed number of points per element
-    //LibUtilities::PointsKey from_key = BndExp[0]->GetExp(0)->GetBasis(0)->GetPointsKey();
-    //const int from_nPtsPerElmt = from_key.GetNumPoints();
-    LibUtilities::PointsType to_pointstype = LibUtilities::PointsType::ePolyEvenlySpaced;
+
+    // Step 4 - set sampling origins on the wall
+    // dimension for parametric coordinate system and 
+    // dimension for physical space that this cooridinate located in
+    // eg. dim_para=1 dim_phys=2 for 2.5D case
+    const int dim_para = BndExp[0]->GetExp(0)->GetNumBases(); 
+    const int dim_phys = nCoordDim; 
+
+    // set point keys
+    LibUtilities::PointsType to_pointstype = 
+                                 LibUtilities::PointsType::ePolyEvenlySpaced;
     LibUtilities::PointsKey  to_key(to_nPtsPerEdge, to_pointstype);
     Array<OneD, LibUtilities::PointsKey> from_key(dim_para);
     int from_nPtsPerElmt = 1;
     int to_nPtsPerElmt   = 1; 
-    for (int i=0; i<dim_para; ++i) {
+    for (int i=0; i<dim_para; ++i)
+    {
         from_key[i] = BndExp[0]->GetExp(0)->GetBasis(i)->GetPointsKey();
         from_nPtsPerElmt *= from_key[i].GetNumPoints();
         to_nPtsPerElmt   *= to_nPtsPerEdge;
@@ -358,40 +357,41 @@ void ProcessNFactor::Process(po::variables_map &vm)
     Array<OneD, Array<OneD, NekDouble> > from_ptsInElmt(3);
     Array<OneD, Array<OneD, NekDouble> > to_ptsInElmt(3);
     Array<OneD, Array<OneD, NekDouble> > to_normalsInElmt(3);
-    for (int i=0; i<3; ++i) {
+    for (int i=0; i<3; ++i)
+    {
         from_ptsInElmt[i]   = Array<OneD, NekDouble>(from_nPtsPerElmt, 0.0);
         to_ptsInElmt[i]     = Array<OneD, NekDouble>(to_nPtsPerElmt, 0.0);
         to_normalsInElmt[i] = Array<OneD, NekDouble>(to_nPtsPerElmt, 0.0);
     }
 
     const int nElmts = BndExp[0]->GetNumElmts(); //42
-    const int nOrigs = to_nPtsPerElmt * nElmts;
-    Array<OneD, Array<OneD, NekDouble> > origs(6); // samping origins (have same points), 6 for x/y/z/nx/ny/nz
+    const int nOrigs = to_nPtsPerElmt * nElmts;  // num of origins on the wall
+    Array<OneD, Array<OneD, NekDouble> > origs(6); // 6 for x/y/z/nx/ny/nz
     for (int i=0; i<6; ++i) {
         origs[i] = Array<OneD, NekDouble>(nOrigs, 0.0); 
     }
     
     // loop the element on the bnd
     int ptr = 0; // pointed to head to copy the arrays
-    for ( int i = 0; i < nElmts; ++i ) { //i < nElmts
-
+    for (int i=0; i<nElmts; ++i)
+    {
         // obtain the points in the element
-        BndExp[0]->GetExp(i)->GetCoords(from_ptsInElmt[0], from_ptsInElmt[1], from_ptsInElmt[2]); 
-
-        // skip some elements, needs further improved
-        if (from_ptsInElmt[0][0]<boundingBox[0] ||
-            from_ptsInElmt[0][from_nPtsPerElmt-1]>boundingBox[1]) { continue; } 
-
+        BndExp[0]->GetExp(i)->GetCoords(from_ptsInElmt[0], 
+                                        from_ptsInElmt[1], 
+                                        from_ptsInElmt[2]);
         // interp x/y/z and nx/ny/nz
         // dim_phys determins the times (xy/xyz) to loop
         // dim_para determins the interpolation function (Interp1D/Interp2D) to ues
         // ref: Expansion::v_GetCoords in Expansion.cpp
-        for (int j = 0; j < dim_phys; ++j ) {
+        for (int j=0; j<dim_phys; ++j)
+        {
             //LibUtilities::Interp1D(from_key, &xyz_bnd[j][i*from_nPtsPerElmt], to_key, &to_ptsInElmt[j][0]); //alternative code
             //LibUtilities::Interp1D(from_key, &from_ptsInElmt[j][0], to_key, &to_ptsInElmt[j][0]); //x/y/z
             //LibUtilities::Interp1D(from_key, &normals[j][i*from_nPtsPerElmt], to_key, &to_normalsInElmt[j][0]);
-            switch (dim_para) {
-                case 1: {
+            switch (dim_para)
+            {
+                case 1:
+                {
                     // ksi - line segement element on bnd
                     LibUtilities::Interp1D(
                         from_key[0], &from_ptsInElmt[j][0], 
@@ -401,7 +401,8 @@ void ProcessNFactor::Process(po::variables_map &vm)
                         to_key,      &to_normalsInElmt[j][0]); // nx/ny/nz
                     break;
                 }
-                case 2: {
+                case 2:
+                {
                     // ksi and eta - tri or quad element on bnd
                     LibUtilities::Interp2D(
                         from_key[0], from_key[1], 
@@ -409,13 +410,14 @@ void ProcessNFactor::Process(po::variables_map &vm)
                         to_key,      to_key,      
                         &to_ptsInElmt[j][0]); //x/y/z
                     LibUtilities::Interp2D(
-                        from_key[0], from_key[1], 
+                        from_key[0], from_key[1],
                         &normals[j][i*from_nPtsPerElmt], 
                         to_key,      to_key,      
                         &to_normalsInElmt[j][0]);
                     break;
                 }
-                default: {
+                default:
+                {
                     ASSERTL0(false, "Dimension error.");
                 }
             }
@@ -424,7 +426,7 @@ void ProcessNFactor::Process(po::variables_map &vm)
             Vmath::Vcopy(to_nPtsPerElmt, &to_ptsInElmt[j][0],
                          1, &origs[j][ptr],   1); // copy coordinates
             Vmath::Vcopy(to_nPtsPerElmt, &to_normalsInElmt[j][0],
-                         1, &origs[j+3][ptr], 1); // copy coordinates
+                         1, &origs[j+3][ptr], 1); // copy normals
         }
         ptr += to_nPtsPerElmt;
 
@@ -432,47 +434,82 @@ void ProcessNFactor::Process(po::variables_map &vm)
  
     // sort array regards to x-value and remove repeated origin points
     HeapSort(origs);
-    int nOrigs_new = CleanRepeatedPts(origs);
+    int nOrigs_diff = CleanRepeatedPts(origs); // number of different origins
      
-    //-------------------------------------------------------------------------
-    //=========================================================================
 
-    // Step 5 - set sampling points
+    // Step 5 - set parametric distance of sampling points
     // Expression in Agrawal's paper:
     // h = 1- tanh((1-ksi)*atanh(sqrt(1-delta)))/sqrt(1-delta), ksi in [0,1]
-    Array<OneD, NekDouble> h(npts_n);
+    Array<OneD, NekDouble> h(npts_h);
     NekDouble tmp1;
-    const NekDouble tmp2 = 1.0/(static_cast<NekDouble>(npts_n)-1.0); // 1/(npts-1)
+    const NekDouble tmp2 = 1.0/(static_cast<NekDouble>(npts_h)-1.0);
     const NekDouble tmp3 = sqrt(1.0-delta);
     const NekDouble tmp4 = atanh(tmp3);
     const NekDouble tmp5 = 1.0/tmp3;
-    for (int i=0; i<npts_n; ++i){
-        tmp1 = 1.0 - i * tmp2; // tmp1 = 1-ksi, ksi = i/(npts_n-1) belonging to [0,1]
+    for (int i=0; i<npts_h; ++i)
+    {
+        tmp1 = 1.0 - i * tmp2; // tmp1 = 1-ksi
         h[i] = 1 - tanh(tmp1*tmp4)*tmp5;
-        //cout << i <<" - ksi = "<<1-tmp1<<", h = "<< h[i] <<endl;
     }
 
+
+    //=========================================================================
+    // Step 6 - create fieldPts and interpolate
+    int npts    = nOrigs_diff * npts_h;   // total number of points
+    int totVars = m_spacedim  + m_f->m_variables.size();
+
+    Array<OneD, Array<OneD, NekDouble> > pts(totVars);
+    for (int i=0; i<totVars; ++i)
+    {
+        pts[i] = Array<OneD, NekDouble>(npts, 0.0);
+    }
+
+    int idx=0;
+    for (int i=0; i<nOrigs_diff; ++i)
+    {
+        for (int j=0; j<npts_h; ++j)
+        {
+            idx = i*npts_h + j;     // 2nd index in pts
+            tmp1 = distance_h*h[j]; // physical distance in normal direction
+
+            for (int k=0; k<m_spacedim; ++k)
+            {
+                pts[k][idx] = origs[k][i] + tmp1*origs[k+3][i]; // x0+dist*nx 
+            }
+        }
+    }
+
+    m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
+        m_spacedim, m_f->m_variables, pts, LibUtilities::NullPtsInfoMap);
+
+    Interpolator interp;
+    interp.Interpolate(m_f->m_exp, m_f->m_fieldPts, NekConstants::kNekUnsetDouble);
+    //=========================================================================
+
+
+    /*// Alternative code for Step 6 (last part)
     // declare the data array and fill in the coordinates
     // data[originId][normalId][variableId]
-    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > data(nOrigs_new);
-    for (int i=0; i<nOrigs_new; ++i) {
-        data[i] = Array<OneD, Array<OneD, NekDouble> >(npts_n);
-        for (int j=0; j<npts_n; ++j) {
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > data(nOrigs_diff);
+    for (int i=0; i<nOrigs_diff; ++i) {
+        data[i] = Array<OneD, Array<OneD, NekDouble> >(npts_h);
+        for (int j=0; j<npts_h; ++j) {
             data[i][j] = Array<OneD, NekDouble>(3+BndExp.size(), 0.0); //x/y/z+flow variables
             
-            tmp1 = distance_n*h[j]; // physical distance in normal direction
+            tmp1 = distance_h*h[j]; // physical distance in normal direction
             for (int k=0; k<3; ++k) {
                 data[i][j][k] = origs[k][i] + tmp1*origs[k+3][i]; // x0+dist*nx
             }
         }
     }
 
-    // Step 5 - interpolate the variables for each point
+
+    // Step 6 - interpolate the variables for each point
     Array<OneD, NekDouble> Lcoords(nCoordDim, 0.0); // 2.5D=2, 3D=3
     Array<OneD, NekDouble> coords(3);               // directly use 3
    
-    for (int i=0; i<nOrigs_new; ++i) {
-        for (int j=0; j<npts_n; ++j) {
+    for (int i=0; i<nOrigs_diff; ++i) {
+        for (int j=0; j<npts_h; ++j) {
 
             // Get donor element and local coordinates
             Vmath::Vcopy(3, &data[i][j][0], 1, &coords[0], 1);
@@ -499,6 +536,7 @@ void ProcessNFactor::Process(po::variables_map &vm)
 
             //-------------
             // interpolate the value for each field
+            // interpolation routine already there 
             int offset;
             NekDouble value;
             if (elmtid >= 0) {
@@ -537,134 +575,18 @@ void ProcessNFactor::Process(po::variables_map &vm)
         } // loop j for normal array
     } // loop i for orgins 
     
-    
-    // create m_fieldPts for OutputPts module to write
-    CreateFieldPts(data, nOrigs_new);
-
     // Export data in pts format directly in the current module
     // can be used to check the output file by OutputPts module
-    //WriteDataInPts("outTest.pts", data, nOrigs_new);
-    //========================================================================= 
-    
+    WriteDataInPts("outTest.pts", data, nOrigs_diff);
 
-    //---------------------------------------------------------------
-    // To do list (done)
-    // 1. Will the following 3 expressions always the same?
-    //    m_f->m_graph->GetSpaceDimension()
-    //    m_f->m_exp[0]->GetCoordim(0)
-    //    BndExp[0]->GetCoordim(0)
-    // 2. PointTypes for quad bnd mesh and tri mesh on the boundary?
-    //    PointsKey only accept 1 pointtype but there are 2 directions.
-    // 3. Does this routine give the parametric dimension?
-    //    BndExp[0]->GetExp(0)->GetNumBases()
-
-    // ans:
-
-    //---------------output some  middle results --------------------
-    /*
-    std::cout << "dim_para = " << dim_para <<", dim_coor = " << dim_phys <<std::endl;
-    std::cout<< m_f->m_exp[0]->GetNumElmts() <<std::endl;
-    std::cout<< m_f->m_variables[0]<<", "<<m_f->m_variables[1]<<", "
-             << m_f->m_variables[2]<<", "<<m_f->m_variables[3]<<endl;
-    cout << "m_f->m_exp.size() = " << m_f->m_exp.size() <<endl;
-
-    cout << "bnd = " << bnd << endl;
-    cout << "nqb = " << nqb << endl;
-    cout << "normals_y = " << normals[1][nqb-2]<<" "<< normals[1][nqb-1] << endl; 
-    cout << "Dimension = " << nCoordDim <<endl;
-    */
-    /*
-    for (int i=0;i<nqb/4;++i){   // 0 ~ nqb/4, where 4 if for HomModesZ=4
-        cout << i << " - " <<xyz_bnd[0][i] <<", "<<xyz_bnd[1][i]<<", "<<xyz_bnd[2][i]<<endl;
-    }*/
-    
-    /*
     // create m_fieldPts for OutputPts module to write
-    m_f->m_fieldPts = LibUtilities::NullPtsField;
-    vector<string> fieldNames = {"u","v","w","p"};
-    int totvars = m_spacedim + fieldNames.size();
-    Array<OneD, Array<OneD, NekDouble> > pts(totvars);
-    int npts = nOrigs_new*npts_n;
-    for (int i = 0; i < totvars; ++i)
-    {
-        pts[i] = Array<OneD, NekDouble>(npts);
-    }
+    //CreateFieldPts(data, nOrigs_diff);
 
-    int idx_o, idx_n, idx_v;
-    for (int i = 0; i < npts; ++i)
-    {
-        idx_n = i%npts_n;
-        idx_o = (i-idx_n)/npts_n;
-        idx_v = 0;
-        for (int j = 0; j < totvars; ++j)
-        {
-            pts[j][i] = data[idx_o][idx_n][idx_v];
-            ++idx_v;
-            if(m_spacedim==2 && j==1){++idx_v;}
-        }
-    }
-
-    m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(m_spacedim, fieldNames, pts, LibUtilities::NullPtsInfoMap);
-    
-    
-    
+    // interpolate the pts object
+    //Interpolator interp;
+    //interp.Interpolate(m_f->m_exp, m_f->m_fieldPts, -999.0);
     */
-       
-    /*
-    cout << "len1 = "<< nOrigs <<", len2 = " << nOrigs_new << endl;
-    for (int j=0; j<nOrigs_new; ++j){
-        cout <<"-array_3- " << origs[0][j] <<", "<< origs[1][j]<<", "<< origs[2][j] <<", "
-                            << origs[3][j] <<", "<< origs[4][j]<<", "<< origs[5][j] <<endl;
-    } 
-
-    //---------------------------------------------------------------
-    int i=0;
-    cout << "======Result check======\nInput an origin index:"<<endl;
-    cin >> i;
-    while (i>=0 && i<nOrigs_new) {
-        
-        for (int j=0; j<npts_n; ++j) {
-            cout << "#"<<j<<" - [" <<data[i][j][0] <<", "<<data[i][j][1]<<", "<< data[i][j][2]<<"]\n     "
-                 <<data[i][j][3] <<", "<<data[i][j][4]<<", "<< data[i][j][5]<<", "<< data[i][j][6]<<endl;
-
-        }
-        system("pause");
-        cout << "Dumped.\nInput a new origin index:"<<endl;
-        cin >> i;
-    }
-    //---------------------------------------------------------------
-    */
-    /*
-    vector<string> inout   = vm["input-file"].as<vector<string> >();
-    vector<string> modcmds = vm["module"].as<vector<string> >();
-    cout << "input.size = " << inout.size() << endl;
-    for (int i=0; i<inout.size(); ++i){
-        cout << "inout " << i << " = " << inout[i] << endl;
-    }
-    cout << "modcmds.size =" << modcmds.size() << endl;
-    for (int i=0; i<modcmds.size(); ++i){
-        cout << "modcmds " << i << " = " << modcmds[i] << endl;
-    }
-    
-    cout << "bnd = " << m_config["bnd"].as<int>() << endl;
-    cout << "in  = " << m_config["infile"].as<string>() << endl;
-    cout << "out = " << m_config["outfile"].as<string>() << endl;
-
-    cout <<"h = " << distance_n <<", nh = " << npts_n 
-         << ", ne = " << to_nPtsPerEdge << ", delta = " << delta << endl;
-
-    cout << "[x0,x1] = [" << boundingBox[0] << "," << boundingBox[1] << "]" << endl;
-    cout << "[y0,y1] = [" << boundingBox[2] << "," << boundingBox[3] << "]" << endl;
-    cout << "[z0,z1] = [" << boundingBox[4] << "," << boundingBox[5] << "]" << endl;
-
-
-    cout << "\nHi there. " << this->GetModuleName() << endl;
-
-    if (m_f->m_fieldPts){cout << "fieldPts np = " << m_f->m_fieldPts->GetNpoints() << endl;}
-    else {cout << "Not created!"<<endl;}
-    */
-    //---------------------------------------------------------------
-
+    //========================================================================= 
 
 }
 

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessNFactor.h
+//  File: ProcessWallNormalData.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -32,8 +32,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_PROCESSNFACTOR
-#define FIELDUTILS_PROCESSNFACTOR
+#ifndef FIELDUTILS_PROCESSWALLNORMALDATA
+#define FIELDUTILS_PROCESSWALLNORMALDATA
 
 #include "ProcessBoundaryExtract.h"
 
@@ -46,31 +46,36 @@ namespace FieldUtils
  * @brief This processing module calculates the wall shear stress and adds it
  * as an extra-field to the output file, and writes it to a surface output file.
  */
-class ProcessNFactor : public ProcessBoundaryExtract
+class ProcessWallNormalData : public ProcessBoundaryExtract
 {
 public:
     /// Creates an instance of this class
     static std::shared_ptr<Module> create(FieldSharedPtr f)
     {
-        return MemoryManager<ProcessNFactor>::AllocateSharedPtr(f);
+        return MemoryManager<ProcessWallNormalData>::AllocateSharedPtr(f);
     }
     static ModuleKey className;
 
-    ProcessNFactor(FieldSharedPtr f);
-    virtual ~ProcessNFactor();
+    ProcessWallNormalData(FieldSharedPtr f);
+    virtual ~ProcessWallNormalData();
 
     /// Write mesh to output file.
     virtual void Process(po::variables_map &vm);
 
     virtual std::string GetModuleName()
     {
-        return "ProcessNFactor";
+        return "ProcessWallNormalData";
     }
 
     virtual std::string GetModuleDescription()
     {
         return "Calculating N-factor along the surface";
     }
+
+protected:
+
+private:
+    int m_spacedim;
 
     // functions for organizing the data locally in this module
     void Heapify_max(Array<OneD, Array<OneD, NekDouble> > A, 
@@ -90,11 +95,6 @@ public:
     void CreateFieldPts(
         const Array<OneD, Array<OneD, Array<OneD, NekDouble> > > data, 
         const int len);
-
-protected:
-
-private:
-    int m_spacedim;
 
 };
 }

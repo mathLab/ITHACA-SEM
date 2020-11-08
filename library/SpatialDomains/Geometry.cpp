@@ -264,7 +264,7 @@ bool Geometry::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
 
     // Convert to the local (eta) coordinates.
     dist = GetLocCoords(gloCoord, locCoord);
-    if(dist<tol+2.22E-16)
+    if(dist<=tol+2.22E-16)
     {
         return true;
     }

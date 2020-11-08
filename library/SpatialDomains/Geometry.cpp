@@ -253,6 +253,7 @@ bool Geometry::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                NekDouble tol,
                                NekDouble &dist)
 {
+    dist = 1E6;
     //Rough check if within twice min/max point
     if (GetMetricInfo()->GetGtype() != eRegular)
     {

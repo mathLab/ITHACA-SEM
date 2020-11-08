@@ -56,8 +56,6 @@ ModuleKey ProcessScaleInFld::className =
 ProcessScaleInFld::ProcessScaleInFld(FieldSharedPtr f) : ProcessModule(f)
 {
     m_config["scale"] = ConfigOption(false, "NotSet", "scale factor");
-    ASSERTL0(m_config["scale"].as<string>().compare("NotSet") != 0,
-             "scaleinputfld: Need to specify a scale factor");
 }
 
 ProcessScaleInFld::~ProcessScaleInFld()
@@ -67,6 +65,9 @@ ProcessScaleInFld::~ProcessScaleInFld()
 void ProcessScaleInFld::Process(po::variables_map &vm)
 {
     boost::ignore_unused(vm);
+
+    ASSERTL0(m_config["scale"].as<string>().compare("NotSet") != 0,
+             "scaleinputfld: Need to specify a scale factor");
 
     string scalestr = m_config["scale"].as<string>();
     NekDouble scale = boost::lexical_cast<NekDouble>(scalestr);

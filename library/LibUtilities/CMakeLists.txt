@@ -207,9 +207,16 @@ SET(LinearAlgebraHeaders
 ./LinearAlgebra/MatrixType.h
 ./LinearAlgebra/NekLinAlgAlgorithms.hpp
 ./LinearAlgebra/NekLinSys.hpp
+./LinearAlgebra/NekLinSysIter.h
+./LinearAlgebra/NekLinSysIterCG.h
+./LinearAlgebra/NekLinSysIterFixedpointJacobi.h
+./LinearAlgebra/NekLinSysIterGMRES.h
 ./LinearAlgebra/NekMatrixFwd.hpp
 ./LinearAlgebra/NekMatrix.hpp
+./LinearAlgebra/NekNonlinSys.h
+./LinearAlgebra/NekNonlinSysNewton.h
 ./LinearAlgebra/NekPoint.hpp
+./LinearAlgebra/NekSys.h
 ./LinearAlgebra/NekTypeDefs.hpp
 ./LinearAlgebra/NekVectorFwd.hpp
 ./LinearAlgebra/NekVector.hpp
@@ -232,6 +239,13 @@ SET(LinearAlgebraSources
 ./LinearAlgebra/MatrixFuncs.cpp
 ./LinearAlgebra/MatrixOperations.cpp
 ./LinearAlgebra/MatrixVectorMultiplication.cpp
+./LinearAlgebra/NekLinSysIter.cpp
+./LinearAlgebra/NekLinSysIterGMRES.cpp
+./LinearAlgebra/NekLinSysIterCG.cpp
+./LinearAlgebra/NekLinSysIterFixedpointJacobi.cpp
+./LinearAlgebra/NekNonlinSys.cpp
+./LinearAlgebra/NekNonlinSysNewton.cpp
+./LinearAlgebra/NekSys.cpp
 ./LinearAlgebra/NekVector.cpp
 ./LinearAlgebra/ScaledMatrix.cpp
 ./LinearAlgebra/StandardMatrix.cpp
@@ -259,27 +273,32 @@ SET(PolylibSources
 )
 
 SET(TimeIntegrationHeaders
-./TimeIntegration/AdamsBashforthTimeIntegrationSchemes.h
-./TimeIntegration/AdamsMoultonTimeIntegrationSchemes.h
-./TimeIntegration/BDFImplicitTimeIntegrationSchemes.h
-./TimeIntegration/EulerTimeIntegrationSchemes.h
-./TimeIntegration/CNABTimeIntegrationScheme.h
-./TimeIntegration/DIRKTimeIntegrationSchemes.h
-./TimeIntegration/IMEXGearTimeIntegrationScheme.h
-./TimeIntegration/IMEXTimeIntegrationSchemes.h
-./TimeIntegration/IMEXdirkTimeIntegrationSchemes.h
-./TimeIntegration/MCNABTimeIntegrationScheme.h
-./TimeIntegration/RungeKuttaTimeIntegrationSchemes.h
-./TimeIntegration/TimeIntegrationScheme.h
-./TimeIntegration/TimeIntegrationSchemeData.h
-./TimeIntegration/TimeIntegrationSolution.h
+        ./TimeIntegration/AdamsBashforthTimeIntegrationSchemes.h
+        ./TimeIntegration/AdamsMoultonTimeIntegrationSchemes.h
+        ./TimeIntegration/BDFImplicitTimeIntegrationSchemes.h
+        ./TimeIntegration/EulerTimeIntegrationSchemes.h
+        ./TimeIntegration/EulerExponentialTimeIntegrationSchemes.h
+        ./TimeIntegration/CNABTimeIntegrationScheme.h
+        ./TimeIntegration/DIRKTimeIntegrationSchemes.h
+        ./TimeIntegration/IMEXTimeIntegrationSchemes.h
+        ./TimeIntegration/IMEXdirkTimeIntegrationSchemes.h
+        ./TimeIntegration/IMEXGearTimeIntegrationScheme.h
+        ./TimeIntegration/MCNABTimeIntegrationScheme.h
+        ./TimeIntegration/RungeKuttaTimeIntegrationSchemes.h
+        ./TimeIntegration/TimeIntegrationScheme.h
+        ./TimeIntegration/TimeIntegrationSchemeFIT.h
+        ./TimeIntegration/TimeIntegrationSchemeGLM.h
+        ./TimeIntegration/TimeIntegrationAlgorithmGLM.h
+        ./TimeIntegration/TimeIntegrationSolutionGLM.h
 )
 
 SET(TimeIntegrationSources
-./TimeIntegration/SchemeInitializer.cpp
-./TimeIntegration/TimeIntegrationScheme.cpp
-./TimeIntegration/TimeIntegrationSchemeData.cpp
-./TimeIntegration/TimeIntegrationSolution.cpp
+        ./TimeIntegration/SchemeInitializer.cpp
+        ./TimeIntegration/TimeIntegrationScheme.cpp
+        ./TimeIntegration/TimeIntegrationSchemeFIT.cpp
+        ./TimeIntegration/TimeIntegrationSchemeGLM.cpp
+        ./TimeIntegration/TimeIntegrationAlgorithmGLM.cpp
+        ./TimeIntegration/TimeIntegrationSolutionGLM.cpp
 )
 
 

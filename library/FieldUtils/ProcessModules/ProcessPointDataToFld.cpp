@@ -72,7 +72,7 @@ ProcessPointDataToFld::~ProcessPointDataToFld()
 
 void ProcessPointDataToFld::Process(po::variables_map &vm)
 {
-    boost::ignore_unused(vm);
+    m_f->SetUpExp(vm);
 
     int i, j;
     bool setnantovalue = false;

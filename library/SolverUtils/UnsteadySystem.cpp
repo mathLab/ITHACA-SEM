@@ -41,6 +41,7 @@ using namespace std;
 #include <boost/format.hpp>
 
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SolverUtils/UnsteadySystem.h>
 
@@ -99,13 +100,25 @@ namespace Nektar
                                           m_steadyStateSteps, 1);
 
             // For steady problems, we do not initialise the time integration
-            if (m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
+            if (m_session->DefinesSolverInfo("TimeIntegrationMethod") ||
+                m_session->DefinesTimeIntScheme())
             {
-                std::string methodName = m_session->GetSolverInfo(
-                                                "TIMEINTEGRATIONMETHOD" );
+                LibUtilities::TimeIntScheme timeInt;
+                if (m_session->DefinesTimeIntScheme())
+                {
+                    timeInt = m_session->GetTimeIntScheme();
+                }
+                else
+                {
+                    timeInt.method = m_session->GetSolverInfo(
+                        "TimeIntegrationMethod");
+                }
+
                 m_intScheme = LibUtilities::GetTimeIntegrationSchemeFactory()
-		    .CreateInstance( methodName, "", 0,
-				     std::vector<NekDouble>());
+                    .CreateInstance(timeInt.method,
+                                    timeInt.variant,
+                                    timeInt.order,
+                                    timeInt.freeParams);
 
                 // Load generic input parameters
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
@@ -223,8 +236,7 @@ namespace Nektar
             }
 
             // Initialise time integration scheme
-            m_intSoln = m_intScheme->InitializeScheme( m_timestep, fields,
-                                                       m_time, m_ode );
+            m_intScheme->InitializeScheme( m_timestep, fields, m_time, m_ode );
 
             // Initialise filters
             for( auto &x : m_filters )
@@ -287,8 +299,8 @@ namespace Nektar
                     break;
                 }
 
-                fields = m_intScheme->TimeIntegrate(
-                    stepCounter, m_timestep, m_intSoln, m_ode);
+                fields =
+                    m_intScheme->TimeIntegrate( stepCounter, m_timestep, m_ode);
                 timer.Stop();
 
                 m_time  += m_timestep;

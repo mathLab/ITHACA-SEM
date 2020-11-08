@@ -122,6 +122,15 @@ Each of the segments can be then represented under the section \inltt{DOMAIN} by
 
 We will use the different domains later to define variable material properties and cross-sectional areas.
 
+\subsection{Time Integration Scheme}
+
+\begin{itemize}
+\item \inltt{Method} the time-stepping method.
+\item \inltt{Variant} the variant to the method. 
+\item \inltt{Order} the order of the method.
+\item \inltt{FreeParameters} any free parameters required.
+\end{itemize}
+
 \subsection{Session Info}
 The PulseWaveSolver is specified through the \inltt{EquationType}
 option in the session file. This can be set as follows:
@@ -131,7 +140,6 @@ using the following option:
     \begin{itemize}
     \item \inltt{Discontinuous} for a discontinous Galerkin (DG) projection.
     \end{itemize}
-\item \inltt{TimeIntegrationMethod}
 \item \inltt{UpwindTypePulse}:
     \begin{itemize}
     \item \inltt{UpwindPulse}
@@ -345,6 +353,12 @@ and other parameters are specified.
         <P> A55            = 0.060              </P>
     </PARAMETERS>
 
+    <TIMEINTEGRATIONSCHEME>
+        <METHOD> RungeKutta </METHOD>
+        <VARIANT> SSP </VARIANT>
+        <ORDER> 2 </ORDER>
+    </TIMEINTEGRATIONSCHEME>
+        
     <SOLVERINFO>
         <I PROPERTY="EQTYPE" VALUE="PulseWavePropagation" />
         <I PROPERTY="Projection" VALUE="DisContinuous" />
@@ -536,6 +550,16 @@ Finally the domain is specified by the first composite by
 </EXPANSIONS>
 \end{lstlisting}
 
+\paragraph{Time Integration Scheme:~} For the Time Integration Scheme
+we use a basic Forward Euler method.
+
+\begin{lstlisting}[style=XMLStyle] 
+<TIMEINTEGRATIONSCHEME>
+  <METHOD> ForwardEuler </METHOD>
+  <ORDER> 1 </ORDER>
+</TIMEINTEGRATIONSCHEME>
+\end{lstlisting}
+        
 \paragraph{Solver Information:~}The Discontinuous Galerkin Method is used as projection scheme and the time-integration is performed by a simple Forward Euler scheme. A full list of possible time integration scheme is given in the parameter section of the  \hyperref[PulseWaveSolver]{Pulse Wave Solver}
 \begin{lstlisting}[style=XMLStyle]
 <SOLVERINFO>

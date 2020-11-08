@@ -2389,14 +2389,13 @@ namespace Nektar
                 {
                     return cachedId;
                 }
-                else if(returnNearestElmt)
+                else if(returnNearestElmt && (nearpt < nearpt_min))
                 {
                     // If it does not lie within, keep track of which element
                     // is nearest.
                     min_id     = cachedId;
                     nearpt_min = nearpt;
-                    Vmath::Vcopy(locCoords.size(),locCoords,    1,
-                                                          savLocCoords, 1);
+                    Vmath::Vcopy(locCoords.size(),locCoords, 1, savLocCoords, 1);
                 }
             }
 
@@ -2419,24 +2418,17 @@ namespace Nektar
                 {
                     continue;
                 }
-                if ((*m_exp)[id]->
-                            GetGeom()->ContainsPoint(gloCoords,
-                                                     locCoords,
-                                                     tol, nearpt))
+                if ((*m_exp)[id]->GetGeom()->ContainsPoint(gloCoords, locCoords, tol, nearpt))
                 {
                     return id;
                 }
-                else if(returnNearestElmt)
+                else if(returnNearestElmt && (nearpt < nearpt_min))
                 {
                     // If it does not lie within, keep track of which element
                     // is nearest.
-                    if(nearpt < nearpt_min)
-                    {
-                        min_id     = id;
-                        nearpt_min = nearpt;
-                        Vmath::Vcopy(locCoords.size(),locCoords,    1,
-                                                              savLocCoords, 1);
-                    }
+                    min_id     = id;
+                    nearpt_min = nearpt;
+                    Vmath::Vcopy(locCoords.size(),locCoords, 1, savLocCoords, 1);
                 }
             }
 

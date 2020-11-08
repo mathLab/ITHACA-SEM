@@ -208,7 +208,7 @@ void Interpolator::Interpolate(
         // Obtain Element and LocalCoordinate to interpolate.
         elmtid = m_expInField[0]->GetExpIndex(
             coords, Lcoords,
-            NekConstants::kGeomFactorsTol, false, elmtid);
+            NekConstants::kGeomFactorsTol, true, elmtid);
 
         // Homogeneous case, need to find the right plane
         int targetPlane = -1;

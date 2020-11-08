@@ -454,6 +454,11 @@ void ProcessWallNormalData::Process(po::variables_map &vm)
 
 
     //=========================================================================
+    // Set sampling array and interpolate
+    // if 1 ---- final format
+    // if 0 ---- just to debug
+
+#if 1   
     // Step 6 - create fieldPts and interpolate
     int npts    = nOrigs_diff * npts_h;   // total number of points
     int totVars = m_spacedim  + m_f->m_variables.size();
@@ -484,10 +489,10 @@ void ProcessWallNormalData::Process(po::variables_map &vm)
 
     Interpolator interp;
     interp.Interpolate(m_f->m_exp, m_f->m_fieldPts, NekConstants::kNekUnsetDouble);
+    
     //=========================================================================
-
-
-    /*// Alternative code for Step 6 (last part)
+#else
+    // Alternative code for Step 6 (last part)
     // declare the data array and fill in the coordinates
     // data[originId][normalId][variableId]
     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > data(nOrigs_diff);
@@ -584,8 +589,8 @@ void ProcessWallNormalData::Process(po::variables_map &vm)
 
     // interpolate the pts object
     //Interpolator interp;
-    //interp.Interpolate(m_f->m_exp, m_f->m_fieldPts, -999.0);
-    */
+    //interp.Interpolate(m_f->m_exp, m_f->m_fieldPts, -99999.0);
+#endif   
     //========================================================================= 
 
 }

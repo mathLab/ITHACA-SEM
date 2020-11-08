@@ -256,6 +256,9 @@ NekDouble Geometry3D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         }
         else
         {
+            v1 = 1;
+            v2 = 2;
+            v3 = 3;
             ASSERTL0(false, "unrecognized 3D element type");
         }
         // Point inside tetrahedron

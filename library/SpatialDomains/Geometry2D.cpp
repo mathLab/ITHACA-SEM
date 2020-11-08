@@ -205,6 +205,7 @@ NekDouble Geometry2D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
             v2 = 3;
         } else
         {
+            v2 = 2;
             ASSERTL0(false, "unrecognized 2D element type");
         }
 

@@ -158,7 +158,7 @@ public:
     SPATIAL_DOMAINS_EXPORT inline NekDouble GetCoord(
         const int i, const Array<OneD, const NekDouble> &Lcoord);
     SPATIAL_DOMAINS_EXPORT bool MinMaxCheck(
-        const Array<OneD, const NekDouble> &gloCoord, NekDouble &dist);
+        const Array<OneD, const NekDouble> &gloCoord);
     SPATIAL_DOMAINS_EXPORT bool ClampLocCoords(
         Array<OneD, NekDouble> &locCoord,
         NekDouble tol);

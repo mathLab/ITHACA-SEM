@@ -253,10 +253,11 @@ bool Geometry::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                NekDouble tol,
                                NekDouble &dist)
 {
+    dist = 1E12;
     //Rough check if within twice min/max point
     if (GetMetricInfo()->GetGtype() != eRegular)
     {
-        if (!MinMaxCheck(gloCoord, dist))
+        if (!MinMaxCheck(gloCoord))
         {
             return false;
         }
@@ -461,7 +462,7 @@ std::array<NekDouble, 6> Geometry::GetBoundingBox()
  *
  * @return True if within distance or False otherwise.
  */
-bool Geometry::MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord, NekDouble &dist)
+bool Geometry::MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord)
 {
     // Validation checks
     ASSERTL1(gloCoord.size() >= m_coordim,
@@ -470,23 +471,21 @@ bool Geometry::MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord, NekDoub
 
     int i;
     Array<OneD, NekDouble> mincoord(m_coordim), maxcoord(m_coordim);
-    NekDouble diff = 0.0, tmp;
+    NekDouble diff = 0.0;
 
     v_FillGeom();
 
     const int npts = m_xmap->GetTotPoints();
     Array<OneD, NekDouble> pts(npts);
-    dist = 0.;
+
     for (i = 0; i < m_coordim; ++i)
     {
         m_xmap->BwdTrans(m_coeffs[i], pts);
         mincoord[i] = Vmath::Vmin(pts.size(), pts, 1);
         maxcoord[i] = Vmath::Vmax(pts.size(), pts, 1);
-        tmp = pts[0] - gloCoord[i];
-        dist += tmp * tmp;
+
         diff = std::max(maxcoord[i] - mincoord[i], diff);
     }
-    dist = sqrt(dist);
 
     for (i = 0; i < m_coordim; ++i)
     {

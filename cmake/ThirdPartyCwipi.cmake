@@ -62,7 +62,6 @@ IF ( NEKTAR_USE_CWIPI )
                 ${CMAKE_COMMAND}
                     -DCMAKE_INSTALL_PREFIX=${TPDIST}
                     ${TPSRC}/cwipi-0.11.1
-            BUILD_COMMAND make -j 1
         )
 
         THIRDPARTY_LIBRARY(CWIPI_LIBRARY SHARED cwp

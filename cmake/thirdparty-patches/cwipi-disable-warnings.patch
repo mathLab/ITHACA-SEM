@@ -1,6 +1,6 @@
 diff -Naur cwipi-0.11.1.old/cmake/modules/default_flags.cmake cwipi-0.11.1/cmake/modules/default_flags.cmake
---- cwipi-0.11.1.old/cmake/modules/default_flags.cmake	2020-03-27 10:29:35.000000000 +0000
-+++ cwipi-0.11.1/cmake/modules/default_flags.cmake	2020-11-07 20:53:28.256197580 +0000
+--- cwipi-0.11.1.old/cmake/modules/default_flags.cmake	2020-11-09 14:55:03.634116018 +0000
++++ cwipi-0.11.1/cmake/modules/default_flags.cmake	2020-11-09 14:53:59.757846889 +0000
 @@ -16,7 +16,7 @@
  
    link_libraries("m")
@@ -19,16 +19,43 @@ diff -Naur cwipi-0.11.1.old/cmake/modules/default_flags.cmake cwipi-0.11.1/cmake
  
    set (CMAKE_Fortran_FLAGS_RELEASE "-O3")
  
-@@ -143,7 +143,7 @@
+@@ -95,7 +95,7 @@
+ 
+ elseif (CMAKE_Fortran_COMPILER_ID STREQUAL "PathScale")
+ 
+-  set (CMAKE_Fortran_FLAGS "-Wall -Wno-unused -cpp")
++  set (CMAKE_Fortran_FLAGS "-w -cpp")
+ 
+   set (CMAKE_Fortran_FLAGS_RELEASE         "-fast")
+   set (CMAKE_Fortran_FLAGS_DEBUG           "-g  -ffortran-bounds-check")
+@@ -141,7 +141,7 @@
  
    link_libraries ("m")
  
 -  set (CMAKE_C_FLAGS "-std=gnu99 -fPIC -funsigned-char -pedantic -W -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Wunused -Wfloat-equal  -Wno-unused-dummy-argument")
-+  set (CMAKE_C_FLAGS "-w -std=gnu99 -fPIC -funsigned-char -pedantic")
++  set (CMAKE_C_FLAGS "-w -std=gnu99 -fPIC -funsigned-char")
  
    set (CMAKE_C_FLAGS_RELEASE         "-O3")
    set (CMAKE_C_FLAGS_DEBUG           "-O0 -g")
-@@ -240,7 +240,7 @@
+@@ -151,7 +151,7 @@
+ 
+ elseif (CMAKE_C_COMPILER_ID STREQUAL "Intel")
+ 
+-  set (CMAKE_C_FLAGS "-std=gnu99 -restrict -fpic -funsigned-char -Wall -Wcheck -Wshadow -Wpointer-arith -Wmissing-prototypes -Wuninitialized -Wunused -wd869,3656,177")
++  set (CMAKE_C_FLAGS "-std=gnu99 -restrict -fpic -funsigned-char -w")
+ 
+   set (CMAKE_C_FLAGS_RELEASE "-O3")
+ 
+@@ -161,7 +161,7 @@
+   set (CMAKE_C_FLAGS_MINSIZEREL      "-O2 -g")
+ 
+ elseif (CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
+-  set (CMAKE_C_FLAGS "-std=c99 -fPIC -funsigned-char -Wall -pedantic -Wshadow -Wpointer-arith -Wmissing-prototypes -Wuninitialized -Wunused -Wno-empty-translation-unit -Wno-unused-function")
++  set (CMAKE_C_FLAGS "-std=c99 -fPIC -funsigned-char -w")
+ 
+   set (CMAKE_C_FLAGS_RELEASE "-O3")
+   set (CMAKE_C_FLAGS_DEBUG "-g -O0")
+@@ -238,7 +238,7 @@
  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
  
    link_libraries ("m")
@@ -37,3 +64,12 @@ diff -Naur cwipi-0.11.1.old/cmake/modules/default_flags.cmake cwipi-0.11.1/cmake
  
    set (CMAKE_CXX_FLAGS_RELEASE         "-O3")
    set (CMAKE_CXX_FLAGS_DEBUG           "-O0 -g")
+@@ -316,7 +316,7 @@
+ 
+ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "PathScale")
+ 
+-  set (CMAKE_CXX_FLAGS "-ansi -W -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Wunused -Wunused-value")
++  set (CMAKE_CXX_FLAGS "-ansi -w")
+ 
+   set (CMAKE_CXX_FLAGS_RELEASE         "-0fast")
+   set (CMAKE_CXX_FLAGS_DEBUG           "-g")

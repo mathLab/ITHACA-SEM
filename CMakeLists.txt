@@ -133,6 +133,13 @@ IF (NOT EXISTS ${TPSRC})
     FILE(MAKE_DIRECTORY ${TPSRC})
 ENDIF ()
 
+# Make thirdparty dist/lib directory so it exists to avoid -L flag compiler
+# warning when building Nektar++ executables without dependencies.
+IF (NOT EXISTS ${TPDIST})
+    FILE(MAKE_DIRECTORY ${TPDIST}/lib)
+    FILE(MAKE_DIRECTORY ${TPDIST}/include)
+ENDIF ()
+
 # Build shared libraries.
 SET(NEKTAR_LIBRARY_TYPE "SHARED")
 

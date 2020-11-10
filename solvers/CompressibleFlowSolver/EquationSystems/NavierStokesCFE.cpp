@@ -132,7 +132,6 @@ namespace Nektar
             m_diffusion->SetFluxVectorNS(
                 &NavierStokesCFE::v_GetViscousFluxVectorDeAlias,
                 this);
-
             m_diffusion->SetDiffusionFluxCons(
                 &NavierStokesCFE::GetViscousFluxVectorConservVar, this);
 
@@ -556,20 +555,14 @@ namespace Nektar
         // Auxiliary variables
         size_t nScalar    = physfield.size();
         size_t nPts       = physfield[0].size();
+        Array<OneD, NekDouble > divVel             (nPts, 0.0);
 
         // Stokes hypothesis
         const NekDouble lambda = -2.0/3.0;
 
-        // Auxiliary variables
-        Array<OneD, NekDouble > mu                 (nPts, m_mu);
-        Array<OneD, NekDouble > thermalConductivity(nPts, 0.0);
-        Array<OneD, NekDouble > divVel             (nPts, 0.0);
-
-        // Variable viscosity through the Sutherland's law
-        if (m_ViscosityType == "Variable")
-        {
-            m_varConv->GetDynamicViscosity(physfield[nScalar-1], mu);
-        }
+        // Update viscosity and thermal conductivity
+        GetViscosityAndThermalCondFromTemp(physfield[nScalar-1], m_mu,
+            m_thermalConductivity);
 
         // Add artificial viscosity if wanted
         if (m_shockCaptureType == "Physical")
@@ -584,17 +577,13 @@ namespace Nektar
             {
                 C0Smooth(m_muav);
             }
-            Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
+            Vmath::Vadd(nPts, m_mu, 1, m_muav, 1, m_mu, 1);
             // Freeze AV for Implicit time stepping
             if (m_explicitDiffusion == false)
             {
                 m_calcuPhysicalAV = false;
             }
         }
-
-        // Set thermal conductivity
-        NekDouble tRa = m_Cp / m_Prandtl;
-        Vmath::Smul(nPts, tRa, mu, 1, thermalConductivity, 1);
 
         // Velocity divergence
         for (int j = 0; j < m_spacedim; ++j)
@@ -678,17 +667,15 @@ namespace Nektar
         int nPts      = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
         size_t nPts_orig = physfield[0].size();
 
-        const NekDouble lambda = -2.0/3.0;
         // Auxiliary variables
-        Array<OneD, NekDouble > mu                 (nPts, m_mu);
-        Array<OneD, NekDouble > thermalConductivity(nPts, 0.0);
         Array<OneD, NekDouble > divVel             (nPts, 0.0);
 
-        // Variable viscosity through the Sutherland's law
-        if (m_ViscosityType == "Variable")
-        {
-            m_varConv->GetDynamicViscosity(physfield[nScalar-2], mu);
-        }
+        // Stokes hypothesis
+        const NekDouble lambda = -2.0/3.0;
+
+        // Update viscosity and thermal conductivity
+        GetViscosityAndThermalCondFromTemp(physfield[nScalar-1], m_mu,
+            m_thermalConductivity);
 
         // Add artificial viscosity if wanted
         if (m_shockCaptureType == "Physical")
@@ -703,17 +690,13 @@ namespace Nektar
             {
                 C0Smooth(m_muav);
             }
-            Vmath::Vadd(nPts, mu, 1, m_muav, 1, mu, 1);
+            Vmath::Vadd(nPts, m_mu, 1, m_muav, 1, m_mu, 1);
             // Freeze AV for Implicit time stepping
             if (m_explicitDiffusion == false)
             {
                 m_calcuPhysicalAV = false;
             }
         }
-
-        // Set thermal conductivity
-        NekDouble tRa = m_Cp / m_Prandtl;
-        Vmath::Smul(nPts, tRa, mu, 1, thermalConductivity, 1);
 
         // Interpolate inputs and initialise interpolated output
         Array<OneD, Array<OneD, NekDouble> > vel_interp(m_spacedim);
@@ -980,18 +963,13 @@ namespace Nektar
         int ndens       = 0;
         int nengy       = nConvectiveFields - 1;
 
-        Array<OneD, NekDouble> wallTotEngy;
-
-        int nLengthArray    =0;
-
         Array<OneD, Array<OneD, NekDouble>> bndCons {nConvectiveFields};
-
         Array<OneD, NekDouble> bndTotEngy;
         Array<OneD, NekDouble> bndPressure;
         Array<OneD, NekDouble> bndRho;
         Array<OneD, NekDouble> bndIntEndy;
+        int nLengthArray    =0;
 
-        // Compute boundary conditions  for Energy
         int cnt = 0;
         int nBndRegions = m_fields[nengy]->
             GetBndCondExpansions().size();

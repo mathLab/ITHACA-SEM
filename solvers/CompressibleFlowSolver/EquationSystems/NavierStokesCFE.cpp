@@ -110,7 +110,7 @@ namespace Nektar
             "Off");
 
 
-        string diffName, advName;
+        string diffName;
         m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
 
         m_diffusion = SolverUtils::GetDiffusionFactory()
@@ -118,6 +118,13 @@ namespace Nektar
         if ("InteriorPenalty" == diffName)
         {
             SetBoundaryConditionsBwdWeight();
+        }
+
+        if ("LDGNS" == diffName||
+            "LDGNS3DHomogeneous1D" == diffName)
+        {
+            m_diffusion->SetFluxPenaltyNS(&NavierStokesCFE::
+                v_GetFluxPenalty, this);
         }
 
         if (m_specHP_dealiasing)
@@ -153,7 +160,7 @@ namespace Nektar
 
             m_diffusion->SetDiffusionSymmFluxCons(
                 &NavierStokesCFE::GetViscousSymmtrFluxConservVar, this);
-
+            
             if (m_artificialDiffusion)
             {
                 m_diffusion->SetArtificialDiffusionVector(
@@ -163,20 +170,9 @@ namespace Nektar
 
         m_diffusion->SetCalcViscosity(
                 &NavierStokesCFE::CalcViscosity, this);
-
+        
         // Concluding initialisation of diffusion operator
         m_diffusion->InitObject         (m_session, m_fields);
-
-        //Only NavierStokes equation and using weakDG,LDGNS can temparary use the codes
-        m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
-        m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-        // Set up penalty term for LDGNS
-        if ("LDGNS" == diffName||
-            "LDGNS3DHomogeneous1D" == diffName)
-        {
-            m_diffusion->SetFluxPenaltyNS(&NavierStokesCFE::
-                v_GetFluxPenalty, this);
-        }
 
         m_GetdFlux_dDeriv_Array = Array<OneD, GetdFlux_dDeriv> (m_spacedim);
         switch (m_spacedim)
@@ -572,7 +568,7 @@ namespace Nektar
         // Variable viscosity through the Sutherland's law
         if (m_ViscosityType == "Variable")
         {
-            m_varConv->GetDynamicViscosity(physfield[nScalar-2], mu);
+            m_varConv->GetDynamicViscosity(physfield[nScalar-1], mu);
         }
 
         // Add artificial viscosity if wanted

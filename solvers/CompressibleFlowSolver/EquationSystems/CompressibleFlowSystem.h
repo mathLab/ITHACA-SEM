@@ -616,7 +616,8 @@ namespace Nektar
         }
 
 
-        virtual Array<OneD, NekDouble> v_GetMaxStdVelocity(const NekDouble SpeedSoundFactor=1.0);
+        virtual Array<OneD, NekDouble> v_GetMaxStdVelocity(
+            const NekDouble SpeedSoundFactor);
 
         virtual void v_SteadyStateResidual(
                 int                         step, 

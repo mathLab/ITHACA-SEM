@@ -3407,7 +3407,8 @@ namespace Nektar
      * @brief Compute the advection velocity in the standard space
      * for each element of the expansion.
      */
-    Array<OneD, NekDouble> CompressibleFlowSystem::v_GetMaxStdVelocity(const NekDouble SpeedSoundFactor)
+    Array<OneD, NekDouble> CompressibleFlowSystem::v_GetMaxStdVelocity(
+        const NekDouble SpeedSoundFactor)
     {
         int nTotQuadPoints = GetTotPoints();
         int n_element      = m_fields[0]->GetExpSize();

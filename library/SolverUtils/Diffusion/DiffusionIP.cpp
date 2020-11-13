@@ -515,7 +515,7 @@ void DiffusionIP::CalTraceSymFlux(
 }
 
 void DiffusionIP::AddSymmFluxIntegralToCoeff(
-    const std::size_t nConvectiveFields, const size_t nDim, const size_t nPts,
+    const std::size_t nConvectiveFields, const size_t nDim, const size_t nPts, 
     const size_t nTracePts,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     const Array<OneD, const int> &nonZeroIndex,

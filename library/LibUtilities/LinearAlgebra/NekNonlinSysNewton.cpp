@@ -88,17 +88,17 @@ NekNonlinSysNewton::NekNonlinSysNewton(
     }
 
     m_LinSysIterSovlerType = "GMRES";
-    if (pSession->DefinesGlobalSysSolnInfo(variable, "LinSysIterSovler"))
+    if (pSession->DefinesGlobalSysSolnInfo(variable, "LinSysIterSovlerInNewton"))
     {
         m_LinSysIterSovlerType =
-            pSession->GetGlobalSysSolnInfo(variable, "LinSysIterSovler");
+            pSession->GetGlobalSysSolnInfo(variable, "LinSysIterSovlerInNewton");
     }
     else
     {
-        if (pSession->DefinesSolverInfo("LinSysIterSovler"))
+        if (pSession->DefinesSolverInfo("LinSysIterSovlerInNewton"))
         {
             m_LinSysIterSovlerType =
-                pSession->GetSolverInfo("LinSysIterSovler");
+                pSession->GetSolverInfo("LinSysIterSovlerInNewton");
         }
     }
 

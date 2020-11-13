@@ -212,7 +212,6 @@ namespace Nektar
         NekDouble                           m_NewtonAbsoluteIteTol;
         int                                 m_TotNewtonIts = 0;
         int                                 m_TotImpStages = 0;
-        int                                 m_StagesPerStep = 0;
         Array<OneD, NekDouble>              m_magnitdEstimat;
 
         NekDouble                                   m_NewtonRelativeIteTol;

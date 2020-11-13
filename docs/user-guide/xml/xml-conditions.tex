@@ -31,17 +31,33 @@ For example,
 
 A number of pre-defined constants may also be used in parameter expressions, for example \texttt{PI}. A full list of supported constants is provided in Section~\ref{sec:xml:expressions:syntax}.
 
+\subsection{Time Integration Scheme}
+
+These specify properties to define the parameters specific to the time
+integration scheme to be used. The parameters are specified as XML
+elements and require a string corresponding to the time-stepping method
+and the order, and optionally the variant and free parameters. For
+example,
+
+\begin{lstlisting}[style=XMLStyle]
+ <TIMEINTEGRATIONSCHEME>
+   <METHOD> IMEX </METHOD>
+   <VARIANT> DIRK </VARIANT>
+   <ORDER> 2 </ORDER>
+   <FREEPARAMETERS> 2 3 </FREEPARAMETERS>
+ </TIMEINTEGRATIONSCHEME>
+\end{lstlisting}
+
 \subsection{Solver Information}
 
-These specify properties to define the actions specific to solvers, typically
-including the equation to solve, the projection type and the method of time
-integration. The property/value pairs are specified as XML attributes. For
-example, 
+These specify properties to define the actions specific to solvers,
+typically including the equation to solve and the projection type. The
+property/value pairs are specified as XML attributes. For example,
+
 \begin{lstlisting}[style=XMLStyle] 
 <SOLVERINFO>
   <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvection"    /> 
   <I PROPERTY="Projection"            VALUE="Continuous"           /> 
-  <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
 </SOLVERINFO>
 \end{lstlisting}
 
@@ -64,11 +80,15 @@ The default driver is called \inltt{Standard} and executes the following steps:
 In the following example, the driver \inltt{Standard} is used to manage the 
 execution of the incompressible Navier-Stokes equations:
 \begin{lstlisting}[style=XMLStyle]
-<SOLVERINFO>
+ <TIMEINTEGRATIONSCHEME>
+    <METHOD> IMEX </METHOD>
+    <ORDER> 2 </ORDER>
+ </TIMEINTEGRATIONSCHEME>
+
+ <SOLVERINFO>
     <I PROPERTY="EQTYPE"                VALUE="UnsteadyNavierStokes"     />
     <I PROPERTY="SolverType"            VALUE="VelocityCorrectionScheme" />
     <I PROPERTY="Projection"            VALUE="Galerkin"                 />
-    <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"               />
     <I PROPERTY="Driver"                VALUE="Standard"                 />
 </SOLVERINFO>
 \end{lstlisting}

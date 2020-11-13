@@ -130,7 +130,7 @@ namespace Nektar
                 m_preconType = pSession->GetValueAsEnum<PreconditionerType>(
                                                     "Preconditioner", precon);
             }
-            
+
             if(pSession->DefinesGlobalSysSolnInfo(variable,
                                                   "IterativeSolverTolerance"))
             {

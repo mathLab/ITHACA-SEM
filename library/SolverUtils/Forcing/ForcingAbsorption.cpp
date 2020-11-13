@@ -236,27 +236,27 @@ namespace SolverUtils
             const NekDouble &time)
     {
         int nq = m_Forcing[0].size();
-        CalculateForcing(fields,inarray,time);
-        for (int i = 0; i < m_NumVariable; i++)
+        CalculateForcing(fields, inarray, time);
+        for (int i = 0; i < m_NumVariable; ++i)
         {
             Vmath::Vadd(nq, m_Forcing[i], 1,
                         outarray[i], 1, outarray[i], 1);
         }
     }
 
-    void ForcingAbsorption::v_Apply_coeff(
+    void ForcingAbsorption::v_ApplyCoeff(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble> > &inarray,
-            Array<OneD, Array<OneD, NekDouble> > &outarray,
-            const NekDouble &time)
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray,
+            const NekDouble                                   &time)
     {
-        int ncoeff = outarray[m_NumVariable-1].size();
+        int ncoeff = outarray[m_NumVariable - 1].size();
         Array<OneD, NekDouble> tmp(ncoeff, 0.0);
-        CalculateForcing(fields,inarray,time);
+        CalculateForcing(fields, inarray, time);
 
-        for (int i = 0; i < m_NumVariable; i++)
+        for (int i = 0; i < m_NumVariable; ++i)
         {
-            fields[i]->FwdTrans(m_Forcing[i],tmp);
+            fields[i]->FwdTrans(m_Forcing[i], tmp);
             Vmath::Vadd(ncoeff, tmp, 1,
                         outarray[i], 1, outarray[i], 1);
         }
@@ -264,8 +264,8 @@ namespace SolverUtils
 
     void ForcingAbsorption::CalculateForcing(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble> > &inarray,
-            const NekDouble &time)
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            const NekDouble                                   &time)
     {
         boost::ignore_unused(fields);
         int nq = m_Forcing[0].size();

@@ -26,8 +26,8 @@ IF(NEKTAR_USE_MESHGEN)
 
 		MESSAGE(STATUS "Found CFI Libraries: ${CFI_LIBRARY_API}")
 
-                INCLUDE_DIRECTORIES(NekMeshUtils ${CFI_INCLUDE_DIR_HXX})
-                INCLUDE_DIRECTORIES(NekMeshUtils ${CFI_INCLUDE_DIR})
+                INCLUDE_DIRECTORIES(${CFI_INCLUDE_DIR_HXX})
+                INCLUDE_DIRECTORIES(${CFI_INCLUDE_DIR})
 
             ELSE()
                 MESSAGE(FATAL_ERROR "Cannot find cadfixapi headers")

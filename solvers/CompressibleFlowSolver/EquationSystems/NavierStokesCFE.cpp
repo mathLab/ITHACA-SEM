@@ -439,7 +439,7 @@ namespace Nektar
     }
 
 
-    void NavierStokesCFE::v_DoDiffusion_coeff(
+    void NavierStokesCFE::v_DoDiffusionCoeff(
         const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
         Array<OneD, Array<OneD, NekDouble> >                &outarray,
         const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
@@ -537,7 +537,7 @@ namespace Nektar
 
             if (m_shockCaptureType != "Off")
             {
-                m_artificialDiffusion->DoArtificialDiffusion_coeff(
+                m_artificialDiffusion->DoArtificialDiffusionCoeff(
                     inarray, outarray);
             }
         }

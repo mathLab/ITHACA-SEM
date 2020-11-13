@@ -50,23 +50,27 @@ namespace Nektar
         class GlobalLinSysKey : public GlobalMatrixKey
         {
         public:
-            MULTI_REGIONS_EXPORT GlobalLinSysKey(const StdRegions::MatrixType matrixType,
-                            const AssemblyMapSharedPtr &locToGloMap
-                                        = NullAssemblyMapSharedPtr,
-                            const StdRegions::ConstFactorMap &factors =
-                                                 StdRegions::NullConstFactorMap,
-                            const StdRegions::VarCoeffMap &varCoeffs =
-                                                 StdRegions::NullVarCoeffMap,
-                            const VarFactorsMap &varFactos = NullVarFactorsMap);
-
+            MULTI_REGIONS_EXPORT GlobalLinSysKey(
+               const StdRegions::MatrixType matrixType,
+               const AssemblyMapSharedPtr &locToGloMap = 
+                            NullAssemblyMapSharedPtr,
+               const StdRegions::ConstFactorMap &factors =
+                            StdRegions::NullConstFactorMap,
+               const StdRegions::VarCoeffMap &varCoeffs =
+                             StdRegions::NullVarCoeffMap,
+               const VarFactorsMap &varFactos = NullVarFactorsMap);
+            
             /// Copy constructor.
             MULTI_REGIONS_EXPORT GlobalLinSysKey(const GlobalLinSysKey &key);
+            
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysKey();
 
             /// Less-than operator for GlobalLinSysKey comparison.
-            MULTI_REGIONS_EXPORT friend bool operator<(const GlobalLinSysKey &lhs, 
+            MULTI_REGIONS_EXPORT friend bool operator<(
+                                  const GlobalLinSysKey &lhs, 
                                   const GlobalLinSysKey &rhs);
+            
             /// Return the associated solution type.
             inline GlobalSysSolnType  GetGlobalSysSolnType() const;
 
@@ -74,19 +78,18 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT const Array<OneD, const NekDouble> &
                 GetVarFactors(const StdRegions::ConstFactorType& coeff) const;
+            
             MULTI_REGIONS_EXPORT const VarFactorsMap & GetVarFactors() const;
 
         protected:
             /// Store the solution type associated with the linear system. This
             /// may be none, full matrix, static condensation or multi-level
             /// static condensation.
-            GlobalSysSolnType        m_solnType;
-            
+            GlobalSysSolnType        m_solnType;            
             VarFactorsMap            m_varFactors;
-
-            std::vector<std::size_t> m_varFactors_hashes; 
+            std::vector<std::size_t> m_varFactors_hashes;
+            
         private:
-        
         };
 
         /// Writes information about the object to a given stream.

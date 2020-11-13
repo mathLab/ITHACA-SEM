@@ -1,0 +1,5 @@
+ADD_NEKPY_EXECUTABLE(StdIntegral2D.py StdIntegral2D.py)
+
+IF (NEKTAR_BUILD_TESTS)
+    ADD_NEKPY_TEST(StdIntegral2D)
+ENDIF()

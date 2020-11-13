@@ -7,4 +7,5 @@ ADD_NEKPY_LIBRARY(LibUtilities SOURCES
     Foundations/Basis.cpp
     Foundations/Points.cpp
     LinearAlgebra/NekMatrix.cpp
+    Communication/Comm.cpp
     )

@@ -50,6 +50,7 @@
 #include <SolverUtils/Filters/FilterInterfaces.hpp>
 #include <LocalRegions/Expansion3D.h>
 #include <LocalRegions/Expansion2D.h>
+#include <LibUtilities/LinearAlgebra/NekNonlinSys.h>
 
 #define DEMO_IMPLICITSOLVER_JFNK_COEFF
 #define CFS_DEBUGMODE
@@ -78,6 +79,41 @@ namespace Nektar
         /// Function to get estimate of min h/p factor per element
         Array<OneD, NekDouble>  GetElmtMinHP(void);
 
+        void InitialiseNonlinSysSolver();
+
+        void NonlinSysEvaluator1D(
+            const TensorOfArray1D<NekDouble>    &inarray,
+            TensorOfArray1D<NekDouble>          &out,
+            const bool                          &flag);
+
+        void NonlinSysEvaluatorCoeff(
+            TensorOfArray2D<NekDouble>  &inarray,
+            TensorOfArray2D<NekDouble>  &out);
+        void DoOdeRhsCoeff(
+            const TensorOfArray2D<NekDouble>    &inarray,
+            TensorOfArray2D<NekDouble>          &outarray,
+            const NekDouble                     time);
+        
+        void DoAdvectionCoeff(
+            const TensorOfArray2D<NekDouble>    &inarray,
+            TensorOfArray2D<NekDouble>          &outarray,
+            const NekDouble                     time,
+            const TensorOfArray2D<NekDouble>    &pFwd,
+            const TensorOfArray2D<NekDouble>    &pBwd);
+        void DoImplicitSolvePhysToCoeff(
+            const TensorOfArray2D<NekDouble>    &inpnts,
+            TensorOfArray2D<NekDouble>          &outpnt,
+            const NekDouble                     time,
+            const NekDouble                     lambda);
+        void DoImplicitSolveCoeff(
+            const TensorOfArray2D<NekDouble>    &inpnts,
+            const TensorOfArray1D<NekDouble>    &inarray,
+            TensorOfArray1D<NekDouble>          &out,
+            const NekDouble                     time,
+            const NekDouble                     lambda);
+         void CalcRefValues(
+            const TensorOfArray1D<NekDouble>    &inarray);
+    
         virtual void GetPressure(
             const Array<OneD, const Array<OneD, NekDouble> > &physfield,
                   Array<OneD, NekDouble>                     &pressure);
@@ -107,8 +143,6 @@ namespace Nektar
         NekDouble                           m_filterExponent;
         NekDouble                           m_filterCutoff;
 
-        NekDouble                           m_JFEps;
-        
         bool                                m_useFiltering;
 
         /// Store physical artificial viscosity
@@ -165,7 +199,18 @@ namespace Nektar
 
         PreconditionerType                  m_PrecMatStorage;
         NekDouble                           m_BndEvaluateTime;
+        NekDouble                           m_TimeIntegLambda;
+        NekDouble                           m_JacobiFreeEps;
+        NekDouble                           m_inArrayNorm = -1.0;
+        NekDouble                           m_NewtonAbsoluteIteTol;
+        int                                 m_TotNewtonIts = 0;
+        int                                 m_TotImpStages = 0;
+        int                                 m_StagesPerStep = 0;
+        Array<OneD, NekDouble>              m_magnitdEstimat;
 
+        LibUtilities::NekNonlinSysSharedPtr         m_nonlinsol;
+        LibUtilities::NekSysOperators         m_NekSysOp;
+        
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession,
             const SpatialDomains::MeshGraphSharedPtr& pGraph);
@@ -196,7 +241,7 @@ namespace Nektar
             const TypeNekBlkMatSharedPtr     &PrecMatVars,
             const DataType                   &tmpDataType);
 
-        void preconditioner_BlkSOR_coeff(
+        void preconditionerBlkSORCoeff(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&outarray,
             const bool                   &flag);
@@ -301,13 +346,13 @@ namespace Nektar
             Array<OneD, TypeNekBlkMatSharedPtr >    &gmtxarray,
             const DataType                          valu);
 
-        void DoImplicitSolve_phy2coeff(
+        void DoImplicitSolve_phy2Coeff(
             const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                 Array<OneD,       Array<OneD, NekDouble> >&out,
             const NekDouble time,
             const NekDouble lambda);
 
-        void DoImplicitSolve_coeff(
+        void DoImplicitSolveCoeff(
             const Array<OneD, const Array<OneD, NekDouble> >&inpnts,
             const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                 Array<OneD,       Array<OneD, NekDouble> >&out,
@@ -315,7 +360,7 @@ namespace Nektar
             const NekDouble lambda);
 
         template<typename TypeNekBlkMatSharedPtr>
-        void AllocatePrecondBlkDiag_coeff(
+        void AllocatePrecondBlkDiagCoeff(
             Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> > &gmtxarray,
             const int                                          &nscale=1 );
 
@@ -359,7 +404,7 @@ namespace Nektar
 
 
         template<typename DataType, typename TypeNekBlkMatSharedPtr>
-        void GetpreconditionerNSBlkDiag_coeff(
+        void GetpreconditionerNSBlkDiagCoeff(
             const Array<OneD, const Array<OneD, NekDouble> >                                &inarray,
             Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >                               &gmtxarray,
             TypeNekBlkMatSharedPtr                                                          &gmtVar,
@@ -372,34 +417,14 @@ namespace Nektar
             Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > >                 &StdMatDataDBB,
             Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, DataType> > > > >   &StdMatDataDBDB);
 
-        void MatrixMultiply_MatrixFree_coeff(
-            const  Array<OneD, NekDouble> &inarray,
-                   Array<OneD, NekDouble >&out);
-        void MatrixMultiply_MatrixFree_coeff_central(
+        void MatrixMultiplyMatrixFreeCoeffCentral(
             const  Array<OneD, NekDouble> &inarray,
                 Array<OneD, NekDouble >&out);
 
-        void MatrixMultiply_MatrixFree_coeff_dualtimestep(
+        void MatrixMultiplyMatrixFreeCoeffDualtimestep(
             const  Array<OneD, NekDouble> &inarray,
                 Array<OneD, NekDouble >&out,
             const  bool                   &controlFlag);
-
-        void NonlinSysEvaluator_coeff(
-                Array<OneD, Array<OneD, NekDouble> > &inarray,
-                Array<OneD, Array<OneD, NekDouble> > &out);
-
-        void DoOdeRhs_coeff(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const NekDouble                                   time);
-
-
-        void DoAdvection_coeff(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const NekDouble                                   time,
-            const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
 
         template<typename DataType, typename TypeNekBlkMatSharedPtr>
         void MultiplyElmtInvMass_PlusSource(
@@ -539,11 +564,15 @@ namespace Nektar
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
-        void DoDiffusion_coeff(
+        void DoDiffusionCoeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
             Array<OneD, Array<OneD, NekDouble> >             &outarray,
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
+        void MatrixMultiplyMatrixFreeCoeff(
+            const  TensorOfArray1D<NekDouble>   &inarray,
+            TensorOfArray1D<NekDouble>          &out,
+            const bool                          &flag = false);
 
         void GetFluxVector(
             const Array<OneD, Array<OneD, NekDouble> >       &physfield,
@@ -606,7 +635,7 @@ namespace Nektar
             // Do nothing by default
         }
         
-        virtual void v_DoDiffusion_coeff(
+        virtual void v_DoDiffusionCoeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const Array<OneD, Array<OneD, NekDouble> >       &pFwd,

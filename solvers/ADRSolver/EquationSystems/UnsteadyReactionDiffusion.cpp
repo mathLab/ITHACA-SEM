@@ -38,6 +38,7 @@
 #include <boost/core/ignore_unused.hpp>
 
 #include <ADRSolver/EquationSystems/UnsteadyReactionDiffusion.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
 using namespace std;
 

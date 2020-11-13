@@ -84,26 +84,4 @@ void export_LocalElements()
                    const LibUtilities::BasisKey&,
                    const LibUtilities::BasisKey&,
                    const SpatialDomains::HexGeomSharedPtr &>());
-
-    NEKPY_SHPTR_FIX(SegExp, Expansion);
-    NEKPY_SHPTR_FIX(SegExp, StdRegions::StdSegExp);
-    NEKPY_SHPTR_FIX(SegExp, StdRegions::StdExpansion);
-    NEKPY_SHPTR_FIX(TriExp, Expansion);
-    NEKPY_SHPTR_FIX(TriExp, StdRegions::StdTriExp);
-    NEKPY_SHPTR_FIX(TriExp, StdRegions::StdExpansion);
-    NEKPY_SHPTR_FIX(QuadExp, Expansion);
-    NEKPY_SHPTR_FIX(QuadExp, StdRegions::StdQuadExp);
-    NEKPY_SHPTR_FIX(QuadExp, StdRegions::StdExpansion);
-    NEKPY_SHPTR_FIX(TetExp, Expansion);
-    NEKPY_SHPTR_FIX(TetExp, StdRegions::StdTetExp);
-    NEKPY_SHPTR_FIX(TetExp, StdRegions::StdExpansion);
-    NEKPY_SHPTR_FIX(PrismExp, Expansion);
-    NEKPY_SHPTR_FIX(PrismExp, StdRegions::StdPrismExp);
-    NEKPY_SHPTR_FIX(PrismExp, StdRegions::StdExpansion);
-    NEKPY_SHPTR_FIX(PyrExp, Expansion);
-    NEKPY_SHPTR_FIX(PyrExp, StdRegions::StdPyrExp);
-    NEKPY_SHPTR_FIX(PyrExp, StdRegions::StdExpansion);
-    NEKPY_SHPTR_FIX(HexExp, Expansion);
-    NEKPY_SHPTR_FIX(HexExp, StdRegions::StdHexExp);
-    NEKPY_SHPTR_FIX(HexExp, StdRegions::StdExpansion);
 }

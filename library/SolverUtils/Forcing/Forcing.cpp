@@ -83,13 +83,13 @@ namespace Nektar
          * @param   inarray     u^n from previous timestep
          * @param   outarray    output array to append forcing to
          */
-        void Forcing::Apply_coeff(
-                const Array<OneD, MultiRegions::ExpListSharedPtr>& fields,
-                const Array<OneD, Array<OneD, NekDouble> >&        inarray,
-                Array<OneD, Array<OneD, NekDouble> >&              outarray,
-                const NekDouble&                                   time)
+        void Forcing::ApplyCoeff(
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray,
+                const NekDouble&                                  time)
         {
-            v_Apply_coeff(fields, inarray, outarray, time);
+            v_ApplyCoeff(fields, inarray, outarray, time);
         }
 
         /**
@@ -195,16 +195,14 @@ namespace Nektar
             }
         }
 
-        void Forcing::v_Apply_coeff(
+        void Forcing::v_ApplyCoeff(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >        &outarray,
-                const NekDouble &time)
+                Array<OneD, Array<OneD, NekDouble> >              &outarray,
+                const NekDouble                                   &time)
         {
-            boost::ignore_unused(fields,inarray,outarray,time);
-            ASSERTL0(false, "v_Apply_coeff not defined");
+            boost::ignore_unused(fields, inarray, outarray, time);
+            ASSERTL0(false, "v_ApplyCoeff not defined");
         }
-
-
     }
 }

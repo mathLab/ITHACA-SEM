@@ -38,11 +38,14 @@
 // integrator with the Time Integration Scheme Facatory in
 // SchemeInitializor.cpp.
 
-#pragma once
+#ifndef NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_BDF_TIME_INTEGRATION_SCHEME
+#define NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_BDF_TIME_INTEGRATION_SCHEME
 
 #define LUE LIB_UTILITIES_EXPORT
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationAlgorithmGLM.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationSchemeGLM.h>
+
 #include <LibUtilities/TimeIntegration/IMEXdirkTimeIntegrationSchemes.h>
 
 namespace Nektar
@@ -53,39 +56,39 @@ namespace LibUtilities
 ///////////////////////////////////////////////////////////////////////////////
 // BDF Implicit Order N
 
-class BDFImplicitTimeIntegrationScheme : public TimeIntegrationScheme
+class BDFImplicitTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
 public:
     BDFImplicitTimeIntegrationScheme(std::string variant, unsigned int order,
-                                     std::vector<NekDouble> freeParams) :
-        TimeIntegrationScheme(variant, order, freeParams)
+                                     std::vector<NekDouble> freeParams)
+        : TimeIntegrationSchemeGLM(variant, order, freeParams)
     {
         // Currently up to 4th order is implemented.
 
         // Methods with order > 6 are not zero-stable.
-        ASSERTL1(0 < order && order <= 4,
+        ASSERTL1(1 <= order && order <= 4,
                  "BDFImplicit Time integration scheme bad order (1-4): " +
-                 std::to_string(order));
+                     std::to_string(order));
 
-        m_integration_phases = TimeIntegrationSchemeDataVector(order);
+        m_integration_phases = TimeIntegrationAlgorithmGLMVector(order);
 
-        for( unsigned int n=0; n<order; ++n )
+        for (unsigned int n = 0; n < order; ++n)
         {
-            m_integration_phases[n] = TimeIntegrationSchemeDataSharedPtr(
-                new TimeIntegrationSchemeData(this));
+            m_integration_phases[n] = TimeIntegrationAlgorithmGLMSharedPtr(
+                new TimeIntegrationAlgorithmGLM(this));
         }
 
         // Next to last phase
-        if( order > 1 )
+        if (order > 1)
             BDFImplicitTimeIntegrationScheme::SetupSchemeData(
-                m_integration_phases[order-2], order-1);
+                m_integration_phases[order - 2], order - 1);
 
         // Last phase
         BDFImplicitTimeIntegrationScheme::SetupSchemeData(
-            m_integration_phases[order-1], order);
+            m_integration_phases[order - 1], order);
 
         // Initial phases
-        switch( order )
+        switch (order)
         {
             case 1:
                 // No intial phase.
@@ -112,7 +115,7 @@ public:
             default:
                 ASSERTL1(false,
                          "BDFImplicit Time integration scheme bad order: " +
-                         std::to_string(order));
+                             std::to_string(order));
         }
     }
 
@@ -120,11 +123,13 @@ public:
     {
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-						 std::vector<NekDouble> freeParams)
-  {
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<
-          BDFImplicitTimeIntegrationScheme>::AllocateSharedPtr(variant, order, freeParams);
+    static TimeIntegrationSchemeSharedPtr create(
+        std::string variant, unsigned int order,
+        std::vector<NekDouble> freeParams)
+    {
+        TimeIntegrationSchemeSharedPtr p =
+            MemoryManager<BDFImplicitTimeIntegrationScheme>::AllocateSharedPtr(
+                variant, order, freeParams);
 
         return p;
     }
@@ -141,17 +146,18 @@ public:
         return 1.0;
     }
 
-    LUE static void SetupSchemeData(TimeIntegrationSchemeDataSharedPtr &phase,
+    LUE static void SetupSchemeData(TimeIntegrationAlgorithmGLMSharedPtr &phase,
                                     unsigned int order)
     {
-        const NekDouble ABcoefficients[5] = {      0.,
-                                                   1.,    // 1st Order
-                                              2. / 3.,    // 2nd Order
-                                              6. / 11.,   // 3rd Order
-                                             12. / 25. }; // 4th Order
+        const NekDouble ABcoefficients[5] = {0.,
+                                             1.,         // 1st Order
+                                             2. / 3.,    // 2nd Order
+                                             6. / 11.,   // 3rd Order
+                                             12. / 25.}; // 4th Order
 
         // The 3rd and 4th order tableaus have not been validated!!!!!
-        // The 3rd and 4th order tableaus have not been validated!!!!!
+
+        // clang-format off
         const NekDouble UVcoefficients[5][4] =
             { {       0.,      0.,     0.,       0. },
               // 1st Order
@@ -162,11 +168,12 @@ public:
               { 18./11.,  -9./11.,  2./11.,      0. },
               // 4th Order
               { 48./25., -36./25., 16./25., -3./25. } };
+        // clang-format on
 
         phase->m_schemeType = eDiagonallyImplicit;
-        phase->m_order = order;
-        phase->m_name = std::string("BDFImplicitOrder" +
-                                    std::to_string(phase->m_order));
+        phase->m_order      = order;
+        phase->m_name =
+            std::string("BDFImplicitOrder" + std::to_string(phase->m_order));
 
         phase->m_numsteps  = phase->m_order;
         phase->m_numstages = 1;
@@ -177,11 +184,11 @@ public:
         phase->m_A[0] =
             Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numstages, 0.0);
         phase->m_B[0] =
-            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numstages, 0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numstages, 0.0);
         phase->m_U =
-            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps,  0.0);
+            Array<TwoD, NekDouble>(phase->m_numstages, phase->m_numsteps, 0.0);
         phase->m_V =
-            Array<TwoD, NekDouble>(phase->m_numsteps,  phase->m_numsteps,  0.0);
+            Array<TwoD, NekDouble>(phase->m_numsteps, phase->m_numsteps, 0.0);
 
         // Coefficients
 
@@ -193,16 +200,16 @@ public:
         phase->m_B[0][0][0] = ABcoefficients[phase->m_order];
 
         // U/V Coefficients for first row additional columns
-        for( int n=0; n<phase->m_order; ++n )
+        for (int n = 0; n < phase->m_order; ++n)
         {
             phase->m_U[0][n] = UVcoefficients[phase->m_order][n];
             phase->m_V[0][n] = UVcoefficients[phase->m_order][n];
         }
 
         // V evaluation value shuffling row n column n-1
-        for( int n=1; n<phase->m_order; ++n )
+        for (int n = 1; n < phase->m_order; ++n)
         {
-            phase->m_V[n][n-1] = 1.0;
+            phase->m_V[n][n - 1] = 1.0;
         }
 
         phase->m_numMultiStepValues = phase->m_order;
@@ -210,7 +217,7 @@ public:
         phase->m_timeLevelOffset = Array<OneD, unsigned int>(phase->m_numsteps);
 
         // For order >= 1 values are needed.
-        for( int n=0; n<phase->m_order; ++n )
+        for (int n = 0; n < phase->m_order; ++n)
         {
             phase->m_timeLevelOffset[n] = n;
         }
@@ -222,26 +229,29 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 // Backwards compatibility
-class BDFImplicitOrder1TimeIntegrationScheme :
-    public BDFImplicitTimeIntegrationScheme
+class BDFImplicitOrder1TimeIntegrationScheme
+    : public BDFImplicitTimeIntegrationScheme
 {
 public:
-    BDFImplicitOrder1TimeIntegrationScheme(std::string variant, unsigned int order,
-                                           std::vector<NekDouble> freeParams) :
-      BDFImplicitTimeIntegrationScheme("", 1, freeParams)
+    BDFImplicitOrder1TimeIntegrationScheme(std::string variant,
+                                           unsigned int order,
+                                           std::vector<NekDouble> freeParams)
+        : BDFImplicitTimeIntegrationScheme("", 1, freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-                                                 std::vector<NekDouble> freeParams)
+    static TimeIntegrationSchemeSharedPtr create(
+        std::string variant, unsigned int order,
+        std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
 
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            BDFImplicitTimeIntegrationScheme>::AllocateSharedPtr("", 1, freeParams);
+        TimeIntegrationSchemeSharedPtr p =
+            MemoryManager<BDFImplicitTimeIntegrationScheme>::AllocateSharedPtr(
+                "", 1, freeParams);
         return p;
     }
 
@@ -249,27 +259,29 @@ public:
 
 }; // end class BDFImplicitOrder1TimeIntegrationScheme
 
-
-class BDFImplicitOrder2TimeIntegrationScheme :
-    public BDFImplicitTimeIntegrationScheme
+class BDFImplicitOrder2TimeIntegrationScheme
+    : public BDFImplicitTimeIntegrationScheme
 {
 public:
-    BDFImplicitOrder2TimeIntegrationScheme(std::string variant, unsigned int order,
-                                           std::vector<NekDouble> freeParams) :
-        BDFImplicitTimeIntegrationScheme("", 2, freeParams)
+    BDFImplicitOrder2TimeIntegrationScheme(std::string variant,
+                                           unsigned int order,
+                                           std::vector<NekDouble> freeParams)
+        : BDFImplicitTimeIntegrationScheme("", 2, freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
     }
 
-    static TimeIntegrationSchemeSharedPtr create(std::string variant, unsigned int order,
-                                                 std::vector<NekDouble> freeParams)
+    static TimeIntegrationSchemeSharedPtr create(
+        std::string variant, unsigned int order,
+        std::vector<NekDouble> freeParams)
     {
         boost::ignore_unused(variant);
         boost::ignore_unused(order);
 
-        TimeIntegrationSchemeSharedPtr p = MemoryManager<
-            BDFImplicitTimeIntegrationScheme>::AllocateSharedPtr("", 2, freeParams);
+        TimeIntegrationSchemeSharedPtr p =
+            MemoryManager<BDFImplicitTimeIntegrationScheme>::AllocateSharedPtr(
+                "", 2, freeParams);
         return p;
     }
 
@@ -279,3 +291,5 @@ public:
 
 } // end namespace LibUtilities
 } // end namespace Nektar
+
+#endif

@@ -115,7 +115,7 @@ ProcessIsoContour::~ProcessIsoContour(void)
 
 void ProcessIsoContour::Process(po::variables_map &vm)
 {
-    boost::ignore_unused(vm);
+    m_f->SetUpExp(vm);
 
     bool verbose = (m_f->m_verbose && m_f->m_comm->TreatAsRankZero());
 

@@ -49,7 +49,6 @@
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <MultiRegions/GlobalLinSysKey.h>
-#include <MultiRegions/GlobalOptimizationParameters.h>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
 #include <LibUtilities/Kernel/kernel.h>
 #include <tinyxml.h>
@@ -1260,8 +1259,6 @@ namespace Nektar
 
             /// m_coeffs to elemental value map
             Array<OneD, std::pair<int, int> >  m_coeffsToElmt;
-
-            NekOptimize::GlobalOptParamSharedPtr m_globalOptParam;
 
             BlockMatrixMapShPtr  m_blockMat;
 

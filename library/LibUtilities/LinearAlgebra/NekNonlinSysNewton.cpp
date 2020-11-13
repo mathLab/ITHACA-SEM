@@ -131,7 +131,7 @@ int NekNonlinSysNewton::v_SolveSystem(
     const NekDouble factor)
 {
     int nwidthcolm = 12;
-    m_linsol->setSysOperators(m_operator);
+    m_linsol->SetSysOperators(m_operator);
 
     ASSERTL0(0 == nDir, "0 != nDir not tested");
     ASSERTL0(m_SysDimen == nGlobal, "m_SysDimen!=nGlobal");
@@ -146,20 +146,35 @@ int NekNonlinSysNewton::v_SolveSystem(
 
     m_Solution = pOutput;
     Vmath::Vcopy(ntotal, pInput, 1, m_Solution, 1);
+    
+    if (m_ResidualUpdated)
+    {
+        m_ResidualUpdated = false;
+    }
+    else
+    {
+        m_operator.DoNekSysResEval(m_Solution, m_Residual);
+    }
+
+    NekDouble resnormOld = 0.0;
     for (int k = 0; k < m_maxiter; ++k)
     {
-        m_operator.DoNekSysRhsEval(m_Solution, m_Residual);
-
         m_converged = v_ConvergenceCheck(k, m_Residual, tol);
         if (m_converged)
             break;
 
-        NekDouble LinSysTol = m_LinSysRelativeTolInNewton * sqrt(m_SysResNorm);
+        NekDouble GMRESRelativeIteTol;
+        CalcInexactNewtonForcing(k, resnormOld, m_SysResNorm, 
+            GMRESRelativeIteTol);
+        resnormOld = m_SysResNorm;
+
+        NekDouble LinSysTol = GMRESRelativeIteTol * sqrt(m_SysResNorm);
         int ntmpGMRESIts =
             m_linsol->SolveSystem(ntotal, m_Residual, m_DeltSltn, 0, LinSysTol);
         NtotLinSysIts += ntmpGMRESIts;
         Vmath::Vsub(ntotal, m_Solution, 1, m_DeltSltn, 1, m_Solution, 1);
         NttlNonlinIte++;
+        m_operator.DoNekSysResEval(m_Solution, m_Residual);
     }
 
     if ((m_root || (!m_converged)) && m_verbose)
@@ -204,5 +219,48 @@ bool NekNonlinSysNewton::v_ConvergenceCheck(
 
     return converged;
 }
+
+void NekNonlinSysNewton::CalcInexactNewtonForcing(
+    const int       &k,
+    NekDouble       &resnormOld,
+    const NekDouble &resnorm,
+    NekDouble       &forcing)
+{
+    if (0 == k)
+    {
+        forcing = m_LinSysRelativeTolInNewton;
+        resnormOld = resnorm;
+    }
+    else
+    {
+        switch(m_InexactNewtonForcing)
+        {
+        case 0:
+            {
+                forcing = m_LinSysRelativeTolInNewton;
+                break;
+            }
+        case 1: 
+            {
+                NekDouble tmpForc = m_ForcingGama * 
+                    pow((resnorm / resnormOld), m_ForcingAlpha); 
+                NekDouble tmp = m_ForcingGama * 
+                    pow(forcing, m_ForcingAlpha);
+                if (tmp > 0.1)
+                {
+                    forcing = min(m_LinSysRelativeTolInNewton, max(tmp, tmpForc));
+                }
+                else
+                {
+                    forcing = min(m_LinSysRelativeTolInNewton, tmpForc);
+                }
+
+                forcing = max(forcing,  1.0E-6);
+                break;
+            }
+        }
+    }
+}
+
 } // namespace LibUtilities
 } // namespace Nektar

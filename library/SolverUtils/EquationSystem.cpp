@@ -146,6 +146,13 @@ namespace Nektar
             m_multipleModes         = false;
             m_HomogeneousType       = eNotHomogeneous;
 
+            m_verbose = m_session->DefinesCmdLineArgument("verbose");
+            m_root = false;
+            if (0 == m_comm->GetRank())
+            {
+                m_root =true;
+            }
+
             if (m_session->DefinesSolverInfo("HOMOGENEOUS"))
             {
                 std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
@@ -666,30 +673,9 @@ namespace Nektar
                      (m_checktime == 0.0 && m_checksteps >  0),
                      "Only one of IO_CheckTime and IO_CheckSteps "
                      "should be set!");
-            m_session->LoadParameter("cflLocTimestep",       m_cflLocTimestep      , -5.0);
             m_session->LoadParameter("TimeIncrementFactor",  m_TimeIncrementFactor , 1.0);
             m_session->LoadParameter("PrcdMatFreezNumb",     m_PrcdMatFreezNumb    , 1);
-            m_session->LoadParameter("NewtonAbsoluteIteTol", m_NewtonAbsoluteIteTol, 1.0E-12);
-            m_session->LoadParameter("NewtonRelativeIteTol", m_NewtonRelativeIteTol, 1.0E-2);
-            m_session->LoadParameter("GMRESRelativeIteTol",  m_GMRESRelativeIteTol , 1.0E-2);
-            m_session->LoadParameter("JFNKTimeAccurate",     m_JFNKTimeAccurate    , 1);
-            m_session->LoadParameter("JFNKPrecondStep",      m_JFNKPrecondStep     , 5);
-            m_session->LoadParameter("MaxNonlinIte",         m_MaxNonlinIte        , 10);
-            m_session->LoadParameter("SORRelaxParam",        m_SORRelaxParam       , 1.0);
 
-            NekDouble minimuxTol    =   0.8;
-            if(m_NewtonRelativeIteTol>minimuxTol)
-            {
-                WARNINGL0(false,"m_NewtonRelativeIteTol>0.1");
-                m_NewtonRelativeIteTol = minimuxTol;
-            }
-
-            // when no time accuracy needed
-            if(m_JFNKTimeAccurate<1)
-            {
-                m_NewtonAbsoluteIteTol = 1.0E-10;
-                m_NewtonRelativeIteTol = 0.1;
-            }
             
             m_nchk = 0;
 

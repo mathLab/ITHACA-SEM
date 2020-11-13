@@ -74,14 +74,14 @@ NekLinSysIter::NekLinSysIter(
                                 NekConstants::kNekIterativeTol);
     }
 
-    if (pSession->DefinesGlobalSysSolnInfo(variable, "MaxIterations"))
+    if (pSession->DefinesGlobalSysSolnInfo(variable, "NekLinSysMaxIterations"))
     {
         m_maxiter = boost::lexical_cast<int>(
-            pSession->GetGlobalSysSolnInfo(variable, "MaxIterations").c_str());
+            pSession->GetGlobalSysSolnInfo(variable, "NekLinSysMaxIterations").c_str());
     }
     else
     {
-        pSession->LoadParameter("MaxIterations", m_maxiter, 5000);
+        pSession->LoadParameter("NekLinSysMaxIterations", m_maxiter, 5000);
     }
 }
 

@@ -331,6 +331,8 @@ namespace Nektar
         protected:
             /// Communicator
             LibUtilities::CommSharedPtr                 m_comm;
+            bool                                        m_verbose;
+            bool                                        m_root;
             /// The session reader
             LibUtilities::SessionReaderSharedPtr        m_session;
             /// Map of known SessionFunctions
@@ -361,27 +363,8 @@ namespace Nektar
             /// Time between checkpoints.
             NekDouble                                   m_checktime;
 
-            NekDouble                                   m_NewtonAbsoluteIteTol;
-
-            NekDouble                                   m_NewtonRelativeIteTol;
-
-            NekDouble                                   m_GMRESRelativeIteTol;
-
-            NekDouble                                   m_TimeIncrementFactor;
-            /// cfl number for local time step(notice only for jfnk other see m_cflSafetyFactor)
-            NekDouble                                   m_cflLocTimestep;
-            /// In Jacobi iteration the SOR relaxation parameter
-            NekDouble                                   m_SORRelaxParam;
-
-            /// two strategies: time accurate or not.
-            int                                        m_JFNKTimeAccurate;
-                        
             int                                         m_PrcdMatFreezNumb;
-
-            /// preconditioning steps
-            int                                         m_JFNKPrecondStep;
-
-            int                                         m_MaxNonlinIte;
+            NekDouble                                   m_TimeIncrementFactor;
 
             /// Number of checkpoints written so far
             int                                         m_nchk;

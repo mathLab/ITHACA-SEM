@@ -82,12 +82,24 @@ public:
         return m_Residual;
     }
 
+    LIB_UTILITIES_EXPORT void SetRefResidual(
+        const Array<OneD, const NekDouble> &in)
+    {
+        ASSERTL0(in.size() == m_SysDimen, 
+            "SetRefResidual dimension not correct");
+        Vmath::Vcopy(m_SysDimen, in, 1, m_Residual, 1);
+        
+        m_ResidualUpdated = true;
+    }
+
 protected:
     int m_totalIterations = 0;
 
     Array<OneD, NekDouble> m_Solution;
     Array<OneD, NekDouble> m_Residual;
     Array<OneD, NekDouble> m_DeltSltn;
+
+    bool m_ResidualUpdated = false;
 
     virtual void v_InitObject();
 

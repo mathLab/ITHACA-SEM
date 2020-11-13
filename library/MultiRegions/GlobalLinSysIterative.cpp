@@ -146,7 +146,7 @@ namespace Nektar
                     &GlobalLinSysIterative::DoMatrixMultiplyFlag, this);
                 m_NekSysOp.DefineNekSysPrecond(
                     &GlobalLinSysIterative::DoPreconditionerFlag, this);
-                m_linsol->setSysOperators(m_NekSysOp);
+                m_linsol->SetSysOperators(m_NekSysOp);
                     v_UniqueMap();
                 m_linsol->setUniversalUniqueMap(m_map);
             }

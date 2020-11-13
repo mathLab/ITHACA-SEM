@@ -72,7 +72,7 @@ public:
 
         m_NekSysOp.DefineNekSysLhsEval(&LinSysDemo::DoLhs, this);
         m_NekSysOp.DefineNekSysFixPointIte(&LinSysDemo::DoFixedPoint, this);
-        m_linsol->setSysOperators(m_NekSysOp);
+        m_linsol->SetSysOperators(m_NekSysOp);
         UniqueMap();
         m_linsol->setUniversalUniqueMap(m_map);
     }

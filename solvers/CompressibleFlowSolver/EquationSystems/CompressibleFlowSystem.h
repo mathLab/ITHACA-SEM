@@ -111,6 +111,12 @@ namespace Nektar
             TensorOfArray1D<NekDouble>          &out,
             const NekDouble                     time,
             const NekDouble                     lambda);
+        bool UpdatePrecMatCheck(
+            TensorOfArray1D<NekDouble>  &res);
+        void CalPrecMat(
+            const TensorOfArray2D<NekDouble>    &inpnts,
+            const NekDouble                     time,
+            const NekDouble                     lambda);
          void CalcRefValues(
             const TensorOfArray1D<NekDouble>    &inarray);
     
@@ -157,6 +163,7 @@ namespace Nektar
         bool                                m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT;
         bool                                m_DEBUG_VISCOUS_JAC_MAT;
         bool                                m_DEBUG_ADVECTION_JAC_MAT;
+        bool                                m_updatePrecMatFlag;
 
         // 1: Adv; 2: Dif; Default: all
         int                                 m_DebugAdvDiffSwitch; 
@@ -171,13 +178,11 @@ namespace Nektar
         int                                 m_DebugIPSymmFluxJacSwitch; 
 
         Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble>>>>
-                          m_StdDMatDataDBB;
-        Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekDouble>>>>>
-                          m_StdDMatDataDBDB;
-        Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekSingle> > > >
-                          m_StdSMatDataDBB;
-        Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekSingle>>>>>
-                          m_StdSMatDataDBDB;
+            m_StdDMatDataDBB;
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble>>>>> m_StdDMatDataDBDB;
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekSingle>>>> 
+            m_StdSMatDataDBB;
+        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekSingle>>>>> m_StdSMatDataDBDB;
 
         int                                m_nPadding = 1;
 
@@ -200,6 +205,8 @@ namespace Nektar
         PreconditionerType                  m_PrecMatStorage;
         NekDouble                           m_BndEvaluateTime;
         NekDouble                           m_TimeIntegLambda;
+        TensorOfArray2D<NekDouble>          m_solutionPhys;
+
         NekDouble                           m_JacobiFreeEps;
         NekDouble                           m_inArrayNorm = -1.0;
         NekDouble                           m_NewtonAbsoluteIteTol;
@@ -207,6 +214,18 @@ namespace Nektar
         int                                 m_TotImpStages = 0;
         int                                 m_StagesPerStep = 0;
         Array<OneD, NekDouble>              m_magnitdEstimat;
+
+        NekDouble                                   m_NewtonRelativeIteTol;
+        /// cfl number for local time step(notice only for jfnk other see m_cflSafetyFactor)
+        NekDouble                                   m_cflLocTimestep;
+        /// In Jacobi iteration the SOR relaxation parameter
+        NekDouble                                   m_SORRelaxParam;
+        /// two strategies: time accurate or not.
+        int                                        m_JFNKTimeAccurate;
+        int                                         m_PrcdMatFreezNumb;
+        /// preconditioning steps
+        int                                         m_JFNKPrecondStep;
+        int                                         m_MaxNonlinIte;
 
         LibUtilities::NekNonlinSysSharedPtr         m_nonlinsol;
         LibUtilities::NekSysOperators         m_NekSysOp;

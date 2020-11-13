@@ -79,6 +79,10 @@ protected:
 
     std::string m_LinSysIterSovlerType;
 
+    int m_InexactNewtonForcing = 0;
+    NekDouble   m_ForcingGama  = 1.0;
+    NekDouble   m_ForcingAlpha = 0.5 * (1.0 + sqrt(5));
+
     virtual void v_InitObject();
 
     virtual int v_SolveSystem(const int nGlobal,
@@ -89,6 +93,11 @@ protected:
     virtual bool v_ConvergenceCheck(
         const int nIteration, const Array<OneD, const NekDouble> &Residual,
         const NekDouble tol);
+    void CalcInexactNewtonForcing(
+        const int       &k,
+        NekDouble       &resnormOld,
+        const NekDouble &resnorm,
+        NekDouble       &forcing);
 
 private:
 };

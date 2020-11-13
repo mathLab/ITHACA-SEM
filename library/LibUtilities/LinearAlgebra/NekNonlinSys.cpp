@@ -74,16 +74,16 @@ NekNonlinSys::NekNonlinSys(const LibUtilities::SessionReaderSharedPtr &pSession,
     }
 
     if (pSession->DefinesGlobalSysSolnInfo(variable,
-                                           "NonlinIteratMaxIterations"))
+                                           "NekNonlinSysMaxIterations"))
     {
         m_maxiter = boost::lexical_cast<int>(
             pSession
-                ->GetGlobalSysSolnInfo(variable, "NonlinIteratMaxIterations")
+                ->GetGlobalSysSolnInfo(variable, "NekNonlinSysMaxIterations")
                 .c_str());
     }
     else
     {
-        pSession->LoadParameter("NonlinIteratMaxIterations", m_maxiter, 5000);
+        pSession->LoadParameter("NekNonlinSysMaxIterations", m_maxiter, 5000);
     }
 }
 

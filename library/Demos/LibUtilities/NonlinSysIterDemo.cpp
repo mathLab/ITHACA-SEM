@@ -66,7 +66,7 @@ public:
 
         m_NekSysOp.DefineNekSysRhsEval(&LinSysDemo::DoRhs, this);
         m_NekSysOp.DefineNekSysLhsEval(&LinSysDemo::DoLhs, this);
-        m_nonlinsol->setSysOperators(m_NekSysOp);
+        m_nonlinsol->SetSysOperators(m_NekSysOp);
     }
     ~LinSysDemo()
     {

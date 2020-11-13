@@ -125,10 +125,10 @@ public:
                       std::placeholders::_3, std::placeholders::_4);
     }
 
-    inline void DoNekSysRhsEval(InArrayType &inarray, OutArrayType &outarray,
+    inline void DoNekSysResEval(InArrayType &inarray, OutArrayType &outarray,
                                 const bool &flag = false) const
     {
-        ASSERTL1(m_functors1[0], "DoNekSysRhsEval should be defined");
+        ASSERTL1(m_functors1[0], "DoNekSysResEval should be defined");
         m_functors1[0](inarray, outarray, flag);
     }
 
@@ -162,12 +162,14 @@ public:
 
 protected:
     /* Defines three operators
-        DoNekSysRhsEval   :
-            evaluations the RHS of the Nonlinear/Linear system.
+        DoNekSysResEval   :
+            evaluations the residual of the Nonlinear/Linear system 
+            ie. the residual b-Ax and N(x) for linear and 
+            nonlinear systems, respectively
             May not be used for linear system.
         DoNekSysLhsEval   :
             evaluations the LHS of the Nonlinear/Linear system (Ax),
-            where A is the matrix x is solution vector.
+            where A is the matrix and x is solution vector.
             For linear system A is the coefficient matrix;
             For nonlinear system A is the coefficient matrix in
             each nonlinear iterations, for example A is the
@@ -209,7 +211,7 @@ public:
     }
     LIB_UTILITIES_EXPORT virtual ~NekSys();
 
-    LIB_UTILITIES_EXPORT inline void setSysOperators(const NekSysOperators &in)
+    LIB_UTILITIES_EXPORT inline void SetSysOperators(const NekSysOperators &in)
     {
         m_operator = in;
     }

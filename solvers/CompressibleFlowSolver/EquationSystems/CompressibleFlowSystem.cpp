@@ -579,8 +579,10 @@ namespace Nektar
     void CompressibleFlowSystem::preconditionerBlkSORCoeff(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&outarray,
-            const bool                   &updatePrecMatFlag)
+            const bool                   &flag)
     {
+
+        boost::ignore_unused(flag);
         if (m_updatePrecMatFlag)
         {
             // if (m_calcCurrLvlPrecMat)
@@ -718,7 +720,7 @@ namespace Nektar
         const NekDouble                     time,
         const NekDouble                     lambda)
     {
-        boost::ignore_unused(lambda);
+        boost::ignore_unused(time, lambda);
         int nvariables = inpnts.size();
 
         int nphspnt = inpnts[0].size();
@@ -2954,7 +2956,7 @@ namespace Nektar
 
         m_nonlinsol->GetSysOperators().DoNekSysResEval(inarray, out);
         m_nonlinsol->SetRefResidual(out);
-        bool m_updatePrecMatFlag = UpdatePrecMatCheck(out);
+        m_updatePrecMatFlag = UpdatePrecMatCheck(out);
 
         m_TotNewtonIts +=  m_nonlinsol->SolveSystem(ntotal,inarray,
                                                     out, 0, tol2);
@@ -2966,6 +2968,8 @@ namespace Nektar
     bool CompressibleFlowSystem::UpdatePrecMatCheck(
             TensorOfArray1D<NekDouble>  &res)
     {
+        boost::ignore_unused(res);
+
         bool flag = false;
 
         // TODO: auto precondition recompute. use random vector&L1 norm relative error.
@@ -2975,7 +2979,7 @@ namespace Nektar
             {
                 flag = true;
             }
-            else if (0==step)
+            else
             {
                 if((m_CalcuPrecMatFlag) ||
                     (m_TimeIntegLambdaPrcMat!=m_TimeIntegLambda))
@@ -2985,95 +2989,95 @@ namespace Nektar
                 }
                 else
                 {
-                    size_t halfPrecMatNumbSteps = ceil(0.25 * m_timestepRatio * 
-                        m_CalcuPrecMatNumbSteps);
-                    halfPrecMatNumbSteps = max(int(halfPrecMatNumbSteps), 1);
-                    size_t quotnt = m_CalcuPrecMatCounter / 
-                        halfPrecMatNumbSteps;
-                    size_t remainder = m_CalcuPrecMatCounter - 
-                        quotnt * halfPrecMatNumbSteps;
-                    if (0 == remainder)
-                    {
-                        if (0 == m_CalcuPrecMatNumbSteps)
-                        {
-                            m_CalcuPrecMatNumbSteps = m_CalcuPrecMatCounter;
-                            flag = true;
-                        }
-                        else
-                        {
-                            if (m_adptPrecMatFrzFlag)
-                            {
-                                size_t nTotCoeff = 
-                                    m_adptPrecMatFrzNoise.size();
-                                TensorOfArray1D<NekDouble> 
-                                    tmpNoiseout {nTotCoeff};
+//                     size_t halfPrecMatNumbSteps = ceil(0.25 * m_timestepRatio * 
+//                         m_CalcuPrecMatNumbSteps);
+//                     halfPrecMatNumbSteps = max(int(halfPrecMatNumbSteps), 1);
+//                     size_t quotnt = m_CalcuPrecMatCounter / 
+//                         halfPrecMatNumbSteps;
+//                     size_t remainder = m_CalcuPrecMatCounter - 
+//                         quotnt * halfPrecMatNumbSteps;
+//                     if (0 == remainder)
+//                     {
+//                         if (0 == m_CalcuPrecMatNumbSteps)
+//                         {
+//                             m_CalcuPrecMatNumbSteps = m_CalcuPrecMatCounter;
+//                             flag = true;
+//                         }
+//                         else
+//                         {
+//                             if (m_adptPrecMatFrzFlag)
+//                             {
+//                                 size_t nTotCoeff = 
+//                                     m_adptPrecMatFrzNoise.size();
+//                                 TensorOfArray1D<NekDouble> 
+//                                     tmpNoiseout {nTotCoeff};
                                 
-                                m_LinSysOprtors.DoMatrixMultiply(
-                                    m_adptPrecMatFrzNoise, 
-                                    tmpNoiseout);
-                                Vmath::Vsub(nTotCoeff, 
-                                    m_adptPrecMatFrzNoiseOut, 1, 
-                                    tmpNoiseout, 1, tmpNoiseout, 1);
-                                Vmath::Vmul(nTotCoeff, res, 1, 
-                                    tmpNoiseout, 1, 
-                                    tmpNoiseout, 1);
+//                                 m_LinSysOprtors.DoMatrixMultiply(
+//                                     m_adptPrecMatFrzNoise, 
+//                                     tmpNoiseout);
+//                                 Vmath::Vsub(nTotCoeff, 
+//                                     m_adptPrecMatFrzNoiseOut, 1, 
+//                                     tmpNoiseout, 1, tmpNoiseout, 1);
+//                                 Vmath::Vmul(nTotCoeff, res, 1, 
+//                                     tmpNoiseout, 1, 
+//                                     tmpNoiseout, 1);
                                 
-                                NekDouble magn = Vmath::Dot(nTotCoeff,
-                                    tmpNoiseout,tmpNoiseout);
-                                m_comm->AllReduce(magn, 
-                                    Nektar::LibUtilities::ReduceSum);
+//                                 NekDouble magn = Vmath::Dot(nTotCoeff,
+//                                     tmpNoiseout,tmpNoiseout);
+//                                 m_comm->AllReduce(magn, 
+//                                     Nektar::LibUtilities::ReduceSum);
 
-                                Vmath::Vmul(nTotCoeff, res, 1, 
-                                    m_adptPrecMatFrzNoiseOut, 1, 
-                                    tmpNoiseout, 1);
+//                                 Vmath::Vmul(nTotCoeff, res, 1, 
+//                                     m_adptPrecMatFrzNoiseOut, 1, 
+//                                     tmpNoiseout, 1);
 
-                                NekDouble adptPrecMatFrzNoiseOutMag = 
-                                    Vmath::Dot(nTotCoeff,
-                                        tmpNoiseout,tmpNoiseout);
-                                m_comm->AllReduce(adptPrecMatFrzNoiseOutMag, 
-                                    Nektar::LibUtilities::ReduceSum);
+//                                 NekDouble adptPrecMatFrzNoiseOutMag = 
+//                                     Vmath::Dot(nTotCoeff,
+//                                         tmpNoiseout,tmpNoiseout);
+//                                 m_comm->AllReduce(adptPrecMatFrzNoiseOutMag, 
+//                                     Nektar::LibUtilities::ReduceSum);
 
-                                magn /= adptPrecMatFrzNoiseOutMag;
+//                                 magn /= adptPrecMatFrzNoiseOutMag;
 
-                                if ( magn > 
-                                    m_adptPrecMatTol*m_adptPrecMatTol)
-                                {
-                                    m_CalcuPrecMatFlagNext = true;
-///DEBUG_LOCCFL_MERGE_MASTER
-                                    // m_intScheme->GetIntegrationSchemeVector()[0]->
-                                    //     UpdateTemporalErrorState(true);
-                                    //Avoid reoperating TemporalError     
-                                    m_CalculateTemporalErrorFlag=true;
-                                    m_CalculateTemporalErrorCounter=0;
-                                }
+//                                 if ( magn > 
+//                                     m_adptPrecMatTol*m_adptPrecMatTol)
+//                                 {
+//                                     m_CalcuPrecMatFlagNext = true;
+// ///DEBUG_LOCCFL_MERGE_MASTER
+//                                     // m_intScheme->GetIntegrationSchemeVector()[0]->
+//                                     //     UpdateTemporalErrorState(true);
+//                                     //Avoid reoperating TemporalError     
+//                                     m_CalculateTemporalErrorFlag=true;
+//                                     m_CalculateTemporalErrorCounter=0;
+//                                 }
 
-                                int nwidthcolm = 7;
-                                if(m_root && m_verbose)
-                                {
-                                    cout << right << scientific 
-                                        << setw(nwidthcolm) 
-                                        << setprecision(nwidthcolm-6)
-                                        <<"        *** adptPrecMatError= "
-                                        << sqrt(magn)
-                                        <<endl;
-                                }
+//                                 int nwidthcolm = 7;
+//                                 if(m_root && m_verbose)
+//                                 {
+//                                     cout << right << scientific 
+//                                         << setw(nwidthcolm) 
+//                                         << setprecision(nwidthcolm-6)
+//                                         <<"        *** adptPrecMatError= "
+//                                         << sqrt(magn)
+//                                         <<endl;
+//                                 }
 
-                                // TensorOfArray1D<NekDouble> tmpFrzNoiseout {nTotCoeff};
-                                // Vmath::Vabs(nTotCoeff, m_adptPrecMatFrzNoiseOut, 1,
-                                //     tmpFrzNoiseout, 1);
-                                // Vmath::Sadd(nTotCoeff, m_adptPrecMatFrzNoiseOutEps, 
-                                //     tmpFrzNoiseout, 1,
-                                //     tmpFrzNoiseout, 1);
-                                // Vmath::Vdiv(nTotCoeff, tmpNoiseout, 1, tmpFrzNoiseout, 1
-                                //     tmpNoiseout, 1);
+//                                 // TensorOfArray1D<NekDouble> tmpFrzNoiseout {nTotCoeff};
+//                                 // Vmath::Vabs(nTotCoeff, m_adptPrecMatFrzNoiseOut, 1,
+//                                 //     tmpFrzNoiseout, 1);
+//                                 // Vmath::Sadd(nTotCoeff, m_adptPrecMatFrzNoiseOutEps, 
+//                                 //     tmpFrzNoiseout, 1,
+//                                 //     tmpFrzNoiseout, 1);
+//                                 // Vmath::Vdiv(nTotCoeff, tmpNoiseout, 1, tmpFrzNoiseout, 1
+//                                 //     tmpNoiseout, 1);
 
-                            }
-                        }
-                    }
+//                             }
+//                         }
+//                     }
                 }
             }
         }
-        m_UpDateOperatorflag = flag; 
+        // m_UpDateOperatorflag = flag; 
         return flag;
     }
 

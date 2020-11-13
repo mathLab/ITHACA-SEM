@@ -169,6 +169,7 @@ protected:
     bool m_CalcuPrecMatFlag     = true;
     
     int m_CalcuPrecMatCounter  = std::numeric_limits<int>::max();
+    int m_CalcuPrecMatNumbSteps  = std::numeric_limits<int>::max();
 
     int m_TotLinItePerStep=0;
     int m_StagesPerStep=1;

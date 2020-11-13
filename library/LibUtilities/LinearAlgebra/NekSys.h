@@ -216,6 +216,11 @@ public:
         m_operator = in;
     }
 
+    LIB_UTILITIES_EXPORT inline const NekSysOperators &GetSysOperators()
+    {
+        return m_operator;
+    }
+
     LIB_UTILITIES_EXPORT int SolveSystem(
         const int nGlobal, const Array<OneD, const NekDouble> &pInput,
         Array<OneD, NekDouble> &pOutput, const int nDir,

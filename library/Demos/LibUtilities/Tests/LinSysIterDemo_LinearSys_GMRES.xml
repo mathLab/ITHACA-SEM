@@ -8,7 +8,7 @@
             <I PROPERTY="LinSysIterSovler"   VALUE="GMRES"/>
         </SOLVERINFO>
         <PARAMETERS>
-            <P> MaxIterations = 4 </P>
+            <P> GMRESMaxStorage = 4 </P>
         </PARAMETERS>
         <VARIABLES>
             <V ID="0"> u </V>

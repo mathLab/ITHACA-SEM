@@ -250,7 +250,7 @@ namespace Nektar
             int       stepCounter       = 0;
             int       restartStep      = -1;
             NekDouble intTime           = 0.0;
-            // NekDouble lastCheckTime     = 0.0;
+            NekDouble lastCheckTime     = 0.0;
             NekDouble cpuTime           = 0.0;
             NekDouble cpuPrevious       = 0.0;
             NekDouble elapsed           = 0.0;
@@ -269,9 +269,9 @@ namespace Nektar
                 abortFile = m_session->GetSolverInfo("CheckAbortFile");
             }
 
-            // NekDouble tmp_cflSafetyFactor = m_cflSafetyFactor;
+            NekDouble tmp_cflSafetyFactor = m_cflSafetyFactor;
             m_CalcuPrecMatCounter = m_PrcdMatFreezNumb;
-            // bool flagFreezeCFL = false;
+            bool flagFreezeCFL = false;
 
             m_timestepMax = m_timestep;
             while ((step   < m_steps ||
@@ -280,96 +280,96 @@ namespace Nektar
             {
                 restartStep++;
 
-                // if(m_CFLEnd>tmp_cflSafetyFactor)
-                // {
-                //     if( m_steadyStateTol > 0.0 &&
-                //         (NekDouble(m_TotLinItePerStep)/NekDouble(m_StagesPerStep)>0.5*NekDouble(m_maxLinItePerNewton)))
-                //     {
-                //         // cout <<"WARNINGL1(false,tmp_cflSafetyFactor *= 0.9; );"<<endl;
+                if(m_CFLEnd>tmp_cflSafetyFactor)
+                {
+                    if( m_steadyStateTol > 0.0 &&
+                        (NekDouble(m_TotLinItePerStep)/NekDouble(m_StagesPerStep)>0.5*NekDouble(m_maxLinItePerNewton)))
+                    {
+                        // cout <<"WARNINGL1(false,tmp_cflSafetyFactor *= 0.9; );"<<endl;
                         
-                //         tmp_cflSafetyFactor = 0.9*tmp_cflSafetyFactor;
-                //         flagFreezeCFL = true;
-                //         WARNINGL1(false," tmp_cflSafetyFactor *= 0.9; ");
-                //     }
-                //     else if(flagFreezeCFL)
-                //     {
-                //         flagFreezeCFL = false;
-                //     }
-                //     else
-                //     {
-                //         if (m_steadyStateTol > 0.0 && (!((step+1)%m_steadyStateSteps)) )
-                //         {
-                //             if(restartStep>1)
-                //             {
-                //                 tmp_cflSafetyFactor = min(m_CFLEnd,std::pow(m_steadyStateRes0/m_steadyStateRes,0.7)*tmp_cflSafetyFactor);
-                //             }
-                //         }
-                //         else
-                //         {
-                //             if(m_CFLGrowth > 1.0&&m_cflSafetyFactor<m_CFLEnd)
-                //             {
-                //                 tmp_cflSafetyFactor = min(m_CFLEnd,m_CFLGrowth*tmp_cflSafetyFactor);
-                //             }
-                //         }
-                //     }
-                // }
+                        tmp_cflSafetyFactor = 0.9*tmp_cflSafetyFactor;
+                        flagFreezeCFL = true;
+                        WARNINGL1(false," tmp_cflSafetyFactor *= 0.9; ");
+                    }
+                    else if(flagFreezeCFL)
+                    {
+                        flagFreezeCFL = false;
+                    }
+                    else
+                    {
+                        if (m_steadyStateTol > 0.0 && (!((step+1)%m_steadyStateSteps)) )
+                        {
+                            if(restartStep>1)
+                            {
+                                tmp_cflSafetyFactor = min(m_CFLEnd,std::pow(m_steadyStateRes0/m_steadyStateRes,0.7)*tmp_cflSafetyFactor);
+                            }
+                        }
+                        else
+                        {
+                            if(m_CFLGrowth > 1.0&&m_cflSafetyFactor<m_CFLEnd)
+                            {
+                                tmp_cflSafetyFactor = min(m_CFLEnd,m_CFLGrowth*tmp_cflSafetyFactor);
+                            }
+                        }
+                    }
+                }
 
-                // // Flag to update AV
-                // m_calcuPhysicalAV = true;
+                // Flag to update AV
+                m_calcuPhysicalAV = true;
 
-                // // Frozen preconditioner checks
-                // if((m_CalcuPrecMatCounter >= m_PrcdMatFreezNumb)||
-                //    (m_time + m_timestep > m_fintime && m_fintime > 0.0)||
-                //    (m_checktime && m_time + m_timestep - lastCheckTime >=
-                //     m_checktime))
-                // {
+                // Frozen preconditioner checks
+                if ((m_CalcuPrecMatCounter >= m_PrcdMatFreezNumb)||
+                   (m_time + m_timestep > m_fintime && m_fintime > 0.0)||
+                   (m_checktime && m_time + m_timestep - lastCheckTime >=
+                    m_checktime))
+                {
 
-                //     m_CalcuPrecMatFlag      =   true;
-                //     m_CalcuPrecMatCounter   =   0;
-                //     m_cflSafetyFactor       =   tmp_cflSafetyFactor;
+                    m_CalcuPrecMatFlag      =   true;
+                    m_CalcuPrecMatCounter   =   0;
+                    m_cflSafetyFactor       =   tmp_cflSafetyFactor;
 
-                //     if (m_cflSafetyFactor)
-                //     {
-                //         m_timestep = GetTimeStep(fields);
-                //     }
+                    if (m_cflSafetyFactor)
+                    {
+                        m_timestep = GetTimeStep(fields);
+                    }
 
-                //     // Ensure that the final timestep finishes at the final
-                //     // time, or at a prescribed IO_CheckTime.
-                //     if (m_time + m_timestep > m_fintime && m_fintime > 0.0)
-                //     {
-                //         m_timestep = m_fintime - m_time;
-                //     }
-                //     else if (m_checktime &&
-                //              m_time + m_timestep - lastCheckTime >= m_checktime)
-                //     {
-                //         lastCheckTime += m_checktime;
-                //         m_timestep     = lastCheckTime - m_time;
-                //         doCheckTime    = true;
-                //     }
-                // }
+                    // Ensure that the final timestep finishes at the final
+                    // time, or at a prescribed IO_CheckTime.
+                    if (m_time + m_timestep > m_fintime && m_fintime > 0.0)
+                    {
+                        m_timestep = m_fintime - m_time;
+                    }
+                    else if (m_checktime &&
+                             m_time + m_timestep - lastCheckTime >= m_checktime)
+                    {
+                        lastCheckTime += m_checktime;
+                        m_timestep     = lastCheckTime - m_time;
+                        doCheckTime    = true;
+                    }
+                }
 
-                // m_CalcuPrecMatCounter++;
+                m_CalcuPrecMatCounter++;
 
-                // if (m_TimeIncrementFactor > 1.0)
-                // {
-                //     NekDouble timeincrementFactor = m_TimeIncrementFactor;
-                //     m_timestep  *=  timeincrementFactor;
+                if (m_TimeIncrementFactor > 1.0)
+                {
+                    NekDouble timeincrementFactor = m_TimeIncrementFactor;
+                    m_timestep  *=  timeincrementFactor;
 
-                //     if (m_time + m_timestep > m_fintime && m_fintime > 0.0)
-                //     {
-                //         m_timestep = m_fintime - m_time;
-                //     }
-                // }
+                    if (m_time + m_timestep > m_fintime && m_fintime > 0.0)
+                    {
+                        m_timestep = m_fintime - m_time;
+                    }
+                }
 
-                // // Perform any solver-specific pre-integration steps
-                // timer.Start();
-                // if (v_PreIntegrate(step))
-                // {
-                //     break;
-                // }
+                // Perform any solver-specific pre-integration steps
+                timer.Start();
+                if (v_PreIntegrate(step))
+                {
+                    break;
+                }
 
-                // m_StagesPerStep = 0;
-                // m_TotLinItePerStep = 0;
+                m_StagesPerStep = 0;
+                m_TotLinItePerStep = 0;
 
                 fields =
                     m_intScheme->TimeIntegrate( stepCounter, m_timestep, m_ode);

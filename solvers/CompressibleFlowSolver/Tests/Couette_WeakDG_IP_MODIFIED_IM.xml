@@ -53,8 +53,11 @@
       <P> Cv                    = GasConstant/(Gamma-1)         </P> 
       <P> Cp                    = (Gamma*GasConstant)/(Gamma-1) </P>
 
-      <P> NonlinIteTolRelativeL2  = 1.0E-14                     </P>
-      <P> NewtonAbsoluteIteTol    = 1.0E-14                     </P>
+      <P> NewtonIterTolRelativeL2   = 1.0E-4                     </P>
+      <P> NewtonAbsoluteIteTol      = 1.0E-4                     </P>
+      <P> LinSysRelativeTolInNewton = 1.0E-6                     </P>
+      <P> NekLinSysMaxIterations    = 30                     </P>
+      <P> SteadyStateTol    = 1.0E-6                     </P>
       
     </PARAMETERS>
 
@@ -69,7 +72,7 @@
         <I PROPERTY="UpwindType"            VALUE="Roe"                 />
         <I PROPERTY="ProblemType"           VALUE="General"             />
         <I PROPERTY="ViscosityType"         VALUE="Constant"            />
-        <I PROPERTY="LinSysIterSovler"      VALUE="GMRES"               />
+        <I PROPERTY="LinSysIterSovlerInNewton" VALUE="GMRES"               />
     </SOLVERINFO>
 
     <VARIABLES>

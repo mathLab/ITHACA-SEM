@@ -151,23 +151,23 @@ namespace Nektar
                                       DoImplicitSolvePhysToCoeff, this);
             InitialiseNonlinSysSolver();
 
-            // int nvariables  =   m_fields.size();
-            // Array<OneD, Array<OneD, Array<OneD, int > > >   map;
-            // bool flag;
-            // const MultiRegions::LocTraceToTraceMapSharedPtr locTraceToTraceMap =
-            //     m_fields[0]->GetLocTraceToTraceMap();
-            // m_fields[0]->CalcuTracephysToLeftRightExpphysMap(flag,map);
-            // locTraceToTraceMap->SetTracePhysToLeftRightExpPhysMap(map);
-            // locTraceToTraceMap->SetFlagTracePhysToLeftRightExpPhysMap(flag);
+            int nvariables  =   m_fields.size();
+            Array<OneD, Array<OneD, Array<OneD, int > > >   map;
+            bool flag;
+            const MultiRegions::LocTraceToTraceMapSharedPtr locTraceToTraceMap =
+                m_fields[0]->GetLocTraceToTraceMap();
+            m_fields[0]->CalcuTracephysToLeftRightExpphysMap(flag,map);
+            locTraceToTraceMap->SetTracePhysToLeftRightExpPhysMap(map);
+            locTraceToTraceMap->SetFlagTracePhysToLeftRightExpPhysMap(flag);
 
-            // locTraceToTraceMap->CalcuLocTracephysToTraceIDMap(m_fields[0]->GetTrace(),m_spacedim);
-            // for(int i=1;i<nvariables;i++)
-            // {
-            //     m_fields[i]->GetLocTraceToTraceMap()->SetTracePhysToLeftRightExpPhysMap(map);
-            //     m_fields[i]->GetLocTraceToTraceMap()->SetFlagTracePhysToLeftRightExpPhysMap(flag);
-            //     m_fields[i]->GetLocTraceToTraceMap()->SetLocTracephysToTraceIDMap(
-            //         locTraceToTraceMap->GetLocTracephysToTraceIDMap()    );
-            // }
+            locTraceToTraceMap->CalcuLocTracephysToTraceIDMap(m_fields[0]->GetTrace(),m_spacedim);
+            for(int i=1;i<nvariables;i++)
+            {
+                m_fields[i]->GetLocTraceToTraceMap()->SetTracePhysToLeftRightExpPhysMap(map);
+                m_fields[i]->GetLocTraceToTraceMap()->SetFlagTracePhysToLeftRightExpPhysMap(flag);
+                m_fields[i]->GetLocTraceToTraceMap()->SetLocTracephysToTraceIDMap(
+                    locTraceToTraceMap->GetLocTracephysToTraceIDMap()    );
+            }
         }
 
         SetBoundaryConditionsBwdWeight();
@@ -194,74 +194,76 @@ namespace Nektar
             NonlinSysEvaluatorCoeff1D, this);
         m_NekSysOp.DefineNekSysLhsEval(&CompressibleFlowSystem::
             MatrixMultiplyMatrixFreeCoeff, this);
+
+        m_session->LoadParameter("PrcdMatFreezNumb",     m_PrcdMatFreezNumb    , 1);
+        m_session->LoadParameter("NewtonAbsoluteIteTol", m_NewtonAbsoluteIteTol, 1.0E-12);
+        m_session->LoadParameter("NewtonRelativeIteTol", m_NewtonRelativeIteTol, 1.0E-2);
+        m_session->LoadParameter("JFNKTimeAccurate",     m_JFNKTimeAccurate    , 1);
+        m_session->LoadParameter("JFNKPrecondStep",      m_JFNKPrecondStep     , 5);
+        m_session->LoadParameter("MaxNonlinIte",         m_MaxNonlinIte        , 10);
+        m_session->LoadParameter("SORRelaxParam",        m_SORRelaxParam       , 1.0);
+
+        NekDouble minimuxTol    =   0.8;
+        if(m_NewtonRelativeIteTol>minimuxTol)
+        {
+            WARNINGL0(false,"m_NewtonRelativeIteTol>0.1");
+            m_NewtonRelativeIteTol = minimuxTol;
+        }
+
+        // when no time accuracy needed
+        if(m_JFNKTimeAccurate<1)
+        {
+            m_NewtonAbsoluteIteTol = 1.0E-10;
+            m_NewtonRelativeIteTol = 0.1;
+        }
+
+        if (boost::iequals(m_session->GetSolverInfo("PRECONDITIONER"),
+                               "IncompleteLU"))
+        {
+            // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkILU_coeff, this);
+            m_PrecMatStorage    =   eSparse;
+
+            ASSERTL0(false,"IncompleteLU preconditioner not finished yet");
+
+            // DNekSmvBsrMat::SparseStorageSharedPtr sparseStorage =
+            //             MemoryManager<DNekSmvBsrMat::StorageType>::
+            //                     AllocateSharedPtr(
+            //                         brows, bcols, block_size, bcoMat, matStorage );
+
+            // // Create sparse matrix
+            // m_smvbsrmatrix = MemoryManager<DNekSmvBsrMat>::
+            //                         AllocateSharedPtr( sparseStorage );
+
+            // matBytes = m_smvbsrmatrix->GetMemoryFootprint();
+        }
+        else
+        {
+            int nvariables  =   m_fields.size();
+            m_NekSysOp.DefineNekSysPrecond(
+                    &CompressibleFlowSystem::preconditionerBlkSORCoeff, this);
+            m_PrecMatStorage    =   eDiagonal;
+            m_session->LoadParameter("nPadding",     m_nPadding      ,    4);
+    
+            m_PrecMatVarsSingle = Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >(nvariables);
+            for(int i = 0; i < nvariables; i++)
+            {
+                m_PrecMatVarsSingle[i] =  Array<OneD, SNekBlkMatSharedPtr> (nvariables);
+            }
+            AllocatePrecondBlkDiagCoeff(m_PrecMatVarsSingle);
+
+            int nelmts  = m_fields[0]->GetNumElmts();
+            int nelmtcoef;
+            Array<OneD, unsigned int > nelmtmatdim(nelmts);
+            for(int i = 0; i < nelmts; i++)
+            {
+                nelmtcoef   =   m_fields[0]->GetExp(i)->GetNcoeffs();
+                nelmtmatdim[i]  =   nelmtcoef*nvariables;
+            }
+            AllocateNekBlkMatDig(m_PrecMatSingle,nelmtmatdim,nelmtmatdim);
+        }
+
         m_nonlinsol->SetSysOperators(m_NekSysOp);
 
-        // m_session->LoadParameter("PrcdMatFreezNumb",     m_PrcdMatFreezNumb    , 1);
-        // m_session->LoadParameter("NewtonAbsoluteIteTol", m_NewtonAbsoluteIteTol, 1.0E-12);
-        // m_session->LoadParameter("NewtonRelativeIteTol", m_NewtonRelativeIteTol, 1.0E-2);
-        // m_session->LoadParameter("JFNKTimeAccurate",     m_JFNKTimeAccurate    , 1);
-        // m_session->LoadParameter("JFNKPrecondStep",      m_JFNKPrecondStep     , 5);
-        // m_session->LoadParameter("MaxNonlinIte",         m_MaxNonlinIte        , 10);
-        // m_session->LoadParameter("SORRelaxParam",        m_SORRelaxParam       , 1.0);
-
-        // NekDouble minimuxTol    =   0.8;
-        // if(m_NewtonRelativeIteTol>minimuxTol)
-        // {
-        //     WARNINGL0(false,"m_NewtonRelativeIteTol>0.1");
-        //     m_NewtonRelativeIteTol = minimuxTol;
-        // }
-
-        // // when no time accuracy needed
-        // if(m_JFNKTimeAccurate<1)
-        // {
-        //     m_NewtonAbsoluteIteTol = 1.0E-10;
-        //     m_NewtonRelativeIteTol = 0.1;
-        // }
-
-        // if (boost::iequals(m_session->GetSolverInfo("PRECONDITIONER"),
-        //                        "IncompleteLU"))
-        // {
-        //     // m_LinSysOprtors.DefinePrecond(&CompressibleFlowSystem::preconditioner_BlkILU_coeff, this);
-        //     m_PrecMatStorage    =   eSparse;
-
-        //     ASSERTL0(false,"IncompleteLU preconditioner not finished yet");
-
-        //     // DNekSmvBsrMat::SparseStorageSharedPtr sparseStorage =
-        //     //             MemoryManager<DNekSmvBsrMat::StorageType>::
-        //     //                     AllocateSharedPtr(
-        //     //                         brows, bcols, block_size, bcoMat, matStorage );
-
-        //     // // Create sparse matrix
-        //     // m_smvbsrmatrix = MemoryManager<DNekSmvBsrMat>::
-        //     //                         AllocateSharedPtr( sparseStorage );
-
-        //     // matBytes = m_smvbsrmatrix->GetMemoryFootprint();
-        // }
-        // else
-        // {
-        //     int nvariables  =   m_fields.size();
-        //     m_NekSysOp.DefineNekSysPrecond(
-        //             &CompressibleFlowSystem::preconditionerBlkSORCoeff, this);
-        //     m_PrecMatStorage    =   eDiagonal;
-        //     m_session->LoadParameter("nPadding",     m_nPadding      ,    4);
-    
-        //     m_PrecMatVarsSingle = Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >(nvariables);
-        //     for(int i = 0; i < nvariables; i++)
-        //     {
-        //         m_PrecMatVarsSingle[i] =  Array<OneD, SNekBlkMatSharedPtr> (nvariables);
-        //     }
-        //     AllocatePrecondBlkDiagCoeff(m_PrecMatVarsSingle);
-
-        //     int nelmts  = m_fields[0]->GetNumElmts();
-        //     int nelmtcoef;
-        //     Array<OneD, unsigned int > nelmtmatdim(nelmts);
-        //     for(int i = 0; i < nelmts; i++)
-        //     {
-        //         nelmtcoef   =   m_fields[0]->GetExp(i)->GetNcoeffs();
-        //         nelmtmatdim[i]  =   nelmtcoef*nvariables;
-        //     }
-        //     AllocateNekBlkMatDig(m_PrecMatSingle,nelmtmatdim,nelmtmatdim);
-        // }
     }
 
     /**
@@ -530,8 +532,8 @@ namespace Nektar
     {
         boost::ignore_unused(tmpDataType);
 
-        unsigned int nvariables = m_TimeIntegtSol_n.size();
-        unsigned int npoints    = m_TimeIntegtSol_n[0].size();
+        unsigned int nvariables = m_fields.size();
+        unsigned int npoints    = GetNcoeffs();
         unsigned int npointsVar = nvariables*npoints;
         Array<OneD, DataType >Sinarray(npointsVar);
         Array<OneD, DataType > Soutarray(npointsVar);
@@ -2321,8 +2323,8 @@ namespace Nektar
         // eps *= magnitdEstimatMax;
         eps *= sqrt( (sqrt(m_inArrayNorm) + 1.0)/magninarray);
         NekDouble oeps = 1.0/eps;
-        unsigned int nvariables = m_TimeIntegtSol_n.size();
-        unsigned int npoints    = m_TimeIntegtSol_n[0].size();
+        unsigned int nvariables = m_fields.size();
+        unsigned int npoints    = GetNcoeffs();
         Array<OneD, NekDouble > tmp;
         Array<OneD,       Array<OneD, NekDouble> > solplus(nvariables);
         Array<OneD,       Array<OneD, NekDouble> > resplus(nvariables);
@@ -2337,14 +2339,14 @@ namespace Nektar
         for (int i = 0; i < nvariables; i++)
         {
             tmp = inarray + i*npoints;
-            Vmath::Svtvp(npoints,eps,tmp,1,m_TimeIntegtSol_k[i],1,solplus[i],1);
+// Vmath::Svtvp(npoints,eps,tmp,1,m_TimeIntegtSol_k[i],1,solplus[i],1);
         }
         NonlinSysEvaluatorCoeff(solplus,resplus);
 
         for (int i = 0; i < nvariables; i++)
         {
             tmp = inarray + i*npoints;
-            Vmath::Svtvp(npoints,-eps,tmp,1,m_TimeIntegtSol_k[i],1,solplus[i],1);
+// Vmath::Svtvp(npoints,-eps,tmp,1,m_TimeIntegtSol_k[i],1,solplus[i],1);
         }
         NonlinSysEvaluatorCoeff(solplus,resminus);
 
@@ -2379,8 +2381,8 @@ namespace Nektar
             NekDouble fac;
             Array<OneD, NekDouble> tmp;
             Array<OneD, NekDouble> tmpout;
-            unsigned int nvariables = m_TimeIntegtSol_n.size();
-            unsigned int ntotcoeffs = m_TimeIntegtSol_n[0].size();
+            unsigned int nvariables = m_fields.size();
+            unsigned int ntotcoeffs = GetNcoeffs();
 
             Array<OneD, NekDouble> pseudotimefactor(nElements,0.0);
             NekDouble   otimestep   =   1.0/m_timestep;
@@ -2959,10 +2961,11 @@ namespace Nektar
             const NekDouble                     lambda)
     {
         boost::ignore_unused(inpnts);
-        m_TimeIntegLambda               = lambda;
-        m_BndEvaluateTime               = time;
-        m_solutionPhys                  = inpnts;
-        unsigned int ntotal             = inarray.size();
+
+        m_TimeIntegLambda   = lambda;
+        m_BndEvaluateTime   = time;
+        m_solutionPhys      = inpnts;
+        unsigned int ntotal = inarray.size();
 
         if (m_inArrayNorm < 0.0)
         {

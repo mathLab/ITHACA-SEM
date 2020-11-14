@@ -83,7 +83,7 @@ NekNonlinSys::NekNonlinSys(const LibUtilities::SessionReaderSharedPtr &pSession,
     }
     else
     {
-        pSession->LoadParameter("NekNonlinSysMaxIterations", m_maxiter, 5000);
+        pSession->LoadParameter("NekNonlinSysMaxIterations", m_maxiter, 100);
     }
 }
 

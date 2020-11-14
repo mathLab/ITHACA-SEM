@@ -32,7 +32,7 @@
 <CONDITIONS>
     <PARAMETERS> 
       <P> TimeStep              = 0.05                          </P>
-      <P> FinTime               = 2.0                           </P>
+      <P> FinTime               = 20                           </P>
       <P> IO_CheckSteps         = 500000                        </P>
       <P> IO_InfoSteps          = 1                             </P>
       <P> GasConstant           = 287.058                       </P>
@@ -53,12 +53,15 @@
       <P> Cv                    = GasConstant/(Gamma-1)         </P> 
       <P> Cp                    = (Gamma*GasConstant)/(Gamma-1) </P>
 
-      <P> NewtonIterTolRelativeL2   = 1.0E-4                     </P>
-      <P> NewtonAbsoluteIteTol      = 1.0E-4                     </P>
-      <P> LinSysRelativeTolInNewton = 1.0E-6                     </P>
+      <P> NewtonIterTolRelativeL2   = 1.0E-3                     </P>
+      <P> NewtonAbsoluteIteTol      = 1.0E-13                     </P>
+      <P> LinSysRelativeTolInNewton = 1.0E-2                     </P>
+      <P> NekNonlinSysMaxIterations = 10                     </P>
       <P> NekLinSysMaxIterations    = 30                     </P>
-      <P> SteadyStateTol    = 1.0E-6                     </P>
       
+      <P> JFNKPrecondStep       = 7                          </P>
+
+      <P> SteadyStateTol    = 3.0E-7                     </P> 
     </PARAMETERS>
 
         <SOLVERINFO>

@@ -210,7 +210,7 @@ namespace Nektar
             eSparse,
         };
 
-        // PreconditionerType                  m_PrecMatStorage;
+        PreconditionerType                  m_PrecMatStorage;
         NekDouble                           m_BndEvaluateTime;
         // NekDouble                           m_TimeIntegLambda;
         TensorOfArray2D<NekDouble>          m_solutionPhys;

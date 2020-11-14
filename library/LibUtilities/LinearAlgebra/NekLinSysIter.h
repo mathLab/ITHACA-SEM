@@ -78,6 +78,20 @@ public:
     {
         m_rhs_magnitude = mag;
     }
+    LIB_UTILITIES_EXPORT void SetNekLinSysTolerance(const NekDouble in)
+    {
+        m_tolerance = in;
+    }
+
+    LIB_UTILITIES_EXPORT void SetNekLinSysMaxIterations(const unsigned int in)
+    {
+        m_maxiter = in;
+    }
+
+    LIB_UTILITIES_EXPORT void SetLinSysMaxStorage(const unsigned int in)
+    {
+        m_LinSysMaxStorage = in;
+    }
 
 protected:
     /// Global to universal unique map
@@ -90,6 +104,10 @@ protected:
     NekDouble m_rhs_mag_sm = 0.9;
 
     NekDouble m_prec_factor = 1.0;
+
+    // This is  maximum gmres search directions for one restart
+    // (determines the max storage usage)
+    int m_LinSysMaxStorage;
 
     void Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn);
     void setUniversalUniqueMap();

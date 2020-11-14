@@ -69,15 +69,13 @@ public:
 
     LIB_UTILITIES_EXPORT int GetMaxLinIte()
     {
-        return (m_maxrestart * m_GMRESMaxStorage);
+        return (m_maxrestart * m_LinSysMaxStorage);
     }
 
 protected:
     // This is maximum gmres restart iteration
     int m_maxrestart;
-    // This is  maximum gmres search directions for one restart
-    // (determines the max storage usage)
-    int m_GMRESMaxStorage;
+    
     // This is maximum bandwidth of Hessenburg matrix
     // if use truncted Gmres(m)
     int m_GMRESMaxHessMatBand;

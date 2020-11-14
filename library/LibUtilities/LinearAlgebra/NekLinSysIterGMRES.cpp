@@ -56,7 +56,7 @@ NekLinSysIterGMRES::NekLinSysIterGMRES(
     const LibUtilities::CommSharedPtr &vComm, const int nDimen)
     : NekLinSysIter(pSession, vComm, nDimen)
 {
-    m_GMRESMaxStorage     = 30;
+    m_LinSysMaxStorage     = 30;
     m_GMRESMaxHessMatBand = 30;
     std::vector<std::string> variables(1);
     variables[0]    = pSession->GetVariable(0);
@@ -67,16 +67,17 @@ NekLinSysIterGMRES::NekLinSysIterGMRES(
     pSession->MatchSolverInfo("GMRESRightPrecond", "False", m_GMRESRightPrecond,
                               true);
 
-    if (pSession->DefinesGlobalSysSolnInfo(variable, "GMRESMaxStorage"))
+    if (pSession->DefinesGlobalSysSolnInfo(variable, "LinSysMaxStorage"))
     {
-        m_GMRESMaxStorage = boost::lexical_cast<int>(
-            pSession->GetGlobalSysSolnInfo(variable, "GMRESMaxStorage")
+        m_LinSysMaxStorage = boost::lexical_cast<int>(
+            pSession->GetGlobalSysSolnInfo(variable, "LinSysMaxStorage")
                 .c_str());
     }
     else
     {
-        pSession->LoadParameter("GMRESMaxStorage", m_GMRESMaxStorage, 30);
+        pSession->LoadParameter("LinSysMaxStorage", m_LinSysMaxStorage, 100);
     }
+
     if (pSession->DefinesGlobalSysSolnInfo(variable, "GMRESMaxHessMatBand"))
     {
         m_GMRESMaxHessMatBand = boost::lexical_cast<int>(
@@ -86,11 +87,11 @@ NekLinSysIterGMRES::NekLinSysIterGMRES(
     else
     {
         pSession->LoadParameter("GMRESMaxHessMatBand", m_GMRESMaxHessMatBand,
-                                m_GMRESMaxStorage + 1);
+                                m_LinSysMaxStorage + 1);
     }
 
-    m_maxrestart = ceil(NekDouble(m_maxiter) / NekDouble(m_GMRESMaxStorage));
-    m_GMRESMaxStorage = min(m_maxiter, m_GMRESMaxStorage);
+    m_maxrestart = ceil(NekDouble(m_maxiter) / NekDouble(m_LinSysMaxStorage));
+    m_LinSysMaxStorage = min(m_maxiter, m_LinSysMaxStorage);
 
     int GMRESCentralDifference = 0;
     pSession->LoadParameter("GMRESCentralDifference", GMRESCentralDifference,
@@ -244,37 +245,37 @@ NekDouble NekLinSysIterGMRES::DoGmresRestart(
 
     // Allocate array storage of coefficients
     // Hessenburg matrix
-    Array<OneD, Array<OneD, NekDouble>> hes(m_GMRESMaxStorage);
-    for (int i = 0; i < m_GMRESMaxStorage; ++i)
+    Array<OneD, Array<OneD, NekDouble>> hes(m_LinSysMaxStorage);
+    for (int i = 0; i < m_LinSysMaxStorage; ++i)
     {
-        hes[i] = Array<OneD, NekDouble>(m_GMRESMaxStorage + 1, 0.0);
+        hes[i] = Array<OneD, NekDouble>(m_LinSysMaxStorage + 1, 0.0);
     }
     // Hesseburg matrix after rotation
-    Array<OneD, Array<OneD, NekDouble>> Upper(m_GMRESMaxStorage);
-    for (int i = 0; i < m_GMRESMaxStorage; ++i)
+    Array<OneD, Array<OneD, NekDouble>> Upper(m_LinSysMaxStorage);
+    for (int i = 0; i < m_LinSysMaxStorage; ++i)
     {
-        Upper[i] = Array<OneD, NekDouble>(m_GMRESMaxStorage + 1, 0.0);
+        Upper[i] = Array<OneD, NekDouble>(m_LinSysMaxStorage + 1, 0.0);
     }
     // Total search directions
-    Array<OneD, Array<OneD, NekDouble>> V_total(m_GMRESMaxStorage + 1);
-    for (int i = 0; i < m_GMRESMaxStorage + 1; ++i)
+    Array<OneD, Array<OneD, NekDouble>> V_total(m_LinSysMaxStorage + 1);
+    for (int i = 0; i < m_LinSysMaxStorage + 1; ++i)
     {
         V_total[i] = Array<OneD, NekDouble>(nGlobal, 0.0);
     }
     // Residual
-    Array<OneD, NekDouble> eta(m_GMRESMaxStorage + 1, 0.0);
+    Array<OneD, NekDouble> eta(m_LinSysMaxStorage + 1, 0.0);
     // Givens rotation c
-    Array<OneD, NekDouble> cs(m_GMRESMaxStorage, 0.0);
+    Array<OneD, NekDouble> cs(m_LinSysMaxStorage, 0.0);
     // Givens rotation s
-    Array<OneD, NekDouble> sn(m_GMRESMaxStorage, 0.0);
+    Array<OneD, NekDouble> sn(m_LinSysMaxStorage, 0.0);
     // Total coefficients, just for check
-    Array<OneD, NekDouble> y_total(m_GMRESMaxStorage, 0.0);
+    Array<OneD, NekDouble> y_total(m_LinSysMaxStorage, 0.0);
     // Residual
     NekDouble eps;
     // Search direction order
-    Array<OneD, int> id(m_GMRESMaxStorage, 0);
-    Array<OneD, int> id_start(m_GMRESMaxStorage, 0);
-    Array<OneD, int> id_end(m_GMRESMaxStorage, 0);
+    Array<OneD, int> id(m_LinSysMaxStorage, 0);
+    Array<OneD, int> id_start(m_LinSysMaxStorage, 0);
+    Array<OneD, int> id_end(m_LinSysMaxStorage, 0);
     // Temporary variables
     int idtem;
     int starttem;
@@ -347,7 +348,7 @@ NekDouble NekLinSysIterGMRES::DoGmresRestart(
     eta[0] = sqrt(eps);
 
     // Give an order for the entries in Hessenburg matrix
-    for (int nd = 0; nd < m_GMRESMaxStorage; ++nd)
+    for (int nd = 0; nd < m_LinSysMaxStorage; ++nd)
     {
         id[nd]     = nd;
         id_end[nd] = nd + 1;
@@ -374,7 +375,7 @@ NekDouble NekLinSysIterGMRES::DoGmresRestart(
         Vsingle1 = Array<OneD, NekDouble>(nGlobal, 0.0);
     }
 
-    for (int nd = 0; nd < m_GMRESMaxStorage; ++nd)
+    for (int nd = 0; nd < m_LinSysMaxStorage; ++nd)
     {
         Vsingle2 = V_total[nd + 1];
         hsingle1 = hes[nd];
@@ -403,7 +404,7 @@ NekDouble NekLinSysIterGMRES::DoGmresRestart(
         }
 
         hsingle2 = Upper[nd];
-        Vmath::Vcopy(m_GMRESMaxStorage + 1, &hsingle1[0], 1, &hsingle2[0], 1);
+        Vmath::Vcopy(m_LinSysMaxStorage + 1, &hsingle1[0], 1, &hsingle2[0], 1);
         DoGivensRotation(starttem, endtem, nGlobal, nDir, cs, sn, hsingle2,
                          eta);
 

@@ -37,6 +37,7 @@
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_NONLINSYS_H
 
 #include <LibUtilities/LinearAlgebra/NekSys.h>
+#include <LibUtilities/LinearAlgebra/NekLinSysIter.h>
 
 namespace Nektar
 {
@@ -96,7 +97,55 @@ public:
         m_ResidualUpdated = true;
     }
 
+    LIB_UTILITIES_EXPORT void SetNekNonlinSysTolerance(const NekDouble in)
+    {
+        m_tolerance = in;
+    }
+
+    LIB_UTILITIES_EXPORT void SetNekNonlinSysMaxIterations(
+        const unsigned int in)
+    {
+        m_maxiter = in;
+    }
+
+    LIB_UTILITIES_EXPORT const NekLinSysIterSharedPtr &
+        GetLinSys()
+    {
+        return m_linsol;
+    }
+
+    LIB_UTILITIES_EXPORT void SetNonlinIterTolRelativeL2(const NekDouble in)
+    {
+        m_NonlinIterTolRelativeL2 = in;
+    }
+
+    LIB_UTILITIES_EXPORT void SetLinSysRelativeTolInNonlin(const NekDouble in)
+    {
+        m_LinSysRelativeTolInNonlin = in;
+    }
+
+    LIB_UTILITIES_EXPORT void SetLinSysIterSovlerTypeInNonlin(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const std::string in)
+    {
+        m_LinSysIterSovlerType = in;
+        ASSERTL0(LibUtilities::GetNekLinSysIterFactory().ModuleExists(
+                 m_LinSysIterSovlerType),
+             "NekLinSysIter '" + m_LinSysIterSovlerType +
+                 "' is not defined.\n");
+                 
+        m_linsol = LibUtilities::GetNekLinSysIterFactory().CreateInstance(
+            m_LinSysIterSovlerType, pSession, m_Comm, m_SysDimen);
+    }
+
 protected:
+    NekLinSysIterSharedPtr m_linsol;
+
+    NekDouble m_NonlinIterTolRelativeL2;
+    NekDouble m_LinSysRelativeTolInNonlin;
+
+    std::string m_LinSysIterSovlerType;
+
     int m_totalIterations = 0;
 
     Array<OneD, NekDouble> m_Solution;

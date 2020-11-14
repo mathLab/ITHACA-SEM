@@ -36,7 +36,6 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_NONLINSYS_NEWTON_H
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_NONLINSYS_NEWTON_H
 
-#include <LibUtilities/LinearAlgebra/NekLinSysIter.h>
 #include <LibUtilities/LinearAlgebra/NekNonlinSys.h>
 
 namespace Nektar
@@ -70,14 +69,9 @@ public:
     LIB_UTILITIES_EXPORT ~NekNonlinSysNewton();
 
 protected:
-    NekLinSysIterSharedPtr m_linsol;
 
-    NekDouble m_NewtonIterTolRelativeL2;
-    NekDouble m_LinSysRelativeTolInNewton;
     NekDouble m_SysResNorm0;
     NekDouble m_SysResNorm;
-
-    std::string m_LinSysIterSovlerType;
 
     int m_InexactNewtonForcing = 0;
     NekDouble   m_ForcingGama  = 1.0;
@@ -85,10 +79,11 @@ protected:
 
     virtual void v_InitObject();
 
-    virtual int v_SolveSystem(const int nGlobal,
-                              const Array<OneD, const NekDouble> &pInput,
-                              Array<OneD, NekDouble> &pOutput, const int nDir,
-                              const NekDouble tol, const NekDouble factor);
+    virtual int v_SolveSystem(
+        const int nGlobal,
+        const Array<OneD, const NekDouble> &pInput,
+        Array<OneD, NekDouble> &pOutput, const int nDir,
+        const NekDouble tol, const NekDouble factor);
 
     virtual bool v_ConvergenceCheck(
         const int nIteration, const Array<OneD, const NekDouble> &Residual,

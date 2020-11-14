@@ -222,7 +222,6 @@ namespace Nektar
         // int                                 m_TotImpStages = 0;
         // Array<OneD, NekDouble>              m_magnitdEstimat;
 
-        NekDouble                                   m_NewtonRelativeIteTol;
         /// cfl number for local time step(notice only for jfnk other see m_cflSafetyFactor)
         NekDouble                                   m_cflLocTimestep;
         /// In Jacobi iteration the SOR relaxation parameter
@@ -232,7 +231,6 @@ namespace Nektar
         // int                                         m_PrcdMatFreezNumb;
         /// preconditioning steps
         int                                         m_JFNKPrecondStep;
-        int                                         m_MaxNonlinIte;
 
         LibUtilities::NekNonlinSysSharedPtr         m_nonlinsol;
         LibUtilities::NekSysOperators         m_NekSysOp;

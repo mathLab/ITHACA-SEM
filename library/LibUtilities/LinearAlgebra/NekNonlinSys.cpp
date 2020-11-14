@@ -85,6 +85,58 @@ NekNonlinSys::NekNonlinSys(const LibUtilities::SessionReaderSharedPtr &pSession,
     {
         pSession->LoadParameter("NekNonlinSysMaxIterations", m_maxiter, 100);
     }
+
+    if (pSession->DefinesGlobalSysSolnInfo(variable, "NonlinIterTolRelativeL2"))
+    {
+        m_NonlinIterTolRelativeL2 = boost::lexical_cast<int>(
+            pSession->GetGlobalSysSolnInfo(variable, "NonlinIterTolRelativeL2")
+                .c_str());
+    }
+    else
+    {
+        pSession->LoadParameter("NonlinIterTolRelativeL2",
+                                m_NonlinIterTolRelativeL2, 1.0E-10);
+    }
+
+    if (pSession->DefinesGlobalSysSolnInfo(variable,
+                                           "LinSysRelativeTolInNonlin"))
+    {
+        m_LinSysRelativeTolInNonlin = boost::lexical_cast<int>(
+            pSession
+                ->GetGlobalSysSolnInfo(variable, "LinSysRelativeTolInNonlin")
+                .c_str());
+    }
+    else
+    {
+        pSession->LoadParameter("LinSysRelativeTolInNonlin",
+                                m_LinSysRelativeTolInNonlin,
+                                m_NonlinIterTolRelativeL2);
+    }
+
+    m_LinSysIterSovlerType = "GMRES";
+    if (pSession->DefinesGlobalSysSolnInfo(variable, 
+            "LinSysIterSovlerTypeInNonlin"))
+    {
+        m_LinSysIterSovlerType =
+            pSession->GetGlobalSysSolnInfo(variable, 
+            "LinSysIterSovlerTypeInNonlin");
+    }
+    else
+    {
+        if (pSession->DefinesSolverInfo("LinSysIterSovlerTypeInNonlin"))
+        {
+            m_LinSysIterSovlerType =
+                pSession->GetSolverInfo("LinSysIterSovlerTypeInNonlin");
+        }
+    }
+
+    ASSERTL0(LibUtilities::GetNekLinSysIterFactory().ModuleExists(
+                 m_LinSysIterSovlerType),
+             "NekLinSysIter '" + m_LinSysIterSovlerType +
+                 "' is not defined.\n");
+                 
+    m_linsol = LibUtilities::GetNekLinSysIterFactory().CreateInstance(
+        m_LinSysIterSovlerType, pSession, m_Comm, m_SysDimen);
 }
 
 void NekNonlinSys::v_InitObject()

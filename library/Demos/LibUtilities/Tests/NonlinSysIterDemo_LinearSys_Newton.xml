@@ -8,8 +8,8 @@
             <I PROPERTY="LinSysIterSovler"   VALUE="GMRES"/>
         </SOLVERINFO>
         <PARAMETERS>
-            <P> NewtonIterTolRelativeL2 = 1e-8 </P>
-            <P> GMRESMaxStorage = 2 </P>
+            <P> NonlinIterTolRelativeL2 = 1e-8 </P>
+            <P> LinSysMaxStorage = 2 </P>
             <P> NekNonlinSysMaxIterations = 20 </P>
         </PARAMETERS>
         <VARIABLES>

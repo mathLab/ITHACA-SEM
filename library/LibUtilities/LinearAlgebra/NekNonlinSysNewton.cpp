@@ -56,59 +56,7 @@ NekNonlinSysNewton::NekNonlinSysNewton(
     const LibUtilities::CommSharedPtr &vComm, const int nscale)
     : NekNonlinSys(pSession, vComm, nscale)
 {
-    std::vector<std::string> variables(1);
-    variables[0]    = pSession->GetVariable(0);
-    string variable = variables[0];
-
-    if (pSession->DefinesGlobalSysSolnInfo(variable, "NewtonIterTolRelativeL2"))
-    {
-        m_NewtonIterTolRelativeL2 = boost::lexical_cast<int>(
-            pSession->GetGlobalSysSolnInfo(variable, "NewtonIterTolRelativeL2")
-                .c_str());
-    }
-    else
-    {
-        pSession->LoadParameter("NewtonIterTolRelativeL2",
-                                m_NewtonIterTolRelativeL2, 1.0E-10);
-    }
-
-    if (pSession->DefinesGlobalSysSolnInfo(variable,
-                                           "LinSysRelativeTolInNewton"))
-    {
-        m_LinSysRelativeTolInNewton = boost::lexical_cast<int>(
-            pSession
-                ->GetGlobalSysSolnInfo(variable, "LinSysRelativeTolInNewton")
-                .c_str());
-    }
-    else
-    {
-        pSession->LoadParameter("LinSysRelativeTolInNewton",
-                                m_LinSysRelativeTolInNewton,
-                                m_NewtonIterTolRelativeL2);
-    }
-
-    m_LinSysIterSovlerType = "GMRES";
-    if (pSession->DefinesGlobalSysSolnInfo(variable, "LinSysIterSovlerInNewton"))
-    {
-        m_LinSysIterSovlerType =
-            pSession->GetGlobalSysSolnInfo(variable, "LinSysIterSovlerInNewton");
-    }
-    else
-    {
-        if (pSession->DefinesSolverInfo("LinSysIterSovlerInNewton"))
-        {
-            m_LinSysIterSovlerType =
-                pSession->GetSolverInfo("LinSysIterSovlerInNewton");
-        }
-    }
-
-    ASSERTL0(LibUtilities::GetNekLinSysIterFactory().ModuleExists(
-                 m_LinSysIterSovlerType),
-             "NekLinSysIter '" + m_LinSysIterSovlerType +
-                 "' is not defined.\n");
-
-    m_linsol = LibUtilities::GetNekLinSysIterFactory().CreateInstance(
-        m_LinSysIterSovlerType, pSession, m_Comm, m_SysDimen);
+    
 }
 
 void NekNonlinSysNewton::v_InitObject()
@@ -199,7 +147,7 @@ bool NekNonlinSysNewton::v_ConvergenceCheck(
         resratio = m_SysResNorm / m_SysResNorm0;
     }
 
-    if (resratio < (m_NewtonIterTolRelativeL2 * m_NewtonIterTolRelativeL2) ||
+    if (resratio < (m_NonlinIterTolRelativeL2 * m_NonlinIterTolRelativeL2) ||
         m_SysResNorm < tol)
     {
         converged = true;
@@ -216,7 +164,7 @@ void NekNonlinSysNewton::CalcInexactNewtonForcing(
 {
     if (0 == k)
     {
-        forcing = m_LinSysRelativeTolInNewton;
+        forcing = m_LinSysRelativeTolInNonlin;
         resnormOld = resnorm;
     }
     else
@@ -225,7 +173,7 @@ void NekNonlinSysNewton::CalcInexactNewtonForcing(
         {
         case 0:
             {
-                forcing = m_LinSysRelativeTolInNewton;
+                forcing = m_LinSysRelativeTolInNonlin;
                 break;
             }
         case 1: 
@@ -236,11 +184,12 @@ void NekNonlinSysNewton::CalcInexactNewtonForcing(
                     pow(forcing, m_ForcingAlpha);
                 if (tmp > 0.1)
                 {
-                    forcing = min(m_LinSysRelativeTolInNewton, max(tmp, tmpForc));
+                    forcing = min(m_LinSysRelativeTolInNonlin, 
+                        max(tmp, tmpForc));
                 }
                 else
                 {
-                    forcing = min(m_LinSysRelativeTolInNewton, tmpForc);
+                    forcing = min(m_LinSysRelativeTolInNonlin, tmpForc);
                 }
 
                 forcing = max(forcing,  1.0E-6);

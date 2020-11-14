@@ -83,6 +83,18 @@ NekLinSysIter::NekLinSysIter(
     {
         pSession->LoadParameter("NekLinSysMaxIterations", m_maxiter, 5000);
     }
+
+    if (pSession->DefinesGlobalSysSolnInfo(variable, "LinSysMaxStorage"))
+    {
+        m_LinSysMaxStorage = boost::lexical_cast<int>(
+            pSession->GetGlobalSysSolnInfo(variable, "LinSysMaxStorage")
+                .c_str());
+    }
+    else
+    {
+        pSession->LoadParameter("LinSysMaxStorage", m_LinSysMaxStorage, 30);
+    }
+    
 }
 
 void NekLinSysIter::v_InitObject()

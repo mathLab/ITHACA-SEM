@@ -190,31 +190,33 @@ namespace Nektar
         m_nonlinsol = LibUtilities::GetNekNonlinSysFactory().CreateInstance(
             SovlerType, m_session, m_comm,ntotal);
 
+        // Default parameters for implicit CFS
+        m_nonlinsol->SetNonlinIterTolRelativeL2(1.0E-3);
+        m_nonlinsol->SetLinSysRelativeTolInNonlin(5.0E-2);
+        m_nonlinsol->SetNekNonlinSysMaxIterations(10);
+        m_nonlinsol->GetLinSys()->SetNekLinSysMaxIterations(30);
+        m_nonlinsol->GetLinSys()->SetLinSysMaxStorage(30);
+
         m_NekSysOp.DefineNekSysResEval(&CompressibleFlowSystem::
             NonlinSysEvaluatorCoeff1D, this);
         m_NekSysOp.DefineNekSysLhsEval(&CompressibleFlowSystem::
             MatrixMultiplyMatrixFreeCoeff, this);
 
-        m_session->LoadParameter("PrcdMatFreezNumb",     m_PrcdMatFreezNumb    , 1);
-        m_session->LoadParameter("NewtonAbsoluteIteTol", m_NewtonAbsoluteIteTol, 1.0E-12);
-        m_session->LoadParameter("NewtonRelativeIteTol", m_NewtonRelativeIteTol, 1.0E-2);
-        m_session->LoadParameter("JFNKTimeAccurate",     m_JFNKTimeAccurate    , 1);
-        m_session->LoadParameter("JFNKPrecondStep",      m_JFNKPrecondStep     , 5);
-        m_session->LoadParameter("MaxNonlinIte",         m_MaxNonlinIte        , 10);
-        m_session->LoadParameter("SORRelaxParam",        m_SORRelaxParam       , 1.0);
-
-        NekDouble minimuxTol    =   0.8;
-        if(m_NewtonRelativeIteTol>minimuxTol)
-        {
-            WARNINGL0(false,"m_NewtonRelativeIteTol>0.1");
-            m_NewtonRelativeIteTol = minimuxTol;
-        }
+        m_session->LoadParameter("PrcdMatFreezNumb",     
+            m_PrcdMatFreezNumb    , 1);
+        m_session->LoadParameter("NewtonAbsoluteIteTol", 
+            m_NewtonAbsoluteIteTol, 1.0E-12);
+        m_session->LoadParameter("JFNKTimeAccurate",     
+            m_JFNKTimeAccurate, 1);
+        m_session->LoadParameter("JFNKPrecondStep",      
+            m_JFNKPrecondStep, 7);
+        m_session->LoadParameter("SORRelaxParam",        
+            m_SORRelaxParam, 1.0);
 
         // when no time accuracy needed
         if(m_JFNKTimeAccurate<1)
         {
             m_NewtonAbsoluteIteTol = 1.0E-10;
-            m_NewtonRelativeIteTol = 0.1;
         }
 
         if (boost::iequals(m_session->GetSolverInfo("PRECONDITIONER"),

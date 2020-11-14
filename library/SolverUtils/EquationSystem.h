@@ -131,6 +131,10 @@ namespace Nektar
             /// Get pressure field if available
             SOLVER_UTILS_EXPORT MultiRegions::ExpListSharedPtr GetPressure();
 
+            SOLVER_UTILS_EXPORT inline void ExtraFldOutput(
+                std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                std::vector<std::string>             &variables);
+
             /// Print a summary of parameters and solver characteristics.
             SOLVER_UTILS_EXPORT inline void PrintSummary(std::ostream &out);
 
@@ -324,10 +328,6 @@ namespace Nektar
             /// Virtual function to identify if operator is negated in DoSolve
             SOLVER_UTILS_EXPORT virtual bool v_NegatedOp();
 
-            SOLVER_UTILS_EXPORT void ExtraFldOutput(
-               std::vector<Array<OneD, NekDouble> >    &fieldcoeffs,
-               std::vector<std::string>                &variables);
-
         protected:
             /// Communicator
             LibUtilities::CommSharedPtr                 m_comm;
@@ -402,11 +402,6 @@ namespace Nektar
             Array<OneD, bool>                           m_checkIfSystemSingular;
             /// Map to identify relevant solver info to dump in output fields
             LibUtilities::FieldMetaDataMap              m_fieldMetaDataMap;
-
-            /// Map to identify relevant solver info to dump in output fields
-            LinSysOperators                             m_LinSysOprtors;
-
-            NekLinSysIterativeSharedPtr                 m_linsol;
 
             /// Number of Quadrature points used to work out the error
             int  m_NumQuadPointsError;

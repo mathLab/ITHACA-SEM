@@ -95,5 +95,14 @@ void NekNonlinSys::v_InitObject()
 NekNonlinSys::~NekNonlinSys()
 {
 }
+
+void NekNonlinSys::v_SetupNekNonlinSystem(
+    const int nGlobal, const Array<OneD, const NekDouble> &pInput,
+    Array<OneD, NekDouble> &pOutput, const int nDir)
+{
+    boost::ignore_unused(nGlobal, pInput, pOutput, nDir);
+    ASSERTL0(false, "v_SetupNekNonlinSystem not defined");
+}
+
 } // namespace LibUtilities
 } // namespace Nektar

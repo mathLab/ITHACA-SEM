@@ -675,13 +675,11 @@ namespace Nektar
                      "should be set!");
             m_session->LoadParameter("TimeIncrementFactor",  m_TimeIncrementFactor , 1.0);
             m_session->LoadParameter("PrcdMatFreezNumb",     m_PrcdMatFreezNumb    , 1);
-
             
             m_nchk = 0;
 
             // Zero all physical fields initially
             ZeroPhysFields();
-
         }
 
         /**

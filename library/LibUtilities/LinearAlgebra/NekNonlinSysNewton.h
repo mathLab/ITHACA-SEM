@@ -99,6 +99,11 @@ protected:
         const NekDouble &resnorm,
         NekDouble       &forcing);
 
+    virtual void v_SetupNekNonlinSystem(
+        const int nGlobal, const Array<OneD, const NekDouble> &pInput,
+        Array<OneD, NekDouble> &pOutput, const int nDir);
+
+
 private:
 };
 } // namespace LibUtilities

@@ -81,14 +81,22 @@ namespace Nektar
 
         void InitialiseNonlinSysSolver();
 
-        void NonlinSysEvaluator1D(
+        void NonlinSysEvaluatorCoeff1D(
             const TensorOfArray1D<NekDouble>    &inarray,
             TensorOfArray1D<NekDouble>          &out,
             const bool                          &flag);
+        void NonlinSysEvaluatorCoeff(
+            const TensorOfArray1D<NekDouble>    &inarray,
+            TensorOfArray1D<NekDouble>          &out,
+            const bool                          &flag = true,
+            const TensorOfArray1D<NekDouble>    &source =
+                NullTensorOfArray1DDouble);
 
         void NonlinSysEvaluatorCoeff(
-            TensorOfArray2D<NekDouble>  &inarray,
-            TensorOfArray2D<NekDouble>  &out);
+            const TensorOfArray2D<NekDouble>    &inarray,
+            TensorOfArray2D<NekDouble>          &out,
+            const TensorOfArray2D<NekDouble>    &source = 
+                NullTensorOfArray2DDouble);
         void DoOdeRhsCoeff(
             const TensorOfArray2D<NekDouble>    &inarray,
             TensorOfArray2D<NekDouble>          &outarray,
@@ -112,7 +120,7 @@ namespace Nektar
             const NekDouble                     time,
             const NekDouble                     lambda);
         bool UpdatePrecMatCheck(
-            TensorOfArray1D<NekDouble>  &res);
+            const TensorOfArray1D<NekDouble>  &res);
         void CalPrecMat(
             const TensorOfArray2D<NekDouble>    &inpnts,
             const NekDouble                     time,
@@ -202,17 +210,17 @@ namespace Nektar
             eSparse,
         };
 
-        PreconditionerType                  m_PrecMatStorage;
+        // PreconditionerType                  m_PrecMatStorage;
         NekDouble                           m_BndEvaluateTime;
-        NekDouble                           m_TimeIntegLambda;
+        // NekDouble                           m_TimeIntegLambda;
         TensorOfArray2D<NekDouble>          m_solutionPhys;
 
         NekDouble                           m_JacobiFreeEps;
-        NekDouble                           m_inArrayNorm = -1.0;
+        // NekDouble                           m_inArrayNorm = -1.0;
         NekDouble                           m_NewtonAbsoluteIteTol;
-        int                                 m_TotNewtonIts = 0;
-        int                                 m_TotImpStages = 0;
-        Array<OneD, NekDouble>              m_magnitdEstimat;
+        // int                                 m_TotNewtonIts = 0;
+        // int                                 m_TotImpStages = 0;
+        // Array<OneD, NekDouble>              m_magnitdEstimat;
 
         NekDouble                                   m_NewtonRelativeIteTol;
         /// cfl number for local time step(notice only for jfnk other see m_cflSafetyFactor)
@@ -221,7 +229,7 @@ namespace Nektar
         NekDouble                                   m_SORRelaxParam;
         /// two strategies: time accurate or not.
         int                                        m_JFNKTimeAccurate;
-        int                                         m_PrcdMatFreezNumb;
+        // int                                         m_PrcdMatFreezNumb;
         /// preconditioning steps
         int                                         m_JFNKPrecondStep;
         int                                         m_MaxNonlinIte;
@@ -364,19 +372,6 @@ namespace Nektar
             Array<OneD, TypeNekBlkMatSharedPtr >    &gmtxarray,
             const DataType                          valu);
 
-        void DoImplicitSolve_phy2Coeff(
-            const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                Array<OneD,       Array<OneD, NekDouble> >&out,
-            const NekDouble time,
-            const NekDouble lambda);
-
-        void DoImplicitSolveCoeff(
-            const Array<OneD, const Array<OneD, NekDouble> >&inpnts,
-            const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                Array<OneD,       Array<OneD, NekDouble> >&out,
-            const NekDouble time,
-            const NekDouble lambda);
-
         template<typename TypeNekBlkMatSharedPtr>
         void AllocatePrecondBlkDiagCoeff(
             Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> > &gmtxarray,
@@ -400,26 +395,6 @@ namespace Nektar
                 mat->SetBlock(nelm,nelm,loc_matNvar);
             }
         }
-
-        inline void AllocateNekBlkMatDig(
-            DNekBlkMatSharedPtr                         &mat,
-            const Array<OneD, unsigned int >            nrow,
-            const Array<OneD, unsigned int >            ncol)
-        {
-            mat = MemoryManager<DNekBlkMat>
-                ::AllocateSharedPtr(nrow, ncol, eDIAGONAL);
-            DNekMatSharedPtr loc_matNvar;
-            for(int nelm = 0; nelm < nrow.size(); ++nelm)
-            {
-                int nrowsVars = nrow[nelm];
-                int ncolsVars = ncol[nelm];
-                
-                loc_matNvar = MemoryManager<DNekMat>::
-                    AllocateSharedPtr(nrowsVars,ncolsVars,0.0);
-                mat->SetBlock(nelm,nelm,loc_matNvar);
-            }
-        }
-
 
         template<typename DataType, typename TypeNekBlkMatSharedPtr>
         void GetpreconditionerNSBlkDiagCoeff(

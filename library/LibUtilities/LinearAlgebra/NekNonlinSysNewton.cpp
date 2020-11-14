@@ -124,37 +124,23 @@ NekNonlinSysNewton::~NekNonlinSysNewton()
 
 /**
  *
- */
+ **/
 int NekNonlinSysNewton::v_SolveSystem(
     const int nGlobal, const Array<OneD, const NekDouble> &pInput,
     Array<OneD, NekDouble> &pOutput, const int nDir, const NekDouble tol,
     const NekDouble factor)
 {
-    int nwidthcolm = 12;
-    m_linsol->SetSysOperators(m_operator);
-
-    ASSERTL0(0 == nDir, "0 != nDir not tested");
-    ASSERTL0(m_SysDimen == nGlobal, "m_SysDimen!=nGlobal");
-
     boost::ignore_unused(factor);
+
+    int nwidthcolm = 12;
+
+    v_SetupNekNonlinSystem(nGlobal, pInput, pOutput, nDir);
 
     int ntotal        = nGlobal - nDir;
     int NtotLinSysIts = 0;
 
     int NttlNonlinIte = 0;
     m_converged       = false;
-
-    m_Solution = pOutput;
-    Vmath::Vcopy(ntotal, pInput, 1, m_Solution, 1);
-    
-    if (m_ResidualUpdated)
-    {
-        m_ResidualUpdated = false;
-    }
-    else
-    {
-        m_operator.DoNekSysResEval(m_Solution, m_Residual);
-    }
 
     NekDouble resnormOld = 0.0;
     for (int k = 0; k < m_maxiter; ++k)
@@ -187,6 +173,8 @@ int NekNonlinSysNewton::v_SolveSystem(
              << " Res/(DtRHS): " << sqrt(m_SysResNorm / m_SysResNorm0)
              << " with " << setw(3) << NttlNonlinIte << " Non-Its)" << endl;
     }
+
+    m_ResidualUpdated = false;
     return NttlNonlinIte;
 }
 
@@ -261,6 +249,27 @@ void NekNonlinSysNewton::CalcInexactNewtonForcing(
         }
     }
 }
+
+void NekNonlinSysNewton::v_SetupNekNonlinSystem(
+    const int nGlobal, const Array<OneD, const NekDouble> &pInput,
+    Array<OneD, NekDouble> &pOutput, const int nDir)
+{
+    m_linsol->SetSysOperators(m_operator);
+
+    ASSERTL0(0 == nDir, "0 != nDir not tested");
+    ASSERTL0(m_SysDimen == nGlobal, "m_SysDimen!=nGlobal");
+
+    int ntotal        = nGlobal - nDir;
+    m_Solution = pOutput;
+    Vmath::Vcopy(ntotal, pInput, 1, m_Solution, 1);
+    
+    if (!m_ResidualUpdated)
+    {
+        m_operator.DoNekSysResEval(m_Solution, m_Residual);
+        m_ResidualUpdated = true;
+    }
+}
+
 
 } // namespace LibUtilities
 } // namespace Nektar

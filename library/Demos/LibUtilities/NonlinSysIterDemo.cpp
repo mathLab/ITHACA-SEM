@@ -64,7 +64,7 @@ public:
         m_nonlinsol = LibUtilities::GetNekNonlinSysFactory().CreateInstance(
             SovlerType, m_session, m_comm, m_matDim);
 
-        m_NekSysOp.DefineNekSysRhsEval(&LinSysDemo::DoRhs, this);
+        m_NekSysOp.DefineNekSysResEval(&LinSysDemo::DoRhs, this);
         m_NekSysOp.DefineNekSysLhsEval(&LinSysDemo::DoLhs, this);
         m_nonlinsol->SetSysOperators(m_NekSysOp);
     }

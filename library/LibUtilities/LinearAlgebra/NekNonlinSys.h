@@ -70,6 +70,10 @@ public:
         const LibUtilities::CommSharedPtr &vComm, const int nDimen);
     LIB_UTILITIES_EXPORT ~NekNonlinSys();
 
+    LIB_UTILITIES_EXPORT virtual void v_SetupNekNonlinSystem(
+        const int nGlobal, const Array<OneD, const NekDouble> &pInput,
+        Array<OneD, NekDouble> &pOutput, const int nDir);
+
     LIB_UTILITIES_EXPORT const Array<OneD, const NekDouble> &GetRefSolution()
         const
     {

@@ -118,7 +118,7 @@ protected:
 
     NekDouble                                       m_TimeIntegLambdaPrcMat=0.0;
 
-    NekDouble                                       m_Res0PreviousStep=-1.0;
+    // NekDouble                                       m_Res0PreviousStep=-1.0;
     
     ///Solution of The kth iteration in the Newton method(Nonlinear iteration)
     Array<OneD,       Array<OneD, NekDouble> >      m_TimeIntegtSol_k;

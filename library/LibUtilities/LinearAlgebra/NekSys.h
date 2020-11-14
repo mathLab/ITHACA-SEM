@@ -97,7 +97,7 @@ public:
     }
 
     template <typename FuncPointerT, typename ObjectPointerT>
-    void DefineNekSysRhsEval(FuncPointerT func, ObjectPointerT obj)
+    void DefineNekSysResEval(FuncPointerT func, ObjectPointerT obj)
     {
         m_functors1[0] =
             std::bind(func, obj, std::placeholders::_1, std::placeholders::_2,
@@ -235,6 +235,10 @@ public:
     {
         return v_ConvergenceCheck(nIteration, Residual, tol);
     }
+
+    LIB_UTILITIES_EXPORT virtual void v_NekSysInitialGuess(
+        const Array<OneD, NekDouble> &pInput,
+        Array<OneD, NekDouble> &pguess);
 
 protected:
     /// Maximum iterations

@@ -49,7 +49,8 @@ typedef std::shared_ptr<NekNonlinSys> NekNonlinSysSharedPtr;
 
 typedef LibUtilities::NekFactory<std::string, NekNonlinSys,
                                  const LibUtilities::SessionReaderSharedPtr &,
-                                 const LibUtilities::CommSharedPtr &, const int>
+                                 const LibUtilities::CommSharedPtr &, const int,
+                                 const NekSysKey &>
     NekNonlinSysFactory;
 LIB_UTILITIES_EXPORT NekNonlinSysFactory &GetNekNonlinSysFactory();
 
@@ -59,16 +60,18 @@ public:
     friend class MemoryManager<NekNonlinSys>;
     LIB_UTILITIES_EXPORT static NekNonlinSysSharedPtr CreateInstance(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen)
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+        const NekSysKey &pKey)
     {
         NekNonlinSysSharedPtr p =
             MemoryManager<NekNonlinSys>::AllocateSharedPtr(pSession, vComm,
-                                                           nDimen);
+                                                           nDimen, pKey);
         return p;
     }
     LIB_UTILITIES_EXPORT NekNonlinSys(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen);
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+        const NekSysKey &pKey);
     LIB_UTILITIES_EXPORT ~NekNonlinSys();
 
     LIB_UTILITIES_EXPORT virtual void v_SetupNekNonlinSystem(
@@ -122,20 +125,6 @@ public:
     LIB_UTILITIES_EXPORT void SetLinSysRelativeTolInNonlin(const NekDouble in)
     {
         m_LinSysRelativeTolInNonlin = in;
-    }
-
-    LIB_UTILITIES_EXPORT void SetLinSysIterSovlerTypeInNonlin(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
-        const std::string in)
-    {
-        m_LinSysIterSovlerType = in;
-        ASSERTL0(LibUtilities::GetNekLinSysIterFactory().ModuleExists(
-                 m_LinSysIterSovlerType),
-             "NekLinSysIter '" + m_LinSysIterSovlerType +
-                 "' is not defined.\n");
-                 
-        m_linsol = LibUtilities::GetNekLinSysIterFactory().CreateInstance(
-            m_LinSysIterSovlerType, pSession, m_Comm, m_SysDimen);
     }
 
 protected:

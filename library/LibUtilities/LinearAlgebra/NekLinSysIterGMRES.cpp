@@ -53,30 +53,18 @@ string NekLinSysIterGMRES::className =
 
 NekLinSysIterGMRES::NekLinSysIterGMRES(
     const LibUtilities::SessionReaderSharedPtr &pSession,
-    const LibUtilities::CommSharedPtr &vComm, const int nDimen)
-    : NekLinSysIter(pSession, vComm, nDimen)
+    const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+    const NekSysKey &pKey)
+    : NekLinSysIter(pSession, vComm, nDimen, pKey)
 {
-    m_LinSysMaxStorage     = 30;
-    m_GMRESMaxHessMatBand = 30;
     std::vector<std::string> variables(1);
     variables[0]    = pSession->GetVariable(0);
     string variable = variables[0];
 
     pSession->MatchSolverInfo("GMRESLeftPrecond", "True", m_GMRESLeftPrecond,
-                              false);
+                              pKey.m_DefaultGMRESLeftPrecond);
     pSession->MatchSolverInfo("GMRESRightPrecond", "False", m_GMRESRightPrecond,
-                              true);
-
-    if (pSession->DefinesGlobalSysSolnInfo(variable, "LinSysMaxStorage"))
-    {
-        m_LinSysMaxStorage = boost::lexical_cast<int>(
-            pSession->GetGlobalSysSolnInfo(variable, "LinSysMaxStorage")
-                .c_str());
-    }
-    else
-    {
-        pSession->LoadParameter("LinSysMaxStorage", m_LinSysMaxStorage, 100);
-    }
+                              pKey.m_DefaultGMRESRightPrecond);
 
     if (pSession->DefinesGlobalSysSolnInfo(variable, "GMRESMaxHessMatBand"))
     {
@@ -92,6 +80,12 @@ NekLinSysIterGMRES::NekLinSysIterGMRES(
 
     m_maxrestart = ceil(NekDouble(m_maxiter) / NekDouble(m_LinSysMaxStorage));
     m_LinSysMaxStorage = min(m_maxiter, m_LinSysMaxStorage);
+
+    // cout 
+    //     << " m_maxiter = " << m_maxiter
+    //     << " m_maxrestart = " << m_maxrestart
+    //     << " m_LinSysMaxStorage = " << m_LinSysMaxStorage
+    //     << endl;
 
     int GMRESCentralDifference = 0;
     pSession->LoadParameter("GMRESCentralDifference", GMRESCentralDifference,
@@ -163,6 +157,8 @@ int NekLinSysIterGMRES::DoGMRES(const int nGlobal,
         NekVector<NekDouble> inGlob(nGlobal, pInput, eWrapper);
         Set_Rhs_Magnitude(inGlob);
     }
+
+    m_rhs_magnitude = 1.0;
 
     // Get vector sizes
     NekDouble eps = 0.0;
@@ -374,6 +370,11 @@ NekDouble NekLinSysIterGMRES::DoGmresRestart(
     {
         Vsingle1 = Array<OneD, NekDouble>(nGlobal, 0.0);
     }
+
+    // cout 
+    //     << " m_tolerance = " << m_tolerance 
+    //     << " m_rhs_magnitude = " << m_rhs_magnitude 
+    //     << endl;
 
     for (int nd = 0; nd < m_LinSysMaxStorage; ++nd)
     {

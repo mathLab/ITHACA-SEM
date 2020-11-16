@@ -187,15 +187,17 @@ namespace Nektar
             ModuleExists(SovlerType), "NekNonlinSys '" + SovlerType + 
             "' is not defined.\n");
         int ntotal = m_fields[0]->GetNcoeffs() * m_fields.size();
-        m_nonlinsol = LibUtilities::GetNekNonlinSysFactory().CreateInstance(
-            SovlerType, m_session, m_comm,ntotal);
 
-        // Default parameters for implicit CFS
-        m_nonlinsol->SetNonlinIterTolRelativeL2(1.0E-3);
-        m_nonlinsol->SetLinSysRelativeTolInNonlin(5.0E-2);
-        m_nonlinsol->SetNekNonlinSysMaxIterations(10);
-        m_nonlinsol->GetLinSys()->SetNekLinSysMaxIterations(30);
-        m_nonlinsol->GetLinSys()->SetLinSysMaxStorage(30);
+        LibUtilities::NekSysKey key = LibUtilities::NekSysKey();
+
+        key.m_DefaultNonlinIterTolRelativeL2   = 1.0E-3;
+        key.m_DefaultLinSysRelativeTolInNonlin = 5.0E-2;
+        key.m_DefaultNekNonlinSysMaxIterations = 10;
+        key.m_DefaultNekLinSysMaxIterations    = 30;
+        key.m_DefaultLinSysMaxStorage          = 30;
+
+        m_nonlinsol = LibUtilities::GetNekNonlinSysFactory().CreateInstance(
+            SovlerType, m_session, m_comm, ntotal, key);
 
         m_NekSysOp.DefineNekSysResEval(&CompressibleFlowSystem::
             NonlinSysEvaluatorCoeff1D, this);

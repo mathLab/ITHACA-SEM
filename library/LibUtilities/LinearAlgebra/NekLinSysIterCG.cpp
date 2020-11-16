@@ -54,8 +54,9 @@ string NekLinSysIterCG::className =
 
 NekLinSysIterCG::NekLinSysIterCG(
     const LibUtilities::SessionReaderSharedPtr &pSession,
-    const LibUtilities::CommSharedPtr &vComm, const int nDimen)
-    : NekLinSysIter(pSession, vComm, nDimen)
+    const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+    const NekSysKey &pKey)
+    : NekLinSysIter(pSession, vComm, nDimen, pKey)
 {
     std::vector<std::string> variables(1);
     variables[0]    = pSession->GetVariable(0);

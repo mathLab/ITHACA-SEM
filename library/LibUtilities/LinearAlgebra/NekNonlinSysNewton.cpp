@@ -53,8 +53,9 @@ string NekNonlinSysNewton::className =
 
 NekNonlinSysNewton::NekNonlinSysNewton(
     const LibUtilities::SessionReaderSharedPtr &pSession,
-    const LibUtilities::CommSharedPtr &vComm, const int nscale)
-    : NekNonlinSys(pSession, vComm, nscale)
+    const LibUtilities::CommSharedPtr &vComm, const int nscale,
+    const NekSysKey &pKey)
+    : NekNonlinSys(pSession, vComm, nscale, pKey)
 {
     
 }
@@ -100,6 +101,8 @@ int NekNonlinSysNewton::v_SolveSystem(
         NekDouble GMRESRelativeIteTol;
         CalcInexactNewtonForcing(k, resnormOld, m_SysResNorm, 
             GMRESRelativeIteTol);
+        
+        // cout << " m_SysResNorm = " << m_SysResNorm << endl;
         resnormOld = m_SysResNorm;
 
         NekDouble LinSysTol = GMRESRelativeIteTol * sqrt(m_SysResNorm);

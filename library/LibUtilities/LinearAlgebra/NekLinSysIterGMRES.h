@@ -52,11 +52,12 @@ public:
 
     LIB_UTILITIES_EXPORT static NekLinSysIterSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen)
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+        const NekSysKey &pKey)
     {
         NekLinSysIterSharedPtr p =
             MemoryManager<NekLinSysIterGMRES>::AllocateSharedPtr(pSession,
-                                                                 vComm, nDimen);
+                vComm, nDimen, pKey);
         p->InitObject();
         return p;
     }
@@ -64,7 +65,8 @@ public:
 
     LIB_UTILITIES_EXPORT NekLinSysIterGMRES(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen);
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+        const NekSysKey &pKey = NekSysKey());
     LIB_UTILITIES_EXPORT ~NekLinSysIterGMRES();
 
     LIB_UTILITIES_EXPORT int GetMaxLinIte()

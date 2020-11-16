@@ -48,9 +48,10 @@ namespace LibUtilities
  */
 
 NekSys::NekSys(const LibUtilities::SessionReaderSharedPtr &pSession,
-               const LibUtilities::CommSharedPtr &vComm, const int nDimen)
+               const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+               const NekSysKey &pKey)
 {
-    m_tolerance = NekConstants::kNekIterativeTol;
+    m_tolerance = pKey.m_DefaultTolerance;
     m_verbose   = false;
     m_root      = false;
     m_Comm      = vComm;

@@ -140,7 +140,7 @@ namespace Nektar
                     "' is not defined.\n");
                 m_linsol = LibUtilities::GetNekLinSysIterFactory().
                            CreateInstance(LinSysIterSovlerType, pSession,
-                                          v_Comm, nGlobal - nDir);
+                            v_Comm, nGlobal - nDir, LibUtilities::NekSysKey());
 
                 m_NekSysOp.DefineNekSysLhsEval(
                     &GlobalLinSysIterative::DoMatrixMultiplyFlag, this);

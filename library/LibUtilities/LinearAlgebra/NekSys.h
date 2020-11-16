@@ -184,6 +184,35 @@ protected:
     FunctorType2Array m_functors2;
 };
 
+class NekSysKey
+{
+public:
+    NekSysKey()
+    {
+    }
+
+    ~NekSysKey()
+    {}
+
+    NekDouble   m_DefaultTolerance                    = 
+                                                NekConstants::kNekIterativeTol;
+    int         m_DefaultNekNonlinSysMaxIterations    = 100;
+    int         m_DefaultNekLinSysMaxIterations       = 100;
+    NekDouble   m_DefaultNekNonlinSysTolerance        = m_DefaultTolerance;
+    NekDouble   m_DefaultNekLinSysTolerance           = m_DefaultTolerance;
+    NekDouble   m_DefaultNonlinIterTolRelativeL2      = 1.0E-6;
+    NekDouble   m_DefaultLinSysRelativeTolInNonlin    = 1.0E-2;
+    int         m_DefaultLinSysMaxStorage             = 100;
+    int         m_DefaultGMRESMaxHessMatBand          = 100;
+    bool        m_DefaultGMRESLeftPrecond             = false;
+    bool        m_DefaultGMRESRightPrecond            = true;
+    bool        m_DefaultDifferenceFlag0              = false;
+    bool        m_DefaultDifferenceFlag1              = false;
+    bool        m_DefaultuseProjection                = false;
+    std::string m_DefaultLinSysIterSovlerTypeInNonlin = "GMRES";
+    
+};
+
 class NekSys;
 
 typedef std::shared_ptr<NekSys> NekSysSharedPtr;
@@ -196,15 +225,17 @@ public:
 
     LIB_UTILITIES_EXPORT static NekSysSharedPtr CreateInstance(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen)
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen, 
+        const NekSysKey &pKey)
     {
-        NekSysSharedPtr p =
-            MemoryManager<NekSys>::AllocateSharedPtr(pSession, vComm, nDimen);
+        NekSysSharedPtr p = MemoryManager<NekSys>::
+            AllocateSharedPtr(pSession, vComm, nDimen, pKey);
         return p;
     }
     LIB_UTILITIES_EXPORT NekSys(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen);
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+        const NekSysKey &pKey);
     LIB_UTILITIES_EXPORT void InitObject()
     {
         v_InitObject();

@@ -62,7 +62,7 @@ public:
             LibUtilities::GetNekNonlinSysFactory().ModuleExists(SovlerType),
             "NekNonlinSys '" + SovlerType + "' is not defined.\n");
         m_nonlinsol = LibUtilities::GetNekNonlinSysFactory().CreateInstance(
-            SovlerType, m_session, m_comm, m_matDim);
+            SovlerType, m_session, m_comm, m_matDim, LibUtilities::NekSysKey());
 
         m_NekSysOp.DefineNekSysResEval(&LinSysDemo::DoRhs, this);
         m_NekSysOp.DefineNekSysLhsEval(&LinSysDemo::DoLhs, this);

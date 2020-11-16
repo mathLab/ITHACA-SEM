@@ -49,7 +49,8 @@ typedef std::shared_ptr<NekLinSysIter> NekLinSysIterSharedPtr;
 
 typedef LibUtilities::NekFactory<std::string, NekLinSysIter,
                                  const LibUtilities::SessionReaderSharedPtr &,
-                                 const LibUtilities::CommSharedPtr &, const int>
+                                 const LibUtilities::CommSharedPtr &, const int,
+                                 const NekSysKey &>
     NekLinSysIterFactory;
 LIB_UTILITIES_EXPORT NekLinSysIterFactory &GetNekLinSysIterFactory();
 
@@ -61,16 +62,18 @@ public:
 
     LIB_UTILITIES_EXPORT static NekLinSysIterSharedPtr CreateInstance(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen)
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+        const NekSysKey &pKey)
     {
         NekLinSysIterSharedPtr p =
             MemoryManager<NekLinSysIter>::AllocateSharedPtr(pSession, vComm,
-                                                            nDimen);
+                nDimen, pKey);
         return p;
     }
     LIB_UTILITIES_EXPORT NekLinSysIter(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen);
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen, 
+        const NekSysKey &pKey);
     LIB_UTILITIES_EXPORT virtual ~NekLinSysIter();
 
     LIB_UTILITIES_EXPORT void setUniversalUniqueMap(Array<OneD, int> &map);

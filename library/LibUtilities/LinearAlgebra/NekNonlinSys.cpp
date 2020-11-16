@@ -54,8 +54,9 @@ NekNonlinSysFactory &GetNekNonlinSysFactory()
 
 NekNonlinSys::NekNonlinSys(const LibUtilities::SessionReaderSharedPtr &pSession,
                            const LibUtilities::CommSharedPtr &vComm,
-                           const int nDimen)
-    : NekSys(pSession, vComm, nDimen)
+                           const int nDimen,
+                           const NekSysKey &pKey)
+    : NekSys(pSession, vComm, nDimen, pKey)
 {
     std::vector<std::string> variables(1);
     variables[0]    = pSession->GetVariable(0);
@@ -70,7 +71,7 @@ NekNonlinSys::NekNonlinSys(const LibUtilities::SessionReaderSharedPtr &pSession,
     else
     {
         pSession->LoadParameter("NekNonlinSysTolerance", m_tolerance,
-                                NekConstants::kNekIterativeTol);
+            pKey.m_DefaultNekNonlinSysTolerance);
     }
 
     if (pSession->DefinesGlobalSysSolnInfo(variable,
@@ -83,7 +84,8 @@ NekNonlinSys::NekNonlinSys(const LibUtilities::SessionReaderSharedPtr &pSession,
     }
     else
     {
-        pSession->LoadParameter("NekNonlinSysMaxIterations", m_maxiter, 100);
+        pSession->LoadParameter("NekNonlinSysMaxIterations", m_maxiter, 
+            pKey.m_DefaultNekNonlinSysMaxIterations);
     }
 
     if (pSession->DefinesGlobalSysSolnInfo(variable, "NonlinIterTolRelativeL2"))
@@ -95,7 +97,7 @@ NekNonlinSys::NekNonlinSys(const LibUtilities::SessionReaderSharedPtr &pSession,
     else
     {
         pSession->LoadParameter("NonlinIterTolRelativeL2",
-                                m_NonlinIterTolRelativeL2, 1.0E-10);
+            m_NonlinIterTolRelativeL2, pKey.m_DefaultNonlinIterTolRelativeL2);
     }
 
     if (pSession->DefinesGlobalSysSolnInfo(variable,
@@ -109,11 +111,13 @@ NekNonlinSys::NekNonlinSys(const LibUtilities::SessionReaderSharedPtr &pSession,
     else
     {
         pSession->LoadParameter("LinSysRelativeTolInNonlin",
-                                m_LinSysRelativeTolInNonlin,
-                                m_NonlinIterTolRelativeL2);
+            m_LinSysRelativeTolInNonlin,
+            pKey.m_DefaultLinSysRelativeTolInNonlin);
     }
 
-    m_LinSysIterSovlerType = "GMRES";
+    // cout << " m_LinSysRelativeTolInNonlin = " << m_LinSysRelativeTolInNonlin << endl;
+
+    m_LinSysIterSovlerType = pKey.m_DefaultLinSysIterSovlerTypeInNonlin;
     if (pSession->DefinesGlobalSysSolnInfo(variable, 
             "LinSysIterSovlerTypeInNonlin"))
     {
@@ -136,7 +140,7 @@ NekNonlinSys::NekNonlinSys(const LibUtilities::SessionReaderSharedPtr &pSession,
                  "' is not defined.\n");
                  
     m_linsol = LibUtilities::GetNekLinSysIterFactory().CreateInstance(
-        m_LinSysIterSovlerType, pSession, m_Comm, m_SysDimen);
+        m_LinSysIterSovlerType, pSession, m_Comm, m_SysDimen, pKey);
 }
 
 void NekNonlinSys::v_InitObject()

@@ -68,7 +68,8 @@ public:
                  "NekLinSysIter '" + LinSysIterSovlerType +
                      "' is not defined.\n");
         m_linsol = LibUtilities::GetNekLinSysIterFactory().CreateInstance(
-            LinSysIterSovlerType, m_session, m_comm, m_matDim);
+            LinSysIterSovlerType, m_session, m_comm, m_matDim,
+            LibUtilities::NekSysKey());
 
         m_NekSysOp.DefineNekSysLhsEval(&LinSysDemo::DoLhs, this);
         m_NekSysOp.DefineNekSysFixPointIte(&LinSysDemo::DoFixedPoint, this);

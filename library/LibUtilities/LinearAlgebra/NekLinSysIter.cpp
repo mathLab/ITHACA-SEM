@@ -55,8 +55,9 @@ NekLinSysIterFactory &GetNekLinSysIterFactory()
 
 NekLinSysIter::NekLinSysIter(
     const LibUtilities::SessionReaderSharedPtr &pSession,
-    const LibUtilities::CommSharedPtr &vComm, const int nDimen)
-    : NekSys(pSession, vComm, nDimen)
+    const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+    const NekSysKey &pKey)
+    : NekSys(pSession, vComm, nDimen, pKey)
 {
     std::vector<std::string> variables(1);
     variables[0]    = pSession->GetVariable(0);
@@ -71,7 +72,7 @@ NekLinSysIter::NekLinSysIter(
     else
     {
         pSession->LoadParameter("NekLinSysTolerance", m_tolerance,
-                                NekConstants::kNekIterativeTol);
+            pKey.m_DefaultNekLinSysTolerance);
     }
 
     if (pSession->DefinesGlobalSysSolnInfo(variable, "NekLinSysMaxIterations"))
@@ -81,7 +82,8 @@ NekLinSysIter::NekLinSysIter(
     }
     else
     {
-        pSession->LoadParameter("NekLinSysMaxIterations", m_maxiter, 5000);
+        pSession->LoadParameter("NekLinSysMaxIterations", m_maxiter, 
+            pKey.m_DefaultNekLinSysMaxIterations);
     }
 
     if (pSession->DefinesGlobalSysSolnInfo(variable, "LinSysMaxStorage"))
@@ -92,7 +94,8 @@ NekLinSysIter::NekLinSysIter(
     }
     else
     {
-        pSession->LoadParameter("LinSysMaxStorage", m_LinSysMaxStorage, 30);
+        pSession->LoadParameter("LinSysMaxStorage", m_LinSysMaxStorage, 
+            pKey.m_DefaultLinSysMaxStorage);
     }
     
 }

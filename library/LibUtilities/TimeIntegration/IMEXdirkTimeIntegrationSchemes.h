@@ -52,9 +52,9 @@ namespace LibUtilities
 {
 
 ///////////////////////////////////////////////////////////////////////////////
-//  IMEXDirk-(s, sigma, p), where s is the number of implicit stage
-//  schemes, sigma is the number of explicit stage scheme and p is the
-//  combined order of the scheme.
+//  IMEXDirk-(s, sigma, p), where s is the number of stages of the
+//  implicit scheme, sigma is the number of stages of the explicit
+//  scheme and p is the combined order of the scheme.
 
 class IMEXdirkTimeIntegrationScheme : public TimeIntegrationSchemeGLM
 {
@@ -65,8 +65,9 @@ public:
     {
         ASSERTL1(freeParams.size() == 2,
                  "IMEX DIRK Time integration scheme invalid number "
-                 "of free parameters, expected two, received  " +
-                     std::to_string(freeParams.size()));
+                 "of free parameters, expected two "
+                 "<implicit stages, explicit stages>, received  " +
+                 std::to_string(freeParams.size()));
 
         int s     = freeParams[0];
         int sigma = freeParams[1];
@@ -126,8 +127,9 @@ public:
     {
         ASSERTL1(freeParams.size() == 2,
                  "IMEX DIRK Time integration scheme invalid number "
-                 "of free parameters, expected two, received " +
-                     std::to_string(freeParams.size()) + ".");
+                 "of free parameters, expected two "
+                 "<implicit stages, explicit stages>, received  " +
+                 std::to_string(freeParams.size()) + ".");
 
         int s     = freeParams[0];
         int sigma = freeParams[1];

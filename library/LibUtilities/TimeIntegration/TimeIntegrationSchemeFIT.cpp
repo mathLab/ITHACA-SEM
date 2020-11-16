@@ -72,7 +72,9 @@ FractionalInTimeIntegrationScheme(std::string variant, unsigned int order,
              freeParams.size() == 2 ||  // Base
              freeParams.size() == 6,    // Talbot quadrature rule
              "FractionalInTime Time integration scheme invalid number "
-             "of free parameters, expected zero, two, or six received  " +
+             "of free parameters, expected zero, one <alpha>, "
+	     "two <alpha, base>, or "
+	     "six <alpha, base, nQuadPts, sigma, mu0, nu> received  " +
              std::to_string(freeParams.size()));
 
     if( freeParams.size() >= 1 )

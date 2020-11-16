@@ -605,7 +605,8 @@ int main(int argc, char *argv[])
         else if (sMethod == "IMEX" && sVariant == "DIRK" &&
                  (nOrder == 0 || freeParams.size() == 0))
         {
-            std::cout << "method, order, and free parameters.";
+            std::cout << "method, order, and free parameters "
+		      << "<implicit stages, explicit stages>.";
         }
 
         else if(sMethod == "FractionalInTime" &&
@@ -616,7 +617,7 @@ int main(int argc, char *argv[])
                   freeParams.size() != 6)))
         {
             std::cout << "method, order, and optionally the free parameters "
-                      << "([alpha] | [alpha, base] | [alpha, base, nQuadPts,sigma,mu0,nu])";
+                      << "[alpha] | [alpha, base] | [alpha, base, nQuadPts,sigma,mu0,nu].";
         }
         else if (sMethod == "Euler")
         {

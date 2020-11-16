@@ -68,8 +68,9 @@ public:
         {
             ASSERTL1(freeParams.size() == 2,
                      "IMEX DIRK Time integration scheme invalid number "
-                     "of free parameters, expected two, received  " +
-                         std::to_string(freeParams.size()));
+                     "of free parameters, expected two "
+                     "<implicit stages, explicit stages>, received  " +
+                     std::to_string(freeParams.size()));
 
             int s     = freeParams[0];
             int sigma = freeParams[1];

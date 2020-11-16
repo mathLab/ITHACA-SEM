@@ -394,13 +394,14 @@ class OneDFDESolver : public DemoSolver
 {
 public:
     // constructor based upon the discretisation details
-    OneDFDESolver(int nVars, int nPoints, int nTimeSteps, bool test)
+  OneDFDESolver(int nVars, int nPoints, int nTimeSteps, bool test,
+                NekDouble alpha)
         : DemoSolver(nVars, nPoints, nTimeSteps, test)
     {
         m_fileName = std::string("OneDFDESolver");
         m_title    = std::string("Solution to the 1D constant equation");
 
-        m_alpha = 0.3;
+        m_alpha = alpha;
 
         if (test)
             srand(0);
@@ -451,7 +452,7 @@ int main(int argc, char *argv[])
     po::options_description desc("Usage:");
 
     desc.add_options()("help,h", "Produce this help message.")(
-        "test,t", "Run in regession test mode.")(
+        "test,test", "Run in regession test mode.")(
         "butcher,b", "Print the Butcher Tableau for each phase.")(
         "solution,s", "Print the solution values for each time step.")(
         "L2,l", "Print the L2 error for each time step.")(
@@ -565,9 +566,9 @@ int main(int argc, char *argv[])
     // Bullet proofing.
 
     // These methods need the order only
-    if (((sMethod == "RungeKutta" || sMethod == "DIRK" ||
+    if (((sMethod == "RungeKutta"     || sMethod == "DIRK" ||
           sMethod == "AdamsBashforth" || sMethod == "AdamsMoulton" ||
-          sMethod == "BDFImplicit" || sMethod == "EulerExponential") &&
+          sMethod == "BDFImplicit"    || sMethod == "EulerExponential") &&
          nOrder == 0) ||
 
         // No variant but the order
@@ -576,6 +577,13 @@ int main(int argc, char *argv[])
         // Needs an order and parameters
         (sMethod == "IMEX" && sVariant == "DIRK" &&
          (nOrder == 0 || freeParams.size() == 0)) ||
+
+        // Needs an order and possibly parameters
+        (sMethod == "FractionalInTime" &&
+         (nOrder == 0 ||
+          (freeParams.size() != 0 &&
+           freeParams.size() != 2 &&
+           freeParams.size() != 6))) ||
 
         // Needs a variant
         (sMethod == "Euler" && sVariant == "") ||
@@ -596,7 +604,17 @@ int main(int argc, char *argv[])
         else if (sMethod == "IMEX" && sVariant == "DIRK" &&
                  (nOrder == 0 || freeParams.size() == 0))
         {
-            std::cout << "method, order, and free parameters in quotes.";
+            std::cout << "method, order, and free parameters.";
+        }
+
+        else if(sMethod == "FractionalInTime" &&
+                (nOrder == 0 ||
+                 (freeParams.size() != 0 &&
+                  freeParams.size() != 2 &&
+                  freeParams.size() != 6)))
+        {
+            std::cout << "method, order, and optionally the free parameters "
+                      << "([alpha,base] | [alpha,base, nQuadPts,sigma,mu0,nu])";
         }
         else if (sMethod == "Euler")
         {
@@ -644,8 +662,15 @@ int main(int argc, char *argv[])
         nVariables = nDoF;
         nPoints    = 1;
 
+        NekDouble alpha = 0.3; // Fractional order default
+
+        if( freeParams.size() > 0 )
+        {
+          alpha = freeParams[0];
+        }
+
         OneDFDESolver *tmpSolver =
-            new OneDFDESolver(nVariables, nPoints, nTimeSteps, test);
+          new OneDFDESolver(nVariables, nPoints, nTimeSteps, test, alpha);
 
         ode.DefineOdeRhs(&OneDFDESolver::EvaluateFDETerm, tmpSolver);
 

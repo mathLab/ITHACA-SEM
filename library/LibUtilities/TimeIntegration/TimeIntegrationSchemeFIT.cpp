@@ -68,15 +68,20 @@ FractionalInTimeIntegrationScheme(std::string variant, unsigned int order,
              std::to_string(order));
 
     ASSERTL1(freeParams.size() == 0 ||  // Use defaults
-             freeParams.size() == 2 ||  // Alpha and the base
+             freeParams.size() == 1 ||  // Alpha
+             freeParams.size() == 2 ||  // Base
              freeParams.size() == 6,    // Talbot quadrature rule
              "FractionalInTime Time integration scheme invalid number "
              "of free parameters, expected zero, two, or six received  " +
              std::to_string(freeParams.size()));
 
-    if( freeParams.size() >= 2 )
+    if( freeParams.size() >= 1 )
     {
       m_alpha = freeParams[0];    // Value for exp integration.
+    }
+
+    if( freeParams.size() >= 2 )
+    {
       m_base  = freeParams[1];    // "Base" of the algorithm.
     }
 

@@ -582,6 +582,7 @@ int main(int argc, char *argv[])
         (sMethod == "FractionalInTime" &&
          (nOrder == 0 ||
           (freeParams.size() != 0 &&
+           freeParams.size() != 1 &&
            freeParams.size() != 2 &&
            freeParams.size() != 6))) ||
 
@@ -610,11 +611,12 @@ int main(int argc, char *argv[])
         else if(sMethod == "FractionalInTime" &&
                 (nOrder == 0 ||
                  (freeParams.size() != 0 &&
+                  freeParams.size() != 1 &&
                   freeParams.size() != 2 &&
                   freeParams.size() != 6)))
         {
             std::cout << "method, order, and optionally the free parameters "
-                      << "([alpha,base] | [alpha,base, nQuadPts,sigma,mu0,nu])";
+                      << "([alpha] | [alpha, base] | [alpha, base, nQuadPts,sigma,mu0,nu])";
         }
         else if (sMethod == "Euler")
         {

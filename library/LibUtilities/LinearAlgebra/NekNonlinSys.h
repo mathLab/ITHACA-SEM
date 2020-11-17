@@ -133,6 +133,11 @@ public:
     {
         m_LinSysRelativeTolInNonlin = in;
     }
+    
+    LIB_UTILITIES_EXPORT int GetNtotLinSysIts()
+    {
+        return m_NtotLinSysIts;
+    }
 
 protected:
     NekLinSysIterSharedPtr m_linsol;
@@ -143,6 +148,8 @@ protected:
     std::string m_LinSysIterSovlerType;
 
     int m_totalIterations = 0;
+    int m_NtotLinSysIts = 0;
+
 
     Array<OneD, NekDouble> m_Solution;
     Array<OneD, NekDouble> m_Residual;

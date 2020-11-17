@@ -2985,6 +2985,8 @@ namespace Nektar
         m_TotNewtonIts +=  m_nonlinsol->SolveSystem(ntotal,inarray,
                                                     out, 0, tol2);
 
+        m_TotGMRESIts += m_nonlinsol->GetNtotLinSysIts();
+
         m_TotImpStages++;
         m_StagesPerStep++;
     }

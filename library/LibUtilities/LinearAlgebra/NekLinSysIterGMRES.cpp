@@ -228,7 +228,7 @@ int NekLinSysIterGMRES::DoGMRES(const int nGlobal,
         }
     }
 
-    WARNINGL0(m_converged, "GMRES did not converged !!");
+    WARNINGL1(m_converged, "GMRES did not converged !!");
     return m_totalIterations;
 }
 

@@ -177,7 +177,6 @@ protected:
     
     int m_TotNewtonIts  =0;
     int m_TotGMRESIts   =0;
-    int m_TotOdeRHS     =0;
     int m_TotImpStages  =0;
     
     /// flag to update artificial viscosity

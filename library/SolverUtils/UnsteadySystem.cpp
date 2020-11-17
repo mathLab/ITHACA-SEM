@@ -258,7 +258,6 @@ namespace Nektar
 
             m_TotNewtonIts  = 0;
             m_TotGMRESIts   = 0;
-            m_TotOdeRHS     = 0;
             m_TotImpStages  = 0;
 
 
@@ -399,6 +398,16 @@ namespace Nektar
                          << ss.str() << endl;
                     cpuPrevious = cpuTime;
                     cpuTime = 0.0;
+
+                    if(m_flagImplItsStatistcs)
+                    {
+                        cout 
+                             << "       &&" 
+                             << " TotImpStages= " << m_TotImpStages 
+                             << " TotNewtonIts= " << m_TotNewtonIts
+                             << " TotGMRESIts = " << m_TotGMRESIts  
+                             << endl;
+                    }
                 }
 
                 // Transform data into coefficient space
@@ -563,6 +572,16 @@ namespace Nektar
                 if (m_session->GetSolverInfo("Driver") != "SteadyState")
                 {
                     cout << "Time-integration  : " << intTime  << "s"   << endl;
+                }
+
+                if(m_flagImplItsStatistcs)
+                {
+                    cout 
+                    << "-------------------------------------------" << endl
+                    << "Total Implicit Stages: " << m_TotImpStages << endl
+                    << "Total Newton Steps   : " << m_TotNewtonIts << endl
+                    << "Total GMRES Steps    : " << m_TotGMRESIts  << endl 
+                    << "-------------------------------------------" << endl;
                 }
             }
 

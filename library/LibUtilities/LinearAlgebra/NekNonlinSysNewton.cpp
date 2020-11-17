@@ -90,7 +90,7 @@ int NekNonlinSysNewton::v_SolveSystem(
     Vmath::Vcopy(nGlobal-nDir, pInput, 1, m_Solution, 1);
 
     int ntotal        = nGlobal - nDir;
-    int NtotLinSysIts = 0;
+    m_NtotLinSysIts = 0;
 
     int NttlNonlinIte = 0;
     m_converged       = false;
@@ -112,7 +112,7 @@ int NekNonlinSysNewton::v_SolveSystem(
         NekDouble LinSysTol = GMRESRelativeIteTol * sqrt(m_SysResNorm);
         int ntmpGMRESIts =
             m_linsol->SolveSystem(ntotal, m_Residual, m_DeltSltn, 0, LinSysTol);
-        NtotLinSysIts += ntmpGMRESIts;
+        m_NtotLinSysIts += ntmpGMRESIts;
         Vmath::Vsub(ntotal, m_Solution, 1, m_DeltSltn, 1, m_Solution, 1);
         NttlNonlinIte++;
         m_operator.DoNekSysResEval(m_Solution, m_Residual);

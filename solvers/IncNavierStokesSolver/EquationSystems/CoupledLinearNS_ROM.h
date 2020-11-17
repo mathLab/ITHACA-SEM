@@ -171,6 +171,9 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > trafo_current_para(Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y, Array<OneD, NekDouble> parameter_of_interest, Eigen::VectorXd & ref_f_bnd, Eigen::VectorXd & ref_f_p, Eigen::VectorXd & ref_f_int);
 	int get_curr_elem_pos(int);   
 	double Geo_T(double w, int elemT, int index);
+	void do_geo_trafo();
+	void write_curr_field(std::string filename);
+	
     
     
             
@@ -229,6 +232,8 @@ namespace Nektar
 	Array<OneD, NekDouble> param_vector;   
 	Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection;
 	Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection;
+	Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection_VV;
+	Array<OneD, Array<OneD, NekDouble> > snapshot_y_collection_VV;
 	int f_bnd_size;
 	int f_p_size;
 	int f_int_size;
@@ -281,7 +286,13 @@ namespace Nektar
 	Eigen::VectorXd the_const_one_rhs_proj;        
        	Eigen::MatrixXd curr_xy_projected;
 	Array<OneD, Array<OneD, NekDouble> > myAdvField_Newton;
-
+	Array<OneD, Array<OneD, NekDouble> > general_param_vector;
+	Array<OneD, Array<OneD, NekDouble> > fine_general_param_vector;
+	bool do_trafo_check;
+	bool load_cO_snapshot_data_from_files;
+	int qoi_dof;
+	int fine_grid_dir0;
+	int fine_grid_dir1;
 
 
 

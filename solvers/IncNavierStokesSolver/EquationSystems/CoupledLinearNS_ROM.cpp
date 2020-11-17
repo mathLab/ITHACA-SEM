@@ -5546,5 +5546,220 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
     }
 
+    void CoupledLinearNS_ROM::do_geo_trafo()
+    {
+ 
+	// setting collect_f_all, making use of snapshot_x_collection, snapshot_y_collection
+
+//	cout << "checking if all quantities set: " << endl;
+//	cout << "Nmax " << Nmax << endl;
+//	cout << "curr_f_bnd.size() " << curr_f_bnd.size() << endl;
+//	cout << "curr_f_p.size() " << curr_f_p.size() << endl;
+//	cout << "curr_f_int.size() " << curr_f_int.size() << endl;
+
+	Eigen::MatrixXd collect_f_bnd( curr_f_bnd.size() , Nmax );
+	Eigen::MatrixXd collect_f_p( curr_f_p.size() , Nmax );
+	Eigen::MatrixXd collect_f_int( curr_f_int.size() , Nmax );
+
+	Array<OneD, NekDouble> collected_qoi = Array<OneD, NekDouble> (Nmax);
+
+        for(int i = 0; i < Nmax; ++i)
+	{
+//		cout << "general_param_vector[i][0] " << general_param_vector[i][0] << endl;
+//		cout << "general_param_vector[i][1] " << general_param_vector[i][1] << endl;
+//		cout << "curr_f_bnd.size() " << curr_f_bnd.size() << endl;
+//		cout << "curr_f_p.size() " << curr_f_p.size() << endl;
+//		cout << "curr_f_int.size() " << curr_f_int.size() << endl;
+		// identify the geometry one - introduce in the .h some vars keeping the para_type
+		// here now [0] is geometry 'w' and [1] is k_invis
+
+		//for (int repeat_i = 0; repeat_i < 10; ++repeat_i)
+
+		// setting collect_f_all, making use of snapshot_x_collection, snapshot_y_collection
+
+		// take a timing for trafo_current_para
+
+		Eigen::VectorXd ref_f_bnd;
+		Eigen::VectorXd ref_f_p;
+		Eigen::VectorXd ref_f_int;
+
+		// if using Newton should set myAdvField
+
+		Array<OneD, Array<OneD, NekDouble> > snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_x_collection[i], snapshot_y_collection[i], general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int); 
+
+//		cout << "curr_f_bnd.norm() " << curr_f_bnd.norm() << endl;
+//		cout << "ref_f_bnd.norm() " << ref_f_bnd.norm() << endl;
+
+//		Eigen::VectorXd trafo_f_bnd = curr_f_bnd;
+//		Eigen::VectorXd trafo_f_p = curr_f_p;
+//		Eigen::VectorXd trafo_f_int = curr_f_int;
+
+		if (do_trafo_check)
+		{
+			double L2error = 1;
+			do
+			{
+				Array<OneD, Array<OneD, NekDouble> > prev_snapshot_result_phys_velocity_x_y = snapshot_result_phys_velocity_x_y;
+				snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_result_phys_velocity_x_y[0], snapshot_result_phys_velocity_x_y[1], general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int); // setting collect_f_all, making use of snapshot_x_collection, snapshot_y_collection
+
+//				cout << "curr_f_bnd.norm() " << curr_f_bnd.norm() << endl;
+//				cout << "ref_f_bnd.norm() " << ref_f_bnd.norm() << endl;
+
+//				trafo_f_bnd = curr_f_bnd;
+//				trafo_f_p = curr_f_p;
+//				trafo_f_int = curr_f_int;
+
+				double L2error_x = L2Error(0, prev_snapshot_result_phys_velocity_x_y[0]);
+				double L2error_y = L2Error(1, prev_snapshot_result_phys_velocity_x_y[1]);
+				double L2error_x_ref = L2Error(0);
+				double L2error_y_ref = L2Error(1);
+				L2error = sqrt(L2error_x*L2error_x + L2error_y*L2error_y) / sqrt(L2error_x_ref*L2error_x_ref + L2error_y_ref*L2error_y_ref);
+				cout << "relative L2error w.r.t. current iterate " << L2error << endl;
+//				cout << " L2Error(0, prev_snapshot_result_phys_velocity_x_y[0]) " << L2Error(0, prev_snapshot_result_phys_velocity_x_y[0]) << endl;
+//				cout << " L2Error(1, prev_snapshot_result_phys_velocity_x_y[1]) " << L2Error(1, prev_snapshot_result_phys_velocity_x_y[1]) << endl;
+			}
+			while ((L2error > 2e-5) && (!load_cO_snapshot_data_from_files));
+		}
+
+//		snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_result_phys_velocity_x_y[0], snapshot_result_phys_velocity_x_y[1], general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int);
+
+//		cout << "curr_f_bnd.norm() " << curr_f_bnd.norm() << endl;
+//		cout << "ref_f_bnd.norm() " << ref_f_bnd.norm() << endl;
+
+		if (qoi_dof >= 0)
+		{
+			cout << "converged qoi dof " << snapshot_result_phys_velocity_x_y[1][qoi_dof] << endl;
+			collected_qoi[i] = snapshot_result_phys_velocity_x_y[1][qoi_dof];
+		}
+
+		Eigen::VectorXd trafo_f_bnd = curr_f_bnd;
+		Eigen::VectorXd trafo_f_p = curr_f_p;
+		Eigen::VectorXd trafo_f_int = curr_f_int;
+
+		collect_f_bnd.col(i) = trafo_f_bnd;
+		collect_f_p.col(i) = trafo_f_p;
+		collect_f_int.col(i) = trafo_f_int;
+
+		// need to replace the snapshot data with the converged one for error computations
+		// that means replace data in the snapshot_x_collection and snapshot_y_collection
+		snapshot_x_collection[i] = snapshot_result_phys_velocity_x_y[0];
+		snapshot_y_collection[i] = snapshot_result_phys_velocity_x_y[1];
+
+//		cout << "collect_f_bnd.col(i).norm() " << collect_f_bnd.col(i).norm() << endl;
+
+		// generate the correct string
+		std::stringstream sstm;
+		sstm << "Conv_Oseen_param" << i << ".fld";
+		std::string filename = sstm.str();
+		if (!load_cO_snapshot_data_from_files)
+		{
+			write_curr_field(filename);
+		}
+
+	}
+
+	std::stringstream sstm;
+	sstm << "FOM_qoi.txt";
+	std::string LocROM_txt = sstm.str();
+	const char* outname = LocROM_txt.c_str();
+	ofstream myfile (outname);
+	if (myfile.is_open())
+	{
+		for (int i0 = 0; i0 < Nmax; i0++)
+		{
+			myfile << collected_qoi[i0] << "\t";
+		}
+		myfile.close();
+	}
+	else cout << "Unable to open file"; 	
+
+
+	collect_f_all = Eigen::MatrixXd::Zero( curr_f_bnd.size()+curr_f_p.size()+curr_f_int.size() , Nmax );
+	collect_f_all.block(0,0,collect_f_bnd.rows(),collect_f_bnd.cols()) = collect_f_bnd;
+	collect_f_all.block(collect_f_bnd.rows(),0,collect_f_p.rows(),collect_f_p.cols()) = collect_f_p;
+	collect_f_all.block(collect_f_bnd.rows()+collect_f_p.rows(),0,collect_f_int.rows(),collect_f_int.cols()) = collect_f_int;
+
+	// do the same for VV reference solutions
+    for(int i = fine_grid_dir0*fine_grid_dir1; i < fine_grid_dir0*fine_grid_dir1; ++i)
+	{
+
+		cout << "\n attempting trafo for VV reference solutions \n \n";
+
+
+		double err_threshold = 1e-9;
+		int num_iter = 0;
+		Eigen::VectorXd ref_f_bnd;
+		Eigen::VectorXd ref_f_p;
+		Eigen::VectorXd ref_f_int;
+//		Array<OneD, Array<OneD, NekDouble> > snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_x_collection[0], snapshot_y_collection[0], fine_general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int);
+		Array<OneD, Array<OneD, NekDouble> > snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_x_collection_VV[i], snapshot_y_collection_VV[i], fine_general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int);  
+
+		if (1)
+		{
+			double L2error = 1;
+			do
+			{
+				Array<OneD, Array<OneD, NekDouble> > prev_snapshot_result_phys_velocity_x_y = snapshot_result_phys_velocity_x_y;
+				snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_result_phys_velocity_x_y[0], snapshot_result_phys_velocity_x_y[1], fine_general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int); // setting collect_f_all, making use of snapshot_x_collection, snapshot_y_collection
+
+
+				double L2error_x = L2Error(0, prev_snapshot_result_phys_velocity_x_y[0]);
+				double L2error_y = L2Error(1, prev_snapshot_result_phys_velocity_x_y[1]);
+				double L2error_x_ref = L2Error(0);
+				double L2error_y_ref = L2Error(1);
+				L2error = sqrt(L2error_x*L2error_x + L2error_y*L2error_y) / sqrt(L2error_x_ref*L2error_x_ref + L2error_y_ref*L2error_y_ref);
+				cout << "relative L2error w.r.t. current iterate " << L2error << endl;
+				num_iter++;
+				if (num_iter == 100)
+				{
+					num_iter = 0;
+					err_threshold = err_threshold*10;
+				}
+			}
+			while ((L2error > err_threshold));
+		}
+
+		std::stringstream sstm;
+		sstm << "Conv_ref_Oseen_param" << i << ".fld";
+		std::string filename = sstm.str();
+		if (1)
+		{
+			write_curr_field(filename);
+		}
+
+	}
+
+    }
+
+    void CoupledLinearNS_ROM::write_curr_field(std::string filename)
+    {
+
+        std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_fields.size()+1);
+        std::vector<std::string> variables(m_fields.size()+1);
+        int i;
+        
+        for(i = 0; i < m_fields.size(); ++i)
+        {
+            fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
+            variables[i]   = m_boundaryConditions->GetVariable(i);
+	    if (debug_mode)
+	    {
+		    cout << "variables[i] " << variables[i] << endl;
+	    }
+        }
+
+	if (debug_mode)
+	{
+		cout << "m_singleMode " << m_singleMode << endl;	
+	}
+
+	fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs(), 0.0);  
+        variables[i] = "p"; 
+
+	WriteFld(filename,m_fields[0],fieldcoeffs,variables);
+
+    }
+
+
     
 }

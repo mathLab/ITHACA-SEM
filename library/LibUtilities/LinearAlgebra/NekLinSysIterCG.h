@@ -86,29 +86,29 @@ protected:
     virtual void v_InitObject();
 
     virtual int v_SolveSystem(const int nGlobal,
-                              const Array<OneD, const NekDouble> &pInput,
+                              const TensorOfArray1D<NekDouble> &pInput,
                               Array<OneD, NekDouble> &pOutput, const int nDir,
                               const NekDouble tol, const NekDouble factor);
 
 private:
     /// A-conjugate projection technique
     void DoAconjugateProjection(const int pNumRows,
-                                const Array<OneD, const NekDouble> &pInput,
+                                const TensorOfArray1D<NekDouble> &pInput,
                                 Array<OneD, NekDouble> &pOutput,
                                 const int pNumDir);
 
     /// Actual iterative solve
     void DoConjugateGradient(const int pNumRows,
-                             const Array<OneD, const NekDouble> &pInput,
+                             const TensorOfArray1D<NekDouble> &pInput,
                              Array<OneD, NekDouble> &pOutput,
                              const int pNumDir);
 
     void UpdateKnownSolutions(const int pGlobalBndDofs,
-                              const Array<OneD, const NekDouble> &pSolution,
+                              const TensorOfArray1D<NekDouble> &pSolution,
                               const int pNumDirBndDofs);
 
     NekDouble CalculateAnorm(const int nGlobal,
-                             const Array<OneD, const NekDouble> &in,
+                             const TensorOfArray1D<NekDouble> &in,
                              const int nDir);
 };
 } // namespace LibUtilities

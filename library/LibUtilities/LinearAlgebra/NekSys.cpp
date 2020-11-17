@@ -72,7 +72,7 @@ NekSys::~NekSys()
 }
 
 bool NekSys::v_ConvergenceCheck(const int nIteration,
-                                const Array<OneD, const NekDouble> &Residual,
+                                const TensorOfArray1D<NekDouble> &Residual,
                                 const NekDouble tol)
 {
     bool converged = false;
@@ -93,7 +93,7 @@ bool NekSys::v_ConvergenceCheck(const int nIteration,
  * Natural guess
 **/
 void NekSys::v_NekSysInitialGuess(
-        const Array<OneD, NekDouble> &pInput,
+        const TensorOfArray1D<NekDouble> &pInput,
         Array<OneD, NekDouble> &pguess)
 {
     size_t ndim = pInput.size();

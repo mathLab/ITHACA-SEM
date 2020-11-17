@@ -75,23 +75,30 @@ public:
     LIB_UTILITIES_EXPORT ~NekNonlinSys();
 
     LIB_UTILITIES_EXPORT virtual void v_SetupNekNonlinSystem(
-        const int nGlobal, const Array<OneD, const NekDouble> &pInput,
-        Array<OneD, NekDouble> &pOutput, const int nDir);
+        const int nGlobal, const TensorOfArray1D<NekDouble> &pInput,
+        const TensorOfArray1D<NekDouble> &pSource,
+        const int nDir);
 
-    LIB_UTILITIES_EXPORT const Array<OneD, const NekDouble> &GetRefSolution()
+    LIB_UTILITIES_EXPORT const TensorOfArray1D<NekDouble> &GetRefSolution()
         const
     {
         return m_Solution;
     }
 
-    LIB_UTILITIES_EXPORT const Array<OneD, const NekDouble> &GetRefResidual()
+    LIB_UTILITIES_EXPORT const TensorOfArray1D<NekDouble> &GetRefResidual()
         const
     {
         return m_Residual;
     }
 
+    LIB_UTILITIES_EXPORT const TensorOfArray1D<NekDouble> &GetRefSourceVec()
+        const
+    {
+        return m_SourceVec;
+    }
+
     LIB_UTILITIES_EXPORT void SetRefResidual(
-        const Array<OneD, const NekDouble> &in)
+        const TensorOfArray1D<NekDouble> &in)
     {
         ASSERTL0(in.size() == m_SysDimen, 
             "SetRefResidual dimension not correct");
@@ -140,6 +147,7 @@ protected:
     Array<OneD, NekDouble> m_Solution;
     Array<OneD, NekDouble> m_Residual;
     Array<OneD, NekDouble> m_DeltSltn;
+    Array<OneD, NekDouble> m_SourceVec;
 
     bool m_ResidualUpdated = false;
 

@@ -53,7 +53,7 @@ namespace LibUtilities
 class NekSysOperators
 {
 public:
-    typedef const Array<OneD, NekDouble> InArrayType;
+    typedef const TensorOfArray1D<NekDouble> InArrayType;
     typedef Array<OneD, NekDouble> OutArrayType;
 
     typedef std::function<void(InArrayType &, OutArrayType &, const bool &)>
@@ -253,7 +253,7 @@ public:
     }
 
     LIB_UTILITIES_EXPORT int SolveSystem(
-        const int nGlobal, const Array<OneD, const NekDouble> &pInput,
+        const int nGlobal, const TensorOfArray1D<NekDouble> &pInput,
         Array<OneD, NekDouble> &pOutput, const int nDir,
         const NekDouble tol = 1.0E-7, const NekDouble factor = 1.0)
     {
@@ -261,14 +261,14 @@ public:
     }
 
     LIB_UTILITIES_EXPORT bool ConvergenceCheck(
-        const int nIteration, const Array<OneD, const NekDouble> &Residual,
+        const int nIteration, const TensorOfArray1D<NekDouble> &Residual,
         const NekDouble tol = 1.0E-7)
     {
         return v_ConvergenceCheck(nIteration, Residual, tol);
     }
 
     LIB_UTILITIES_EXPORT virtual void v_NekSysInitialGuess(
-        const Array<OneD, NekDouble> &pInput,
+        const TensorOfArray1D<NekDouble> &pInput,
         Array<OneD, NekDouble> &pguess);
 
 protected:
@@ -294,7 +294,7 @@ protected:
     }
 
     virtual int v_SolveSystem(const int nGlobal,
-                              const Array<OneD, const NekDouble> &pInput,
+                              const TensorOfArray1D<NekDouble> &pInput,
                               Array<OneD, NekDouble> &pOutput, const int nDir,
                               const NekDouble tol, const NekDouble factor)
     {
@@ -304,7 +304,7 @@ protected:
     }
 
     virtual bool v_ConvergenceCheck(
-        const int nIteration, const Array<OneD, const NekDouble> &Residual,
+        const int nIteration, const TensorOfArray1D<NekDouble> &Residual,
         const NekDouble tol);
 };
 } // namespace LibUtilities

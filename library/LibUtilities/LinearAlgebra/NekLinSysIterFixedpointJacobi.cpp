@@ -73,7 +73,7 @@ NekLinSysIterFixedpointJacobi::~NekLinSysIterFixedpointJacobi()
  *
  */
 int NekLinSysIterFixedpointJacobi::v_SolveSystem(
-    const int nGlobal, const Array<OneD, const NekDouble> &pRhs,
+    const int nGlobal, const TensorOfArray1D<NekDouble> &pRhs,
     Array<OneD, NekDouble> &pSolution, const int nDir, const NekDouble tol,
     const NekDouble factor)
 {

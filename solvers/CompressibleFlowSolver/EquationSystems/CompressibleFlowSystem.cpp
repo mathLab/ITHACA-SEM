@@ -2832,9 +2832,9 @@ namespace Nektar
         TensorOfArray1D<NekDouble>          &out,
         const bool                          &flag)
     {
-        const TensorOfArray1D<NekDouble> refsol 
-            = m_nonlinsol->GetRefSolution();
-        NonlinSysEvaluatorCoeff(inarray, out, flag, refsol);
+        const TensorOfArray1D<NekDouble> refsource 
+            = m_nonlinsol->GetRefSourceVec();
+        NonlinSysEvaluatorCoeff(inarray, out, flag, refsource);
     }
 
     void CompressibleFlowSystem::NonlinSysEvaluatorCoeff(
@@ -2979,7 +2979,7 @@ namespace Nektar
         NekDouble tol2 = m_inArrayNorm
                         *m_NewtonAbsoluteIteTol * m_NewtonAbsoluteIteTol;
 
-        m_nonlinsol->v_SetupNekNonlinSystem(ntotal, inarray, out, 0);
+        m_nonlinsol->v_SetupNekNonlinSystem(ntotal, inarray, inarray, 0);
         m_updatePrecMatFlag = UpdatePrecMatCheck(m_nonlinsol->GetRefResidual());
 
         m_TotNewtonIts +=  m_nonlinsol->SolveSystem(ntotal,inarray,
@@ -3167,44 +3167,26 @@ namespace Nektar
             m_nonlinsol->GetRefSolution();
         const Array<OneD, const NekDouble> refres =
             m_nonlinsol->GetRefResidual();
-        NekDouble eps = m_JacobiFreeEps;
-        NekDouble magnitdEstimatMax = 0.0;
-        for (int i = 0; i < m_magnitdEstimat.size(); ++i)
-        {
-            magnitdEstimatMax = max(magnitdEstimatMax, m_magnitdEstimat[i]);
-        }
-        eps *= magnitdEstimatMax;
-        NekDouble oeps = 1.0 / eps;
-        unsigned int nvariables = m_fields.size();
-        unsigned int ntotal     = inarray.size();
-        unsigned int npoints    = ntotal / nvariables;
-        Array<OneD, NekDouble > tmp;
-        TensorOfArray2D<NekDouble> solplus(nvariables);
-        TensorOfArray2D<NekDouble> resplus(nvariables);
-        for (int i = 0; i < nvariables; ++i)
-        {
-            solplus[i] = TensorOfArray1D<NekDouble> (npoints, 0.0);
-            resplus[i] = TensorOfArray1D<NekDouble> (npoints, 0.0);
-        }
+        const Array<OneD, const NekDouble> refsource =
+            m_nonlinsol->GetRefSourceVec();
 
-        for (int i = 0; i < nvariables; ++i)
-        {
-            int noffset = i*npoints;
-            tmp = inarray + noffset;
-            Vmath::Svtvp(npoints, eps, tmp, 1, 
-                         refsol + noffset,1, solplus[i], 1);
-        }
+        NekDouble eps = m_JacobiFreeEps;
+        unsigned int ntotalGlobal     = inarray.size();
+        NekDouble magninarray = Vmath::Dot(ntotalGlobal,inarray,inarray);
+        m_comm->AllReduce(magninarray, Nektar::LibUtilities::ReduceSum);
+        eps *= sqrt( (sqrt(m_inArrayNorm) + 1.0)/magninarray);
+
+        NekDouble oeps = 1.0 / eps;
+        unsigned int ntotal     = inarray.size();
+        TensorOfArray1D<NekDouble> solplus{ntotal, 0.0};
+        TensorOfArray1D<NekDouble> resplus{ntotal, 0.0};
+
+        Vmath::Svtvp(ntotal, eps, inarray, 1, refsol, 1, solplus, 1);
+
+        NonlinSysEvaluatorCoeff(solplus, resplus, flag, refsource);
         
-        NonlinSysEvaluatorCoeff(solplus, resplus, solplus);
-        
-        for (int i = 0; i < nvariables; ++i)
-        {
-            int noffset = i * npoints;
-            tmp = out + noffset;
-            Vmath::Vsub(npoints, &resplus[i][0], 1, 
-                       &refres[0] + noffset, 1, &tmp[0],1);
-            Vmath::Smul(npoints, oeps, &tmp[0], 1, &tmp[0], 1);
-        }
+        Vmath::Vsub(ntotal, &resplus[0], 1, &refres[0], 1, &out[0],1);
+        Vmath::Smul(ntotal, oeps, &out[0], 1, &out[0], 1);
        
         return;
     }

@@ -65,6 +65,7 @@ void NekNonlinSysNewton::v_InitObject()
     NekSys::v_InitObject();
     m_Residual = Array<OneD, NekDouble>(m_SysDimen, 0.0);
     m_DeltSltn = Array<OneD, NekDouble>(m_SysDimen, 0.0);
+    m_SourceVec = Array<OneD, NekDouble>(m_SysDimen, 0.0);
 }
 
 NekNonlinSysNewton::~NekNonlinSysNewton()
@@ -75,7 +76,7 @@ NekNonlinSysNewton::~NekNonlinSysNewton()
  *
  **/
 int NekNonlinSysNewton::v_SolveSystem(
-    const int nGlobal, const Array<OneD, const NekDouble> &pInput,
+    const int nGlobal, const TensorOfArray1D<NekDouble> &pInput,
     Array<OneD, NekDouble> &pOutput, const int nDir, const NekDouble tol,
     const NekDouble factor)
 {
@@ -83,7 +84,10 @@ int NekNonlinSysNewton::v_SolveSystem(
 
     int nwidthcolm = 12;
 
-    v_SetupNekNonlinSystem(nGlobal, pInput, pOutput, nDir);
+    v_SetupNekNonlinSystem(nGlobal, pInput, pInput, nDir);
+
+    m_Solution = pOutput;
+    Vmath::Vcopy(nGlobal-nDir, pInput, 1, m_Solution, 1);
 
     int ntotal        = nGlobal - nDir;
     int NtotLinSysIts = 0;
@@ -130,7 +134,7 @@ int NekNonlinSysNewton::v_SolveSystem(
 }
 
 bool NekNonlinSysNewton::v_ConvergenceCheck(
-    const int nIteration, const Array<OneD, const NekDouble> &Residual,
+    const int nIteration, const TensorOfArray1D<NekDouble> &Residual,
     const NekDouble tol)
 {
     bool converged     = false;
@@ -203,23 +207,24 @@ void NekNonlinSysNewton::CalcInexactNewtonForcing(
 }
 
 void NekNonlinSysNewton::v_SetupNekNonlinSystem(
-    const int nGlobal, const Array<OneD, const NekDouble> &pInput,
-    Array<OneD, NekDouble> &pOutput, const int nDir)
+    const int nGlobal, const TensorOfArray1D<NekDouble> &pInput,
+    const TensorOfArray1D<NekDouble> &pSource,
+    const int nDir)
 {
-    m_linsol->SetSysOperators(m_operator);
+    boost::ignore_unused(nGlobal, nDir);
 
     ASSERTL0(0 == nDir, "0 != nDir not tested");
     ASSERTL0(m_SysDimen == nGlobal, "m_SysDimen!=nGlobal");
 
-    int ntotal        = nGlobal - nDir;
-    m_Solution = pOutput;
-    Vmath::Vcopy(ntotal, pInput, 1, m_Solution, 1);
-    
+    m_SourceVec = pSource;
+    Vmath::Vcopy(nGlobal-nDir, pSource, 1, m_SourceVec, 1);
+
     if (!m_ResidualUpdated)
     {
-        m_operator.DoNekSysResEval(m_Solution, m_Residual);
+        m_operator.DoNekSysResEval(pInput, m_Residual);
         m_ResidualUpdated = true;
     }
+    m_linsol->SetSysOperators(m_operator);
 }
 
 

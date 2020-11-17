@@ -47,7 +47,7 @@ using namespace Nektar::LibUtilities;
 
 class LinSysDemo
 {
-    typedef const Array<OneD, NekDouble> InArrayType;
+    typedef const TensorOfArray1D<NekDouble> InArrayType;
     typedef Array<OneD, NekDouble> OutArrayType;
 
 public:
@@ -103,7 +103,7 @@ public:
                const bool &flag = false)
     {
         boost::ignore_unused(flag);
-        const Array<OneD, const NekDouble> refsol =
+        const TensorOfArray1D<NekDouble> refsol =
             m_nonlinsol->GetRefSolution();
 
         NekDouble x = refsol[0];

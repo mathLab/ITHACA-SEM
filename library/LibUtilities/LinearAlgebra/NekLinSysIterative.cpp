@@ -199,7 +199,7 @@ namespace Nektar
      */
     int NekLinSysIterative::SolveLinearSystem(
         const int nGlobal,
-        const Array<OneD, const NekDouble> &pInput,
+        const TensorOfArray1D<NekDouble> &pInput,
         Array<OneD,      NekDouble> &pOutput,
         const int nDir,
         const NekDouble  tol,
@@ -239,7 +239,7 @@ namespace Nektar
 
     int  NekLinSysIterative::DoGMRES(
         const int                          nGlobal,
-        const Array<OneD, const NekDouble> &pInput,
+        const TensorOfArray1D<NekDouble> &pInput,
         Array<OneD,      NekDouble> &pOutput,
         const int                          nDir)
     {
@@ -345,7 +345,7 @@ namespace Nektar
         const bool                          restarted,
         const bool                          truncted,
         const int                           nGlobal,
-        const Array<OneD, const NekDouble>  &pInput,
+        const TensorOfArray1D<NekDouble>  &pInput,
         Array<OneD,      NekDouble>         &pOutput,
         const int                           nDir)
     {
@@ -733,7 +733,7 @@ namespace Nektar
     void  NekLinSysIterative::DoBackward(
         const int  number,
         Array<OneD, Array<OneD, NekDouble> > &A,
-        const Array<OneD, const NekDouble> &b,
+        const TensorOfArray1D<NekDouble> &b,
         Array <OneD, NekDouble> &y
     )
     {

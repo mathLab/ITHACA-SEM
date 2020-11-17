@@ -97,7 +97,7 @@ NekLinSysIterCG::~NekLinSysIterCG()
  *
  */
 int NekLinSysIterCG::v_SolveSystem(const int nGlobal,
-                                   const Array<OneD, const NekDouble> &pInput,
+                                   const TensorOfArray1D<NekDouble> &pInput,
                                    Array<OneD, NekDouble> &pOutput,
                                    const int nDir, const NekDouble tol,
                                    const NekDouble factor)
@@ -126,7 +126,7 @@ int NekLinSysIterCG::v_SolveSystem(const int nGlobal,
  * (P.F.Fischer, Comput. Methods Appl. Mech. Engrg. 163, 1998)
  */
 void NekLinSysIterCG::DoAconjugateProjection(
-    const int nGlobal, const Array<OneD, const NekDouble> &pInput,
+    const int nGlobal, const TensorOfArray1D<NekDouble> &pInput,
     Array<OneD, NekDouble> &pOutput, const int nDir)
 {
 
@@ -218,7 +218,7 @@ void NekLinSysIterCG::DoAconjugateProjection(
  * A-norm(x) := sqrt( < x, Ax > )
  */
 NekDouble NekLinSysIterCG::CalculateAnorm(
-    const int nGlobal, const Array<OneD, const NekDouble> &in, const int nDir)
+    const int nGlobal, const TensorOfArray1D<NekDouble> &in, const int nDir)
 {
     // Get vector sizes
     int nNonDir = nGlobal - nDir;
@@ -239,7 +239,7 @@ NekDouble NekLinSysIterCG::CalculateAnorm(
  * Performs normalisation of input vector wrt A-norm.
  */
 void NekLinSysIterCG::UpdateKnownSolutions(
-    const int nGlobal, const Array<OneD, const NekDouble> &newX, const int nDir)
+    const int nGlobal, const TensorOfArray1D<NekDouble> &newX, const int nDir)
 {
     // Get vector sizes
     int nNonDir = nGlobal - nDir;
@@ -326,7 +326,7 @@ void NekLinSysIterCG::UpdateKnownSolutions(
  * @param       pOutput     Solution vector of all DOFs.  
  */
 void NekLinSysIterCG::DoConjugateGradient(
-    const int nGlobal, const Array<OneD, const NekDouble> &pInput,
+    const int nGlobal, const TensorOfArray1D<NekDouble> &pInput,
     Array<OneD, NekDouble> &pOutput, const int nDir)
 {
     // Get vector sizes

@@ -57,10 +57,10 @@ namespace Nektar
     class LinSysOperators
     {
     public:
-        // typedef const Array<OneD, const Array<OneD, NekDouble> > InArrayType;
+        // typedef const Array<OneD, const TensorOfArray1D<NekDouble> > InArrayType;
         // typedef       Array<OneD,       Array<OneD, NekDouble> > OutArrayType;
 
-        typedef const Array<OneD, NekDouble> InArrayType;
+        typedef const TensorOfArray1D<NekDouble> InArrayType;
         typedef       Array<OneD, NekDouble> OutArrayType;
         
         typedef std::function< void (InArrayType&, OutArrayType&, const bool&) >                                   FunctorType1;
@@ -173,7 +173,7 @@ namespace Nektar
             
         int SolveLinearSystem(
             const int nGlobal,
-            const Array<OneD, const NekDouble> &pInput,
+            const TensorOfArray1D<NekDouble> &pInput,
                   Array<OneD,      NekDouble> &pOutput,
             const int nDir,
             const NekDouble  tol    =   1.0E-7,
@@ -237,16 +237,16 @@ namespace Nektar
         /// Actual iterative solve-GMRS
         int DoGMRES(
             const int pNumRows,
-            const Array<OneD, const NekDouble> &pInput,
+            const TensorOfArray1D<NekDouble> &pInput,
                   Array<OneD,       NekDouble> &pOutput,
             const int pNumDir);
         void UpdateKnownSolutions(
             const int pGlobalBndDofs,
-            const Array<OneD, const NekDouble> &pSolution,
+            const TensorOfArray1D<NekDouble> &pSolution,
             const int pNumDirBndDofs);
         NekDouble CalculateAnorm(
             const int nGlobal,
-            const Array<OneD, const NekDouble> &in,
+            const TensorOfArray1D<NekDouble> &in,
             const int nDir);
         
         /// Actual iterative gmres solver for one restart
@@ -254,7 +254,7 @@ namespace Nektar
             const bool                         restarted,
             const bool                         truncted,
             const int                          nGlobal,
-            const Array<OneD, const NekDouble> &pInput,
+            const TensorOfArray1D<NekDouble> &pInput,
             Array<OneD,      NekDouble> &pOutput,
             const int                          nDir);
         
@@ -289,7 +289,7 @@ namespace Nektar
         void DoBackward(
             const int  number,
             Array<OneD, Array<OneD, NekDouble> > &A,
-            const Array<OneD, const NekDouble> &b,
+            const TensorOfArray1D<NekDouble> &b,
             Array <OneD, NekDouble> &y
         );
         static std::string lookupIds[];

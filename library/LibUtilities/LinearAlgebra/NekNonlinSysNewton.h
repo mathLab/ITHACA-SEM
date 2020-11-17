@@ -83,12 +83,12 @@ protected:
 
     virtual int v_SolveSystem(
         const int nGlobal,
-        const Array<OneD, const NekDouble> &pInput,
+        const TensorOfArray1D<NekDouble> &pInput,
         Array<OneD, NekDouble> &pOutput, const int nDir,
         const NekDouble tol, const NekDouble factor);
 
     virtual bool v_ConvergenceCheck(
-        const int nIteration, const Array<OneD, const NekDouble> &Residual,
+        const int nIteration, const TensorOfArray1D<NekDouble> &Residual,
         const NekDouble tol);
     void CalcInexactNewtonForcing(
         const int       &k,
@@ -97,8 +97,9 @@ protected:
         NekDouble       &forcing);
 
     virtual void v_SetupNekNonlinSystem(
-        const int nGlobal, const Array<OneD, const NekDouble> &pInput,
-        Array<OneD, NekDouble> &pOutput, const int nDir);
+        const int nGlobal, const TensorOfArray1D<NekDouble> &pInput,
+        const TensorOfArray1D<NekDouble> &pSource,
+        const int nDir);
 
 
 private:

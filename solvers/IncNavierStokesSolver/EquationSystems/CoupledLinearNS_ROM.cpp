@@ -1414,7 +1414,7 @@ namespace Nektar
 			}
 			else if (parameter_types[0] == 1)
 			{
-				cout << "missing compute snapshots geo para" << endl;
+				cout << "missing compute snapshots function for geometric parameters" << endl;
 				return;
 			}
 		}
@@ -4258,4 +4258,1293 @@ namespace Nektar
     {
         return m_session->GetVariables().size();
     }
+    
+
+    Array<OneD, Array<OneD, NekDouble> > CoupledLinearNS_ROM::trafo_current_para(Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y, Array<OneD, NekDouble> parameter_of_interest, Eigen::VectorXd & ref_f_bnd, Eigen::VectorXd & ref_f_p, Eigen::VectorXd & ref_f_int)
+    {
+
+	double w = parameter_of_interest[0];	
+	double mKinvis = parameter_of_interest[1];
+	StdRegions::StdExpansionSharedPtr locExp;
+        Array<OneD, unsigned int> bmap,imap; 
+
+	// verify and transform to bnd / p / int the snapshot data
+
+        int nz_loc;
+        nz_loc = 1;
+
+        int nel  = m_fields[m_velocity[0]]->GetNumElmts();
+        int nvel   = m_velocity.size();
+        int nsize_bndry = nvel*m_fields[m_velocity[0]]->GetExp(0)->NumBndryCoeffs()*nz_loc;
+        int nbndry = nsize_bndry;
+        int nsize_bndry_p1 = nsize_bndry+nz_loc;
+        int nsize_int = (nvel*m_fields[m_velocity[0]]->GetExp(0)->GetNcoeffs()*nz_loc - nsize_bndry);
+	int nint = nsize_int;
+        int nsize_p = m_pressure->GetExp(0)->GetNcoeffs()*nz_loc;
+//	cout << "nsize_int " << nsize_int << endl;
+//	cout << "nsize_p " << nsize_p << endl;
+        int nsize_p_m1 = nsize_p-nz_loc;
+        int Ahrows = nsize_bndry_p1;
+
+	Array<OneD, Eigen::MatrixXd > Ah_elem(m_fields[0]->GetNumElmts()); // , nsize_bndry_p1, nsize_bndry_p1
+	Array<OneD, Eigen::MatrixXd > Bh_elem(m_fields[0]->GetNumElmts()); // 
+	Array<OneD, Eigen::MatrixXd > B_elem(m_fields[0]->GetNumElmts()); // , nsize_bndry, nsize_int
+	Array<OneD, Eigen::MatrixXd > C_elem(m_fields[0]->GetNumElmts()); // , nsize_bndry, nsize_int
+	Array<OneD, Eigen::MatrixXd > D_elem(m_fields[0]->GetNumElmts()); // , nsize_int, nsize_int
+	Array<OneD, Eigen::MatrixXd > Dbnd_elem(m_fields[0]->GetNumElmts()); // , nsize_p, nsize_bndry
+	Array<OneD, Eigen::MatrixXd > Dint_elem(m_fields[0]->GetNumElmts()); // , nsize_p, nsize_int
+	Array<OneD, Eigen::MatrixXd > Ch_elem(m_fields[0]->GetNumElmts()); // nsize_p_m1, nsize_bndry_p1
+	Array<OneD, Eigen::MatrixXd > Dh_elem(m_fields[0]->GetNumElmts()); // nsize_p_m1, nsize_p_m1
+	
+	// set the newton forcing in terms of the current iterate
+	myAdvField_Newton = Array<OneD, Array<OneD, NekDouble> > (2);
+	myAdvField_Newton[0] = Array<OneD, NekDouble> (m_fields[0]->GetTotPoints(),0.0);
+	myAdvField_Newton[1] = Array<OneD, NekDouble> (m_fields[0]->GetTotPoints(),0.0);
+	for (int i = 0; i<m_fields[0]->GetTotPoints(); ++i)
+	{
+		myAdvField_Newton[0][i] = snapshot_x[i];
+		myAdvField_Newton[1][i] = snapshot_y[i];
+	}
+
+
+	for (int curr_elem = 0; curr_elem < m_fields[0]->GetNumElmts(); ++curr_elem)
+	{
+		int curr_elem_pos = get_curr_elem_pos(curr_elem);
+		double detT = Geo_T(w, curr_elem_pos, 0);
+		double Ta = Geo_T(w, curr_elem_pos, 1);
+		double Tb = Geo_T(w, curr_elem_pos, 2);
+		double Tc = Geo_T(w, curr_elem_pos, 3);
+		double Td = Geo_T(w, curr_elem_pos, 4);
+		double c00 = Ta*Ta + Tb*Tb;
+		double c01 = Ta*Tc + Tb*Td;
+		double c11 = Tc*Tc + Td*Td;
+                locExp = m_fields[m_velocity[0]]->GetExp(curr_elem);
+                locExp->GetBoundaryMap(bmap);
+                locExp->GetInteriorMap(imap);
+                int ncoeffs = m_fields[m_velocity[0]]->GetExp(curr_elem)->GetNcoeffs();
+                int nphys   = m_fields[m_velocity[0]]->GetExp(curr_elem)->GetTotPoints();
+		int pqsize  = m_pressure->GetExp(curr_elem)->GetTotPoints();
+                int npoints = locExp->GetTotPoints();
+                int phys_offset = m_fields[m_velocity[0]]->GetPhys_Offset(curr_elem);
+                Array<OneD, Array<OneD, NekDouble> > AdvDeriv(nvel*nvel);
+//                Array<OneD, NekDouble> tmpphys = m_fields[0]->UpdatePhys();
+                Array<OneD, NekDouble> tmpphys = Array<OneD, NekDouble>(npoints,0.0);
+//		cout << "ncoeffs " << ncoeffs << endl;
+//		cout << "nphys " << nphys << endl;
+//		cout << "pqsize " << pqsize << endl;   // pqsize == nphys and ncoeffs == nphys / 2 when?
+
+                int nbmap = bmap.size();
+                int nimap = imap.size();
+		Array<OneD, double> curr_snap_x_part(nphys, 0.0);
+		Array<OneD, double> curr_snap_y_part(nphys, 0.0);
+		for (int i = 0; i < nphys; ++i)
+		{
+			curr_snap_x_part[i] = snapshot_x[curr_elem*nphys + i];
+			curr_snap_y_part[i] = snapshot_y[curr_elem*nphys + i];
+		}
+
+                // Calculate derivative of base flow 
+                if(use_Newton)
+                {
+                    int cnt = 0;
+                    AdvDeriv[0] = Array<OneD, NekDouble>(nvel*nvel*npoints);
+                    for(int nv = 0; nv < nvel; ++nv)
+                    {
+                        for(int nv1 = 0; nv1 < nvel; ++nv1)
+                        {
+                            if(cnt < nvel*nvel-1)
+                            {
+                                AdvDeriv[cnt+1] = AdvDeriv[cnt] + npoints;
+                                ++cnt;
+                            }
+                            locExp->PhysDeriv(MultiRegions::DirCartesianMap[nv1],myAdvField_Newton[nv] + phys_offset, AdvDeriv[nv*nvel+nv1]);
+                        }
+                    }
+                }
+                
+
+		Array<OneD, double> Ah_ele_vec(Ahrows*Ahrows, 0.0);
+		Array<OneD, double> B_ele_vec(nsize_bndry*nsize_int, 0.0);
+		Array<OneD, double> C_ele_vec(nsize_bndry*nsize_int, 0.0);
+		Array<OneD, double> D_ele_vec(nsize_int*nsize_int, 0.0);
+		Array<OneD, double> Dbnd_ele_vec(nsize_p*nsize_bndry, 0.0);
+		Array<OneD, double> Dint_ele_vec(nsize_p*nsize_int, 0.0);
+
+		for (int i = 0; i < nbmap; ++i)
+		{
+			Array<OneD, double> coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_x_coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_y_coeffs(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_0_0(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_0_1(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_1_0(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_1_1(ncoeffs, 0.0);
+			Array<OneD, double> phys(nphys, 0.0);
+			Array<OneD, double> deriv_0(pqsize, 0.0);
+			Array<OneD, double> deriv_1(pqsize, 0.0);
+
+			coeffs[bmap[i]] = 1.0;
+			m_fields[m_velocity[0]]->GetExp(curr_elem)->BwdTrans(coeffs,phys);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[0], phys, deriv_0);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[1], phys, deriv_1);
+
+			locExp->IProductWRTDerivBase(0, deriv_0, coeffs_0_0);
+			locExp->IProductWRTDerivBase(1, deriv_0, coeffs_0_1);
+			locExp->IProductWRTDerivBase(0, deriv_1, coeffs_1_0);
+			locExp->IProductWRTDerivBase(1, deriv_1, coeffs_1_1);
+
+			for (int k = 0; k < 2; ++k)
+			{
+				for (int j = 0; j < nbmap; ++j)
+				{
+					Ah_ele_vec[ i+k*nbmap + (j+k*nbmap)*Ahrows ] += mKinvis * detT * ( c00*coeffs_0_0[int(bmap[j])] + c01*(coeffs_0_1[int(bmap[j])] + coeffs_1_0[int(bmap[j])]) + c11*coeffs_1_1[int(bmap[j])] );
+				}
+				for (int j = 0; j < nimap; ++j)
+				{
+					B_ele_vec[i+k*nbmap + (j+k*nimap)*nsize_bndry] += mKinvis * detT * ( c00*coeffs_0_0[int(imap[j])] + c01*(coeffs_0_1[int(imap[j])] + coeffs_1_0[int(imap[j])]) + c11*coeffs_1_1[int(imap[j])] );
+				}
+				if (k == 0)
+				{
+					Array<OneD, double> tmpphys_x(nphys, 0.0);
+					std::transform( curr_snap_x_part.begin(), curr_snap_x_part.end(), deriv_0.begin(), tmpphys_x.begin(),  std::multiplies<double>() ); 
+/*					for (int il = 0; il < nphys; ++il)
+					{
+						cout << "curr_snap_x_part[il] " << curr_snap_x_part[il] << endl;
+						cout << "deriv_0[il] " << deriv_0[il] << endl;
+						cout << "tmpphys_x[il] " << tmpphys_x[il] << endl;
+					} */
+					Array<OneD, double> tmpphys_y(nphys, 0.0);
+					std::transform( curr_snap_x_part.begin(), curr_snap_x_part.end(), deriv_1.begin(), tmpphys_y.begin(),  std::multiplies<double>() ); 
+					locExp->IProductWRTBase(tmpphys_x, adv_x_coeffs);
+					locExp->IProductWRTBase(tmpphys_y, adv_y_coeffs);
+					for (int nv = 0; nv < 2; ++nv)
+					{
+						for (int j = 0; j < nbmap; ++j)
+						{
+							Ah_ele_vec[ j+nv*nbmap + (i+nv*nbmap)*Ahrows ] += detT * (Ta * adv_x_coeffs[int(bmap[j])] + Tc * adv_y_coeffs[int(bmap[j])]);
+						}
+						for (int j = 0; j < nimap; ++j)
+						{
+							C_ele_vec[ i+nv*nbmap + (j+nv*nimap)*nsize_bndry ] += detT * (Ta * adv_x_coeffs[int(imap[j])] + Tc * adv_y_coeffs[int(imap[j])]);
+						}
+					}
+			            	int psize   = m_pressure->GetExp(curr_elem)->GetNcoeffs();
+			               	Array<OneD, NekDouble> pcoeffs_x(psize);
+			               	Array<OneD, NekDouble> pcoeffs_y(psize);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_0,pcoeffs_x);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_1,pcoeffs_y);
+					for (int il = 0; il < nsize_p; ++il)
+					{
+						Dbnd_ele_vec[ (k*nbmap + i)*nsize_p + il ] = detT * (Ta * pcoeffs_x[il] + Tc * pcoeffs_y[il]);
+					}
+				}
+				if (k == 1)
+				{
+					Array<OneD, double> tmpphys_x(nphys, 0.0);
+					std::transform( curr_snap_y_part.begin(), curr_snap_y_part.end(), deriv_0.begin(), tmpphys_x.begin(),  std::multiplies<double>() ); 
+/*					for (int il = 0; il < nphys; ++il)
+					{
+						cout << "curr_snap_x_part[il] " << curr_snap_x_part[il] << endl;
+						cout << "deriv_0[il] " << deriv_0[il] << endl;
+						cout << "tmpphys_x[il] " << tmpphys_x[il] << endl;
+					} */
+					Array<OneD, double> tmpphys_y(nphys, 0.0);
+					std::transform( curr_snap_y_part.begin(), curr_snap_y_part.end(), deriv_1.begin(), tmpphys_y.begin(),  std::multiplies<double>() ); 
+					locExp->IProductWRTBase(tmpphys_x, adv_x_coeffs);
+					locExp->IProductWRTBase(tmpphys_y, adv_y_coeffs);
+					for (int nv = 0; nv < 2; ++nv)
+					{
+						for (int j = 0; j < nbmap; ++j)
+						{
+							Ah_ele_vec[ j+nv*nbmap + (i+nv*nbmap)*Ahrows ] += detT * (Tb * adv_x_coeffs[int(bmap[j])] + Td * adv_y_coeffs[int(bmap[j])]);
+						}
+						for (int j = 0; j < nimap; ++j)
+						{
+							C_ele_vec[ i+nv*nbmap + (j+nv*nimap)*nsize_bndry ] += detT * (Tb * adv_x_coeffs[int(imap[j])] + Td * adv_y_coeffs[int(imap[j])]);
+						}
+					}
+			            	int psize   = m_pressure->GetExp(curr_elem)->GetNcoeffs();
+			               	Array<OneD, NekDouble> pcoeffs_x(psize);
+			               	Array<OneD, NekDouble> pcoeffs_y(psize);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_0,pcoeffs_x);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_1,pcoeffs_y);
+					for (int il = 0; il < nsize_p; ++il)
+					{
+						Dbnd_ele_vec[ (k*nbmap + i)*nsize_p + il ] = detT * (Tb * pcoeffs_x[il] + Td * pcoeffs_y[il]);
+					}
+
+
+				}
+
+
+                        if(use_Newton)
+                        {
+                            for(int nv = 0; nv < nvel; ++nv)
+                            {
+                                // u' . Grad U terms 
+                                Vmath::Vmul(npoints,phys,1, AdvDeriv[k*nvel+nv], 1,tmpphys,1);
+                                locExp->IProductWRTBase(tmpphys,coeffs);
+                                
+                                for(int n1 = 0; n1 < nz_loc; ++n1) // n1 is only zero
+                                {
+                                    for(int j = 0; j < nbmap; ++j)
+                                    {
+                                        Ah_ele_vec[j+(k*nz_loc+n1)*nbmap + (i+(nv*nz_loc+n1)*nbmap)*Ahrows] += coeffs[bmap[j]];
+                                    }
+                                    
+                                    for(int j = 0; j < nimap; ++j)
+                                    {
+                                        C_ele_vec[i+(nv*nz_loc+n1)*nbmap + (j+(k*nz_loc+n1)*nimap)*nbndry] += coeffs[imap[j]];
+                                    }
+                                }
+                            } 
+			}
+
+			} //for (int k = 0; k < 2; ++k)
+
+
+		} // for (int i = 0; i < nbmap; ++i)
+		for (int i = 0; i < nimap; ++i)
+		{
+			
+			Array<OneD, double> coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_x_coeffs(ncoeffs, 0.0);
+			Array<OneD, double> adv_y_coeffs(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_0_0(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_0_1(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_1_0(ncoeffs, 0.0);
+			Array<OneD, double> coeffs_1_1(ncoeffs, 0.0);
+			Array<OneD, double> phys(nphys, 0.0);
+			Array<OneD, double> deriv_0(pqsize, 0.0);
+			Array<OneD, double> deriv_1(pqsize, 0.0);
+			coeffs[imap[i]] = 1.0;
+			m_fields[m_velocity[0]]->GetExp(curr_elem)->BwdTrans(coeffs,phys);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[0], phys, deriv_0);
+			locExp->PhysDeriv(MultiRegions::DirCartesianMap[1], phys, deriv_1);
+
+			locExp->IProductWRTDerivBase(0, deriv_0, coeffs_0_0);
+			locExp->IProductWRTDerivBase(1, deriv_0, coeffs_0_1);
+			locExp->IProductWRTDerivBase(0, deriv_1, coeffs_1_0);
+			locExp->IProductWRTDerivBase(1, deriv_1, coeffs_1_1);
+
+			for (int k = 0; k < 2; ++k)
+			{
+				for (int j = 0; j < nbmap; ++j)
+				{
+					C_ele_vec[ j+k*nbmap + (i+k*nimap)*nsize_bndry ] += mKinvis * detT * ( c00*coeffs_0_0[int(bmap[j])] + c01*(coeffs_0_1[int(bmap[j])] + coeffs_1_0[int(bmap[j])]) + c11*coeffs_1_1[int(bmap[j])] );
+				}
+				for (int j = 0; j < nimap; ++j)
+				{
+					D_ele_vec[i+k*nimap + (j+k*nimap)*nsize_int] += mKinvis * detT * ( c00*coeffs_0_0[int(imap[j])] + c01*(coeffs_0_1[int(imap[j])] + coeffs_1_0[int(imap[j])]) + c11*coeffs_1_1[int(imap[j])] );
+				}
+				if (k == 0)
+				{
+					Array<OneD, double> tmpphys_x(nphys, 0.0);
+					std::transform( curr_snap_x_part.begin(), curr_snap_x_part.end(), deriv_0.begin(), tmpphys_x.begin(),  std::multiplies<double>() ); 
+					Array<OneD, double> tmpphys_y(nphys, 0.0);
+					std::transform( curr_snap_x_part.begin(), curr_snap_x_part.end(), deriv_1.begin(), tmpphys_y.begin(),  std::multiplies<double>() ); 
+					locExp->IProductWRTBase(tmpphys_x, adv_x_coeffs);
+					locExp->IProductWRTBase(tmpphys_y, adv_y_coeffs);
+					for (int nv = 0; nv < 2; ++nv)
+					{
+						for (int j = 0; j < nbmap; ++j)
+						{
+							B_ele_vec[ j+nv*nbmap + (i+nv*nimap)*nsize_bndry ] += detT * (Ta * adv_x_coeffs[int(bmap[j])] + Tc * adv_y_coeffs[int(bmap[j])]);
+						}
+						for (int j = 0; j < nimap; ++j)
+						{
+							D_ele_vec[ j+nv*nimap + (i+nv*nimap)*nsize_int ]  += detT * (Ta * adv_x_coeffs[int(imap[j])] + Tc * adv_y_coeffs[int(imap[j])]);
+						}
+					}
+			            	int psize   = m_pressure->GetExp(curr_elem)->GetNcoeffs();
+			               	Array<OneD, NekDouble> pcoeffs_x(psize);
+			               	Array<OneD, NekDouble> pcoeffs_y(psize);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_0,pcoeffs_x);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_1,pcoeffs_y);
+					for (int il = 0; il < nsize_p; ++il)
+					{
+						Dint_ele_vec[ (k*nimap + i)*nsize_p + il ] = detT * (Ta * pcoeffs_x[il] + Tc * pcoeffs_y[il]);
+					}
+				}
+				if (k == 1)
+				{
+					Array<OneD, double> tmpphys_x(nphys, 0.0);
+					std::transform( curr_snap_y_part.begin(), curr_snap_y_part.end(), deriv_0.begin(), tmpphys_x.begin(),  std::multiplies<double>() ); 
+					Array<OneD, double> tmpphys_y(nphys, 0.0);
+					std::transform( curr_snap_y_part.begin(), curr_snap_y_part.end(), deriv_1.begin(), tmpphys_y.begin(),  std::multiplies<double>() ); 
+					locExp->IProductWRTBase(tmpphys_x, adv_x_coeffs);
+					locExp->IProductWRTBase(tmpphys_y, adv_y_coeffs);
+					for (int nv = 0; nv < 2; ++nv)
+					{
+						for (int j = 0; j < nbmap; ++j)
+						{
+							B_ele_vec[ j+nv*nbmap + (i+nv*nimap)*nsize_bndry ] += detT * (Tb * adv_x_coeffs[int(bmap[j])] + Td * adv_y_coeffs[int(bmap[j])]);
+						}
+						for (int j = 0; j < nimap; ++j)
+						{
+							D_ele_vec[ j+nv*nimap + (i+nv*nimap)*nsize_int ]  += detT * (Tb * adv_x_coeffs[int(imap[j])] + Td * adv_y_coeffs[int(imap[j])]);
+						}
+					}
+			            	int psize   = m_pressure->GetExp(curr_elem)->GetNcoeffs();
+			               	Array<OneD, NekDouble> pcoeffs_x(psize);
+			               	Array<OneD, NekDouble> pcoeffs_y(psize);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_0,pcoeffs_x);
+					m_pressure->GetExp(curr_elem)->IProductWRTBase(deriv_1,pcoeffs_y);
+					for (int il = 0; il < nsize_p; ++il)
+					{
+						Dint_ele_vec[ (k*nimap + i)*nsize_p + il ] = detT * (Tb * pcoeffs_x[il] + Td * pcoeffs_y[il]);
+					}
+				}
+
+                        if(use_Newton)
+                        {
+                            for(int nv = 0; nv < nvel; ++nv)
+                            {
+                                // u' . Grad U terms 
+                                Vmath::Vmul(npoints,phys,1, AdvDeriv[k*nvel+nv], 1,tmpphys,1);
+                                locExp->IProductWRTBase(tmpphys,coeffs);
+                                
+                                for(int n1 = 0; n1 < nz_loc; ++n1) // n1 is only zero
+                                {
+                                    for(int j = 0; j < nbmap; ++j)
+                                    {
+                                        B_ele_vec[j+(k*nz_loc+n1)*nbmap + (i+(nv*nz_loc+n1)*nimap)*nbndry] += coeffs[bmap[j]];
+                                    }
+                                    
+                                    for(int j = 0; j < nimap; ++j)
+                                    {
+                                        D_ele_vec[j+(k*nz_loc+n1)*nimap + (i+(nv*nz_loc+n1)*nimap)*nint] += coeffs[imap[j]];
+                                    }
+                                }
+                            } 
+			}
+
+
+
+			} //for (int k = 0; k < 2; ++k)
+
+
+		}
+
+ 		// chosen choice: redo the nektar++ approach
+		// possible alternatives:
+		// build instead the sing_* matrices directly
+		// or copy for test purposes from setupcoupledmats??
+
+		Ah_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_bndry_p1, nsize_bndry_p1);
+		for (int i = 0; i < nsize_bndry_p1; ++i)
+		{
+			for (int j = 0; j < nsize_bndry_p1; ++j)
+			{
+				Ah_elem[curr_elem](i,j) = Ah_ele_vec[ i + j*Ahrows ];
+			}
+		} 
+		B_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_bndry, nsize_int);
+		for (int i = 0; i < nsize_bndry; ++i)
+		{
+			for (int j = 0; j < nsize_int; ++j)
+			{
+				B_elem[curr_elem](i,j) = B_ele_vec[ i + j*nsize_bndry ];
+			}
+		} 
+		C_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_bndry, nsize_int);
+		for (int i = 0; i < nsize_bndry; ++i)
+		{
+			for (int j = 0; j < nsize_int; ++j)
+			{
+				C_elem[curr_elem](i,j) = C_ele_vec[ i + j*nsize_bndry ];
+			}
+		} 
+		D_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_int, nsize_int);
+		for (int i = 0; i < nsize_int; ++i)
+		{
+			for (int j = 0; j < nsize_int; ++j)
+			{
+				D_elem[curr_elem](i,j) = D_ele_vec[ i + j*nsize_int];
+			}
+		} 
+		Dbnd_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_p, nsize_bndry);
+		for (int i = 0; i < nsize_p; ++i)
+		{
+			for (int j = 0; j < nsize_bndry; ++j)
+			{
+				Dbnd_elem[curr_elem](i,j) = Dbnd_ele_vec[ i + j*nsize_p];
+			}
+		} 
+		Dint_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_p, nsize_int);
+		for (int i = 0; i < nsize_p; ++i)
+		{
+			for (int j = 0; j < nsize_int; ++j)
+			{
+				Dint_elem[curr_elem](i,j) = Dint_ele_vec[ i + j*nsize_p];
+			}
+		} 
+
+		
+		D_elem[curr_elem] = D_elem[curr_elem].inverse();
+		B_elem[curr_elem] = B_elem[curr_elem] * D_elem[curr_elem];
+		Ah_elem[curr_elem].block(0,0,nsize_bndry,nsize_bndry) = Ah_elem[curr_elem].block(0,0,nsize_bndry,nsize_bndry) - B_elem[curr_elem] * C_elem[curr_elem].transpose();
+		Eigen::MatrixXd Elem_Cinv = D_elem[curr_elem];
+		Eigen::MatrixXd Elem_BCinv = B_elem[curr_elem];
+		Eigen::MatrixXd Elem_Btilde = C_elem[curr_elem];
+		Eigen::MatrixXd Elem_DintCinvDTint = Dint_elem[curr_elem] * Elem_Cinv * Dint_elem[curr_elem].transpose();
+		Eigen::MatrixXd Elem_BCinvDTint_m_DTbnd = Elem_BCinv * Dint_elem[curr_elem].transpose() - Dbnd_elem[curr_elem].transpose();
+		Eigen::MatrixXd Elem_DintCinvBTtilde_m_Dbnd = Dint_elem[curr_elem] * Elem_Cinv * Elem_Btilde.transpose() - Dbnd_elem[curr_elem];
+
+		Eigen::MatrixXd Bh_curr_ele = Eigen::MatrixXd::Zero( nsize_bndry_p1, nsize_p_m1 );
+		Eigen::MatrixXd Ch_curr_ele = Eigen::MatrixXd::Zero( nsize_p_m1, nsize_bndry_p1 );
+		Eigen::MatrixXd Dh_curr_ele = Eigen::MatrixXd::Zero( nsize_p_m1, nsize_p_m1 );
+		
+		for (int i = 0; i < nsize_p_m1; ++i)
+		{
+			for (int j = 0; j < nsize_p_m1; ++j)
+			{
+				Dh_curr_ele(i,j) = -Elem_DintCinvDTint(i+1,j+1);
+			}
+		}
+
+		for (int i = 0; i < nsize_bndry; ++i)
+		{
+			Ah_elem[curr_elem](i,nsize_bndry) = Elem_BCinvDTint_m_DTbnd(i,0);
+			Ah_elem[curr_elem](nsize_bndry,i) = Elem_DintCinvBTtilde_m_Dbnd(0,i);
+		}		
+		Ah_elem[curr_elem](nsize_bndry,nsize_bndry) = -Elem_DintCinvDTint(0,0);
+
+		for (int j = 0; j < nsize_p_m1; ++j)
+		{
+			for (int i = 0; i < nsize_bndry; ++i)
+			{
+				Bh_curr_ele(i,j) = Elem_BCinvDTint_m_DTbnd(i,j+1);
+				Ch_curr_ele(j,i) = Elem_DintCinvBTtilde_m_Dbnd(j+1,i);
+			}
+		}
+
+		for (int j = 0; j < nsize_p_m1; ++j)
+		{
+			Bh_curr_ele(nsize_bndry, j) = - Elem_DintCinvDTint(0, j+1);
+			Ch_curr_ele(j, nsize_bndry) = - Elem_DintCinvDTint(j+1, 0);
+		}
+
+		Dh_curr_ele = Dh_curr_ele.inverse();
+		Bh_curr_ele = Bh_curr_ele * Dh_curr_ele;
+		Ah_elem[curr_elem] = Ah_elem[curr_elem] - Bh_curr_ele * Ch_curr_ele;
+		Bh_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_bndry_p1, nsize_p_m1  );
+		Bh_elem[curr_elem] = Bh_curr_ele;
+		Ch_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_p_m1, nsize_bndry_p1 );
+		Ch_elem[curr_elem] = Ch_curr_ele;
+		Dh_elem[curr_elem] = Eigen::MatrixXd::Zero(nsize_p_m1, nsize_p_m1 );
+		Dh_elem[curr_elem] = Dh_curr_ele;
+
+		///////////////////////////
+		// temporary debugging
+//		cout << "Dh_elem[curr_elem](0,0) " << Dh_elem[curr_elem](0,0) << endl;
+//		cout << "Dh_elem[curr_elem](1,0) " << Dh_elem[curr_elem](1,0) << endl;
+//		cout << "Dh_elem[curr_elem](0,1) " << Dh_elem[curr_elem](0,1) << endl;
+//		cout << "Dh_elem[curr_elem](1,1) " << Dh_elem[curr_elem](1,1) << endl;
+		/////////////////////////
+		
+
+
+//		sing_A[]
+
+
+
+//		cout << "finished curr_elem " << curr_elem << endl;
+
+
+	} // loop over curr_elem
+
+	// nBndDofs already defined
+	// NumDirBCs from GetNumGlobalDirBndCoeffs ??
+
+	int NumDirBCs = m_locToGloMap[0]->GetNumGlobalDirBndCoeffs();
+	nBndDofs = m_locToGloMap[0]->GetNumGlobalBndCoeffs();  // number of global bnd dofs, also in the .h
+	int nGlobHomBndDofs = nBndDofs - NumDirBCs;
+	int rows = nGlobHomBndDofs;
+	if (debug_mode)
+	{
+	//	cout << "rows " << rows << endl;
+	//	cout << "nBndDofs " << nBndDofs << endl;
+	//	cout << "NumDirBCs " << NumDirBCs << endl;
+	}
+	Eigen::MatrixXd my_Gmat = Eigen::MatrixXd::Zero(rows, rows);
+	int num_elem = m_fields[0]->GetNumElmts();
+	Eigen::MatrixXd M_trafo = Eigen::MatrixXd::Zero(num_elem*nsize_bndry + num_elem, nGlobHomBndDofs);
+	Eigen::MatrixXd M_trafo_no_pp = Eigen::MatrixXd::Zero(num_elem*nsize_bndry, nGlobHomBndDofs);
+
+        const Array<OneD,const int>& loctoglobndmap = m_locToGloMap[0]->GetLocalToGlobalBndMap();
+        const Array<OneD,const NekDouble>& loctoglobndsign = m_locToGloMap[0]->GetLocalToGlobalBndSign();
+
+	for (int curr_elem = 0; curr_elem < num_elem; ++curr_elem)
+	{
+		int cnt = curr_elem*nsize_bndry_p1;
+		int cnt_no_pp = curr_elem*nsize_bndry;
+		Eigen::MatrixXd loc_Ah = Ah_elem[curr_elem];
+		for (int i = 0; i < nsize_bndry_p1; ++i)
+		{
+			int gid1 = loctoglobndmap[cnt + i] - NumDirBCs;
+			int sign1 = loctoglobndsign[cnt + i];
+			if (gid1 >= 0)
+			{
+				M_trafo(cnt+i, gid1) = sign1;
+				if (i < nsize_bndry)
+				{
+					M_trafo_no_pp(cnt_no_pp + i, gid1) = sign1;
+				}
+				for (int j = 0; j < nsize_bndry_p1; ++j)
+				{
+					int gid2 = loctoglobndmap[cnt + j] - NumDirBCs;
+					int sign2 = loctoglobndsign[cnt + j];
+					if (gid2 >= 0)
+					{
+						my_Gmat(gid1,gid2) += sign1*sign2*loc_Ah(i,j);
+					}
+				}
+			}
+		}
+	}
+
+	int nGlobBndDofs = nBndDofs;
+
+        Array<OneD, NekDouble > f_bnd(num_elem*nsize_bndry);
+        NekVector< NekDouble  > F_bnd(f_bnd.size(), f_bnd, eWrapper);
+        Array<OneD, NekDouble > f_int(num_elem*nsize_int);
+        NekVector< NekDouble  > F_int(f_int.size(),f_int, eWrapper);
+
+	Array<OneD, Array<OneD, NekDouble> > forcing(2); // local dofs
+	forcing[0] = Array<OneD, NekDouble>(m_fields[m_velocity[0]]->GetNcoeffs(),0.0);
+	forcing[1] = Array<OneD, NekDouble>(m_fields[m_velocity[0]]->GetNcoeffs(),0.0);
+
+	// set the newton forcing in terms of the current iterate
+//	myAdvField_Newton = Array<OneD, Array<OneD, NekDouble> > (2);
+//	myAdvField_Newton[0] = Array<OneD, NekDouble> (m_fields[0]->GetTotPoints(),0.0);
+//	myAdvField_Newton[1] = Array<OneD, NekDouble> (m_fields[0]->GetTotPoints(),0.0);
+        Array<OneD, Array<OneD, NekDouble> > AdvField(m_velocity.size());
+	Array<OneD, Array<OneD, NekDouble> > Eval_Adv(m_velocity.size());
+	Array<OneD, Array<OneD, NekDouble> > AdvTerm(m_velocity.size());
+        for(int il = 0; il < m_velocity.size(); ++il)
+        {
+                AdvField[il] = Array<OneD, NekDouble> (m_fields[m_velocity[il]]->GetTotPoints(),0.0);
+		Eval_Adv[il] = Array<OneD, NekDouble> (m_fields[m_velocity[il]]->GetTotPoints(),0.0);
+		AdvTerm[il] = Array<OneD, NekDouble> (m_fields[m_velocity[il]]->GetNcoeffs(),0.0);
+        }
+/*	for (int i = 0; i<m_fields[0]->GetTotPoints(); ++i)
+	{
+		myAdvField_Newton[0][i] = snapshot_x[i];
+		myAdvField_Newton[1][i] = snapshot_y[i];
+	}
+*/
+	EvaluateAdvectionTerms(myAdvField_Newton, Eval_Adv);
+        for (unsigned int i = 0; i < m_velocity.size(); ++i)
+        {
+            bool waveSpace = m_fields[m_velocity[i]]->GetWaveSpace();
+            m_fields[i]->SetWaveSpace(true);
+//            m_fields[i]->IProductWRTBase(forcing_phys[i], forcing[i]);
+            m_fields[m_velocity[i]]->IProductWRTBase(Eval_Adv[i], AdvTerm[i]); //(w, (u.grad)u)
+	    if (use_Newton)
+	    {
+		for (unsigned int il = 0; il < forcing[i].size(); ++il)
+	        {
+			forcing[i][il] = forcing[i][il] - AdvTerm[i][il];
+//			cout << Eval_Adv[i][il] << endl;
+		}
+	    }
+            m_fields[i]->SetWaveSpace(waveSpace);
+        }
+
+
+        // Assemble f_bnd and f_int
+
+        int cnt = 0;
+	int cnt1 = 0;
+        for(int i = 0; i < num_elem; ++i) // loop over elements
+        {
+            int eid = i;
+            m_fields[m_velocity[0]]->GetExp(eid)->GetBoundaryMap(bmap);
+            m_fields[m_velocity[0]]->GetExp(eid)->GetInteriorMap(imap);
+            int nbnd   = bmap.size();
+            int nint   = imap.size();
+            int offset = m_fields[m_velocity[0]]->GetCoeff_Offset(eid);
+            
+            for(int j = 0; j < nvel; ++j) // loop over velocity fields 
+            {
+                    for(int k = 0; k < nbnd; ++k)
+                    {
+                        f_bnd[cnt+k] = forcing[j][ offset+bmap[k]];
+                    }
+                    for(int k = 0; k < nint; ++k)
+                    {
+                        f_int[cnt1+k] = forcing[j][ offset+imap[k]];
+                    }
+                    cnt  += nbnd;
+                    cnt1 += nint;
+            }
+        }
+
+        Array<OneD, NekDouble > f_p(num_elem*nsize_p);
+        NekVector<  NekDouble > F_p(f_p.size(),f_p,eWrapper);
+        NekVector<  NekDouble > F_p_tmp(num_elem*nsize_int);
+        
+
+	Eigen::VectorXd f_bnd_rhs_eigen = Eigen::VectorXd::Zero(f_bnd.size());
+	for (int i = 0; i < f_bnd.size(); ++i)
+	{
+		f_bnd_rhs_eigen(i) = f_bnd[i];
+	}
+	Eigen::VectorXd f_p_rhs_eigen = Eigen::VectorXd::Zero(f_p.size());
+	for (int i = 0; i < f_p.size(); ++i)
+	{
+		f_p_rhs_eigen(i) = f_p[i]; // should be undefined at this stage
+	}
+	Eigen::VectorXd f_int_rhs_eigen = Eigen::VectorXd::Zero(f_int.size()); // num_elem*nsize_int
+	Eigen::VectorXd f_p_tmp_eigen = Eigen::VectorXd::Zero(f_int.size()); // num_elem*nsize_int
+	for (int i = 0; i < f_int.size(); ++i)
+	{
+		f_int_rhs_eigen(i) = f_int[i];
+	}
+
+
+
+        // fbnd does not currently hold the pressure mean
+//        F_bnd = F_bnd - (*m_mat[mode].m_BCinv)*F_int;
+//        F_p_tmp = (*m_mat[mode].m_Cinv)*F_int;
+//        F_p = (*m_mat[mode].m_D_int) * F_p_tmp;
+
+//	 should do these operations in Eigen
+	for (int i = 0; i < num_elem; ++i)
+	{
+		f_bnd_rhs_eigen.segment(i*nsize_bndry, nsize_bndry) = f_bnd_rhs_eigen.segment(i*nsize_bndry, nsize_bndry) - B_elem[i] * f_int_rhs_eigen.segment(i*nsize_int, nsize_int);
+		f_p_tmp_eigen.segment(i*nsize_int, nsize_int) = D_elem[i] * f_int_rhs_eigen.segment(i*nsize_int, nsize_int);
+		f_p_rhs_eigen.segment(i*nsize_p, nsize_p) = Dint_elem[i] * f_p_tmp_eigen.segment(i*nsize_int, nsize_int);
+
+	}
+
+
+	////////////////////
+	// temporary debugging
+/*	cout << "f_bnd_rhs_eigen.size() " << f_bnd_rhs_eigen.size() << endl;
+	cout << "f_bnd_rhs_eigen.norm() " << f_bnd_rhs_eigen.norm() << endl;
+	cout << "f_p_rhs_eigen.size() " << f_p_rhs_eigen.size() << endl;
+	cout << "f_p_rhs_eigen.norm() " << f_p_rhs_eigen.norm() << endl;
+
+*/
+	///////////////////
+
+
+
+        Array<OneD, NekDouble > bnd   (m_locToGloMap[0]->GetNumGlobalCoeffs(),0.0);
+        Array<OneD, NekDouble > fh_bnd(m_locToGloMap[0]->GetNumGlobalCoeffs(),0.0);
+
+        const Array<OneD,const int>& loctoglomap = m_locToGloMap[0]->GetLocalToGlobalMap();
+        const Array<OneD,const NekDouble>& loctoglosign = m_locToGloMap[0]->GetLocalToGlobalSign();
+        
+	int offset = 0;
+	cnt = 0; 
+        for(int i = 0; i < num_elem; ++i)
+        {
+            int eid  = i;
+            int nbnd = nz_loc*m_fields[0]->GetExp(eid)->NumBndryCoeffs(); 
+            
+            for(int j = 0; j < nvel; ++j)
+            {
+                for(int k = 0; k < nbnd; ++k)
+                {
+                    fh_bnd[loctoglomap[offset+j*nbnd+k]] += loctoglosign[offset+j*nbnd+k]*f_bnd_rhs_eigen(cnt+k);
+                }
+                cnt += nbnd;
+            }
+            
+            int nint    = m_pressure->GetExp(eid)->GetNcoeffs();
+            offset += nvel*nbnd + nint*nz_loc; 
+        }
+        
+        offset = cnt1 = 0; 
+        for(int i = 0; i <  num_elem; ++i)
+        {
+            int eid  = i;
+            int nbnd = nz_loc*m_fields[0]->GetExp(eid)->NumBndryCoeffs(); 
+            int nint = m_pressure->GetExp(eid)->GetNcoeffs(); 
+            
+            for(int n = 0; n < nz_loc; ++n)
+            {
+                for(int j = 0; j < nint; ++j)
+                {
+                    fh_bnd[loctoglomap[offset + nvel*nbnd + n*nint+j]] = f_p_rhs_eigen(cnt1+j);
+                }
+                cnt1   += nint;
+            }
+            offset += nvel*nbnd + nz_loc*nint; 
+        }
+
+
+	////////////////////////////
+	// temporary debugging
+//	cout << "fh_bnd.size() " << fh_bnd.size() << endl;
+	double temp_norm = 0;
+	for (int i = 0; i < fh_bnd.size(); i++)
+		temp_norm += fh_bnd[i];
+//	temp_norm = sqrt(temp_norm);
+//	cout << "fh_bnd norm " << temp_norm << endl;
+	///////////////////////////
+
+	////////////////////////////
+	// temporary debugging
+//	cout << "bnd.size() " << bnd.size() << endl;
+	temp_norm = 0;
+	for (int i = 0; i < bnd.size(); i++)
+	{
+		temp_norm += bnd[i];
+//		cout << bnd[i] << " ";
+	}
+//	temp_norm = sqrt(temp_norm);
+//	cout << "bnd norm " << temp_norm << endl;
+	///////////////////////////
+
+	int nLocBndDofs = num_elem * nsize_bndry_p1;
+	// ??	nGlobDofs = ??
+	// nGlobBndDofs defined??, si, si, si come nBndDofs
+	int nDirBndDofs = NumDirBCs;
+	Eigen::VectorXd loc_dbc = Eigen::VectorXd::Zero(nLocBndDofs);
+	Eigen::VectorXd loc_dbc_pt1 = Eigen::VectorXd::Zero(nLocBndDofs);
+	Eigen::VectorXd loc_dbc_pt2 = Eigen::VectorXd::Zero(nLocBndDofs);
+	Eigen::VectorXd V_GlobBnd = Eigen::VectorXd::Zero(nGlobBndDofs);
+
+/*	cout << "bnd.size() is the same as m_locToGloMap[0]->GetNumGlobalCoeffs() " << bnd.size() << endl;
+	cout << "nGlobBndDofs " << nGlobBndDofs << endl;
+	cout << "m_locToGloMap[0]->AtLastLevel() " << m_locToGloMap[0]->AtLastLevel() << endl;	
+	cout << "m_locToGloMap[0]->GetStaticCondLevel() " << m_locToGloMap[0]->GetStaticCondLevel() << endl;
+	cout << "m_locToGloMap[0]->GetLowestStaticCondLevel() " << m_locToGloMap[0]->GetLowestStaticCondLevel() << endl;
+*/
+	for (int i = 0; i < nGlobBndDofs; ++i)
+	{
+		V_GlobBnd(i) = bnd[i];
+	}
+	
+	for (int i = 0; i < nLocBndDofs; ++i)
+	{
+		loc_dbc(i) = loctoglobndsign[i] * V_GlobBnd(loctoglobndmap[i]);
+	}
+
+	for (int curr_elem = 0; curr_elem < num_elem; ++curr_elem)
+	{
+		int cnt = curr_elem*nsize_bndry_p1;
+//		cout << "test " << endl;
+		Eigen::MatrixXd loc_Ah = Ah_elem[curr_elem];
+		Eigen::MatrixXd loc_Bh = Bh_elem[curr_elem];
+//		cout << "test2 " << endl;
+		Eigen::VectorXd lds = loc_dbc.segment(cnt,nsize_bndry_p1);
+		Eigen::VectorXd loc_f_int_rhs_eigen = f_int_rhs_eigen.segment(curr_elem*nsize_int,nsize_int);
+//		cout << "test3 " << endl;
+//		cout << "loc_f_int_rhs_eigen " << loc_f_int_rhs_eigen << endl;
+//		cout << "loc_f_int_rhs_eigen sizes " << loc_f_int_rhs_eigen.rows() << " " << loc_f_int_rhs_eigen.cols() << endl;
+//		cout << "loc_Bh sizes " << loc_Bh.rows() << " " << loc_Bh.cols() << endl;	
+//		loc_dbc.segment(cnt,nsize_bndry_p1) = loc_Bh * loc_f_int_rhs_eigen + loc_Ah * lds; // should not interfere with aliasing // something wrong with dims of loc_Bh * loc_f_int_rhs_eigen
+		loc_dbc.segment(cnt,nsize_bndry_p1) = loc_Ah * lds;
+/*		cout << "test4 " << endl;
+		loc_dbc_pt1.segment(cnt,nsize_bndry_p1) = loc_Bh * loc_f_int_rhs_eigen;
+		cout << "test5 " << endl;
+		loc_dbc_pt2.segment(cnt,nsize_bndry_p1) = loc_Ah * lds;
+		cout << "test6 " << endl; */
+	}
+
+//	cout << "loc_dbc_pt2.head(5) " << loc_dbc_pt2.head(5) << endl;
+
+	// have here in Nektar:  V_LocBnd = BinvD*F_Int + SchurCompl*V_LocBnd;
+	//  f_int(num_elem*nsize_int); is also same as f_int_rhs_eigen
+//	cout << "f_int.size() " << f_int.size() << endl;
+	// and using Bh_elem
+/*	cout << "Bh_elem[0].cols() * num_elem " << Bh_elem[0].cols() * num_elem << endl;
+	cout << "Bh_elem[0].rows() * num_elem " << Bh_elem[0].rows() * num_elem << endl;
+	cout << "Ah_elem[0].cols() * num_elem " << Ah_elem[0].cols() * num_elem << endl;
+	cout << "Ah_elem[0].rows() * num_elem " << Ah_elem[0].rows() * num_elem << endl;
+*/
+	Eigen::VectorXd V_GlobHomBndTmp = Eigen::VectorXd::Zero(nGlobHomBndDofs);
+	Eigen::VectorXd tmp = Eigen::VectorXd::Zero(nGlobBndDofs);
+	
+	for (int i = 0; i < nLocBndDofs; ++i)
+	{
+		tmp(loctoglobndmap[i]) += loctoglobndsign[i] * loc_dbc(i);
+	}
+
+	offset = nDirBndDofs;
+	V_GlobHomBndTmp = tmp.segment(offset, nGlobBndDofs-offset);
+	// actually this, but is mixing Nektar and Eigen data structures V_GlobHomBndTmp = -V_GlobHomBndTmp + fh_bnd[NumDirBCs : nGlobHomBndDofs + NumDirBCs]
+	Eigen::VectorXd fh_bnd_add1 = Eigen::VectorXd::Zero(nGlobHomBndDofs);
+	for (int i = 0; i < nGlobHomBndDofs; ++i)
+	{
+		fh_bnd_add1(i) = fh_bnd[NumDirBCs + i] ;
+	}
+	V_GlobHomBndTmp = -V_GlobHomBndTmp + fh_bnd_add1;
+	Eigen::VectorXd my_sys_in = V_GlobHomBndTmp;
+
+	/////////////////////// actual solve here ////////////////////////////////
+	Eigen::VectorXd my_Asolution = my_Gmat.colPivHouseholderQr().solve(my_sys_in);
+	//////////////////////////////////////////////////////////////////////////
+/*	cout << "my_Gmat.rows() " << my_Gmat.rows() << endl;
+	cout << "my_Gmat.cols() " << my_Gmat.cols() << endl;
+	cout << "my_sys_in.rows() " << my_sys_in.rows() << endl;
+	cout << "my_sys_in.cols() " << my_sys_in.cols() << endl;
+*/
+	Eigen::VectorXd my_bnd_after = Eigen::VectorXd::Zero(m_locToGloMap[0]->GetNumGlobalCoeffs());
+	for (int i = 0; i < m_locToGloMap[0]->GetNumGlobalCoeffs(); ++i)
+	{
+		my_bnd_after(i) = bnd[i];
+	}
+	my_bnd_after.segment(offset, nGlobBndDofs-offset) += my_Asolution;
+	V_GlobBnd = my_bnd_after.segment(0, nGlobBndDofs);
+	for (int i = 0; i < nLocBndDofs; ++i)
+	{
+		loc_dbc(i) = loctoglobndsign[i] * V_GlobBnd(loctoglobndmap[i]);
+	}
+
+	////////////////////////////
+	// temporary debugging
+/*	cout << "loc_dbc.size() " << loc_dbc.size() << endl;
+	double temp_norm = 0;
+	for (int i = 0; i < loc_dbc.size(); i++)
+		temp_norm += loc_dbc[i] * loc_dbc[i];
+	temp_norm = sqrt(temp_norm);
+	cout << "loc_dbc norm " << temp_norm << endl; */
+	///////////////////////////
+
+	Eigen::VectorXd Fint = Eigen::VectorXd::Zero(num_elem*nsize_p - num_elem);
+	for (int curr_elem = 0; curr_elem < num_elem; ++curr_elem)
+	{
+		int cnt = curr_elem*nsize_bndry_p1;
+		Eigen::MatrixXd loc_Ch = Ch_elem[curr_elem];
+//		F_int[curr_elem*nsize_p_m1:curr_elem*nsize_p_m1+nsize_p_m1] = fh_bnd[nGlobHomBndDofs + NumDirBCs + curr_elem*nsize_p_m1: nGlobHomBndDofs + NumDirBCs + curr_elem*nsize_p_m1+nsize_p_m1] - np.dot(loc_Ch,  loc_dbc[cnt:cnt+nsize_bndry_p1])
+		Eigen::VectorXd fh_bnd_add2 = Eigen::VectorXd::Zero(nsize_p_m1);
+		for (int i = 0; i < nsize_p_m1; ++i)
+		{
+			fh_bnd_add2(i) = fh_bnd[NumDirBCs + nGlobHomBndDofs + curr_elem*nsize_p_m1 + i] ;
+		}
+		Fint.segment(curr_elem*nsize_p_m1,nsize_p_m1) = fh_bnd_add2 - loc_Ch * loc_dbc.segment(cnt, nsize_bndry_p1);  // actually an fh_bnd in case of body forcing as well
+		Eigen::MatrixXd loc_Dh = Dh_elem[curr_elem];
+		Fint.segment(curr_elem*nsize_p_m1,nsize_p_m1) = loc_Dh * Fint.segment(curr_elem*nsize_p_m1,nsize_p_m1).eval();
+	}
+	my_bnd_after.segment(nGlobBndDofs, m_locToGloMap[0]->GetNumGlobalCoeffs() - nGlobBndDofs) = Fint;
+
+	for (int i = 0; i < m_locToGloMap[0]->GetNumGlobalCoeffs(); ++i)
+	{
+		 bnd[i] = my_bnd_after(i);
+	}
+
+	// can I now copy-paste from Nektar ?? -- try to do so:
+
+//        const Array<OneD,const int>& loctoglomap = m_locToGloMap[0]->GetLocalToGlobalMap();
+//        const Array<OneD,const NekDouble>& loctoglosign = m_locToGloMap[0]->GetLocalToGlobalSign();
+
+
+	////////////////////////////
+	// temporary debugging
+//	cout << "bnd.size() " << bnd.size() << endl;
+	temp_norm = 0;
+	for (int i = 0; i < bnd.size(); i++)
+	{
+		temp_norm += bnd[i] * bnd[i];
+//		cout << bnd[i] << " ";
+	}
+	temp_norm = sqrt(temp_norm);
+//	cout << "bnd norm " << temp_norm << endl;
+	///////////////////////////
+
+
+        // unpack pressure and velocity boundary systems. 
+        offset = 0;
+	cnt = 0; 
+        int totpcoeffs = m_pressure->GetNcoeffs();
+        Array<OneD, NekDouble> p_coeffs = m_pressure->UpdateCoeffs();
+        for(int i = 0; i <  nel; ++i)
+        {
+            int eid  = i;
+            int nbnd = nz_loc*m_fields[0]->GetExp(eid)->NumBndryCoeffs(); 
+            int nint = m_pressure->GetExp(eid)->GetNcoeffs(); 
+            
+            for(int j = 0; j < nvel; ++j)
+            {
+                for(int k = 0; k < nbnd; ++k)
+                {
+                    f_bnd[cnt+k] = loctoglosign[offset+j*nbnd+k]*bnd[loctoglomap[offset + j*nbnd + k]];
+                }
+                cnt += nbnd;
+            }
+            offset += nvel*nbnd + nint*nz_loc;
+        }
+
+        m_pressure->SetPhysState(false);
+        
+  //      Array<OneD, NekDouble > f_p(num_elem*nsize_p);
+//        NekVector<  NekDouble > F_p(f_p.size(),f_p,eWrapper);
+
+        offset = 0; 
+	cnt = 0; 
+	cnt1 = 0;
+        for(int i = 0; i < nel; ++i)
+        {
+            int eid  = i;
+            int nint = m_pressure->GetExp(eid)->GetNcoeffs(); 
+            int nbnd = m_fields[0]->GetExp(eid)->NumBndryCoeffs(); 
+            cnt1 = m_pressure->GetCoeff_Offset(eid);
+            
+            for(int n = 0; n < nz_loc; ++n)
+            {
+                for(int j = 0; j < nint; ++j)
+                {
+                    p_coeffs[n*totpcoeffs + cnt1+j] = f_p[cnt+j] = bnd[loctoglomap[offset + (nvel*nz_loc)*nbnd + n*nint + j]];
+                }
+                cnt += nint;
+            }
+            offset += (nvel*nbnd + nint)*nz_loc;
+        }
+
+        // Back solve first level of static condensation for interior
+        // velocity space and store in F_int
+	// F_int should initially be empty without body forcing
+
+//        F_int = F_int + Transpose(*m_mat[mode].m_D_int)*F_p - Transpose(*m_mat[mode].m_Btilde)*F_bnd;
+//        F_int = (*m_mat[mode].m_Cinv)*F_int;
+		// like to do the MatVec in Eigen and the transform into Nektar?? for f_p and bnd
+
+	Eigen::VectorXd f_bnd_eigen = Eigen::VectorXd::Zero(f_bnd.size());
+	for (int i = 0; i < f_bnd.size(); ++i)
+	{
+		f_bnd_eigen(i) = f_bnd[i];
+	}
+	Eigen::VectorXd f_p_eigen = Eigen::VectorXd::Zero(f_p.size());
+	for (int i = 0; i < f_p.size(); ++i)
+	{
+		f_p_eigen(i) = f_p[i];
+	}
+	Eigen::VectorXd f_int_eigen = Eigen::VectorXd::Zero(f_int.size()); // num_elem*nsize_int
+
+	for (int curr_elem = 0; curr_elem < num_elem; ++curr_elem)
+	{
+		int cnt_Dint = curr_elem*nsize_p;
+		int cnt_C = curr_elem*nsize_bndry;
+		int cnt_D = curr_elem*nsize_int;
+		Eigen::MatrixXd loc_Dint = Dint_elem[curr_elem];
+		Eigen::MatrixXd loc_C = C_elem[curr_elem];
+		Eigen::MatrixXd loc_D = D_elem[curr_elem];
+		// f_int_rhs should come in as well...
+//		cout << "f_p_eigen.rows, f_p_eigen.cols " << f_p_eigen.rows() << " " << f_p_eigen.cols() << endl;
+//		cout << "f_bnd_eigen.rows, f_bnd_eigen.cols " << f_bnd_eigen.rows() << " " << f_bnd_eigen.cols() << endl;
+//		Eigen::VectorXd nn =  f_p_eigen.segment(cnt_Dint, nsize_p);
+//		cout << "nn.rows, nn.cols " << nn.rows() << " " << nn.cols() << endl;
+		f_int_eigen.segment(curr_elem*nsize_int, nsize_int) = f_int_rhs_eigen.segment(curr_elem*nsize_int, nsize_int) + loc_Dint.transpose() * f_p_eigen.segment(cnt_Dint, nsize_p) - loc_C.transpose() * f_bnd_eigen.segment(cnt_C, nsize_bndry);  // also f_int_rhs here
+		f_int_eigen.segment(curr_elem*nsize_int, nsize_int) = loc_D * f_int_eigen.segment(curr_elem*nsize_int, nsize_int);
+	}
+
+	for (int i = 0; i < f_int.size(); ++i)
+	{
+		f_int[i] = f_int_eigen(i);
+	}
+
+	int nlc = m_locToGloMap[0]->GetNumLocalCoeffs();
+	int nplanecoeffs = nlc;
+
+        // Unpack solution from Bnd and F_int to v_coeffs 
+        cnt = 0; 
+	cnt1 = 0;
+        for(int i = 0; i < nel; ++i) // loop over elements
+        {
+            int eid  = i;
+            m_fields[0]->GetExp(eid)->GetBoundaryMap(bmap);
+            m_fields[0]->GetExp(eid)->GetInteriorMap(imap);
+            int nbnd   = bmap.size();
+            int nint   = imap.size();
+            int offset = m_fields[0]->GetCoeff_Offset(eid);
+            
+            for(int j = 0; j < nvel; ++j) // loop over velocity fields 
+            {
+                for(int n = 0; n < nz_loc; ++n)
+                {
+                    for(int k = 0; k < nbnd; ++k)
+                    {
+                        m_fields[j]->SetCoeff(n*nplanecoeffs + offset+bmap[k], f_bnd[cnt+k]);
+                    }
+                    
+                    for(int k = 0; k < nint; ++k)
+                    {
+                        m_fields[j]->SetCoeff(n*nplanecoeffs + offset+imap[k], f_int[cnt1+k]);
+                    }
+                    cnt  += nbnd;
+                    cnt1 += nint;
+                }
+            }
+        }
+        
+        for(int j = 0; j < nvel; ++j) 
+        {
+            m_fields[j]->SetPhysState(false);
+        }
+
+	// the fields should be the same as the input:  Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y
+	Array<OneD, MultiRegions::ExpListSharedPtr> m_fields_t = UpdateFields();
+	m_fields_t[0]->BwdTrans(m_fields_t[0]->GetCoeffs(), m_fields_t[0]->UpdatePhys());
+	m_fields_t[1]->BwdTrans(m_fields_t[1]->GetCoeffs(), m_fields_t[1]->UpdatePhys());
+	Array<OneD, NekDouble> out_field_trafo_x(GetNpoints(), 0.0);
+	Array<OneD, NekDouble> out_field_trafo_y(GetNpoints(), 0.0);
+
+	Eigen::VectorXd csx0_trafo(GetNpoints());
+	Eigen::VectorXd csy0_trafo(GetNpoints());
+	Eigen::VectorXd csx0(GetNpoints());
+	Eigen::VectorXd csy0(GetNpoints());
+
+	CopyFromPhysField(0, out_field_trafo_x); 
+	CopyFromPhysField(1, out_field_trafo_y);
+	for( int index_conv = 0; index_conv < GetNpoints(); ++index_conv)
+	{
+		csx0_trafo(index_conv) = out_field_trafo_x[index_conv];
+		csy0_trafo(index_conv) = out_field_trafo_y[index_conv];
+		csx0(index_conv) = snapshot_x[index_conv];
+		csy0(index_conv) = snapshot_y[index_conv];
+	}
+
+	if (debug_mode)
+	{
+		cout << "csx0.norm() " << csx0.norm() << endl;
+		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
+		cout << "csy0.norm() " << csy0.norm() << endl;
+		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
+	}
+
+	Array<OneD, Array<OneD, NekDouble> > snapshot_result_phys_velocity_x_y(2);
+	snapshot_result_phys_velocity_x_y[0] = Array<OneD, NekDouble>(GetNpoints());
+	snapshot_result_phys_velocity_x_y[1] = Array<OneD, NekDouble>(GetNpoints());
+	snapshot_result_phys_velocity_x_y[0] = out_field_trafo_x;
+	snapshot_result_phys_velocity_x_y[1] = out_field_trafo_y;
+
+	curr_f_bnd = Eigen::VectorXd::Zero(f_bnd.size());
+	for (int i_phys_dof = 0; i_phys_dof < f_bnd.size(); i_phys_dof++)
+	{
+		curr_f_bnd(i_phys_dof) = f_bnd[i_phys_dof]; 
+	}
+	curr_f_p = Eigen::VectorXd::Zero(f_p.size()); 
+	for (int i_phys_dof = 0; i_phys_dof < f_p.size(); i_phys_dof++)
+	{
+		curr_f_p(i_phys_dof) = f_p[i_phys_dof]; 
+	}
+	curr_f_int = Eigen::VectorXd::Zero(f_int.size()); 
+	for (int i_phys_dof = 0; i_phys_dof < f_int.size(); i_phys_dof++)
+	{
+		curr_f_int(i_phys_dof) = f_int[i_phys_dof]; 
+	}
+	
+	ref_f_bnd = curr_f_bnd;
+	ref_f_p = curr_f_p;
+	ref_f_int = curr_f_int;
+
+	return snapshot_result_phys_velocity_x_y;
+
+
+
+/*
+
+		for i in range(0, nimap):
+			coeffs = 0*np.arange(ncoeffs*1.0)
+			coeffs[int(imap[i])] = 1.0
+			phys = np.dot(coeffs, loc_bwd_mat)
+			deriv_0 = np.dot(phys, (loc_cm0))
+			deriv_1 = np.dot(phys, (loc_cm1))
+			coeffs_0_0 = np.dot(deriv_0, loc_IP_d0)
+			coeffs_0_1 = np.dot(deriv_0, loc_IP_d1)
+			coeffs_1_0 = np.dot(deriv_1, loc_IP_d0)
+			coeffs_1_1 = np.dot(deriv_1, loc_IP_d1)
+			for k in range(0, 2):
+				for j in range(0, nbmap):
+					C_ele_vec[j+k*nbmap + (i+k*nimap)*nsize_bndry] += mKinvis * detT * ( c00*coeffs_0_0[int(bmap[j])] + c01*(coeffs_0_1[int(bmap[j])] + coeffs_1_0[int(bmap[j])]) + c11*coeffs_1_1[int(bmap[j])] )
+				for j in range(0, nimap):
+					D_ele_vec[i+k*nimap + (j+k*nimap)*nsize_int] += mKinvis * detT * ( c00*coeffs_0_0[int(imap[j])] + c01*(coeffs_0_1[int(imap[j])] + coeffs_1_0[int(imap[j])]) + c11*coeffs_1_1[int(imap[j])] )
+			for k in range(0, 2):
+				if (k == 0):
+					deriv = np.dot(phys, (loc_cm0))
+					deriv_y = np.dot(phys, (loc_cm1))
+					tmpphys = u_x[(curr_elem*nphys) : (curr_elem*nphys + nphys)] * deriv
+					tmpphys_y = u_x[(curr_elem*nphys) : (curr_elem*nphys + nphys)] * deriv_y
+					coeffs = np.dot(tmpphys, loc_IP)
+					coeffs_y = np.dot(tmpphys_y, loc_IP)
+					for nv in range(0, 2):
+						for j in range(0, nbmap):
+							B_ele_vec[ j+nv*nbmap + (i+nv*nimap)*nsize_bndry ] += detT * (Ta * coeffs[int(bmap[j])] + Tc * coeffs_y[int(bmap[j])])
+						for j in range(0, nimap):
+							D_ele_vec[ j+nv*nimap + (i+nv*nimap)*nsize_int ] += detT * (Ta * coeffs[int(imap[j])] + Tc * coeffs_y[int(imap[j])])
+					pcoeff = np.dot(deriv, loc_IPp)
+					pcoeff_y = np.dot(deriv_y, loc_IPp)
+					Dint_ele_vec[ (k*nimap + i)*nsize_p : ((k*nimap + i)*nsize_p + nsize_p) ] = detT * (Ta * pcoeff + Tc * pcoeff_y)
+				if (k == 1):
+					deriv = np.dot(phys, (loc_cm1))
+					tmpphys = u_y[(curr_elem*nphys) : (curr_elem*nphys + nphys)] * deriv
+					coeffs = np.dot(tmpphys, loc_IP)
+					for nv in range(0, 2):
+						for j in range(0, nbmap):
+							B_ele_vec[ j+nv*nbmap + (i+nv*nimap)*nsize_bndry ] += detT * (Tb * coeffs[int(bmap[j])] + Td * coeffs[int(bmap[j])])
+						for j in range(0, nimap):
+							D_ele_vec[ j+nv*nimap + (i+nv*nimap)*nsize_int ] += detT * (Tb * coeffs[int(imap[j])] + Td * coeffs[int(imap[j])])
+					pcoeff = np.dot(deriv, loc_IPp)
+					Dint_ele_vec[ (k*nimap + i)*nsize_p : ((k*nimap + i)*nsize_p + nsize_p) ] = detT * (Tb * pcoeff + Td * pcoeff)
+
+		for i in range(0, nbmap):
+			coeffs = 0*np.arange(ncoeffs*1.0)
+			coeffs[int(bmap[i])] = 1.0
+			phys = np.dot(coeffs, loc_bwd_mat)
+			deriv_0 = np.dot(phys, (loc_cm0))
+			deriv_1 = np.dot(phys, (loc_cm1))
+			coeffs_0_0 = np.dot(deriv_0, loc_IP_d0)
+			coeffs_0_1 = np.dot(deriv_0, loc_IP_d1)
+			coeffs_1_0 = np.dot(deriv_1, loc_IP_d0)
+			coeffs_1_1 = np.dot(deriv_1, loc_IP_d1)
+			for k in range(0, 2):
+				for j in range(0, nbmap):
+					Ah_ele_vec[ i+k*nbmap + (j+k*nbmap)*Ahrows ] += mKinvis * detT * ( c00*coeffs_0_0[int(bmap[j])] + c01*(coeffs_0_1[int(bmap[j])] + coeffs_1_0[int(bmap[j])]) + c11*coeffs_1_1[int(bmap[j])] )
+				for j in range(0, nimap):
+					B_ele_vec[i+k*nbmap + (j+k*nimap)*nsize_bndry] += mKinvis * detT * ( c00*coeffs_0_0[int(imap[j])] + c01*(coeffs_0_1[int(imap[j])] + coeffs_1_0[int(imap[j])]) + c11*coeffs_1_1[int(imap[j])] )
+			for k in range(0, 2):
+				if (k == 0):
+					deriv = np.dot(phys, (loc_cm0))
+					deriv_y = np.dot(phys, (loc_cm1))
+					tmpphys = u_x[(curr_elem*nphys) : (curr_elem*nphys + nphys)] * deriv
+					tmpphys_y = u_x[(curr_elem*nphys) : (curr_elem*nphys + nphys)] * deriv_y
+					coeffs = np.dot(tmpphys, loc_IP)
+					coeffs_y = np.dot(tmpphys_y, loc_IP)
+					for nv in range(0, 2):
+						for j in range(0, nbmap):
+							Ah_ele_vec[ j+nv*nbmap + (i+nv*nbmap)*Ahrows ] += detT * (Ta * coeffs[int(bmap[j])] + Tc * coeffs_y[int(bmap[j])])
+						for j in range(0, nimap):
+							C_ele_vec[ i+nv*nbmap + (j+nv*nimap)*nsize_bndry ] += detT * (Ta * coeffs[int(imap[j])] + Tc * coeffs_y[int(imap[j])])
+					pcoeff = np.dot(deriv, loc_IPp)
+					pcoeff_y = np.dot(deriv_y, loc_IPp)
+					Dbnd_ele_vec[ (k*nbmap + i)*nsize_p : ((k*nbmap + i)*nsize_p + nsize_p) ] = detT * (Ta * pcoeff + Tc * pcoeff_y)
+				if (k == 1):
+					deriv = np.dot(phys, (loc_cm1))
+					tmpphys = u_y[(curr_elem*nphys) : (curr_elem*nphys + nphys)] * deriv
+					coeffs = np.dot(tmpphys, loc_IP)
+					for nv in range(0, 2):
+						for j in range(0, nbmap):
+							Ah_ele_vec[ j+nv*nbmap + (i+nv*nbmap)*Ahrows ] += detT * (Tb * coeffs[int(bmap[j])] + Td * coeffs[int(bmap[j])])
+						for j in range(0, nimap):
+							C_ele_vec[ i+nv*nbmap + (j+nv*nimap)*nsize_bndry ] += detT * (Tb * coeffs[int(imap[j])] + Td * coeffs[int(imap[j])])
+					pcoeff = np.dot(deriv, loc_IPp) 
+					Dbnd_ele_vec[ (k*nbmap + i)*nsize_p : ((k*nbmap + i)*nsize_p + nsize_p) ] = detT * (Tb * pcoeff + Td * pcoeff)											
+
+
+*/
+
+/*	for curr_elem in range(0, num_elem):
+		Ah_ele_vec = 0*np.arange(Ahrows*Ahrows*1.0)
+		H1_bnd_ele_vec = 0*np.arange(Ahrows*Ahrows*1.0)
+		B_ele_vec = 0*np.arange(nsize_bndry*nsize_int*1.0)
+		C_ele_vec = 0*np.arange(nsize_bndry*nsize_int*1.0)
+		D_ele_vec = 0*np.arange(nsize_int*nsize_int*1.0)
+		DnoK_ele_vec = 0*np.arange(nsize_int*nsize_int*1.0)
+		Dadv_ele_vec = 0*np.arange(nsize_int*nsize_int*1.0)
+		H1_int_ele_vec = 0*np.arange(nsize_int*nsize_int*1.0)
+		D1_ele_vec = 0*np.arange(nsize_int*nsize_int*1.0)
+		Dbnd_ele_vec = 0*np.arange(nsize_bndry*nsize_p*1.0)
+		Dint_ele_vec = 0*np.arange(nsize_int*nsize_p*1.0)
+		loc_bwd_mat = bwdtrans[(curr_elem*ncoeffs) : (curr_elem*ncoeffs + ncoeffs) ,:]
+		loc_cm0 = cartmap0[(curr_elem*nphys) : (curr_elem*nphys + nphys) ,:]
+		loc_cm1 = cartmap1[(curr_elem*nphys) : (curr_elem*nphys + nphys) ,:]
+		loc_IP = IP[(curr_elem*nphys) : (curr_elem*nphys + nphys) ,:]
+		loc_IP_d0 = IP_d0[(curr_elem*nphys) : (curr_elem*nphys + nphys) ,:]
+		loc_IP_d1 = IP_d1[(curr_elem*nphys) : (curr_elem*nphys + nphys) ,:]
+		loc_IPp = IPp[(curr_elem*nphys) : (curr_elem*nphys + nphys) ,:]
+		HelmMat = HelmMats[curr_elem,:]
+		L00 = Lapl00[curr_elem,:]
+		L11 = Lapl11[curr_elem,:]
+		mimic_L00 = 0*Lapl00[curr_elem,:]
+		curr_elem_pos = get_curr_elem_pos(curr_elem, geo_trafo_list)
+		detT = Geo_T(w, curr_elem_pos, 0)
+		Ta = Geo_T(w, curr_elem_pos, 1)
+		Tb = Geo_T(w, curr_elem_pos, 2)
+		Tc = Geo_T(w, curr_elem_pos, 3)
+		Td = Geo_T(w, curr_elem_pos, 4)
+		c00 = Ta*Ta + Tb*Tb
+		c01 = Ta*Tc + Tb*Td
+		c11 = Tc*Tc + Td*Td			
+*/
+    }    // closing bracket for trafo_current_para
+ 
+    int CoupledLinearNS_ROM::get_curr_elem_pos(int curr_elem)
+    {
+    	return 0;
+    }     
+    
+    double CoupledLinearNS_ROM::Geo_T(double w, int elemT, int index)
+    {
+/*
+def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
+	if elemT == 0:
+		T = np.matrix([[1, 0], [0, 1/w]])
+	if elemT == 1:
+		T = np.matrix([[1, 0], [0, 2/(3-w)]])
+	if elemT == 2:
+		T = np.matrix([[1, 0], [-(1-w)/2, 1]])
+	if elemT == 3:
+		T = np.matrix([[1, 0], [-(w-1)/2, 1]])
+	if elemT == 4:
+		T = np.matrix([[1, 0], [0, 1]])			
+	if index == 0:
+		return 1/np.linalg.det(T)
+	if index == 1:
+		return T[0,0]
+	if index == 2:
+		return T[0,1]
+	if index == 3:
+		return T[1,0]
+	if index == 4:
+		return T[1,1]
+
+
+*/
+	Eigen::Matrix2d T;
+	if (elemT == 0) 
+	{
+		T << 1, 0, 0, 1/w;
+	}
+	else if (elemT == 1) 
+	{
+		T << 1, 0, 0, 2/(3-w);
+	}
+	else if (elemT == 2) 
+	{
+		T << 1, 0, -(1-w)/2, 1;
+	}
+	else if (elemT == 3) 
+	{
+		T << 1, 0, -(w-1)/2, 1;
+	}
+	else if (elemT == 4) 
+	{
+		T << 1, 0, 0, 1;
+	}
+
+//	cout << T << endl;
+
+	if (index == 0) 
+	{
+		return 1/(T(0,0)*T(1,1) - T(0,1)*T(1,0)); // 1/det
+	}
+	else if (index == 1) 
+	{
+		return T(0,0);
+	}
+	else if (index == 2) 
+	{
+		return T(0,1);
+	}
+	else if (index == 3) 
+	{
+		return T(1,0);
+	}
+	else if (index == 4) 
+	{
+		return T(1,1);
+	}
+
+	return 0;
+
+
+    }
+
+    
 }

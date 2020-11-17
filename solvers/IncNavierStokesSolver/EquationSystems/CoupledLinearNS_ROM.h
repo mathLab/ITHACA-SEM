@@ -168,7 +168,12 @@ namespace Nektar
         Eigen::VectorXd reconstruct_solution_w_dbc(Eigen::VectorXd reprojected_solve);
         void compute_snapshots_kinvis(void);
         Array<OneD, Array<OneD, NekDouble> > DoSolve_at_param(Array<OneD, NekDouble> init_snapshot_x, Array<OneD, NekDouble> init_snapshot_y, NekDouble parameter);
-        
+        Array<OneD, Array<OneD, NekDouble> > trafo_current_para(Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y, Array<OneD, NekDouble> parameter_of_interest, Eigen::VectorXd & ref_f_bnd, Eigen::VectorXd & ref_f_p, Eigen::VectorXd & ref_f_int);
+	int get_curr_elem_pos(int);   
+	double Geo_T(double w, int elemT, int index);
+    
+    
+            
 //	int get_curr_elem_pos(int curr_elem);
 
 
@@ -275,6 +280,12 @@ namespace Nektar
 	Eigen::VectorXd the_ABCD_one_rhs_proj;
 	Eigen::VectorXd the_const_one_rhs_proj;        
        	Eigen::MatrixXd curr_xy_projected;
+	Array<OneD, Array<OneD, NekDouble> > myAdvField_Newton;
+
+
+
+
+
 
         Array<OneD, CoupledSolverMatrices> m_mat;
         

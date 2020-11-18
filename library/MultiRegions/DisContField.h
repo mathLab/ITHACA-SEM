@@ -417,6 +417,7 @@ namespace Nektar
                 Bwd[m_periodicBwdCopy[n]] = Fwd[m_periodicFwdCopy[n]];
             }
         }
+        
     } //end of namespace
 } //end of namespace
 

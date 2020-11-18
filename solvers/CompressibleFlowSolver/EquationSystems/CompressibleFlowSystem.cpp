@@ -458,12 +458,12 @@ namespace Nektar
             GetElmtTimeStep(inarray, tstep);
 
             // Loop over elements
-            for(int n = 0; n < nElements; ++n)
+            for (int n = 0; n < nElements; ++n)
             {
                 nq     = m_fields[0]->GetExp(n)->GetTotPoints();
                 offset = m_fields[0]->GetPhys_Offset(n);
                 fac    = tstep[n] / m_timestep;
-                for(int i = 0; i < nvariables; ++i)
+                for (int i = 0; i < nvariables; ++i)
                 {
                     Vmath::Smul(nq, fac, outarray[i] + offset, 1,
                                          tmp = outarray[i] + offset, 1);
@@ -481,7 +481,6 @@ namespace Nektar
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
         const NekDouble                                   time)
     {
-        int i;
         int nvariables = inarray.size();
 
         switch(m_projectionType)
@@ -491,10 +490,10 @@ namespace Nektar
                 // Just copy over array
                 int npoints = GetNpoints();
 
-                for(i = 0; i < nvariables; ++i)
+                for (int i = 0; i < nvariables; ++i)
                 {
                     Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
-                    if(m_useFiltering)
+                    if (m_useFiltering)
                     {
                         m_fields[i]->ExponentialFilter(outarray[i],
                             m_filterAlpha, m_filterExponent, m_filterCutoff);

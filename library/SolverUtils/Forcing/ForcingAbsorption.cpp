@@ -228,7 +228,6 @@ namespace SolverUtils
         }
     }
 
-
     void ForcingAbsorption::v_Apply(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> > &inarray,

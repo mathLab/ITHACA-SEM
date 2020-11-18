@@ -4343,7 +4343,8 @@ namespace Nektar
                 (*m_exp)[i]->FwdTrans(work, tmp_coeffs = outarray + m_coeff_offset[i]);
             }
         }
-
+//ICFS_MERGE_FLAG 
+//NOT USED
         void DisContField::v_GetLocTraceFromTracePts(
                 const Array<OneD, const NekDouble>  &Fwd,
                 const Array<OneD, const NekDouble>  &Bwd,

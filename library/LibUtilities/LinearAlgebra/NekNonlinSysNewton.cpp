@@ -118,7 +118,7 @@ int NekNonlinSysNewton::v_SolveSystem(
         m_operator.DoNekSysResEval(m_Solution, m_Residual);
     }
 
-    if ((m_root || (!m_converged)) && m_verbose)
+    if ( ((!m_converged) || m_verbose) && m_root)
     {
         WARNINGL0(m_converged,
                   "     # Nonlinear solver not converge in DoImplicitSolve");

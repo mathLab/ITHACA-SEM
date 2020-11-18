@@ -109,7 +109,6 @@ namespace Nektar
         m_session->LoadSolverInfo("PhysicalSensorType", m_physicalSensorType,
             "Off");
 
-
         string diffName;
         m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
 
@@ -968,7 +967,7 @@ namespace Nektar
         Array<OneD, NekDouble> bndPressure;
         Array<OneD, NekDouble> bndRho;
         Array<OneD, NekDouble> bndIntEndy;
-        int nLengthArray    =0;
+        int nLengthArray = 0;
 
         int cnt = 0;
         int nBndRegions = m_fields[nengy]->
@@ -1056,12 +1055,12 @@ namespace Nektar
      * @brief Calculate and return the Symmetric flux in IP method.
      */
     void NavierStokesCFE::GetViscousSymmtrFluxConservVar(
-            const int                                         nSpaceDim,
-            const Array<OneD, Array<OneD, NekDouble> >        &inaverg,
-            const Array<OneD, Array<OneD, NekDouble > >       &inarray,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&outarray,
-            Array< OneD, int >                                &nonZeroIndex,
-            const Array<OneD, Array<OneD, NekDouble> >        &normals)
+        const int                                         nSpaceDim,
+        const Array<OneD, Array<OneD, NekDouble> >        &inaverg,
+        const Array<OneD, Array<OneD, NekDouble > >       &inarray,
+        TensorOfArray3D<NekDouble>                        &outarray,
+        Array< OneD, int >                                &nonZeroIndex,
+        const Array<OneD, Array<OneD, NekDouble> >        &normals)
     {
         size_t nConvectiveFields   = inarray.size();
         size_t nPts                = inaverg[nConvectiveFields - 1].size();

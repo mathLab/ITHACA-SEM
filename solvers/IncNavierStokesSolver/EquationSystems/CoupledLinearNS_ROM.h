@@ -148,6 +148,8 @@ namespace Nektar
         void ROM_offline_phase(void);
         void ROM_online_phase(void);
         Eigen::MatrixXd DoTrafo(void);
+        Eigen::MatrixXd DoTrafo_1p_kinvis(void);
+        Eigen::MatrixXd DoTrafo_1p_geo(void);
         void DoInitialiseAdv(Array<OneD, NekDouble> myAdvField_x, Array<OneD, NekDouble> myAdvField_y);
         void Set_m_kinvis(NekDouble);
         void setDBC(Eigen::MatrixXd);

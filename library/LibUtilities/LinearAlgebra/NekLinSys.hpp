@@ -43,7 +43,6 @@
 #include <LibUtilities/BasicUtils/ConsistentObjectAccess.hpp>
 #include <LibUtilities/BasicUtils/RawType.hpp>
 #include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
-#include <LibUtilities/LinearAlgebra/NekLinSysIterative.h>
 #include <iostream>
 
 #include <type_traits>

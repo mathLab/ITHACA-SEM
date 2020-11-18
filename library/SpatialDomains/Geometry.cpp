@@ -436,8 +436,8 @@ std::array<NekDouble, 6> Geometry::GetBoundingBox()
     for (int j = 0; j < 3; ++j)
     {
         const NekDouble len = max[j] - min[j];
-        min[j] -= 0.1*len;
-        max[j] += 0.1*len;
+        min[j] -= (0.1+NekConstants::kGeomFactorsTol)*len;
+        max[j] += (0.1+NekConstants::kGeomFactorsTol)*len;
     }
 
     //save bounding box

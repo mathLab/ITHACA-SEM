@@ -727,7 +727,8 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &gloCoord,
                 NekDouble tol = 0.0,
                 bool returnNearestElmt = false,
-                int cachedId = -1);
+                int cachedId = -1,
+                NekDouble maxDistance = 1e6);
 
             /** This function returns the index and the Local
              * Cartesian Coordinates \a locCoords of the local
@@ -739,7 +740,8 @@ namespace Nektar
                 Array<OneD, NekDouble>       &locCoords,
                 NekDouble tol = 0.0,
                 bool returnNearestElmt = false,
-                int cachedId = -1);
+                int cachedId = -1,
+                NekDouble maxDistance = 1e6);
 
             /** This function return the expansion field value
              * at the coordinates given as input.

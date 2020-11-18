@@ -2344,11 +2344,12 @@ namespace Nektar
                                  const Array<OneD, const NekDouble> &gloCoord,
                                  NekDouble tol,
                                  bool returnNearestElmt,
-                                 int cachedId)
+                                 int cachedId,
+                                 NekDouble maxDistance)
         {
             Array<OneD, NekDouble> Lcoords(gloCoord.size());
 
-            return GetExpIndex(gloCoord,Lcoords,tol,returnNearestElmt,cachedId);
+            return GetExpIndex(gloCoord,Lcoords,tol,returnNearestElmt,cachedId,maxDistance);
         }
 
 
@@ -2357,7 +2358,8 @@ namespace Nektar
                       Array<OneD, NekDouble> &locCoords,
                 NekDouble tol,
                 bool returnNearestElmt,
-                int cachedId)
+                int cachedId,
+                NekDouble maxDistance)
         {
             if (GetNumElmts() == 0)
             {
@@ -2376,19 +2378,20 @@ namespace Nektar
             }
 
             NekDouble nearpt     = 1e12;
-            NekDouble nearpt_min = 1e6;
+            NekDouble nearpt_min = maxDistance;
             int       min_id     = -1;
             Array<OneD, NekDouble> savLocCoords(locCoords.size());
 
             if(cachedId >= 0 && cachedId < (*m_exp).size())
             {
+                nearpt = 1e12;
                 if((*m_exp)[cachedId]->GetGeom()->MinMaxCheck(gloCoords) &&
                    (*m_exp)[cachedId]->GetGeom()->ContainsPoint(gloCoords,
                                                 locCoords, tol, nearpt))
                 {
                     return cachedId;
                 }
-                else if(returnNearestElmt && (nearpt < nearpt_min))
+                else if(returnNearestElmt && (nearpt <= nearpt_min))
                 {
                     // If it does not lie within, keep track of which element
                     // is nearest.
@@ -2422,7 +2425,7 @@ namespace Nektar
                 {
                     return id;
                 }
-                else if(returnNearestElmt && (nearpt < nearpt_min))
+                else if(returnNearestElmt && (nearpt <= nearpt_min))
                 {
                     // If it does not lie within, keep track of which element
                     // is nearest.
@@ -2448,8 +2451,7 @@ namespace Nektar
                         + boost::lexical_cast<std::string>(min_id);
                 WARNINGL1(false,msg.c_str());
 
-                Vmath::Vcopy(locCoords.size(),savLocCoords, 1,
-                                                      locCoords,    1);
+                Vmath::Vcopy(locCoords.size(),savLocCoords, 1, locCoords, 1);
                 return min_id;
             }
             else

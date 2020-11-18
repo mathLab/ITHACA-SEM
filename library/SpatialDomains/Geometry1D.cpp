@@ -81,7 +81,8 @@ NekDouble Geometry1D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         if(xi<0.)
         {
             dist = - xi * sqrt(len);
-        } else if(xi>1.)
+        }
+        else if(xi>1.)
         {
             dist = (xi - 1.) * sqrt(len);
         }

@@ -201,6 +201,8 @@ protected:
     int                               m_globalID;
     /// Array containing expansion coefficients of @p m_xmap
     Array<OneD, Array<OneD, NekDouble> > m_coeffs;
+    /// Array containing bounding box
+    Array<OneD, NekDouble> m_boundingBox;
 
     /// Handles generation of geometry factors.
     void                              GenGeomFactors();

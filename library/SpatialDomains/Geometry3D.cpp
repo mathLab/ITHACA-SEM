@@ -189,7 +189,7 @@ void Geometry3D::NewtonIterationForLocCoord(
     }
 
     m_xmap->LocCoordToLocCollapsed(Lcoords, eta);
-    if(ClampLocCoords(eta, 1E-15))
+    if(ClampLocCoords(eta, 0.))
     {
         I[0] = m_xmap->GetBasis(0)->GetI(eta);
         I[1] = m_xmap->GetBasis(1)->GetI(eta + 1);
@@ -286,7 +286,7 @@ NekDouble Geometry3D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         // Set distance
         Array<OneD, NekDouble> eta(3, 0.);
         m_xmap->LocCoordToLocCollapsed(Lcoords, eta);
-        if(ClampLocCoords(eta, 1E-15))
+        if(ClampLocCoords(eta, 0.))
         {
             Array<OneD, NekDouble> xi(3, 0.);
             m_xmap->LocCollapsedToLocCoord(eta, xi);

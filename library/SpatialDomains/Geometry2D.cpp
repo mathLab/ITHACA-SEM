@@ -149,7 +149,7 @@ void Geometry2D::NewtonIterationForLocCoord(
     }
 
     m_xmap->LocCoordToLocCollapsed(Lcoords, eta);
-    if(ClampLocCoords(eta, 1E-15))
+    if(ClampLocCoords(eta, 0.))
     {
         I[0] = m_xmap->GetBasis(0)->GetI(eta);
         I[1] = m_xmap->GetBasis(1)->GetI(eta + 1);
@@ -200,10 +200,12 @@ NekDouble Geometry2D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         if(m_shapeType == LibUtilities::eTriangle)
         {
             v2 = 2;
-        } else if(m_shapeType == LibUtilities::eQuadrilateral)
+        }
+        else if(m_shapeType == LibUtilities::eQuadrilateral)
         {
             v2 = 3;
-        } else
+        }
+        else
         {
             v2 = 2;
             ASSERTL0(false, "unrecognized 2D element type");
@@ -235,7 +237,7 @@ NekDouble Geometry2D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         // Set distance
         Array<OneD, NekDouble> eta(2, 0.);
         m_xmap->LocCoordToLocCollapsed(Lcoords, eta);
-        if(ClampLocCoords(eta, 1E-15))
+        if(ClampLocCoords(eta, 0.))
         {
             Array<OneD, NekDouble> xi(2, 0.);
             m_xmap->LocCollapsedToLocCoord(eta, xi);

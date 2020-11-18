@@ -2375,17 +2375,16 @@ namespace Nektar
                 }
             }
 
-            NekDouble nearpt     = 1e6;
+            NekDouble nearpt     = 1e12;
             NekDouble nearpt_min = 1e6;
             int       min_id     = -1;
             Array<OneD, NekDouble> savLocCoords(locCoords.size());
 
             if(cachedId >= 0 && cachedId < (*m_exp).size())
             {
-                if((*m_exp)[cachedId]->
-                           GetGeom()->ContainsPoint(gloCoords,
-                                                    locCoords,
-                                                    tol, nearpt))
+                if((*m_exp)[cachedId]->GetGeom()->MinMaxCheck(gloCoords) &&
+                   (*m_exp)[cachedId]->GetGeom()->ContainsPoint(gloCoords,
+                                                locCoords, tol, nearpt))
                 {
                     return cachedId;
                 }
@@ -2418,7 +2417,8 @@ namespace Nektar
                 {
                     continue;
                 }
-                if ((*m_exp)[id]->GetGeom()->ContainsPoint(gloCoords, locCoords, tol, nearpt))
+                if ((*m_exp)[id]->GetGeom()->ContainsPoint(gloCoords,
+                                            locCoords, tol, nearpt))
                 {
                     return id;
                 }

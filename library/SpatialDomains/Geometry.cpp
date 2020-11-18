@@ -253,7 +253,7 @@ bool Geometry::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                NekDouble tol,
                                NekDouble &dist)
 {
-    // Convert to the local (eta) coordinates.
+    // Convert to the local (xi) coordinates.
     dist = GetLocCoords(gloCoord, locCoord);
     if(dist<=tol + NekConstants::kNekMachineEpsilon)
     {

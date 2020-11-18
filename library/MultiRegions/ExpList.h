@@ -725,16 +725,20 @@ namespace Nektar
              * expansion containing the arbitrary point given by \a gloCoord,
              * within a distance tolerance of tol.
              *
-             * If returnNearestElmt is true and no element contains this point,
+             * If returnNearestElmt is true and no element contains the point,
              * this function returns the nearest element whose bounding box contains
-             * this point. The bounding box has a 10% margin in each direction.
+             * the point. The bounding box has a 10% margin in each direction.
              *
-             * @param gloCoord          input the coordinate of one point in physics space
-             * @param locCoords         output its local coordinate in the returned element
-             * @param tol               distance tolerance to judge if a point lies in an element
-             * @param returnNearestElmt if true and no element contains this point, the nearest element whose bounding box contains this point is returned
-             * @param cachedId          an initial guess of the most possible element index
-             * @param maxDistance       if returnNearestElmt is set as true, the nearest element will be returned. But the distance of the nearest element and this point should be <= maxDistance.
+             * @param gloCoord    (input) coordinate in physics space
+             * @param locCoords   (output) local coordinate xi in the returned element
+             * @param tol         distance tolerance to judge if a point lies in an element
+             * @param returnNearestElmt if true and no element contains this point, the
+             *                          nearest element whose bounding box contains this
+             *                          point is returned
+             * @param cachedId    an initial guess of the most possible element index
+             * @param maxDistance if returnNearestElmt is set as true, the nearest
+             *                    element will be returned. But the distance of the
+             *                    nearest element and this point should be <= maxDistance.
              *
              * @return element index; if no element is found, -1 is returned.
              */

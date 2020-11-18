@@ -197,7 +197,7 @@ public:
     NekDouble   m_DefaultTolerance                    = 
                                                 NekConstants::kNekIterativeTol;
     int         m_DefaultNekNonlinSysMaxIterations    = 100;
-    int         m_DefaultNekLinSysMaxIterations       = 100;
+    int         m_DefaultNekLinSysMaxIterations       = 5000;
     NekDouble   m_DefaultNekNonlinSysTolerance        = m_DefaultTolerance;
     NekDouble   m_DefaultNekLinSysTolerance           = m_DefaultTolerance;
     NekDouble   m_DefaultNonlinIterTolRelativeL2      = 1.0E-6;

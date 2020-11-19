@@ -93,13 +93,13 @@ void FilterMean::v_Initialise(
     MultiRegions::ExpListSharedPtr areaField;
 
     ASSERTL0(pFields[0]->GetExpType() != MultiRegions::e1D,
-             "1D expansion not supported for energy filter");
+             "1D expansion not supported for mean filter");
 
     ASSERTL0(pFields[0]->GetExpType() != MultiRegions::e2D,
-             "2D expansion not supported for energy filter");
+             "2D expansion not supported for mean filter");
 
     ASSERTL0(pFields[0]->GetExpType() != MultiRegions::e3DH2D,
-             "Homogeneous 2D expansion not supported for energy filter");
+             "Homogeneous 2D expansion not supported for mean filter");
 
     if (pFields[0]->GetExpType() == MultiRegions::e3DH1D)
     {

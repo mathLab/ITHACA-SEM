@@ -3,6 +3,7 @@
     <description>NS, Couette flow, mixed bcs, WeakDG advection and IP diffusion, Implicit</description>
     <executable>CompressibleFlowSolver</executable>
     <parameters>Couette_WeakDG_IP_MODIFIED_IM_PRECON.xml</parameters>
+    <processes>4</processes>
     <files>
         <file description="Session File">Couette_WeakDG_IP_MODIFIED_IM_PRECON.xml</file>
     </files>

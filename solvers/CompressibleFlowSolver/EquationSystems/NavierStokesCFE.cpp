@@ -876,7 +876,7 @@ namespace Nektar
                 {
                     GetViscousFluxBilinearForm(nConvectiveFields, nd, nderiv, 
                         inarray, qfields[nderiv], mu, auxVars, outtmp);
-                    
+
                     for (int j = 0; j < nConvectiveFields; ++j)
                     {
                         Vmath::Vvtvp(nPts, &normal[nd][0], 1,
@@ -1162,7 +1162,7 @@ namespace Nektar
             Vmath::Vadd(nPts,&q2[0],1,&u2[i][0],1,&q2[0],1);
         }
         Vmath::Vmul(nPts,&inaverg[nDim_plus_one][0],1,&orho[0],1,&E_minus_q2[0],1);
-        Vmath::Vsub(nPts,&E_minus_q2[0],1,&q2[0],1,&E_minus_q2[0],1);
+        Vmath::Vsub(nPts,&E_minus_q2[0],1,&q2[0],1,&E_minus_q2[0],1);          
         Vmath::Vmul(nPts,&mu[0],1,&orho[0],1,&tmp[0],1);
     }
 
@@ -1345,7 +1345,8 @@ namespace Nektar
         }
         else
         {
-            Vmath::Vcopy(nPts, m_mu, 1, mu, 1);
+            //mu may be on volume or trace 
+            Vmath::Fill(nPts, m_mu[0], mu, 1);
         }
     }
     /**
@@ -2281,7 +2282,7 @@ namespace Nektar
         }
         else
         {
-            Vmath::Vcopy(nPts, m_mu, 1, mu, 1);
+            Vmath::Fill(nPts, m_mu[0], mu, 1);
         }
 
         NekDouble pointmu       = 0.0;
@@ -2415,7 +2416,7 @@ namespace Nektar
             }
         }
         // Auxiliary variables
-        Array<OneD, NekDouble > mu                 (nPts, m_mu);
+        Array<OneD, NekDouble > mu                 (nPts, m_mu[0]);
 
         // Variable viscosity through the Sutherland's law
         if (m_ViscosityType == "Variable")

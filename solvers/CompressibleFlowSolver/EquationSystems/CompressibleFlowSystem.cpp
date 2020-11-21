@@ -2166,7 +2166,7 @@ namespace Nektar
 
         bool converged       = false;
         // bool steady_state    = false;
-        int nwidthcolm = 8;
+        // int nwidthcolm = 8;
         int NtotDoOdeRHS = 0;
         int NtotGMRESIts = 0;
         NekDouble resnorm0 = 0.0;
@@ -2221,7 +2221,8 @@ namespace Nektar
                     if(resratio>tol2Ratio&&l_root)
                     {
                         WARNINGL0(true,"     # resratio>tol2Ratio in CompressibleFlowSystem::DoImplicitSolve ");
-                        cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
+                        // cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
+                        cout 
                              <<" resratio= "<<resratio<<" tol2Ratio= "<<tol2Ratio<<endl;
                     }
                     break;
@@ -2254,7 +2255,8 @@ namespace Nektar
         if((l_verbose||(!converged))&&l_root)
         {
             WARNINGL0(converged,"     # Nonlinear system solver not converge in CompressibleFlowSystem::DoImplicitSolve ");
-            cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
+            // cout <<right<<scientific<<setw(nwidthcolm)<<setprecision(nwidthcolm-6)
+            cout 
                 <<"     * Newton-Its converged (RES="
                 << sqrt(resnorm)<<" Res/Q="<< sqrt(resnorm/m_inArrayNorm)
                 <<" ResMax/QPerDOF="<< resmaxm*sqrt(ntotalDOF/m_inArrayNorm)<<" Res/(DtRHS): "<<sqrt(resratio)

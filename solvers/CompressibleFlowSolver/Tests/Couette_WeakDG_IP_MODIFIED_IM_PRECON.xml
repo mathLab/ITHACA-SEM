@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="2" SPACE="2">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAGH/ZDaXsHkY9f/tQzMDCiyX9f/B8I7sPlmaAyYHWGHXu/oskzo8mjm8+C1X4GBpg8K1b9CHk2VP326O5jR5NHt58DqzzCfAAO8UYf</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1jjkKADAMw9z7+v9/OxQNNSSLEcIm0ruk/+AccAlYxtWSnWaJ77aLH4GfgV/2B35bj/1jffwFP/AAngAA</EDGE>
+        <ELEMENT>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAFjFCaCUozo4mzQGlWKM2GQx+MZofSHFCaE81cmH4uKM2Npg8AFAgAWQAA</Q>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="7"> E[5,10] </C>
+            <C ID="8"> E[11,8] </C>
+            <C ID="9"> E[3,9] </C>
+            <C ID="10"> E[4,0] </C>
+            <C ID="11"> Q[0-3] </C>
+        </COMPOSITE>
+        <DOMAIN> C[11] </DOMAIN>
+    </GEOMETRY>
+    <Metadata>
+        <Provenance>
+            <GitBranch>refs/heads/feature_ImplicitSolver_UWI_VisJac_Blasius</GitBranch>
+            <GitSHA1>02c5e1135864cf898ba64b679825cd1f2d29f4b9</GitSHA1>
+            <Hostname>zgyan-ThinkPad-X1-Carbon-6th</Hostname>
+            <NektarVersion>4.5.0</NektarVersion>
+            <Timestamp>11-Mar-2020 19:57:39</Timestamp>
+        </Provenance>
+        <NekMeshCommandLine>2_2.msh 2_2.xml </NekMeshCommandLine>
+    </Metadata>
+    
+   <EXPANSIONS>
+        <E COMPOSITE="C[11]" NUMMODES="2" TYPE="MODIFIED" FIELDS="rho,rhou,rhov,E" />
+    </EXPANSIONS>
+<CONDITIONS>
+    <PARAMETERS> 
+      <P> TimeStep              = 5                             </P>
+      <P> NumSteps               = 8                           </P>
+      <P> IO_CheckSteps         = 500000                        </P>
+      <P> IO_InfoSteps          = 10                          </P>
+      <P> GasConstant           = 287.058                       </P>
+      <P> Gamma                 = 1.4                           </P>
+      <P> pInf                  = 101325                        </P>
+      <P> rhoInf                = 1.225                         </P>
+      <P> Mach                  = 0.1                           </P>
+      <P> cInf                  = sqrt(Gamma * pInf / rhoInf)   </P>  
+      <P> uInf                  = Mach*cInf                     </P>
+      <P> vInf                  = 0.0                           </P>
+      <P> Twall                 = 300.15                        </P>
+      <P> T0                    = 0.8*Twall                     </P>
+      <P> T1                    = 0.85*Twall                    </P>
+      <P> Re                    = 100                           </P>
+      <P> L                     = 1                             </P>
+      <P> mu                    = rhoInf * L * uInf / Re        </P>     
+      <P> Pr                    = 0.72                          </P>     
+      <P> Cv                    = GasConstant/(Gamma-1)         </P> 
+      <P> Cp                    = (Gamma*GasConstant)/(Gamma-1) </P>
+
+      <P> NekLinSysMaxIterations = 9                     </P>
+      <P> NekNonlinSysMaxIterations = 3                     </P>
+      <P> LinSysRelativeTolInNonlin = 0.01                     </P>
+      <P> NonlinIterTolRelativeL2 = 0.001                     </P>
+
+      <P> JFNKPrecondStep = 7                     </P>
+
+      <P> flagImplItsStatistcs  = 1                     </P> 
+
+      <P> SteadyStateTol    = 3.0E-7                     </P> 
+    </PARAMETERS>
+
+        <SOLVERINFO>
+        <I PROPERTY="EQType"                VALUE="NavierStokesCFE"     />
+        <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+        <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
+        <I PROPERTY="DiffusionType"         VALUE="InteriorPenalty"     />
+        <I PROPERTY="AdvectionAdvancement"  VALUE="Implicit"            />
+        <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit"            />
+        <I PROPERTY="TimeIntegrationMethod" VALUE="BackwardEuler"       />
+        <I PROPERTY="UpwindType"            VALUE="Roe"                 />
+        <I PROPERTY="ProblemType"           VALUE="General"             />
+        <I PROPERTY="ViscosityType"         VALUE="Constant"            />
+        <I PROPERTY="LinSysIterSovlerInNewton" VALUE="GMRES"               />
+    </SOLVERINFO>
+
+    <VARIABLES>
+      <V ID="0"> rho  </V>
+      <V ID="1"> rhou </V>
+      <V ID="2"> rhov </V>
+      <V ID="3"> E    </V>
+    </VARIABLES>
+
+    <BOUNDARYREGIONS>
+      <B ID="0"> C[7] </B>
+      <B ID="1"> C[8] </B>
+      <B ID="2"> C[9] </B>
+      <B ID="3"> C[10] </B>
+    </BOUNDARYREGIONS>
+
+    <BOUNDARYCONDITIONS>
+      <REGION REF="0">
+        <D VAR="rho"  VALUE="pInf/(GasConstant*T0)" />
+        <D VAR="rhou" VALUE="0" />
+        <D VAR="rhov" VALUE="0"/>
+        <D VAR="E"    VALUE="pInf/(GasConstant*T0)*(Cv*T0)" />
+      </REGION>
+      <REGION REF="2">
+        <D VAR="rho"  VALUE="pInf/(GasConstant*T1)" />
+        <D VAR="rhou" VALUE="pInf/(GasConstant*T1)*uInf" />
+        <D VAR="rhov" VALUE="0"/>
+        <D VAR="E"    VALUE="pInf/(GasConstant*T1)*(Cv*T1+0.5 * uInf * uInf)" />
+      </REGION>
+<!--       Period -->
+      <REGION REF="1">
+        <P VAR="rho"  VALUE="[3]" />
+        <P VAR="rhou" VALUE="[3]" />
+        <P VAR="rhov" VALUE="[3]" />
+        <P VAR="E"    VALUE="[3]" />
+      </REGION>
+      <REGION REF="3">
+        <P VAR="rho"  VALUE="[1]" />
+        <P VAR="rhou" VALUE="[1]" />
+        <P VAR="rhov" VALUE="[1]" />
+        <P VAR="E"    VALUE="[1]" />
+      </REGION>
+    </BOUNDARYCONDITIONS>
+
+    <FUNCTION NAME="InitialConditions">
+        <E VAR="rho"    VALUE="rhoInf"/>
+        <E VAR="rhou"   VALUE="rhoInf * uInf"   />
+        <E VAR="rhov"   VALUE="rhoInf * vInf"   />
+        <E VAR="E"      VALUE="pInf / (Gamma - 1) + 0.5 * rhoInf * (uInf * uInf + vInf * vInf)"/>      
+    </FUNCTION>
+    
+    <FUNCTION NAME="ExactSolution">
+        <E VAR="rho"  VALUE="pInf/(GasConstant*(T0+y/L*(T1-T0)+y/L*(1.0-y/L)*Pr*uInf*uInf/(2.0*Cp)))" />
+        <E VAR="rhou" VALUE="pInf/(GasConstant*(T0+y/L*(T1-T0)+y/L*(1.0-y/L)*Pr*uInf*uInf/(2.0*Cp)))*y/L*uInf" />
+        <E VAR="rhov" VALUE="0.0" />
+        <E VAR="E"    VALUE="pInf/(GasConstant*(T0+y/L*(T1-T0)+y/L*(1.0-y/L)*Pr*uInf*uInf/(2.0*Cp)))*(Cv*(T0+y/L*(T1-T0)+y/L*(1.0-y/L)*Pr*uInf*uInf/(2.0*Cp))+0.5*y/L*uInf*y/L*uInf)" />
+    </FUNCTION>
+  </CONDITIONS>
+</NEKTAR>

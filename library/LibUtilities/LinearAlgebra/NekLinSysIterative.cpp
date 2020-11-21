@@ -281,7 +281,7 @@ namespace Nektar
             truncted = true;
         }
 
-        int nwidthcolm = 10;
+        // int nwidthcolm = 10;
 
         for(int nrestart = 0; nrestart < m_maxrestart; ++nrestart)
         {
@@ -314,7 +314,8 @@ namespace Nektar
 
             if (m_root)
             {
-                cout <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8) 
+                // cout <<std::scientific<<std::setw(nwidthcolm)<<std::setprecision(nwidthcolm-8) 
+                cout  
                         << "       GMRES iterations made = " << m_totalIterations
                         << " using tolerance of "  << m_tolerance
                         << " (error = " << sqrt(eps * m_prec_factor / m_rhs_magnitude) << ")";

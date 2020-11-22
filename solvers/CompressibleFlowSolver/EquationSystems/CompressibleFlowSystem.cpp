@@ -824,10 +824,10 @@ namespace Nektar
         }
         for(int m = 0; m < nvariables; ++m)
         {
-            Vmath::Zero(nTracePts, &Fwdreslt[0],1);
+            Vmath::Zero(nTracePts, Fwdreslt,1);
             for(int n = 0; n < nvariables; ++n)
             {
-                Vmath::Vvtvp(nTracePts,&TraceJacArray[0][m][n][0],1,&Fwdarray[n][0],1,&Fwdreslt[0],1,&Fwdreslt[0],1);
+                Vmath::Vvtvp(nTracePts, TraceJacArray[0][m][n], 1, Fwdarray[n], 1, Fwdreslt, 1, Fwdreslt, 1);
             }
 
             for(int i = 0; i < nTracePts; ++i)
@@ -845,10 +845,10 @@ namespace Nektar
         }
         for(int m = 0; m < nvariables; ++m)
         {
-            Vmath::Zero(nTracePts, &Fwdreslt[0],1);
+            Vmath::Zero(nTracePts, Fwdreslt,1);
             for(int n = 0; n < nvariables; ++n)
             {
-                Vmath::Vvtvp(nTracePts,&TraceJacArray[1][m][n][0],1,&Fwdarray[n][0],1,&Fwdreslt[0],1,&Fwdreslt[0],1);
+                Vmath::Vvtvp(nTracePts,TraceJacArray[1][m][n],1,Fwdarray[n],1,Fwdreslt,1,Fwdreslt,1);
             }
             for(int i = 0; i < nTracePts; ++i)
             {
@@ -882,7 +882,7 @@ namespace Nektar
 
                 for(int m = 0; m < nvariables; ++m)
                 {
-                    Vmath::Zero(nTracePts, &Fwdreslt[0],1);
+                    Vmath::Zero(nTracePts, Fwdreslt,1);
                     for (int nd = 0; nd < nDim; ++nd)
                     {
                         for(int n = 0; n < nvariables; ++n)
@@ -891,7 +891,7 @@ namespace Nektar
                             {
                                 Fwdarray[n][i] =  DataType( numDerivFwd[nd][n][i] );
                             }
-                            Vmath::Vvtvp(nTracePts,&TraceJacDerivArray[0][m][n*nDim+nd][0],1,&Fwdarray[n][0],1,&Fwdreslt[0],1,&Fwdreslt[0],1);
+                            Vmath::Vvtvp(nTracePts,TraceJacDerivArray[0][m][n*nDim+nd],1,Fwdarray[n],1,Fwdreslt,1,Fwdreslt,1);
                         }
                     }
                     for(int i = 0; i < nTracePts; ++i)
@@ -902,7 +902,7 @@ namespace Nektar
 
                 for(int m = 0; m < nvariables; ++m)
                 {
-                    Vmath::Zero(nTracePts, &Fwdreslt[0],1);
+                    Vmath::Zero(nTracePts, Fwdreslt,1);
                     for (int nd = 0; nd < nDim; ++nd)
                     {
                         for(int n = 0; n < nvariables; ++n)
@@ -911,7 +911,7 @@ namespace Nektar
                             {
                                 Fwdarray[n][i] =  DataType( numDerivBwd[nd][n][i] );
                             }
-                            Vmath::Vvtvp(nTracePts,&TraceJacDerivArray[1][m][n*nDim+nd][0],1,&Fwdarray[n][0],1,&Fwdreslt[0],1,&Fwdreslt[0],1);
+                            Vmath::Vvtvp(nTracePts,TraceJacDerivArray[1][m][n*nDim+nd],1,Fwdarray[n],1,Fwdreslt,1,Fwdreslt,1);
                         }
                     }
                     for(int i = 0; i < nTracePts; ++i)
@@ -934,10 +934,10 @@ namespace Nektar
                     {
                         for(int m = 0; m < nvariables; ++m)
                         {
-                            Vmath::Zero(nTracePts, &Fwdreslt[0],1);
+                            Vmath::Zero(nTracePts, Fwdreslt,1);
                             for(int n = 0; n < nvariables; ++n)
                             {
-                                Vmath::Vvtvp(nTracePts,&TraceIPSymJacArray[0][nd][m][n][0],1,&Fwdarray[n][0],1,&Fwdreslt[0],1,&Fwdreslt[0],1);
+                                Vmath::Vvtvp(nTracePts,TraceIPSymJacArray[0][nd][m][n],1,Fwdarray[n],1,Fwdreslt,1,Fwdreslt,1);
                             }
 
                             for(int i = 0; i < nTracePts; ++i)
@@ -958,10 +958,10 @@ namespace Nektar
                     {
                         for(int m = 0; m < nvariables; ++m)
                         {
-                            Vmath::Zero(nTracePts, &Fwdreslt[0],1);
+                            Vmath::Zero(nTracePts, Fwdreslt,1);
                             for(int n = 0; n < nvariables; ++n)
                             {
-                                Vmath::Vvtvp(nTracePts,&TraceIPSymJacArray[1][nd][m][n][0],1,&Fwdarray[n][0],1,&Fwdreslt[0],1,&Fwdreslt[0],1);
+                                Vmath::Vvtvp(nTracePts,TraceIPSymJacArray[1][nd][m][n],1,Fwdarray[n],1,Fwdreslt,1,Fwdreslt,1);
                             }
 
                             for(int i = 0; i < nTracePts; ++i)
@@ -1027,6 +1027,7 @@ namespace Nektar
         TypeNekBlkMatSharedPtr tmpGmtx;
 
         Array<OneD, DataType>    GMatData,ElmtMatData;
+        Array<OneD, DataType>    tmpArray1,tmpArray2;
 
         for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
         {
@@ -1060,7 +1061,7 @@ namespace Nektar
                         int Goffset = (n*nElmtCoef+ncl)*nConvectiveFields*nElmtCoef+m*nElmtCoef;
                         int Eoffset = ncl*nElmtCoef;
 
-                        Vmath::Vcopy(nElmtCoef,&ElmtMatData[0]+Eoffset,1, &GMatData[0]+Goffset,1);
+                        Vmath::Vcopy(nElmtCoef,tmpArray1 = ElmtMatData+Eoffset,1, tmpArray2 = GMatData+Goffset,1);
                     }
                 }
             }
@@ -1078,12 +1079,12 @@ namespace Nektar
                         int Goffset = (n*nElmtCoef+ncl)*nConvectiveFields*nElmtCoef+m*nElmtCoef;
                         int Eoffset = ncl*nElmtCoef;
 
-                        Vmath::Vcopy(nElmtCoef, &GMatData[0]+Goffset,1,&ElmtMatData[0]+Eoffset,1);
+                        Vmath::Vcopy(nElmtCoef, tmpArray1 = GMatData+Goffset,1,tmpArray2 = ElmtMatData+Eoffset,1);
                     }
                 }
             }
             ElmtMatData = gmtVar->GetBlock(nelmt,nelmt)->GetPtr();
-            Vmath::Vcopy(blocksize, &GMatData[0],1,&ElmtMatData[0],1);
+            Vmath::Vcopy(blocksize, GMatData,1,ElmtMatData,1);
         }
         return;
     }
@@ -1345,7 +1346,7 @@ namespace Nektar
                 }
             }
             
-            Vmath::Zero(nElmtCoef2Paded*nVar2,&MatData[0],1);
+            Vmath::Zero(nElmtCoef2Paded*nVar2,MatData,1);
             DataType one = 1.0;
             for(int ndir =0;ndir<m_spacedim;ndir++)
             {
@@ -1375,13 +1376,16 @@ namespace Nektar
                 }
             }
 
+
+            Array<OneD, DataType> tmpA;
+
             for(int n=0; n<nvariable;n++)
             {
                 for(int m=0; m<nvariable;m++)
                 {
                     int nvarOffset = m+n*nvariable;
                     GmatxData = gmtxarray[m][n]->GetBlock(ne,ne)->GetPtr();
-                    Vmath::Vcopy(nElmtCoef2,&MatData[nvarOffset*nElmtCoef2Paded],1,&GmatxData[0],1);
+                    Vmath::Vcopy(nElmtCoef2, tmpA = MatData + nvarOffset*nElmtCoef2Paded,1,GmatxData,1);
                 }
             }
         }
@@ -1898,8 +1902,8 @@ namespace Nektar
 
             for (int n = 0; n < nFields; n++)
             {
-                Vmath::Vsub(nTracePts,&plusflux[n][0],1,&numflux[n][0],1,&Jacvect[n][0],1);
-                Vmath::Smul(nTracePts, oepsvar ,&Jacvect[n][0],1,&Jacvect[n][0],1);
+                Vmath::Vsub(nTracePts,plusflux[n],1,numflux[n],1,Jacvect[n],1);
+                Vmath::Smul(nTracePts, oepsvar ,Jacvect[n],1,Jacvect[n],1);
             }
             for(int j = 0; j < nTracePts; j++)
             {
@@ -1917,8 +1921,8 @@ namespace Nektar
                 {
                     for (int n = 0; n < nFields; n++)
                     {
-                        Vmath::Vsub(nTracePts,&IPFluxPlus[nd][n][0],1,&IPSymmFlux[nd][n][0],1,&Jacvect[n][0],1);
-                        Vmath::Smul(nTracePts, oepsvar ,&Jacvect[n][0],1,&Jacvect[n][0],1);
+                        Vmath::Vsub(nTracePts,IPFluxPlus[nd][n],1,IPSymmFlux[nd][n],1,Jacvect[n],1);
+                        Vmath::Smul(nTracePts, oepsvar,Jacvect[n],1,Jacvect[n],1);
                         for(int np=0;np<nTracePts;np++)
                         {
                             TraceIPSymJacArray[0][nd][n][i][np] = DataType( Jacvect[n][np] );
@@ -1967,8 +1971,8 @@ namespace Nektar
 
             for (int n = 0; n < nFields; n++)
             {
-                Vmath::Vsub(nTracePts,&plusflux[n][0],1,&numflux[n][0],1,&Jacvect[n][0],1);
-                Vmath::Smul(nTracePts, oepsvar ,&Jacvect[n][0],1,&Jacvect[n][0],1);
+                Vmath::Vsub(nTracePts,plusflux[n],1,numflux[n],1,Jacvect[n],1);
+                Vmath::Smul(nTracePts, oepsvar,Jacvect[n],1,Jacvect[n],1);
             }
             for(int j = 0; j < nTracePts; j++)
             {
@@ -1986,8 +1990,8 @@ namespace Nektar
                 {
                     for (int n = 0; n < nFields; n++)
                     {
-                        Vmath::Vsub(nTracePts,&IPFluxPlus[nd][n][0],1,&IPSymmFlux[nd][n][0],1,&Jacvect[n][0],1);
-                        Vmath::Smul(nTracePts, oepsvar ,&Jacvect[n][0],1,&Jacvect[n][0],1);
+                        Vmath::Vsub(nTracePts,IPFluxPlus[nd][n],1,IPSymmFlux[nd][n],1,Jacvect[n],1);
+                        Vmath::Smul(nTracePts, oepsvar ,Jacvect[n],1,Jacvect[n],1);
                         for(int np=0;np<nTracePts;np++)
                         {
                             TraceIPSymJacArray[1][nd][n][i][np] = DataType( Jacvect[n][np] );
@@ -2195,6 +2199,7 @@ namespace Nektar
 
         DNekMatSharedPtr MassMat;
         Array<OneD,NekDouble> BwdMatData,MassMatData,tmp;
+        Array<OneD,NekDouble> tmp2;
         Array<OneD,DataType> MassMatDataDataType;
         LibUtilities::ShapeType ElmtTypePrevious = LibUtilities::eNoShapeType;
 
@@ -2229,7 +2234,7 @@ namespace Nektar
             for(int np=0; np<nelmtcoef;np++)
             {
                 explist->GetExp(nelmt)->IProductWRTBase(BwdMatData+np*nelmtpnts,tmp);
-                Vmath::Vcopy(nelmtcoef,&tmp[0],1,&MassMatData[0]+np*nelmtcoef,1);
+                Vmath::Vcopy(nelmtcoef,tmp,1,tmp2 = MassMatData+np*nelmtcoef,1);
             }
             for(int i=0;i<MassMatData.size();i++)
             {
@@ -2356,8 +2361,8 @@ namespace Nektar
         for (int i = 0; i < nvariables; i++)
         {
             tmp = out + i*npoints;
-            Vmath::Vsub(npoints,&resplus[i][0],1,&resminus[i][0],1,&tmp[0],1);
-            Vmath::Smul(npoints, 0.5*oeps ,&tmp[0],1,&tmp[0],1);
+            Vmath::Vsub(npoints,resplus[i],1,resminus[i],1,tmp,1);
+            Vmath::Smul(npoints, 0.5*oeps ,tmp,1,tmp,1);
         }
        
         return;
@@ -2597,7 +2602,7 @@ namespace Nektar
 
             GetFluxVectorJacPoint(nConvectiveFields,pointVar,normals,wspMat);
 
-            Vmath::Vcopy(matsize, &wspMatData[0],1,&PntJacArray[npnt][0],1);
+            Vmath::Vcopy(matsize, wspMatData,1,PntJacArray[npnt],1);
         }
         return ;
     }
@@ -3186,8 +3191,8 @@ namespace Nektar
 
         NonlinSysEvaluatorCoeff(solplus, resplus, flag, refsource);
         
-        Vmath::Vsub(ntotal, &resplus[0], 1, &refres[0], 1, &out[0],1);
-        Vmath::Smul(ntotal, oeps, &out[0], 1, &out[0], 1);
+        Vmath::Vsub(ntotal, resplus, 1, refres, 1, out,1);
+        Vmath::Smul(ntotal, oeps, out, 1, out, 1);
        
         return;
     }

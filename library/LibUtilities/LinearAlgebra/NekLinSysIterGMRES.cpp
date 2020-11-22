@@ -164,10 +164,12 @@ int NekLinSysIterGMRES::DoGMRES(const int nGlobal,
     NekDouble eps = 0.0;
     int nNonDir   = nGlobal - nDir;
 
+    Array<OneD, NekDouble> tmp;
+
     // zero homogeneous out array ready for solution updates
     // Should not be earlier in case input vector is same as
     // output and above copy has been peformed
-    Vmath::Zero(nNonDir, &pOutput[nDir], 1);
+    Vmath::Zero(nNonDir, tmp = pOutput + nDir, 1);
 
     m_totalIterations = 0;
     m_converged       = false;

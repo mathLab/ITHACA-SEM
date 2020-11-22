@@ -260,7 +260,6 @@ namespace Nektar
             m_TotGMRESIts   = 0;
             m_TotImpStages  = 0;
 
-
            Array<OneD, int> abortFlags(2, 0);
             string    abortFile     = "abort";
             if (m_session->DefinesSolverInfo("CheckAbortFile"))

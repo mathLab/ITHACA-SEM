@@ -156,7 +156,6 @@ namespace Nektar
         NekDouble                           m_filterAlpha;
         NekDouble                           m_filterExponent;
         NekDouble                           m_filterCutoff;
-
         bool                                m_useFiltering;
 
         /// Store physical artificial viscosity
@@ -223,7 +222,7 @@ namespace Nektar
         // Array<OneD, NekDouble>              m_magnitdEstimat;
 
         /// cfl number for local time step(notice only for jfnk other see m_cflSafetyFactor)
-        NekDouble                                   m_cflLocTimestep;
+        NekDouble                                   m_cflLocTimestep = -1.0;
         /// In Jacobi iteration the SOR relaxation parameter
         NekDouble                                   m_SORRelaxParam;
         /// two strategies: time accurate or not.

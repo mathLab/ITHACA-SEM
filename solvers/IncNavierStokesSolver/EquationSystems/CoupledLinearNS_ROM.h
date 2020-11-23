@@ -295,7 +295,8 @@ namespace Nektar
 	int qoi_dof;
 	int fine_grid_dir0;
 	int fine_grid_dir1;
-
+	Array<OneD, std::set<int> > elements_trafo;
+	int number_elem_trafo;
 
 
 

@@ -1299,6 +1299,59 @@ namespace Nektar
 		        param_vector[i] = m_session->GetParameter(result);
 	        }
 	}
+
+	{ // currently just copy-pasted hard-coded from previous version	
+		if (m_session->DefinesParameter("number_elem_trafo"))
+		{
+			number_elem_trafo = m_session->GetParameter("number_elem_trafo");
+		}
+		elements_trafo = Array<OneD, std::set<int> > (number_elem_trafo);
+//	    <P> elem_1 = {32,30,11,10,9,8,17,16,15,14,25,24,23,22}   	</P>   
+//          <P> elem_2 = {12, 28, 34, 13,21,20,18,19,26,27}   		</P>   
+//	    <P> elem_3 = {29, 31}   	</P>   
+//	    <P> elem_4 = {33, 35}   	</P>   
+//	    <P> elem_5 = {0,1,2,3,4,5,6,7}  
+		elements_trafo[0].insert(32); // of course, this should work automatically
+		elements_trafo[0].insert(30);
+		elements_trafo[0].insert(11);
+		elements_trafo[0].insert(10);
+		elements_trafo[0].insert(9);
+		elements_trafo[0].insert(8);
+		elements_trafo[0].insert(17);
+		elements_trafo[0].insert(16);
+		elements_trafo[0].insert(15);
+		elements_trafo[0].insert(14);
+		elements_trafo[0].insert(25);
+		elements_trafo[0].insert(24);
+		elements_trafo[0].insert(23);
+		elements_trafo[0].insert(22);
+
+		elements_trafo[1].insert(12);
+		elements_trafo[1].insert(28);
+		elements_trafo[1].insert(34);
+		elements_trafo[1].insert(13);
+		elements_trafo[1].insert(21);
+		elements_trafo[1].insert(20);
+		elements_trafo[1].insert(18);
+		elements_trafo[1].insert(19);
+		elements_trafo[1].insert(26);
+		elements_trafo[1].insert(27);
+
+		elements_trafo[2].insert(29);
+		elements_trafo[2].insert(31);
+
+		elements_trafo[3].insert(33);
+		elements_trafo[3].insert(35);
+
+		elements_trafo[4].insert(0);
+		elements_trafo[4].insert(1);
+		elements_trafo[4].insert(2);
+		elements_trafo[4].insert(3);
+		elements_trafo[4].insert(4);
+		elements_trafo[4].insert(5);
+		elements_trafo[4].insert(6);
+		elements_trafo[4].insert(7);
+	}
 	
     	cout << " ... finished loading ROM parameters" << endl;
 	
@@ -5492,7 +5545,14 @@ namespace Nektar
  
     int CoupledLinearNS_ROM::get_curr_elem_pos(int curr_elem)
     {
-    	return 0;
+	// find within Array<OneD, std::set<int> > elements_trafo; the current entry
+	for(int i = 0; i < elements_trafo.size(); ++i)
+	{
+		if (elements_trafo[i].count(curr_elem))
+		{
+			return i;
+		}
+	}
     }     
     
     double CoupledLinearNS_ROM::Geo_T(double w, int elemT, int index)
@@ -5793,6 +5853,17 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
      	cout << " transform snapshots to different format for single geometric parameter ... " << endl;
     	cout << " need to set general_param_vector " << endl;
      	
+     	// general_param_vector expects first the geo parameter and then the kinvis
+     	// here the kinvis is constant and given by m_kinvis
+     	
+     	Array<OneD, NekDouble> current_parameter_vector = Array<OneD, NekDouble>(2);
+     	current_parameter_vector[0] = 0;
+     	current_parameter_vector[1] = m_kinvis;
+     	
+        for(int i = 0; i < Nmax; ++i)
+	{
+		//cout << "param_vector[i] " << param_vector[i] << endl;
+	}     	
      	
  	Eigen::MatrixXd transformed_snapshots;
 	// setting transformed_snapshots, making use of snapshot_x_collection, snapshot_y_collection
@@ -5811,6 +5882,8 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
         for(int i = 0; i < Nmax; ++i)
 	{
+		current_parameter_vector[0] = param_vector[i];
+		
 //		cout << "general_param_vector[i][0] " << general_param_vector[i][0] << endl;
 //		cout << "general_param_vector[i][1] " << general_param_vector[i][1] << endl;
 //		cout << "curr_f_bnd.size() " << curr_f_bnd.size() << endl;
@@ -5829,7 +5902,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 
 		// if using Newton should set myAdvField
 
-		Array<OneD, Array<OneD, NekDouble> > snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_x_collection[i], snapshot_y_collection[i], general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int); 
+		Array<OneD, Array<OneD, NekDouble> > snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_x_collection[i], snapshot_y_collection[i], current_parameter_vector, ref_f_bnd, ref_f_p, ref_f_int); 
 
 //		cout << "curr_f_bnd.norm() " << curr_f_bnd.norm() << endl;
 //		cout << "ref_f_bnd.norm() " << ref_f_bnd.norm() << endl;
@@ -5844,7 +5917,7 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 			do
 			{
 				Array<OneD, Array<OneD, NekDouble> > prev_snapshot_result_phys_velocity_x_y = snapshot_result_phys_velocity_x_y;
-				snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_result_phys_velocity_x_y[0], snapshot_result_phys_velocity_x_y[1], general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int);
+				snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_result_phys_velocity_x_y[0], snapshot_result_phys_velocity_x_y[1], current_parameter_vector, ref_f_bnd, ref_f_p, ref_f_int);
 //				cout << "curr_f_bnd.norm() " << curr_f_bnd.norm() << endl;
 //				cout << "ref_f_bnd.norm() " << ref_f_bnd.norm() << endl;
 

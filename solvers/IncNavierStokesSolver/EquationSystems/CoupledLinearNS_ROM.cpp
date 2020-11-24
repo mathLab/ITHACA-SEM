@@ -4833,6 +4833,26 @@ namespace Nektar
 
 	} // loop over curr_elem
 
+        cout << "find malloc" << endl;
+        
+       	int num_elem = m_fields[0]->GetNumElmts();
+
+//        Array<OneD, NekDouble > f_p(num_elem*nsize_p);
+//        NekVector<  NekDouble > F_p(f_p.size(),f_p,eWrapper);
+//        NekVector<  NekDouble > F_p_tmp(num_elem*nsize_int);
+        
+//        Array<OneD, NekDouble > f_p(m_mat[mode].m_D_int->GetRows());
+	int f_p_size = num_elem*nsize_p;
+	cout << "f_p_size " << f_p_size << endl;
+        Array<OneD, NekDouble > f_p(f_p_size);
+         cout << "find malloc 2" << endl;
+        NekVector<  NekDouble > F_p(f_p.size(),f_p,eWrapper);
+         cout << "find malloc 3" << endl;
+        NekVector<  NekDouble > F_p_tmp(m_mat[0].m_Cinv->GetRows());
+         cout << "find malloc 4" << endl;
+         
+         
+
 	// nBndDofs already defined
 	// NumDirBCs from GetNumGlobalDirBndCoeffs ??
 
@@ -4847,7 +4867,7 @@ namespace Nektar
 	//	cout << "NumDirBCs " << NumDirBCs << endl;
 	}
 	Eigen::MatrixXd my_Gmat = Eigen::MatrixXd::Zero(rows, rows);
-	int num_elem = m_fields[0]->GetNumElmts();
+
 	Eigen::MatrixXd M_trafo = Eigen::MatrixXd::Zero(num_elem*nsize_bndry + num_elem, nGlobHomBndDofs);
 	Eigen::MatrixXd M_trafo_no_pp = Eigen::MatrixXd::Zero(num_elem*nsize_bndry, nGlobHomBndDofs);
 
@@ -4931,57 +4951,144 @@ namespace Nektar
             m_fields[i]->SetWaveSpace(waveSpace);
         }
 
-
-        // Assemble f_bnd and f_int
-
-        int cnt = 0;
-	int cnt1 = 0;
-        for(int i = 0; i < num_elem; ++i) // loop over elements
+        int i,j,k,n,cnt,cnt1;
+        int nbnd;
+        int mode = 0;
+      	int nplanecoeffs = m_locToGloMap[0]->GetNumLocalCoeffs();
+        Array<OneD, NekDouble > bnd   (m_locToGloMap[0]->GetNumGlobalCoeffs(),0.0);
+        int offset;
+                
+        /*		
+	for(k = 0; k < nvel; ++k)
         {
-            int eid = i;
-            m_fields[m_velocity[0]]->GetExp(eid)->GetBoundaryMap(bmap);
-            m_fields[m_velocity[0]]->GetExp(eid)->GetInteriorMap(imap);
-            int nbnd   = bmap.size();
-            int nint   = imap.size();
-            int offset = m_fields[m_velocity[0]]->GetCoeff_Offset(eid);
+            MultiRegions::ContFieldSharedPtr cfield =
+                std::dynamic_pointer_cast<MultiRegions::ContField>(m_fields[k]);
+
+            Array<OneD, NekDouble> sign = cfield->GetLocalToGlobalMap()->
+                GetBndCondCoeffsToLocalCoeffsSign();
+            const Array<OneD, const int> map= cfield->GetLocalToGlobalMap()->
+                GetBndCondCoeffsToLocalCoeffsMap();
             
-            for(int j = 0; j < nvel; ++j) // loop over velocity fields 
+            // Add weak boundary conditions to forcing
+            const Array<OneD, SpatialDomains::BoundaryConditionShPtr>
+                bndConds = m_fields[k]->GetBndConditions();
+            Array<OneD, const MultiRegions::ExpListSharedPtr> bndCondExp;
+
+            if(m_HomogeneousType == eHomogeneous1D) 
             {
-                    for(int k = 0; k < nbnd; ++k)
+                bndCondExp = m_fields[k]->GetPlane(2*mode)->GetBndCondExpansions();
+            }
+            else
+            {
+                bndCondExp = m_fields[k]->GetBndCondExpansions();
+            }
+            
+            for(n = 0; n < nz_loc; ++n)
+            {
+                int bndcnt = 0;
+                for(i = 0; i < bndCondExp.size(); ++i)
+                {
+                    const Array<OneD, const NekDouble > bndcoeffs =
+                        bndCondExp[i]->GetCoeffs();
+                    
+                    cnt = 0;
+                    if(bndConds[i]->GetBoundaryConditionType() ==
+                       SpatialDomains::eNeumann ||
+                       bndConds[i]->GetBoundaryConditionType() ==
+                       SpatialDomains::eRobin)
                     {
-                        f_bnd[cnt+k] = forcing[j][ offset+bmap[k]];
+                        if(m_locToGloMap[mode]->GetSignChange())
+                        {
+                            for(j = 0; j < (bndCondExp[i])->GetNcoeffs(); j++)
+                            {
+                                forcing[k][n*nplanecoeffs + map[bndcnt+j]] += sign[bndcnt+j] *
+                                    bndcoeffs[j]; 
+                            }
+                        }
+                        else
+                        {
+                            for(j = 0; j < (bndCondExp[i])->GetNcoeffs(); j++)
+                            {
+                                forcing[k][n*nplanecoeffs + map[bndcnt+j]] += bndcoeffs[j]; 
+                            }
+                        }                    
                     }
-                    for(int k = 0; k < nint; ++k)
-                    {
-                        f_int[cnt1+k] = forcing[j][ offset+imap[k]];
-                    }
-                    cnt  += nbnd;
-                    cnt1 += nint;
+                    
+                    bndcnt += bndCondExp[i]->GetNcoeffs();
+                }
             }
         }
-
-        Array<OneD, NekDouble > f_p(num_elem*nsize_p);
-        NekVector<  NekDouble > F_p(f_p.size(),f_p,eWrapper);
-        NekVector<  NekDouble > F_p_tmp(num_elem*nsize_int);
         
+        
+        // Construct f_bnd and f_int and fill in bnd from inarray
+        // (with Dirichlet BCs imposed)
+        int bndoffset = 0;
+        cnt = cnt1 = 0;
+
+        for(i = 0; i < nel; ++i) // loop over elements
+        {
+            m_fields[m_velocity[0]]->GetExp(i)->GetBoundaryMap(bmap);
+            m_fields[m_velocity[0]]->GetExp(i)->GetInteriorMap(imap);
+            nbnd   = bmap.size();
+            nint   = imap.size();
+            offset = m_fields[m_velocity[0]]->GetCoeff_Offset(i);
+
+            for(j = 0; j < nvel; ++j) // loop over velocity fields 
+            {
+                Array<OneD, NekDouble> incoeffs = m_fields[j]->UpdateCoeffs();
+
+                for(n = 0; n < nz_loc; ++n)
+                {
+                    for(k = 0; k < nbnd; ++k)
+                    {
+                        f_bnd[cnt+k] = forcing[j][n*nplanecoeffs + 
+                                                  offset+bmap[k]];
+
+                        bnd[bndoffset + (n + j*nz_loc)*nbnd + k] =
+                            incoeffs[n*nplanecoeffs + offset + bmap[k]];
+                    }
+                    for(k = 0; k < nint; ++k)
+                    {
+                        f_int[cnt1+k] = forcing[j][n*nplanecoeffs +
+                                                   offset+imap[k]];
+                    }
+
+                    cnt  += nbnd;
+                    cnt1 += nint;
+                }
+            }
+            bndoffset += nvel*nz_loc*nbnd + nz_loc*(m_pressure->GetExp(i)->GetNcoeffs()); 
+        }
+        */
+
+        cout << "find malloc" << endl;
+
+           cout << "f_bnd.size() " << f_bnd.size() << endl;
 
 	Eigen::VectorXd f_bnd_rhs_eigen = Eigen::VectorXd::Zero(f_bnd.size());
+        cout << "find malloc" << endl;
 	for (int i = 0; i < f_bnd.size(); ++i)
 	{
 		f_bnd_rhs_eigen(i) = f_bnd[i];
 	}
+        cout << "find malloc" << endl;
 	Eigen::VectorXd f_p_rhs_eigen = Eigen::VectorXd::Zero(f_p.size());
+        cout << "find malloc" << endl;
 	for (int i = 0; i < f_p.size(); ++i)
 	{
-		f_p_rhs_eigen(i) = f_p[i]; // should be undefined at this stage
+	//	f_p_rhs_eigen(i) = f_p[i]; // should be undefined at this stage
 	}
+        cout << "find malloc" << endl;
 	Eigen::VectorXd f_int_rhs_eigen = Eigen::VectorXd::Zero(f_int.size()); // num_elem*nsize_int
+        cout << "find malloc" << endl;
 	Eigen::VectorXd f_p_tmp_eigen = Eigen::VectorXd::Zero(f_int.size()); // num_elem*nsize_int
+        cout << "find malloc" << endl;
 	for (int i = 0; i < f_int.size(); ++i)
 	{
 		f_int_rhs_eigen(i) = f_int[i];
 	}
 
+        cout << "find malloc" << endl;
 
 
         // fbnd does not currently hold the pressure mean
@@ -5011,13 +5118,12 @@ namespace Nektar
 
 
 
-        Array<OneD, NekDouble > bnd   (m_locToGloMap[0]->GetNumGlobalCoeffs(),0.0);
         Array<OneD, NekDouble > fh_bnd(m_locToGloMap[0]->GetNumGlobalCoeffs(),0.0);
 
         const Array<OneD,const int>& loctoglomap = m_locToGloMap[0]->GetLocalToGlobalMap();
         const Array<OneD,const NekDouble>& loctoglosign = m_locToGloMap[0]->GetLocalToGlobalSign();
         
-	int offset = 0;
+	offset = 0;
 	cnt = 0; 
         for(int i = 0; i < num_elem; ++i)
         {
@@ -5055,6 +5161,7 @@ namespace Nektar
             offset += nvel*nbnd + nz_loc*nint; 
         }
 
+        cout << "find malloc" << endl;
 
 	////////////////////////////
 	// temporary debugging
@@ -5094,6 +5201,9 @@ namespace Nektar
 	cout << "m_locToGloMap[0]->GetStaticCondLevel() " << m_locToGloMap[0]->GetStaticCondLevel() << endl;
 	cout << "m_locToGloMap[0]->GetLowestStaticCondLevel() " << m_locToGloMap[0]->GetLowestStaticCondLevel() << endl;
 */
+
+        cout << "find malloc" << endl;
+
 	for (int i = 0; i < nGlobBndDofs; ++i)
 	{
 		V_GlobBnd(i) = bnd[i];
@@ -5159,6 +5269,7 @@ namespace Nektar
 	/////////////////////// actual solve here ////////////////////////////////
 	Eigen::VectorXd my_Asolution = my_Gmat.colPivHouseholderQr().solve(my_sys_in);
 	//////////////////////////////////////////////////////////////////////////
+	
 /*	cout << "my_Gmat.rows() " << my_Gmat.rows() << endl;
 	cout << "my_Gmat.cols() " << my_Gmat.cols() << endl;
 	cout << "my_sys_in.rows() " << my_sys_in.rows() << endl;
@@ -5175,16 +5286,6 @@ namespace Nektar
 	{
 		loc_dbc(i) = loctoglobndsign[i] * V_GlobBnd(loctoglobndmap[i]);
 	}
-
-	////////////////////////////
-	// temporary debugging
-/*	cout << "loc_dbc.size() " << loc_dbc.size() << endl;
-	double temp_norm = 0;
-	for (int i = 0; i < loc_dbc.size(); i++)
-		temp_norm += loc_dbc[i] * loc_dbc[i];
-	temp_norm = sqrt(temp_norm);
-	cout << "loc_dbc norm " << temp_norm << endl; */
-	///////////////////////////
 
 	Eigen::VectorXd Fint = Eigen::VectorXd::Zero(num_elem*nsize_p - num_elem);
 	for (int curr_elem = 0; curr_elem < num_elem; ++curr_elem)
@@ -5212,20 +5313,6 @@ namespace Nektar
 
 //        const Array<OneD,const int>& loctoglomap = m_locToGloMap[0]->GetLocalToGlobalMap();
 //        const Array<OneD,const NekDouble>& loctoglosign = m_locToGloMap[0]->GetLocalToGlobalSign();
-
-
-	////////////////////////////
-	// temporary debugging
-//	cout << "bnd.size() " << bnd.size() << endl;
-	temp_norm = 0;
-	for (int i = 0; i < bnd.size(); i++)
-	{
-		temp_norm += bnd[i] * bnd[i];
-//		cout << bnd[i] << " ";
-	}
-	temp_norm = sqrt(temp_norm);
-//	cout << "bnd norm " << temp_norm << endl;
-	///////////////////////////
 
 
         // unpack pressure and velocity boundary systems. 
@@ -5319,7 +5406,7 @@ namespace Nektar
 	}
 
 	int nlc = m_locToGloMap[0]->GetNumLocalCoeffs();
-	int nplanecoeffs = nlc;
+	nplanecoeffs = nlc;
 
         // Unpack solution from Bnd and F_int to v_coeffs 
         cnt = 0; 
@@ -5553,6 +5640,7 @@ namespace Nektar
 			return i;
 		}
 	}
+	return -1;
     }     
     
     double CoupledLinearNS_ROM::Geo_T(double w, int elemT, int index)

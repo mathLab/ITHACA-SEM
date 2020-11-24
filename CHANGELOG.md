@@ -10,6 +10,7 @@ v5.1.0
   was not using GetRowComm() (!1144)
 - Add interior penalty method to DG framework (!1101)
 - Add an error filter for the time-evolution of the L2 and Linf errors (!1147)
+- Fix successiveRHS method (!1176)
 - Add cachedId in GetExpIndex and use in Fieldconvert (!1167)
 - Fix bug in PreconditionerLowEnergy (!1161)
 - Fix intel c compiler error in AeroFilters (!1198)

@@ -170,8 +170,8 @@ void ProcessWallNormalData::WriteDataInPts(const std::string &outFile,
 {
 
     // Step 1 - settings
-    bool is2D;  // true=2D, false=3D
-    bool isInc; // true=incompressible. false=compressible
+    bool is2D  = true;  // true=2D, false=3D
+    bool isInc = true;  // true=incompressible. false=compressible
     int nfields = m_f->m_variables.size();
 
     if      (boost::iequals(m_f->m_variables[0], "u"  )) { isInc = true;  }

@@ -10,9 +10,11 @@ v5.1.0
   was not using GetRowComm() (!1144)
 - Add interior penalty method to DG framework (!1101)
 - Add an error filter for the time-evolution of the L2 and Linf errors (!1147)
+- Fix successiveRHS method (!1176)
 - Add cachedId in GetExpIndex and use in Fieldconvert (!1167)
 - Fix bug in PreconditionerLowEnergy (!1161)
 - Fix intel c compiler error in AeroFilters (!1198)
+- Fix compilation errors when CWIPI interface enabled (!1207)
 
 **FieldConvert**
 - Refactored time integration code using factory pattern (!1034)
@@ -73,6 +75,7 @@ v5.0.1
 - Fix periodic boundary conditions with HDF5 input file (!1163)
 - Fix DESTDIR issues for MacPorts (!1179)
 - Fix Bodyforcing and history point filter bounds issue (!1184)
+
 **IncNavierStokesSolver**
 - Change the baseflow time in the Adjoint advection (!1133)
 

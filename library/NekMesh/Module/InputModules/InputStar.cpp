@@ -462,7 +462,7 @@ void InputStar::GenElement2D(vector<NodeSharedPtr> &VertNodes,
 {
     boost::ignore_unused(i);
 
-    LibUtilities::ShapeType elType;
+    LibUtilities::ShapeType elType = LibUtilities::eNoShapeType;
 
     if (FaceNodes.size() == 3)
     {

@@ -17311,8 +17311,7 @@
         <!-- M = M-straight * cos(Lambda),-->
         <PARAMETERS>
             <P> TimeStep        = 0.0000001                  </P>
-            <P> FinTime         = 0.0000005                  </P>
-            <P> NumSteps        = FinTime/TimeStep           </P>
+            <P> NumSteps        = 5                          </P>
             <P> IO_CheckSteps   = 1000                       </P>
             <P> IO_InfoSteps    = 1                          </P>
             <P> Gamma           = 1.4                        </P>
@@ -17334,7 +17333,6 @@
             <I PROPERTY="EQType"                VALUE="EulerCFE"            />
             <I PROPERTY="Projection"            VALUE="DisContinuous"       />
             <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
-            <!--I PROPERTY="DiffusionType"        VALUE="LDG"             /-->
             <I PROPERTY="TimeIntegrationMethod" VALUE="RungeKutta2_ImprovedEuler"/>
             <I PROPERTY="UpwindType"            VALUE="ExactToro"           />
             <I PROPERTY="ProblemType"           VALUE="General"             />
@@ -17379,13 +17377,5 @@
             <F VAR="rho,rhou,rhov,E"    FILE="RAE5240_BSF_LE_bcsfromfile_par.rst"/>
         </FUNCTION>
         
-        <!--
-        <FUNCTION NAME="ExactSolution">
-            <E VAR="rho"    VALUE="rhoInf"          />
-            <E VAR="rhou"   VALUE="rhoInf * uInf"   />
-            <E VAR="rhov"   VALUE="rhoInf * vInf"   />
-            <E VAR="E"      VALUE="pInf / (Gamma - 1) + 0.5 * rhoInf * (uInf * uInf + vInf * vInf)"/>
-        </FUNCTION>
-        -->
     </CONDITIONS>
 </NEKTAR>

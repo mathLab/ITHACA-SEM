@@ -277,8 +277,8 @@ namespace Nektar
                    abortFlags[1] == 0)
             {
                 restartStep++;
-
-                if(m_CFLEnd>tmp_cflSafetyFactor)
+                
+                if(m_CFLEnd>tmp_cflSafetyFactor + NekConstants::kNekZeroTol)
                 {
                     if( m_steadyStateTol > 0.0 &&
                         (NekDouble(m_TotLinItePerStep)/NekDouble(m_StagesPerStep)>0.5*NekDouble(m_maxLinItePerNewton)))
@@ -368,6 +368,8 @@ namespace Nektar
 
                 m_StagesPerStep = 0;
                 m_TotLinItePerStep = 0;
+
+                ASSERTL0(m_timestep > 0, "m_timestep < 0");
 
                 fields =
                     m_intScheme->TimeIntegrate( stepCounter, m_timestep, m_ode);

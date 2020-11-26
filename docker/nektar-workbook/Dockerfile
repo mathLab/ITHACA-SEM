@@ -3,7 +3,7 @@ FROM jupyter/scipy-notebook:42f4c82a07ff AS build
 LABEL maintainer="Nektar++ Development Team <nektar-users@imperial.ac.uk>"
 
 USER $NB_UID
-RUN conda install --quiet --yes cmake==3.19.1 boost==1.74 occt==7.4.0 tinyxml==2.6.22 jupyter_contrib_nbextensions && \
+RUN conda install --quiet --yes cmake=3.19.1 boost=1.74.0 occt=7.5.0 tinyxml jupyter_contrib_nbextensions && \
     jupyter contrib nbextension install --sys-prefix && \
     jupyter nbextension enable --sys-prefix hide_input/main && \
     jupyter nbextension enable --sys-prefix hide_input_all/main && \

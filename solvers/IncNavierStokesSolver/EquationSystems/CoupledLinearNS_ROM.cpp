@@ -4833,7 +4833,6 @@ namespace Nektar
 
 	} // loop over curr_elem
 
-        cout << "find malloc" << endl;
         
        	int num_elem = m_fields[0]->GetNumElmts();
 
@@ -4841,15 +4840,6 @@ namespace Nektar
 //        NekVector<  NekDouble > F_p(f_p.size(),f_p,eWrapper);
 //        NekVector<  NekDouble > F_p_tmp(num_elem*nsize_int);
         
-//        Array<OneD, NekDouble > f_p(m_mat[mode].m_D_int->GetRows());
-	int f_p_size = num_elem*nsize_p;
-	cout << "f_p_size " << f_p_size << endl;
-        Array<OneD, NekDouble > f_p(f_p_size);
-         cout << "find malloc 2" << endl;
-        NekVector<  NekDouble > F_p(f_p.size(),f_p,eWrapper);
-         cout << "find malloc 3" << endl;
-        NekVector<  NekDouble > F_p_tmp(m_mat[0].m_Cinv->GetRows());
-         cout << "find malloc 4" << endl;
          
          
 
@@ -4950,15 +4940,27 @@ namespace Nektar
 	    }
             m_fields[i]->SetWaveSpace(waveSpace);
         }
+        
+        Array<OneD,  MultiRegions::ExpListSharedPtr> vel_fields(m_velocity.size());
+        Array<OneD, Array<OneD, NekDouble> > force(m_velocity.size());
+
+        // Impose Dirichlet conditions on velocity fields
+        for(int i = 0; i < m_velocity.size(); ++i)
+        {
+            Vmath::Zero(m_fields[i]->GetNcoeffs(), m_fields[i]->UpdateCoeffs(),1);
+            m_fields[i]->ImposeDirichletConditions(m_fields[i]->UpdateCoeffs());
+        }
+        
+        // start of adjusted SolveLinearNS function
 
         int i,j,k,n,cnt,cnt1;
         int nbnd;
         int mode = 0;
       	int nplanecoeffs = m_locToGloMap[0]->GetNumLocalCoeffs();
-        Array<OneD, NekDouble > bnd   (m_locToGloMap[0]->GetNumGlobalCoeffs(),0.0);
+        Array<OneD, NekDouble > bnd   (m_locToGloMap[0]->GetNumLocalCoeffs(),0.0);
         int offset;
                 
-        /*		
+        		
 	for(k = 0; k < nvel; ++k)
         {
             MultiRegions::ContFieldSharedPtr cfield =
@@ -5033,62 +5035,68 @@ namespace Nektar
             nint   = imap.size();
             offset = m_fields[m_velocity[0]]->GetCoeff_Offset(i);
 
+	    
             for(j = 0; j < nvel; ++j) // loop over velocity fields 
             {
                 Array<OneD, NekDouble> incoeffs = m_fields[j]->UpdateCoeffs();
 
+
                 for(n = 0; n < nz_loc; ++n)
                 {
+                    
                     for(k = 0; k < nbnd; ++k)
                     {
-                        f_bnd[cnt+k] = forcing[j][n*nplanecoeffs + 
-                                                  offset+bmap[k]];
-
-                        bnd[bndoffset + (n + j*nz_loc)*nbnd + k] =
-                            incoeffs[n*nplanecoeffs + offset + bmap[k]];
+                        f_bnd[cnt+k] = forcing[j][n*nplanecoeffs + offset+bmap[k]];
+//                        cout << "for incoeffs " << n*nplanecoeffs + offset + bmap[k] << endl;
+  //                      cout << "m_fields[j]->GetNcoeffs() " << m_fields[j]->GetNcoeffs() << endl;
+  //                      cout << "for bnd " << bndoffset + (n + j*nz_loc)*nbnd + k << endl;
+  //                      cout << "m_locToGloMap[0]->GetNumLocalCoeffs() " << m_locToGloMap[0]->GetNumLocalCoeffs() << endl;
+                        bnd[bndoffset + (n + j*nz_loc)*nbnd + k] = incoeffs[n*nplanecoeffs + offset + bmap[k]];
                     }
+                    
                     for(k = 0; k < nint; ++k)
                     {
-                        f_int[cnt1+k] = forcing[j][n*nplanecoeffs +
-                                                   offset+imap[k]];
+                        f_int[cnt1+k] = forcing[j][n*nplanecoeffs + offset+imap[k]];
                     }
+                    
 
                     cnt  += nbnd;
                     cnt1 += nint;
                 }
             }
+            
             bndoffset += nvel*nz_loc*nbnd + nz_loc*(m_pressure->GetExp(i)->GetNcoeffs()); 
         }
-        */
+        
 
-        cout << "find malloc" << endl;
+//        Array<OneD, NekDouble > f_p(m_mat[mode].m_D_int->GetRows());
+	int f_p_size = num_elem*nsize_p;
+	//cout << "f_p_size " << f_p_size << endl;
+        Array<OneD, NekDouble > f_p(f_p_size);
+        // cout << "find malloc 2" << endl;
+        NekVector<  NekDouble > F_p(f_p.size(),f_p,eWrapper);
+        // cout << "find malloc 3" << endl;
+        NekVector<  NekDouble > F_p_tmp(m_mat[0].m_Cinv->GetRows());
+        // cout << "find malloc 4" << endl;
 
-           cout << "f_bnd.size() " << f_bnd.size() << endl;
 
 	Eigen::VectorXd f_bnd_rhs_eigen = Eigen::VectorXd::Zero(f_bnd.size());
-        cout << "find malloc" << endl;
 	for (int i = 0; i < f_bnd.size(); ++i)
 	{
 		f_bnd_rhs_eigen(i) = f_bnd[i];
 	}
-        cout << "find malloc" << endl;
 	Eigen::VectorXd f_p_rhs_eigen = Eigen::VectorXd::Zero(f_p.size());
-        cout << "find malloc" << endl;
 	for (int i = 0; i < f_p.size(); ++i)
 	{
 	//	f_p_rhs_eigen(i) = f_p[i]; // should be undefined at this stage
 	}
-        cout << "find malloc" << endl;
 	Eigen::VectorXd f_int_rhs_eigen = Eigen::VectorXd::Zero(f_int.size()); // num_elem*nsize_int
-        cout << "find malloc" << endl;
 	Eigen::VectorXd f_p_tmp_eigen = Eigen::VectorXd::Zero(f_int.size()); // num_elem*nsize_int
-        cout << "find malloc" << endl;
 	for (int i = 0; i < f_int.size(); ++i)
 	{
 		f_int_rhs_eigen(i) = f_int[i];
 	}
 
-        cout << "find malloc" << endl;
 
 
         // fbnd does not currently hold the pressure mean
@@ -5117,8 +5125,8 @@ namespace Nektar
 	///////////////////
 
 
-
-        Array<OneD, NekDouble > fh_bnd(m_locToGloMap[0]->GetNumGlobalCoeffs(),0.0);
+	// construct inner forcing
+        Array<OneD, NekDouble > fh_bnd(m_locToGloMap[0]->GetNumLocalCoeffs(),0.0);
 
         const Array<OneD,const int>& loctoglomap = m_locToGloMap[0]->GetLocalToGlobalMap();
         const Array<OneD,const NekDouble>& loctoglosign = m_locToGloMap[0]->GetLocalToGlobalSign();
@@ -5134,7 +5142,8 @@ namespace Nektar
             {
                 for(int k = 0; k < nbnd; ++k)
                 {
-                    fh_bnd[loctoglomap[offset+j*nbnd+k]] += loctoglosign[offset+j*nbnd+k]*f_bnd_rhs_eigen(cnt+k);
+// old                    fh_bnd[loctoglomap[offset+j*nbnd+k]] += loctoglosign[offset+j*nbnd+k]*f_bnd_rhs_eigen(cnt+k);
+                    fh_bnd[offset+j*nbnd+k] = f_bnd_rhs_eigen(cnt+k);
                 }
                 cnt += nbnd;
             }
@@ -5154,42 +5163,148 @@ namespace Nektar
             {
                 for(int j = 0; j < nint; ++j)
                 {
-                    fh_bnd[loctoglomap[offset + nvel*nbnd + n*nint+j]] = f_p_rhs_eigen(cnt1+j);
+                    fh_bnd[offset + nvel*nbnd + n*nint+j] = f_p_rhs_eigen(cnt1+j);
                 }
                 cnt1   += nint;
             }
             offset += nvel*nbnd + nz_loc*nint; 
         }
 
-        cout << "find malloc" << endl;
 
 	////////////////////////////
 	// temporary debugging
-//	cout << "fh_bnd.size() " << fh_bnd.size() << endl;
+	cout << "fh_bnd.size() " << fh_bnd.size() << endl;
 	double temp_norm = 0;
 	for (int i = 0; i < fh_bnd.size(); i++)
 		temp_norm += fh_bnd[i];
-//	temp_norm = sqrt(temp_norm);
-//	cout << "fh_bnd norm " << temp_norm << endl;
+	temp_norm = sqrt(temp_norm);
+	cout << "fh_bnd norm " << temp_norm << endl;
 	///////////////////////////
 
 	////////////////////////////
 	// temporary debugging
-//	cout << "bnd.size() " << bnd.size() << endl;
+	cout << "bnd.size() " << bnd.size() << endl;
 	temp_norm = 0;
 	for (int i = 0; i < bnd.size(); i++)
 	{
 		temp_norm += bnd[i];
 //		cout << bnd[i] << " ";
 	}
-//	temp_norm = sqrt(temp_norm);
-//	cout << "bnd norm " << temp_norm << endl;
+	temp_norm = sqrt(temp_norm);
+	cout << "bnd norm " << temp_norm << endl;
 	///////////////////////////
 
-	int nLocBndDofs = num_elem * nsize_bndry_p1;
+            bool atLastLevel       = m_locToGloMap[mode]->AtLastLevel();
+            int  scLevel           = m_locToGloMap[mode]->GetStaticCondLevel();
+            
+            int nGlobDofs    = m_locToGloMap[mode]->GetNumGlobalCoeffs();
+            int nLocBndDofs  = m_locToGloMap[mode]->GetNumLocalBndCoeffs();
+        //    int nGlobBndDofs = m_locToGloMap[mode]->GetNumGlobalBndCoeffs();
+            int nDirBndDofs  = m_locToGloMap[mode]->GetNumGlobalDirBndCoeffs();
+            int nIntDofs     = nGlobDofs - nGlobBndDofs;
+            int nLocalBnd    = m_locToGloMap[mode]->GetNumLocalBndCoeffs();
+
+	cout << "atLastLevel " << atLastLevel << endl;
+	cout << "scLevel " << scLevel << endl;
+	cout << "nGlobDofs " << nGlobDofs << endl;		
+	cout << "nLocBndDofs " << nLocBndDofs << endl;
+	cout << "nGlobBndDofs " << nGlobBndDofs << endl;
+	cout << "nDirBndDofs " << nDirBndDofs << endl;
+	cout << "nLocalBnd " << nLocalBnd << endl;		
+	
+	Array<OneD, NekDouble> m_wsp = Array<OneD, NekDouble> (3*nLocalBnd + nIntDofs, 0.0);
+	
+	
+            Array<OneD, NekDouble> F_bnd_glssc, F_bnd1_glssc, F_int_glssc, V_bnd_glssc; 
+            Array<OneD, NekDouble> tmp_glssc;
+
+            F_bnd_glssc  = m_wsp;
+            F_bnd1_glssc = m_wsp + nLocBndDofs;
+            V_bnd_glssc  = m_wsp + 2*nLocBndDofs;
+            F_int_glssc  = m_wsp + 3*nLocBndDofs; 
+            
+            m_locToGloMap[mode]->LocalToLocalBnd(bnd,V_bnd_glssc);
+
+            NekVector<NekDouble> F_Int_glssc(nIntDofs, F_int_glssc,eWrapper);
+            NekVector<NekDouble> V_Bnd_glssc(nLocBndDofs,V_bnd_glssc,eWrapper);            
+            
+            if(nIntDofs)
+            {
+                m_locToGloMap[mode]->LocalToLocalInt(fh_bnd, F_int_glssc);
+            }
+
+            // Boundary system solution
+            if(nGlobBndDofs-nDirBndDofs)
+            {
+                m_locToGloMap[mode]->LocalToLocalBnd(fh_bnd,F_bnd_glssc);                
+//                v_PreSolve(scLevel, F_bnd_glssc);  // set up normalisation factor for right hand side on first SC level                
+                NekVector<NekDouble> F_Bnd_glssc(nLocBndDofs,F_bnd1_glssc,eWrapper); // Gather boundary expansison into locbnd                 
+                if(nIntDofs)   // construct boundary forcing
+                {
+           //         DNekScalBlkMat &BinvD      = *m_BinvD;
+           //         F_Bnd_glssc = BinvD*F_Int_glssc; 
+                    
+	Eigen::VectorXd F_Bnd_glssc_eigen = Eigen::VectorXd::Zero(F_bnd_glssc.size());
+	Eigen::VectorXd F_Int_glssc_eigen = Eigen::VectorXd::Zero(F_int_glssc.size());
+	cout << "F_bnd_glssc.size() " << F_bnd_glssc.size() << endl;
+	cout << "F_int_glssc.size() " << F_int_glssc.size() << endl;
+	for (int F_Int_glssc_eigen_index = 0; F_Int_glssc_eigen_index < F_int_glssc.size(); ++F_Int_glssc_eigen_index)
+	{
+		F_Int_glssc_eigen(F_Int_glssc_eigen_index) = F_Int_glssc[F_Int_glssc_eigen_index];
+	}                    
+	for (int curr_elem = 0; curr_elem < num_elem; ++curr_elem)
+	{
+		int cnt = curr_elem*nsize_bndry_p1;
+		Eigen::MatrixXd loc_Ah = Ah_elem[curr_elem];
+		Eigen::MatrixXd loc_Bh = Bh_elem[curr_elem]; // of size (nsize_bndry_p1, nsize_p_m1) 
+		Eigen::VectorXd loc_F_Int_glssc_eigen = F_Int_glssc_eigen.segment(curr_elem*nsize_p_m1,nsize_p_m1);
+		F_Bnd_glssc_eigen.segment(curr_elem*nsize_bndry_p1,nsize_bndry_p1) = loc_Bh * loc_F_Int_glssc_eigen;
+	//	cout << "curr_elem*nsize_p_m1 " << curr_elem*nsize_p_m1 << endl;
+	//	cout << "curr_elem*nsize_bndry_p1 " << curr_elem*nsize_bndry_p1 << endl;
+	}
+	
+	                    
+                    Vmath::Vsub(nLocBndDofs, F_bnd_glssc,1, F_bnd1_glssc,1, F_bnd_glssc,1);
+               }
+                if(atLastLevel)
+                {                    
+//                    v_BasisFwdTransform(F_bnd_glssc);  // Transform to new basis if required 
+//                    DNekScalBlkMat &SchurCompl = *m_schurCompl;
+//                    v_CoeffsFwdTransform(V_bnd_glssc,V_bnd_glssc);                    
+  // need to do this in local coordinates,so use the Ah                 F_Bnd_glssc = my_Gmat*V_Bnd_glssc;   // subtract dirichlet boundary forcing
+                    Vmath::Vsub(nLocBndDofs, F_bnd_glssc,1, F_bnd1_glssc, 1, F_bnd_glssc,1);
+                    Array<OneD, NekDouble> F_hom, pert(nGlobBndDofs,0.0);
+                    m_locToGloMap[mode]->AssembleBnd(F_bnd_glssc, F_bnd1_glssc);                    
+              //      SolveLinearSystem(nGlobBndDofs, F_bnd1_glssc, pert, pLocToGloMap, nDirBndDofs);   // Solve for difference from initial solution given inout;
+                    Array<OneD, NekDouble> outloc = F_bnd_glssc; 
+                    m_locToGloMap[mode]->GlobalToLocalBnd(pert,outloc);                    
+                    Vmath::Vadd(nLocBndDofs, V_bnd_glssc, 1, outloc, 1, V_bnd_glssc,1);   // Add back initial conditions onto difference                    
+//                    v_CoeffsBwdTransform(V_bnd_glssc);    // Transform back to original basis                    
+                    m_locToGloMap[mode]->LocalBndToLocal(V_bnd_glssc,bnd);    // put final bnd solution back in output array
+                }
+                else // Process next level of recursion for multi level SC
+                {
+                	cout << "Process next level of recursion for multi level SC undefined" << endl;
+                //    AssemblyMapSharedPtr nextLevLocToGloMap = m_locToGloMap[mode]->GetNextLevelLocalToGlobalMap();
+                    // partially assemble F for next level and
+                    // reshuffle V_bnd
+                //    nextLevLocToGloMap->PatchAssemble     (F_bnd_glssc,F_bnd_glssc);
+                //    nextLevLocToGloMap->PatchLocalToGlobal(V_bnd_glssc,V_bnd_glssc);
+                //    m_recursiveSchurCompl->Solve(F_bnd_glssc,V_bnd_glssc, nextLevLocToGloMap);
+                    // unpack V_bnd
+                //    nextLevLocToGloMap->PatchGlobalToLocal(V_bnd_glssc,V_bnd_glssc);
+                    // place V_bnd in output array
+                //    m_locToGloMap[mode]->LocalBndToLocal(V_bnd_glssc, bnd);
+                }
+            }
+
+
+
+	
+//	int nLocBndDofs = num_elem * nsize_bndry_p1;
 	// ??	nGlobDofs = ??
 	// nGlobBndDofs defined??, si, si, si come nBndDofs
-	int nDirBndDofs = NumDirBCs;
+//	int nDirBndDofs = NumDirBCs;
 	Eigen::VectorXd loc_dbc = Eigen::VectorXd::Zero(nLocBndDofs);
 	Eigen::VectorXd loc_dbc_pt1 = Eigen::VectorXd::Zero(nLocBndDofs);
 	Eigen::VectorXd loc_dbc_pt2 = Eigen::VectorXd::Zero(nLocBndDofs);
@@ -5202,7 +5317,6 @@ namespace Nektar
 	cout << "m_locToGloMap[0]->GetLowestStaticCondLevel() " << m_locToGloMap[0]->GetLowestStaticCondLevel() << endl;
 */
 
-        cout << "find malloc" << endl;
 
 	for (int i = 0; i < nGlobBndDofs; ++i)
 	{

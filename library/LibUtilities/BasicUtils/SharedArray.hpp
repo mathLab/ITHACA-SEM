@@ -828,6 +828,21 @@ namespace Nektar
     using TensorOfArray2D = Array<OneD, Array<OneD, T>>;
     template<class T>
     using TensorOfArray3D = Array<OneD, Array<OneD, Array<OneD, T>>>;
+    template<class T>
+    using TensorOfArray4D = 
+                Array<OneD, Array<OneD, Array<OneD, Array<OneD, T>>>>;
+    template<class T>
+    using TensorOfArray5D = 
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, T>>>>>;
+
+    
+    static TensorOfArray1D<NekDouble> NullDTensorOfArray1D;
+    static TensorOfArray2D<NekDouble> NullDTensorOfArray2D;
+    static TensorOfArray3D<NekDouble> NullDTensorOfArray3D;
+    static TensorOfArray4D<NekDouble> NullDTensorOfArray4D;
+    static TensorOfArray5D<NekDouble> NullDTensorOfArray5D;
+
+    static TensorOfArray1D<bool> NullBTensorOfArray1D;
 
     static TensorOfArray1D<NekDouble> NullTensorOfArray1DDouble;
     static TensorOfArray2D<NekDouble> NullTensorOfArray2DDouble;

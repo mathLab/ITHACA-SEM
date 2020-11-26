@@ -38,7 +38,6 @@
 #include <boost/core/ignore_unused.hpp>
 
 #include <SolverUtils/Advection/Advection.h>
-#define CFS_DEBUGMODE
 
 namespace Nektar
 {

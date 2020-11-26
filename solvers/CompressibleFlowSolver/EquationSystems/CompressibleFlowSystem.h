@@ -184,12 +184,10 @@ namespace Nektar
 
         int                                 m_DebugIPSymmFluxJacSwitch; 
 
-        Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble>>>>
-            m_StdDMatDataDBB;
-        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble>>>>> m_StdDMatDataDBDB;
-        Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekSingle>>>> 
-            m_StdSMatDataDBB;
-        Array<OneD, Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekSingle>>>>> m_StdSMatDataDBDB;
+        TensorOfArray4D<NekDouble>          m_StdDMatDataDBB;
+        TensorOfArray5D<NekDouble>          m_StdDMatDataDBDB;
+        TensorOfArray4D<NekSingle>          m_StdSMatDataDBB;
+        TensorOfArray5D<NekSingle>          m_StdSMatDataDBDB;
 
         int                                m_nPadding = 1;
 

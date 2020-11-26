@@ -673,8 +673,10 @@ namespace Nektar
                      (m_checktime == 0.0 && m_checksteps >  0),
                      "Only one of IO_CheckTime and IO_CheckSteps "
                      "should be set!");
-            m_session->LoadParameter("TimeIncrementFactor",  m_TimeIncrementFactor , 1.0);
-            m_session->LoadParameter("PrcdMatFreezNumb",     m_PrcdMatFreezNumb    , 1);
+            m_session->LoadParameter("TimeIncrementFactor",  
+                m_TimeIncrementFactor , 1.0);
+            m_session->LoadParameter("PrcdMatFreezNumb",     
+                m_PrcdMatFreezNumb    , 1);
             
             m_nchk = 0;
 
@@ -1152,38 +1154,6 @@ namespace Nektar
             WriteFld(outname + ".chk");
         }
 
-#if 0 // Not sure this is necessary any more - check with ZhenGuo
-        /**
-         * Writes the field data to a file with the given filename.
-         * @param   outname     Filename to write to.
-         */
-        void EquationSystem::ExtraFldOutput(
-                std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
-                std::vector<std::string>             &variables)
-        {
-            fieldcoeffs = std::vector<Array<OneD, NekDouble> > (m_fields.size());
-            variables   = std::vector<std::string> (m_fields.size());
-
-            for (int i = 0; i < m_fields.size(); ++i)
-            {
-                if (m_fields[i]->GetNcoeffs() == m_fields[0]->GetNcoeffs())
-                {
-                    fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
-                }
-                else
-                {
-                    fieldcoeffs[i] = Array<OneD,NekDouble>(m_fields[0]->
-                                                           GetNcoeffs());
-                    m_fields[0]->ExtractCoeffsToCoeffs(m_fields[i],
-                                                       m_fields[i]->GetCoeffs(),
-                                                       fieldcoeffs[i]);
-                }
-                variables[i] = m_boundaryConditions->GetVariable(i);
-            }
-
-            v_ExtraFldOutput(fieldcoeffs, variables);
-        }
-#endif
         /**
          * Writes the field data to a file with the given filename.
          * @param   outname     Filename to write to.

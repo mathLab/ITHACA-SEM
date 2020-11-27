@@ -5233,20 +5233,27 @@ namespace Nektar
                 m_locToGloMap[mode]->LocalToLocalInt(fh_bnd, F_int_glssc);
             }
 
+	Eigen::VectorXd F_Bnd_glssc_eigen = Eigen::VectorXd::Zero(F_bnd_glssc.size());
+
             // Boundary system solution
             if(nGlobBndDofs-nDirBndDofs)
             {
                 m_locToGloMap[mode]->LocalToLocalBnd(fh_bnd,F_bnd_glssc);                
 //                v_PreSolve(scLevel, F_bnd_glssc);  // set up normalisation factor for right hand side on first SC level                
                 NekVector<NekDouble> F_Bnd_glssc(nLocBndDofs,F_bnd1_glssc,eWrapper); // Gather boundary expansison into locbnd                 
+
+
+
+
+
                 if(nIntDofs)   // construct boundary forcing
                 {
            //         DNekScalBlkMat &BinvD      = *m_BinvD;
            //         F_Bnd_glssc = BinvD*F_Int_glssc; 
                     
-	Eigen::VectorXd F_Bnd_glssc_eigen = Eigen::VectorXd::Zero(F_bnd_glssc.size());
+
 	Eigen::VectorXd F_Int_glssc_eigen = Eigen::VectorXd::Zero(F_int_glssc.size());
-	cout << "F_bnd_glssc.size() " << F_bnd_glssc.size() << endl;
+	cout << "F_bnd_glssc.size() " << F_bnd_glssc.size() << endl;   // actually is only nLocBndDofs probably
 	cout << "F_int_glssc.size() " << F_int_glssc.size() << endl;
 	for (int F_Int_glssc_eigen_index = 0; F_Int_glssc_eigen_index < F_int_glssc.size(); ++F_Int_glssc_eigen_index)
 	{
@@ -5262,6 +5269,10 @@ namespace Nektar
 	//	cout << "curr_elem*nsize_p_m1 " << curr_elem*nsize_p_m1 << endl;
 	//	cout << "curr_elem*nsize_bndry_p1 " << curr_elem*nsize_bndry_p1 << endl;
 	}
+	for (int F_Bnd_glssc_eigen_index = 0; F_Bnd_glssc_eigen_index < nLocBndDofs; ++F_Bnd_glssc_eigen_index)
+	{
+		F_Bnd_glssc[F_Bnd_glssc_eigen_index] = F_Bnd_glssc_eigen(F_Bnd_glssc_eigen_index);
+	}                    
 	
 	                    
                     Vmath::Vsub(nLocBndDofs, F_bnd_glssc,1, F_bnd1_glssc,1, F_bnd_glssc,1);
@@ -5272,10 +5283,74 @@ namespace Nektar
 //                    DNekScalBlkMat &SchurCompl = *m_schurCompl;
 //                    v_CoeffsFwdTransform(V_bnd_glssc,V_bnd_glssc);                    
   // need to do this in local coordinates,so use the Ah                 F_Bnd_glssc = my_Gmat*V_Bnd_glssc;   // subtract dirichlet boundary forcing
+  	Eigen::VectorXd V_Bnd_glssc_eigen = Eigen::VectorXd::Zero(nLocBndDofs);
+	for (int V_Bnd_glssc_eigen_index = 0; V_Bnd_glssc_eigen_index < nLocBndDofs; ++V_Bnd_glssc_eigen_index)
+	{
+		V_Bnd_glssc_eigen(V_Bnd_glssc_eigen_index) = V_Bnd_glssc[V_Bnd_glssc_eigen_index];
+	}  
+	for (int curr_elem = 0; curr_elem < num_elem; ++curr_elem)
+	{
+		int cnt = curr_elem*nsize_bndry_p1;
+		Eigen::MatrixXd loc_Ah = Ah_elem[curr_elem]; // of size (nsize_bndry_p1, nsize_bndry_p1)
+		Eigen::MatrixXd loc_Bh = Bh_elem[curr_elem]; // of size (nsize_bndry_p1, nsize_p_m1) 
+		Eigen::VectorXd loc_V_Bnd_glssc_eigen = V_Bnd_glssc_eigen.segment(curr_elem*nsize_bndry_p1,nsize_bndry_p1);
+		F_Bnd_glssc_eigen.segment(curr_elem*nsize_bndry_p1,nsize_bndry_p1) = loc_Ah * loc_V_Bnd_glssc_eigen;
+	//	cout << "curr_elem*nsize_p_m1 " << curr_elem*nsize_p_m1 << endl;
+	//	cout << "curr_elem*nsize_bndry_p1 " << curr_elem*nsize_bndry_p1 << endl;
+	}
+	for (int F_Bnd_glssc_eigen_index = 0; F_Bnd_glssc_eigen_index < nLocBndDofs; ++F_Bnd_glssc_eigen_index)
+	{
+		F_Bnd_glssc[F_Bnd_glssc_eigen_index] = F_Bnd_glssc_eigen(F_Bnd_glssc_eigen_index);
+	}	
+
                     Vmath::Vsub(nLocBndDofs, F_bnd_glssc,1, F_bnd1_glssc, 1, F_bnd_glssc,1);
                     Array<OneD, NekDouble> F_hom, pert(nGlobBndDofs,0.0);
                     m_locToGloMap[mode]->AssembleBnd(F_bnd_glssc, F_bnd1_glssc);                    
+
+		// double check all vars here, I suppose that the length of F_bnd1_glssc and pert is nGlobBndDofs
+			////////////////////////////
+	// temporary debugging
+//	cout << "fh_bnd.size() " << fh_bnd.size() << endl;
+	double temp_norm_F_bnd1_glssc = 0;
+	double temp_norm_pert = 0;
+	for (int i = 0; i < nGlobBndDofs; i++)
+	{	temp_norm_F_bnd1_glssc += F_bnd1_glssc[i]*F_bnd1_glssc[i];
+		temp_norm_pert += pert[i]*pert[i];}
+	temp_norm_F_bnd1_glssc = sqrt(temp_norm_F_bnd1_glssc);
+	temp_norm_pert = sqrt(temp_norm_pert);
+	cout << "temp_norm_F_bnd1_glssc " << temp_norm_F_bnd1_glssc << endl;
+	cout << "temp_norm_pert " << temp_norm_pert << endl;
+	///////////////////////////
+	cout << "nGlobBndDofs " << nGlobBndDofs << endl;
+	cout << "nDirBndDofs " << nDirBndDofs << endl;
+	cout << "nHomDofs = nGlobBndDofs - nDirBndDofs " << nGlobBndDofs - nDirBndDofs << endl;
+	cout << "my_Gmat.rows() " << my_Gmat.rows() << endl;
+	cout << "my_Gmat.cols() " << my_Gmat.cols() << endl;
+	
+	
               //      SolveLinearSystem(nGlobBndDofs, F_bnd1_glssc, pert, pLocToGloMap, nDirBndDofs);   // Solve for difference from initial solution given inout;
+	
+	int nHomDofs = nGlobBndDofs - nDirBndDofs ;
+	Eigen::VectorXd my_invec = Eigen::VectorXd::Zero(nHomDofs);
+	for (int my_invec_index = 0; my_invec_index < nHomDofs; ++my_invec_index)
+	{
+		my_invec(my_invec_index) = F_bnd1_glssc[nDirBndDofs + my_invec_index]; 
+	}
+	/////////////////////// actual solve here ////////////////////////////////
+	Eigen::VectorXd my_Asolution = my_Gmat.colPivHouseholderQr().solve(my_invec);
+	//////////////////////////////////////////////////////////////////////////
+			////////////////////////////
+	// temporary debugging
+//	cout << "fh_bnd.size() " << fh_bnd.size() << endl;
+	double temp_norm_my_Asolution = 0;
+	for (int i = 0; i < nHomDofs; i++)
+	{	
+		temp_norm_my_Asolution += my_Asolution[i]*my_Asolution[i];
+	}
+	temp_norm_my_Asolution = sqrt(temp_norm_my_Asolution);
+	cout << "temp_norm_my_Asolution " << temp_norm_my_Asolution << endl;
+	///////////////////////////	
+
                     Array<OneD, NekDouble> outloc = F_bnd_glssc; 
                     m_locToGloMap[mode]->GlobalToLocalBnd(pert,outloc);                    
                     Vmath::Vadd(nLocBndDofs, V_bnd_glssc, 1, outloc, 1, V_bnd_glssc,1);   // Add back initial conditions onto difference                    
@@ -5298,7 +5373,54 @@ namespace Nektar
                 }
             }
 
+            // solve interior system
+            if(nIntDofs)
+            {
+                Array<OneD, NekDouble> V_int(nIntDofs);
+                NekVector<NekDouble>   V_Int(nIntDofs, V_int ,eWrapper);
 
+                // get array of local solutions
+//                DNekScalBlkMat &invD  = *m_invD;
+//                DNekScalBlkMat &C     = *m_C;
+//                F_Int = F_Int - C*V_Bnd;
+//                Multiply(V_Int, invD, F_Int); // is doing V_Int = invD * F_int 
+
+//	change F_int_glssc and V_bnd_glssc into Eigen datastructures
+	Eigen::VectorXd F_Int_glssc_eigen = Eigen::VectorXd::Zero(F_int_glssc.size());
+	for (int F_Int_glssc_eigen_index = 0; F_Int_glssc_eigen_index < F_int_glssc.size(); ++F_Int_glssc_eigen_index)
+	{
+		F_Int_glssc_eigen(F_Int_glssc_eigen_index) = F_Int_glssc[F_Int_glssc_eigen_index];
+	}
+	Eigen::VectorXd V_Bnd_glssc_eigen = Eigen::VectorXd::Zero(nLocBndDofs);
+	for (int V_Bnd_glssc_eigen_index = 0; V_Bnd_glssc_eigen_index < nLocBndDofs; ++V_Bnd_glssc_eigen_index)
+	{
+		V_Bnd_glssc_eigen(V_Bnd_glssc_eigen_index) = V_Bnd_glssc[V_Bnd_glssc_eigen_index];
+	}  
+	Eigen::VectorXd V_Int_glssc_eigen = Eigen::VectorXd::Zero(nIntDofs);
+	for (int curr_elem = 0; curr_elem < num_elem; ++curr_elem)
+	{
+		int cnt = curr_elem*nsize_bndry_p1;
+		Eigen::MatrixXd loc_Ch = Ch_elem[curr_elem];
+//		F_int[curr_elem*nsize_p_m1:curr_elem*nsize_p_m1+nsize_p_m1] = fh_bnd[nGlobHomBndDofs + NumDirBCs + curr_elem*nsize_p_m1: nGlobHomBndDofs + NumDirBCs + curr_elem*nsize_p_m1+nsize_p_m1] - np.dot(loc_Ch,  loc_dbc[cnt:cnt+nsize_bndry_p1])
+		F_Int_glssc_eigen.segment(curr_elem*nsize_p_m1,nsize_p_m1) = F_Int_glssc_eigen.segment(curr_elem*nsize_p_m1,nsize_p_m1).eval() - loc_Ch * V_Bnd_glssc_eigen.segment(cnt, nsize_bndry_p1);  // actually an fh_bnd in case of body forcing as well
+		Eigen::MatrixXd loc_Dh = Dh_elem[curr_elem];
+		V_Int_glssc_eigen.segment(curr_elem*nsize_p_m1,nsize_p_m1) = loc_Dh * F_Int_glssc_eigen.segment(curr_elem*nsize_p_m1,nsize_p_m1).eval();
+	}
+	for (int V_Int_glssc_eigen_index = 0; V_Int_glssc_eigen_index < nIntDofs; ++V_Int_glssc_eigen_index)
+	{
+		V_int[V_Int_glssc_eigen_index] = V_Int_glssc_eigen(V_Int_glssc_eigen_index);
+	}  
+	
+
+
+                
+                m_locToGloMap[mode]->LocalIntToLocal(V_int, bnd);
+            }
+
+
+	
+	
+	
 
 	
 //	int nLocBndDofs = num_elem * nsize_bndry_p1;

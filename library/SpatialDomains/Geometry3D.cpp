@@ -331,7 +331,7 @@ NekDouble Geometry3D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         // Get Local coordinates
         int qa = za.size(), qb = zb.size();
 
-        Array<OneD, NekDouble> eta(2, 0.);
+        Array<OneD, NekDouble> eta(3, 0.);
         eta[2] = zc[min_i / (qa * qb)];
         min_i = min_i % (qa * qb);
         eta[1] = zb[min_i / qa];

@@ -2378,7 +2378,7 @@ namespace Nektar
             }
 
             NekDouble nearpt     = 1e12;
-            NekDouble nearpt_min = maxDistance;
+            NekDouble nearpt_min = 1e6;
             int       min_id     = -1;
             Array<OneD, NekDouble> savLocCoords(locCoords.size());
 
@@ -2391,7 +2391,7 @@ namespace Nektar
                 {
                     return cachedId;
                 }
-                else if(returnNearestElmt && (nearpt <= nearpt_min))
+                else if(returnNearestElmt && (nearpt < nearpt_min))
                 {
                     // If it does not lie within, keep track of which element
                     // is nearest.
@@ -2425,7 +2425,7 @@ namespace Nektar
                 {
                     return id;
                 }
-                else if(returnNearestElmt && (nearpt <= nearpt_min))
+                else if(returnNearestElmt && (nearpt < nearpt_min))
                 {
                     // If it does not lie within, keep track of which element
                     // is nearest.
@@ -2437,7 +2437,7 @@ namespace Nektar
 
             // If the calling function is with just the nearest element, return
             // that. Otherwise return -1 to indicate no matching elemenet found.
-            if(returnNearestElmt)
+            if(returnNearestElmt && nearpt_min <= maxDistance)
             {
 
                 std::string msg = "Failed to find point within element to "

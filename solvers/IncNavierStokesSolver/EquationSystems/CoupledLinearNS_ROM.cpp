@@ -1283,6 +1283,18 @@ namespace Nektar
 	{
 		debug_mode = 1;
 	}	
+	
+	if (m_session->DefinesParameter("do_trafo_check")) 
+	{
+		do_trafo_check = m_session->GetParameter("do_trafo_check");	
+	}
+	else
+	{
+		do_trafo_check = 1;
+	}
+	
+	
+	
 	parameter_types = Array<OneD, int> (parameter_space_dimension); 
 	parameter_types[0] = m_session->GetParameter("type_para1");
 	Nmax = number_of_snapshots;
@@ -4280,7 +4292,7 @@ namespace Nektar
                     {
                         fields[j]->SetCoeff(n*nplanecoeffs +
                         offset+imap[k],
-                        f_int[cnt1+k]);
+                        f_int[cnt1+k]);                       
                     }
                     cnt  += nbnd;
                     cnt1 += nint;
@@ -5171,29 +5183,6 @@ namespace Nektar
         }
 
 
-	////////////////////////////
-	// temporary debugging
-	cout << "fh_bnd.size() " << fh_bnd.size() << endl;
-	double temp_norm = 0;
-	for (int i = 0; i < fh_bnd.size(); i++)
-		temp_norm += fh_bnd[i];
-	temp_norm = sqrt(temp_norm);
-	cout << "fh_bnd norm " << temp_norm << endl;
-	///////////////////////////
-
-	////////////////////////////
-	// temporary debugging
-	cout << "bnd.size() " << bnd.size() << endl;
-	temp_norm = 0;
-	for (int i = 0; i < bnd.size(); i++)
-	{
-		temp_norm += bnd[i];
-//		cout << bnd[i] << " ";
-	}
-	temp_norm = sqrt(temp_norm);
-	cout << "bnd norm " << temp_norm << endl;
-	///////////////////////////
-
             bool atLastLevel       = m_locToGloMap[mode]->AtLastLevel();
             int  scLevel           = m_locToGloMap[mode]->GetStaticCondLevel();
             
@@ -5204,13 +5193,6 @@ namespace Nektar
             int nIntDofs     = nGlobDofs - nGlobBndDofs;
             int nLocalBnd    = m_locToGloMap[mode]->GetNumLocalBndCoeffs();
 
-	cout << "atLastLevel " << atLastLevel << endl;
-	cout << "scLevel " << scLevel << endl;
-	cout << "nGlobDofs " << nGlobDofs << endl;		
-	cout << "nLocBndDofs " << nLocBndDofs << endl;
-	cout << "nGlobBndDofs " << nGlobBndDofs << endl;
-	cout << "nDirBndDofs " << nDirBndDofs << endl;
-	cout << "nLocalBnd " << nLocalBnd << endl;		
 	
 	Array<OneD, NekDouble> m_wsp = Array<OneD, NekDouble> (3*nLocalBnd + nIntDofs, 0.0);
 	
@@ -5253,8 +5235,6 @@ namespace Nektar
                     
 
 	Eigen::VectorXd F_Int_glssc_eigen = Eigen::VectorXd::Zero(F_int_glssc.size());
-	cout << "F_bnd_glssc.size() " << F_bnd_glssc.size() << endl;   // actually is only nLocBndDofs probably
-	cout << "F_int_glssc.size() " << F_int_glssc.size() << endl;
 	for (int F_Int_glssc_eigen_index = 0; F_Int_glssc_eigen_index < F_int_glssc.size(); ++F_Int_glssc_eigen_index)
 	{
 		F_Int_glssc_eigen(F_Int_glssc_eigen_index) = F_Int_glssc[F_Int_glssc_eigen_index];
@@ -5306,26 +5286,6 @@ namespace Nektar
                     Vmath::Vsub(nLocBndDofs, F_bnd_glssc,1, F_bnd1_glssc, 1, F_bnd_glssc,1);
                     Array<OneD, NekDouble> F_hom, pert(nGlobBndDofs,0.0);
                     m_locToGloMap[mode]->AssembleBnd(F_bnd_glssc, F_bnd1_glssc);                    
-
-		// double check all vars here, I suppose that the length of F_bnd1_glssc and pert is nGlobBndDofs
-			////////////////////////////
-	// temporary debugging
-//	cout << "fh_bnd.size() " << fh_bnd.size() << endl;
-	double temp_norm_F_bnd1_glssc = 0;
-	double temp_norm_pert = 0;
-	for (int i = 0; i < nGlobBndDofs; i++)
-	{	temp_norm_F_bnd1_glssc += F_bnd1_glssc[i]*F_bnd1_glssc[i];
-		temp_norm_pert += pert[i]*pert[i];}
-	temp_norm_F_bnd1_glssc = sqrt(temp_norm_F_bnd1_glssc);
-	temp_norm_pert = sqrt(temp_norm_pert);
-	cout << "temp_norm_F_bnd1_glssc " << temp_norm_F_bnd1_glssc << endl;
-	cout << "temp_norm_pert " << temp_norm_pert << endl;
-	///////////////////////////
-	cout << "nGlobBndDofs " << nGlobBndDofs << endl;
-	cout << "nDirBndDofs " << nDirBndDofs << endl;
-	cout << "nHomDofs = nGlobBndDofs - nDirBndDofs " << nGlobBndDofs - nDirBndDofs << endl;
-	cout << "my_Gmat.rows() " << my_Gmat.rows() << endl;
-	cout << "my_Gmat.cols() " << my_Gmat.cols() << endl;
 	
 	
               //      SolveLinearSystem(nGlobBndDofs, F_bnd1_glssc, pert, pLocToGloMap, nDirBndDofs);   // Solve for difference from initial solution given inout;
@@ -5339,17 +5299,13 @@ namespace Nektar
 	/////////////////////// actual solve here ////////////////////////////////
 	Eigen::VectorXd my_Asolution = my_Gmat.colPivHouseholderQr().solve(my_invec);
 	//////////////////////////////////////////////////////////////////////////
-			////////////////////////////
-	// temporary debugging
-//	cout << "fh_bnd.size() " << fh_bnd.size() << endl;
-	double temp_norm_my_Asolution = 0;
-	for (int i = 0; i < nHomDofs; i++)
-	{	
-		temp_norm_my_Asolution += my_Asolution[i]*my_Asolution[i];
+	
+	// write my_Asolution back into pert
+	for (int my_Asolution_index = 0; my_Asolution_index < nHomDofs; ++my_Asolution_index)
+	{
+		pert[nDirBndDofs + my_Asolution_index] = my_Asolution(my_Asolution_index); 
 	}
-	temp_norm_my_Asolution = sqrt(temp_norm_my_Asolution);
-	cout << "temp_norm_my_Asolution " << temp_norm_my_Asolution << endl;
-	///////////////////////////	
+	
 
                     Array<OneD, NekDouble> outloc = F_bnd_glssc; 
                     m_locToGloMap[mode]->GlobalToLocalBnd(pert,outloc);                    
@@ -5372,6 +5328,8 @@ namespace Nektar
                 //    m_locToGloMap[mode]->LocalBndToLocal(V_bnd_glssc, bnd);
                 }
             }
+
+
 
             // solve interior system
             if(nIntDofs)
@@ -5410,10 +5368,9 @@ namespace Nektar
 	{
 		V_int[V_Int_glssc_eigen_index] = V_Int_glssc_eigen(V_Int_glssc_eigen_index);
 	}  
+
+
 	
-
-
-                
                 m_locToGloMap[mode]->LocalIntToLocal(V_int, bnd);
             }
 
@@ -5427,11 +5384,11 @@ namespace Nektar
 	// ??	nGlobDofs = ??
 	// nGlobBndDofs defined??, si, si, si come nBndDofs
 //	int nDirBndDofs = NumDirBCs;
-	Eigen::VectorXd loc_dbc = Eigen::VectorXd::Zero(nLocBndDofs);
+/*	Eigen::VectorXd loc_dbc = Eigen::VectorXd::Zero(nLocBndDofs);
 	Eigen::VectorXd loc_dbc_pt1 = Eigen::VectorXd::Zero(nLocBndDofs);
 	Eigen::VectorXd loc_dbc_pt2 = Eigen::VectorXd::Zero(nLocBndDofs);
 	Eigen::VectorXd V_GlobBnd = Eigen::VectorXd::Zero(nGlobBndDofs);
-
+*/
 /*	cout << "bnd.size() is the same as m_locToGloMap[0]->GetNumGlobalCoeffs() " << bnd.size() << endl;
 	cout << "nGlobBndDofs " << nGlobBndDofs << endl;
 	cout << "m_locToGloMap[0]->AtLastLevel() " << m_locToGloMap[0]->AtLastLevel() << endl;	
@@ -5440,7 +5397,7 @@ namespace Nektar
 */
 
 
-	for (int i = 0; i < nGlobBndDofs; ++i)
+/*	for (int i = 0; i < nGlobBndDofs; ++i)
 	{
 		V_GlobBnd(i) = bnd[i];
 	}
@@ -5449,101 +5406,7 @@ namespace Nektar
 	{
 		loc_dbc(i) = loctoglobndsign[i] * V_GlobBnd(loctoglobndmap[i]);
 	}
-
-	for (int curr_elem = 0; curr_elem < num_elem; ++curr_elem)
-	{
-		int cnt = curr_elem*nsize_bndry_p1;
-//		cout << "test " << endl;
-		Eigen::MatrixXd loc_Ah = Ah_elem[curr_elem];
-		Eigen::MatrixXd loc_Bh = Bh_elem[curr_elem];
-//		cout << "test2 " << endl;
-		Eigen::VectorXd lds = loc_dbc.segment(cnt,nsize_bndry_p1);
-		Eigen::VectorXd loc_f_int_rhs_eigen = f_int_rhs_eigen.segment(curr_elem*nsize_int,nsize_int);
-//		cout << "test3 " << endl;
-//		cout << "loc_f_int_rhs_eigen " << loc_f_int_rhs_eigen << endl;
-//		cout << "loc_f_int_rhs_eigen sizes " << loc_f_int_rhs_eigen.rows() << " " << loc_f_int_rhs_eigen.cols() << endl;
-//		cout << "loc_Bh sizes " << loc_Bh.rows() << " " << loc_Bh.cols() << endl;	
-//		loc_dbc.segment(cnt,nsize_bndry_p1) = loc_Bh * loc_f_int_rhs_eigen + loc_Ah * lds; // should not interfere with aliasing // something wrong with dims of loc_Bh * loc_f_int_rhs_eigen
-		loc_dbc.segment(cnt,nsize_bndry_p1) = loc_Ah * lds;
-/*		cout << "test4 " << endl;
-		loc_dbc_pt1.segment(cnt,nsize_bndry_p1) = loc_Bh * loc_f_int_rhs_eigen;
-		cout << "test5 " << endl;
-		loc_dbc_pt2.segment(cnt,nsize_bndry_p1) = loc_Ah * lds;
-		cout << "test6 " << endl; */
-	}
-
-//	cout << "loc_dbc_pt2.head(5) " << loc_dbc_pt2.head(5) << endl;
-
-	// have here in Nektar:  V_LocBnd = BinvD*F_Int + SchurCompl*V_LocBnd;
-	//  f_int(num_elem*nsize_int); is also same as f_int_rhs_eigen
-//	cout << "f_int.size() " << f_int.size() << endl;
-	// and using Bh_elem
-/*	cout << "Bh_elem[0].cols() * num_elem " << Bh_elem[0].cols() * num_elem << endl;
-	cout << "Bh_elem[0].rows() * num_elem " << Bh_elem[0].rows() * num_elem << endl;
-	cout << "Ah_elem[0].cols() * num_elem " << Ah_elem[0].cols() * num_elem << endl;
-	cout << "Ah_elem[0].rows() * num_elem " << Ah_elem[0].rows() * num_elem << endl;
 */
-	Eigen::VectorXd V_GlobHomBndTmp = Eigen::VectorXd::Zero(nGlobHomBndDofs);
-	Eigen::VectorXd tmp = Eigen::VectorXd::Zero(nGlobBndDofs);
-	
-	for (int i = 0; i < nLocBndDofs; ++i)
-	{
-		tmp(loctoglobndmap[i]) += loctoglobndsign[i] * loc_dbc(i);
-	}
-
-	offset = nDirBndDofs;
-	V_GlobHomBndTmp = tmp.segment(offset, nGlobBndDofs-offset);
-	// actually this, but is mixing Nektar and Eigen data structures V_GlobHomBndTmp = -V_GlobHomBndTmp + fh_bnd[NumDirBCs : nGlobHomBndDofs + NumDirBCs]
-	Eigen::VectorXd fh_bnd_add1 = Eigen::VectorXd::Zero(nGlobHomBndDofs);
-	for (int i = 0; i < nGlobHomBndDofs; ++i)
-	{
-		fh_bnd_add1(i) = fh_bnd[NumDirBCs + i] ;
-	}
-	V_GlobHomBndTmp = -V_GlobHomBndTmp + fh_bnd_add1;
-	Eigen::VectorXd my_sys_in = V_GlobHomBndTmp;
-
-	/////////////////////// actual solve here ////////////////////////////////
-	Eigen::VectorXd my_Asolution = my_Gmat.colPivHouseholderQr().solve(my_sys_in);
-	//////////////////////////////////////////////////////////////////////////
-	
-/*	cout << "my_Gmat.rows() " << my_Gmat.rows() << endl;
-	cout << "my_Gmat.cols() " << my_Gmat.cols() << endl;
-	cout << "my_sys_in.rows() " << my_sys_in.rows() << endl;
-	cout << "my_sys_in.cols() " << my_sys_in.cols() << endl;
-*/
-	Eigen::VectorXd my_bnd_after = Eigen::VectorXd::Zero(m_locToGloMap[0]->GetNumGlobalCoeffs());
-	for (int i = 0; i < m_locToGloMap[0]->GetNumGlobalCoeffs(); ++i)
-	{
-		my_bnd_after(i) = bnd[i];
-	}
-	my_bnd_after.segment(offset, nGlobBndDofs-offset) += my_Asolution;
-	V_GlobBnd = my_bnd_after.segment(0, nGlobBndDofs);
-	for (int i = 0; i < nLocBndDofs; ++i)
-	{
-		loc_dbc(i) = loctoglobndsign[i] * V_GlobBnd(loctoglobndmap[i]);
-	}
-
-	Eigen::VectorXd Fint = Eigen::VectorXd::Zero(num_elem*nsize_p - num_elem);
-	for (int curr_elem = 0; curr_elem < num_elem; ++curr_elem)
-	{
-		int cnt = curr_elem*nsize_bndry_p1;
-		Eigen::MatrixXd loc_Ch = Ch_elem[curr_elem];
-//		F_int[curr_elem*nsize_p_m1:curr_elem*nsize_p_m1+nsize_p_m1] = fh_bnd[nGlobHomBndDofs + NumDirBCs + curr_elem*nsize_p_m1: nGlobHomBndDofs + NumDirBCs + curr_elem*nsize_p_m1+nsize_p_m1] - np.dot(loc_Ch,  loc_dbc[cnt:cnt+nsize_bndry_p1])
-		Eigen::VectorXd fh_bnd_add2 = Eigen::VectorXd::Zero(nsize_p_m1);
-		for (int i = 0; i < nsize_p_m1; ++i)
-		{
-			fh_bnd_add2(i) = fh_bnd[NumDirBCs + nGlobHomBndDofs + curr_elem*nsize_p_m1 + i] ;
-		}
-		Fint.segment(curr_elem*nsize_p_m1,nsize_p_m1) = fh_bnd_add2 - loc_Ch * loc_dbc.segment(cnt, nsize_bndry_p1);  // actually an fh_bnd in case of body forcing as well
-		Eigen::MatrixXd loc_Dh = Dh_elem[curr_elem];
-		Fint.segment(curr_elem*nsize_p_m1,nsize_p_m1) = loc_Dh * Fint.segment(curr_elem*nsize_p_m1,nsize_p_m1).eval();
-	}
-	my_bnd_after.segment(nGlobBndDofs, m_locToGloMap[0]->GetNumGlobalCoeffs() - nGlobBndDofs) = Fint;
-
-	for (int i = 0; i < m_locToGloMap[0]->GetNumGlobalCoeffs(); ++i)
-	{
-		 bnd[i] = my_bnd_after(i);
-	}
 
 	// can I now copy-paste from Nektar ?? -- try to do so:
 
@@ -5552,21 +5415,18 @@ namespace Nektar
 
 
         // unpack pressure and velocity boundary systems. 
-        offset = 0;
-	cnt = 0; 
+        offset = cnt = 0;
         int totpcoeffs = m_pressure->GetNcoeffs();
         Array<OneD, NekDouble> p_coeffs = m_pressure->UpdateCoeffs();
-        for(int i = 0; i <  nel; ++i)
+        for(i = 0; i < nel; ++i)
         {
-            int eid  = i;
-            int nbnd = nz_loc*m_fields[0]->GetExp(eid)->NumBndryCoeffs(); 
-            int nint = m_pressure->GetExp(eid)->GetNcoeffs(); 
-            
-            for(int j = 0; j < nvel; ++j)
+            nbnd = nz_loc*m_fields[0]->GetExp(i)->NumBndryCoeffs(); 
+            nint = m_pressure->GetExp(i)->GetNcoeffs(); 
+            for(j = 0; j < nvel; ++j)
             {
-                for(int k = 0; k < nbnd; ++k)
+                for(k = 0; k < nbnd; ++k)
                 {
-                    f_bnd[cnt+k] = loctoglosign[offset+j*nbnd+k]*bnd[loctoglomap[offset + j*nbnd + k]];
+                    f_bnd[cnt+k] = bnd[offset + j*nbnd + k];
                 }
                 cnt += nbnd;
             }
@@ -5578,21 +5438,21 @@ namespace Nektar
   //      Array<OneD, NekDouble > f_p(num_elem*nsize_p);
 //        NekVector<  NekDouble > F_p(f_p.size(),f_p,eWrapper);
 
-        offset = 0; 
-	cnt = 0; 
-	cnt1 = 0;
-        for(int i = 0; i < nel; ++i)
+        offset = cnt = cnt1 = 0;
+        for(i = 0; i < nel; ++i)
         {
-            int eid  = i;
-            int nint = m_pressure->GetExp(eid)->GetNcoeffs(); 
-            int nbnd = m_fields[0]->GetExp(eid)->NumBndryCoeffs(); 
-            cnt1 = m_pressure->GetCoeff_Offset(eid);
+            nint = m_pressure->GetExp(i)->GetNcoeffs(); 
+            nbnd = m_fields[0]->GetExp(i)->NumBndryCoeffs(); 
+            cnt1 = m_pressure->GetCoeff_Offset(i);
             
-            for(int n = 0; n < nz_loc; ++n)
+            for(n = 0; n < nz_loc; ++n)
             {
-                for(int j = 0; j < nint; ++j)
+                for(j = 0; j < nint; ++j)
                 {
-                    p_coeffs[n*totpcoeffs + cnt1+j] = f_p[cnt+j] = bnd[loctoglomap[offset + (nvel*nz_loc)*nbnd + n*nint + j]];
+                    p_coeffs[n*totpcoeffs + cnt1+j] =
+                    f_p[cnt+j] = bnd[offset +
+                    nvel*nz_loc*nbnd +
+                    n*nint + j];
                 }
                 cnt += nint;
             }

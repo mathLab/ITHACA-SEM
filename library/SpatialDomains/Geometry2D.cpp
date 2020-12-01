@@ -142,6 +142,15 @@ void Geometry2D::NewtonIterationForLocCoord(
             Lcoords[1] +
             (-dery_1 * (coords[0] - xmap) + derx_1 * (coords[1] - ymap)) / jac;
 
+        if(std::isnan(Lcoords[0]) || std::isnan(Lcoords[1]))
+        {
+            dist = 1e16;
+            std::ostringstream ss;
+            ss << "nan found in NewtonIterationForLocCoord with global coordinate";
+            ss << "(" << coords[0] << "," << coords[1] << ")";
+            WARNINGL1(false, ss.str());
+            return;
+        }
         if (fabs(Lcoords[0]) > LcoordDiv || fabs(Lcoords[1]) > LcoordDiv)
         {
             break; // lcoords have diverged so stop iteration

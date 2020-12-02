@@ -2377,7 +2377,7 @@ namespace Nektar
                 }
             }
 
-            NekDouble nearpt     = 1e12;
+            NekDouble nearpt     = 1e6;
             NekDouble nearpt_min = 1e6;
             int       min_id     = -1;
             Array<OneD, NekDouble> savLocCoords(locCoords.size());

@@ -498,18 +498,17 @@ bool Geometry::ClampLocCoords(Array<OneD, NekDouble> &locCoord,
     bool clamp = false;
     for (int i = 0; i < GetShapeDim(); ++i)
     {
-        if(std::isnan(locCoord[i]))
+        if(!std::isfinite(locCoord[i]))
         {
             locCoord[i] = 0.;
             clamp = true;
         }
-        if (locCoord[i] < -(1. + tol))
+        else if (locCoord[i] < -(1. + tol))
         {
             locCoord[i] = -(1. + tol);
             clamp = true;
         }
-
-        if (locCoord[i] > (1. + tol))
+        else if (locCoord[i] > (1. + tol))
         {
             locCoord[i] = 1. + tol;
             clamp = true;

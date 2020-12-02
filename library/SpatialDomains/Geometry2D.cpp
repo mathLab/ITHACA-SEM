@@ -142,12 +142,12 @@ void Geometry2D::NewtonIterationForLocCoord(
             Lcoords[1] +
             (-dery_1 * (coords[0] - xmap) + derx_1 * (coords[1] - ymap)) / jac;
 
-        if(std::isnan(Lcoords[0]) || std::isnan(Lcoords[1]))
+        if( !(std::isfinite(Lcoords[0]) && std::isfinite(Lcoords[1])) )
         {
             dist = 1e16;
             std::ostringstream ss;
-            ss << "nan found in NewtonIterationForLocCoord with global coordinate";
-            ss << "(" << coords[0] << "," << coords[1] << ")";
+            ss << "nan or inf found in NewtonIterationForLocCoord in element "
+               << GetGlobalID();
             WARNINGL1(false, ss.str());
             return;
         }
@@ -268,15 +268,41 @@ NekDouble Geometry2D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         Array<OneD, NekDouble> ptsx(npts), ptsy(npts);
         Array<OneD, NekDouble> tmpx(npts), tmpy(npts);
 
-        m_xmap->BwdTrans(m_coeffs[0], ptsx);
-        m_xmap->BwdTrans(m_coeffs[1], ptsy);
+        // Determine 3D manifold orientation
+        int idx = 0, idy = 1;
+        if(m_coordim == 3)
+        {
+            PointGeom e01, e21, norm;
+            e01.Sub(*m_verts[0], *m_verts[1]);
+            e21.Sub(*m_verts[2], *m_verts[1]);
+            norm.Mult(e01, e21);
+            int tmpi = 0;
+            double tmp = std::fabs(norm[0]);
+            if(tmp < fabs(norm[1]))
+            {
+                tmp = fabs(norm[1]);
+                tmpi = 1;
+            }
+            if(tmp < fabs(norm[2]))
+            {
+                tmpi = 2;
+            }
+            idx = (tmpi + 1) % 3;
+            idy = (tmpi + 2) % 3;
+        }
+        Array<OneD, NekDouble> tmpcoords(2);
+        tmpcoords[0] = coords[idx];
+        tmpcoords[1] = coords[idy];
+
+        m_xmap->BwdTrans(m_coeffs[idx], ptsx);
+        m_xmap->BwdTrans(m_coeffs[idy], ptsy);
 
         const Array<OneD, const NekDouble> za = m_xmap->GetPoints(0);
         const Array<OneD, const NekDouble> zb = m_xmap->GetPoints(1);
 
         // guess the first local coords based on nearest point
-        Vmath::Sadd(npts, -coords[0], ptsx, 1, tmpx, 1);
-        Vmath::Sadd(npts, -coords[1], ptsy, 1, tmpy, 1);
+        Vmath::Sadd(npts, -tmpcoords[0], ptsx, 1, tmpx, 1);
+        Vmath::Sadd(npts, -tmpcoords[1], ptsy, 1, tmpy, 1);
         Vmath::Vmul(npts, tmpx, 1, tmpx, 1, tmpx, 1);
         Vmath::Vvtvp(npts, tmpy, 1, tmpy, 1, tmpx, 1, tmpx, 1);
 
@@ -288,7 +314,7 @@ NekDouble Geometry2D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
         m_xmap->LocCollapsedToLocCoord(eta, Lcoords);
 
         // Perform newton iteration to find local coordinates
-        NewtonIterationForLocCoord(coords, ptsx, ptsy, Lcoords, dist);
+        NewtonIterationForLocCoord(tmpcoords, ptsx, ptsy, Lcoords, dist);
     }
     return dist;
 }

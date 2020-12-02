@@ -181,12 +181,13 @@ void Geometry3D::NewtonIterationForLocCoord(
              (derx_1 * dery_2 - derx_2 * dery_1) * (coords[2] - zmap)) /
                 jac;
 
-        if(std::isnan(Lcoords[0]) || std::isnan(Lcoords[1]) || std::isnan(Lcoords[2]))
+        if( !(std::isfinite(Lcoords[0]) && std::isfinite(Lcoords[1]) &&
+              std::isfinite(Lcoords[2])) )
         {
             dist = 1e16;
             std::ostringstream ss;
-            ss << "nan found in NewtonIterationForLocCoord with global coordinate";
-            ss << "(" << coords[0] << "," << coords[1] << "," << coords[2] << ")";
+            ss << "nan or inf found in NewtonIterationForLocCoord in element "
+               << GetGlobalID();
             WARNINGL1(false, ss.str());
             return;
         }

@@ -10,18 +10,18 @@
     </files>
     <metrics>
         <metric type="L2" id="1">
-            <value variable="x" tolerance="1e-4">2.0467</value>
-            <value variable="y" tolerance="1e-4">2.0467</value>
-            <value variable="z" tolerance="1e-4">2.0467</value>
-            <value variable="eta" tolerance="1e-4">1.1561</value>
-            <value variable="u" tolerance="1e-4">2.0467</value>
-            <value variable="v" tolerance="1e-4">3.5450</value>
+            <value variable="x" tolerance="1e-4">2.04663</value>
+            <value variable="y" tolerance="1e-4">2.04662</value>
+            <value variable="z" tolerance="1e-4">2.04662</value>
+            <value variable="eta" tolerance="1e-4">1.15612</value>
+            <value variable="u" tolerance="1e-4">2.04663</value>
+            <value variable="v" tolerance="1e-4">3.54488</value>
         </metric>
         <metric type="Linf" id="2">
             <value variable="x" tolerance="1e-4">1.</value>
             <value variable="y" tolerance="1e-4">1.</value>
             <value variable="z" tolerance="1e-4">1.</value>
-            <value variable="eta" tolerance="1e-4">0.7707</value>
+            <value variable="eta" tolerance="1e-4">0.770749</value>
             <value variable="u" tolerance="1e-4">1.</value>
             <value variable="v" tolerance="1e-4">1.</value>
         </metric>

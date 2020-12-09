@@ -89,12 +89,16 @@ protected:
     // 3D Geometry Methods
     //---------------------------------------
 
+    SPATIAL_DOMAINS_EXPORT virtual NekDouble v_GetLocCoords(
+        const Array<OneD, const NekDouble> &coords,
+        Array<OneD, NekDouble> &Lcoords);
+
     void NewtonIterationForLocCoord(const Array<OneD, const NekDouble> &coords,
                                     const Array<OneD, const NekDouble> &ptsx,
                                     const Array<OneD, const NekDouble> &ptsy,
                                     const Array<OneD, const NekDouble> &ptsz,
                                     Array<OneD, NekDouble> &Lcoords,
-                                    NekDouble &resid);
+                                    NekDouble &dist);
 
     virtual void v_FillGeom();
     virtual NekDouble v_GetCoord(const int i,

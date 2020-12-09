@@ -113,7 +113,8 @@ void Interpolator::Interpolate(
         // Obtain Element and LocalCoordinate to interpolate
         elmtid = m_expInField[0]->GetExpIndex(Scoords, Lcoords,
                                               NekConstants::kGeomFactorsTol,
-                                              true, elmtid);
+                                              true, elmtid,
+                                              NekConstants::kGeomFactorsTol*1e3);
 
         // we use kGeomFactorsTol as tolerance, while StdPhysEvaluate has
         // kNekZeroTol hardcoded, so we need to limit Lcoords to not produce
@@ -208,7 +209,8 @@ void Interpolator::Interpolate(
         // Obtain Element and LocalCoordinate to interpolate.
         elmtid = m_expInField[0]->GetExpIndex(
             coords, Lcoords,
-            NekConstants::kGeomFactorsTol, false, elmtid);
+            NekConstants::kGeomFactorsTol, true, elmtid,
+            NekConstants::kGeomFactorsTol*1e3);
 
         // Homogeneous case, need to find the right plane
         int targetPlane = -1;

@@ -174,8 +174,14 @@ namespace Nektar
 	int get_curr_elem_pos(int);   
 	double Geo_T(double w, int elemT, int index);
 	void write_curr_field(std::string filename);
-	
-    
+	Array<OneD, Array<OneD, Eigen::MatrixXd > > gen_adv_mats_proj_x_geo(Array<OneD, double> curr_PhysBaseVec_x, Array<OneD, Array<OneD, Eigen::VectorXd > > &adv_vec_proj_x_2d);
+	Array<OneD, Array<OneD, Eigen::MatrixXd > > gen_adv_mats_proj_y_geo(Array<OneD, double> curr_PhysBaseVec_y, Array<OneD, Array<OneD, Eigen::VectorXd > > &adv_vec_proj_y_2d);
+        Eigen::MatrixXd adv_geo_mat_projector(Array<OneD, Array<OneD, Eigen::MatrixXd > > Ah_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > B_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > C_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > D_elem, int curr_elem_trafo, int deriv_index, Eigen::VectorXd &adv_vec_proj);	
+        void gen_proj_adv_terms_geo();
+	void gen_reference_matrices_geo();
+     Eigen::MatrixXd press_geo_mat_projector(Array<OneD, Array<OneD, Eigen::MatrixXd > > Dbnd_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > Dint_elem, int curr_elem_trafo, int deriv_index, Eigen::VectorXd &press_vec_proj);
+         Eigen::MatrixXd ABCD_geo_mat_projector(Array<OneD, Array<OneD, Eigen::MatrixXd > > A_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > B_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > C_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > D_elem, int curr_elem_trafo, int deriv_index, Eigen::VectorXd &ABCD_vec_proj);
+
     
             
 //	int get_curr_elem_pos(int curr_elem);
@@ -272,6 +278,10 @@ namespace Nektar
 	Array<OneD, Eigen::VectorXd> adv_vec_proj_y_newton;
 	Array<OneD, Eigen::MatrixXd> adv_vec_proj_x_newton_RB;
 	Array<OneD, Eigen::MatrixXd> adv_vec_proj_y_newton_RB;
+       	Array<OneD, Array<OneD, Array<OneD, Eigen::VectorXd > > > adv_vec_proj_x_2d;
+	Array<OneD, Array<OneD, Array<OneD, Eigen::VectorXd > > > adv_vec_proj_y_2d;
+	Array<OneD, Array<OneD, Array<OneD, Eigen::MatrixXd > > > adv_mats_proj_x_2d;
+	Array<OneD, Array<OneD, Array<OneD, Eigen::MatrixXd > > > adv_mats_proj_y_2d;	
 	bool use_Newton;        
 	Eigen::MatrixXd the_const_one;
 	Eigen::MatrixXd the_ABCD_one;
@@ -297,8 +307,11 @@ namespace Nektar
 	int fine_grid_dir1;
 	Array<OneD, std::set<int> > elements_trafo;
 	int number_elem_trafo;
-
-
+	bool use_fine_grid_VV;
+	Array<OneD, Array<OneD, Eigen::MatrixXd > > the_const_one_proj_2d;
+	Array<OneD, Array<OneD, Eigen::MatrixXd > > the_ABCD_one_proj_2d;
+	Array<OneD, Array<OneD, Eigen::VectorXd > > the_ABCD_one_rhs_proj_2d;
+	Array<OneD, Array<OneD, Eigen::VectorXd > > the_const_one_rhs_proj_2d;
 
 
         Array<OneD, CoupledSolverMatrices> m_mat;

@@ -181,6 +181,8 @@ namespace Nektar
 	void gen_reference_matrices_geo();
      Eigen::MatrixXd press_geo_mat_projector(Array<OneD, Array<OneD, Eigen::MatrixXd > > Dbnd_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > Dint_elem, int curr_elem_trafo, int deriv_index, Eigen::VectorXd &press_vec_proj);
          Eigen::MatrixXd ABCD_geo_mat_projector(Array<OneD, Array<OneD, Eigen::MatrixXd > > A_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > B_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > C_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > D_elem, int curr_elem_trafo, int deriv_index, Eigen::VectorXd &ABCD_vec_proj);
+             Eigen::MatrixXd gen_affine_mat_proj_geo(double current_nu, double w);
+    Eigen::VectorXd gen_affine_vec_proj_geo(double current_nu, double w, int current_index);
 
     
             

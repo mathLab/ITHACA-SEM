@@ -71,7 +71,7 @@ for usage
 
 \noindent default: has to be set
 
-\noindent explanation: the first parameter value in the parameter vector in case of only one parameter direction. further paramters are numbered param1, param2, ... and so on
+\noindent explanation: the first parameter value in the parameter vector in case of only one parameter direction. Further paramters are numbered param1, param2, ... and so on
 
 \subsection{POD\_tolerance}
 
@@ -98,11 +98,70 @@ for usage
 
 \noindent explanation: if '0' the parameter is kinematic viscosity
 
+\subsection{do\_trafo\_check}
 
+\noindent type: bool
+
+\noindent default: 1
+
+\noindent explanation: do fixed point iterations on loaded snapshots until convergence
 
    
+\subsection{use\_fine\_grid\_VV}
+
+\noindent type: bool
+
+\noindent default: 0
+
+\noindent explanation: sets whether a Verification and Validation (VV) snapshot set being used   
+
+\subsection{use\_fine\_grid\_VV\_and\_load\_ref}
+
+\noindent type: bool
+
+\noindent default: 1
+
+\noindent explanation: sets whether a Verification and Validation (VV) snapshot set is loaded from files 
+
+\subsection{use\_fine\_grid\_VV\_random}
+
+\noindent type: bool
+
+\noindent default: 0
+
+\noindent explanation: sets whether the Verification and Validation (VV) snapshot set is given at pre-defined parameter locations
+
+
+\subsection{VV\_param0\_dir0}
+
+\noindent type: double
+
+\noindent default: has to be set when use\_fine\_grid\_VV\_random
+
+\noindent explanation: the first parameter value in the Verification and Validation (VV) parameter vector in the first parameter direction. Further paramters are numbered VV\_param0\_dir1, VV\_param2\_dir0, ... and so on
+
+\subsection{fine\_grid\_dir0}
+
+\noindent type: int
+
+\noindent default: has to be set when use\_fine\_grid\_VV
+
+\noindent explanation: number of snapshots in the Verification and Validation (VV) snapshot set. 
+
+\subsection{number\_elem\_trafo}
+
+\noindent type: int
+
+\noindent default: 5
+
+\noindent explanation: number of affine terms when a geometric parameter is given. Additional the two inline functions in CoupledLinearisedNS\_ROM.h (Geo\_T and set\_elem\_trafo) need to be adjusted. 
+
+
+
 
 \section{Examples}
+
+See solvers/IncNavierStokesSolver/Tests\_ROM/single\_geometric\_parameter for an example showing parametric variation in geometry and a random test set.
 
 
 \end{document}

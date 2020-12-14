@@ -40,6 +40,7 @@
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 #include <MultiRegions/ContField.h>
 
+
 using namespace std;
 
 namespace Nektar
@@ -1253,7 +1254,31 @@ namespace Nektar
 
 	
     	cout << " ... finished loading FOM snapshots from files" << endl;
-
+    	
+    	if (use_fine_grid_VV_and_load_ref && use_fine_grid_VV)
+    	{
+    		cout << "start loading Verification & Validation snapshots ... " << endl;
+		snapshot_x_collection_VV = Array<OneD, Array<OneD, NekDouble> > (fine_grid_dir0);
+		snapshot_y_collection_VV = Array<OneD, Array<OneD, NekDouble> > (fine_grid_dir0);    	
+	        for(int i = 0; i < fine_grid_dir0; ++i)
+	        {
+			// generate the correct string
+			std::stringstream sstm;
+			sstm << "VV" << i+1;
+			std::string result = sstm.str();
+			const char* rr = result.c_str();
+		        GetFunction(result)->Evaluate(fieldStr, test_load_snapshot);
+		        
+			snapshot_x_collection_VV[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+			snapshot_y_collection_VV[i] = Array<OneD, NekDouble> (GetNpoints(), 0.0);
+			for (int j=0; j < GetNpoints(); ++j)
+			{
+				snapshot_x_collection_VV[i][j] = test_load_snapshot[0][j];
+				snapshot_y_collection_VV[i][j] = test_load_snapshot[1][j];
+			}
+	        }    	
+    		cout << " ... finished loading Verification & Validation snapshots " << endl;
+    	}
     }
     
     void CoupledLinearNS_ROM::load_session_parameters()
@@ -1309,6 +1334,22 @@ namespace Nektar
 	{
 		use_fine_grid_VV = 0;
 	}
+	if (m_session->DefinesParameter("use_fine_grid_VV_and_load_ref")) 
+	{
+		use_fine_grid_VV_and_load_ref = m_session->GetParameter("use_fine_grid_VV_and_load_ref");	
+	}
+	else
+	{
+		use_fine_grid_VV_and_load_ref = 1;
+	}	
+	if (m_session->DefinesParameter("use_fine_grid_VV_random")) 
+	{
+		use_fine_grid_VV_random = m_session->GetParameter("use_fine_grid_VV_random");	
+	}
+	else
+	{
+		use_fine_grid_VV_random = 0;
+	}
 
 	
 	
@@ -1330,6 +1371,39 @@ namespace Nektar
 	        }
 	}
 
+		if (use_fine_grid_VV && (parameter_space_dimension == 1))
+		{
+			fine_grid_dir0 = m_session->GetParameter("fine_grid_dir0");
+			Nmax_VV = fine_grid_dir0;
+			fine_general_param_vector = Array<OneD, Array<OneD, NekDouble> >(fine_grid_dir0);
+			for(int i = 0; i < fine_grid_dir0; ++i)
+			{
+				Array<OneD, NekDouble> parameter_point = Array<OneD, NekDouble> (parameter_space_dimension, 0.0);
+				fine_general_param_vector[i] = parameter_point;
+			}
+
+			// or alternatively overwrite with given random vector
+			if (use_fine_grid_VV_random)
+			{
+				int current_index = 0;
+				for (int i1 = 0; i1 < fine_grid_dir0; i1++)
+				{
+					// generate the correct string
+					std::stringstream sstm;
+					sstm << "VV_param" << i1 << "_dir0";
+					std::string result = sstm.str();
+					double param_dir0 = m_session->GetParameter(result);
+	
+
+					fine_general_param_vector[current_index][0] = param_dir0;
+					current_index++;
+ 				}
+				
+			}
+
+		}
+
+
 	{ // currently just copy-pasted hard-coded from previous version	
 		if (m_session->DefinesParameter("number_elem_trafo"))
 		{
@@ -1339,13 +1413,17 @@ namespace Nektar
 		{
 			number_elem_trafo = 5;
 		}
-		elements_trafo = Array<OneD, std::set<int> > (number_elem_trafo);
+//		elements_trafo = Array<OneD, std::set<int> > (number_elem_trafo);
+
+		elements_trafo = set_elem_trafo( number_elem_trafo);
+
 //	    <P> elem_1 = {32,30,11,10,9,8,17,16,15,14,25,24,23,22}   	</P>   
 //          <P> elem_2 = {12, 28, 34, 13,21,20,18,19,26,27}   		</P>   
 //	    <P> elem_3 = {29, 31}   	</P>   
 //	    <P> elem_4 = {33, 35}   	</P>   
 //	    <P> elem_5 = {0,1,2,3,4,5,6,7}  
-		elements_trafo[0].insert(32); // of course, this should work automatically
+
+/*		elements_trafo[0].insert(32); 
 		elements_trafo[0].insert(30);
 		elements_trafo[0].insert(11);
 		elements_trafo[0].insert(10);
@@ -1384,7 +1462,7 @@ namespace Nektar
 		elements_trafo[4].insert(4);
 		elements_trafo[4].insert(5);
 		elements_trafo[4].insert(6);
-		elements_trafo[4].insert(7);
+		elements_trafo[4].insert(7);  */
 	}
 	
     	cout << " ... finished loading ROM parameters" << endl;
@@ -3534,6 +3612,169 @@ namespace Nektar
 		cout << "relative euclidean projection error norm in x coords: " << diff_x_proj.norm() / snap_x.norm() << " of snapshot number " << iter_index << endl;
 		cout << "relative euclidean projection error norm in y coords: " << diff_y_proj.norm() / snap_y.norm() << " of snapshot number " << iter_index << endl;
 	}
+	
+	if (use_fine_grid_VV)
+	{
+		// repeat the evaluation without the accuracy check
+		// fine_general_param_vector is available already
+		// start sweeping 
+
+		// Question: how to init?
+		// could use all-zero or the cluster-mean
+		Array<OneD, NekDouble> cluster_mean_x(snapshot_x_collection[0].size(), 0.0);
+		Array<OneD, NekDouble> cluster_mean_y(snapshot_y_collection[0].size(), 0.0);
+/*		for (std::set<int>::iterator it=current_cluster.begin(); it!=current_cluster.end(); ++it)
+		{
+			for (int i = 0; i < snapshot_x_collection[0].size(); ++i)
+			{
+				cluster_mean_x[i] += (1.0 / current_cluster.size()) * snapshot_x_collection[*it][i];
+				cluster_mean_y[i] += (1.0 / current_cluster.size()) * snapshot_y_collection[*it][i];
+			}
+		} */
+
+		Eigen::VectorXd collected_qoi = Eigen::VectorXd::Zero(Nmax_VV);
+		Eigen::VectorXd collected_relative_L2errors = Eigen::VectorXd::Zero(Nmax_VV);
+		Eigen::VectorXd collected_relative_Linferrors = Eigen::VectorXd::Zero(Nmax_VV);
+		// Eigen::MatrixXd collected_relative_L2errors_v2 = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
+		// Eigen::MatrixXd collected_relative_Linferrors_v2 = Eigen::MatrixXd::Zero(fine_grid_dir0, fine_grid_dir1);
+		int fine_grid_dir0_index = 0;
+		int fine_grid_dir1_index = 0;
+		double locROM_qoi;
+		for (int iter_index = 0; iter_index < Nmax_VV; ++iter_index)
+		{
+			int current_index = iter_index;
+			double current_nu;
+			double current_geo;
+			if (parameter_space_dimension == 1)
+			{
+				if (parameter_types[0] == 0)
+				{
+					current_nu = fine_general_param_vector[current_index][0];
+				}
+				if (parameter_types[0] == 1)
+				{
+					current_geo = fine_general_param_vector[current_index][0];
+					current_nu = m_kinvis;
+				}				
+			}
+			if (debug_mode)
+			{
+	//			cout << " VV online phase current nu " << current_nu << endl;
+	//			cout << " VV online phase current w " << w << endl;
+			}
+			Set_m_kinvis( current_nu );
+			if (use_Newton)
+			{
+				DoInitialiseAdv(cluster_mean_x, cluster_mean_y);
+			}
+
+
+
+			Eigen::MatrixXd curr_xy_proj = project_onto_basis(cluster_mean_x, cluster_mean_y);
+			Eigen::MatrixXd affine_mat_proj;
+			Eigen::VectorXd affine_vec_proj;
+			if (parameter_space_dimension == 1)
+			{
+				if (parameter_types[0] == 0)
+				{
+					affine_mat_proj = gen_affine_mat_proj(current_nu);
+					affine_vec_proj = gen_affine_vec_proj(current_nu, current_index);
+				}
+				if (parameter_types[0] == 1)
+				{
+					affine_mat_proj = gen_affine_mat_proj_geo(current_nu, current_geo);
+					affine_vec_proj = gen_affine_vec_proj_geo(current_nu, current_geo, current_index);
+				}
+			}
+			Eigen::VectorXd solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
+			double relative_change_error;
+			int no_iter=0;
+			Array<OneD, double> field_x;
+			Array<OneD, double> field_y;
+			// now start looping
+			do
+			{
+				// for now only Oseen // otherwise need to do the DoInitialiseAdv(cluster_mean_x, cluster_mean_y);
+				Eigen::VectorXd prev_solve_affine = solve_affine;
+				Eigen::VectorXd repro_solve_affine = RB * solve_affine;
+				Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+
+				recover_snapshot_loop(reconstruct_solution, field_x, field_y);
+				if (use_Newton)
+				{
+					DoInitialiseAdv(field_x, field_y);
+				}
+				curr_xy_proj = project_onto_basis(field_x, field_y);
+				if (parameter_space_dimension == 1)
+				{
+					if (parameter_types[0] == 0)
+					{
+						affine_mat_proj = gen_affine_mat_proj(current_nu);
+						affine_vec_proj = gen_affine_vec_proj(current_nu, current_index);
+					}
+					if (parameter_types[0] == 1)
+					{
+						affine_mat_proj = gen_affine_mat_proj_geo(current_nu, current_geo);
+						affine_vec_proj = gen_affine_vec_proj_geo(current_nu, current_geo, current_index);
+					}
+				}
+				else if (parameter_space_dimension == 2)
+				{
+					//cout << " VV online phase current nu " << current_nu << endl;
+					//cout << " VV online phase current w " << w << endl;
+//					affine_mat_proj = gen_affine_mat_proj_2d(current_nu, w);
+//					affine_vec_proj = gen_affine_vec_proj_2d(current_nu, w, current_index);
+				}
+				solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
+				relative_change_error = (solve_affine - prev_solve_affine).norm() / prev_solve_affine.norm();
+				//cout << "relative_change_error " << relative_change_error << " no_iter " << no_iter << endl;
+				no_iter++;
+			} 
+			while( ((relative_change_error > 1e-12) && (no_iter < 100)) );
+//			cout << "ROM solve no iters used " << no_iter << endl;
+			Eigen::VectorXd repro_solve_affine = RB * solve_affine;
+			Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+			recover_snapshot_loop(reconstruct_solution, field_x, field_y);
+			Eigen::VectorXd  snap_x = Eigen::VectorXd::Zero(cluster_mean_x.size());
+			Eigen::VectorXd  snap_y = Eigen::VectorXd::Zero(cluster_mean_x.size());
+			for (int index_recr = 0; index_recr < cluster_mean_x.size(); ++index_recr)
+			{
+				snap_x(index_recr) = field_x[index_recr];
+				snap_y(index_recr) = field_y[index_recr];
+			}
+//			cout << "solved snap_x.norm() " << snap_x.norm() << endl;
+//			cout << "solved snap_y.norm() " << snap_y.norm() << endl;
+
+		/*	if (write_ROM_field || (qoi_dof >= 0))
+			{
+				locROM_qoi = recover_snapshot_data(reconstruct_solution, 0);
+			}   */
+	//		collected_qoi(iter_index) = locROM_qoi;
+			if (use_fine_grid_VV_and_load_ref)
+			{
+				collected_relative_L2errors(iter_index) = L2norm_abs_error_ITHACA(field_x, field_y, snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]) / L2norm_ITHACA(snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]);
+				collected_relative_Linferrors(iter_index) = Linfnorm_abs_error_ITHACA(field_x, field_y, snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]) / Linfnorm_ITHACA(snapshot_x_collection_VV[iter_index], snapshot_y_collection_VV[iter_index]);
+		/*		if (use_non_unique_up_to_two)
+				{
+					collected_relative_L2errors_v2(fine_grid_dir0_index, fine_grid_dir1_index) = L2norm_abs_error_ITHACA(field_x, field_y, snapshot_x_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1], snapshot_y_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1]) / L2norm_ITHACA(snapshot_x_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1], snapshot_y_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1]);
+					collected_relative_Linferrors_v2(fine_grid_dir0_index, fine_grid_dir1_index) = Linfnorm_abs_error_ITHACA(field_x, field_y, snapshot_x_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1], snapshot_y_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1]) / Linfnorm_ITHACA(snapshot_x_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1], snapshot_y_collection_VV[iter_index + fine_grid_dir0*fine_grid_dir1]);
+				}    */
+			}
+/*			fine_grid_dir1_index++;
+			if (fine_grid_dir1_index == fine_grid_dir1)
+			{
+				fine_grid_dir1_index = 0;
+				fine_grid_dir0_index++;
+			}			*/
+		
+			cout << "VV iteration " << iter_index << endl;
+			cout << "relative L2 error " << collected_relative_L2errors(iter_index) << endl;
+			cout << "relative Linf error " << collected_relative_Linferrors(iter_index) << endl;
+
+		} // for (int iter_index = 0; iter_index < fine_grid_dir0*fine_grid_dir1; ++iter_index)
+	}	// if (use_fine_grid_VV)
+	
+	
     }
     
     
@@ -5796,33 +6037,8 @@ namespace Nektar
 	return -1;
     }     
     
-    double CoupledLinearNS_ROM::Geo_T(double w, int elemT, int index)
+  /*  double CoupledLinearNS_ROM::Geo_T(double w, int elemT, int index)
     {
-/*
-def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
-	if elemT == 0:
-		T = np.matrix([[1, 0], [0, 1/w]])
-	if elemT == 1:
-		T = np.matrix([[1, 0], [0, 2/(3-w)]])
-	if elemT == 2:
-		T = np.matrix([[1, 0], [-(1-w)/2, 1]])
-	if elemT == 3:
-		T = np.matrix([[1, 0], [-(w-1)/2, 1]])
-	if elemT == 4:
-		T = np.matrix([[1, 0], [0, 1]])			
-	if index == 0:
-		return 1/np.linalg.det(T)
-	if index == 1:
-		return T[0,0]
-	if index == 2:
-		return T[0,1]
-	if index == 3:
-		return T[1,0]
-	if index == 4:
-		return T[1,1]
-
-
-*/
 	Eigen::Matrix2d T;
 	if (elemT == 0) 
 	{
@@ -5844,9 +6060,6 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	{
 		T << 1, 0, 0, 1;
 	}
-
-//	cout << T << endl;
-
 	if (index == 0) 
 	{
 		return 1/(T(0,0)*T(1,1) - T(0,1)*T(1,0)); // 1/det
@@ -5867,12 +6080,9 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	{
 		return T(1,1);
 	}
-
 	return 0;
-
-
     }
-
+*/
 
     void CoupledLinearNS_ROM::write_curr_field(std::string filename)
     {
@@ -6055,43 +6265,38 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	// do the same for VV reference solutions, if that is being used
 	if (use_fine_grid_VV)
 	{
-    for(int i = fine_grid_dir0*fine_grid_dir1; i < fine_grid_dir0*fine_grid_dir1; ++i)
-	{
-
-		cout << "\n attempting trafo for VV reference solutions \n \n";
-
-
-		double err_threshold = 1e-9;
-		int num_iter = 0;
-		Eigen::VectorXd ref_f_bnd;
-		Eigen::VectorXd ref_f_p;
-		Eigen::VectorXd ref_f_int;
-//		Array<OneD, Array<OneD, NekDouble> > snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_x_collection[0], snapshot_y_collection[0], fine_general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int);
-		Array<OneD, Array<OneD, NekDouble> > snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_x_collection_VV[i], snapshot_y_collection_VV[i], fine_general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int);  
-
-		if (1)
+    		for(int i = 0; i < fine_grid_dir0; ++i)
 		{
-			double L2error = 1;
-			do
+			current_parameter_vector[0] = fine_general_param_vector[i][0];
+			cout << "\n attempting trafo for VV reference solutions \n \n";
+			double err_threshold = 1e-9;
+			int num_iter = 0;
+			Eigen::VectorXd ref_f_bnd;
+			Eigen::VectorXd ref_f_p;
+			Eigen::VectorXd ref_f_int;
+			Array<OneD, Array<OneD, NekDouble> > snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_x_collection_VV[i], snapshot_y_collection_VV[i], current_parameter_vector, ref_f_bnd, ref_f_p, ref_f_int);  
+			if (1)
 			{
-				Array<OneD, Array<OneD, NekDouble> > prev_snapshot_result_phys_velocity_x_y = snapshot_result_phys_velocity_x_y;
-				snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_result_phys_velocity_x_y[0], snapshot_result_phys_velocity_x_y[1], fine_general_param_vector[i], ref_f_bnd, ref_f_p, ref_f_int); 
-
-				double L2error_x = L2Error(0, prev_snapshot_result_phys_velocity_x_y[0]);
-				double L2error_y = L2Error(1, prev_snapshot_result_phys_velocity_x_y[1]);
-				double L2error_x_ref = L2Error(0);
-				double L2error_y_ref = L2Error(1);
-				L2error = sqrt(L2error_x*L2error_x + L2error_y*L2error_y) / sqrt(L2error_x_ref*L2error_x_ref + L2error_y_ref*L2error_y_ref);
-				cout << "relative L2error w.r.t. current iterate " << L2error << endl;
-				num_iter++;
-				if (num_iter == 100)
+				double L2error = 1;
+				do
 				{
-					num_iter = 0;
-					err_threshold = err_threshold*10;
-				}	
+					Array<OneD, Array<OneD, NekDouble> > prev_snapshot_result_phys_velocity_x_y = snapshot_result_phys_velocity_x_y;
+					snapshot_result_phys_velocity_x_y = trafo_current_para(snapshot_result_phys_velocity_x_y[0], snapshot_result_phys_velocity_x_y[1], current_parameter_vector, ref_f_bnd, ref_f_p, ref_f_int); 
+					double L2error_x = L2Error(0, prev_snapshot_result_phys_velocity_x_y[0]);
+					double L2error_y = L2Error(1, prev_snapshot_result_phys_velocity_x_y[1]);
+					double L2error_x_ref = L2Error(0);
+					double L2error_y_ref = L2Error(1);
+					L2error = sqrt(L2error_x*L2error_x + L2error_y*L2error_y) / sqrt(L2error_x_ref*L2error_x_ref + L2error_y_ref*L2error_y_ref);
+					cout << "relative L2error w.r.t. current iterate " << L2error << endl;
+					num_iter++;
+					if (num_iter == 100)
+					{
+						num_iter = 0;
+						err_threshold = err_threshold*10;
+					}	
+				}
+				while ((L2error > err_threshold));
 			}
-			while ((L2error > err_threshold));
-		}
 
 		std::stringstream sstm;
 		sstm << "Conv_ref_Oseen_param" << i << ".fld";
@@ -7389,6 +7594,115 @@ def Geo_T(w, elemT, index): # index 0: det, index 1,2,3,4: mat_entries
 	return -recovered_press_proj - current_nu * recovered_ABCD_proj + recovered_affine_adv_rhs_proj_xy  -0.5*add_rhs_Newton ;  
 //	return -the_const_one_rhs_proj - current_nu * the_ABCD_one_rhs_proj + recovered_affine_adv_rhs_proj_xy  -0.5*add_rhs_Newton ;  
     }
+
+    void CoupledLinearNS_ROM::recover_snapshot_loop(Eigen::VectorXd reconstruct_solution, Array<OneD, double> & field_x, Array<OneD, double> & field_y)
+    {
+	Eigen::VectorXd f_bnd = reconstruct_solution.head(curr_f_bnd.size());
+	Eigen::VectorXd f_int = reconstruct_solution.tail(curr_f_int.size());
+	Array<OneD, MultiRegions::ExpListSharedPtr> fields = UpdateFields(); 
+	Array<OneD, unsigned int> bmap, imap; 
+	Array<OneD, double> field_0(GetNcoeffs());
+	Array<OneD, double> field_1(GetNcoeffs());
+	Array<OneD, double> curr_PhysBaseVec_x(GetNpoints(), 0.0);
+	Array<OneD, double> curr_PhysBaseVec_y(GetNpoints(), 0.0);
+	int cnt = 0;
+	int cnt1 = 0;
+	int nvel = 2;
+	int nz_loc = 1;
+	int  nplanecoeffs = fields[0]->GetNcoeffs();
+	int  nel  = m_fields[0]->GetNumElmts();
+	for(int i = 0; i < nel; ++i) 
+	{
+	      int eid  = i;
+	      fields[0]->GetExp(eid)->GetBoundaryMap(bmap);
+	      fields[0]->GetExp(eid)->GetInteriorMap(imap);
+	      int nbnd   = bmap.size();
+	      int nint   = imap.size();
+	      int offset = fields[0]->GetCoeff_Offset(eid);
+	            
+	      for(int j = 0; j < nvel; ++j)
+	      {
+	           for(int n = 0; n < nz_loc; ++n)
+	           {
+	                    for(int k = 0; k < nbnd; ++k)
+	                    {
+	                        fields[j]->SetCoeff(n*nplanecoeffs + offset+bmap[k], f_bnd(cnt+k));
+	                    }
+	                    
+	                    for(int k = 0; k < nint; ++k)
+	                    {
+	                        fields[j]->SetCoeff(n*nplanecoeffs + offset+imap[k], f_int(cnt1+k));
+	                    }
+	                    cnt  += nbnd;
+	                    cnt1 += nint;
+	           }
+	      }
+	}
+	Array<OneD, double> test_nn = fields[0]->GetCoeffs();
+	fields[0]->BwdTrans_IterPerExp(fields[0]->GetCoeffs(), curr_PhysBaseVec_x);
+	fields[1]->BwdTrans_IterPerExp(fields[1]->GetCoeffs(), curr_PhysBaseVec_y);
+	field_x = curr_PhysBaseVec_x;
+	field_y = curr_PhysBaseVec_y;
+    }
+    
+    double CoupledLinearNS_ROM::L2norm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y )
+    {
+	Array< OneD, NekDouble > x_difference(component1_x.size());
+	Array< OneD, NekDouble > y_difference(component1_y.size());
+	for (int i = 0; i < component1_y.size(); ++i)
+	{
+		x_difference[i] = component1_x[i] - component2_x[i];
+		y_difference[i] = component1_y[i] - component2_y[i];
+	}
+	double result = L2norm_ITHACA(x_difference, y_difference);
+	return result;
+    }
+
+    double CoupledLinearNS_ROM::Linfnorm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y )
+    {
+	Array< OneD, NekDouble > x_difference(component1_x.size());
+	Array< OneD, NekDouble > y_difference(component1_y.size());
+	for (int i = 0; i < component1_y.size(); ++i)
+	{
+		x_difference[i] = component1_x[i] - component2_x[i];
+		y_difference[i] = component1_y[i] - component2_y[i];
+	}
+	double result = Linfnorm_ITHACA(x_difference, y_difference);
+	return result;
+    }    
+
+    double CoupledLinearNS_ROM::L2norm_ITHACA( Array< OneD, NekDouble > component_x, Array< OneD, NekDouble > component_y )
+    {
+	// the input comes in phys coords
+        NekDouble L2norm = -1.0;
+//	cout << "m_NumQuadPointsError " << m_NumQuadPointsError << endl; // should be 0
+//	cout << "component_x.size() " << component_x.size() << endl; // should be nphys
+        if (m_NumQuadPointsError == 0)
+        {
+		double L2norm_x = m_fields[0]->L2(component_x);
+		double L2norm_y = m_fields[1]->L2(component_y);
+		L2norm = sqrt( L2norm_x*L2norm_x + L2norm_y*L2norm_y );
+        }
+	return L2norm;
+    }
+
+    double CoupledLinearNS_ROM::Linfnorm_ITHACA( Array< OneD, NekDouble > component_x, Array< OneD, NekDouble > component_y )
+    {
+	// the input comes in phys coords
+        NekDouble Linfnorm = -1.0;
+//	cout << "m_NumQuadPointsError " << m_NumQuadPointsError << endl; // should be 0
+//	cout << "component_x.size() " << component_x.size() << endl; // should be nphys
+        if (m_NumQuadPointsError == 0)
+        {
+		double Linfnorm_x = m_fields[0]->L2(component_x);
+		double Linfnorm_y = m_fields[1]->L2(component_y);
+		Linfnorm = max(Linfnorm_x, Linfnorm_y);
+        }
+	return Linfnorm;
+    }
+
+
+
 
    
 }

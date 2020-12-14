@@ -172,7 +172,106 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > DoSolve_at_param(Array<OneD, NekDouble> init_snapshot_x, Array<OneD, NekDouble> init_snapshot_y, NekDouble parameter);
         Array<OneD, Array<OneD, NekDouble> > trafo_current_para(Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y, Array<OneD, NekDouble> parameter_of_interest, Eigen::VectorXd & ref_f_bnd, Eigen::VectorXd & ref_f_p, Eigen::VectorXd & ref_f_int);
 	int get_curr_elem_pos(int);   
-	double Geo_T(double w, int elemT, int index);
+	
+	inline double Geo_T(double w, int elemT, int index)
+	{
+		Eigen::Matrix2d T;
+	if (elemT == 0) 
+	{
+		T << 1, 0, 0, 1/w;
+	}
+	else if (elemT == 1) 
+	{
+		T << 1, 0, 0, 2/(3-w);
+	}
+	else if (elemT == 2) 
+	{
+		T << 1, 0, -(1-w)/2, 1;
+	}
+	else if (elemT == 3) 
+	{
+		T << 1, 0, -(w-1)/2, 1;
+	}
+	else if (elemT == 4) 
+	{
+		T << 1, 0, 0, 1;
+	}
+
+//	cout << T << endl;
+
+	if (index == 0) 
+	{
+		return 1/(T(0,0)*T(1,1) - T(0,1)*T(1,0)); // 1/det
+	}
+	else if (index == 1) 
+	{
+		return T(0,0);
+	}
+	else if (index == 2) 
+	{
+		return T(0,1);
+	}
+	else if (index == 3) 
+	{
+		return T(1,0);
+	}
+	else if (index == 4) 
+	{
+		return T(1,1);
+	}
+
+	return 0;
+
+
+    }
+    
+    inline Array<OneD, std::set<int> > set_elem_trafo(int number_elem_trafo)
+    {
+    		Array<OneD, std::set<int> > elements_trafo = Array<OneD, std::set<int> > (number_elem_trafo);
+		elements_trafo[0].insert(32); 
+		elements_trafo[0].insert(30);
+		elements_trafo[0].insert(11);
+		elements_trafo[0].insert(10);
+		elements_trafo[0].insert(9);
+		elements_trafo[0].insert(8);
+		elements_trafo[0].insert(17);
+		elements_trafo[0].insert(16);
+		elements_trafo[0].insert(15);
+		elements_trafo[0].insert(14);
+		elements_trafo[0].insert(25);
+		elements_trafo[0].insert(24);
+		elements_trafo[0].insert(23);
+		elements_trafo[0].insert(22);
+
+		elements_trafo[1].insert(12);
+		elements_trafo[1].insert(28);
+		elements_trafo[1].insert(34);
+		elements_trafo[1].insert(13);
+		elements_trafo[1].insert(21);
+		elements_trafo[1].insert(20);
+		elements_trafo[1].insert(18);
+		elements_trafo[1].insert(19);
+		elements_trafo[1].insert(26);
+		elements_trafo[1].insert(27);
+
+		elements_trafo[2].insert(29);
+		elements_trafo[2].insert(31);
+
+		elements_trafo[3].insert(33);
+		elements_trafo[3].insert(35);
+
+		elements_trafo[4].insert(0);
+		elements_trafo[4].insert(1);
+		elements_trafo[4].insert(2);
+		elements_trafo[4].insert(3);
+		elements_trafo[4].insert(4);
+		elements_trafo[4].insert(5);
+		elements_trafo[4].insert(6);
+		elements_trafo[4].insert(7);
+		
+		return elements_trafo;
+    }
+    
 	void write_curr_field(std::string filename);
 	Array<OneD, Array<OneD, Eigen::MatrixXd > > gen_adv_mats_proj_x_geo(Array<OneD, double> curr_PhysBaseVec_x, Array<OneD, Array<OneD, Eigen::VectorXd > > &adv_vec_proj_x_2d);
 	Array<OneD, Array<OneD, Eigen::MatrixXd > > gen_adv_mats_proj_y_geo(Array<OneD, double> curr_PhysBaseVec_y, Array<OneD, Array<OneD, Eigen::VectorXd > > &adv_vec_proj_y_2d);
@@ -183,6 +282,11 @@ namespace Nektar
          Eigen::MatrixXd ABCD_geo_mat_projector(Array<OneD, Array<OneD, Eigen::MatrixXd > > A_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > B_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > C_elem, Array<OneD, Array<OneD, Eigen::MatrixXd > > D_elem, int curr_elem_trafo, int deriv_index, Eigen::VectorXd &ABCD_vec_proj);
              Eigen::MatrixXd gen_affine_mat_proj_geo(double current_nu, double w);
     Eigen::VectorXd gen_affine_vec_proj_geo(double current_nu, double w, int current_index);
+    void recover_snapshot_loop(Eigen::VectorXd reconstruct_solution, Array<OneD, double> & field_x, Array<OneD, double> & field_y);
+    double Linfnorm_ITHACA( Array< OneD, NekDouble > component_x, Array< OneD, NekDouble > component_y );
+    double L2norm_ITHACA( Array< OneD, NekDouble > component_x, Array< OneD, NekDouble > component_y );
+    double Linfnorm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y );
+    double L2norm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y );
 
     
             
@@ -235,6 +339,7 @@ namespace Nektar
         bool load_snapshot_data_from_files;
         int number_of_snapshots;
         int Nmax;
+        int Nmax_VV;
         int parameter_space_dimension;
         Array<OneD, int> parameter_types;
         double POD_tolerance;
@@ -314,7 +419,11 @@ namespace Nektar
 	Array<OneD, Array<OneD, Eigen::MatrixXd > > the_ABCD_one_proj_2d;
 	Array<OneD, Array<OneD, Eigen::VectorXd > > the_ABCD_one_rhs_proj_2d;
 	Array<OneD, Array<OneD, Eigen::VectorXd > > the_const_one_rhs_proj_2d;
-
+	bool use_fine_grid_VV_random;
+	bool use_fine_grid_VV_and_load_ref;
+	
+	
+	
 
         Array<OneD, CoupledSolverMatrices> m_mat;
         

@@ -5555,6 +5555,9 @@ namespace Nektar
 	                    
                     Vmath::Vsub(nLocBndDofs, F_bnd_glssc,1, F_bnd1_glssc,1, F_bnd_glssc,1);
                }
+               
+		cout << "value of atLastLevel " << atLastLevel << endl;               	
+               	
                 if(atLastLevel)
                 {                    
 //                    v_BasisFwdTransform(F_bnd_glssc);  // Transform to new basis if required 

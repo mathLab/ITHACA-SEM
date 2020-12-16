@@ -5481,6 +5481,9 @@ namespace Nektar
         }
 
 
+
+
+
             bool atLastLevel       = m_locToGloMap[mode]->AtLastLevel();
             int  scLevel           = m_locToGloMap[mode]->GetStaticCondLevel();
             
@@ -5558,71 +5561,65 @@ namespace Nektar
                
 		cout << "value of atLastLevel " << atLastLevel << endl;               	
                	
-                if(atLastLevel)
+//                if(atLastLevel)
+                if(1)
                 {                    
-//                    v_BasisFwdTransform(F_bnd_glssc);  // Transform to new basis if required 
-//                    DNekScalBlkMat &SchurCompl = *m_schurCompl;
-//                    v_CoeffsFwdTransform(V_bnd_glssc,V_bnd_glssc);                    
-  // need to do this in local coordinates,so use the Ah                 F_Bnd_glssc = my_Gmat*V_Bnd_glssc;   // subtract dirichlet boundary forcing
-  	Eigen::VectorXd V_Bnd_glssc_eigen = Eigen::VectorXd::Zero(nLocBndDofs);
-	for (int V_Bnd_glssc_eigen_index = 0; V_Bnd_glssc_eigen_index < nLocBndDofs; ++V_Bnd_glssc_eigen_index)
-	{
-		V_Bnd_glssc_eigen(V_Bnd_glssc_eigen_index) = V_Bnd_glssc[V_Bnd_glssc_eigen_index];
-	}  
-	for (int curr_elem = 0; curr_elem < num_elem; ++curr_elem)
-	{
-		int cnt = curr_elem*nsize_bndry_p1;
-		Eigen::MatrixXd loc_Ah = Ah_elem[curr_elem]; // of size (nsize_bndry_p1, nsize_bndry_p1)
-		Eigen::MatrixXd loc_Bh = Bh_elem[curr_elem]; // of size (nsize_bndry_p1, nsize_p_m1) 
-		Eigen::VectorXd loc_V_Bnd_glssc_eigen = V_Bnd_glssc_eigen.segment(curr_elem*nsize_bndry_p1,nsize_bndry_p1);
-		F_Bnd_glssc_eigen.segment(curr_elem*nsize_bndry_p1,nsize_bndry_p1) = loc_Ah * loc_V_Bnd_glssc_eigen;
-	//	cout << "curr_elem*nsize_p_m1 " << curr_elem*nsize_p_m1 << endl;
-	//	cout << "curr_elem*nsize_bndry_p1 " << curr_elem*nsize_bndry_p1 << endl;
-	}
-	for (int F_Bnd_glssc_eigen_index = 0; F_Bnd_glssc_eigen_index < nLocBndDofs; ++F_Bnd_glssc_eigen_index)
-	{
-		F_Bnd_glssc[F_Bnd_glssc_eigen_index] = F_Bnd_glssc_eigen(F_Bnd_glssc_eigen_index);
-	}	
-
-                    Vmath::Vsub(nLocBndDofs, F_bnd_glssc,1, F_bnd1_glssc, 1, F_bnd_glssc,1);
-                    Array<OneD, NekDouble> F_hom, pert(nGlobBndDofs,0.0);
-                    m_locToGloMap[mode]->AssembleBnd(F_bnd_glssc, F_bnd1_glssc);                    
-	
-	
-              //      SolveLinearSystem(nGlobBndDofs, F_bnd1_glssc, pert, pLocToGloMap, nDirBndDofs);   // Solve for difference from initial solution given inout;
-	
-	int nHomDofs = nGlobBndDofs - nDirBndDofs ;
-	Eigen::VectorXd my_invec = Eigen::VectorXd::Zero(nHomDofs);
-	for (int my_invec_index = 0; my_invec_index < nHomDofs; ++my_invec_index)
-	{
-		my_invec(my_invec_index) = F_bnd1_glssc[nDirBndDofs + my_invec_index]; 
-	}
-	/////////////////////// actual solve here ////////////////////////////////
-	Eigen::VectorXd my_Asolution = my_Gmat.colPivHouseholderQr().solve(my_invec);
-	//////////////////////////////////////////////////////////////////////////
-	
-	// write my_Asolution back into pert
-	for (int my_Asolution_index = 0; my_Asolution_index < nHomDofs; ++my_Asolution_index)
-	{
-		pert[nDirBndDofs + my_Asolution_index] = my_Asolution(my_Asolution_index); 
-	}
-	
-
-                    Array<OneD, NekDouble> outloc = F_bnd_glssc; 
-                    m_locToGloMap[mode]->GlobalToLocalBnd(pert,outloc);                    
-                    Vmath::Vadd(nLocBndDofs, V_bnd_glssc, 1, outloc, 1, V_bnd_glssc,1);   // Add back initial conditions onto difference                    
-//                    v_CoeffsBwdTransform(V_bnd_glssc);    // Transform back to original basis                    
-                    m_locToGloMap[mode]->LocalBndToLocal(V_bnd_glssc,bnd);    // put final bnd solution back in output array
+			//                    v_BasisFwdTransform(F_bnd_glssc);  // Transform to new basis if required 
+			//                    DNekScalBlkMat &SchurCompl = *m_schurCompl;
+			//                    v_CoeffsFwdTransform(V_bnd_glssc,V_bnd_glssc);                    
+		  	// need to do this in local coordinates,so use the Ah                 F_Bnd_glssc = my_Gmat*V_Bnd_glssc;   // subtract dirichlet boundary forcing
+		  	Eigen::VectorXd V_Bnd_glssc_eigen = Eigen::VectorXd::Zero(nLocBndDofs);
+			for (int V_Bnd_glssc_eigen_index = 0; V_Bnd_glssc_eigen_index < nLocBndDofs; ++V_Bnd_glssc_eigen_index)
+			{
+				V_Bnd_glssc_eigen(V_Bnd_glssc_eigen_index) = V_Bnd_glssc[V_Bnd_glssc_eigen_index];
+			}  
+			for (int curr_elem = 0; curr_elem < num_elem; ++curr_elem)
+			{
+				int cnt = curr_elem*nsize_bndry_p1;
+				Eigen::MatrixXd loc_Ah = Ah_elem[curr_elem]; // of size (nsize_bndry_p1, nsize_bndry_p1)
+				Eigen::MatrixXd loc_Bh = Bh_elem[curr_elem]; // of size (nsize_bndry_p1, nsize_p_m1) 
+				Eigen::VectorXd loc_V_Bnd_glssc_eigen = V_Bnd_glssc_eigen.segment(curr_elem*nsize_bndry_p1,nsize_bndry_p1);
+				F_Bnd_glssc_eigen.segment(curr_elem*nsize_bndry_p1,nsize_bndry_p1) = loc_Ah * loc_V_Bnd_glssc_eigen;
+			//	cout << "curr_elem*nsize_p_m1 " << curr_elem*nsize_p_m1 << endl;
+			//	cout << "curr_elem*nsize_bndry_p1 " << curr_elem*nsize_bndry_p1 << endl;
+			}
+			for (int F_Bnd_glssc_eigen_index = 0; F_Bnd_glssc_eigen_index < nLocBndDofs; ++F_Bnd_glssc_eigen_index)
+			{
+				F_Bnd_glssc[F_Bnd_glssc_eigen_index] = F_Bnd_glssc_eigen(F_Bnd_glssc_eigen_index);
+			}	
+	                Vmath::Vsub(nLocBndDofs, F_bnd_glssc,1, F_bnd1_glssc, 1, F_bnd_glssc,1);
+        	        Array<OneD, NekDouble> F_hom, pert(nGlobBndDofs,0.0);
+                	m_locToGloMap[mode]->AssembleBnd(F_bnd_glssc, F_bnd1_glssc);                    
+              		//      SolveLinearSystem(nGlobBndDofs, F_bnd1_glssc, pert, pLocToGloMap, nDirBndDofs);   // Solve for difference from initial solution given inout;
+			int nHomDofs = nGlobBndDofs - nDirBndDofs ;
+			Eigen::VectorXd my_invec = Eigen::VectorXd::Zero(nHomDofs);
+			for (int my_invec_index = 0; my_invec_index < nHomDofs; ++my_invec_index)
+			{
+				my_invec(my_invec_index) = F_bnd1_glssc[nDirBndDofs + my_invec_index]; 
+			}
+			/////////////////////// actual solve here ////////////////////////////////
+			Eigen::VectorXd my_Asolution = my_Gmat.colPivHouseholderQr().solve(my_invec);
+			//////////////////////////////////////////////////////////////////////////
+			// write my_Asolution back into pert
+			for (int my_Asolution_index = 0; my_Asolution_index < nHomDofs; ++my_Asolution_index)
+			{
+				pert[nDirBndDofs + my_Asolution_index] = my_Asolution(my_Asolution_index); 
+			}
+	                Array<OneD, NekDouble> outloc = F_bnd_glssc; 
+        	        m_locToGloMap[mode]->GlobalToLocalBnd(pert,outloc);                    
+                	Vmath::Vadd(nLocBndDofs, V_bnd_glssc, 1, outloc, 1, V_bnd_glssc,1);   // Add back initial conditions onto difference                    
+			//    v_CoeffsBwdTransform(V_bnd_glssc);    // Transform back to original basis                    
+                	m_locToGloMap[mode]->LocalBndToLocal(V_bnd_glssc,bnd);    // put final bnd solution back in output array
                 }
                 else // Process next level of recursion for multi level SC
                 {
                 	cout << "Process next level of recursion for multi level SC undefined" << endl;
-                //    AssemblyMapSharedPtr nextLevLocToGloMap = m_locToGloMap[mode]->GetNextLevelLocalToGlobalMap();
+                	Nektar::MultiRegions::AssemblyMapSharedPtr nextLevLocToGloMap = m_locToGloMap[mode]->GetNextLevelLocalToGlobalMap();
                     // partially assemble F for next level and
                     // reshuffle V_bnd
-                //    nextLevLocToGloMap->PatchAssemble     (F_bnd_glssc,F_bnd_glssc);
-                //    nextLevLocToGloMap->PatchLocalToGlobal(V_bnd_glssc,V_bnd_glssc);
-                //    m_recursiveSchurCompl->Solve(F_bnd_glssc,V_bnd_glssc, nextLevLocToGloMap);
+             	        nextLevLocToGloMap->PatchAssemble     (F_bnd_glssc,F_bnd_glssc);
+                	nextLevLocToGloMap->PatchLocalToGlobal(V_bnd_glssc,V_bnd_glssc);
+               //         m_recursiveSchurCompl->Solve(F_bnd_glssc,V_bnd_glssc, nextLevLocToGloMap);
                     // unpack V_bnd
                 //    nextLevLocToGloMap->PatchGlobalToLocal(V_bnd_glssc,V_bnd_glssc);
                     // place V_bnd in output array

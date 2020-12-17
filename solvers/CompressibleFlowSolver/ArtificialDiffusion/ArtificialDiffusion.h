@@ -76,7 +76,7 @@ class ArtificialDiffusion
             Array<OneD,       Array<OneD, NekDouble> > &outarray);
         
         /// Apply the artificial diffusion the outarray is in coeff space
-        void DoArtificialDiffusion_coeff(
+        void DoArtificialDiffusionCoeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
             Array<OneD,       Array<OneD, NekDouble> > &outarray);
 
@@ -112,7 +112,7 @@ class ArtificialDiffusion
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
             Array<OneD,       Array<OneD, NekDouble> > &outarray);
         
-        virtual void v_DoArtificialDiffusion_coeff(
+        virtual void v_DoArtificialDiffusionCoeff(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
             Array<OneD, Array<OneD, NekDouble> >             &outarray);
 

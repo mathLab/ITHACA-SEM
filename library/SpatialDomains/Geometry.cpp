@@ -251,12 +251,25 @@ StdRegions::StdExpansionSharedPtr Geometry::v_GetXmap() const
 bool Geometry::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
                                Array<OneD, NekDouble> &locCoord,
                                NekDouble tol,
-                               NekDouble &resid)
+                               NekDouble &dist)
 {
-    boost::ignore_unused(gloCoord, locCoord, tol, resid);
-    NEKERROR(ErrorUtil::efatal,
-             "This function has not been defined for this geometry");
-    return false;
+    // Convert to the local (xi) coordinates.
+    dist = GetLocCoords(gloCoord, locCoord);
+    if(dist<=tol + NekConstants::kNekMachineEpsilon)
+    {
+        return true;
+    }
+    Array<OneD, NekDouble> eta(GetShapeDim(), 0.);
+    m_xmap->LocCoordToLocCollapsed(locCoord, eta);
+    if(ClampLocCoords(eta, tol))
+    {
+        m_xmap->LocCollapsedToLocCoord(eta, locCoord);
+        return false;
+    }
+    else
+    {
+        return true;
+    }
 }
 
 /**
@@ -369,6 +382,11 @@ void Geometry::v_Setup()
  */
 std::array<NekDouble, 6> Geometry::GetBoundingBox()
 {
+    if(m_boundingBox.size() == 6)
+    {
+        return {{ m_boundingBox[0], m_boundingBox[1], m_boundingBox[2],
+                  m_boundingBox[3], m_boundingBox[4], m_boundingBox[5] }};
+    }
     //NekDouble minx, miny, minz, maxx, maxy, maxz;
     Array<OneD, NekDouble> min(3), max(3);
 
@@ -411,28 +429,30 @@ std::array<NekDouble, 6> Geometry::GetBoundingBox()
                 min[j] = (x[j][i] < min[j] ? x[j][i] : min[j]);
                 max[j] = (x[j][i] > max[j] ? x[j][i] : max[j]);
             }
-
-            // Add 10% margin to bounding box in case elements have
-            // convex boundaries.
-            const NekDouble len = max[j] - min[j];
-            max[j] += 0.1*len;
-            min[j] -= 0.1*len;
         }
     }
-    // Add geometric tolerance
+    // Add 10% margin to bounding box, in order to
+    // return the nearest element
     for (int j = 0; j < 3; ++j)
     {
         const NekDouble len = max[j] - min[j];
-        min[j] -= NekConstants::kGeomFactorsTol*len;
-        max[j] += NekConstants::kGeomFactorsTol*len;
+        min[j] -= (0.1+NekConstants::kGeomFactorsTol)*len;
+        max[j] += (0.1+NekConstants::kGeomFactorsTol)*len;
     }
 
+    //save bounding box
+    m_boundingBox = Array<OneD, NekDouble>(6);
+    for(int j=0; j<3; ++j)
+    {
+        m_boundingBox[j  ] = min[j];
+        m_boundingBox[j+3] = max[j];
+    }
     // Return bounding box
     return {{ min[0], min[1], min[2], max[0], max[1], max[2] }};
 }
 
 /**
- * @brief Check if given global coord is within twice the min/max distance
+ * @brief Check if given global coord is within the BoundingBox
  * of the element.
  *
  * @param coords   Input Cartesian global coordinates
@@ -446,33 +466,14 @@ bool Geometry::MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord)
              "Expects number of global coordinates supplied to be greater than "
              "or equal to the mesh dimension.");
 
-    int i;
-    Array<OneD, NekDouble> mincoord(m_coordim), maxcoord(m_coordim);
-    NekDouble diff = 0.0;
-
-    v_FillGeom();
-
-    const int npts = m_xmap->GetTotPoints();
-    Array<OneD, NekDouble> pts(npts);
-
-    for (i = 0; i < m_coordim; ++i)
+    std::array<NekDouble, 6> minMax = GetBoundingBox();
+    for (int i = 0; i < m_coordim; ++i)
     {
-        m_xmap->BwdTrans(m_coeffs[i], pts);
-        mincoord[i] = Vmath::Vmin(pts.size(), pts, 1);
-        maxcoord[i] = Vmath::Vmax(pts.size(), pts, 1);
-
-        diff = std::max(maxcoord[i] - mincoord[i], diff);
-    }
-
-    for (i = 0; i < m_coordim; ++i)
-    {
-        if ((gloCoord[i] < mincoord[i] - 0.2 * diff) ||
-            (gloCoord[i] > maxcoord[i] + 0.2 * diff))
+        if ( (gloCoord[i] < minMax[i]) || (gloCoord[i] > minMax[i+3]) )
         {
             return false;
         }
     }
-
     return true;
 }
 
@@ -482,7 +483,7 @@ bool Geometry::MinMaxCheck(const Array<OneD, const NekDouble> &gloCoord)
  *
  * @param Lcoords  Corresponding local coordinates
  */
-void Geometry::ClampLocCoords(Array<OneD, NekDouble> &locCoord,
+bool Geometry::ClampLocCoords(Array<OneD, NekDouble> &locCoord,
                                   NekDouble tol)
 {
     // Validation checks
@@ -494,18 +495,26 @@ void Geometry::ClampLocCoords(Array<OneD, NekDouble> &locCoord,
     // since any larger value will be very oscillatory if
     // called by 'returnNearestElmt' option in
     // ExpList::GetExpIndex
+    bool clamp = false;
     for (int i = 0; i < GetShapeDim(); ++i)
     {
-        if (locCoord[i] < -(1 + tol))
+        if(!std::isfinite(locCoord[i]))
         {
-            locCoord[i] = -(1 + tol);
+            locCoord[i] = 0.;
+            clamp = true;
         }
-
-        if (locCoord[i] > (1 + tol))
+        else if (locCoord[i] < -(1. + tol))
         {
-            locCoord[i] = 1 + tol;
+            locCoord[i] = -(1. + tol);
+            clamp = true;
+        }
+        else if (locCoord[i] > (1. + tol))
+        {
+            locCoord[i] = 1. + tol;
+            clamp = true;
         }
     }
+    return clamp;
 }
 
 

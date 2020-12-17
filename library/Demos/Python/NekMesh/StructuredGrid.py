@@ -118,7 +118,7 @@ if __name__ == '__main__':
 
     # First, call our input module's create function from the NekMesh factory.
     NekMesh.InputModule.Create(
-        "StructuredGrid", mesh,
+        "StructuredGrid", mesh, "",
         nx = sys.argv[1], ny = sys.argv[2], lx = sys.argv[3],
         ly = sys.argv[4], rx = sys.argv[5], ry = sys.argv[6],
         compid = sys.argv[7], shape = sys.argv[8]).Process()
@@ -129,4 +129,4 @@ if __name__ == '__main__':
     # Finally, output the resulting file (making sure to test it inside Nektar++
     # first).
     NekMesh.OutputModule.Create(
-        "xml", mesh, test=True, outfile=sys.argv[9]).Process()
+        "xml", mesh, sys.argv[9], test=True).Process()

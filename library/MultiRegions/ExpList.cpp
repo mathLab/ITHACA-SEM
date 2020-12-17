@@ -2344,11 +2344,12 @@ namespace Nektar
                                  const Array<OneD, const NekDouble> &gloCoord,
                                  NekDouble tol,
                                  bool returnNearestElmt,
-                                 int cachedId)
+                                 int cachedId,
+                                 NekDouble maxDistance)
         {
             Array<OneD, NekDouble> Lcoords(gloCoord.size());
 
-            return GetExpIndex(gloCoord,Lcoords,tol,returnNearestElmt,cachedId);
+            return GetExpIndex(gloCoord,Lcoords,tol,returnNearestElmt,cachedId,maxDistance);
         }
 
 
@@ -2357,7 +2358,8 @@ namespace Nektar
                       Array<OneD, NekDouble> &locCoords,
                 NekDouble tol,
                 bool returnNearestElmt,
-                int cachedId)
+                int cachedId,
+                NekDouble maxDistance)
         {
             if (GetNumElmts() == 0)
             {
@@ -2377,26 +2379,25 @@ namespace Nektar
 
             NekDouble nearpt     = 1e6;
             NekDouble nearpt_min = 1e6;
-            int       min_id     = 0;
+            int       min_id     = -1;
             Array<OneD, NekDouble> savLocCoords(locCoords.size());
 
             if(cachedId >= 0 && cachedId < (*m_exp).size())
             {
-                if((*m_exp)[cachedId]->
-                           GetGeom()->ContainsPoint(gloCoords,
-                                                    locCoords,
-                                                    tol, nearpt))
+                nearpt = 1e12;
+                if((*m_exp)[cachedId]->GetGeom()->MinMaxCheck(gloCoords) &&
+                   (*m_exp)[cachedId]->GetGeom()->ContainsPoint(gloCoords,
+                                                locCoords, tol, nearpt))
                 {
                     return cachedId;
                 }
-                else if(returnNearestElmt)
+                else if(returnNearestElmt && (nearpt < nearpt_min))
                 {
                     // If it does not lie within, keep track of which element
                     // is nearest.
                     min_id     = cachedId;
                     nearpt_min = nearpt;
-                    Vmath::Vcopy(locCoords.size(),locCoords,    1,
-                                                          savLocCoords, 1);
+                    Vmath::Vcopy(locCoords.size(),locCoords, 1, savLocCoords, 1);
                 }
             }
 
@@ -2419,30 +2420,24 @@ namespace Nektar
                 {
                     continue;
                 }
-                if ((*m_exp)[id]->
-                            GetGeom()->ContainsPoint(gloCoords,
-                                                     locCoords,
-                                                     tol, nearpt))
+                if ((*m_exp)[id]->GetGeom()->ContainsPoint(gloCoords,
+                                            locCoords, tol, nearpt))
                 {
                     return id;
                 }
-                else if(returnNearestElmt)
+                else if(returnNearestElmt && (nearpt < nearpt_min))
                 {
                     // If it does not lie within, keep track of which element
                     // is nearest.
-                    if(nearpt < nearpt_min)
-                    {
-                        min_id     = id;
-                        nearpt_min = nearpt;
-                        Vmath::Vcopy(locCoords.size(),locCoords,    1,
-                                                              savLocCoords, 1);
-                    }
+                    min_id     = id;
+                    nearpt_min = nearpt;
+                    Vmath::Vcopy(locCoords.size(),locCoords, 1, savLocCoords, 1);
                 }
             }
 
             // If the calling function is with just the nearest element, return
             // that. Otherwise return -1 to indicate no matching elemenet found.
-            if(returnNearestElmt)
+            if(returnNearestElmt && nearpt_min <= maxDistance)
             {
 
                 std::string msg = "Failed to find point within element to "
@@ -2456,8 +2451,7 @@ namespace Nektar
                         + boost::lexical_cast<std::string>(min_id);
                 WARNINGL1(false,msg.c_str());
 
-                Vmath::Vcopy(locCoords.size(),savLocCoords, 1,
-                                                      locCoords,    1);
+                Vmath::Vcopy(locCoords.size(),savLocCoords, 1, locCoords, 1);
                 return min_id;
             }
             else

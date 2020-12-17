@@ -33,6 +33,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef NEKTAR_USING_PETSC
+#include "petscsys.h"
+#endif
+
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Communication/CommCwipi.h>
 
@@ -49,18 +53,8 @@ std::string CommCwipi::className = GetCommFactory().RegisterCreatorFunction(
 /**
  *
  */
-CommCwipi::CommCwipi(int narg, char *arg[]) : CommMpi()
+CommCwipi::CommCwipi(int narg, char *arg[]) : CommMpi(narg, arg)
 {
-    int init = 0;
-    MPI_Initialized(&init);
-    ASSERTL0(!init, "MPI has already been initialised.");
-
-    int retval = MPI_Init(&narg, &arg);
-    if (retval != MPI_SUCCESS)
-    {
-        ASSERTL0(false, "Failed to initialise MPI");
-    }
-
     std::string localName = "";
     for (int i = 0; i < narg; ++i)
     {
@@ -70,6 +64,7 @@ CommCwipi::CommCwipi(int narg, char *arg[]) : CommMpi()
         }
     }
 
+    // Initialise CWIPI and override MPI_COMM_WORLD communicator set in CommMPI
     MPI_Comm localComm;
     cwipi_init(MPI_COMM_WORLD, localName.c_str(), &localComm);
     m_comm = localComm;
@@ -77,6 +72,10 @@ CommCwipi::CommCwipi(int narg, char *arg[]) : CommMpi()
     MPI_Comm_size(m_comm, &m_size);
     MPI_Comm_rank(m_comm, &m_rank);
 
+#ifdef NEKTAR_USING_PETSC
+    PETSC_COMM_WORLD = m_comm;
+    PetscInitializeNoArguments();
+#endif
     m_type = "Parallel MPI with CWIPI";
 }
 

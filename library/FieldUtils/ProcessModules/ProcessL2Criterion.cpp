@@ -129,7 +129,7 @@ void MatSymEVals(NekDouble d1, NekDouble d2, NekDouble d3, NekDouble a,
 
 void ProcessL2Criterion::Process(po::variables_map &vm)
 {
-    boost::ignore_unused(vm);
+    m_f->SetUpExp(vm);
 
     auto nfields = m_f->m_variables.size();
     m_f->m_variables.push_back("L2");

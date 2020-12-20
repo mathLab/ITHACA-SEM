@@ -836,7 +836,7 @@ namespace Nektar
                 if (cos_angle < 0.99985)
          //       if (1)                
 		{
-		    cout << "adding at step no. at VCS " << step << endl;
+		    cout << "adding at step no. at VCS " << step << " out of a macimum of " << m_steps << " steps " << endl;
 		    last_added_field[0] = current_phys_field[0];
 		    last_added_field[1] = current_phys_field[1];
 		    //   div_t divresult = div(step,100);
@@ -861,6 +861,88 @@ namespace Nektar
 		
 	if (step == m_steps)
 	{
+
+		cout << "number of added ones: " << no_of_added_ones << endl;
+		Eigen::MatrixXd time_traj_eigen_x = Eigen::MatrixXd::Zero( m_fields[m_intVariables[0]]->GetNpoints() , no_of_added_ones );
+		Eigen::MatrixXd time_traj_eigen_y = Eigen::MatrixXd::Zero( m_fields[m_intVariables[0]]->GetNpoints() , no_of_added_ones );
+		for (int index0 = 0; index0 < m_fields[m_intVariables[0]]->GetNpoints(); ++index0)
+		{
+			for (int index1 = 0; index1 < no_of_added_ones; ++index1)
+			{
+				time_traj_eigen_x(index0, index1) = fields_time_trajectory[index1][0][index0];	
+				time_traj_eigen_y(index0, index1) = fields_time_trajectory[index1][1][index0];
+			}
+		}		
+		Eigen::BDCSVD<Eigen::MatrixXd> 	svd_time_traj_eigen_x(time_traj_eigen_x, Eigen::ComputeThinU);
+		Eigen::BDCSVD<Eigen::MatrixXd> 	svd_time_traj_eigen_y(time_traj_eigen_y, Eigen::ComputeThinU);		
+		Eigen::VectorXd singular_vals_tt_x = svd_time_traj_eigen_x.singularValues();
+		Eigen::VectorXd singular_vals_tt_y = svd_time_traj_eigen_y.singularValues();
+//		cout << "singular_vals_tt_x: " << singular_vals_tt_x << endl;
+//		cout << "singular_vals_tt_y: " << singular_vals_tt_y << endl;
+		
+		int RBsize = 1; 
+		double POD_tolerance = 0.9999;
+		Eigen::VectorXd cum_rel_singular_values = Eigen::VectorXd::Zero(singular_vals_tt_x.rows());
+		for (int i = 0; i < singular_vals_tt_x.rows(); ++i)
+		{
+			cum_rel_singular_values(i) = singular_vals_tt_x.head(i+1).sum() / singular_vals_tt_x.sum();
+			if (cum_rel_singular_values(i) < POD_tolerance)
+			{
+				RBsize = i+2;
+			}		
+		}	
+		cout << "RBsize in x " << RBsize << endl;
+		Eigen::MatrixXd collect_f_all_PODmodes = svd_time_traj_eigen_x.matrixU(); // this is a local variable...
+		Eigen::MatrixXd PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), RBsize);  
+		PODmodes = collect_f_all_PODmodes.leftCols(RBsize);
+	        std::ofstream myfile_fields_TT_pod_x ("VCS_fields_TT_pod_x.txt");
+                if (myfile_fields_TT_pod_x.is_open())
+		{
+			for(int n = 0; n < RBsize; ++n)
+			{
+			    for(int counter_nphys = 0; counter_nphys < m_fields[m_intVariables[0]]->GetNpoints(); ++counter_nphys)
+			    {
+	                        myfile_fields_TT_pod_x << std::setprecision(17) << PODmodes(counter_nphys,n) << " ";
+			    }
+			    myfile_fields_TT_pod_x << endl;
+	                }
+		        myfile_fields_TT_pod_x.close();
+		}
+		else std::cout << "Unable to open file";
+		
+		cum_rel_singular_values = Eigen::VectorXd::Zero(singular_vals_tt_y.rows());
+		for (int i = 0; i < singular_vals_tt_y.rows(); ++i)
+		{
+			cum_rel_singular_values(i) = singular_vals_tt_y.head(i+1).sum() / singular_vals_tt_y.sum();
+			if (cum_rel_singular_values(i) < POD_tolerance)
+			{
+				RBsize = i+2;
+			}		
+		}	
+		cout << "RBsize in y " << RBsize << endl;
+		collect_f_all_PODmodes = svd_time_traj_eigen_y.matrixU(); // this is a local variable...
+		PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), RBsize);  
+		PODmodes = collect_f_all_PODmodes.leftCols(RBsize);
+	        std::ofstream myfile_fields_TT_pod_y ("VCS_fields_TT_pod_y.txt");
+                if (myfile_fields_TT_pod_y.is_open())
+		{
+			for(int n = 0; n < RBsize; ++n)
+			{
+			    for(int counter_nphys = 0; counter_nphys < m_fields[m_intVariables[0]]->GetNpoints(); ++counter_nphys)
+			    {
+	                        myfile_fields_TT_pod_y << std::setprecision(17) << PODmodes(counter_nphys,n) << " ";
+			    }
+			    myfile_fields_TT_pod_y << endl;
+	                }
+		        myfile_fields_TT_pod_y.close();
+		}
+		else std::cout << "Unable to open file";		
+		
+		
+		
+		
+			
+	
             std::ofstream myfile_fields_TT_x ("VCS_fields_TT_x.txt");
             std::ofstream myfile_fields_TT_y ("VCS_fields_TT_y.txt");
             

@@ -231,11 +231,13 @@ namespace Nektar
     
     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fields_time_trajectory;  
     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > global_fields_time_trajectory;  
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > ROM_fields_time_trajectory;  
     Array<OneD, Array<OneD, NekDouble> > last_added_field; 
     int globalNcoeff;
     int step;
     int no_of_added_ones;
     bool ROM_started;
+	int ROM_stage;
         
     };
 

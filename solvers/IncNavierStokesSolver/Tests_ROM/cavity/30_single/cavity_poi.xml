@@ -41,16 +41,17 @@ Aspect ratio fixed to 4
 
         <PARAMETERS>
             <!--  The updated parameters are: X_tilde = 2.01704e+07 and Delta_tilde = 2.13066e+21   -->
-	    <!-- <P> ControlCoeff = 10 </P>  -->
-	    <!-- <P> FilterWidth = 2e+1 </P> -->
-	    <P> ControlCoeff = 1 </P>  
-	    <P> FilterWidth = 2 </P> 
+		    <!-- <P> ControlCoeff = 10 </P>  -->
+		    <!-- <P> FilterWidth = 2e+1 </P> -->
+		    <P> ControlCoeff = 1 </P>  
+		    <P> FilterWidth = 2 </P> 
             <P> TimeStep = 3e-5    </P>
             <P> TOL = .0075    </P>
             <P> NumSteps = 2e3       </P>
             <P> IO_CheckSteps = 1e3       </P>
             <P> IO_InfoSteps = 1e3       </P>
             <P> Kinvis = 1       </P>
+            <P> ROM_stage = 2       </P>
         </PARAMETERS>
 
         <VARIABLES>

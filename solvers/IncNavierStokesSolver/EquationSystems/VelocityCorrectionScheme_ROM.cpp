@@ -582,6 +582,17 @@ namespace Nektar
         // field below
         SetBoundaryConditions(m_time);
 
+		if (m_session->DefinesParameter("ROM_stage")) 
+		{
+			ROM_stage = m_session->GetParameter("ROM_stage");	
+		}
+		else
+		{
+			ROM_stage = 1;
+		}
+
+		cout << "current ROM_stage " << ROM_stage << endl;
+
 	// Ensure the initial conditions have correct BCs  
         for(int i = 0; i < m_fields.size(); ++i)
         {
@@ -647,6 +658,34 @@ namespace Nektar
             cout << "sizeof(fields_time_trajectory) " << sizeof(fields_time_trajectory) << endl;
             no_of_added_ones = 0;
 	    step = 0;
+
+		if (ROM_stage == 2) // load the POD basis and collect reduced trajectory
+		{
+	        std::string VCS_fields_TT_pod_x_txt = "VCS_fields_TT_pod_x.txt";
+			const char* VCS_fields_TT_pod_x_txt_t = VCS_fields_TT_pod_x_txt.c_str();
+			ifstream myfile_VCS_fields_TT_pod_x_txt_t (VCS_fields_TT_pod_x_txt_t);
+			std::vector< std::vector<int> > all_integers;
+			if (myfile_VCS_fields_TT_pod_x_txt_t.is_open())
+			{
+
+				std::string line;
+				int counter = 0;
+				while ( getline( myfile_VCS_fields_TT_pod_x_txt_t, line ) ) 
+				{
+//				      cout << line << endl;
+			        std::istringstream is( line );
+					std::vector<double> nn = std::vector<double>( std::istream_iterator<double>(is), std::istream_iterator<double>() );
+					cout << "nn.size() "  << nn.size() << endl;
+			//		for (int i = 0; i < nn.size(); ++i)
+				//	{
+//						optimal_clusters[counter].insert(nn[i]);
+//					}
+//					++counter;
+				}
+			}
+			else cout << "Unable to open file"; 
+
+		}
 
         
         

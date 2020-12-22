@@ -661,7 +661,7 @@ namespace Nektar
 
 		if (ROM_stage == 2) // load the POD basis and collect reduced trajectory
 		{
-	        std::string VCS_fields_TT_pod_x_txt = "VCS_fields_TT_pod_x.txt";
+		        std::string VCS_fields_TT_pod_x_txt = "VCS_fields_TT_pod_x.txt";
 			const char* VCS_fields_TT_pod_x_txt_t = VCS_fields_TT_pod_x_txt.c_str();
 			ifstream myfile_VCS_fields_TT_pod_x_txt_t (VCS_fields_TT_pod_x_txt_t);
 			std::vector< std::vector<int> > all_integers;
@@ -934,6 +934,15 @@ namespace Nektar
 		Eigen::MatrixXd collect_f_all_PODmodes = svd_time_traj_eigen_x.matrixU(); // this is a local variable...
 		Eigen::MatrixXd PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), RBsize);  
 		PODmodes = collect_f_all_PODmodes.leftCols(RBsize);
+	        std::ofstream myfile_RBsize_x ("RBsize_x.txt");
+	        if (myfile_RBsize_x.is_open())
+	        {
+	        	myfile_RBsize_x << RBsize;
+	        	myfile_RBsize_x.close();
+	        }
+		else std::cout << "Unable to open file";
+	        
+	        
 	        std::ofstream myfile_fields_TT_pod_x ("VCS_fields_TT_pod_x.txt");
                 if (myfile_fields_TT_pod_x.is_open())
 		{
@@ -962,6 +971,15 @@ namespace Nektar
 		collect_f_all_PODmodes = svd_time_traj_eigen_y.matrixU(); // this is a local variable...
 		PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), RBsize);  
 		PODmodes = collect_f_all_PODmodes.leftCols(RBsize);
+	        std::ofstream myfile_RBsize_y ("RBsize_y.txt");
+	        if (myfile_RBsize_y.is_open())
+	        {
+	        	myfile_RBsize_y << RBsize;
+	        	myfile_RBsize_y.close();
+	        }
+		else std::cout << "Unable to open file";
+		
+		
 	        std::ofstream myfile_fields_TT_pod_y ("VCS_fields_TT_pod_y.txt");
                 if (myfile_fields_TT_pod_y.is_open())
 		{

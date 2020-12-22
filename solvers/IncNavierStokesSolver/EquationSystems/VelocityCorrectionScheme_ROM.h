@@ -237,7 +237,9 @@ namespace Nektar
     int step;
     int no_of_added_ones;
     bool ROM_started;
-	int ROM_stage;
+    int ROM_stage;
+    int ROM_size_x;
+    int ROM_size_y;
         
     };
 

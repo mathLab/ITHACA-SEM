@@ -661,10 +661,31 @@ namespace Nektar
 
 		if (ROM_stage == 2) // load the POD basis and collect reduced trajectory
 		{
-		        std::string VCS_fields_TT_pod_x_txt = "VCS_fields_TT_pod_x.txt";
+
+		    std::string RBsize_x = "RBsize_x.txt";
+			const char* RBsize_x_t = RBsize_x.c_str();
+			ifstream myfile_RBsize_x_t (RBsize_x_t);
+			if (myfile_RBsize_x_t.is_open())
+			{
+				std::string line;
+				while ( getline( myfile_RBsize_x_t, line ) ) 
+				{
+					std::istringstream is( line );
+					std::vector<int> nn = std::vector<int>( std::istream_iterator<int>(is), std::istream_iterator<int>() );
+					ROM_size_x = nn[0];
+				}
+			}
+			else cout << "Unable to open file"; 
+
+			cout << "ROM_size_x loaded as " << ROM_size_x << endl;
+
+			Eigen::MatrixXd POD_modes_x = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_x);
+
+
+		    std::string VCS_fields_TT_pod_x_txt = "VCS_fields_TT_pod_x.txt";
 			const char* VCS_fields_TT_pod_x_txt_t = VCS_fields_TT_pod_x_txt.c_str();
 			ifstream myfile_VCS_fields_TT_pod_x_txt_t (VCS_fields_TT_pod_x_txt_t);
-			std::vector< std::vector<int> > all_integers;
+//			std::vector< std::vector<int> > all_integers;
 			if (myfile_VCS_fields_TT_pod_x_txt_t.is_open())
 			{
 
@@ -675,12 +696,55 @@ namespace Nektar
 //				      cout << line << endl;
 			        std::istringstream is( line );
 					std::vector<double> nn = std::vector<double>( std::istream_iterator<double>(is), std::istream_iterator<double>() );
-					cout << "nn.size() "  << nn.size() << endl;
-			//		for (int i = 0; i < nn.size(); ++i)
-				//	{
-//						optimal_clusters[counter].insert(nn[i]);
-//					}
-//					++counter;
+			//		cout << "nn.size() "  << nn.size() << endl;
+					for (int i = 0; i < nn.size(); ++i)
+					{
+						POD_modes_x(i, counter) = nn[i];
+					}
+					++counter;
+				}
+			}
+			else cout << "Unable to open file"; 
+
+		    std::string RBsize_y = "RBsize_y.txt";
+			const char* RBsize_y_t = RBsize_y.c_str();
+			ifstream myfile_RBsize_y_t (RBsize_y_t);
+			if (myfile_RBsize_y_t.is_open())
+			{
+				std::string line;
+				while ( getline( myfile_RBsize_y_t, line ) ) 
+				{
+					std::istringstream is( line );
+					std::vector<int> nn = std::vector<int>( std::istream_iterator<int>(is), std::istream_iterator<int>() );
+					ROM_size_y = nn[0];
+				}
+			}
+			else cout << "Unable to open file"; 
+
+			cout << "ROM_size_y loaded as " << ROM_size_y << endl;
+
+			Eigen::MatrixXd POD_modes_y = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_y);
+
+		    std::string VCS_fields_TT_pod_y_txt = "VCS_fields_TT_pod_y.txt";
+			const char* VCS_fields_TT_pod_y_txt_t = VCS_fields_TT_pod_y_txt.c_str();
+			ifstream myfile_VCS_fields_TT_pod_y_txt_t (VCS_fields_TT_pod_y_txt_t);
+//			std::vector< std::vector<int> > all_integers;
+			if (myfile_VCS_fields_TT_pod_y_txt_t.is_open())
+			{
+
+				std::string line;
+				int counter = 0;
+				while ( getline( myfile_VCS_fields_TT_pod_y_txt_t, line ) ) 
+				{
+//				      cout << line << endl;
+			        std::istringstream is( line );
+					std::vector<double> nn = std::vector<double>( std::istream_iterator<double>(is), std::istream_iterator<double>() );
+			//		cout << "nn.size() "  << nn.size() << endl;
+					for (int i = 0; i < nn.size(); ++i)
+					{
+						POD_modes_y(i, counter) = nn[i];
+					}
+					++counter;
 				}
 			}
 			else cout << "Unable to open file"; 

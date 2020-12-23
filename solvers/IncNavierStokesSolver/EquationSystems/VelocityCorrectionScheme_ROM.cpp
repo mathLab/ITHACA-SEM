@@ -679,7 +679,7 @@ namespace Nektar
 
 			cout << "ROM_size_x loaded as " << ROM_size_x << endl;
 
-			Eigen::MatrixXd POD_modes_x = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_x);
+			POD_modes_x = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_x);
 
 
 		    std::string VCS_fields_TT_pod_x_txt = "VCS_fields_TT_pod_x.txt";
@@ -723,7 +723,7 @@ namespace Nektar
 
 			cout << "ROM_size_y loaded as " << ROM_size_y << endl;
 
-			Eigen::MatrixXd POD_modes_y = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_y);
+			POD_modes_y = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_y);
 
 		    std::string VCS_fields_TT_pod_y_txt = "VCS_fields_TT_pod_y.txt";
 			const char* VCS_fields_TT_pod_y_txt_t = VCS_fields_TT_pod_y_txt.c_str();
@@ -748,6 +748,23 @@ namespace Nektar
 				}
 			}
 			else cout << "Unable to open file"; 
+
+            ROM_fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps + 1);  
+            for (int i = 0; i < m_steps + 1; ++i)
+            {
+            	ROM_fields_time_trajectory[i] = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields);
+           	    ROM_fields_time_trajectory[i][0] = Array<OneD, NekDouble> (ROM_size_x);
+           	    for (int k = 0; k < ROM_size_x; ++k)
+           	    {
+           	        ROM_fields_time_trajectory[i][0][k] = 0.0;
+				}
+           	    ROM_fields_time_trajectory[i][1] = Array<OneD, NekDouble> (ROM_size_y);
+           	    for (int k = 0; k < ROM_size_y; ++k)
+           	    {
+           	        ROM_fields_time_trajectory[i][1][k] = 0.0;
+				}
+			}
+
 
 		}
 

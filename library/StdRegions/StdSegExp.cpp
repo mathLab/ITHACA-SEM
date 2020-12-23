@@ -512,6 +512,18 @@ namespace Nektar
         //----------------------------
         // Evaluation
         //----------------------------
+        void StdSegExp::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,
+                                                 Array<OneD, NekDouble>& eta)
+        {
+            eta[0] = xi[0];
+        }
+
+        void StdSegExp::v_LocCollapsedToLocCoord
+                          (const Array<OneD, const NekDouble>& eta,
+                           Array<OneD, NekDouble>& xi)
+        {
+            xi[0] = eta[0];
+        }
 
         void StdSegExp::v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
         {

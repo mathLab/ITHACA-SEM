@@ -950,6 +950,12 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
         }
 
+        void StdExpansion::v_LocCollapsedToLocCoord(const Array<OneD, const NekDouble>& eta,Array<OneD, NekDouble>& xi)
+        {
+            boost::ignore_unused(eta, xi);
+            NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+        }
+
         int StdExpansion::v_GetNtraces() const
         {
             ASSERTL0(false, "This function is needs defining for this shape");

@@ -442,6 +442,7 @@ win10-default-build-and-test:
   after_script:
     - Remove-Item -Recurse -Force build
   needs: []
+  timeout: 4h
 
 win10-mpi-default-build-and-test:
   <<: *build-and-test-template
@@ -459,6 +460,7 @@ win10-mpi-default-build-and-test:
   after_script:
     - Remove-Item -Recurse -Force build
   needs: []
+  timeout: 4h
 
 # ##################################################
 # #################  DOCKERHUB  ####################

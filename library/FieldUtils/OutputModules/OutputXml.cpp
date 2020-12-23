@@ -58,7 +58,7 @@ OutputXml::~OutputXml()
 
 void OutputXml::Process(po::variables_map &vm)
 {
-    boost::ignore_unused(vm);
+    m_f->SetUpExp(vm);
 
     if (!m_f->m_exp.size()) // do nothing if no expansion defined
     {

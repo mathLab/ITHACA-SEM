@@ -134,6 +134,21 @@ namespace Nektar
         };
 
 
+        enum LinSysIterSovler
+        {
+            eNoLinSysIterSovler,///< No Solution type specified
+            eConjugateGradient,
+            eGMRES
+        };
+
+        const char* const LinSysIterSovlerMap[] =
+        {
+            "NoLinSysIterSovler",
+            "ConjugateGradient",
+            "GMRES"
+        };
+
+
         // let's keep this for linking to external
         // sparse libraries
         enum MatrixStorageType

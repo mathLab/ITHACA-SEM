@@ -69,7 +69,7 @@ namespace NekMesh
         SIZE_ModuleType
     };
 
-    const char* const ModuleTypeMap[] =
+    const std::string ModuleTypeMap[] =
     {
         "Input",
         "Process",

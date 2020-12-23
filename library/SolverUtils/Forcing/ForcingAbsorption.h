@@ -89,7 +89,12 @@ namespace SolverUtils
             std::string                             m_funcNameTime;
             std::vector<unsigned int>               m_bRegions;
             std::shared_ptr<BRTree>               m_rtree;
-  
+            
+            void CalculateForcing(
+                    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                    const NekDouble &time);
+                    
             SOLVER_UTILS_EXPORT virtual void v_InitObject(
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                     const unsigned int& pNumForcingFields,
@@ -100,7 +105,11 @@ namespace SolverUtils
                     const Array<OneD, Array<OneD, NekDouble> > &inarray,
                     Array<OneD, Array<OneD, NekDouble> > &outarray,
                     const NekDouble &time);
-
+            SOLVER_UTILS_EXPORT virtual void v_ApplyCoeff(
+                    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                    const Array<OneD, Array<OneD, NekDouble> > &inarray,
+                    Array<OneD, Array<OneD, NekDouble> > &outarray,
+                    const NekDouble &time);
         private:
             ForcingAbsorption(
                 const LibUtilities::SessionReaderSharedPtr &pSession,

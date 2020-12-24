@@ -908,15 +908,35 @@ namespace Nektar
 		double norm_current = 0.0;
 		double dot_product = 0.0;
 		Array<OneD, Array<OneD, NekDouble> > current_phys_field(2);
+		Eigen::MatrixXd current_phys_field_eigen = Eigen::MatrixXd::Zero(2, m_fields[m_intVariables[0]]->GetNpoints());
 		current_phys_field[0] = Array<OneD, NekDouble>(m_fields[m_intVariables[0]]->GetNpoints());
 		current_phys_field[1] = Array<OneD, NekDouble>(m_fields[m_intVariables[1]]->GetNpoints());
 		for (int k = 0; k < m_fields[m_intVariables[0]]->GetNpoints(); ++k)
-            	{
-            	        current_phys_field[0][k] = 0.0;
-            	        current_phys_field[1][k] = 0.0;
-            	}
+        {
+      	        current_phys_field[0][k] = 0.0;
+       	        current_phys_field[1][k] = 0.0;
+        }
 		current_phys_field[0] = m_fields[0]->GetPhys();
 		current_phys_field[1] = m_fields[1]->GetPhys();
+		for (int k = 0; k < m_fields[m_intVariables[0]]->GetNpoints(); ++k)
+        {
+      	        current_phys_field_eigen(0,k) = current_phys_field[0][k];
+       	        current_phys_field_eigen(1,k) = current_phys_field[1][k];
+        }
+
+
+		if (ROM_stage == 2) // project and collect the ROM fields
+		{
+			Eigen::VectorXd proj_x = POD_modes_x.transpose() * current_phys_field_eigen.row(0);
+			cout << "proj_x.norm() " << proj_x.norm() << endl;
+			cout << "proj_x " << proj_x << endl;
+
+			Eigen::VectorXd proj_y = POD_modes_y.transpose() * current_phys_field_eigen.row(1);
+			cout << "proj_y.norm() " << proj_y.norm() << endl;
+
+		}
+
+
 		for (int k = 0; k < m_fields[m_intVariables[0]]->GetNpoints(); ++k)
             	{
             	    norm_last_added += last_added_field[0][k] * last_added_field[0][k] + last_added_field[1][k] * last_added_field[1][k];

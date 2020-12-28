@@ -923,17 +923,13 @@ namespace Nektar
       	        current_phys_field_eigen(0,k) = current_phys_field[0][k];
        	        current_phys_field_eigen(1,k) = current_phys_field[1][k];
         }
-
-
 		if (ROM_stage == 2) // project and collect the ROM fields
 		{
-			Eigen::VectorXd proj_x = POD_modes_x.transpose() * current_phys_field_eigen.row(0);
-			cout << "proj_x.norm() " << proj_x.norm() << endl;
-			cout << "proj_x " << proj_x << endl;
-
-			Eigen::VectorXd proj_y = POD_modes_y.transpose() * current_phys_field_eigen.row(1);
-			cout << "proj_y.norm() " << proj_y.norm() << endl;
-
+			Eigen::VectorXd proj_x = POD_modes_x.transpose() * current_phys_field_eigen.row(0).transpose();
+//			cout << "proj_x.norm() " << proj_x.norm() << endl;
+//			cout << "proj_x " << proj_x << endl;
+			Eigen::VectorXd proj_y = POD_modes_y.transpose() * current_phys_field_eigen.row(1).transpose();
+//			cout << "proj_y.norm() " << proj_y.norm() << endl;
 		}
 
 

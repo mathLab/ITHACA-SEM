@@ -270,6 +270,11 @@ protected:
         const TensorOfArray3D<NekDouble> &qfield,
         TensorOfArray3D<NekDouble> &numDerivFwd,
         TensorOfArray3D<NekDouble> &numDerivBwd);
+        
+    void ApplyFluxBndConds(
+        const int                                         nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        Array<OneD,       Array<OneD, NekDouble> >        &flux);
 };
 } // namespace SolverUtils
 } // namespace Nektar

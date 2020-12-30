@@ -395,6 +395,8 @@ void DiffusionIP::v_DiffuseTraceFlux(
     CalTraceNumFlux(nConvectiveFields, nDim, nPts, nTracePts, m_IP2ndDervCoeff,
                     fields, inarray, qfield, pFwd, pBwd, m_MuVarTrace,
                     nonZeroIndex, traceflux3D, m_traceAver, m_traceJump);
+
+    ApplyFluxBndConds(nConvectiveFields, fields, TraceFlux);
 }
 
 void DiffusionIP::v_AddDiffusionSymmFluxToCoeff(
@@ -890,5 +892,52 @@ void DiffusionIP::AddSecondDerivToTrace(
         }
     }
 }
+
+
+/**
+ * @brief aplly Neuman boundary conditions on flux 
+ *        Currently only consider WallAdiabatic
+ *
+ **/
+void DiffusionIP::ApplyFluxBndConds(
+    const int                                               nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
+    Array<OneD,       Array<OneD, NekDouble> >              &flux)
+{            
+    int nengy       = nConvectiveFields-1;
+    int cnt;
+    // Compute boundary conditions  for Energy
+    cnt = 0;
+    size_t nBndRegions = fields[nengy]->
+    GetBndCondExpansions().size();
+    for (size_t j = 0; j < nBndRegions; ++j)
+    {
+        if (fields[nengy]->GetBndConditions()[j]->
+            GetBoundaryConditionType() ==
+            SpatialDomains::ePeriodic)
+        {
+            continue;
+        }
+
+        size_t nBndEdges = fields[nengy]->
+        GetBndCondExpansions()[j]->GetExpSize();
+        for (size_t e = 0; e < nBndEdges; ++e)
+        {
+            size_t nBndEdgePts = fields[nengy]->
+            GetBndCondExpansions()[j]->GetExp(e)->GetTotPoints();
+
+            std::size_t id2 = fields[0]->GetTrace()->
+                GetPhys_Offset(fields[0]->GetTraceMap()->
+                                GetBndCondIDToGlobalTraceID(cnt++));
+
+            if (fields[0]->GetBndConditions()[j]->
+                GetUserDefined() =="WallAdiabatic")
+            {
+                Vmath::Zero(nBndEdgePts, &flux[nengy][id2], 1);
+            }                    
+        }
+    }
+}
+
 } // namespace SolverUtils
 } // namespace Nektar

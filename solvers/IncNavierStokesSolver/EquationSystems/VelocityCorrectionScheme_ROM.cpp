@@ -1116,7 +1116,7 @@ namespace Nektar
             
             if (myfile_fields_TT_x.is_open())
 	    {
-		for(int n = 0; n < m_steps; ++n)
+		for(int n = 0; n < 500; ++n)
 		{
 		    for(int counter_nphys = 0; counter_nphys < m_fields[m_intVariables[0]]->GetNpoints(); ++counter_nphys)
 		    {
@@ -1130,7 +1130,7 @@ namespace Nektar
 	    
             if (myfile_fields_TT_y.is_open())
 	    {
-		for(int n = 0; n < m_steps; ++n)
+		for(int n = 0; n < 500; ++n)
 		{
 		    for(int counter_nphys = 0; counter_nphys < m_fields[m_intVariables[1]]->GetNpoints(); ++counter_nphys)
 		    {

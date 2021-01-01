@@ -604,14 +604,26 @@ namespace Nektar
         }
         
                     // Set up wrapper to all fields data storage.
-            fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps + 1);  
+            // should limit here a bit: fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps + 1);
+            fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(500);  
             global_fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps + 1);  
          
       //      Array<OneD, Array<OneD, NekDouble> > last_added_field(m_nConvectiveFields); 
             last_added_field = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields); 
                      
             cout << "sizeof(fields_time_trajectory) " << sizeof(fields_time_trajectory) << endl;
-            cout << "sizeof(NekDouble) " << sizeof(NekDouble) << endl;
+            cout << "sizeof(NekDouble) " << sizeof(NekDouble) << endl; // this is in bytes
+            // estimate how much memory this takes
+            long mem_req_all = (m_steps + 1) * m_nConvectiveFields * m_fields[m_intVariables[0]]->GetNpoints() * sizeof(NekDouble);
+            cout << "mem_req_all in bytes: " << mem_req_all << endl;
+            long mem_req_all_kB = mem_req_all / 1024;
+            int mem_req_all_MB = mem_req_all_kB / 1024;
+            int mem_req_all_GB = mem_req_all_MB / 1024;
+            cout << "mem_req_all_kB in bytes: " << mem_req_all_kB << endl;
+            cout << "mem_req_all_MB in bytes: " << mem_req_all_MB << endl;
+            cout << "mem_req_all_GB in bytes: " << mem_req_all_GB << endl;
+            
+            
             cout << "m_fields[m_intVariables[0]]->GetNpoints() " << m_fields[m_intVariables[0]]->GetNpoints() << endl;
             cout << "m_fields[m_intVariables[0]]->GetNcoeffs() " << m_fields[m_intVariables[0]]->GetNcoeffs() << endl;
             // find the no. of global dofs
@@ -632,10 +644,11 @@ namespace Nektar
             }
             cout << "globalNcoeff at VelocityCorrectionSchemeROM::v_DoInitialise " << globalNcoeff << endl;
             
-            for (int i = 0; i < m_steps + 1; ++i)
+//            for (int i = 0; i < m_steps + 1; ++i)
+            for (int i = 0; i < 500; ++i)
             {
             	fields_time_trajectory[i] = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields);
-            	global_fields_time_trajectory[i] = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields);
+ //           	global_fields_time_trajectory[i] = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields);
             	for (int j = 0; j < m_nConvectiveFields; ++j)
             	{
             	    fields_time_trajectory[i][j] = Array<OneD, NekDouble> (m_fields[m_intVariables[j]]->GetNpoints());
@@ -645,10 +658,10 @@ namespace Nektar
             	        fields_time_trajectory[i][j][k] = 0.0;
             	        last_added_field[j][k] = 0.0;
             	    }
-            	    global_fields_time_trajectory[i][j] = Array<OneD, NekDouble> (globalNcoeff);
+//            	    global_fields_time_trajectory[i][j] = Array<OneD, NekDouble> (globalNcoeff);
             	    for (int k = 0; k < globalNcoeff; ++k)
             	    {
-            	        global_fields_time_trajectory[i][j][k] = 0.0;
+//            	        global_fields_time_trajectory[i][j][k] = 0.0;
             	       
             	    }
             	    
@@ -973,6 +986,7 @@ namespace Nektar
          //       if (1)                
 		{
 		    cout << "adding at step no. at VCS " << step << " out of a macimum of " << m_steps << " steps " << endl;
+		    cout << "current no_of_added_ones " << no_of_added_ones << endl;
 		    last_added_field[0] = current_phys_field[0];
 		    last_added_field[1] = current_phys_field[1];
 		    //   div_t divresult = div(step,100);
@@ -987,8 +1001,8 @@ namespace Nektar
 		    }
 //                    m_fields[m_intVariables[0]]->LocalToGlobal(m_fields[m_intVariables[0]]->GetCoeffs(), global_fields_time_trajectory[divresult.quot][0]);
 //                    m_fields[m_intVariables[0]]->LocalToGlobal(m_fields[m_intVariables[1]]->GetCoeffs(), global_fields_time_trajectory[divresult.quot][1]);
-                    m_fields[m_intVariables[0]]->LocalToGlobal(m_fields[m_intVariables[0]]->GetCoeffs(), global_fields_time_trajectory[no_of_added_ones][0]);
-                    m_fields[m_intVariables[0]]->LocalToGlobal(m_fields[m_intVariables[1]]->GetCoeffs(), global_fields_time_trajectory[no_of_added_ones][1]);
+//                    m_fields[m_intVariables[0]]->LocalToGlobal(m_fields[m_intVariables[0]]->GetCoeffs(), global_fields_time_trajectory[no_of_added_ones][0]);
+//                    m_fields[m_intVariables[0]]->LocalToGlobal(m_fields[m_intVariables[1]]->GetCoeffs(), global_fields_time_trajectory[no_of_added_ones][1]);
                     no_of_added_ones++;
 		}
 		

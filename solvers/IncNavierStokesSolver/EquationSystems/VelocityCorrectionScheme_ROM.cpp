@@ -605,7 +605,7 @@ namespace Nektar
         
                     // Set up wrapper to all fields data storage.
             // should limit here a bit: fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps + 1);
-            fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(500);  
+            fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(1500);  
             global_fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps + 1);  
          
       //      Array<OneD, Array<OneD, NekDouble> > last_added_field(m_nConvectiveFields); 
@@ -645,7 +645,7 @@ namespace Nektar
             cout << "globalNcoeff at VelocityCorrectionSchemeROM::v_DoInitialise " << globalNcoeff << endl;
             
 //            for (int i = 0; i < m_steps + 1; ++i)
-            for (int i = 0; i < 500; ++i)
+            for (int i = 0; i < 1500; ++i)
             {
             	fields_time_trajectory[i] = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields);
  //           	global_fields_time_trajectory[i] = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields);
@@ -1116,7 +1116,7 @@ namespace Nektar
             
             if (myfile_fields_TT_x.is_open())
 	    {
-		for(int n = 0; n < 500; ++n)
+		for(int n = 0; n < 1500; ++n)
 		{
 		    for(int counter_nphys = 0; counter_nphys < m_fields[m_intVariables[0]]->GetNpoints(); ++counter_nphys)
 		    {
@@ -1130,7 +1130,7 @@ namespace Nektar
 	    
             if (myfile_fields_TT_y.is_open())
 	    {
-		for(int n = 0; n < 500; ++n)
+		for(int n = 0; n < 1500; ++n)
 		{
 		    for(int counter_nphys = 0; counter_nphys < m_fields[m_intVariables[1]]->GetNpoints(); ++counter_nphys)
 		    {

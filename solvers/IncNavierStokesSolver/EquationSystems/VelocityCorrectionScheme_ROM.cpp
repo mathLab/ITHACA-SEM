@@ -675,7 +675,8 @@ namespace Nektar
 		if (ROM_stage == 2) // load the POD basis and collect reduced trajectory
 		{
 
-		    std::string RBsize_x = "RBsize_x.txt";
+//		    std::string RBsize_x = "RBsize_x.txt";
+		    std::string RBsize_x = "../dim_x.txt";
 			const char* RBsize_x_t = RBsize_x.c_str();
 			ifstream myfile_RBsize_x_t (RBsize_x_t);
 			if (myfile_RBsize_x_t.is_open())
@@ -695,7 +696,8 @@ namespace Nektar
 			POD_modes_x = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_x);
 
 
-		    std::string VCS_fields_TT_pod_x_txt = "VCS_fields_TT_pod_x.txt";
+//		    std::string VCS_fields_TT_pod_x_txt = "VCS_fields_TT_pod_x.txt";
+		    std::string VCS_fields_TT_pod_x_txt = "../all_x.txt";
 			const char* VCS_fields_TT_pod_x_txt_t = VCS_fields_TT_pod_x_txt.c_str();
 			ifstream myfile_VCS_fields_TT_pod_x_txt_t (VCS_fields_TT_pod_x_txt_t);
 //			std::vector< std::vector<int> > all_integers;
@@ -709,7 +711,7 @@ namespace Nektar
 //				      cout << line << endl;
 			        std::istringstream is( line );
 					std::vector<double> nn = std::vector<double>( std::istream_iterator<double>(is), std::istream_iterator<double>() );
-			//		cout << "nn.size() "  << nn.size() << endl;
+					cout << "nn.size() "  << nn.size() << endl;
 					for (int i = 0; i < nn.size(); ++i)
 					{
 						POD_modes_x(i, counter) = nn[i];
@@ -719,7 +721,8 @@ namespace Nektar
 			}
 			else cout << "Unable to open file"; 
 
-		    std::string RBsize_y = "RBsize_y.txt";
+//		    std::string RBsize_y = "RBsize_y.txt";
+		    std::string RBsize_y = "../dim_y.txt";
 			const char* RBsize_y_t = RBsize_y.c_str();
 			ifstream myfile_RBsize_y_t (RBsize_y_t);
 			if (myfile_RBsize_y_t.is_open())
@@ -738,7 +741,8 @@ namespace Nektar
 
 			POD_modes_y = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_y);
 
-		    std::string VCS_fields_TT_pod_y_txt = "VCS_fields_TT_pod_y.txt";
+//		    std::string VCS_fields_TT_pod_y_txt = "VCS_fields_TT_pod_y.txt";
+		    std::string VCS_fields_TT_pod_y_txt = "../all_y.txt";
 			const char* VCS_fields_TT_pod_y_txt_t = VCS_fields_TT_pod_y_txt.c_str();
 			ifstream myfile_VCS_fields_TT_pod_y_txt_t (VCS_fields_TT_pod_y_txt_t);
 //			std::vector< std::vector<int> > all_integers;
@@ -941,8 +945,18 @@ namespace Nektar
 			Eigen::VectorXd proj_x = POD_modes_x.transpose() * current_phys_field_eigen.row(0).transpose();
 //			cout << "proj_x.norm() " << proj_x.norm() << endl;
 //			cout << "proj_x " << proj_x << endl;
+			for (int index_rom = 0; index_rom < ROM_size_x; ++index_rom)
+			{
+				ROM_fields_time_trajectory[step][0][index_rom] = proj_x(index_rom);
+			}
+
 			Eigen::VectorXd proj_y = POD_modes_y.transpose() * current_phys_field_eigen.row(1).transpose();
 //			cout << "proj_y.norm() " << proj_y.norm() << endl;
+			for (int index_rom = 0; index_rom < ROM_size_y; ++index_rom)
+			{
+				ROM_fields_time_trajectory[step][1][index_rom] = proj_y(index_rom);
+			}
+
 		}
 
 
@@ -1106,11 +1120,6 @@ namespace Nektar
 		}
 		else std::cout << "Unable to open file";		
 		
-		
-		
-		
-			
-	
             std::ofstream myfile_fields_TT_x ("VCS_fields_TT_x.txt");
             std::ofstream myfile_fields_TT_y ("VCS_fields_TT_y.txt");
             
@@ -1141,6 +1150,44 @@ namespace Nektar
 	        myfile_fields_TT_y.close();
             }
 	    else std::cout << "Unable to open file";
+	    
+	    if (ROM_stage == 2)
+	    {
+	            std::ofstream myfile_fields_TT_x_ROM ("VCS_fields_TT_x_ROM.txt");
+	            std::ofstream myfile_fields_TT_y_ROM ("VCS_fields_TT_y_ROM.txt");
+            
+	            if (myfile_fields_TT_x_ROM.is_open())
+		    {
+			for(int n = 0; n < m_steps; ++n)
+			{
+			    for(int counter_nphys = 0; counter_nphys < ROM_size_x; ++counter_nphys)
+			    {
+	                        myfile_fields_TT_x_ROM << std::setprecision(17) << ROM_fields_time_trajectory[n][0][counter_nphys] << " ";
+			    }
+			    myfile_fields_TT_x_ROM << endl;
+	                }
+		        myfile_fields_TT_x_ROM.close();
+	            }
+		    else std::cout << "Unable to open file";
+	    
+	            if (myfile_fields_TT_y_ROM.is_open())
+		    {
+			for(int n = 0; n < m_steps; ++n)
+			{
+			    for(int counter_nphys = 0; counter_nphys < ROM_size_y; ++counter_nphys)
+			    {
+	                        myfile_fields_TT_y_ROM << std::setprecision(17) << ROM_fields_time_trajectory[n][1][counter_nphys] << " ";
+			    }
+			    myfile_fields_TT_y_ROM << endl;
+	                }
+		        myfile_fields_TT_y_ROM.close();
+	            }
+		    else std::cout << "Unable to open file";
+	    
+	    
+	    }
+	    
+	    
 	}	
 
 

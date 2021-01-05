@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="2" SPACE="2" PARTITION="2">
+        <VERTEX>
+            <V ID="2">-3.00000000e-01 -1.00000000e+00 0.00000000e+00</V>
+            <V ID="3">3.00000000e-01 -1.00000000e+00 0.00000000e+00</V>
+            <V ID="4">9.00000000e-01 -1.00000000e+00 0.00000000e+00</V>
+            <V ID="5">1.50000000e+00 -1.00000000e+00 0.00000000e+00</V>
+            <V ID="8">-3.00000000e-01 -8.09016994e-01 0.00000000e+00</V>
+            <V ID="9">3.00000000e-01 -8.09016994e-01 0.00000000e+00</V>
+            <V ID="10">9.00000000e-01 -8.09016994e-01 0.00000000e+00</V>
+            <V ID="11">1.50000000e+00 -8.09016994e-01 0.00000000e+00</V>
+            <V ID="14">-3.00000000e-01 -3.09016994e-01 0.00000000e+00</V>
+            <V ID="15">3.00000000e-01 -3.09016994e-01 0.00000000e+00</V>
+            <V ID="16">9.00000000e-01 -3.09016994e-01 0.00000000e+00</V>
+            <V ID="17">1.50000000e+00 -3.09016994e-01 0.00000000e+00</V>
+        </VERTEX>
+        <EDGE>
+            <E ID="2">2 3</E>
+            <E ID="3">3 4</E>
+            <E ID="4">4 5</E>
+            <E ID="7">8 9</E>
+            <E ID="8">9 10</E>
+            <E ID="9">10 11</E>
+            <E ID="12">14 15</E>
+            <E ID="13">15 16</E>
+            <E ID="14">16 17</E>
+            <E ID="32">2 8</E>
+            <E ID="33">3 9</E>
+            <E ID="34">4 10</E>
+            <E ID="35">5 11</E>
+            <E ID="38">8 14</E>
+            <E ID="39">9 15</E>
+            <E ID="40">10 16</E>
+            <E ID="41">11 17</E>
+        </EDGE>
+        <ELEMENT>
+            <Q ID="2">2 33 7 32</Q>
+            <Q ID="3">3 34 8 33</Q>
+            <Q ID="4">4 35 9 34</Q>
+            <Q ID="7">7 39 12 38</Q>
+            <Q ID="8">8 40 13 39</Q>
+            <Q ID="9">9 41 14 40</Q>
+        </ELEMENT>
+        <CURVED />
+        <COMPOSITE>
+            <C ID="0"> Q[2-4,7-9] </C>
+            <C ID="1"> E[2-4] </C>
+            <C ID="4"> E[35,41] </C>
+        </COMPOSITE>
+        <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+    <CONDITIONS>
+        <PARAMETERS>
+            <P>TimeStep = 0.000001</P>
+            <P>NumSteps = 100</P>
+            <P>FinTime = TimeStep*NumSteps</P>
+            <P>IO_CheckSteps = 100000</P>
+            <P>IO_InfoSteps = 100000</P>
+        </PARAMETERS>
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE" VALUE="UnsteadyDiffusion" />
+            <I PROPERTY="Projection" VALUE="DisContinuous" />
+            <I PROPERTY="DiffusionType" VALUE="LDG" />
+            <I PROPERTY="DiffusionAdvancement" VALUE="Explicit" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
+        </SOLVERINFO>
+        <VARIABLES>
+            <V ID="0">u</V>
+            <V ID="1">v</V>
+        </VARIABLES>
+        <BOUNDARYREGIONS>
+            <B ID="0">C[1]</B>
+        </BOUNDARYREGIONS>
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <N VAR="u" VALUE="0" />
+                <N VAR="v" VALUE="0" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="0" />
+        </FUNCTION>
+    </CONDITIONS>
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u,v" TYPE="GLL_LAGRANGE_SEM" />
+    </EXPANSIONS>
+</NEKTAR>

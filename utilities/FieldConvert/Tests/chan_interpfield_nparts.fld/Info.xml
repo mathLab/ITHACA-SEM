@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <Metadata>
+        <Provenance>
+            <GitBranch>refs/heads/InterpField</GitBranch>
+            <GitSHA1>bc8edfe4d542b33371333b942a4170dfdcf2faad</GitSHA1>
+            <Hostname>Jamess-MBP</Hostname>
+            <NektarVersion>5.0.0</NektarVersion>
+            <Timestamp>27-Sep-2020 23:30:36</Timestamp>
+        </Provenance>
+    </Metadata>
+    <Partition FileName="P0000000.fld">0-1,5-6,10-11</Partition>
+    <Partition FileName="P0000001.fld">15-17,20-22</Partition>
+    <Partition FileName="P0000002.fld">2-4,7-9</Partition>
+    <Partition FileName="P0000003.fld">12-14,18-19,23-24</Partition>
+</NEKTAR>

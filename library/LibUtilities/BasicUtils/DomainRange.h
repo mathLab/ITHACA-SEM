@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessInterpPointDataToFld.h
+//  File:  DomainRange.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -28,67 +28,41 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Interpolate point data to a field.
+//  Description:  Finds Min and Max X,Y,Z points of a specific domain
+//
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELDUTILS_PROCESSINTERPDATATOFLD
-#define FIELDUTILS_PROCESSINTERPDATATOFLD
+#ifndef NEKTAR_LIB_LIBUTILITIES_BASSICUTILS_DOMAINRANGE_HPP
+#define NEKTAR_LIB_LIBUTILITIES_BASSICUTILS_DOMAINRANGE_HPP
 
-#include <LibUtilities/BasicUtils/Progressbar.hpp>
-#include <LibUtilities/BasicUtils/DomainRange.h>
-
-#include "../Module.h"
-
-
-
-namespace Nektar
+namespace Nektar 
 {
-namespace FieldUtils
+namespace LibUtilities
 {
-
-/**
- * @brief This processing module interpolates one field to another
- */
-class ProcessInterpPointDataToFld : public ProcessModule
+    
+// set restriction on domain range for post-processing.
+struct DomainRange
 {
-public:
-    /// Creates an instance of this class
-    static std::shared_ptr<Module> create(FieldSharedPtr f)
-    {
-        return MemoryManager<ProcessInterpPointDataToFld>::AllocateSharedPtr(f);
-    }
-    static ModuleKey className;
+    bool m_doXrange;
+    NekDouble m_xmin;
+    NekDouble m_xmax;
+    bool m_doYrange;
+    NekDouble m_ymin;
+    NekDouble m_ymax;
+    bool m_doZrange;
+    NekDouble m_zmin;
+    NekDouble m_zmax;
 
-    ProcessInterpPointDataToFld(FieldSharedPtr f);
-    virtual ~ProcessInterpPointDataToFld();
-
-    /// Write mesh to output file.
-    virtual void Process(po::variables_map &vm);
-
-    virtual std::string GetModuleName()
-    {
-        return "ProcessInterpPointDataToFld";
-    }
-
-    virtual std::string GetModuleDescription()
-    {
-        return "Interpolating data to field";
-    }
-
-    virtual ModulePriority GetModulePriority()
-    {
-        return eFillExp;
-    }
-
-    void PrintProgressbar(const int position, const int goal) const
-    {
-        LibUtilities::PrintProgressbar(position, goal, "Interpolating");
-    }
-
-private:
+    bool m_checkShape;
+    LibUtilities::ShapeType m_shapeType;
 };
-}
+
+typedef std::shared_ptr<DomainRange> DomainRangeShPtr;
+static DomainRangeShPtr NullDomainRangeShPtr;
+
+
 }
 
+}
 #endif

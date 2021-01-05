@@ -109,7 +109,7 @@ void CsvIO::Write(const std::string &outFile,
 }
 
 
-void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsField)
+void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsField, DomainRangeShPtr &Range)
 {
     std::stringstream errstr;
     errstr << "Unable to load file: " << inFile << std::endl;
@@ -133,8 +133,23 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
         }
     }
 
+    ASSERTL0(dim,"Failed to find a paramater labelled \"x\",\"y\" or \"z\"  "
+             "in file" + inFile + ". Is the coordinated labelled something else?");
+    
     size_t totvars = fieldNames.size();
+    std::vector<std::string> dimNames = {"x", "y", "z"};
+    Array<OneD, int> loc_coord(dim);
+    for (int i = 0; i < dim; ++i)
+    {
+        auto p = std::find(fieldNames.begin(), fieldNames.end(), dimNames[i]);
+        if (p != fieldNames.end())
+        {
+            auto j = std::distance(fieldNames.begin(), p);
 
+            loc_coord[i] = j;    
+        }
+    }
+            
     std::vector<NekDouble> ptsSerial;
     typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
     Tokenizer tok(line);
@@ -146,17 +161,64 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
                     std::iterator_traits<Tokenizer::iterator>::difference_type(totvars),
                  "wrong number of columns in line: " + line);
 
-        for (auto &it : tok)
+        bool ReadValue = true; 
+
+        if(Range != NullDomainRangeShPtr)
         {
-            try
+            int cnt = 0; 
+            for (auto &it : tok)
             {
-                ptsSerial.push_back(
-                    boost::lexical_cast<NekDouble>(
-                        boost::trim_copy(std::string(it))));
+                for(int j = 0; j < dim; ++j)
+                {
+                    if(cnt == loc_coord[j])
+                    {
+                        NekDouble CoordVal = boost::lexical_cast<NekDouble>(
+                                             boost::trim_copy(std::string(it)));
+                        switch(j)
+                        {
+                        case 0:
+                            {
+                                if((CoordVal < Range->m_xmin) || (CoordVal > Range->m_xmax))
+                                {
+                                    ReadValue = false; 
+                                }
+                            }
+                            break;
+                        case 1:
+                            {
+                                if((CoordVal < Range->m_ymin) || (CoordVal > Range->m_ymax))
+                                {
+                                    ReadValue = false; 
+                                }
+                            }
+                            break;
+                        case 2:
+                            {
+                                if((CoordVal < Range->m_zmin) || (CoordVal > Range->m_zmax))
+                                {
+                                    ReadValue = false; 
+                                }
+                            }
+                        }
+                    }
+                }
+                cnt++;
             }
-            catch(const boost::bad_lexical_cast &)
+        }
+        if(ReadValue)
+        {
+            for (auto &it : tok)
             {
-                NEKERROR(ErrorUtil::efatal, "could not convert line: " + line);
+                try
+                {
+                    ptsSerial.push_back(
+                                        boost::lexical_cast<NekDouble>(
+                                        boost::trim_copy(std::string(it))));
+                }
+                catch(const boost::bad_lexical_cast &)
+                {
+                    NEKERROR(ErrorUtil::efatal, "could not convert line: " + line);
+                }
             }
         }
     }
@@ -178,7 +240,6 @@ void CsvIO::v_ImportFieldData(const std::string inFile, PtsFieldSharedPtr& ptsFi
     }
 
     // reorder pts to make x,y,z the first columns
-    std::vector<std::string> dimNames = {"x", "y", "z"};
     for (int i = 0; i < dim; ++i)
     {
         auto p = std::find(fieldNames.begin(), fieldNames.end(), dimNames[i]);

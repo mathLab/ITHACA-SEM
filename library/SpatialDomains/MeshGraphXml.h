@@ -74,7 +74,7 @@ public:
     static std::string className;
 
     SPATIAL_DOMAINS_EXPORT virtual void ReadGeometry(
-        DomainRangeShPtr rng,
+        LibUtilities::DomainRangeShPtr rng,
         bool             fillGraph);
     SPATIAL_DOMAINS_EXPORT virtual void PartitionMesh(
         LibUtilities::SessionReaderSharedPtr session);

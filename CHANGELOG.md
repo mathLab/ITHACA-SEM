@@ -32,6 +32,7 @@ v5.1.0
 - Fix mean and innerProduct modules in 3DH1D cases (!1157)
 - Add Python interface (!1081)
 - Fix wss module with nparts option and reading of parallel xml files when the root partition is missing(!1197)
+- Fix a segment error in the gradient module when the number of fields is smaller than space dimension(!1216)
 
 **CardiacEPSolver**
 - Added additional parameter sets to Fenton-Karma model (!1119)

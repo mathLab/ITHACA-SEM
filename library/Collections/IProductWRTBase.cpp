@@ -40,6 +40,7 @@
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
 #include <Collections/IProduct.h>
+#include <Collections/MatrixFreeBase.h>
 
 using namespace std;
 
@@ -154,7 +155,7 @@ OperatorKey IProductWRTBase_StdMat::m_typeArr[] = {
 /**
  * @brief Inner product operator using operator using matrix free operators.
  */
-class IProductWRTBase_MatrixFree : public Operator
+class IProductWRTBase_MatrixFree : public Operator, MatrixFreeOneInOneOut
 {
     public:
         OPERATOR_CREATE(IProductWRTBase_MatrixFree)
@@ -198,48 +199,33 @@ class IProductWRTBase_MatrixFree : public Operator
 
     private:
         std::shared_ptr<MatrixFree::IProduct> m_oper;
-        /// flag for padding
-        bool m_isPadded{false};
-        /// padded input/output vectors
-        Array<OneD, NekDouble> m_input, m_output;
 
         IProductWRTBase_MatrixFree(
                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                 CoalescedGeomDataSharedPtr                pGeomData)
-            : Operator(pCollExp, pGeomData)
+            : Operator(pCollExp, pGeomData),
+              MatrixFreeOneInOneOut(pCollExp[0]->GetStdExp()->GetTotPoints(),
+                                    pCollExp[0]->GetStdExp()->GetNcoeffs(),
+                                    pCollExp.size())
         {
             const auto nqElmt = pCollExp[0]->GetStdExp()->GetTotPoints();
-            const auto nmElmt = pCollExp[0]->GetStdExp()->GetNcoeffs();
-
-            // Padding if needed
-            using vec_t = tinysimd::simd<NekDouble>;
             const auto nElmtNoPad = pCollExp.size();
-            auto nElmtPad = nElmtNoPad;
-            if (nElmtNoPad % vec_t::width != 0)
-            {
-                m_isPadded = true;
-                nElmtPad = nElmtNoPad + vec_t::width -
-                    (nElmtNoPad % vec_t::width);
-                m_input = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                m_output = Array<OneD, NekDouble>{nmElmt * nElmtPad, 0.0};
-            }
-
+            
             // Check if deformed
             bool deformed{pGeomData->IsDeformed(pCollExp)};
 
             // Size of jacobian
             auto jacSizeNoPad = nElmtNoPad;
-            auto jacSizePad = nElmtPad;
+            auto jacSizePad = m_nElmtPad;
             if (deformed)
             {
                 jacSizeNoPad = nElmtNoPad * nqElmt;
-                jacSizePad = nElmtPad * nqElmt;
+                jacSizePad = m_nElmtPad * nqElmt;
             }
 
             // Get Jacobian
             Array<OneD, NekDouble> jac{jacSizePad, 0.0};
             Vmath::Vcopy(jacSizeNoPad, pGeomData->GetJac(pCollExp), 1, jac, 1);
-
 
             // Basis vector
             const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
@@ -256,7 +242,7 @@ class IProductWRTBase_MatrixFree : public Operator
             std::string op_string = "IProduct";
             op_string += MatrixFree::GetOpstring(shapeType, deformed);
             auto oper = MatrixFree::GetOperatorFactory().
-                CreateInstance(op_string, basis, nElmtPad);
+                CreateInstance(op_string, basis, m_nElmtPad);
 
             // Set Jacobian
             oper->SetJac(jac);

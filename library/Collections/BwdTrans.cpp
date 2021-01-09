@@ -34,6 +34,7 @@
 
 #include <Collections/CoalescedGeomData.h>
 #include <Collections/Operator.h>
+#include <Collections/MatrixFreeBase.h>
 #include <MatrixFreeOps/Operator.hpp>
 #include <boost/core/ignore_unused.hpp>
 
@@ -138,7 +139,7 @@ OperatorKey BwdTrans_StdMat::m_typeArr[] = {
 /**
  * @brief Backward transform operator using matrix free operators.
  */
-class BwdTrans_MatrixFree final : public Operator
+class BwdTrans_MatrixFree final : public Operator, MatrixFreeOneInOneOut
 {
 public:
     OPERATOR_CREATE(BwdTrans_MatrixFree)
@@ -180,30 +181,14 @@ public:
 
 private:
     std::shared_ptr<MatrixFree::BwdTrans> m_oper;
-    /// flag for padding
-    bool m_isPadded{false};
-    /// padded input/output vectors
-    Array<OneD, NekDouble> m_input, m_output;
 
     BwdTrans_MatrixFree(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                         CoalescedGeomDataSharedPtr pGeomData)
-        : Operator(pCollExp, pGeomData)
+        : Operator(pCollExp, pGeomData),
+          MatrixFreeOneInOneOut(pCollExp[0]->GetStdExp()->GetNcoeffs(),
+                                pCollExp[0]->GetStdExp()->GetTotPoints(),
+                                pCollExp.size())
     {
-        const auto nqElmt = pCollExp[0]->GetStdExp()->GetTotPoints();
-        const auto nmElmt = pCollExp[0]->GetStdExp()->GetNcoeffs();
-
-        // Padding if needed
-        using vec_t           = tinysimd::simd<NekDouble>;
-        const auto nElmtNoPad = pCollExp.size();
-        auto nElmtPad         = nElmtNoPad;
-        if (nElmtNoPad % vec_t::width != 0)
-        {
-            m_isPadded = true;
-            nElmtPad = nElmtNoPad + vec_t::width - (nElmtNoPad % vec_t::width);
-            m_input  = Array<OneD, NekDouble>{nmElmt * nElmtPad, 0.0};
-            m_output = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-        }
-
         // Basis vector.
         const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
         std::vector<LibUtilities::BasisSharedPtr> basis(dim);
@@ -219,7 +204,7 @@ private:
         std::string op_string = "BwdTrans";
         op_string += MatrixFree::GetOpstring(shapeType, false);
         auto oper = MatrixFree::GetOperatorFactory().CreateInstance(
-            op_string, basis, nElmtPad);
+            op_string, basis, m_nElmtPad);
 
         m_oper = std::dynamic_pointer_cast<MatrixFree::BwdTrans>(oper);
         ASSERTL0(m_oper, "Failed to cast pointer.");

@@ -38,6 +38,7 @@
 #include <MatrixFreeOps/Util.hpp>
 
 #include <Collections/Operator.h>
+#include <Collections/MatrixFreeBase.h>
 #include <Collections/Collection.h>
 #include <Collections/IProduct.h>
 
@@ -231,7 +232,7 @@ OperatorKey IProductWRTDerivBase_StdMat::m_typeArr[] = {
 /**
  * @brief Inner product operator using operator using matrix free operators.
  */
-class IProductWRTDerivBase_MatrixFree : public Operator
+class IProductWRTDerivBase_MatrixFree : public Operator, MatrixFreeMultiInOneOut
 {
     public:
         OPERATOR_CREATE(IProductWRTDerivBase_MatrixFree)
@@ -292,53 +293,31 @@ class IProductWRTDerivBase_MatrixFree : public Operator
 
     private:
         std::shared_ptr<MatrixFree::IProductWRTDerivBase> m_oper;
-        /// flag for padding
-        bool m_isPadded{false};
-        /// padded input/output vectors
-        Array<OneD, Array<OneD, NekDouble>> m_input;
-        Array<OneD, NekDouble> m_output;
-        /// coordinates dimension
-        unsigned short m_coordim;
 
         IProductWRTDerivBase_MatrixFree(
                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                 CoalescedGeomDataSharedPtr                pGeomData)
-            : Operator(pCollExp, pGeomData)
+            : Operator(pCollExp, pGeomData),
+              MatrixFreeMultiInOneOut(pCollExp[0]->GetCoordim(),
+                                      pCollExp[0]->GetStdExp()->GetTotPoints(),
+                                      pCollExp[0]->GetStdExp()->GetNcoeffs(),
+                                      pCollExp.size())
         {
             m_coordim  = pCollExp[0]->GetCoordim();
 
             const auto nqElmt = pCollExp[0]->GetStdExp()->GetTotPoints();
-            const auto nmElmt = pCollExp[0]->GetStdExp()->GetNcoeffs();
-
-            // Padding if needed
-            using vec_t = tinysimd::simd<NekDouble>;
             const auto nElmtNoPad = pCollExp.size();
-            auto nElmtPad = nElmtNoPad;
-            if (nElmtNoPad % vec_t::width != 0)
-            {
-                m_isPadded = true;
-                nElmtPad = nElmtNoPad + vec_t::width -
-                    (nElmtNoPad % vec_t::width);
-                m_input = Array<OneD, Array<OneD, NekDouble>> (m_coordim);
-                m_input[0] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                m_input[1] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                if (m_coordim == 3)
-                {
-                    m_input[2] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                }
-                m_output = Array<OneD, NekDouble>{nmElmt * nElmtPad, 0.0};
-            }
 
             // Check if deformed
             bool deformed{pGeomData->IsDeformed(pCollExp)};
 
             // Size of jacobian
             auto jacSizeNoPad = nElmtNoPad;
-            auto jacSizePad = nElmtPad;
+            auto jacSizePad = m_nElmtPad;
             if (deformed)
             {
                 jacSizeNoPad = nElmtNoPad * nqElmt;
-                jacSizePad = nElmtPad * nqElmt;
+                jacSizePad = m_nElmtPad * nqElmt;
             }
 
             // Get Jacobian
@@ -383,7 +362,7 @@ class IProductWRTDerivBase_MatrixFree : public Operator
             std::string op_string = "IProductWRTDerivBase";
             op_string += MatrixFree::GetOpstring(shapeType, deformed);
             auto oper = MatrixFree::GetOperatorFactory().
-                CreateInstance(op_string, basis, nElmtPad);
+                CreateInstance(op_string, basis, m_nElmtPad);
 
             // Set Jacobian
             oper->SetJac(jac);
@@ -391,7 +370,8 @@ class IProductWRTDerivBase_MatrixFree : public Operator
             // Set derivative factors
             oper->SetDF(df);
 
-            m_oper = std::dynamic_pointer_cast<MatrixFree::IProductWRTDerivBase>(oper);
+            m_oper = std::dynamic_pointer_cast<MatrixFree::
+                                               IProductWRTDerivBase>(oper);
             ASSERTL0(m_oper, "Failed to cast pointer.");
 
         }

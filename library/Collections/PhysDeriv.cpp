@@ -38,6 +38,7 @@
 #include <MatrixFreeOps/Util.hpp>
 
 #include <Collections/Operator.h>
+#include <Collections/MatrixFreeBase.h>
 #include <Collections/Collection.h>
 
 using namespace std;
@@ -228,7 +229,7 @@ OperatorKey PhysDeriv_StdMat::m_typeArr[] =
 /**
  * @brief Phys deriv operator using matrix free operators.
  */
-class PhysDeriv_MatrixFree : public Operator
+class PhysDeriv_MatrixFree : public Operator, MatrixFreeOneInMultiOut
 {
     public:
         OPERATOR_CREATE(PhysDeriv_MatrixFree)
@@ -292,52 +293,32 @@ class PhysDeriv_MatrixFree : public Operator
 
     private:
         std::shared_ptr<MatrixFree::PhysDeriv> m_oper;
-        /// flag for padding
-        bool m_isPadded{false};
-        /// padded input/output vectors
-        Array<OneD, NekDouble> m_input;
-        Array<OneD, Array<OneD, NekDouble>> m_output;
-        /// coordinate dimensions
-        unsigned short m_coordim;
 
         PhysDeriv_MatrixFree(
                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                 CoalescedGeomDataSharedPtr                pGeomData)
-            : Operator(pCollExp, pGeomData)
+            : Operator(pCollExp, pGeomData),
+              MatrixFreeOneInMultiOut(pCollExp[0]->GetCoordim(),
+                                      pCollExp[0]->GetStdExp()->GetTotPoints(),
+                                      pCollExp[0]->GetStdExp()->GetTotPoints(),
+                                      pCollExp.size())
         {
-            m_coordim  = pCollExp[0]->GetCoordim();
 
             const auto nqElmt = pCollExp[0]->GetStdExp()->GetTotPoints();
 
             // Padding if needed
-            using vec_t = tinysimd::simd<NekDouble>;
             const auto nElmtNoPad = pCollExp.size();
-            auto nElmtPad = nElmtNoPad;
-            if (nElmtNoPad % vec_t::width != 0)
-            {
-                m_isPadded = true;
-                nElmtPad = nElmtNoPad + vec_t::width -
-                    (nElmtNoPad % vec_t::width);
-                m_input = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                m_output = Array<OneD, Array<OneD, NekDouble>> {m_coordim};
-                m_output[0] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                m_output[1] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                if (m_coordim == 3)
-                {
-                    m_output[2] = Array<OneD, NekDouble>{nqElmt * nElmtPad, 0.0};
-                }
-            }
 
             // Check if deformed
             bool deformed{pGeomData->IsDeformed(pCollExp)};
 
             // Size of jacobian
             auto jacSizeNoPad = nElmtNoPad;
-            auto jacSizePad = nElmtPad;
+            auto jacSizePad = m_nElmtPad;
             if (deformed)
             {
                 jacSizeNoPad = nElmtNoPad * nqElmt;
-                jacSizePad = nElmtPad * nqElmt;
+                jacSizePad   = m_nElmtPad * nqElmt;
             }
 
             // Get derivative factors
@@ -378,7 +359,7 @@ class PhysDeriv_MatrixFree : public Operator
             std::string op_string = "PhysDeriv";
             op_string += MatrixFree::GetOpstring(shapeType, deformed);
             auto oper = MatrixFree::GetOperatorFactory().
-                CreateInstance(op_string, basis, nElmtPad);
+                CreateInstance(op_string, basis, m_nElmtPad);
 
             // Store derivative factor
             oper->SetDF(df);

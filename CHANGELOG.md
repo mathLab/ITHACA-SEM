@@ -16,6 +16,7 @@ v5.1.0
 - Fix intel c compiler error in AeroFilters (!1198)
 - Fix compilation errors when CWIPI interface enabled (!1207)
 - Fix distance in ContainsPoint and GetLocCoords (!1200)
+- Fix compiler warning of maybe-uninitialized elType in InputStar (!1217)
 
 **FieldConvert**
 - Refactored time integration code using factory pattern (!1034)

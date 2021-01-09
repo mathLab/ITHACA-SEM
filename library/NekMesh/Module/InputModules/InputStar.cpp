@@ -528,6 +528,7 @@ void InputStar::GenElement3D(vector<NodeSharedPtr> &VertNodes,
     }
     else
     {
+        elType = LibUtilities::eHexahedron;
         m_log(FATAL) << "Not set up for elements which are not tets or prisms"
                      << endl;
     }

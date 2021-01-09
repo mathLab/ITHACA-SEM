@@ -111,7 +111,7 @@ protected:
 
     explicit CommMpi(MPI_Comm pComm);
 
-    virtual void v_Finalise() final;
+    virtual void v_Finalise() override;
     virtual int v_GetRank() final;
     virtual void v_Block() final;
     virtual double v_Wtime() final;

@@ -153,6 +153,88 @@ to define the $z$ range.
 %
 %
 %
+
+\section{FieldConvert in NekPy}
+
+The Python interface allows the user to instantiate input,
+output, and process modules by calling the static \verb+Create+ method of the
+\verb+InputModule+, \verb+ProcessModule+, and \verb+OutputModule+,
+register configuration options, and run them.
+For example, consider the command:
+
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -n 10 -m wss:bnd=0 session.xml field.fld  field_wss.fld
+\end{lstlisting}
+
+
+A Python script performing the same task is given below.
+
+\begin{lstlisting}[style=C++Style, language=Python]
+import sys
+from NekPy.FieldUtils import *
+
+field = Field(sys.argv, output_points=10)
+
+InputModule.Create("xml",   field, "session.xml").Run()
+InputModule.Create("fld",   field, "field.fld").Run()
+ProcessModule.Create("wss", field,  bnd="0").Run()
+OutputModule.Create("fld" , field, "field_wss.fld").Run()
+\end{lstlisting}
+
+The key points are that the FieldConvert command line options, in this
+case \inltt{output-points}, are passed to the constructor of \verb+Field+.
+The configuration options for a given module are passed to the static
+\verb+Create+ method of the \verb+InputModule+, \verb+ProcessModule+, and
+\verb+OutputModule+. This creates the corresponding module and the
+modules can be run immediately after instantiation. Note that the first
+parameter of the \verb+Create+ method has to be the key for a given module,
+the second is the field variable and for input and output modules the remaining
+arguments may identify the input and output files for a given module.
+Optionally we can explicitly specify the file type of an input module
+using the "infile" keyword and the "outfile" keyword for output modules.
+
+
+\begin{lstlisting}[style=C++Style, language=Python]
+import sys
+from NekPy.FieldUtils import *
+
+field = Field(sys.argv, output_points=10)
+
+InputModule.Create("xml",   field, infile={"xml": "session.xml"}).Run()
+InputModule.Create("fld",   field, infile={"fld": "field.fld"}).Run()
+ProcessModule.Create("wss", field, bnd="0").Run()
+OutputModule.Create("fld" , field, outfile="field_wss.fld").Run()
+\end{lstlisting}
+
+It can also emulate the functionality of FieldConvert when using the
+\inltt{nparts} option in the following way. Here \verb+session_xml+ is a
+directory containing the mesh partitioned into 2.
+
+\begin{lstlisting}[style=C++Style, language=Python]
+import sys
+from NekPy.FieldUtils import *
+
+field = Field(sys.argv, nparts=2, forceoutput=True, error=True)
+
+inputxml   = InputModule.Create("xml",   field, "session_xml")
+inputfld   = InputModule.Create("fld",   field, "field.fld")
+processwss = ProcessModule.Create("wss", field,  bnd="2")
+outputfld  = OutputModule.Create("fld",  field, "field_wss.fld")
+
+for part in range(2):
+	field.NewPartition(sys.argv, part)
+	inputxml.Run()
+	inputfld.Run()
+	processwss.Run()
+	outputfld.Run()
+
+OutputModule.Create("info", field, "field_wss_b0.fld", nparts=2).Run()
+\end{lstlisting}
+
+The number of partitions is looped over, with \verb+NewPartition+ called at
+the start of each. When using \verb+OutputModule+, the \verb+info+ module
+must be used in order to obtain the correct result.
+
 \section{FieldConvert modules \textit{-m}}
 FieldConvert allows the user to manipulate the \nekpp output
 binary files (.chk and .fld) by using the flag \inltt{-m} (which
@@ -653,7 +735,7 @@ The format of the file \inltt{file2.pts} is of the same form as for the
 </NEKTAR>
 \end{lstlisting}
 Similar to the \textit{interppointdatatofld} module, the \inltt{.pts} file can
-be interchanged with a \inltt{.csv} file (the output can also be written to 
+be interchanged with a \inltt{.csv} file (the output can also be written to
 \inltt{.csv}):
 \begin{lstlisting}[style=BashInputStyle]
 # x, y
@@ -669,7 +751,7 @@ value to be used if the point is outside the domain. Their default values
 are -10,000,000, 10,000,000 and 0.
 
 In addition, instead of specifying the file \inltt{file2.pts}, a module list of
-the form 
+the form
 \begin{lstlisting}[style=BashInputStyle]
 FieldConvert -m interppoints:fromxml=file1.xml:fromfld= \
 	file1.fld:line=npts,x0,y0,x1,y1 file2.dat
@@ -960,7 +1042,7 @@ FieldConvert -m removefield:fieldname="u,v,p" test.xml test.fld test-removed.fld
 where the file \inltt{test-removed.fld} can be processed in a similar
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise the result either in Tecplot, Paraview or VisIt. The lighter resulting
-file speeds up the postprocessing of large files when not all fields are required. 
+file speeds up the postprocessing of large files when not all fields are required.
 %
 %
 %

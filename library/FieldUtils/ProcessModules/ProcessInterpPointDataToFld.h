@@ -36,8 +36,11 @@
 #define FIELDUTILS_PROCESSINTERPDATATOFLD
 
 #include <LibUtilities/BasicUtils/Progressbar.hpp>
+#include <LibUtilities/BasicUtils/DomainRange.h>
 
 #include "../Module.h"
+
+
 
 namespace Nektar
 {

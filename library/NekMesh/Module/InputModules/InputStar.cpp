@@ -462,7 +462,7 @@ void InputStar::GenElement2D(vector<NodeSharedPtr> &VertNodes,
 {
     boost::ignore_unused(i);
 
-    LibUtilities::ShapeType elType;
+    LibUtilities::ShapeType elType = LibUtilities::eNoShapeType;
 
     if (FaceNodes.size() == 3)
     {
@@ -528,6 +528,7 @@ void InputStar::GenElement3D(vector<NodeSharedPtr> &VertNodes,
     }
     else
     {
+        elType = LibUtilities::eHexahedron;
         m_log(FATAL) << "Not set up for elements which are not tets or prisms"
                      << endl;
     }

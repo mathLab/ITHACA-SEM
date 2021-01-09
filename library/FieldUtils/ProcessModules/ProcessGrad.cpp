@@ -64,7 +64,7 @@ ProcessGrad::~ProcessGrad()
 
 void ProcessGrad::Process(po::variables_map &vm)
 {
-    boost::ignore_unused(vm);
+    m_f->SetUpExp(vm);
 
     int i, j;
     int expdim    = m_f->m_graph->GetMeshDimension();
@@ -159,7 +159,7 @@ void ProcessGrad::Process(po::variables_map &vm)
     }
     else
     {
-        for (int i = 0; i < spacedim; ++i)
+        for (int i = 0; i < spacedim && i < nfields; ++i)
         {
             vel[i] = Array<OneD, NekDouble>(npoints);
             Vmath::Vcopy(npoints, m_f->m_exp[i]->GetPhys(), 1, vel[i], 1);

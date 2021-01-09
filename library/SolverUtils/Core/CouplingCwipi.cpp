@@ -40,9 +40,7 @@
 #include <LibUtilities/Foundations/Interp.h>
 #include <LibUtilities/Foundations/PhysGalerkinProject.h>
 
-#include <MultiRegions/ContField1D.h>
-#include <MultiRegions/ContField2D.h>
-#include <MultiRegions/ContField3D.h>
+#include <MultiRegions/ContField.h>
 
 #include <boost/core/ignore_unused.hpp>
 #include <boost/format.hpp>
@@ -264,44 +262,13 @@ void CouplingCwipi::SetupReceive()
 
     SpatialDomains::MeshGraphSharedPtr recvGraph =
         SpatialDomains::MeshGraph::Read(m_evalField->GetSession());
-    recvGraph->SetExpansionsToPointOrder(
+    recvGraph->SetExpansionInfoToPointOrder(
         oversamp + m_evalField->GetExp(0)->GetNumPoints(0));
 
     // TODO: DeclareCoeffPhysArrays
-    switch (m_spacedim)
-    {
-        case 1:
-        {
-            m_recvField =
-                MemoryManager<MultiRegions::ContField1D>::AllocateSharedPtr(
-                    m_evalField->GetSession(), recvGraph, "DefaultVar");
-            break;
-        }
-
-        case 2:
-        {
-
-            m_recvField =
-                MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(
-                    m_evalField->GetSession(), recvGraph);
-            break;
-        }
-
-        case 3:
-        {
-
-            m_recvField =
-                MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(
-                    m_evalField->GetSession(), recvGraph);
-            break;
-        }
-
-        default:
-        {
-            ASSERTL0(false, "Expansion dimension not recognised");
-            break;
-        }
-    }
+    m_recvField =
+        MemoryManager<MultiRegions::ContField>::AllocateSharedPtr(
+           m_evalField->GetSession(), recvGraph, "DefaultVar");
 
     m_oldFields = Array<OneD, Array<OneD, NekDouble> >(m_nRecvVars);
     m_newFields = Array<OneD, Array<OneD, NekDouble> >(m_nRecvVars);

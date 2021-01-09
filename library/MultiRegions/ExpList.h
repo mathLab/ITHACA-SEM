@@ -49,7 +49,6 @@
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <MultiRegions/GlobalLinSysKey.h>
-#include <MultiRegions/GlobalOptimizationParameters.h>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
 #include <LibUtilities/Kernel/kernel.h>
 #include <tinyxml.h>
@@ -720,14 +719,34 @@ namespace Nektar
             MULTI_REGIONS_EXPORT LocalRegions::ExpansionSharedPtr& GetExp(
                 const Array<OneD, const NekDouble> &gloCoord);
 
-            /** This function returns the index of the local elemental
-             * expansion containing the arbitrary point given by \a gloCoord.
-             **/
+            /**
+             * @brief This function returns the index of the local elemental
+             * expansion containing the arbitrary point given by \a gloCoord,
+             * within a distance tolerance of tol.
+             *
+             * If returnNearestElmt is true and no element contains the point,
+             * this function returns the nearest element whose bounding box contains
+             * the point. The bounding box has a 10% margin in each direction.
+             *
+             * @param gloCoord    (input) coordinate in physics space
+             * @param locCoords   (output) local coordinate xi in the returned element
+             * @param tol         distance tolerance to judge if a point lies in an element
+             * @param returnNearestElmt if true and no element contains this point, the
+             *                          nearest element whose bounding box contains this
+             *                          point is returned
+             * @param cachedId    an initial guess of the most possible element index
+             * @param maxDistance if returnNearestElmt is set as true, the nearest
+             *                    element will be returned. But the distance of the
+             *                    nearest element and this point should be <= maxDistance.
+             *
+             * @return element index; if no element is found, -1 is returned.
+             */
             MULTI_REGIONS_EXPORT int GetExpIndex(
                 const Array<OneD, const NekDouble> &gloCoord,
                 NekDouble tol = 0.0,
                 bool returnNearestElmt = false,
-                int cachedId = -1);
+                int cachedId = -1,
+                NekDouble maxDistance = 1e6);
 
             /** This function returns the index and the Local
              * Cartesian Coordinates \a locCoords of the local
@@ -739,7 +758,8 @@ namespace Nektar
                 Array<OneD, NekDouble>       &locCoords,
                 NekDouble tol = 0.0,
                 bool returnNearestElmt = false,
-                int cachedId = -1);
+                int cachedId = -1,
+                NekDouble maxDistance = 1e6);
 
             /** This function return the expansion field value
              * at the coordinates given as input.
@@ -1193,8 +1213,6 @@ namespace Nektar
 
             /// m_coeffs to elemental value map
             Array<OneD, std::pair<int, int> >  m_coeffsToElmt;
-
-            NekOptimize::GlobalOptParamSharedPtr m_globalOptParam;
 
             BlockMatrixMapShPtr  m_blockMat;
 

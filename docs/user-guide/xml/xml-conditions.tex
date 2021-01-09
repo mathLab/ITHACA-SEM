@@ -31,17 +31,33 @@ For example,
 
 A number of pre-defined constants may also be used in parameter expressions, for example \texttt{PI}. A full list of supported constants is provided in Section~\ref{sec:xml:expressions:syntax}.
 
+\subsection{Time Integration Scheme}
+
+These specify properties to define the parameters specific to the time
+integration scheme to be used. The parameters are specified as XML
+elements and require a string corresponding to the time-stepping method
+and the order, and optionally the variant and free parameters. For
+example,
+
+\begin{lstlisting}[style=XMLStyle]
+ <TIMEINTEGRATIONSCHEME>
+   <METHOD> IMEX </METHOD>
+   <VARIANT> DIRK </VARIANT>
+   <ORDER> 2 </ORDER>
+   <FREEPARAMETERS> 2 3 </FREEPARAMETERS>
+ </TIMEINTEGRATIONSCHEME>
+\end{lstlisting}
+
 \subsection{Solver Information}
 
-These specify properties to define the actions specific to solvers, typically
-including the equation to solve, the projection type and the method of time
-integration. The property/value pairs are specified as XML attributes. For
-example, 
+These specify properties to define the actions specific to solvers,
+typically including the equation to solve and the projection type. The
+property/value pairs are specified as XML attributes. For example,
+
 \begin{lstlisting}[style=XMLStyle] 
 <SOLVERINFO>
   <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvection"    /> 
   <I PROPERTY="Projection"            VALUE="Continuous"           /> 
-  <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
 </SOLVERINFO>
 \end{lstlisting}
 
@@ -64,11 +80,15 @@ The default driver is called \inltt{Standard} and executes the following steps:
 In the following example, the driver \inltt{Standard} is used to manage the 
 execution of the incompressible Navier-Stokes equations:
 \begin{lstlisting}[style=XMLStyle]
-<SOLVERINFO>
+ <TIMEINTEGRATIONSCHEME>
+    <METHOD> IMEX </METHOD>
+    <ORDER> 2 </ORDER>
+ </TIMEINTEGRATIONSCHEME>
+
+ <SOLVERINFO>
     <I PROPERTY="EQTYPE"                VALUE="UnsteadyNavierStokes"     />
     <I PROPERTY="SolverType"            VALUE="VelocityCorrectionScheme" />
     <I PROPERTY="Projection"            VALUE="Galerkin"                 />
-    <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"               />
     <I PROPERTY="Driver"                VALUE="Standard"                 />
 </SOLVERINFO>
 \end{lstlisting}
@@ -235,9 +255,111 @@ the developer guide.
 
 The \texttt{SuccessiveRHS} option can be used in the iterative solver only, to
 attempt to reduce the number of iterations taken to converge to a solution. It
-stores a number of previous solutions, dictated by the setting of the
+stores a number of previous solutions or right-hand sides, dictated by the setting of the
 \texttt{SuccessiveRHS} option, to give a better initial guess for the iterative
-process.
+process. This  method is better than any linear extrapolation method.
+
+It can be activated by setting
+\begin{lstlisting}[style=XMLStyle]
+<GLOBALSYSSOLNINFO>
+    <V VAR="u,v,w">
+        <I PROPERTY="GlobalSysSoln"         VALUE="IterativeStaticCond" />
+        <I PROPERTY="Preconditioner"       VALUE="LowEnergyBlock"/>
+        <I PROPERTY="SuccessiveRHS"       VALUE="8" />
+        <I PROPERTY="IterativeSolverTolerance"    VALUE="1e-4"/>
+    </V>
+    <V VAR="p">
+        <I PROPERTY="GlobalSysSoln"           VALUE="IterativeStaticCond" />
+        <I PROPERTY="Preconditioner"         VALUE="LowEnergyBlock"/>
+        <I PROPERTY="SuccessiveRHS"         VALUE="8" />
+        <I PROPERTY="IterativeSolverTolerance"    VALUE="1e-4"/>
+    </V>
+</GLOBALSYSSOLNINFO>
+\end{lstlisting}
+or
+\begin{lstlisting}[style=XMLStyle]
+<PARAMETERS>
+    <P> SuccessiveRHS = 8 </P>
+</PARAMETERS>
+\end{lstlisting}
+The typical value of \texttt{SuccessiveRHS} is $\le$10.
+
+The linear problem to be solved is
+\begin{equation}\label{eq:linearEquationNew}
+A x = b,
+\end{equation}
+here $x$ and $b$ are both column vectors.
+There are a sequence of  already solved linear problems
+\begin{equation}\label{eq:linearEquationOld}
+A x_n = b_n, n = 1, 2, ..., J.
+\end{equation}
+Assume $x_n$ are all linearly independent.
+In the successive right-hand method (see \cite{FISCHER1998193}), the best approximation to $x$ is
+\begin{equation}\label{eq:approximate}
+\tilde{x}=\sum_{n=1}^J\alpha_n x_n
+\end{equation}
+which is found by minimizing the object function
+\begin{equation}\label{eq:objectFunction1}
+Q_1 = \left(A(\tilde{x}-x)\right)^TA(\tilde{x}-x),
+\end{equation}
+or
+\begin{equation}\label{eq:objectFunction2}
+Q_2 = (\tilde{x}-x)^TA(\tilde{x}-x).
+\end{equation}
+
+If $Q_1$ is used, the projection bases are $e_m = b_m, m = 1, 2, ..., J$. Using
+\begin{equation}\label{eq:Atildex}
+\left(A(\tilde{x}-x) \right)^T= \sum_{m=1}^J\alpha_me_m^T - b^T,
+\end{equation}
+there is
+\begin{equation}\label{eq:objectFunctionQ1_v2}
+Q_1= \sum_{m=1}^J\sum_{n=1}^J\alpha_m\alpha_n e_m^T b_n - 2 \sum_{m=1}^J \alpha_m e_m^T b + b^T b.
+\end{equation}
+To minimize $Q_1$, there should be $\partial Q_1/\partial \alpha_m =0, m=1, 2, ..., J$.
+The corresponding linear problem is
+\begin{equation}\label{eq:objectFunctionQ1_solution}
+M (\alpha_1, \alpha_2, ..., \alpha_J)^T =   (e_1^Tb, e_2^Tb, ..., e_J^Tb)^T,
+\end{equation}
+with symmetric positive definite coefficient matrix $M_{mn}=e_m^T b_n$. In this case, both the solutions $x_m$ and the right-hand sides $b_m$ need to be stored.
+
+If $Q_2$ is used, $A$ should be a symmetric positive definite matrix, as those encountered in the Poisson equation and the Helmholtz equation. Here, the projection bases are $\hat{e}_m = x_m, m = 1, 2, ..., J$. Using
+\begin{equation}\label{eq:tildex}
+(\tilde{x}-x) ^T= \sum_{m=1}^J\alpha_n\hat{e}_m^T - x^T,
+\end{equation}
+there is
+\begin{equation}\label{eq:objectFunctionQ2_v2}
+Q_2= \sum_{m=1}^J\sum_{n=1}^J\alpha_m\alpha_n \hat{e}_m^T b_n - 2 \sum_{m=1}^J \alpha_m \hat{e}_m^T b + x^T b.
+\end{equation}
+To minimize $Q_2$, there should be $\partial Q_2/\partial \alpha_m =0, m=1, 2, ..., J$.
+The corresponding linear problem is
+\begin{equation}\label{eq:objectFunctionQ2_solution}
+M (\alpha_1, \alpha_2, ..., \alpha_J)^T =   (\hat{e}_1^Tb, \hat{e}_2^Tb, ..., \hat{e}_J^Tb)^T,
+\end{equation}
+with symmetric positive definite coefficient matrix $M_{mn}=\hat{e}_m^T b_n$. In this case, only the solutions $x_m$ need to be stored.
+
+The formulations of $Q_1$ version and $Q_2$ version are the same, except the difference of projection bases. By default, $Q_2$ is used as the object function. If you want to use $Q_1$ instead, you can assign a negative value to \texttt{SuccessiveRHS}:
+\begin{lstlisting}[style=XMLStyle]
+<I PROPERTY="SuccessiveRHS"         VALUE="-8" />
+\end{lstlisting}
+or
+\begin{lstlisting}[style=XMLStyle]
+<P> SuccessiveRHS = -8 </P>
+\end{lstlisting}
+
+In the original paper of Fischer (1998) \cite{FISCHER1998193}, the Gram-Schmidt orthogonal process is applied to the projection bases, this method is very stable and avoids the calculation of $M^{-1}$. However, when the memory space is full, this approach makes it hard to decide which basis should be overwritten. In our implementation, we just store the normalized right-hand sides or old solutions, i.e. $e_m^T b_m=1$ or $\hat{e}_m^T b_m=1$, and overwrite the oldest ones. The linear problem (\ref{eq:objectFunctionQ1_solution}) or (\ref{eq:objectFunctionQ2_solution}) is solved using a direct method.
+
+To make sure $M$ is positive definite, when a new basis $e_{J+1}$ arrives, we test the following condition to decide whether or not to accept it,
+\begin{equation}\label{eq:thredhold}
+r = (-y^T\tilde{M} ^{-1}, 1) \begin{pmatrix}
+\tilde{M}     & y\\
+y^T  & 1
+\end{pmatrix}
+\begin{pmatrix}
+-\tilde{M} ^{-1}y\\
+1
+\end{pmatrix} =1 - y^T\tilde{M}^{-1}y \ge \varepsilon > 0.
+\end{equation}
+Assuming $e_J$ is the oldest basis, there are $\tilde{M}_{mn} = M_{mn}, y_m = e_{m}^Tb_{J+1}, (m, n=1, 2, ..., J-1)$.
 
 \subsubsection{PETSc options and configuration}
 \label{sec:petsc}

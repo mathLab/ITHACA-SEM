@@ -63,7 +63,7 @@ namespace SolverUtils {
             const std::string& name,
             const NekDouble& value);
 
-}
-}
+} // end namespace SolverUtils
+} // end namespace Nektar
 
 #endif

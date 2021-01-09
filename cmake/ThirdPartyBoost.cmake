@@ -139,7 +139,7 @@ IF (THIRDPARTY_BUILD_BOOST)
                 cxxflags="-w"
                 linkflags="-L${TPDIST}/lib"
                 ${BOOST_FLAGS} ${BOOST_LIB_LIST}
-		--prefix=${TPDIST}
+                --prefix=${TPDIST}
                 --layout=system toolset=${TOOLSET_CMDLINE} install
             INSTALL_COMMAND ""
             )

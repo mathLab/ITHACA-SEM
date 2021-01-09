@@ -1,0 +1,24 @@
+diff -Naur cwipi-0.11.1.old/cmake/modules/default_flags.cmake cwipi-0.11.1/cmake/modules/default_flags.cmake
+--- cwipi-0.11.1.old/cmake/modules/default_flags.cmake	2020-11-07 20:58:47.029647862 +0000
++++ cwipi-0.11.1/cmake/modules/default_flags.cmake	2020-11-07 21:14:58.446070804 +0000
+@@ -108,8 +108,6 @@
+ 
+ else ()
+ 
+-  message (WARNING "Default flags are not defined for ${CMAKE_Fortran_COMPILER_ID}")
+-
+   set (CMAKE_Fortran_FLAGS "")
+   set (CMAKE_Fortran_FLAGS_RELEASE "-O")
+   set (CMAKE_Fortran_FLAGS_DEBUG   "-g")
+diff -Naur cwipi-0.11.1.old/CMakeLists.txt cwipi-0.11.1/CMakeLists.txt
+--- cwipi-0.11.1.old/CMakeLists.txt	2020-03-27 10:29:35.000000000 +0000
++++ cwipi-0.11.1/CMakeLists.txt	2020-11-07 21:03:10.110847267 +0000
+@@ -19,7 +19,7 @@
+ set(CWP_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+ set(CMAKE_MODULE_PATH "${CWP_CMAKE_DIR}/modules")
+ 
+-project(CWP VERSION 0.11.1 LANGUAGES C CXX Fortran)
++project(CWP VERSION 0.11.1 LANGUAGES C CXX)
+ 
+ #------------------------------------------------------------------------------
+ # Enable languages

@@ -68,12 +68,10 @@ The type of equation which is to be solved is specified through the EquationType
 SOLVERINFO option in the session file. This can be set as in table \ref{t:ADR1}.
 At present, the Steady non-symmetric solvers cannot be used in parallel. \\
 
-\subsection{Solver Info}
+\subsection{Time Integration Scheme}
 
-The solver info are listed below:
 \begin{itemize}
-\item \textbf{Eqtype}: This sets the type of equation to solve, according to the table above.
-\item \textbf{TimeIntegrationMethod}: The following types of time integration methods have been tested with each solver:
+\item \textbf{TimeIntegrationScheme}: The following types of time integration schemes have been tested with each solver:
 \begin{center}
 \footnotesize
 \renewcommand\arraystretch{1.2}
@@ -90,6 +88,13 @@ The solver info are listed below:
 \bottomrule
 \end{tabular}
 \end{center}
+\end{itemize}
+
+\subsection{Solver Info}
+
+The solver info are listed below:
+\begin{itemize}
+\item \textbf{Eqtype}: This sets the type of equation to solve, according to the table above.
 
 \item \textbf{Projection}: The Galerkin projection used may be either:
 \begin{itemize}
@@ -184,12 +189,16 @@ Since we are solving the unsteady advection problem, we must specify this in the
 solver information. We also choose to use a discontinuous flux-reconstruction
 projection and use a Runge-Kutta order 4 time-integration scheme.
 \begin{lstlisting}[style=XMLStyle]
+<TIMEINTEGRATIONSCHEME>
+  <METHOD> RungeKutta </METHOD>
+  <ORDER> 4 </ORDER>
+</TIMEINTEGRATIONSCHEME>
+
 <SOLVERINFO>
     <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvection"    />
     <I PROPERTY="Projection"            VALUE="DisContinuous"        />
     <I PROPERTY="AdvectionType"         VALUE="FRDG"                 />
     <I PROPERTY="UpwindType"            VALUE="Upwind"               />
-    <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
 </SOLVERINFO>
 \end{lstlisting}
 
@@ -470,12 +479,16 @@ We choose to use a continuous projection and an first-order implicit-explicit
 time-integration scheme. The \inltt{DiffusionAdvancement} and
 \inltt{AdvectionAdvancement} parameters specify how these terms are treated.
 \begin{lstlisting}[style=XMLStyle]
+<TIMEINTEGRATIONSCHEME>
+  <METHOD> IMEX </METHOD>
+  <ORDER> 1 </ORDER>
+</TIMEINTEGRATIONSCHEME>
+
 <SOLVERINFO>
     <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvectionDiffusion" />
     <I PROPERTY="Projection"            VALUE="Continuous"                 />
     <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit"                   />
     <I PROPERTY="AdvectionAdvancement"  VALUE="Explicit"                   />
-    <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1"                 />
     <I PROPERTY="GlobalSysSoln"         VALUE="IterativeStaticCond"        />
 </SOLVERINFO>
 \end{lstlisting}
@@ -582,13 +595,17 @@ which is mostly defined inside the \inltt{SOLVERINFO} block:
   \inltt{IMEXOrder3};
 \end{itemize}
 
-This naturally leads to the following \inltt{SOLVERINFO} configuration:
+This naturally leads to the following \inltt{TIMEINTEGRATIONSCHEME} and \inltt{SOLVERINFO} configuration:
 \begin{lstlisting}[style=XMLStyle]
+<TIMEINTEGRATIONSCHEME>
+    <METHOD> IMEX </METHOD>
+    <ORDER> 3 </ORDER>
+</TIMEINTEGRATIONSCHEME>
+
 <SOLVERINFO>
     <I PROPERTY="EQTYPE"                VALUE="UnsteadyReactionDiffusion" />
     <I PROPERTY="Projection"            VALUE="Continuous"                />
     <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit"                  />
-    <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder3"                />
 </SOLVERINFO>
 \end{lstlisting}
 Further to this, the reaction term $R(u)$ is imposed by the definition of a body

@@ -1,1 +1,1 @@
-SUBDIRS(LibUtilities StdRegions MultiRegions NekMesh)
+SUBDIRS(LibUtilities StdRegions MultiRegions NekMesh FieldUtils)

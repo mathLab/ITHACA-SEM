@@ -310,14 +310,14 @@ const std::shared_ptr<VecVec_t> CoalescedGeomData::GetDerivFactorsInterLeave(
 
         VecVec_t newdf; 
 
+        int nq = 1;
+        for (int i = 0; i < dim; ++i)
+        {
+            nq  *= ptsKeys[i].GetNumPoints();
+        }
+            
         if(IsDeformed(pCollExp))
         {
-            int nq = 1;
-            for (int i = 0; i < dim; ++i)
-            {
-                nq  *= ptsKeys[i].GetNumPoints();
-            }
-            
             newdf.resize(nBlocks * n_df *nq);
             auto *df_ptr = &newdf[0];
             for (int e = 0; e < nBlocks; ++e)
@@ -353,9 +353,9 @@ const std::shared_ptr<VecVec_t> CoalescedGeomData::GetDerivFactorsInterLeave(
                     for (int j = 0; j < vec_t::width; ++j)
                     {
                         // padding
-                        if(vec_t::width*e + j < dfsize)
+                        if((vec_t::width*e + j)*nq < dfsize)
                         {
-                            vec[j] = df[dir][vec_t::width*e + j];
+                            vec[j] = df[dir][(vec_t::width*e + j)*nq];
                         }
                         else
                         {

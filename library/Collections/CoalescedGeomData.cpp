@@ -97,6 +97,91 @@ const Array<OneD, const NekDouble> &CoalescedGeomData::GetJac(
     return m_oneDGeomData[eJac];
 }
 
+const std::shared_ptr<VecVec_t> CoalescedGeomData::GetJacInterLeave(
+                         vector<StdRegions::StdExpansionSharedPtr> &pCollExp,
+                         int nElmt)
+{
+
+    if(m_oneDGeomDataInterLeave.count(eJac) == 0)
+    {
+        const Array<OneD, const NekDouble> jac = GetJac(pCollExp);
+        int jacsize = jac.size();
+
+        ASSERTL1(nElmt % vec_t::width == 0,
+                 "Number of elements not divisible by vector "
+                 "width, padding not yet implemented.");
+        int  nBlocks = nElmt / vec_t::width;
+        
+        VecVec_t newjac; 
+
+        if(IsDeformed(pCollExp))
+        {
+            LibUtilities::PointsKeyVector ptsKeys = pCollExp[0]->GetPointsKeys();
+            
+            // set up Cached Jacobians to be continuous
+            int nq = 1;
+            for (int i = 0; i < ptsKeys.size(); ++i)
+            {
+                nq  *= ptsKeys[i].GetNumPoints();
+            }
+
+            newjac.resize(nBlocks*nq);
+
+            alignas(vec_t::alignment) NekDouble tmp[vec_t::width];
+
+            for (size_t block = 0; block < nBlocks; ++block)
+            {
+                size_t nblock_width = block*nq*vec_t::width;
+                for(size_t q = 0; q < nq; q++)
+                {
+                    for (int j = 0; j < vec_t::width; ++j)
+                    {
+                        if(nblock_width+ nq*j + q < jacsize)
+                        {
+                            tmp[j] = jac[nblock_width + nq*j + q];
+                        }
+                        else
+                        {
+                            tmp[j] = 0.0; 
+                        }
+                    }
+
+                    //Order is [block][quadpt]
+                    newjac[block*nq + q].load(&tmp[0]);
+                }
+            }
+        }
+        else
+        {
+            newjac.resize(nBlocks);
+
+            alignas(vec_t::alignment) NekDouble tmp[vec_t::width];
+            for (size_t i = 0; i < nBlocks; ++i)
+            {
+                for (int j = 0; j < vec_t::width; ++j)
+                {
+                    if(vec_t::width*i+j < jacsize)
+                    {
+                        tmp[j] = jac[vec_t::width*i+j];
+                    }
+                    else
+                    {
+                        tmp[j] = 0.0;
+                    }
+                }
+
+                newjac[i].load(&tmp[0]);
+            }
+        }
+
+        m_oneDGeomDataInterLeave[eJac] =
+            MemoryManager<VecVec_t>::AllocateSharedPtr(newjac);
+    }
+
+    return m_oneDGeomDataInterLeave[eJac];
+}
+
+    
 
 
 const Array<OneD, const NekDouble> &CoalescedGeomData::GetJacWithStdWeights(
@@ -199,6 +284,97 @@ const Array<TwoD, const NekDouble> &CoalescedGeomData::GetDerivFactors(
 
     return m_twoDGeomData[eDerivFactors];
 }
+
+const std::shared_ptr<VecVec_t> CoalescedGeomData::GetDerivFactorsInterLeave(
+                         vector<StdRegions::StdExpansionSharedPtr> &pCollExp,
+                         int nElmt)
+{
+    if(m_twoDGeomDataInterLeave.count(eDerivFactors) == 0)
+    {
+        ASSERTL1(nElmt % vec_t::width == 0,
+                 "Number of elements not divisible by vector "
+                 "width, padding not yet implemented.");
+
+        int  nBlocks = nElmt / vec_t::width;
+        
+        LibUtilities::PointsKeyVector ptsKeys = pCollExp[0]->GetPointsKeys();
+        const int coordim = pCollExp[0]->GetCoordim();
+        int dim = ptsKeys.size();
+
+
+        unsigned int n_df = coordim*dim;
+        alignas(vec_t::alignment) NekDouble vec[vec_t::width];
+
+        const Array<TwoD, const NekDouble> df = GetDerivFactors(pCollExp);
+        int dfsize = df.GetColumns();
+
+        VecVec_t newdf; 
+
+        if(IsDeformed(pCollExp))
+        {
+            int nq = 1;
+            for (int i = 0; i < dim; ++i)
+            {
+                nq  *= ptsKeys[i].GetNumPoints();
+            }
+            
+            newdf.resize(nBlocks * n_df *nq);
+            auto *df_ptr = &newdf[0];
+            for (int e = 0; e < nBlocks; ++e)
+            {
+                for (int q = 0; q < nq; q++)
+                {
+                    for (int dir = 0; dir < n_df; ++dir, ++df_ptr)
+                    {
+                        for (int j = 0; j < vec_t::width; ++j)
+                        {
+                            // manage padding 
+                            if((vec_t::width*e + j)*nq + q < dfsize)
+                            {
+                                vec[j] = df[dir][(vec_t::width*e + j)*nq + q];
+                            }
+                            else
+                            {
+                                vec[j] = 0.0;
+                            }
+                        }
+                        (*df_ptr).load(&vec[0]);
+                    }
+                }
+            }
+        }
+        else
+        {
+            newdf.resize(nBlocks * n_df);
+            for (int e = 0; e < nBlocks; ++e)
+            {
+                for (int dir = 0; dir < n_df; ++dir)
+                {
+                    for (int j = 0; j < vec_t::width; ++j)
+                    {
+                        // padding
+                        if(vec_t::width*e + j < dfsize)
+                        {
+                            vec[j] = df[dir][vec_t::width*e + j];
+                        }
+                        else
+                        {
+                            vec[j] = 0.0;
+                        }
+                    }
+                    // Must have all vec_t::width elemnts aligned to do a load.
+                    newdf[e*n_df + dir].load(&vec[0]);
+                }
+            }
+        }
+        
+        m_twoDGeomDataInterLeave[eDerivFactors] =
+            MemoryManager<VecVec_t>::AllocateSharedPtr(newdf);
+    }
+    
+    return m_twoDGeomDataInterLeave[eDerivFactors];
+}
+
 
 bool CoalescedGeomData::IsDeformed(
     vector<StdRegions::StdExpansionSharedPtr> &pCollExp)

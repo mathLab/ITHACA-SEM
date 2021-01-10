@@ -163,7 +163,7 @@ struct PhysDerivQuad : public PhysDeriv, public Helper<2, DEFORMED>
         const vec_t* df_ptr;
         for (int e = 0; e < this->m_nBlocks; ++e)
         {
-            df_ptr = &(this->m_df[e*dfSize]);
+            df_ptr = &((*this->m_df)[dfSize*e]);
 
             // Load and transpose data
             load_interleave(inptr, nqTot, tmpIn);
@@ -347,7 +347,7 @@ struct PhysDerivTri : public PhysDeriv, public Helper<2,DEFORMED>
         const vec_t* df_ptr;
         for (int e = 0; e < this->m_nBlocks; ++e)
         {
-            df_ptr = &(this->m_df[e*dfSize]);
+            df_ptr = &((*this->m_df)[dfSize*e]);
 
             // Load and transpose data
             load_interleave(inptr, nqTot, tmpIn);
@@ -544,8 +544,7 @@ struct PhysDerivHex : public PhysDeriv, public Helper<3,DEFORMED>
         const vec_t *df_ptr;
         for (int e = 0; e < this->m_nBlocks; ++e)
         {
-
-            df_ptr = &(this->m_df[e*dfSize]);
+            df_ptr = &((*this->m_df)[dfSize*e]);
 
             // Load and transpose data
             load_interleave(inptr, nqTot, tmpIn);
@@ -741,8 +740,7 @@ struct PhysDerivPrism : public PhysDeriv, public Helper<3, DEFORMED>
         const vec_t* df_ptr;
         for (int e = 0; e < this->m_nBlocks; ++e)
         {
-
-            df_ptr = &(this->m_df[e*dfSize]);
+            df_ptr = &((*this->m_df)[dfSize*e]);
 
             // Load and transpose data
             load_interleave(inptr, nqTot, tmpIn);
@@ -953,7 +951,7 @@ struct PhysDerivTet : public PhysDeriv, public Helper<3, DEFORMED>
 
         for (int e = 0; e < this->m_nBlocks; ++e)
         {
-            df_ptr = &(this->m_df[e*dfSize]);
+            df_ptr = &((*this->m_df)[dfSize*e]);
 
             // Load and transpose data
             load_interleave(inptr, nqTot, tmpIn);

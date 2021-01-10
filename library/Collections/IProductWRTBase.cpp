@@ -208,24 +208,8 @@ class IProductWRTBase_MatrixFree : public Operator, MatrixFreeOneInOneOut
                                     pCollExp[0]->GetStdExp()->GetNcoeffs(),
                                     pCollExp.size())
         {
-            const auto nqElmt = pCollExp[0]->GetStdExp()->GetTotPoints();
-            const auto nElmtNoPad = pCollExp.size();
-            
             // Check if deformed
             bool deformed{pGeomData->IsDeformed(pCollExp)};
-
-            // Size of jacobian
-            auto jacSizeNoPad = nElmtNoPad;
-            auto jacSizePad = m_nElmtPad;
-            if (deformed)
-            {
-                jacSizeNoPad = nElmtNoPad * nqElmt;
-                jacSizePad = m_nElmtPad * nqElmt;
-            }
-
-            // Get Jacobian
-            Array<OneD, NekDouble> jac{jacSizePad, 0.0};
-            Vmath::Vcopy(jacSizeNoPad, pGeomData->GetJac(pCollExp), 1, jac, 1);
 
             // Basis vector
             const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
@@ -245,7 +229,7 @@ class IProductWRTBase_MatrixFree : public Operator, MatrixFreeOneInOneOut
                 CreateInstance(op_string, basis, m_nElmtPad);
 
             // Set Jacobian
-            oper->SetJac(jac);
+            oper->SetJac(pGeomData->GetJacInterLeave(pCollExp,m_nElmtPad));
 
             m_oper = std::dynamic_pointer_cast<MatrixFree::IProduct>(oper);
             ASSERTL0(m_oper, "Failed to cast pointer.");

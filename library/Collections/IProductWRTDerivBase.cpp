@@ -303,51 +303,10 @@ class IProductWRTDerivBase_MatrixFree : public Operator, MatrixFreeMultiInOneOut
                                       pCollExp[0]->GetStdExp()->GetNcoeffs(),
                                       pCollExp.size())
         {
-            m_coordim  = pCollExp[0]->GetCoordim();
-
-            const auto nqElmt = pCollExp[0]->GetStdExp()->GetTotPoints();
-            const auto nElmtNoPad = pCollExp.size();
-
             // Check if deformed
             bool deformed{pGeomData->IsDeformed(pCollExp)};
-
-            // Size of jacobian
-            auto jacSizeNoPad = nElmtNoPad;
-            auto jacSizePad = m_nElmtPad;
-            if (deformed)
-            {
-                jacSizeNoPad = nElmtNoPad * nqElmt;
-                jacSizePad = m_nElmtPad * nqElmt;
-            }
-
-            // Get Jacobian
-            Array<OneD, NekDouble> jac{jacSizePad, 0.0};
-            Vmath::Vcopy(jacSizeNoPad, pGeomData->GetJac(pCollExp), 1, jac, 1);
-
-            // Get derivative factors
             const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
-            Array<TwoD, NekDouble> df(dim * dim, jacSizePad, 0.0);
-            if (deformed)
-            {
-                for (unsigned int j = 0; j < dim * dim; ++j)
-                {
-                    Vmath::Vcopy(jacSizeNoPad,
-                        &(pGeomData->GetDerivFactors(pCollExp))[j][0], 1,
-                        &df[j][0], 1);
-                }
-            }
-            else
-            {
-                for (unsigned int e = 0; e < nElmtNoPad; ++e)
-                {
-                    for (unsigned int j = 0; j < dim * dim; ++j)
-                    {
-                        df[j][e] =
-                            (pGeomData->GetDerivFactors(pCollExp))[j][e*nqElmt];
-                    }
-                }
-            }
-
+            
             // Basis vector
             std::vector<LibUtilities::BasisSharedPtr> basis(dim);
             for (unsigned int i = 0; i < dim; ++i)
@@ -365,10 +324,11 @@ class IProductWRTDerivBase_MatrixFree : public Operator, MatrixFreeMultiInOneOut
                 CreateInstance(op_string, basis, m_nElmtPad);
 
             // Set Jacobian
-            oper->SetJac(jac);
+            oper->SetJac(pGeomData->GetJacInterLeave(pCollExp,m_nElmtPad));
 
             // Set derivative factors
-            oper->SetDF(df);
+            oper->SetDF(pGeomData->GetDerivFactorsInterLeave
+                        (pCollExp,m_nElmtPad));
 
             m_oper = std::dynamic_pointer_cast<MatrixFree::
                                                IProductWRTDerivBase>(oper);

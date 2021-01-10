@@ -217,10 +217,10 @@ public:
         for (int e = 0; e < this->m_nBlocks; ++e)
         {
             // Jacobian
-            jac_ptr = &(this->m_jac[dJSize*e]);
+            jac_ptr = &((*this->m_jac)[dJSize*e]);
 
             // Derivative factor
-            df_ptr = &(this->m_df[e*dfSize]);
+            df_ptr = &((*this->m_df)[dfSize*e]);
 
             // Load and transpose data
             load_interleave(inptr0, nqTot, tmpIn0);
@@ -512,10 +512,10 @@ struct IProductWRTDerivBaseTri : public IProductWRTDerivBase, public Helper<2, D
         for (int e =0; e < this->m_nBlocks; ++e)
         {
             // Jacobian
-            jac_ptr = &(this->m_jac[dJSize*e]);
+            jac_ptr = &((*this->m_jac)[dJSize*e]);
 
             // Derivative factor
-            df_ptr = &(this->m_df[dfSize*e]);
+            df_ptr = &((*this->m_df)[dfSize*e]);
 
             // Load and transpose data
             load_interleave(inptr0, nqTot, tmpIn0);
@@ -797,10 +797,10 @@ public:
         for (int e = 0; e < this->m_nBlocks; ++e)
         {
             // Jacobian
-            jac_ptr = &(this->m_jac[dJSize*e]);
+            jac_ptr = &((*this->m_jac)[dJSize*e]);
 
             // Derivative factor
-            df_ptr = &(this->m_df[e*dfSize]);
+            df_ptr = &((*this->m_df)[dfSize*e]);
 
             // Load and transpose data
             load_interleave(inptr0, nqTot, tmpIn0);
@@ -1201,10 +1201,10 @@ struct IProductWRTDerivBasePrism : public IProductWRTDerivBase, public Helper<3,
         for (int e =0; e < this->m_nBlocks; ++e)
         {
             // Jacobian
-            jac_ptr = &(this->m_jac[dJSize*e]);
+            jac_ptr = &((*this->m_jac)[dJSize*e]);
 
             // Derivative factor
-            df_ptr = &(this->m_df[dfSize*e]);
+            df_ptr = &((*this->m_df)[dfSize*e]);
 
             // Load and transpose data
             load_interleave(inptr0, nqTot, tmpIn0);
@@ -1629,10 +1629,10 @@ struct IProductWRTDerivBaseTet : public IProductWRTDerivBase, public Helper<3, D
         for (int e =0; e < this->m_nBlocks; ++e)
         {
             // Jacobian
-            jac_ptr = &(this->m_jac[dJSize*e]);
+            jac_ptr = &((*this->m_jac)[dJSize*e]);
 
             // Derivative factor
-            df_ptr = &(this->m_df[dfSize*e]);
+            df_ptr = &((*this->m_df)[dfSize*e]);
 
             // Load and transpose data
             load_interleave(inptr0, nqTot, tmpIn0);

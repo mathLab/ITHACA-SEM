@@ -43,6 +43,10 @@
 namespace Nektar {
 namespace Collections {
 
+using namespace tinysimd;
+using vec_t = simd<NekDouble>;
+typedef std::vector<vec_t,tinysimd::allocator<vec_t>> VecVec_t;
+
 enum GeomData
 {
     eJac,
@@ -60,11 +64,19 @@ class CoalescedGeomData
         const Array<OneD, const NekDouble> &GetJac(
                 std::vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
 
+        const std::shared_ptr<VecVec_t> GetJacInterLeave(
+                std::vector<StdRegions::StdExpansionSharedPtr> &pCollExp,
+                int nElmts);
+
         const Array<OneD, const NekDouble> &GetJacWithStdWeights(
                 std::vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
 
         const Array<TwoD, const NekDouble> &GetDerivFactors(
                 std::vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
+
+        const std::shared_ptr<VecVec_t>   GetDerivFactorsInterLeave(
+                std::vector<StdRegions::StdExpansionSharedPtr> &pCollExp,
+                int nElmts);
 
         bool IsDeformed(
                 std::vector<StdRegions::StdExpansionSharedPtr> &pCollExp);
@@ -72,6 +84,8 @@ class CoalescedGeomData
     private:
         std::map<GeomData,Array<OneD, NekDouble> > m_oneDGeomData;
         std::map<GeomData,Array<TwoD, NekDouble> > m_twoDGeomData;
+        std::map<GeomData,std::shared_ptr<VecVec_t>> m_oneDGeomDataInterLeave;
+        std::map<GeomData,std::shared_ptr<VecVec_t>> m_twoDGeomDataInterLeave;
         bool m_deformed;
         bool m_isDeformedSet{false};
 };

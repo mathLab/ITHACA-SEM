@@ -151,11 +151,11 @@ struct IProductQuad : public IProduct, public Helper<2, DEFORMED>
         {
             if (DEFORMED)
             {
-                jac_ptr = &(this->m_jac[nqTot*e]);
+                jac_ptr = &((*this->m_jac)[nqTot*e]);
             }
             else
             {
-                jac_ptr = &(this->m_jac[e]);
+                jac_ptr = &((*this->m_jac)[e]);
             }
 
             // Load and transpose data
@@ -451,11 +451,11 @@ struct IProductTri : public IProduct, public Helper<2, DEFORMED>
 
             if (DEFORMED)
             {
-                jac_ptr = &(this->m_jac[nqTot*e]);
+                jac_ptr = &((*this->m_jac)[nqTot*e]);
             }
             else
             {
-                jac_ptr = &(this->m_jac[e]);
+                jac_ptr = &((*this->m_jac)[e]);
             }
 
             // Load and transpose data
@@ -686,11 +686,13 @@ struct IProductHex : public IProduct, public Helper<3, DEFORMED>
         vec_t* jac_ptr;
         for (int e = 0; e < this->m_nBlocks; ++e)
         {
-            if(DEFORMED){
-                jac_ptr = &(this->m_jac[nqTot*e]);
+            if (DEFORMED)
+            {
+                jac_ptr = &((*this->m_jac)[nqTot*e]);
             }
-            else{
-                jac_ptr = &(this->m_jac[e]);
+            else
+            {
+                jac_ptr = &((*this->m_jac)[e]);
             }
 
             // Load and transpose data
@@ -1076,11 +1078,11 @@ struct IProductPrism : public IProduct, public Helper<3, DEFORMED>
         {
             if (DEFORMED)
             {
-                jac_ptr = &(this->m_jac[nqTot*e]);
+                jac_ptr = &((*this->m_jac)[nqTot*e]);
             }
             else
             {
-                jac_ptr = &(this->m_jac[e]);
+                jac_ptr = &((*this->m_jac)[e]);
             }
 
             // Load and transpose data
@@ -1478,11 +1480,11 @@ struct IProductTet : public IProduct, public Helper<3, DEFORMED>
         {
             if (DEFORMED)
             {
-                jac_ptr = &(this->m_jac[nqTot*e]);
+                jac_ptr = &((*this->m_jac)[nqTot*e]);
             }
             else
             {
-                jac_ptr = &(this->m_jac[e]);
+                jac_ptr = &((*this->m_jac)[e]);
             }
 
             // Load and transpose data

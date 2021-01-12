@@ -114,16 +114,17 @@ const std::shared_ptr<VecVec_t> CoalescedGeomData::GetJacInterLeave(
         
         VecVec_t newjac; 
 
+        LibUtilities::PointsKeyVector ptsKeys = pCollExp[0]->GetPointsKeys();
+            
+        // set up Cached Jacobians to be continuous
+        int nq = 1;
+        for (int i = 0; i < ptsKeys.size(); ++i)
+        {
+            nq  *= ptsKeys[i].GetNumPoints();
+        }
+        
         if(IsDeformed(pCollExp))
         {
-            LibUtilities::PointsKeyVector ptsKeys = pCollExp[0]->GetPointsKeys();
-            
-            // set up Cached Jacobians to be continuous
-            int nq = 1;
-            for (int i = 0; i < ptsKeys.size(); ++i)
-            {
-                nq  *= ptsKeys[i].GetNumPoints();
-            }
 
             newjac.resize(nBlocks*nq);
 
@@ -160,9 +161,9 @@ const std::shared_ptr<VecVec_t> CoalescedGeomData::GetJacInterLeave(
             {
                 for (int j = 0; j < vec_t::width; ++j)
                 {
-                    if(vec_t::width*i+j < jacsize)
+                    if((vec_t::width*i+j)*nq < jacsize)
                     {
-                        tmp[j] = jac[vec_t::width*i+j];
+                        tmp[j] = jac[(vec_t::width*i+j)*nq];
                     }
                     else
                     {

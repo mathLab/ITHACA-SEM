@@ -63,7 +63,7 @@
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="8" FIELDS="u" TYPE="MODIFIED" />
     </EXPANSIONS>
     
     <CONDITIONS>
@@ -114,5 +114,17 @@
         </FUNCTION>
         
     </CONDITIONS>
+
+    <COLLECTIONS>
+      <OPERATOR TYPE="PhysDeriv">
+        <ELEMENT TYPE="Q" ORDER="2-12" IMPTYPE="MatrixFree" />
+      </OPERATOR>
+      <OPERATOR TYPE="IProductWRTBase">
+        <ELEMENT TYPE="Q" ORDER="2-12" IMPTYPE="MatrixFree" />
+      </OPERATOR>
+      <OPERATOR TYPE="IProductWRTDerivBase">
+        <ELEMENT TYPE="Q" ORDER="2-12" IMPTYPE="MatrixFree" />
+      </OPERATOR>
+    </COLLECTIONS>
     
 </NEKTAR>

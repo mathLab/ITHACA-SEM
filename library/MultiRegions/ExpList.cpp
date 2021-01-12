@@ -4947,8 +4947,8 @@ namespace Nektar
                 Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(exp);
                 vector<StdRegions::StdExpansionSharedPtr> collExp;
 
-                int prevCoeffOffset     = m_coeff_offset[it.second[0].second];
-                int prevPhysOffset      = m_phys_offset [it.second[0].second];
+                int prevCoeffOffset = m_coeff_offset[it.second[0].second];
+                int prevPhysOffset  = m_phys_offset [it.second[0].second];
                 int collcnt;
 
                 m_coll_coeff_offset.push_back(prevCoeffOffset);
@@ -4975,12 +4975,16 @@ namespace Nektar
                     collExp.push_back(it.second[0].first);
                     int prevnCoeff = it.second[0].first->GetNcoeffs();
                     int prevnPhys  = it.second[0].first->GetTotPoints();
+                    bool prevDeformed = it.second[0].first->GetMetricInfo()->GetGtype()
+                        == SpatialDomains::eDeformed; 
                     collcnt = 1;
 
                     for (int i = 1; i < it.second.size(); ++i)
                     {
                         int nCoeffs     = it.second[i].first->GetNcoeffs();
                         int nPhys       = it.second[i].first->GetTotPoints();
+                        bool Deformed   = it.second[i].first->GetMetricInfo()->GetGtype()
+                            == SpatialDomains::eDeformed; 
                         int coeffOffset = m_coeff_offset[it.second[i].second];
                         int physOffset  = m_phys_offset [it.second[i].second];
 
@@ -4990,6 +4994,7 @@ namespace Nektar
                         if(prevCoeffOffset + nCoeffs != coeffOffset ||
                            prevnCoeff != nCoeffs ||
                            prevPhysOffset + nPhys != physOffset ||
+                           prevDeformed != Deformed || 
                            prevnPhys != nPhys || collcnt >= collmax)
                         {
 
@@ -5041,6 +5046,7 @@ namespace Nektar
 
                         prevCoeffOffset = coeffOffset;
                         prevPhysOffset  = physOffset;
+                        prevDeformed    = Deformed; 
                         prevnCoeff      = nCoeffs;
                         prevnPhys       = nPhys;
                     }

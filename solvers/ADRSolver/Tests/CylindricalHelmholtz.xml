@@ -88,4 +88,10 @@
 
     </CONDITIONS>
 
+    <COLLECTIONS>
+        <OPERATOR TYPE="IProductWRTBase">
+            <ELEMENT TYPE="T" ORDER="2-8" IMPTYPE="MatrixFree" />
+        </OPERATOR>
+    </COLLECTIONS>
+
   </NEKTAR>

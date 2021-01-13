@@ -79,7 +79,6 @@ class IProductWRTBase_StdMat : public Operator
             ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
 
-#ifdef REGULARAWARE
             if(m_isDeformed)
             {
                 Vmath::Vmul(m_jac.size(),m_jac,1,input,1,wsp,1);
@@ -92,9 +91,6 @@ class IProductWRTBase_StdMat : public Operator
                     Vmath::Smul(m_nqe,m_jac[e],input+e*m_nqe,1,tmp = wsp+e*m_nqe,1);
                 }
             }
-#else
-            Vmath::Vmul(m_jac.size(),m_jac,1,input,1,wsp,1);
-#endif
             
             Blas::Dgemm('N', 'N', m_mat->GetRows(), m_numElmt,
                         m_mat->GetColumns(), 1.0, m_mat->GetRawPtr(),

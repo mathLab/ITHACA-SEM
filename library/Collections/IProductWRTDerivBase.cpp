@@ -95,7 +95,6 @@ class IProductWRTDerivBase_StdMat : public Operator
             // calculate Iproduct WRT Std Deriv
 
             // First component
-#ifdef REGULARAWARE
             if(m_isDeformed)
             {
                 // calculate dx/dxi in[0] + dy/dxi in[1] + dz/dxi in[2]
@@ -135,21 +134,6 @@ class IProductWRTDerivBase_StdMat : public Operator
                     Vmath::Smul(m_nqe,m_jac[e],tmp[0]+e*m_nqe,1,t=tmp[0]+e*m_nqe,1);
                 }
             }
-#else
-            // calculate dx/dxi in[0] + dy/dxi in[1] + dz/dxi in[2]
-            for(int i = 0; i < m_dim; ++i)
-            {
-                Vmath::Vmul (ntot,m_derivFac[i],1, in[0],1,
-                             tmp[i],1);
-                for(int j = 1; j < m_coordim; ++j)
-                {
-                    Vmath::Vvtvp (ntot,m_derivFac[i +j*m_dim],1,
-                                  in[j],1, tmp[i], 1, tmp[i],1);
-                }
-            }
-
-            Vmath::Vmul(ntot,m_jac,1,tmp[0],1,tmp[0],1);
-#endif
 
             Blas::Dgemm('N', 'N', m_iProdWRTStdDBase[0]->GetRows(),
                         m_numElmt,m_iProdWRTStdDBase[0]->GetColumns(),
@@ -161,7 +145,6 @@ class IProductWRTDerivBase_StdMat : public Operator
             // Other components
             for(int i = 1; i < m_dim; ++i)
             {
-#ifdef REGULARAWARE
                 if(m_isDeformed)
                 {
                     Vmath::Vmul(ntot,m_jac,1,tmp[i],1,tmp[i],1);
@@ -175,9 +158,6 @@ class IProductWRTDerivBase_StdMat : public Operator
                                     t=tmp[i]+e*m_nqe,1);
                     }
                 }
-#else
-                Vmath::Vmul(ntot,m_jac,1,tmp[i],1,tmp[i],1);
-#endif
                 Blas::Dgemm('N', 'N', m_iProdWRTStdDBase[i]->GetRows(),
                             m_numElmt,m_iProdWRTStdDBase[i]->GetColumns(),
                             1.0, m_iProdWRTStdDBase[i]->GetRawPtr(),
@@ -454,7 +434,6 @@ class IProductWRTDerivBase_IterPerExp : public Operator
 
             // calculate Iproduct WRT Std Deriv
             // first component
-#ifdef REGULARAWARE
             if(m_isDeformed)
             {
                 // calculate dx/dxi in[0] + dy/dxi in[2] + dz/dxi in[3]
@@ -494,21 +473,7 @@ class IProductWRTDerivBase_IterPerExp : public Operator
                     Vmath::Smul(m_nqe,m_jac[e],tmp[0]+e*m_nqe,1,t=tmp[0]+e*m_nqe,1);
                 }
             }
-#else
-            // calculate dx/dxi in[0] + dy/dxi in[2] + dz/dxi in[3]
-            for(int i = 0; i < m_dim; ++i)
-            {
-                Vmath::Vmul (ntot,m_derivFac[i],1, in[0],1,
-                             tmp[i],1);
-                for(int j = 1; j < m_coordim; ++j)
-                {
-                    Vmath::Vvtvp (ntot,m_derivFac[i +j*m_dim],1,
-                                  in[j],1, tmp[i], 1, tmp[i],1);
-                }
-            }
 
-            Vmath::Vmul(ntot,m_jac,1,tmp[0],1,tmp[0],1);
-#endif
             for(int n = 0; n < m_numElmt; ++n)
             {
                 m_stdExp->IProductWRTDerivBase(0,tmp[0]+n*nPhys,
@@ -519,7 +484,6 @@ class IProductWRTDerivBase_IterPerExp : public Operator
             for(int i = 1; i < m_dim; ++i)
             {
                 // multiply by Jacobian
-#ifdef REGULARAWARE
                 if(m_isDeformed)
                 {
                     Vmath::Vmul(ntot,m_jac,1,tmp[i],1,tmp[i],1);
@@ -533,9 +497,7 @@ class IProductWRTDerivBase_IterPerExp : public Operator
                                     t=tmp[i]+e*m_nqe,1);
                     }
                 }
-#else
-                Vmath::Vmul(ntot,m_jac,1,tmp[i],1,tmp[i],1);
-#endif
+
                 for(int n = 0; n < m_numElmt; ++n)
                 {
                     m_stdExp->IProductWRTDerivBase(i,tmp[i]+n*nPhys,tmp[0]);
@@ -772,7 +734,6 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
 
             Vmath::Vmul(m_numElmt*m_nquad0, m_jacWStdW, 1, input, 1, wsp, 1);
 
-#ifdef REGULARAWARE
             if(m_isDeformed)
             {
                 Vmath::Vmul(m_numElmt*m_nquad0, &m_derivFac[0][0], 1,
@@ -789,11 +750,7 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
                                 &wsp[0] + e*m_nquad0,   1);
                 }
             }
-#else
-            Vmath::Vmul(m_numElmt*m_nquad0, &m_derivFac[0][0], 1,
-                        &wsp[0],           1,
-                        &wsp[0],           1);
-#endif
+
             // out = B0*in;
             Blas::Dgemm('T', 'N', m_nmodes0, m_numElmt, m_nquad0,
                         1.0, m_derbase0.get(), m_nquad0,
@@ -875,7 +832,6 @@ class IProductWRTDerivBase_SumFac_Quad : public Operator
             tmp[0] = wsp; tmp[1] = wsp + nmax;
             wsp1   = wsp + 2*nmax;
 
-#ifdef REGULARAWARE
             if(m_isDeformed)
             {
                 // calculate dx/dxi in[0] + dy/dxi in[1]
@@ -904,14 +860,7 @@ class IProductWRTDerivBase_SumFac_Quad : public Operator
                     }
                 }                
             }
-#else
-            // calculate dx/dxi in[0] + dy/dxi in[1]
-            for(int i = 0; i < 2; ++i)
-            {
-                Vmath::Vmul(ntot, m_derivFac[i], 1, in[0], 1, tmp[i], 1);
-                Vmath::Vvtvp(ntot, m_derivFac[i + 2], 1, in[1], 1, tmp[i], 1, tmp[i], 1);
-            }
-#endif
+
             // Iproduct wrt derivative of base 0
             QuadIProduct(false, m_colldir1, m_numElmt,
                          m_nquad0,   m_nquad1,
@@ -1053,7 +1002,6 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
             tmp[0] = wsp; tmp[1] = wsp + nmax;
             wsp1   = wsp + 2*nmax;
 
-#ifdef REGULARAWARE
             if(m_isDeformed)
             {
                 // calculate dx/dxi in[0] + dy/dxi in[1]
@@ -1082,15 +1030,6 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
                     }
                 }                
             }
-#else
-            for (int i = 0; i < 2; ++i)
-            {
-                Vmath::Vmul(ntot, m_derivFac[i], 1, in[0], 1, tmp[i], 1);
-                Vmath::Vvtvp(ntot, m_derivFac[i+2], 1, in[1], 1, tmp[i], 1,
-                    tmp[i], 1);
-
-            }
-#endif
             
             // Multiply by factor: 2/(1-z1)
             for (int i = 0; i < m_numElmt; ++i)
@@ -1251,7 +1190,6 @@ class IProductWRTDerivBase_SumFac_Hex : public Operator
                 tmp[i] = wsp + i*nmax;
             }
 
-#ifdef REGULARAWARE
             if(m_isDeformed)
             {
                 // calculate dx/dxi in[0] + dy/dxi in[1] + dz/dxi in[2]
@@ -1287,19 +1225,7 @@ class IProductWRTDerivBase_SumFac_Hex : public Operator
                     }
                 }
             }
-#else
-            // calculate dx/dxi in[0] + dy/dxi in[1] + dz/dxi in[2]
-            for(int i = 0; i < 3; ++i)
-            {
-                Vmath::Vmul (ntot,m_derivFac[i],1, in[0],1,
-                             tmp[i],1);
-                for(int j = 1; j < 3; ++j)
-                {
-                    Vmath::Vvtvp (ntot,m_derivFac[i+3*j],1,
-                                  in[j],1, tmp[i], 1, tmp[i],1);
-                }
-            }
-#endif
+
             wsp1   = wsp + 3*nmax;
 
             // calculate Iproduct WRT Std Deriv
@@ -1477,7 +1403,6 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
                 tmp[i] = wsp + i*nmax;
             }
 
-#ifdef REGULARAWARE
             if(m_isDeformed)
             {
                 // calculate dx/dxi in[0] + dy/dxi in[1] + dz/dxi in[2]
@@ -1513,17 +1438,7 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
                     }
                 }
             }
-#else
-            for(int i = 0; i < 3; ++i)
-            {
-                Vmath::Vmul (ntot,m_derivFac[i],1, in[0],1,tmp[i],1);
-                for(int j = 1; j < 3; ++j)
-                {
-                    Vmath::Vvtvp (ntot,m_derivFac[i+3*j],1,
-                                  in[j],1, tmp[i], 1, tmp[i],1);
-                }
-            }
-#endif
+
             wsp1   = wsp + 3*nmax;
 
             // Sort into eta factors
@@ -1765,7 +1680,6 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
                 tmp[i] = wsp + i*nmax;
             }
 
-#ifdef REGULARAWARE
             if(m_isDeformed)
             {
                 // calculate dx/dxi in[0] + dy/dxi in[1] + dz/dxi in[2]
@@ -1801,18 +1715,7 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
                     }
                 }
             }
-#else
-            for(int i = 0; i < 3; ++i)
-            {
-                Vmath::Vmul (ntot,m_derivFac[i],1, in[0],1,
-                             tmp[i],1);
-                for(int j = 1; j < 3; ++j)
-                {
-                    Vmath::Vvtvp (ntot,m_derivFac[i+3*j],1,
-                                  in[j],1, tmp[i], 1, tmp[i],1);
-                }
-            }
-#endif
+
             wsp1   = wsp + 3*nmax;
 
             // Sort into eta factors
@@ -2040,7 +1943,6 @@ class IProductWRTDerivBase_SumFac_Pyr : public Operator
                 tmp[i] = wsp + i*nmax;
             }
 
-#ifdef REGULARAWARE
             if(m_isDeformed)
             {
                 // calculate dx/dxi in[0] + dy/dxi in[1] + dz/dxi in[2]
@@ -2076,17 +1978,7 @@ class IProductWRTDerivBase_SumFac_Pyr : public Operator
                     }
                 }
             }
-#else
-            for(int i = 0; i < 3; ++i)
-            {
-                Vmath::Vmul (ntot,m_derivFac[i],1, in[0],1, tmp[i],1);
-                for(int j = 1; j < 3; ++j)
-                {
-                    Vmath::Vvtvp (ntot,m_derivFac[i+3*j],1,
-                                  in[j],1, tmp[i], 1, tmp[i],1);
-                }
-            }
-#endif
+
             wsp1   = wsp + 3*nmax;
 
             // Sort into eta factors

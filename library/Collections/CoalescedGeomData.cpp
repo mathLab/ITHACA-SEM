@@ -67,7 +67,6 @@ const Array<OneD, const NekDouble> &CoalescedGeomData::GetJac(
             npts   *= ptsKeys[i].GetNumPoints();
         }
 
-#ifdef REGULARAWARE
         if(IsDeformed(pCollExp))
         {
             Array<OneD, NekDouble> newjac(npts*nElmts);
@@ -108,32 +107,6 @@ const Array<OneD, const NekDouble> &CoalescedGeomData::GetJac(
             }
             m_oneDGeomData[eJac] = newjac;
         }
-#else
-        Array<OneD, NekDouble> newjac(npts*nElmts);
-
-        //copy Jacobians into a continuous list and set new chatched value
-        int cnt = 0;
-        for(int i = 0; i < nElmts; ++i)
-        {
-            const StdRegions::StdExpansion * sep = &(*pCollExp[i]);
-            const LocalRegions::Expansion  * lep = dynamic_cast<const LocalRegions::Expansion*>( sep );
-
-            const Array<OneD, const NekDouble> jac = lep->GetMetricInfo()->GetJac( ptsKeys );
-
-            if( lep->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed )
-            {
-                Vmath::Vcopy(npts, &jac[0], 1, &newjac[cnt], 1);
-            }
-            else
-            {
-                Vmath::Fill(npts, jac[0], &newjac[cnt], 1);
-            }
-
-            cnt += npts;
-        }
-
-        m_oneDGeomData[eJac] = newjac;
-#endif
     }
 
     return m_oneDGeomData[eJac];
@@ -203,7 +176,6 @@ const std::shared_ptr<VecVec_t> CoalescedGeomData::GetJacInterLeave(
             {
                 for (int j = 0; j < vec_t::width; ++j)
                 {
-#ifdef REGULARAWARE
                     if(vec_t::width*i+j < jacsize)
                     {
                         tmp[j] = jac[vec_t::width*i+j];
@@ -212,16 +184,6 @@ const std::shared_ptr<VecVec_t> CoalescedGeomData::GetJacInterLeave(
                     {
                         tmp[j] = 0.0;
                     }
-#else                    
-                    if((vec_t::width*i+j)*nq < jacsize)
-                    {
-                        tmp[j] = jac[(vec_t::width*i+j)*nq];
-                    }
-                    else
-                    {
-                        tmp[j] = 0.0;
-                    }
-#endif
                 }
 
                 newjac[i].load(&tmp[0]);
@@ -318,7 +280,6 @@ const Array<TwoD, const NekDouble> &CoalescedGeomData::GetDerivFactors(
             const Array<TwoD, const NekDouble>
                 Dfac = lep->GetMetricInfo()->GetDerivFactors( ptsKeys );
 
-#ifdef REGULARAWARE
             if(IsDeformed(pCollExp))
             {
                 for (int j = 0; j < dim*coordim; ++j)
@@ -334,23 +295,6 @@ const Array<TwoD, const NekDouble> &CoalescedGeomData::GetDerivFactors(
                 }
             }
             cnt += npts;
-#else
-            if( lep->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed)
-            {
-                for (int j = 0; j < dim*coordim; ++j)
-                {
-                    Vmath::Vcopy(npts, &Dfac[j][0], 1, &newDFac[j][cnt], 1);
-                }
-            }
-            else
-            {
-                for (int j = 0; j < dim*coordim; ++j)
-                {
-                    Vmath::Fill(npts, Dfac[j][0], &newDFac[j][cnt], 1);
-                }
-            }
-            cnt += npts;
-#endif
         }
 
         m_twoDGeomData[eDerivFactors] = newDFac;
@@ -426,7 +370,6 @@ const std::shared_ptr<VecVec_t> CoalescedGeomData::GetDerivFactorsInterLeave(
                 {
                     for (int j = 0; j < vec_t::width; ++j)
                     {
-#ifdef REGULARAWARE
                         // padding
                         if(vec_t::width*e + j < dfsize)
                         {
@@ -436,17 +379,6 @@ const std::shared_ptr<VecVec_t> CoalescedGeomData::GetDerivFactorsInterLeave(
                         {
                             vec[j] = 0.0;
                         }
-#else
-                        // padding
-                        if((vec_t::width*e + j)*nq < dfsize)
-                        {
-                            vec[j] = df[dir][(vec_t::width*e + j)*nq];
-                        }
-                        else
-                        {
-                            vec[j] = 0.0;
-                        }
-#endif
                     }
                     // Must have all vec_t::width elemnts aligned to do a load.
                     newdf[e*n_df + dir].load(&vec[0]);

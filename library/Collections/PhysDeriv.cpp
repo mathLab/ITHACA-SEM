@@ -95,7 +95,6 @@ class PhysDeriv_StdMat : public Operator
                             0.0, &Diff[i][0],nPhys);
             }
 
-#ifdef REGULARAWARE
             // calculate full derivative
             if(m_isDeformed)
             {
@@ -129,19 +128,6 @@ class PhysDeriv_StdMat : public Operator
                     }
                 }
             }
-#else
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                Vmath::Zero(ntot,out[i],1);
-                for(int j = 0; j < m_dim; ++j)
-                {
-                    Vmath::Vvtvp (ntot, m_derivFac[i*m_dim+j], 1,
-                                  Diff[j],               1,
-                                  out[i],                1,
-                                  out[i],                1);
-                }
-            }
-#endif            
         }
 
         virtual void operator()(
@@ -171,7 +157,6 @@ class PhysDeriv_StdMat : public Operator
             }
 
             // calculate full derivative
-#ifdef REGULARAWARE
             Vmath::Zero(ntot,output,1);
             if(m_isDeformed)
             {
@@ -197,16 +182,6 @@ class PhysDeriv_StdMat : public Operator
                     }
                 }
             }
-#else
-            Vmath::Zero(ntot,output,1);
-            for(int j = 0; j < m_dim; ++j)
-            {
-                Vmath::Vvtvp (ntot, m_derivFac[dir*m_dim+j], 1,
-                                    Diff[j],               1,
-                                    output,                1,
-                                    output,                1);
-            }
-#endif
         }
 
     protected:
@@ -457,7 +432,6 @@ class PhysDeriv_IterPerExp : public Operator
                                     tmp2 = Diff[2] + i*nPhys);
             }
 
-#ifdef REGULARAWARE
             // calculate full derivative
             if(m_isDeformed)
             {
@@ -493,20 +467,6 @@ class PhysDeriv_IterPerExp : public Operator
                     }
                 }
             }
-#else
-            // calculate full derivative
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                Vmath::Vmul(ntot,m_derivFac[i*m_dim],1,Diff[0],1,out[i],1);
-                for(int j = 1; j < m_dim; ++j)
-                {
-                    Vmath::Vvtvp (ntot, m_derivFac[i*m_dim+j], 1,
-                                        Diff[j],               1,
-                                        out[i],                1,
-                                        out[i],                1);
-                }
-            }
-#endif            
         }
 
         virtual void operator()(
@@ -534,7 +494,6 @@ class PhysDeriv_IterPerExp : public Operator
                                     tmp2 = Diff[2] + i*nPhys);
             }
 
-#ifdef REGULARAWARE
             Vmath::Zero(ntot,output,1);
             if(m_isDeformed)
             {
@@ -560,17 +519,6 @@ class PhysDeriv_IterPerExp : public Operator
                     }
                 }
             }
-#else
-            // calculate full derivative
-            Vmath::Vmul(ntot,m_derivFac[dir*m_dim],1,Diff[0],1,output,1);
-            for(int j = 1; j < m_dim; ++j)
-            {
-                Vmath::Vvtvp (ntot, m_derivFac[dir*m_dim+j], 1,
-                                    Diff[j],               1,
-                                    output,                1,
-                                    output,                1);
-            }
-#endif
         }
 
     protected:
@@ -797,8 +745,6 @@ class PhysDeriv_SumFac_Seg : public Operator
                         input.get(), m_nquad0, 0.0,
                         diff0.get(), m_nquad0);
 
-            
-#ifdef REGULARAWARE
             if(m_isDeformed)
             {
                 Vmath::Vmul  (nqcol, m_derivFac[0], 1, diff0, 1, output0, 1);
@@ -841,19 +787,6 @@ class PhysDeriv_SumFac_Seg : public Operator
                 }
 
             }
-#else
-            Vmath::Vmul  (nqcol, m_derivFac[0], 1, diff0, 1, output0, 1);
-
-            if (m_coordim == 2)
-            {
-                Vmath::Vmul  (nqcol, m_derivFac[1], 1, diff0, 1, output1, 1);
-            }
-            else if (m_coordim == 3)
-            {
-                Vmath::Vmul  (nqcol, m_derivFac[1], 1, diff0, 1, output1, 1);
-                Vmath::Vmul  (nqcol, m_derivFac[2], 1, diff0, 1, output2, 1);
-            }
-#endif
         }
 
         virtual void operator()(
@@ -876,7 +809,6 @@ class PhysDeriv_SumFac_Seg : public Operator
                         input.get(), m_nquad0, 0.0,
                         diff0.get(), m_nquad0);
 
-#ifdef REGULARAWARE
             if(m_isDeformed)
             {
                 Vmath::Vmul(nqcol, m_derivFac[dir], 1, diff0, 1, output, 1);
@@ -890,9 +822,6 @@ class PhysDeriv_SumFac_Seg : public Operator
                                   t = output + e*m_nqe, 1);
                 }
             }
-#else
-            Vmath::Vmul(nqcol, m_derivFac[dir], 1, diff0, 1, output, 1);
-#endif
         }
 
     protected:
@@ -971,7 +900,6 @@ class PhysDeriv_SumFac_Quad : public Operator
                             diff1.get() + cnt, m_nquad0);
             }
 
-#ifdef REGULARAWARE
             if(m_isDeformed)
             {
                 Vmath::Vmul  (nqcol, m_derivFac[0], 1, diff0, 1, output0, 1);
@@ -1015,21 +943,6 @@ class PhysDeriv_SumFac_Quad : public Operator
                     }
                 }
             }
-#else
-            Vmath::Vmul  (nqcol, m_derivFac[0], 1, diff0, 1, output0, 1);
-            Vmath::Vvtvp (nqcol, m_derivFac[1], 1, diff1, 1, output0, 1,
-                                                             output0, 1);
-            Vmath::Vmul  (nqcol, m_derivFac[2], 1, diff0, 1, output1, 1);
-            Vmath::Vvtvp (nqcol, m_derivFac[3], 1, diff1, 1, output1, 1,
-                                                             output1, 1);
-
-            if (m_coordim == 3)
-            {
-                Vmath::Vmul  (nqcol, m_derivFac[4], 1, diff0, 1, output2, 1);
-                Vmath::Vvtvp (nqcol, m_derivFac[5], 1, diff1, 1, output2, 1,
-                                                                 output2, 1);
-            }
-#endif
         }
 
         virtual void operator()(
@@ -1063,7 +976,6 @@ class PhysDeriv_SumFac_Quad : public Operator
                             diff1.get() + cnt, m_nquad0);
             }
 
-#ifdef REGULARAWARE
             if(m_isDeformed)
             {
                 Vmath::Vmul  (nqcol, m_derivFac[2*dir]  , 1, diff0, 1, output, 1);
@@ -1081,11 +993,6 @@ class PhysDeriv_SumFac_Quad : public Operator
                                   output + e*m_nqe, 1, t = output + e*m_nqe, 1);
                 }
             }
-#else
-            Vmath::Vmul  (nqcol, m_derivFac[2*dir]  , 1, diff0, 1, output, 1);
-            Vmath::Vvtvp (nqcol, m_derivFac[2*dir+1], 1, diff1, 1, output, 1,
-                                                                   output, 1);
-#endif
         }
 
     protected:
@@ -1176,8 +1083,6 @@ class PhysDeriv_SumFac_Tri : public Operator
                              diff1.get()+cnt,1,diff1.get()+cnt,1);
             }
 
-
-#ifdef REGULARAWARE
             if(m_isDeformed)
             {
                 Vmath::Vmul  (nqcol, m_derivFac[0], 1, diff0, 1, output0, 1);
@@ -1221,22 +1126,6 @@ class PhysDeriv_SumFac_Tri : public Operator
                     }
                 }
             }
-#else
-            Vmath::Vmul  (nqcol, m_derivFac[0], 1, diff0, 1, output0, 1);
-            Vmath::Vvtvp (nqcol, m_derivFac[1], 1, diff1, 1,
-                          output0, 1, output0, 1);
-            Vmath::Vmul  (nqcol, m_derivFac[2], 1, diff0, 1, output1, 1);
-            Vmath::Vvtvp (nqcol, m_derivFac[3], 1, diff1, 1,
-                          output1, 1, output1, 1);
-
-            if (m_coordim == 3)
-            {
-                Vmath::Vmul  (nqcol, m_derivFac[4], 1, diff0, 1,
-                              output2, 1);
-                Vmath::Vvtvp (nqcol, m_derivFac[5], 1, diff1, 1,
-                              output2, 1, output2, 1);
-            }
-#endif
         }
 
         virtual void operator()(
@@ -1279,8 +1168,6 @@ class PhysDeriv_SumFac_Tri : public Operator
                              diff1.get()+cnt,1,diff1.get()+cnt,1);
             }
 
-
-#ifdef REGULARAWARE
             if(m_isDeformed)
             {
                 Vmath::Vmul  (nqcol, m_derivFac[2*dir]  , 1, diff0, 1, output, 1);
@@ -1298,11 +1185,6 @@ class PhysDeriv_SumFac_Tri : public Operator
                                   output + e*m_nqe, 1, t = output + e*m_nqe, 1);
                 }
             }
-#else
-            Vmath::Vmul  (nqcol, m_derivFac[2*dir]  , 1, diff0, 1, output, 1);
-            Vmath::Vvtvp (nqcol, m_derivFac[2*dir+1], 1, diff1, 1, output, 1,
-                                                                   output, 1);
-#endif
         }
 
     protected:
@@ -1423,7 +1305,6 @@ class PhysDeriv_SumFac_Hex : public Operator
                             m_nquad0*m_nquad1);
             }
 
-#ifdef REGULARAWARE
             // calculate full derivative
             if(m_isDeformed)
             {
@@ -1461,20 +1342,6 @@ class PhysDeriv_SumFac_Hex : public Operator
                     }
                 }
             }
-#else
-            // calculate full derivative
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                Vmath::Vmul(ntot,m_derivFac[i*3],1,Diff[0],1,out[i],1);
-                for(int j = 1; j < 3; ++j)
-                {
-                    Vmath::Vvtvp (ntot, m_derivFac[i*3+j], 1,
-                                        Diff[j],               1,
-                                        out[i],                1,
-                                        out[i],                1);
-                }
-            }
-#endif
         }
 
         virtual void operator()(
@@ -1514,7 +1381,6 @@ class PhysDeriv_SumFac_Hex : public Operator
                             m_nquad0*m_nquad1);
             }
 
-#ifdef REGULARAWARE
             // calculate full derivative
             if(m_isDeformed)
             {
@@ -1546,17 +1412,6 @@ class PhysDeriv_SumFac_Hex : public Operator
                     }
                 }
             }
-#else
-            // calculate full derivative
-            Vmath::Vmul(ntot,m_derivFac[dir*3],1,Diff[0],1,output,1);
-            for(int j = 1; j < 3; ++j)
-            {
-                Vmath::Vvtvp (ntot, m_derivFac[dir*3+j], 1,
-                                    Diff[j],               1,
-                                    output,                1,
-                                    output,                1);
-            }
-#endif
         }
 
     protected:
@@ -1689,7 +1544,6 @@ class PhysDeriv_SumFac_Tet : public Operator
 
             }
 
-#ifdef REGULARAWARE
             // calculate full derivative
             if(m_isDeformed)
             {
@@ -1726,18 +1580,6 @@ class PhysDeriv_SumFac_Tet : public Operator
                     }
                 }
             }
-#else
-            // calculate full derivative
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                Vmath::Vmul(ntot,m_derivFac[i*3],1,Diff[0],1,out[i],1);
-                for(int j = 1; j < 3; ++j)
-                {
-                    Vmath::Vvtvp (ntot, m_derivFac[i*3+j], 1,
-                                        Diff[j], 1, out[i], 1, out[i], 1);
-                }
-            }
-#endif
         }
 
         virtual void operator()(
@@ -1813,7 +1655,6 @@ class PhysDeriv_SumFac_Tet : public Operator
 
             }
 
-#ifdef REGULARAWARE
             // calculate full derivative
             if(m_isDeformed)
             {
@@ -1845,15 +1686,6 @@ class PhysDeriv_SumFac_Tet : public Operator
                     }
                 }
             }
-#else
-            // calculate full derivative
-            Vmath::Vmul(ntot,m_derivFac[dir*3],1,Diff[0],1,output,1);
-            for(int j = 1; j < 3; ++j)
-            {
-                Vmath::Vvtvp (ntot, m_derivFac[dir*3+j], 1,
-                                    Diff[j], 1, output, 1, output, 1);
-            }
-#endif
         }
 
     protected:
@@ -2000,7 +1832,6 @@ class PhysDeriv_SumFac_Prism : public Operator
                 cnt += nPhys;
             }
 
-#ifdef REGULARAWARE
             // calculate full derivative
             if(m_isDeformed)
             {
@@ -2037,18 +1868,6 @@ class PhysDeriv_SumFac_Prism : public Operator
                     }
                 }
             }
-#else
-            // calculate full derivative
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                Vmath::Vmul(ntot,m_derivFac[i*3],1,Diff[0],1,out[i],1);
-                for(int j = 1; j < 3; ++j)
-                {
-                    Vmath::Vvtvp (ntot, m_derivFac[i*3+j], 1,
-                                        Diff[j], 1, out[i], 1, out[i], 1);
-                }
-            }
-#endif
         }
 
         virtual void operator()(
@@ -2102,7 +1921,6 @@ class PhysDeriv_SumFac_Prism : public Operator
                 cnt += nPhys;
             }
 
-#ifdef REGULARAWARE
             // calculate full derivative
             if(m_isDeformed)
             {
@@ -2134,15 +1952,6 @@ class PhysDeriv_SumFac_Prism : public Operator
                     }
                 }
             }
-#else
-            // calculate full derivative
-            Vmath::Vmul(ntot,m_derivFac[dir*3],1,Diff[0],1,output,1);
-            for(int j = 1; j < 3; ++j)
-            {
-                Vmath::Vvtvp (ntot, m_derivFac[dir*3+j], 1,
-                                    Diff[j], 1, output, 1, output, 1);
-            }
-#endif
         }
 
     protected:
@@ -2283,7 +2092,6 @@ class PhysDeriv_SumFac_Pyr : public Operator
                 cnt += nPhys;
             }
 
-#ifdef REGULARAWARE
             // calculate full derivative
             if(m_isDeformed)
             {
@@ -2320,18 +2128,6 @@ class PhysDeriv_SumFac_Pyr : public Operator
                     }
                 }
             }
-#else
-            // calculate full derivative
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                Vmath::Vmul(ntot,m_derivFac[i*3],1,Diff[0],1,out[i],1);
-                for(int j = 1; j < 3; ++j)
-                {
-                    Vmath::Vvtvp (ntot, m_derivFac[i*3+j], 1,
-                                        Diff[j], 1, out[i], 1, out[i], 1);
-                }
-            }
-#endif
         }
 
         virtual void operator()(
@@ -2391,7 +2187,6 @@ class PhysDeriv_SumFac_Pyr : public Operator
                 cnt += nPhys;
             }
 
-#ifdef REGULARAWARE
             // calculate full derivative
             if(m_isDeformed)
             {
@@ -2423,15 +2218,6 @@ class PhysDeriv_SumFac_Pyr : public Operator
                     }
                 }
             }
-#else
-            // calculate full derivative
-            Vmath::Vmul(ntot,m_derivFac[dir*3],1,Diff[0],1,output,1);
-            for(int j = 1; j < 3; ++j)
-            {
-                Vmath::Vvtvp (ntot, m_derivFac[dir*3+j], 1,
-                                    Diff[j], 1, output, 1, output, 1);
-            }
-#endif
         }
 
     protected:

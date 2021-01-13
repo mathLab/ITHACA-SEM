@@ -43,8 +43,6 @@
 namespace Nektar {
 namespace Collections {
 
-#define REGULARAWARE
-    
 
 using namespace tinysimd;
 using vec_t = simd<NekDouble>;

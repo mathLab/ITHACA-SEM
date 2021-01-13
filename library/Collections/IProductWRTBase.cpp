@@ -113,17 +113,14 @@ class IProductWRTBase_StdMat : public Operator
         }
 
     protected:
-        int                             m_nqe;
         DNekMatSharedPtr                m_mat;
         Array<OneD, const NekDouble>    m_jac;
-        bool      m_isDeformed;
     
     private:
         IProductWRTBase_StdMat(
                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                 CoalescedGeomDataSharedPtr                pGeomData)
-            : Operator(pCollExp, pGeomData),
-              m_isDeformed(pGeomData->IsDeformed(pCollExp))
+            : Operator(pCollExp, pGeomData)
         {
             m_jac = pGeomData->GetJac(pCollExp);
             StdRegions::StdMatrixKey key(StdRegions::eIProductWRTBase,
@@ -217,7 +214,6 @@ class IProductWRTBase_MatrixFree : public Operator, MatrixFreeOneInOneOut
         }
 
     private:
-        bool      m_isDeformed;
         std::shared_ptr<MatrixFree::IProduct> m_oper;
 
         IProductWRTBase_MatrixFree(
@@ -226,8 +222,7 @@ class IProductWRTBase_MatrixFree : public Operator, MatrixFreeOneInOneOut
             : Operator(pCollExp, pGeomData),
               MatrixFreeOneInOneOut(pCollExp[0]->GetStdExp()->GetTotPoints(),
                                     pCollExp[0]->GetStdExp()->GetNcoeffs(),
-                                    pCollExp.size()),
-              m_isDeformed(pGeomData->IsDeformed(pCollExp))
+                                    pCollExp.size())
         {
 
             // Basis vector

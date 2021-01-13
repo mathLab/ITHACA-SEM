@@ -312,10 +312,29 @@ const Array<TwoD, const NekDouble> &CoalescedGeomData::GetDerivFactors(
         for(int i = 0; i < nElmts; ++i)
         {
             const StdRegions::StdExpansion * sep = &(*pCollExp[i]);
-            const LocalRegions::Expansion  * lep = dynamic_cast<const LocalRegions::Expansion*>( sep );
+            const LocalRegions::Expansion
+                *lep = dynamic_cast<const LocalRegions::Expansion*>( sep );
 
-            const Array<TwoD, const NekDouble> Dfac = lep->GetMetricInfo()->GetDerivFactors( ptsKeys );
+            const Array<TwoD, const NekDouble>
+                Dfac = lep->GetMetricInfo()->GetDerivFactors( ptsKeys );
 
+#ifdef REGULARAWARE
+            if(IsDeformed(pCollExp))
+            {
+                for (int j = 0; j < dim*coordim; ++j)
+                {
+                    Vmath::Vcopy(npts, &Dfac[j][0], 1, &newDFac[j][cnt], 1);
+                }
+            }
+            else
+            {
+                for (int j = 0; j < dim*coordim; ++j)
+                {
+                    newDFac[j][i] = Dfac[j][0];
+                }
+            }
+            cnt += npts;
+#else
             if( lep->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed)
             {
                 for (int j = 0; j < dim*coordim; ++j)
@@ -331,6 +350,7 @@ const Array<TwoD, const NekDouble> &CoalescedGeomData::GetDerivFactors(
                 }
             }
             cnt += npts;
+#endif
         }
 
         m_twoDGeomData[eDerivFactors] = newDFac;
@@ -406,6 +426,17 @@ const std::shared_ptr<VecVec_t> CoalescedGeomData::GetDerivFactorsInterLeave(
                 {
                     for (int j = 0; j < vec_t::width; ++j)
                     {
+#ifdef REGULARAWARE
+                        // padding
+                        if(vec_t::width*e + j < dfsize)
+                        {
+                            vec[j] = df[dir][vec_t::width*e + j];
+                        }
+                        else
+                        {
+                            vec[j] = 0.0;
+                        }
+#else
                         // padding
                         if((vec_t::width*e + j)*nq < dfsize)
                         {
@@ -415,6 +446,7 @@ const std::shared_ptr<VecVec_t> CoalescedGeomData::GetDerivFactorsInterLeave(
                         {
                             vec[j] = 0.0;
                         }
+#endif
                     }
                     // Must have all vec_t::width elemnts aligned to do a load.
                     newdf[e*n_df + dir].load(&vec[0]);

@@ -107,7 +107,22 @@ class IProductWRTDerivBase_StdMat : public Operator
             // calculate Iproduct WRT Std Deriv
 
             // First component
+#ifdef REGULARAWARE
+            if(m_isDeformed)
+            {
+                Vmath::Vmul(ntot,m_jac,1,tmp[0],1,tmp[0],1);
+            }
+            else
+            {
+                Array<OneD,NekDouble> t;
+                for(int e = 0; e < m_numElmt; ++e)
+                {
+                    Vmath::Smul(m_nqe,m_jac[e],tmp[0]+e*m_nqe,1,t=tmp[0]+e*m_nqe,1);
+                }
+            }
+#else
             Vmath::Vmul(ntot,m_jac,1,tmp[0],1,tmp[0],1);
+#endif
             Blas::Dgemm('N', 'N', m_iProdWRTStdDBase[0]->GetRows(),
                         m_numElmt,m_iProdWRTStdDBase[0]->GetColumns(),
                         1.0, m_iProdWRTStdDBase[0]->GetRawPtr(),
@@ -118,7 +133,23 @@ class IProductWRTDerivBase_StdMat : public Operator
             // Other components
             for(int i = 1; i < m_dim; ++i)
             {
+#ifdef REGULARAWARE
+                if(m_isDeformed)
+                {
+                    Vmath::Vmul(ntot,m_jac,1,tmp[i],1,tmp[i],1);
+                }
+                else
+                {
+                    Array<OneD,NekDouble> t;
+                    for(int e = 0; e < m_numElmt; ++e)
+                    {
+                        Vmath::Smul(m_nqe,m_jac[e],tmp[i]+e*m_nqe,1,
+                                    t=tmp[i]+e*m_nqe,1);
+                    }
+                }
+#else
                 Vmath::Vmul(ntot,m_jac,1,tmp[i],1,tmp[i],1);
+#endif
                 Blas::Dgemm('N', 'N', m_iProdWRTStdDBase[i]->GetRows(),
                             m_numElmt,m_iProdWRTStdDBase[i]->GetColumns(),
                             1.0, m_iProdWRTStdDBase[i]->GetRawPtr(),
@@ -139,35 +170,38 @@ class IProductWRTDerivBase_StdMat : public Operator
         }
 
     protected:
+        bool                            m_isDeformed;
         Array<OneD, DNekMatSharedPtr>   m_iProdWRTStdDBase;
         Array<TwoD, const NekDouble>    m_derivFac;
         Array<OneD, const NekDouble>    m_jac;
+        int                             m_nqe;
         int                             m_dim;
         int                             m_coordim;
-
+        
     private:
         IProductWRTDerivBase_StdMat(
                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                 CoalescedGeomDataSharedPtr                pGeomData)
-            : Operator(pCollExp, pGeomData)
+            : Operator(pCollExp, pGeomData),
+              m_isDeformed(pGeomData->IsDeformed(pCollExp))
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
             m_dim = PtsKey.size();
             m_coordim = pCollExp[0]->GetCoordim();
 
-            int nqtot  = m_stdExp->GetTotPoints();
+            m_nqe      = m_stdExp->GetTotPoints();
             int nmodes = m_stdExp->GetNcoeffs();
 
             // set up a IProductWRTDerivBase StdMat.
             m_iProdWRTStdDBase = Array<OneD, DNekMatSharedPtr>(m_dim);
             for(int i = 0; i < m_dim; ++i)
             {
-                Array<OneD, NekDouble> tmp(nqtot),tmp1(nmodes);
+                Array<OneD, NekDouble> tmp(m_nqe),tmp1(nmodes);
                 m_iProdWRTStdDBase[i] = MemoryManager<DNekMat>
-                                            ::AllocateSharedPtr(nmodes,nqtot);
-                for(int j = 0; j < nqtot; ++j)
+                                            ::AllocateSharedPtr(nmodes,m_nqe);
+                for(int j = 0; j < m_nqe; ++j)
                 {
-                    Vmath::Zero(nqtot,tmp,1);
+                    Vmath::Zero(m_nqe,tmp,1);
                     tmp[j] = 1.0;
                     m_stdExp->IProductWRTDerivBase(i,tmp,tmp1);
                     Vmath::Vcopy(nmodes, &tmp1[0],1,
@@ -177,7 +211,7 @@ class IProductWRTDerivBase_StdMat : public Operator
             }
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
             m_jac      = pGeomData->GetJac(pCollExp);
-            m_wspSize = m_dim*nqtot*m_numElmt;
+            m_wspSize = m_dim*m_nqe*m_numElmt;
         }
 };
 
@@ -407,7 +441,22 @@ class IProductWRTDerivBase_IterPerExp : public Operator
 
             // calculate Iproduct WRT Std Deriv
             // first component
+#ifdef REGULARAWARE
+            if(m_isDeformed)
+            {
+                Vmath::Vmul(ntot,m_jac,1,tmp[0],1,tmp[0],1);
+            }
+            else
+            {
+                Array<OneD,NekDouble> t;
+                for(int e = 0; e < m_numElmt; ++e)
+                {
+                    Vmath::Smul(m_nqe,m_jac[e],tmp[0]+e*m_nqe,1,t=tmp[0]+e*m_nqe,1);
+                }
+            }
+#else
             Vmath::Vmul(ntot,m_jac,1,tmp[0],1,tmp[0],1);
+#endif
             for(int n = 0; n < m_numElmt; ++n)
             {
                 m_stdExp->IProductWRTDerivBase(0,tmp[0]+n*nPhys,
@@ -418,7 +467,23 @@ class IProductWRTDerivBase_IterPerExp : public Operator
             for(int i = 1; i < m_dim; ++i)
             {
                 // multiply by Jacobian
+#ifdef REGULARAWARE
+                if(m_isDeformed)
+                {
+                    Vmath::Vmul(ntot,m_jac,1,tmp[i],1,tmp[i],1);
+                }
+                else
+                {
+                    Array<OneD,NekDouble> t;
+                    for(int e = 0; e < m_numElmt; ++e)
+                    {
+                        Vmath::Smul(m_nqe,m_jac[e],tmp[i]+e*m_nqe,1,
+                                    t=tmp[i]+e*m_nqe,1);
+                    }
+                }
+#else
                 Vmath::Vmul(ntot,m_jac,1,tmp[i],1,tmp[i],1);
+#endif
                 for(int n = 0; n < m_numElmt; ++n)
                 {
                     m_stdExp->IProductWRTDerivBase(i,tmp[i]+n*nPhys,tmp[0]);
@@ -439,8 +504,10 @@ class IProductWRTDerivBase_IterPerExp : public Operator
         }
 
     protected:
+        bool                            m_isDeformed;
         Array<TwoD, const NekDouble>    m_derivFac;
         Array<OneD, const NekDouble>    m_jac;
+        int                             m_nqe;
         int                             m_dim;
         int                             m_coordim;
 
@@ -448,17 +515,18 @@ class IProductWRTDerivBase_IterPerExp : public Operator
         IProductWRTDerivBase_IterPerExp(
                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                 CoalescedGeomDataSharedPtr                pGeomData)
-            : Operator(pCollExp, pGeomData)
+            : Operator(pCollExp, pGeomData),
+              m_isDeformed(pGeomData->IsDeformed(pCollExp))
         {
             LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
             m_dim      = PtsKey.size();
             m_coordim  = pCollExp[0]->GetCoordim();
 
-            int nqtot  = m_stdExp->GetTotPoints();
+            m_nqe      = m_stdExp->GetTotPoints();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
             m_jac      = pGeomData->GetJac(pCollExp);
-            m_wspSize  = m_dim*nqtot*m_numElmt;
+            m_wspSize  = m_dim*m_nqe*m_numElmt;
         }
 };
 
@@ -653,7 +721,7 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
         {
             boost::ignore_unused(output1, output2);
 
-            Vmath::Vmul(m_numElmt*m_nquad0, m_jac, 1, input, 1, wsp, 1);
+            Vmath::Vmul(m_numElmt*m_nquad0, m_jacWStdW, 1, input, 1, wsp, 1);
             Vmath::Vmul(m_numElmt*m_nquad0, &m_derivFac[0][0], 1,
                                             &wsp[0],           1,
                                             &wsp[0],           1);
@@ -678,7 +746,7 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
     protected:
         const int                       m_nquad0;
         const int                       m_nmodes0;
-        Array<OneD, const NekDouble>    m_jac;
+        Array<OneD, const NekDouble>    m_jacWStdW;
         Array<OneD, const NekDouble>    m_derbase0;
         Array<TwoD, const NekDouble>    m_derivFac;
 
@@ -693,7 +761,7 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
         {
             m_wspSize = m_numElmt*m_nquad0;
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
-            m_jac = pGeomData->GetJacWithStdWeights(pCollExp);
+            m_jacWStdW = pGeomData->GetJacWithStdWeights(pCollExp);
         }
 };
 
@@ -751,14 +819,14 @@ class IProductWRTDerivBase_SumFac_Quad : public Operator
                          m_nquad0,   m_nquad1,
                          m_nmodes0,  m_nmodes1,
                          m_derbase0, m_base1,
-                         m_jac, tmp[0], output, wsp1);
+                         m_jacWStdW, tmp[0], output, wsp1);
 
             // Iproduct wrt derivative of base 1
             QuadIProduct(m_colldir0, false, m_numElmt,
                          m_nquad0,   m_nquad1,
                          m_nmodes0,  m_nmodes1,
                          m_base0, m_derbase1,
-                         m_jac, tmp[1],  tmp[0], wsp1);
+                         m_jacWStdW, tmp[1],  tmp[0], wsp1);
 
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
@@ -782,7 +850,7 @@ class IProductWRTDerivBase_SumFac_Quad : public Operator
         const bool                      m_colldir1;
         int                             m_coordim;
         Array<TwoD, const NekDouble>    m_derivFac;
-        Array<OneD, const NekDouble>    m_jac;
+        Array<OneD, const NekDouble>    m_jacWStdW;
         Array<OneD, const NekDouble>    m_base0;
         Array<OneD, const NekDouble>    m_base1;
         Array<OneD, const NekDouble>    m_derbase0;
@@ -808,7 +876,7 @@ class IProductWRTDerivBase_SumFac_Quad : public Operator
             m_coordim  = pCollExp[0]->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
-            m_jac      = pGeomData->GetJacWithStdWeights(pCollExp);
+            m_jacWStdW      = pGeomData->GetJacWithStdWeights(pCollExp);
             m_wspSize  = 4 * m_numElmt * (max(m_nquad0*m_nquad1,
                                               m_nmodes0*m_nmodes1));
         }
@@ -910,12 +978,12 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
             // Iproduct wrt derivative of base 0
             TriIProduct(m_sortTopVertex, m_numElmt, m_nquad0, m_nquad1,
                         m_nmodes0,  m_nmodes1, m_derbase0, m_base1,
-                        m_jac, tmp[0], output, wsp1);
+                        m_jacWStdW, tmp[0], output, wsp1);
 
             // Iproduct wrt derivative of base 1
             TriIProduct(m_sortTopVertex, m_numElmt, m_nquad0, m_nquad1,
                         m_nmodes0,  m_nmodes1, m_base0, m_derbase1,
-                        m_jac, tmp[1], tmp[0], wsp1);
+                        m_jacWStdW, tmp[1], tmp[0], wsp1);
 
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
@@ -939,7 +1007,7 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
         const bool                      m_colldir1;
         int                             m_coordim;
         Array<TwoD, const NekDouble>    m_derivFac;
-        Array<OneD, const NekDouble>    m_jac;
+        Array<OneD, const NekDouble>    m_jacWStdW;
         Array<OneD, const NekDouble>    m_base0;
         Array<OneD, const NekDouble>    m_base1;
         Array<OneD, const NekDouble>    m_derbase0;
@@ -968,7 +1036,7 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
             m_coordim  = pCollExp[0]->GetCoordim();
 
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
-            m_jac      = pGeomData->GetJacWithStdWeights(pCollExp);
+            m_jacWStdW      = pGeomData->GetJacWithStdWeights(pCollExp);
             m_wspSize  = 4 * m_numElmt * (max(m_nquad0*m_nquad1,
                                               m_nmodes0*m_nmodes1));
 
@@ -1073,20 +1141,20 @@ class IProductWRTDerivBase_SumFac_Hex : public Operator
                         m_nquad0,   m_nquad1,  m_nquad2,
                         m_nmodes0,  m_nmodes1, m_nmodes2,
                         m_derbase0, m_base1,   m_base2,
-                        m_jac,tmp[0],output,wsp1);
+                        m_jacWStdW,tmp[0],output,wsp1);
 
             HexIProduct(m_colldir0,false,m_colldir2, m_numElmt,
                         m_nquad0,  m_nquad1,   m_nquad2,
                         m_nmodes0, m_nmodes1,  m_nmodes2,
                         m_base0,   m_derbase1, m_base2,
-                        m_jac,tmp[1],tmp[0],wsp1);
+                        m_jacWStdW,tmp[1],tmp[0],wsp1);
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
 
             HexIProduct(m_colldir0,m_colldir1,false, m_numElmt,
                         m_nquad0,  m_nquad1,  m_nquad2,
                         m_nmodes0, m_nmodes1, m_nmodes2,
                         m_base0,   m_base1,   m_derbase2,
-                        m_jac,tmp[2],tmp[0],wsp1);
+                        m_jacWStdW,tmp[2],tmp[0],wsp1);
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
 
@@ -1110,7 +1178,7 @@ class IProductWRTDerivBase_SumFac_Hex : public Operator
         const bool                      m_colldir0;
         const bool                      m_colldir1;
         const bool                      m_colldir2;
-        Array<OneD, const NekDouble>    m_jac;
+        Array<OneD, const NekDouble>    m_jacWStdW;
         Array<OneD, const NekDouble>    m_base0;
         Array<OneD, const NekDouble>    m_base1;
         Array<OneD, const NekDouble>    m_base2;
@@ -1141,7 +1209,7 @@ class IProductWRTDerivBase_SumFac_Hex : public Operator
               m_derbase2(m_stdExp->GetBasis(2)->GetDbdata())
 
         {
-            m_jac      = pGeomData->GetJacWithStdWeights(pCollExp);
+            m_jacWStdW      = pGeomData->GetJacWithStdWeights(pCollExp);
             m_wspSize  = 6 * m_numElmt * (max(m_nquad0*m_nquad1*m_nquad2,
                                               m_nmodes0*m_nmodes1*m_nmodes2));
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
@@ -1286,20 +1354,20 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
                         m_nquad0,   m_nquad1,  m_nquad2,
                         m_nmodes0,  m_nmodes1, m_nmodes2,
                         m_derbase0, m_base1,   m_base2,
-                        m_jac,tmp[0],output,wsp1);
+                        m_jacWStdW,tmp[0],output,wsp1);
 
             TetIProduct(m_sortTopEdge, m_numElmt,
                         m_nquad0,  m_nquad1,   m_nquad2,
                         m_nmodes0, m_nmodes1,  m_nmodes2,
                         m_base0,   m_derbase1, m_base2,
-                        m_jac,tmp[1],tmp[0],wsp1);
+                        m_jacWStdW,tmp[1],tmp[0],wsp1);
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
 
             TetIProduct(m_sortTopEdge, m_numElmt,
                         m_nquad0,  m_nquad1,  m_nquad2,
                         m_nmodes0, m_nmodes1, m_nmodes2,
                         m_base0,   m_base1,   m_derbase2,
-                        m_jac,tmp[2],tmp[0],wsp1);
+                        m_jacWStdW,tmp[2],tmp[0],wsp1);
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
 
@@ -1320,7 +1388,7 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
         const int                       m_nmodes0;
         const int                       m_nmodes1;
         const int                       m_nmodes2;
-        Array<OneD, const NekDouble>    m_jac;
+        Array<OneD, const NekDouble>    m_jacWStdW;
         Array<OneD, const NekDouble>    m_base0;
         Array<OneD, const NekDouble>    m_base1;
         Array<OneD, const NekDouble>    m_base2;
@@ -1353,7 +1421,7 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
               m_derbase2(m_stdExp->GetBasis(2)->GetDbdata())
 
         {
-            m_jac      = pGeomData->GetJacWithStdWeights(pCollExp);
+            m_jacWStdW      = pGeomData->GetJacWithStdWeights(pCollExp);
             m_wspSize  = 6 * m_numElmt * (max(m_nquad0*m_nquad1*m_nquad2,
                                               m_nmodes0*m_nmodes1*m_nmodes2));
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
@@ -1523,20 +1591,20 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
                         m_nquad0,   m_nquad1,  m_nquad2,
                         m_nmodes0,  m_nmodes1, m_nmodes2,
                         m_derbase0, m_base1,   m_base2,
-                        m_jac,tmp[0],output,wsp1);
+                        m_jacWStdW,tmp[0],output,wsp1);
 
             PrismIProduct(m_sortTopVertex, m_numElmt,
                         m_nquad0,  m_nquad1,   m_nquad2,
                         m_nmodes0, m_nmodes1,  m_nmodes2,
                         m_base0,   m_derbase1, m_base2,
-                        m_jac,tmp[1],tmp[0],wsp1);
+                        m_jacWStdW,tmp[1],tmp[0],wsp1);
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
 
             PrismIProduct(m_sortTopVertex, m_numElmt,
                         m_nquad0,  m_nquad1,  m_nquad2,
                         m_nmodes0, m_nmodes1, m_nmodes2,
                         m_base0,   m_base1,   m_derbase2,
-                        m_jac,tmp[2],tmp[0],wsp1);
+                        m_jacWStdW,tmp[2],tmp[0],wsp1);
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
 
@@ -1558,7 +1626,7 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
         const int                       m_nmodes0;
         const int                       m_nmodes1;
         const int                       m_nmodes2;
-        Array<OneD, const NekDouble>    m_jac;
+        Array<OneD, const NekDouble>    m_jacWStdW;
         Array<OneD, const NekDouble>    m_base0;
         Array<OneD, const NekDouble>    m_base1;
         Array<OneD, const NekDouble>    m_base2;
@@ -1589,7 +1657,7 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
               m_derbase2(m_stdExp->GetBasis(2)->GetDbdata())
 
         {
-            m_jac      = pGeomData->GetJacWithStdWeights(pCollExp);
+            m_jacWStdW      = pGeomData->GetJacWithStdWeights(pCollExp);
             m_wspSize  = 6 * m_numElmt * (max(m_nquad0*m_nquad1*m_nquad2,
                                               m_nmodes0*m_nmodes1*m_nmodes2));
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
@@ -1767,20 +1835,20 @@ class IProductWRTDerivBase_SumFac_Pyr : public Operator
                         m_nquad0,   m_nquad1,  m_nquad2,
                         m_nmodes0,  m_nmodes1, m_nmodes2,
                         m_derbase0, m_base1,   m_base2,
-                        m_jac,tmp[0],output,wsp1);
+                        m_jacWStdW,tmp[0],output,wsp1);
 
             PyrIProduct(m_sortTopVertex, m_numElmt,
                         m_nquad0,  m_nquad1,   m_nquad2,
                         m_nmodes0, m_nmodes1,  m_nmodes2,
                         m_base0,   m_derbase1, m_base2,
-                        m_jac,tmp[1],tmp[0],wsp1);
+                        m_jacWStdW,tmp[1],tmp[0],wsp1);
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
 
             PyrIProduct(m_sortTopVertex, m_numElmt,
                         m_nquad0,  m_nquad1,  m_nquad2,
                         m_nmodes0, m_nmodes1, m_nmodes2,
                         m_base0,   m_base1,   m_derbase2,
-                        m_jac,tmp[2],tmp[0],wsp1);
+                        m_jacWStdW,tmp[2],tmp[0],wsp1);
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
 
@@ -1802,7 +1870,7 @@ class IProductWRTDerivBase_SumFac_Pyr : public Operator
         const int                       m_nmodes0;
         const int                       m_nmodes1;
         const int                       m_nmodes2;
-        Array<OneD, const NekDouble>    m_jac;
+        Array<OneD, const NekDouble>    m_jacWStdW;
         Array<OneD, const NekDouble>    m_base0;
         Array<OneD, const NekDouble>    m_base1;
         Array<OneD, const NekDouble>    m_base2;
@@ -1834,7 +1902,7 @@ class IProductWRTDerivBase_SumFac_Pyr : public Operator
               m_derbase2(m_stdExp->GetBasis(2)->GetDbdata())
 
         {
-            m_jac      = pGeomData->GetJacWithStdWeights(pCollExp);
+            m_jacWStdW      = pGeomData->GetJacWithStdWeights(pCollExp);
             m_wspSize  = 6 * m_numElmt * (max(m_nquad0*m_nquad1*m_nquad2,
                                               m_nmodes0*m_nmodes1*m_nmodes2));
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);

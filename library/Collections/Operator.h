@@ -162,7 +162,7 @@ class Operator
         StdRegions::StdExpansionSharedPtr m_stdExp;
         unsigned int m_numElmt;
         unsigned int m_wspSize;
-};
+    };
 
 /// Shared pointer to an Operator object
 typedef std::shared_ptr<Operator> OperatorSharedPtr;

@@ -67,7 +67,48 @@ const Array<OneD, const NekDouble> &CoalescedGeomData::GetJac(
             npts   *= ptsKeys[i].GetNumPoints();
         }
 
-
+#ifdef REGULARAWARE
+        if(IsDeformed(pCollExp))
+        {
+            Array<OneD, NekDouble> newjac(npts*nElmts);
+            
+            //copy Jacobians into a continuous list and set new chatched value
+            int cnt = 0;
+            for(int i = 0; i < nElmts; ++i)
+            {
+                const StdRegions::StdExpansion * sep = &(*pCollExp[i]);
+                const LocalRegions::Expansion
+                    *lep = dynamic_cast<const LocalRegions::Expansion*>( sep );
+                
+                const Array<OneD, const NekDouble>
+                    jac = lep->GetMetricInfo()->GetJac( ptsKeys );
+                
+                Vmath::Vcopy(npts, &jac[0], 1, &newjac[cnt], 1);
+                
+                cnt += npts;
+            }
+            
+            m_oneDGeomData[eJac] = newjac;
+        }
+        else
+        {
+            Array<OneD, NekDouble> newjac(nElmts);
+            //copy Jacobians into a continuous list 
+            for(int i = 0; i < nElmts; ++i)
+            {
+                const StdRegions::StdExpansion * sep = &(*pCollExp[i]);
+                const LocalRegions::Expansion  * lep =
+                    dynamic_cast<const LocalRegions::Expansion*>( sep );
+                
+                const Array<OneD, const NekDouble> jac =
+                    lep->GetMetricInfo()->GetJac( ptsKeys );
+                
+                newjac[i] = jac[0]; 
+                
+            }
+            m_oneDGeomData[eJac] = newjac;
+        }
+#else
         Array<OneD, NekDouble> newjac(npts*nElmts);
 
         //copy Jacobians into a continuous list and set new chatched value
@@ -92,6 +133,7 @@ const Array<OneD, const NekDouble> &CoalescedGeomData::GetJac(
         }
 
         m_oneDGeomData[eJac] = newjac;
+#endif
     }
 
     return m_oneDGeomData[eJac];
@@ -161,6 +203,16 @@ const std::shared_ptr<VecVec_t> CoalescedGeomData::GetJacInterLeave(
             {
                 for (int j = 0; j < vec_t::width; ++j)
                 {
+#ifdef REGULARAWARE
+                    if(vec_t::width*i+j < jacsize)
+                    {
+                        tmp[j] = jac[vec_t::width*i+j];
+                    }
+                    else
+                    {
+                        tmp[j] = 0.0;
+                    }
+#else                    
                     if((vec_t::width*i+j)*nq < jacsize)
                     {
                         tmp[j] = jac[(vec_t::width*i+j)*nq];
@@ -169,6 +221,7 @@ const std::shared_ptr<VecVec_t> CoalescedGeomData::GetJacInterLeave(
                     {
                         tmp[j] = 0.0;
                     }
+#endif
                 }
 
                 newjac[i].load(&tmp[0]);

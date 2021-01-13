@@ -43,6 +43,9 @@
 namespace Nektar {
 namespace Collections {
 
+#define REGULARAWARE
+    
+
 using namespace tinysimd;
 using vec_t = simd<NekDouble>;
 typedef std::vector<vec_t,tinysimd::allocator<vec_t>> VecVec_t;

@@ -462,17 +462,13 @@ void InputStar::GenElement2D(vector<NodeSharedPtr> &VertNodes,
 {
     boost::ignore_unused(i);
 
-    LibUtilities::ShapeType elType = LibUtilities::eNoShapeType;
+    LibUtilities::ShapeType elType = LibUtilities::eTriangle;
 
-    if (FaceNodes.size() == 3)
-    {
-        elType = LibUtilities::eTriangle;
-    }
-    else if (FaceNodes.size() == 4)
+    if (FaceNodes.size() == 4)
     {
         elType = LibUtilities::eQuadrilateral;
     }
-    else
+    else if (FaceNodes.size() != 3)
     {
         m_log(FATAL) << "Not set up for elements which are not tets or prisms"
                      << endl;
@@ -507,18 +503,15 @@ void InputStar::GenElement3D(vector<NodeSharedPtr> &VertNodes,
 {
     boost::ignore_unused(i);
 
-    LibUtilities::ShapeType elType;
+    LibUtilities::ShapeType elType = LibUtilities::eTetrahedron;
+
     // set up Node list
     Array<OneD, int> Nodes = SortFaceNodes(VertNodes, ElementFaces, FaceNodes);
     int nnodes             = Nodes.size();
     map<LibUtilities::ShapeType, int> domainComposite;
 
     // element type
-    if (nnodes == 4)
-    {
-        elType = LibUtilities::eTetrahedron;
-    }
-    else if (nnodes == 5)
+    if (nnodes == 5)
     {
         elType = LibUtilities::ePyramid;
     }
@@ -526,7 +519,7 @@ void InputStar::GenElement3D(vector<NodeSharedPtr> &VertNodes,
     {
         elType = LibUtilities::ePrism;
     }
-    else
+    else if (nnodes != 4)
     {
         elType = LibUtilities::eHexahedron;
         m_log(FATAL) << "Not set up for elements which are not tets or prisms"

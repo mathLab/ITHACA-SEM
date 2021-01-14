@@ -70,7 +70,13 @@ public:
 protected:
     LIB_UTILITIES_EXPORT virtual void v_ImportFieldData(
         const std::string inFile,
-        PtsFieldSharedPtr &ptsField);
+        PtsFieldSharedPtr &ptsField,
+        DomainRangeShPtr &Range);
+
+    // LIB_UTILITIES_EXPORT virtual void v_ImportFieldData(
+    //     const std::string inFile,
+    //     PtsFieldSharedPtr &ptsField);
+
 
     LIB_UTILITIES_EXPORT virtual std::string GetFileEnding() const
     {

@@ -32,7 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#ifndef NEKTAR_LIB_LIBUTILITES_SIMDLIB_TRAITS_H
+#define NEKTAR_LIB_LIBUTILITES_SIMDLIB_TRAITS_H
 
 #include <type_traits>
 
@@ -115,9 +116,5 @@ struct is_vector_floating_point<T,
 > : std::integral_constant
     <bool, std::is_floating_point<typename T::scalarType>::value> {};
 
-// Helper c++17 style
-// template <class T>
-// inline constexpr bool is_vector_floating_point_v = is_vector_floating_point<T>::value;
-
-
 } // namespace tinysimd
+#endif

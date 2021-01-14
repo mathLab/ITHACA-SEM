@@ -8,8 +8,6 @@
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <Collections/Operator.h>
-// #include "AVXAssembly.h"
-
 #include <LibUtilities/SimdLib/tinysimd.hpp>
 
 namespace Nektar
@@ -27,26 +25,8 @@ public:
     {
     }
 
-    /// Number of gigflops required to compute the operator.
-    MATRIXFREE_EXPORT virtual NekDouble GFlops()
-    {
-        return 0.0;
-    }
-
     /// Number of degrees of freedom that this operator will process.
     MATRIXFREE_EXPORT virtual NekDouble Ndof()
-    {
-        return 0.0;
-    }
-
-    /// Number of stores to memory
-    MATRIXFREE_EXPORT virtual NekDouble NStores()
-    {
-        return 0.0;
-    }
-
-    /// Number of loads from memory
-    MATRIXFREE_EXPORT virtual NekDouble NLoads()
     {
         return 0.0;
     }
@@ -220,84 +200,6 @@ protected:
     int m_nElmt;
 };
 
-// template<int VW>
-// class HelmholtzGlobal : virtual public Operator
-// {
-//     public:
-//     HelmholtzGlobal(std::vector<LibUtilities::BasisSharedPtr> basis,
-//             int nElmt) :
-//             m_basis(basis), m_nElmt(nElmt)
-//     {
-//     }
-
-//     virtual ~HelmholtzGlobal()
-//     {
-//     }
-
-//     virtual bool NeedsJac() override
-//     {
-//         return true;
-//     }
-
-//     virtual bool NeedsDF() override
-//     {
-//         return true;
-//     }
-
-//     virtual void operator()(
-//         const Array<OneD, const NekDouble> &globalIn,
-//         Array<OneD,       NekDouble> &globalOut,
-//         AVXAssembly<VW>              &l2g) = 0;
-
-
-//     // void Ref(MultiRegions::ExpListSharedPtr expList,
-//     //          Array<OneD, NekDouble> &ref_exp,
-//     //          Array<OneD, NekDouble> &ref_helm)
-//     // {
-//     //     Array<OneD, NekDouble> ref_fn(expList->GetNpoints());
-//     //     this->RefFn(expList, ref_fn);
-//     //     expList->FwdTrans_IterPerExp(ref_fn, ref_exp);
-
-//     //     StdRegions::ConstFactorMap factors;
-//     //     factors[StdRegions::eFactorLambda] = 1.0;
-
-//     //     MultiRegions::GlobalMatrixKey mkey(
-//     //         StdRegions::eHelmholtz,
-//     //         MultiRegions::NullAssemblyMapSharedPtr,
-//     //         factors);
-
-//     //     expList->GeneralMatrixOp_IterPerExp(mkey, ref_exp, ref_helm);
-//     // }
-
-//     // void Ref2(MultiRegions::ExpListSharedPtr expList,
-//     //         Array<OneD, NekDouble> &ref_exp,
-//     //         Array<OneD, NekDouble> &ref_helm,
-//     //         const MultiRegions::AssemblyMapSharedPtr asmMap)
-//     // {
-//     //     Array<OneD, NekDouble> ref_fn(expList->GetNpoints());
-//     //     Array<OneD, NekDouble> ref_exp_local (expList->GetNcoeffs());
-//     //     this->RefFn(expList, ref_fn);
-//     //     expList->FwdTrans_IterPerExp(ref_fn, ref_exp_local);
-
-//     //     StdRegions::ConstFactorMap factors;
-//     //     factors[StdRegions::eFactorLambda] = 1.0;
-
-//     //     MultiRegions::GlobalMatrixKey mkey(
-//     //         StdRegions::eHelmholtz,
-//     //         MultiRegions::NullAssemblyMapSharedPtr,
-//     //         factors);
-
-//     //     Array<OneD, NekDouble> ref_helm_local(expList->GetNcoeffs());
-//     //     expList->GeneralMatrixOp_IterPerExp(mkey, ref_exp_local, ref_helm_local);
-
-//     //     asmMap->Assemble(ref_helm_local, ref_helm);
-//     // }
-
-// protected:
-//     std::vector<LibUtilities::BasisSharedPtr> m_basis;
-//     int m_nElmt;
-
-// };
 
 template <int DIM, bool DEFORMED = false>
 class Helper : virtual public Operator
@@ -308,7 +210,7 @@ protected:
         : Operator()
     {
         // Sanity check: no padding yet!
-        ASSERTL0(nElmt % vec_t::width == 0,
+        ASSERTL1(nElmt % vec_t::width == 0,
                  "Number of elements not divisible by vector "
                  "width, padding not yet implemented.");
 

@@ -35,7 +35,6 @@
 #include <boost/core/ignore_unused.hpp>
 
 #include <MatrixFreeOps/Operator.hpp>
-#include <MatrixFreeOps/Util.hpp>
 
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>

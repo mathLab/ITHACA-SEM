@@ -32,7 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#ifndef NEKTAR_LIB_LIBUTILITES_SIMDLIB_AVX512_H
+#define NEKTAR_LIB_LIBUTILITES_SIMDLIB_AVX512_H
 
 #include <immintrin.h>
 #include <vector>
@@ -515,3 +516,4 @@ inline void deinterleave_store(
 #endif // defined(__avx512__)
 
 } // namespace tinysimd
+#endif

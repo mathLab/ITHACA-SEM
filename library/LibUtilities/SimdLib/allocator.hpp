@@ -33,7 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#ifndef NEKTAR_LIB_LIBUTILITES_SIMDLIB_ALLOCATOR_H
+#define NEKTAR_LIB_LIBUTILITES_SIMDLIB_ALLOCATOR_H
 
 #include <type_traits>
 #include <boost/align/aligned_allocator.hpp>
@@ -48,3 +49,4 @@ using allocator = boost::alignment::aligned_allocator<T, T::alignment>;
 
 } // namespace tinysimd
 
+#endif

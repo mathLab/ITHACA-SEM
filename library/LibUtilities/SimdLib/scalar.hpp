@@ -33,7 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#ifndef NEKTAR_LIB_LIBUTILITES_SIMDLIB_SCALAR_H
+#define NEKTAR_LIB_LIBUTILITES_SIMDLIB_SCALAR_H
 
 #include <vector>
 #include <cmath>
@@ -276,3 +277,4 @@ inline void deinterleave_store(
 }
 
 } // namespace tinysimd
+#endif

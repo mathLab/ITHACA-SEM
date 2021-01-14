@@ -32,7 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#ifndef NEKTAR_LIB_LIBUTILITES_SIMDLIB_TINYSIMD_H
+#define NEKTAR_LIB_LIBUTILITES_SIMDLIB_TINYSIMD_H
 
 #include "scalar.hpp"
 #include "avx2.hpp"
@@ -83,3 +84,4 @@ using simd = typename abi<ScalarType>::type;
 
 
 } // namespace tinysimd
+#endif

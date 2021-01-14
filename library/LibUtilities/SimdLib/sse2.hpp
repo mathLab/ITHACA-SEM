@@ -32,7 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#ifndef NEKTAR_LIB_LIBUTILITES_SIMDLIB_SSE2_H
+#define NEKTAR_LIB_LIBUTILITES_SIMDLIB_SSE2_H
 
 #include <immintrin.h>
 #include <cstdint>
@@ -183,3 +184,4 @@ struct sse2Int4
 #endif // defined(__AVX2__)
 
 } // namespace tinysimd
+#endif

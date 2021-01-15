@@ -113,7 +113,7 @@ namespace Nektar
         DataType beta = 0.0;
         DataType* y = result;
         int incy = 1;
-        Blas::DoSgbmv('N', m, n, kl, ku, alpha, a, lda, x, incx, beta, y, incy);
+        Blas::Gbmv('N', m, n, kl, ku, alpha, a, lda, x, incx, beta, y, incy);
 
     }
 
@@ -308,7 +308,7 @@ namespace Nektar
 
             // Multiply
             const unsigned int* size = block->GetSize();
-            Blas::DoSgemv('N', size[0], size[1], block->Scale(),
+            Blas::Gemv('N', size[0], size[1], block->Scale(),
                         block->GetRawPtr(), size[0], rhsWrapper, 1,
                         0.0, resultWrapper, 1);
         }
@@ -372,7 +372,7 @@ namespace Nektar
 
             // Multiply
             const unsigned int* size = block->GetSize();
-            Blas::DoSgemv('N', size[0], size[1], block->Scale(),
+            Blas::Gemv('N', size[0], size[1], block->Scale(),
                         block->GetRawPtr(), size[0], rhsWrapper, 1,
                         0.0, resultWrapper, 1);
         }
@@ -395,7 +395,7 @@ namespace Nektar
         DataType* x = result;
         int incx = 1;
         
-        Blas::DoStpmv('L', lhs.GetTransposeFlag(), 'N', n, a, x, incx);
+        Blas::Tpmv('L', lhs.GetTransposeFlag(), 'N', n, a, x, incx);
     }
 
     template<typename DataType>
@@ -439,7 +439,7 @@ namespace Nektar
         DataType* x = result;
         int incx = 1;
         
-        Blas::DoStpmv('U', lhs.GetTransposeFlag(), 'N', n, a, x, incx);
+        Blas::Tpmv('U', lhs.GetTransposeFlag(), 'N', n, a, x, incx);
     }
 
     template<typename DataType>
@@ -487,7 +487,7 @@ namespace Nektar
         DataType* y = result;
         int incy = 1;
 
-        Blas::DoSspmv('U', size[0], alpha, a, x, incx, beta, y, incy);
+        Blas::Spmv('U', size[0], alpha, a, x, incx, beta, y, incy);
     }
 
     template<typename DataType, typename InnerMatrixType, typename MatrixTag>
@@ -518,7 +518,7 @@ namespace Nektar
         DataType* y = result;
         int incy = 1;
         
-        Blas::DoSgemv(t, size[0], size[1], alpha, a, lda, x, incx, beta, y, incy);
+        Blas::Gemv(t, size[0], size[1], alpha, a, lda, x, incx, beta, y, incy);
     }
 
     template<typename DataType, typename InnerMatrixType, typename MatrixTag>

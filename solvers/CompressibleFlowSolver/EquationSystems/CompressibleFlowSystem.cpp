@@ -1352,7 +1352,7 @@ namespace Nektar
             {
                 for(int i=0;i<nElmtPnt;i++)
                 {
-                    Blas::DoSger (nElmtCoef2Paded,nVar2,one,
+                    Blas::Ger (nElmtCoef2Paded,nVar2,one,
                                 &StdMatDataDBB[ne][ndir][i][0],1,
                                 &PntJacConsStd[ndir][i][0],1,
                                 &MatData[0],nElmtCoef2Paded);
@@ -1367,7 +1367,7 @@ namespace Nektar
                     {
                         for(int i=0;i<nElmtPnt;i++)
                         {
-                            Blas::DoSger (nElmtCoef2Paded,nVar2,one,
+                            Blas::Ger (nElmtCoef2Paded,nVar2,one,
                                         &StdMatDataDBDB[ne][nd0][nd1][i][0],1,
                                         &PntJacDervStd[nd0][nd1][i][0],1,
                                         &MatData[0],nElmtCoef2Paded);

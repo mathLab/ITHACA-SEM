@@ -223,7 +223,7 @@ namespace Blas
 
     /// \brief BLAS level 2: Matrix vector multiply A = A := alpha*x*y**T + A 
     /// where A[m x n]
-    static inline void DoSger (const int& m,
+    static inline void Ger (const int& m,
                  const int& n,       const double& alpha,
                  const double* x,    const int& incx,
                  const double* y,    const int& incy,
@@ -234,7 +234,7 @@ namespace Blas
 
     /// \brief BLAS level 2: Matrix vector multiply A = A := alpha*x*y**T + A 
     /// where A[m x n]
-    static inline void DoSger (const int& m,
+    static inline void Ger (const int& m,
                  const int& n,       const float& alpha,
                  const float* x,    const int& incx,
                  const float* y,    const int& incy,
@@ -244,7 +244,7 @@ namespace Blas
     }
 
     /// \brief BLAS level 2: Matrix vector multiply y = A \e x where A[m x n]
-    static inline void DoSgemv (const char& trans, const int& m, const int& n,
+    static inline void Gemv (const char& trans, const int& m, const int& n,
              const double& alpha, const double* a, const int& lda,
              const double* x,     const int& incx, const double& beta,
              double* y,     const int& incy)
@@ -253,7 +253,7 @@ namespace Blas
     }
 
     /// \brief BLAS level 2: Matrix vector multiply y = A \e x where A[m x n]
-    static inline void DoSgemv (const char& trans, const int& m, const int& n,
+    static inline void Gemv (const char& trans, const int& m, const int& n,
              const float& alpha, const float* a, const int& lda,
              const float* x,     const int& incx, const float& beta,
              float* y,     const int& incy)
@@ -270,7 +270,7 @@ namespace Blas
         F77NAME(dgemv) (trans,m,n,alpha,a,lda,x,incx,beta,y,incy);
     }
 
-    static inline void DoSgbmv (const char& trans,  const int& m,
+    static inline void Gbmv (const char& trans,  const int& m,
                  const int& n, const int& kl, const int& ku,
                  const double& alpha,
                  const double* a,    const int& lda,
@@ -281,7 +281,7 @@ namespace Blas
             incy);
     }
 
-    static inline void DoSgbmv (const char& trans,  const int& m,
+    static inline void Gbmv (const char& trans,  const int& m,
                  const int& n, const int& kl, const int& ku,
                  const float& alpha,
                  const float* a,    const int& lda,
@@ -302,14 +302,14 @@ namespace Blas
         F77NAME(dgbmv) (trans, m, n, kl, ku, alpha, a, lda, x, incx, beta, y, incy);
     }
 
-    static inline void DoStpmv(const char& uplo, const char& trans, 
+    static inline void Tpmv(const char& uplo, const char& trans, 
         const char& diag, const int& n, const double* ap, double* x, 
         const int& incx)
     {
         F77NAME(dtpmv) (uplo, trans, diag, n, ap, x, incx);
     }
 
-    static inline void DoStpmv(const char& uplo, const char& trans, 
+    static inline void Tpmv(const char& uplo, const char& trans, 
         const char& diag, const int& n, const float* ap, float* x, 
         const int& incx)
     {
@@ -324,7 +324,7 @@ namespace Blas
 
     /// \brief BLAS level 2: Matrix vector multiply y = A \e x where A
     /// is symmetric packed
-    static inline void DoSspmv (const char& uplo, const int& n, 
+    static inline void Spmv (const char& uplo, const int& n, 
             const double& alpha,
             const double* a,    const double* x, const int& incx,
             const double& beta,       double* y, const int& incy)
@@ -333,7 +333,7 @@ namespace Blas
     } 
     /// \brief BLAS level 2: Matrix vector multiply y = A \e x where A
     /// is symmetric packed
-    static inline void DoSspmv (const char& uplo, const int& n, 
+    static inline void Spmv (const char& uplo, const int& n, 
             const float& alpha,
             const float* a,    const float* x, const int& incx,
             const float& beta,       float* y, const int& incy)
@@ -362,7 +362,7 @@ namespace Blas
     ///   op(B)[k x n], C[m x n]
     ///   DGEMM  performs one of the matrix-matrix operations:  
     ///   C := alpha*op( A )*op( B ) + beta*C,
-    static inline void DoSgemm (const char& transa, const char& transb, 
+    static inline void Gemm (const char& transa, const char& transb, 
         const int& m,
         const int& n,        const int& k,       const double& alpha,
         const double* a,     const int& lda,     const double* b,
@@ -376,7 +376,7 @@ namespace Blas
     ///   op(B)[k x n], C[m x n]
     ///   DGEMM  performs one of the matrix-matrix operations:  
     ///   C := alpha*op( A )*op( B ) + beta*C,
-    static inline void DoSgemm (const char& transa,  const char& transb, 
+    static inline void Gemm (const char& transa,  const char& transb, 
         const int& m,
         const int& n,        const int& k,       const float& alpha,
         const float* a,     const int& lda,     const float* b,

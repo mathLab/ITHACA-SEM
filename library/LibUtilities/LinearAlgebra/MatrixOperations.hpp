@@ -171,7 +171,7 @@ void NekMultiplyFullMatrixFullMatrix(
         LDB = N;
     }
 
-    Blas::DoSgemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), M, N, K,
+    Blas::Gemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), M, N, K,
                 lhs.Scale() * rhs.Scale(), lhs.GetRawPtr(), LDA,
                 rhs.GetRawPtr(), LDB, 0.0, result.GetRawPtr(),
                 result.GetRows());
@@ -214,7 +214,7 @@ void MultiplyEqual(
     }
     RhsInnerType scale = rhs.Scale();
     Array<OneD, RhsInnerType> &buf = result.GetTempSpace();
-    Blas::DoSgemm(result.GetTransposeFlag(), rhs.GetTransposeFlag(), M, N, K,
+    Blas::Gemm(result.GetTransposeFlag(), rhs.GetTransposeFlag(), M, N, K,
                 scale, result.GetRawPtr(), LDA, rhs.GetRawPtr(), LDB, 0.0,
                 buf.data(), result.GetRows());
     result.SetSize(result.GetRows(), rhs.GetColumns());

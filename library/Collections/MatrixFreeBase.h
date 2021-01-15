@@ -53,7 +53,7 @@ namespace Collections
         /// flag for padding
         bool m_isPadded{false};
         ///  size after padding 
-        int  m_nElmtPad; 
+        unsigned int  m_nElmtPad; 
 
     };
     
@@ -61,8 +61,8 @@ namespace Collections
     {
     public:
         /// Constructor
-        MatrixFreeOneInOneOut(const int nIn, const int nOut,
-                              const int nCollSize)
+        MatrixFreeOneInOneOut(const unsigned int nIn, const unsigned int nOut,
+                              const unsigned int nCollSize)
         {
             // Padding if needed
             using vec_t = tinysimd::simd<NekDouble>;
@@ -88,10 +88,10 @@ namespace Collections
     {
     public:
         /// Constructor
-        MatrixFreeMultiInOneOut(const int coordim,
-                                const int nIn,
-                                const int nOut,
-                                const int nCollSize)
+        MatrixFreeMultiInOneOut(const unsigned int coordim,
+                                const unsigned int nIn,
+                                const unsigned int nOut,
+                                const unsigned int nCollSize)
         {
             m_coordim = coordim;
 
@@ -128,10 +128,10 @@ namespace Collections
     {
     public:
         /// Constructor
-        MatrixFreeOneInMultiOut(const int coordim,
-                                const int nIn,
-                                const int nOut,
-                                const int nCollSize)
+        MatrixFreeOneInMultiOut(const unsigned int coordim,
+                                const unsigned int nIn,
+                                const unsigned int nOut,
+                                const unsigned int nCollSize)
         {
             m_coordim = coordim;
 

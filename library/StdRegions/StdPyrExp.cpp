@@ -723,20 +723,30 @@ namespace Nektar
             const Array<OneD, const NekDouble>& xi,
                   Array<OneD,       NekDouble>& eta)
         {
-            if (fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
+            NekDouble d2 = 1.0 - xi[2];
+            if(fabs(d2) < NekConstants::kNekZeroTol)
             {
-                // Very top point of the pyramid
-                eta[0] = -1.0;
-                eta[1] = -1.0;
-                eta[2] = xi[2];
+                if(d2>=0.)
+                {
+                    d2 =  NekConstants::kNekZeroTol;
+                }
+                else
+                {
+                    d2 = -NekConstants::kNekZeroTol;
+                }
             }
-            else
-            {
-                // Below the line-singularity -- Common case
-                eta[2] = xi[2]; // eta_z = xi_z
-                eta[1] = 2.0*(1.0 + xi[1])/(1.0 - xi[2]) - 1.0;
-                eta[0] = 2.0*(1.0 + xi[0])/(1.0 - xi[2]) - 1.0;
-            }
+            eta[2] = xi[2]; // eta_z = xi_z
+            eta[1] = 2.0*(1.0 + xi[1])/d2 - 1.0;
+            eta[0] = 2.0*(1.0 + xi[0])/d2 - 1.0;
+        }
+
+        void StdPyrExp::v_LocCollapsedToLocCoord(
+            const Array<OneD, const NekDouble>& eta,
+                  Array<OneD,       NekDouble>& xi)
+        {
+            xi[0] = (1.0 + eta[0]) * (1.0 - eta[2]) * 0.5 - 1.0;
+            xi[1] = (1.0 + eta[1]) * (1.0 - eta[2]) * 0.5 - 1.0;
+            xi[2] = eta[2];
         }
 
         void StdPyrExp::v_GetCoords(Array<OneD, NekDouble> &xi_x,

@@ -116,13 +116,7 @@ class Operator
         /// Constructor
         Operator(
                 std::vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                std::shared_ptr<CoalescedGeomData> GeomData)
-            : m_stdExp(pCollExp[0]->GetStdExp()),
-              m_numElmt(pCollExp.size()),
-              m_wspSize(0)
-        {
-            boost::ignore_unused(GeomData);
-        }
+                std::shared_ptr<CoalescedGeomData> GeomData);
 
         /// Perform operation
         COLLECTIONS_EXPORT virtual void operator()(
@@ -163,10 +157,12 @@ class Operator
         }
 
     protected:
+        bool m_isDeformed; 
         StdRegions::StdExpansionSharedPtr m_stdExp;
         unsigned int m_numElmt;
+        unsigned int m_nqe;
         unsigned int m_wspSize;
-};
+    };
 
 /// Shared pointer to an Operator object
 typedef std::shared_ptr<Operator> OperatorSharedPtr;

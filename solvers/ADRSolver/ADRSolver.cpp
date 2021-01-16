@@ -66,15 +66,20 @@ int main(int argc, char *argv[])
         session->LoadSolverInfo("Driver", vDriverModule, "Standard");
         drv = GetDriverFactory().CreateInstance(vDriverModule, session, graph);
 
-LibUtilities::Timer timer;
-timer.Start();
+        LibUtilities::Timer timer;
+        timer.Start();
+
         // Execute driver
         drv->Execute();
-timer.Stop();
-timer.AccumulateRegion("Execute");
 
-// Print out timings
-LibUtilities::Timer::PrintElapsedRegions(session->GetComm());
+        timer.Stop();
+        timer.AccumulateRegion("Execute");
+
+        // Print out timings if verbose
+        if (session->DefinesCmdLineArgument("verbose"))
+        {
+            LibUtilities::Timer::PrintElapsedRegions(session->GetComm());
+        }
 
         LIKWID_MARKER_CLOSE;
 

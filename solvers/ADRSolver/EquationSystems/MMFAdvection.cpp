@@ -40,6 +40,7 @@
 
 #include <ADRSolver/EquationSystems/MMFAdvection.h>
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
 namespace Nektar
 {
@@ -240,7 +241,7 @@ void MMFAdvection::v_DoSolve()
     }
 
     // Initialise time integration scheme
-    m_intSoln = m_intScheme->InitializeScheme( m_timestep, fields, m_time, m_ode );
+    m_intScheme->InitializeScheme(m_timestep, fields, m_time, m_ode);
 
     // Check uniqueness of checkpoint output
     ASSERTL0((m_checktime == 0.0 && m_checksteps == 0) ||
@@ -272,7 +273,7 @@ void MMFAdvection::v_DoSolve()
     while (step < m_steps || m_time < m_fintime - NekConstants::kNekZeroTol)
     {
         timer.Start();
-        fields = m_intScheme->TimeIntegrate(step, m_timestep, m_intSoln, m_ode);
+        fields = m_intScheme->TimeIntegrate(step, m_timestep, m_ode);
         timer.Stop();
 
         m_time += m_timestep;
@@ -868,8 +869,8 @@ NekDouble MMFAdvection::ComputeCirculatingArclength(const NekDouble zlevel,
                                                     const NekDouble Rhs)
 {
 
-    NekDouble Tol = 0.0001, Maxiter = 1000, N = 100, F = 0.0, dF = 0.0;
-    NekDouble newy, y0, tmp;
+    NekDouble Tol = 0.0001, Maxiter = 1000, N = 100;
+    NekDouble newy, F = 0.0, dF = 1.0, y0, tmp;
 
     Array<OneD, NekDouble> xp(N + 1);
     Array<OneD, NekDouble> yp(N + 1);

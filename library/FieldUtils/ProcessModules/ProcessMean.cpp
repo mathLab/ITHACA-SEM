@@ -62,7 +62,7 @@ ProcessMean::~ProcessMean()
 
 void ProcessMean::Process(po::variables_map &vm)
 {
-    boost::ignore_unused(vm);
+    m_f->SetUpExp(vm);
 
     int nfields  = m_f->m_variables.size();
     int spacedim = m_f->m_graph->GetMeshDimension() + m_f->m_numHomogeneousDir;

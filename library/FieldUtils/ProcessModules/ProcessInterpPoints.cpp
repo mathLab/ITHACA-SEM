@@ -104,6 +104,8 @@ ProcessInterpPoints::~ProcessInterpPoints()
 
 void ProcessInterpPoints::Process(po::variables_map &vm)
 {
+    m_f->SetUpExp(vm);
+
     CreateFieldPts(vm);
 
     FieldSharedPtr fromField = std::shared_ptr<Field>(new Field());
@@ -118,8 +120,8 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0));
 
     // Set up range based on min and max of local parallel partition
-    SpatialDomains::DomainRangeShPtr rng =
-        MemoryManager<SpatialDomains::DomainRange>::AllocateSharedPtr();
+    LibUtilities::DomainRangeShPtr rng =
+        MemoryManager<LibUtilities::DomainRange>::AllocateSharedPtr();
     
     int coordim = m_f->m_fieldPts->GetDim();
     int npts    = m_f->m_fieldPts->GetNpoints();
@@ -186,7 +188,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
         fromfld, fromField->m_fielddef, fromField->m_data,
         LibUtilities::NullFieldMetaDataMap, ElementGIDs);
     int NumHomogeneousDir = fromField->m_fielddef[0]->m_numHomogeneousDir;
-    
+
     //----------------------------------------------
     // Set up Expansion information to use mode order from field
     fromField->m_graph->SetExpansionInfo(fromField->m_fielddef);
@@ -194,7 +196,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     fromField->m_exp.resize(nfields);
     fromField->m_exp[0] = fromField->SetUpFirstExpList(NumHomogeneousDir, true);
     m_f->m_exp.resize(nfields);
-    
+
     // declare auxiliary fields.
     for (i = 1; i < nfields; ++i)
     {
@@ -221,7 +223,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
     NekDouble clamp_low = m_config["clamptolowervalue"].as<NekDouble>();
     NekDouble clamp_up  = m_config["clamptouppervalue"].as<NekDouble>();
     NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();
-    
+
     // If 3DH1D must ensure that z-coordinate of all points corresponds to a
     // Fourier plane. Therefore we reset all points that lie outside
     // of a plane to the nearest plane. This means care must be taken when
@@ -246,7 +248,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             targetZ           = (targetZ + 1) * lHom / 2;
 
             // If point is out of plane, reset z-location to closest plane
-            if (fabs(m_f->m_fieldPts->GetPts(2)[pt] - targetZ) > 
+            if (fabs(m_f->m_fieldPts->GetPts(2)[pt] - targetZ) >
                 NekConstants::kVertexTheSameDouble)
             {
                 cout << "Resetting point from (x,y,z) = ("
@@ -256,7 +258,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
                         << m_f->m_fieldPts->GetPts(0)[pt] << ", "
                         << m_f->m_fieldPts->GetPts(1)[pt] << ", " << targetZ
                         << ")" << endl;
-            
+
                 m_f->m_fieldPts->GetPts(2)[pt] = targetZ;
             }
         }

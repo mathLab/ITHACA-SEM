@@ -786,7 +786,7 @@ void FilterAeroForces::CalculateForces(
                         Pb = Array<OneD, NekDouble>(nbc,0.0);
                         elmt->GetTracePhysVals(boundary,bc,pElmt,Pb);
 
-                        for(int j = 0; j < expdim*expdim; ++j)
+                        for(j = 0; j < expdim*expdim; ++j)
                         {
                             gradb[j] = Array<OneD, NekDouble>(nbc,0.0);
                             elmt->GetTracePhysVals(boundary,bc,grad[j],gradb[j]);
@@ -1229,7 +1229,7 @@ void FilterAeroForces::CalculateForcesMapping(
                         int nbc = bc->GetTotPoints();
 
                         // Extract values at boundary
-                        for(int j = 0; j < nVel*nVel; ++j)
+                        for(j = 0; j < nVel*nVel; ++j)
                         {
                             gradBnd[j] = Array<OneD, NekDouble>(nbc,0.0);
                             elmt->GetTracePhysVals(boundary,bc,gradElmt[j],gradBnd[j]);

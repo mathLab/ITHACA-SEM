@@ -1,4 +1,39 @@
-#pragma once
+///////////////////////////////////////////////////////////////////////////////
+//
+// File: avx2.cpp
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description: Vector type using avx2 extension.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+#ifndef NEKTAR_LIB_LIBUTILITES_SIMDLIB_AVX2_H
+#define NEKTAR_LIB_LIBUTILITES_SIMDLIB_AVX2_H
 
 #include <immintrin.h>
 #include <vector>
@@ -411,17 +446,11 @@ struct avx2Double4
         _data = _mm256_set1_pd(rhs);
     }
 
-    //gather
+    // gather/scatter with sse2
     template <typename T>
     inline void gather(scalarType const* p, const sse2Int4<T>& indices)
     {
         _data = _mm256_i32gather_pd(p, indices._data, 8);
-    }
-
-    template <typename T>
-    inline void gather(scalarType const* p, const avx2Long4<T>& indices)
-    {
-        _data = _mm256_i64gather_pd(p, indices._data, 8);
     }
 
     template <typename T>
@@ -431,10 +460,17 @@ struct avx2Double4
         alignas(alignment) scalarArray tmp;
         _mm256_store_pd(tmp, _data);
 
-        out[_mm_extract_epi32(indices._data, 0)] = tmp[0];
+        out[_mm_extract_epi32(indices._data, 0)] = tmp[0]; // SSE4.1
         out[_mm_extract_epi32(indices._data, 1)] = tmp[1];
         out[_mm_extract_epi32(indices._data, 2)] = tmp[2];
         out[_mm_extract_epi32(indices._data, 3)] = tmp[3];
+    }
+
+    // gather scatter with avx2
+    template <typename T>
+    inline void gather(scalarType const* p, const avx2Long4<T>& indices)
+    {
+        _data = _mm256_i64gather_pd(p, indices._data, 8);
     }
 
     template <typename T>
@@ -570,61 +606,20 @@ inline void deinterleave_store(
     size_t dataLen,
     double *out)
 {
-#if 0
-    double *out0 = out;
-    double *out1 = out + dataLen;
-    double *out2 = out + 2 * dataLen;
-    double *out3 = out + 3 * dataLen;
-
-
-    for (size_t i = 0; i < dataLen; ++i)
-    {
-        out0[i] = in[i][0];
-        out1[i] = in[i][1];
-        out2[i] = in[i][2];
-        out3[i] = in[i][3];
-    }
-#else
-
     // size_t nBlocks = dataLen / 4;
 
     alignas(32) size_t tmp[4] = {0, dataLen, 2*dataLen, 3*dataLen};
     using index_t = avx2Long4<size_t>;
     index_t index0(tmp);
-    // index_t index1 = index0 + 1;
-    // index_t index2 = index0 + 2;
-    // index_t index3 = index0 + 3;
-
-    // // 4x unrolled loop
-    // for (size_t i = 0; i < nBlocks; ++i)
-    // {
-    //     in[i].scatter(out, index0);
-    //     in[i+1].scatter(out, index1);
-    //     in[i+2].scatter(out, index2);
-    //     in[i+3].scatter(out, index3);
-    //     index0 = index0 + 4;
-    //     index1 = index1 + 4;
-    //     index2 = index2 + 4;
-    //     index3 = index3 + 4;
-    // }
-
-    // // spillover loop
-    // for (size_t i = 4 * nBlocks; i < dataLen; ++i)
-    // {
-    //     in[i].scatter(out, index0);
-    //     index0 = index0 + 1;
-    // }
 
     for (size_t i = 0; i < dataLen; ++i)
     {
         in[i].scatter(out, index0);
         index0 = index0 + 1;
     }
-#endif
-
-
 }
 
 #endif // defined(__AVX2__)
 
 } // namespace tinysimd
+#endif

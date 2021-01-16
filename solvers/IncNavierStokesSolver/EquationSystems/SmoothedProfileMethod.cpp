@@ -178,11 +178,27 @@ namespace Nektar
         // Make sure that m_phi and m_up are defined
         UpdatePhiUp(0.0);
 
+        // Get the time integration scheme.
+        LibUtilities::TimeIntScheme timeInt;
+        if (m_session->DefinesTimeIntScheme())
+        {
+            timeInt = m_session->GetTimeIntScheme();
+        }
+        else
+        {
+            timeInt.method = m_session->GetSolverInfo("TimeIntegrationMethod");
+            timeInt.order = timeInt.method.back() - '0';
+
+	    // Remove everything past the IMEX.
+	    timeInt.method = timeInt.method.substr(0,4);
+        }
+
         // Select 'm_gamma0' depending on IMEX order
-        string intType = m_session->GetSolverInfo("TimeIntegrationMethod");
-        ASSERTL0(boost::iequals(intType.substr(0, 9), "IMEXOrder"),
-                 "TimeIntegrationMethod must be 'IMEXOrder1' to '4'.")
-        switch (intType.back()-'0')
+        ASSERTL0(boost::iequals(timeInt.method, "IMEX") &&
+                 1 <= timeInt.order && timeInt.order <= 4,
+                 "The TimeIntegrationMethod scheme must be IMEX with order '1' to '4'.")
+
+        switch (timeInt.order)
         {
         case 1:
             m_gamma0 = 1.0;

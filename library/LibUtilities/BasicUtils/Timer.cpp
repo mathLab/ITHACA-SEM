@@ -64,11 +64,16 @@ NekDouble Timer::TimePerTest(unsigned int n)
 
 void Timer::AccumulateRegion(std::string region)
 {
+    // search for region
     auto search = m_elapsedRegion.find(region);
     if (search == m_elapsedRegion.end())
     {
         m_elapsedRegion.insert({region,
             std::make_pair<Timer::Seconds, size_t>(this->Elapsed(),1)});
+        // update width field width
+        m_maxStringWidth = std::max(
+            static_cast<decltype(m_maxStringWidth)>(region.size()),
+            m_maxStringWidth);
     }
     else
     {
@@ -88,17 +93,26 @@ void Timer::PrintElapsedRegions()
     PrintElapsedRegions(comm);
 }
     
-void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm)
+void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm,
+                                std::ostream &o)
 {
+    std::vector<std::string> labels{
+        "Region",
+        "Elapsed time Avg (s)",
+        "Min (s)",
+        "Max (s)",
+        "Count"};
+
+
     if (comm->GetRank() == 0 &&
         m_elapsedRegion.begin() != m_elapsedRegion.end())
     {
-        std::cout
-            << "-------------------------------------------\n"
-            << "Region\t\t Elapsed time Avg (s)"
-            << "\t Min (s)"
-            << "\t Max (s)"
-            << "\t Count\n";
+        o << "-------------------------------------------\n";
+        o << std::setw(m_maxStringWidth+2) << labels[0] << '\t'
+          << std::setw(10) << labels[1] << '\t'
+          << std::setw(10) << labels[2] << '\t'
+          << std::setw(10) << labels[3] << '\t'
+          << std::setw(10) << labels[4] << '\n';
     }
     for (auto item = m_elapsedRegion.begin();
             item != m_elapsedRegion.end(); ++item)
@@ -113,17 +127,20 @@ void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm)
 
         if (comm->GetRank() == 0)
         {
-            std::cout << std::setw(22) << item->first << '\t'
-                << std::setw(8) << elapsedAve << '\t'
-                << std::setw(8) << elapsedMin << '\t'
-                << std::setw(8) << elapsedMax << '\t'
-                << std::setw(8) << item->second.second << '\n';
+            o << std::setw(m_maxStringWidth+2) << item->first << '\t'
+              << std::setw(10) << elapsedAve << '\t'
+              << std::setw(10) << elapsedMin << '\t'
+              << std::setw(10) << elapsedMax << '\t'
+              << std::setw(10) << item->second.second << '\n';
         }
     }
 }
 
+// static members init
 std::unordered_map<std::string, std::pair<Timer::Seconds, size_t>>
     Timer::m_elapsedRegion{};
+
+unsigned short Timer::m_maxStringWidth = 10;
 
 }
 } // end Nektar namespace

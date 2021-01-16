@@ -226,56 +226,6 @@ struct BwdTransQuad : public BwdTrans, public Helper<2>
         return std::make_shared<BwdTransQuad>(basis, nElmt);
     }
 
-    static NekDouble FlopsPerElement(
-        const int nm,
-        const int nq0,
-        const int nq1)
-    {
-        int loop_i = nq0*nm*nm*2;
-        int loop_j = nq1*nq0*nm*2;
-        return loop_i + loop_j;
-    }
-
-    NekDouble GFlops() final
-    {
-
-        const int nm = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-
-        int flops = m_nElmt * BwdTransQuad::FlopsPerElement(nm, nq0, nq1);
-        return flops * 1e-9;
-    }
-
-    NekDouble NLoads() final
-    {
-        const int nm0 = m_basis[0]->GetNumModes();
-        const int nm1 = m_basis[1]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-
-        int load_iqp = nq0 * nm1 * nm0 * 2;
-        int load_jiq = nq1 * nq0 * nm1 * 2;
-        int load_expected = load_iqp + load_jiq;
-
-        return m_nElmt * load_expected;
-
-    }
-
-    NekDouble NStores() final
-    {
-        // const int nm0 = m_basis[0]->GetNumModes();
-        const int nm1 = m_basis[1]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-
-        int store_iq = nq0 * nm1;
-        int store_ij = nq0 * nq1;
-        int store_expected = store_iq + store_ij;
-
-        return m_nElmt * store_expected;
-    }
-
     NekDouble Ndof() final
     {
         return m_nmTot * this->m_nElmt;
@@ -434,58 +384,6 @@ struct BwdTransTri : public BwdTrans, public Helper<2>
         int nElmt)
     {
         return std::make_shared<BwdTransTri>(basis, nElmt);
-    }
-
-    static NekDouble FlopsPerElement(
-        const int nm,
-        const int nq0,
-        const int nq1)
-    {
-        const int pq_loop = nm * (nm+1) / 2;
-        const int inner = 2 * nm + 3;
-
-        return nq1 * (2*pq_loop + nq0*inner);
-    }
-
-    NekDouble GFlops() final
-    {
-        const int nm = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-
-        int flops = m_nElmt * BwdTransTri::FlopsPerElement(nm, nq0, nq1);
-
-        return flops * 1e-9;
-    }
-
-    NekDouble NLoads() final
-    {
-        const int nm0 = m_basis[0]->GetNumModes();
-        // const int nm1 = m_basis[1]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-
-        int load_jpq = nq1 * (nm0 * (nm0 + 1) / 2) * 2;
-        int load_jip =  nq1 * nq0 * nm0 * 2;
-        int load_corr = nq1 * nq0 * 3;
-        int load_expected = load_jpq + load_jip + load_corr;
-
-        return m_nElmt * load_expected;
-
-    }
-
-    NekDouble NStores() final
-    {
-        const int nm0 = m_basis[0]->GetNumModes();
-        // const int nm1 = m_basis[1]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-
-        int store_jp = nq1 * nm0;
-        int store_ji = nq1 * nq0;
-        int store_expected = store_jp + store_ji;
-
-        return m_nElmt * store_expected;
     }
 
     NekDouble Ndof() final
@@ -732,67 +630,9 @@ struct BwdTransHex : public BwdTrans, public Helper<3>
         return std::make_shared<BwdTransHex>(basis, nElmt);
     }
 
-    static NekDouble FlopsPerElement(
-        const int nm,
-        const int nq0,
-        const int nq1,
-        const int nq2)
-    {
-        int loop_i = nq0 * nm *  nm  * nm  * 2;
-        int loop_j = nq1 * nq0 * nm  * nm  * 2;
-        int loop_k = nq2 * nq1 * nq0 * nm  * 2;
-
-        return (loop_i + loop_j + loop_k);
-    }
-
-    NekDouble GFlops() final
-    {
-        const int nm = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int flops = this->m_nElmt * BwdTransHex::FlopsPerElement(nm,nq0,nq1,nq2);
-        return flops * 1e-9;
-    }
-
     NekDouble Ndof()
     {
         return m_nmTot * this->m_nElmt;
-    }
-
-    NekDouble NLoads() final
-    {
-        const int nm0 = m_basis[0]->GetNumModes();
-        const int nm1 = m_basis[1]->GetNumModes();
-        const int nm2 = m_basis[2]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int load_irqp = nq0 * nm2 * nm1 * nm0 * 2;
-        int load_jirq = nq1 * nq0 * nm2 * nm1 * 2;
-        int load_kjir = nq2 * nq1 * nq0 * nm2 * 2;
-        int load_expected = load_irqp + load_jirq + load_kjir;
-
-        return load_expected * m_nElmt;
-    }
-
-    NekDouble NStores() final
-    {
-        // const int nm0 = m_basis[0]->GetNumModes();
-        const int nm1 = m_basis[1]->GetNumModes();
-        const int nm2 = m_basis[2]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int store_irq = nq0 * nm2 * nm1;
-        int store_jir = nq1 * nq0 * nm2;
-        int store_kji = nq0 * nq1 * nq2;
-        int store_expected = store_irq + store_jir + store_kji;
-
-        return store_expected * m_nElmt;
     }
 
     void operator()(const Array<OneD, const NekDouble> &in,
@@ -949,67 +789,9 @@ struct BwdTransTet : public BwdTrans, public Helper<3>
         return std::make_shared<BwdTransTet>(basis, nElmt);
     }
 
-    static NekDouble FlopsPerElement(
-        const int nm,
-        const int nq0,
-        const int nq1,
-        const int nq2)
-    {
-        int pqr_loop = 2.0 * nm*(nm+1)*(nm+2) / 6;
-        int pq_loop = 2.0 * nm*(nm+1) / 2;
-        int i_loop = 2.0 * nm + 8 + 4*(nm - 1);
-
-        return ( nq2 * (pqr_loop + nq1*(pq_loop + nq0*(i_loop) )) );
-    }
-
-    NekDouble GFlops() final
-    {
-        const int nm = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int flop_estimate = m_nElmt * BwdTransTet::FlopsPerElement(nm, nq0, nq1, nq2);
-        return flop_estimate * 1e-9; //Convert to gigaflops.
-    }
-
     NekDouble Ndof() final
     {
         return m_nmTot * this->m_nElmt;
-    }
-
-    NekDouble NLoads() final
-    {
-        const int nm0 = m_basis[0]->GetNumModes();
-        const int nm1 = m_basis[1]->GetNumModes();
-        // const int nm2 = m_basis[2]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int load_kpqr = nq2 * (nm0*(nm0+1)/2) * nm1 * 2;
-        int load_kjpq = nq2 * nq1 * nm0 * nm1 * 2;
-        int load_kjip = nq2 * nq1 * nq0 * nm0 * 2;
-        int corr = nq2 * nq1 * nq0 * (2 + nm1*2);
-        int load_expected = load_kpqr + load_kjpq + load_kjip + corr;
-
-        return load_expected * m_nElmt;
-    }
-
-    NekDouble NStores() final
-    {
-        const int nm0 = m_basis[0]->GetNumModes();
-        const int nm1 = m_basis[1]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int store_kpq = nq2 * nm0 * nm1;
-        int store_kjp = nq2 * nq1 * nm0;
-        int store_kji = nq2 * nq1 * nq0;
-        int store_expected = store_kpq + store_kjp + store_kji;
-
-        return store_expected * m_nElmt;
     }
 
     void operator()(const Array<OneD, const NekDouble> &in,
@@ -1322,70 +1104,9 @@ struct BwdTransPrism : public BwdTrans, public Helper<3>
         return std::make_shared<BwdTransPrism>(basis, nElmt);
     }
 
-    static NekDouble FlopsPerElement(
-        const int nm,
-        const int nq0,
-        const int nq1,
-        const int nq2)
-    {
-        int loop_pqr = 2 * nm * nm * (nm + 1) / 2.0;
-        int loop_pq = nm * nm * 2.0;
-        int loop_p = nm * 2.0;
-        int q_correction = nm * 6.0;
-
-        return nq2 * (loop_pqr + nq1 *( loop_pq + nq0*(loop_p + q_correction)));
-    }
-
-    double GFlops() final
-    {
-        const int nm = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int flops = m_nElmt * BwdTransPrism::FlopsPerElement(nm, nq0, nq1, nq2);
-
-        return flops * 1e-9;
-
-    }
-
     NekDouble Ndof() final
     {
         return m_nmTot * this->m_nElmt;
-    }
-
-    NekDouble NLoads() final
-    {
-        const int nm0 = m_basis[0]->GetNumModes();
-        const int nm2 = m_basis[2]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int load_kpqr = nq2 * (nm0*nm0*(nm0+1) / 2) * 2;
-        int load_kjpq = nq2 * nq1 * nm0 * nm0 * 2;
-        int load_kjip = nq2 * nq1 * nq0 * nm0 * 2;
-        int corr = nq2 * nq1 * nq0 * (8 + 4 *(nm2 - 1));
-        int load_expected = load_kpqr + load_kjpq + load_kjip + corr;
-
-        return load_expected * m_nElmt;
-    }
-
-    NekDouble NStores() final
-    {
-        const int nm0 = m_basis[0]->GetNumModes();
-        // const int nm1 = m_basis[1]->GetNumModes();
-        // const int nm2 = m_basis[2]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int store_kpr = nq2 * nm0 * nm0;
-        int store_kjp = nq2 * nq1 * nm0;
-        int store_kji = nq2 * nq1 * nq0;
-        int store_expected = store_kpr + store_kjp + store_kji;
-
-        return store_expected * m_nElmt;
     }
 
     void operator()(const Array<OneD, const NekDouble> &in,

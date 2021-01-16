@@ -102,11 +102,11 @@ public:
         data->~DataType();
         GetMemoryPool().Deallocate(data, sizeof(DataType));
 #else
-    #ifdef NEKTAR_USE_ALIGNED_MEM
+#ifdef NEKTAR_USE_ALIGNED_MEM
         boost::alignment::aligned_free(data);
-    #else
+#else
         delete data;
-    #endif
+#endif
 #endif
 
         data = NULL;

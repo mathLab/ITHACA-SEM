@@ -57,7 +57,4 @@ void export_ContField()
                  py::default_call_policies(),
                  (py::arg("session"), py::arg("graph"), py::arg("var"),
                   py::arg("checkSingular") = true)));
-
-    NEKPY_SHPTR_FIX(ContField, ExpList);
-    NEKPY_SHPTR_FIX(ContField, DisContField);
 }

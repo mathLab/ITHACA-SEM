@@ -76,7 +76,8 @@ class Timer
 
         /// \brief Print elapsed time and call count for each region
         LIB_UTILITIES_EXPORT static void PrintElapsedRegions
-            (LibUtilities::CommSharedPtr comm);
+        (LibUtilities::CommSharedPtr comm,
+         std::ostream &o = std::cout);
 
         /// \brief Returns amount of seconds per iteration in
         ///        a test with n iterations.
@@ -87,7 +88,7 @@ class Timer
         CounterType m_end;
         static std::unordered_map<std::string, std::pair<Seconds, size_t>>
             m_elapsedRegion;
-
+        static unsigned short m_maxStringWidth;
 
 };
 

@@ -41,223 +41,237 @@ SET(BasicUtilsHeaders
 )
 
 SET(BasicUtilsSources
-    ./BasicUtils/CompressData.cpp
-    ./BasicUtils/CsvIO.cpp
-    ./BasicUtils/Equation.cpp
-    ./BasicUtils/ErrorUtil.cpp
-    ./BasicUtils/FieldIO.cpp
-    ./BasicUtils/FieldIOXml.cpp
-    ./BasicUtils/FileSystem.cpp
-    ./BasicUtils/Interpolator.cpp
-    ./BasicUtils/ParseUtils.cpp
-    ./BasicUtils/PtsField.cpp
-    ./BasicUtils/PtsIO.cpp
-    ./BasicUtils/SessionReader.cpp
-    ./BasicUtils/Thread.cpp
-    ./BasicUtils/ThreadBoost.cpp
-    ./BasicUtils/Timer.cpp
-    ./BasicUtils/Vmath.cpp
+./BasicUtils/CompressData.cpp
+./BasicUtils/CsvIO.cpp
+./BasicUtils/Equation.cpp
+./BasicUtils/ErrorUtil.cpp
+./BasicUtils/FieldIO.cpp
+./BasicUtils/FieldIOXml.cpp
+./BasicUtils/FileSystem.cpp
+./BasicUtils/Interpolator.cpp
+./BasicUtils/ParseUtils.cpp
+./BasicUtils/PtsField.cpp
+./BasicUtils/PtsIO.cpp
+./BasicUtils/SessionReader.cpp
+./BasicUtils/Thread.cpp
+./BasicUtils/ThreadBoost.cpp
+./BasicUtils/Timer.cpp
+./BasicUtils/Vmath.cpp
 )
 
 # HDF5
 IF( NEKTAR_USE_HDF5 )
-    SET(BasicUtilsHeaders ${BasicUtilsHeaders}
-	./BasicUtils/H5.h
-        ./BasicUtils/FieldIOHdf5.h)
-    SET(BasicUtilsSources ${BasicUtilsSources}
-	./BasicUtils/H5.cpp
-        ./BasicUtils/FieldIOHdf5.cpp)
+SET(BasicUtilsHeaders ${BasicUtilsHeaders}
+./BasicUtils/H5.h
+./BasicUtils/FieldIOHdf5.h)
+SET(BasicUtilsSources ${BasicUtilsSources}
+./BasicUtils/H5.cpp
+./BasicUtils/FieldIOHdf5.cpp)
 ENDIF( NEKTAR_USE_HDF5 )
 
 
 SET(CommunicationHeaders
-    ./Communication/Comm.h
-    ./Communication/CommSerial.h
-    ./Communication/CommDataType.h
-    ./Communication/GsLib.hpp
-    ./Communication/Transposition.h
-    ./Communication/Xxt.hpp
+./Communication/Comm.h
+./Communication/CommSerial.h
+./Communication/CommDataType.h
+./Communication/GsLib.hpp
+./Communication/Transposition.h
+./Communication/Xxt.hpp
 )
 
 SET(CommunicationSources
-    ./Communication/Comm.cpp
-    ./Communication/CommDataType.cpp
-    ./Communication/CommSerial.cpp
-    ./Communication/Transposition.cpp
+./Communication/Comm.cpp
+./Communication/CommDataType.cpp
+./Communication/CommSerial.cpp
+./Communication/Transposition.cpp
 )
 
 IF(NEKTAR_USE_MPI)
-    SET(CommunicationHeaders ${CommunicationHeaders}
-        ./Communication/CommMpi.h)
-    SET(CommunicationSources ${CommunicationSources}
-        ./Communication/CommMpi.cpp)
+SET(CommunicationHeaders ${CommunicationHeaders}
+./Communication/CommMpi.h)
+SET(CommunicationSources ${CommunicationSources}
+./Communication/CommMpi.cpp)
 ENDIF(NEKTAR_USE_MPI)
 
 IF ( NEKTAR_USE_CWIPI )
-    SET(CommunicationHeaders ${CommunicationHeaders}
-        ./Communication/CommCwipi.h)
-    SET(CommunicationSources ${CommunicationSources}
-        ./Communication/CommCwipi.cpp)
+SET(CommunicationHeaders ${CommunicationHeaders}
+./Communication/CommCwipi.h)
+SET(CommunicationSources ${CommunicationSources}
+./Communication/CommCwipi.cpp)
 ENDIF ()
 
 SET(FFTHeaders
-       ./FFT/NektarFFT.h
+./FFT/NektarFFT.h
 )
 
 SET(FFTSources
-       ./FFT/NektarFFT.cpp
+./FFT/NektarFFT.cpp
 )
 
 IF(NEKTAR_USE_FFTW)
-    SET(FFTHeaders ${FFTHeaders} ./FFT/NekFFTW.h)
-    SET(FFTSources ${FFTSources} ./FFT/NekFFTW.cpp)
+SET(FFTHeaders ${FFTHeaders} ./FFT/NekFFTW.h)
+SET(FFTSources ${FFTSources} ./FFT/NekFFTW.cpp)
 ENDIF(NEKTAR_USE_FFTW)
 
 SET(FoundationHeaders
-    ./Foundations/Basis.h
-    ./Foundations/BasisType.h
-    ./Foundations/BLPoints.h
-    ./Foundations/FoundationsFwd.hpp
-    ./Foundations/Foundations.hpp
-    ./Foundations/FourierPoints.h
-    ./Foundations/FourierSingleModePoints.h
-    ./Foundations/GaussPoints.h
-    ./Foundations/Graph.h
-    ./Foundations/InterpCoeff.h
-    ./Foundations/Interp.h
-    ./Foundations/ManagerAccess.h
-    ./Foundations/NodalPrismEvenlySpaced.h
-    ./Foundations/NodalPrismElec.h
-    ./Foundations/NodalTetElecData.h
-    ./Foundations/NodalTetElec.h
-    ./Foundations/NodalTetEvenlySpaced.h
-    ./Foundations/NodalTriElecData.h
-    ./Foundations/NodalTriElec.h
-    ./Foundations/NodalTriEvenlySpaced.h
-    ./Foundations/NodalTriFeketeData.h
-    ./Foundations/NodalTriFekete.h
-    ./Foundations/NodalTriSPIData.h
-    ./Foundations/NodalTriSPI.h
-    ./Foundations/NodalTetSPI.h
-    ./Foundations/NodalPrismSPI.h
-    ./Foundations/NodalTetSPIData.h
-    ./Foundations/NodalQuadElec.h
-    ./Foundations/NodalHexElec.h
-    ./Foundations/NodalUtil.h
-    ./Foundations/PhysGalerkinProject.h
-    ./Foundations/Points.h
-    ./Foundations/PointsType.h
-    ./Foundations/PolyEPoints.h
+./Foundations/Basis.h
+./Foundations/BasisType.h
+./Foundations/BLPoints.h
+./Foundations/FoundationsFwd.hpp
+./Foundations/Foundations.hpp
+./Foundations/FourierPoints.h
+./Foundations/FourierSingleModePoints.h
+./Foundations/GaussPoints.h
+./Foundations/Graph.h
+./Foundations/InterpCoeff.h
+./Foundations/Interp.h
+./Foundations/ManagerAccess.h
+./Foundations/NodalPrismEvenlySpaced.h
+./Foundations/NodalPrismElec.h
+./Foundations/NodalTetElecData.h
+./Foundations/NodalTetElec.h
+./Foundations/NodalTetEvenlySpaced.h
+./Foundations/NodalTriElecData.h
+./Foundations/NodalTriElec.h
+./Foundations/NodalTriEvenlySpaced.h
+./Foundations/NodalTriFeketeData.h
+./Foundations/NodalTriFekete.h
+./Foundations/NodalTriSPIData.h
+./Foundations/NodalTriSPI.h
+./Foundations/NodalTetSPI.h
+./Foundations/NodalPrismSPI.h
+./Foundations/NodalTetSPIData.h
+./Foundations/NodalQuadElec.h
+./Foundations/NodalHexElec.h
+./Foundations/NodalUtil.h
+./Foundations/PhysGalerkinProject.h
+./Foundations/Points.h
+./Foundations/PointsType.h
+./Foundations/PolyEPoints.h
 )
 
 SET(FoundationSources
-    ./Foundations/Basis.cpp
-    ./Foundations/BLPoints.cpp
-    ./Foundations/FourierPoints.cpp
-    ./Foundations/FourierSingleModePoints.cpp
-    ./Foundations/GaussPoints.cpp
-    ./Foundations/Graph.cpp
-    ./Foundations/InterpCoeff.cpp
-    ./Foundations/Interp.cpp
-    ./Foundations/ManagerAccess.cpp
-    ./Foundations/NodalPrismEvenlySpaced.cpp
-    ./Foundations/NodalPrismElec.cpp
-    ./Foundations/NodalTetElec.cpp
-    ./Foundations/NodalTetEvenlySpaced.cpp
-    ./Foundations/NodalTriElec.cpp
-    ./Foundations/NodalTriEvenlySpaced.cpp
-    ./Foundations/NodalTriFekete.cpp
-    ./Foundations/NodalTriSPI.cpp
-    ./Foundations/NodalTetSPI.cpp
-    ./Foundations/NodalQuadElec.cpp
-    ./Foundations/NodalHexElec.cpp
-    ./Foundations/NodalPrismSPI.cpp
-    ./Foundations/NodalUtil.cpp
-    ./Foundations/PhysGalerkinProject.cpp
-    ./Foundations/Points.cpp
-    ./Foundations/PolyEPoints.cpp
+./Foundations/Basis.cpp
+./Foundations/BLPoints.cpp
+./Foundations/FourierPoints.cpp
+./Foundations/FourierSingleModePoints.cpp
+./Foundations/GaussPoints.cpp
+./Foundations/Graph.cpp
+./Foundations/InterpCoeff.cpp
+./Foundations/Interp.cpp
+./Foundations/ManagerAccess.cpp
+./Foundations/NodalPrismEvenlySpaced.cpp
+./Foundations/NodalPrismElec.cpp
+./Foundations/NodalTetElec.cpp
+./Foundations/NodalTetEvenlySpaced.cpp
+./Foundations/NodalTriElec.cpp
+./Foundations/NodalTriEvenlySpaced.cpp
+./Foundations/NodalTriFekete.cpp
+./Foundations/NodalTriSPI.cpp
+./Foundations/NodalTetSPI.cpp
+./Foundations/NodalQuadElec.cpp
+./Foundations/NodalHexElec.cpp
+./Foundations/NodalPrismSPI.cpp
+./Foundations/NodalUtil.cpp
+./Foundations/PhysGalerkinProject.cpp
+./Foundations/Points.cpp
+./Foundations/PolyEPoints.cpp
 )
 
 SET(InterpreterHeaders
-    ./Interpreter/Interpreter.h
+./Interpreter/Interpreter.h
 )
 
 SET(InterpreterSources
-    ./Interpreter/Interpreter.cpp
+./Interpreter/Interpreter.cpp
 )
 
 SET(KernelHeaders
-    ./Kernel/kernel.h
+./Kernel/kernel.h
 )
 
 SET(KernelSources
-    ./Kernel/kernel.cpp
+./Kernel/kernel.cpp
 )
 
 SET(LinearAlgebraHeaders
-    ./LinearAlgebra/Arpack.hpp
-    ./LinearAlgebra/BlasArray.hpp
-    ./LinearAlgebra/Blas.hpp
-    ./LinearAlgebra/BlockMatrix.hpp
-    ./LinearAlgebra/CanGetRawPtr.hpp
-    ./LinearAlgebra/ExplicitInstantiation.h
-    ./LinearAlgebra/Lapack.hpp
-    ./LinearAlgebra/MatrixBase.hpp
-    ./LinearAlgebra/MatrixFuncs.h
-    ./LinearAlgebra/MatrixOperations.hpp
-    ./LinearAlgebra/MatrixStorageType.h
-    ./LinearAlgebra/MatrixType.h
-    ./LinearAlgebra/NekLinAlgAlgorithms.hpp
-    ./LinearAlgebra/NekLinSys.hpp
-    ./LinearAlgebra/NekMatrixFwd.hpp
-    ./LinearAlgebra/NekMatrix.hpp
-    ./LinearAlgebra/NekPoint.hpp
-    ./LinearAlgebra/NekTypeDefs.hpp
-    ./LinearAlgebra/NekVectorFwd.hpp
-    ./LinearAlgebra/NekVector.hpp
-    ./LinearAlgebra/PointerWrapper.h
-    ./LinearAlgebra/ScaledMatrix.hpp
-    ./LinearAlgebra/StandardMatrix.hpp
-    ./LinearAlgebra/TransF77.hpp
-    ./LinearAlgebra/StorageSmvBsr.hpp
-    ./LinearAlgebra/NistSparseDescriptors.hpp
-    ./LinearAlgebra/SparseDiagBlkMatrix.hpp
-    ./LinearAlgebra/SparseMatrix.hpp
-    ./LinearAlgebra/SparseMatrixFwd.hpp
-    ./LinearAlgebra/SparseUtils.hpp
+./LinearAlgebra/Arpack.hpp
+./LinearAlgebra/BlasArray.hpp
+./LinearAlgebra/Blas.hpp
+./LinearAlgebra/BlockMatrix.hpp
+./LinearAlgebra/CanGetRawPtr.hpp
+./LinearAlgebra/ExplicitInstantiation.h
+./LinearAlgebra/Lapack.hpp
+./LinearAlgebra/MatrixBase.hpp
+./LinearAlgebra/MatrixFuncs.h
+./LinearAlgebra/MatrixOperations.hpp
+./LinearAlgebra/MatrixStorageType.h
+./LinearAlgebra/MatrixType.h
+./LinearAlgebra/NekLinAlgAlgorithms.hpp
+./LinearAlgebra/NekLinSys.hpp
+./LinearAlgebra/NekLinSysIter.h
+./LinearAlgebra/NekLinSysIterCG.h
+./LinearAlgebra/NekLinSysIterFixedpointJacobi.h
+./LinearAlgebra/NekLinSysIterGMRES.h
+./LinearAlgebra/NekMatrixFwd.hpp
+./LinearAlgebra/NekMatrix.hpp
+./LinearAlgebra/NekNonlinSys.h
+./LinearAlgebra/NekNonlinSysNewton.h
+./LinearAlgebra/NekPoint.hpp
+./LinearAlgebra/NekSys.h
+./LinearAlgebra/NekTypeDefs.hpp
+./LinearAlgebra/NekVectorFwd.hpp
+./LinearAlgebra/NekVector.hpp
+./LinearAlgebra/PointerWrapper.h
+./LinearAlgebra/ScaledMatrix.hpp
+./LinearAlgebra/StandardMatrix.hpp
+./LinearAlgebra/TransF77.hpp
+./LinearAlgebra/StorageSmvBsr.hpp
+./LinearAlgebra/NistSparseDescriptors.hpp
+./LinearAlgebra/SparseDiagBlkMatrix.hpp
+./LinearAlgebra/SparseMatrix.hpp
+./LinearAlgebra/SparseMatrixFwd.hpp
+./LinearAlgebra/SparseUtils.hpp
 )
 
 SET(LinearAlgebraSources
-    ./LinearAlgebra/blas.cpp
-    ./LinearAlgebra/BlockMatrix.cpp
-    ./LinearAlgebra/MatrixBase.cpp
-    ./LinearAlgebra/MatrixFuncs.cpp
-    ./LinearAlgebra/MatrixOperations.cpp
-    ./LinearAlgebra/MatrixVectorMultiplication.cpp
-    ./LinearAlgebra/NekVector.cpp
-    ./LinearAlgebra/ScaledMatrix.cpp
-    ./LinearAlgebra/StandardMatrix.cpp
-    ./LinearAlgebra/SparseUtils.cpp
-    ./LinearAlgebra/StorageSmvBsr.cpp
-    ./LinearAlgebra/SparseDiagBlkMatrix.cpp
-    ./LinearAlgebra/SparseMatrix.cpp
+./LinearAlgebra/blas.cpp
+./LinearAlgebra/BlockMatrix.cpp
+./LinearAlgebra/MatrixBase.cpp
+./LinearAlgebra/MatrixFuncs.cpp
+./LinearAlgebra/MatrixOperations.cpp
+./LinearAlgebra/MatrixVectorMultiplication.cpp
+./LinearAlgebra/NekLinSysIter.cpp
+./LinearAlgebra/NekLinSysIterGMRES.cpp
+./LinearAlgebra/NekLinSysIterCG.cpp
+./LinearAlgebra/NekLinSysIterFixedpointJacobi.cpp
+./LinearAlgebra/NekNonlinSys.cpp
+./LinearAlgebra/NekNonlinSysNewton.cpp
+./LinearAlgebra/NekSys.cpp
+./LinearAlgebra/NekVector.cpp
+./LinearAlgebra/ScaledMatrix.cpp
+./LinearAlgebra/StandardMatrix.cpp
+./LinearAlgebra/SparseUtils.cpp
+./LinearAlgebra/StorageSmvBsr.cpp
+./LinearAlgebra/SparseDiagBlkMatrix.cpp
+./LinearAlgebra/SparseMatrix.cpp
 )
 
 SET(MemoryHeaders
-    ./Memory/ThreadSpecificPool.hpp
-    ./Memory/NekMemoryManager.hpp
+./Memory/ThreadSpecificPool.hpp
+./Memory/NekMemoryManager.hpp
 )
 
 SET(MemorySources
-    ./Memory/ThreadSpecificPool.cpp
+./Memory/ThreadSpecificPool.cpp
 )
 
 SET(PolyLibHeaders
-    ./Polylib/Polylib.h
+./Polylib/Polylib.h
 )
 
 SET(PolylibSources
-    ./Polylib/Polylib.cpp
+./Polylib/Polylib.cpp
 )
 
 SET(TimeIntegrationHeaders
@@ -265,28 +279,33 @@ SET(TimeIntegrationHeaders
         ./TimeIntegration/AdamsMoultonTimeIntegrationSchemes.h
         ./TimeIntegration/BDFImplicitTimeIntegrationSchemes.h
         ./TimeIntegration/EulerTimeIntegrationSchemes.h
+        ./TimeIntegration/EulerExponentialTimeIntegrationSchemes.h
         ./TimeIntegration/CNABTimeIntegrationScheme.h
         ./TimeIntegration/DIRKTimeIntegrationSchemes.h
-        ./TimeIntegration/IMEXGearTimeIntegrationScheme.h
         ./TimeIntegration/IMEXTimeIntegrationSchemes.h
         ./TimeIntegration/IMEXdirkTimeIntegrationSchemes.h
+        ./TimeIntegration/IMEXGearTimeIntegrationScheme.h
         ./TimeIntegration/MCNABTimeIntegrationScheme.h
         ./TimeIntegration/RungeKuttaTimeIntegrationSchemes.h
         ./TimeIntegration/TimeIntegrationScheme.h
-        ./TimeIntegration/TimeIntegrationSchemeData.h
-        ./TimeIntegration/TimeIntegrationSolution.h
+        ./TimeIntegration/TimeIntegrationSchemeFIT.h
+        ./TimeIntegration/TimeIntegrationSchemeGLM.h
+        ./TimeIntegration/TimeIntegrationAlgorithmGLM.h
+        ./TimeIntegration/TimeIntegrationSolutionGLM.h
 )
 
 SET(TimeIntegrationSources
         ./TimeIntegration/SchemeInitializer.cpp
         ./TimeIntegration/TimeIntegrationScheme.cpp
-        ./TimeIntegration/TimeIntegrationSchemeData.cpp
-        ./TimeIntegration/TimeIntegrationSolution.cpp
+        ./TimeIntegration/TimeIntegrationSchemeFIT.cpp
+        ./TimeIntegration/TimeIntegrationSchemeGLM.cpp
+        ./TimeIntegration/TimeIntegrationAlgorithmGLM.cpp
+        ./TimeIntegration/TimeIntegrationSolutionGLM.cpp
 )
 
 
 SET(BaseHeaders
-    LibUtilitiesDeclspec.h
+LibUtilitiesDeclspec.h
 )
 
 SOURCE_GROUP("Basic Const" FILES ${BasicConstHeaders})
@@ -320,19 +339,19 @@ SOURCE_GROUP("FFT Sources" FILES ${FFTSources})
 SOURCE_GROUP("Base" FILES ${BaseHeaders})
 
 SET(LibUtilityHeaders
-    ${MemoryHeaders}
-    ${BasicUtilsHeaders}
-    ${PolyLibHeaders}
-    ${CommunicationHeaders}
-    ${FoundationHeaders}
-    ${CADSystemHeaders}
-    ${LinearAlgebraHeaders}
-    ${BasicConstHeaders}
-    ${InterpreterHeaders}
-    ${KernelHeaders}
-    ${TimeIntegrationHeaders}
-    ${FFTHeaders}
-    ${BaseHeaders}
+${MemoryHeaders}
+${BasicUtilsHeaders}
+${PolyLibHeaders}
+${CommunicationHeaders}
+${FoundationHeaders}
+${CADSystemHeaders}
+${LinearAlgebraHeaders}
+${BasicConstHeaders}
+${InterpreterHeaders}
+${KernelHeaders}
+${TimeIntegrationHeaders}
+${FFTHeaders}
+${BaseHeaders}
 )
 
 # Define the git branch and SHA1 hash if we are in a git repository. This is
@@ -340,30 +359,30 @@ SET(LibUtilityHeaders
 # on commit/update.
 SET(GitRevisionFile "${CMAKE_CURRENT_BINARY_DIR}/GitRevision.cpp")
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/BasicConst/GitRevision.cpp.in
-               ${GitRevisionFile})
+${GitRevisionFile})
 
 SET(LibUtilitySources
-    ${BasicUtilsSources}
-    ${FoundationSources}
-    ${CADSystemSources}
-    ${PolylibSources}
-    ${CommunicationSources}
-    ${LinearAlgebraSources}
-    ${InterpreterSources}
-    ${KernelSources}
-    ${TimeIntegrationSources}
-    ${FFTSources}
-    ${MemorySources}
-    ${GitRevisionFile}
+${BasicUtilsSources}
+${FoundationSources}
+${CADSystemSources}
+${PolylibSources}
+${CommunicationSources}
+${LinearAlgebraSources}
+${InterpreterSources}
+${KernelSources}
+${TimeIntegrationSources}
+${FFTSources}
+${MemorySources}
+${GitRevisionFile}
 )
 
 ADD_DEFINITIONS(-DLIB_UTILITIES_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(LibUtilities
-    SOURCES ${LibUtilitySources}
-    HEADERS ${LibUtilityHeaders}
-    SUMMARY "Nektar++ LibUtilities library"
-    DESCRIPTION "This library provides core routines including linear algebra and integration with ThirdParty libraries.")
+SOURCES ${LibUtilitySources}
+HEADERS ${LibUtilityHeaders}
+SUMMARY "Nektar++ LibUtilities library"
+DESCRIPTION "This library provides core routines including linear algebra and integration with ThirdParty libraries.")
 
 # tinysimd
 ADD_LIBRARY(tinysimd INTERFACE)
@@ -375,31 +394,32 @@ ADD_DEPENDENCIES(LibUtilities boost tinyxml-2.6.2 zlib-1.2.7 tinysimd)
 
 # CWIPI
 IF ( NEKTAR_USE_CWIPI )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${CWIPI_LIBRARY} ${CWIPI_LIBRARY_FVMC} ${CWIPI_LIBRARY_BFTC})
-    ADD_DEPENDENCIES(LibUtilities cwipi-0.8.2)
+TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${CWIPI_LIBRARY})
+ADD_DEPENDENCIES(LibUtilities cwipi-0.11.1)
 ENDIF ()
 
 # FFTW
 IF( NEKTAR_USE_FFTW )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${FFTW_LIBRARY})
-    ADD_DEPENDENCIES(LibUtilities fftw-3.2.2)
-    SET_SOURCE_FILES_PROPERTIES(./FFT/NekFFTW.cpp
-        PROPERTY COMPILE_FLAGS "-I${FFTW_INCLUDE_DIR}")
+TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${FFTW_LIBRARY})
+ADD_DEPENDENCIES(LibUtilities fftw-3.2.2)
+SET_SOURCE_FILES_PROPERTIES(./FFT/NekFFTW.cpp
+PROPERTY COMPILE_FLAGS "-I${FFTW_INCLUDE_DIR}")
 ENDIF( NEKTAR_USE_FFTW )
 
 # ARPACK
 IF( NEKTAR_USE_ARPACK )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${ARPACK_LIBRARY})
-    ADD_DEPENDENCIES(LibUtilities arpack-ng-1.0)
+TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${ARPACK_LIBRARY})
+ADD_DEPENDENCIES(LibUtilities arpack-ng-1.0)
 ENDIF( NEKTAR_USE_ARPACK )
 
 # Boost
 TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC
-    ${Boost_THREAD_LIBRARY}
-    ${Boost_IOSTREAMS_LIBRARY}
-    ${Boost_PROGRAM_OPTIONS_LIBRARY}
-    ${Boost_FILESYSTEM_LIBRARY}
-    ${Boost_SYSTEM_LIBRARY}
+  ${Boost_THREAD_LIBRARY}
+  ${Boost_IOSTREAMS_LIBRARY}
+  ${Boost_PROGRAM_OPTIONS_LIBRARY}
+  ${Boost_FILESYSTEM_LIBRARY}
+  ${Boost_SYSTEM_LIBRARY}
+  ${Boost_REGEX_LIBRARY}
     optimized ${ZLIB_LIBRARIES} debug ${ZLIB_LIBRARIES_DEBUG}
 )
 
@@ -420,7 +440,7 @@ IF( NEKTAR_USE_MPI )
             PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} ${MPI_CXX_COMPILE_FLAGS}")
     ENDIF()
 
-    ADD_DEPENDENCIES(LibUtilities gsmpi-1.2.1)
+    ADD_DEPENDENCIES(LibUtilities gsmpi-1.2.1_2)
 
     IF (THIRDPARTY_BUILD_MPI)
         ADD_DEPENDENCIES(LibUtilities openmpi-1.10.3)

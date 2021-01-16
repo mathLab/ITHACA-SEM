@@ -34,7 +34,7 @@
 
 #include "Octree.h"
 #include <stdexcept>
-#include <math.h>
+#include <cmath>
 
 namespace Nektar
 {
@@ -251,7 +251,7 @@ std::vector<int> Octree::QueryPoints(int nodeID)
 std::vector<int> Octree::QueryNeighbours(int nodeID)
 {
     std::vector<int> indices;
-    for (const OctantWeakPtr node : m_nodes[nodeID]->GetNeighbours())
+    for (const OctantWeakPtr &node : m_nodes[nodeID]->GetNeighbours())
     {
         indices.push_back(node.lock()->GetID());
     }
@@ -525,10 +525,10 @@ void Octree::Octant::SetIndices(const std::vector<int> &indices)
 void Octree::Octant::AddNeighbours(
         const std::vector<OctantSharedPtr> &neighbours)
 {
-    for (const OctantSharedPtr neighbour : neighbours)
+    for (const OctantSharedPtr &neighbour : neighbours)
     {
         bool equal = false;
-        for (const OctantWeakPtr neigh: m_neighbours)
+        for (const OctantWeakPtr &neigh: m_neighbours)
         {
             if (neigh.lock()->GetID() == neighbour->GetID())
             {

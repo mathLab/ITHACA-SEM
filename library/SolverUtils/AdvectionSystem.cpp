@@ -92,13 +92,13 @@ bool AdvectionSystem::v_PostIntegrate(int step)
             }
             std::cout << cfl << " (in elmt " << elmtid << ")" << std::endl;
         }
-        
+
         // At each timestep, if cflWriteFld is set check if cfl is above treshold
         if(m_cflWriteFld>0 && cfl >= m_cflWriteFld && step >= m_cflWriteFldWaitSteps)
         {
             std::string outname =  m_sessionName +  "_CFLWriteFld";
             WriteFld(outname + ".fld");
-            m_cflWriteFld = 0;            
+            m_cflWriteFld = 0;
         }
     }
 

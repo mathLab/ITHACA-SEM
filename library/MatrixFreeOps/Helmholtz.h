@@ -275,40 +275,6 @@ struct HelmholtzQuad : public Helmholtz, public Helper<2, DEFORMED>
     }
 
 public:
-    static NekDouble FlopsPerElement(const int nm, const int nq0, const int nq1)
-    {
-        const NekDouble bwdTrans  = BwdTransQuad::FlopsPerElement(nm,nq0,nq1);
-        const NekDouble iprod1    = IProductQuad<DEFORMED>::FlopsPerElement(nm,nq0,nq1);
-        const NekDouble physDeriv = PhysDerivQuad<DEFORMED>::FlopsPerElement(nq0,nq1);
-
-        NekDouble metrics;
-        if(DEFORMED)
-        {
-            metrics = nq1 * nq0 * (9 + 6);
-        }
-        else
-        {
-            const NekDouble metric_calc = 9;
-            const NekDouble metrics_x0 = nq0 * nq1 * 3;
-            const NekDouble metrics_x1 = nq0 * nq1 * 3;
-            metrics = metric_calc + metrics_x0 + metrics_x1;
-        }
-
-        const NekDouble iprod2 = IProductQuad<DEFORMED>::FlopsPerElement(nm,nq0,nq1);
-        const NekDouble iprod3 = IProductQuad<DEFORMED>::FlopsPerElement(nm,nq0,nq1);
-
-        return bwdTrans + iprod1 + physDeriv + metrics + iprod2 + iprod3;
-    }
-
-    virtual NekDouble GFlops() override
-    {
-        const int nm  = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-
-        const NekDouble flops = m_nElmt * HelmholtzQuad::FlopsPerElement(nm, nq0, nq1);
-        return flops * 1e-9;
-    }
 
     virtual NekDouble Ndof() override
     {
@@ -669,31 +635,6 @@ struct HelmholtzTri : public Helmholtz, public Helper<2, DEFORMED>
     }
 public:
 
-        static NekDouble FlopsPerElement(
-        const int nm,
-        const int nq0,
-        const int nq1)
-    {
-
-        const double bwdTrans = BwdTransTri::FlopsPerElement(nm,nq0,nq1);
-        const double iprod1 =   IProductTri<DEFORMED>::FlopsPerElement(nm, nq0, nq1);
-        const double physDeriv = PhysDerivTri<DEFORMED>::FlopsPerElement(nq0,nq1);
-        const double metric = nq1 * nq0 * (5 + 7 + 3 + 3 + 3);
-        const double iprod2 = IProductTri<DEFORMED>::FlopsPerElement(nm, nq0, nq1);
-        const double iprod3 = IProductTri<DEFORMED>::FlopsPerElement(nm, nq0, nq1);
-
-        return bwdTrans + iprod1 + physDeriv + metric + iprod2 + iprod3;
-    }
-
-    virtual double GFlops() override
-    {
-        const int nm  = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-
-        const double flops = m_nElmt * HelmholtzTri::FlopsPerElement(nm, nq0, nq1);
-        return flops * 1e-9;
-    }
 
     virtual NekDouble Ndof() override
     {
@@ -1053,57 +994,6 @@ struct HelmholtzHex : public Helmholtz, public Helper<3, DEFORMED>
 
 
 public:
-    static NekDouble FlopsPerElement(
-        const int nm,
-        const int nq0,
-        const int nq1,
-        const int nq2)
-    {
-
-        const double bwdTrans = BwdTransHex::
-            FlopsPerElement(nm,nq0,nq1, nq2);
-        const double iprod1 =   IProductHex<DEFORMED>::
-            FlopsPerElement(nm, nq0, nq1, nq2);
-        const double physDeriv = PhysDerivHex<DEFORMED>::
-            FlopsPerElement(nq0,nq1, nq2);
-        const double metric_calc = 30;
-        double metric;
-
-        if(DEFORMED)
-        {
-            metric = nq2 *nq1 * nq0 * (metric_calc + 15);
-        }
-        else
-        {
-            metric = (nq2 * nq1 * nq0 * 15) + metric_calc;
-        }
-
-        const double iprod2 = IProductHex<DEFORMED>::
-            FlopsPerElement(nm, nq0, nq1, nq2);
-        const double iprod3 = IProductHex<DEFORMED>::
-            FlopsPerElement(nm, nq0, nq1, nq2);
-        const double iprod4 = IProductHex<DEFORMED>::
-            FlopsPerElement(nm, nq0, nq1, nq2);
-
-        return bwdTrans + iprod1 + physDeriv + metric + iprod2 + iprod3 + iprod4;
-    }
-
-    virtual double GFlops() override
-    {
-        const int nm  = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        const double flops = m_nElmt * HelmholtzHex::
-            FlopsPerElement(nm, nq0, nq1, nq2);
-        return flops * 1e-9;
-    }
-
-    virtual NekDouble Ndof() override
-    {
-        return m_nmTot * this->m_nElmt;
-    }
 
 private:
     const int m_nmTot;
@@ -1568,35 +1458,6 @@ struct HelmholtzPrism : public Helmholtz, public Helper<3, DEFORMED>
     }
 
 public:
-    static NekDouble FlopsPerElement(
-        const int nm,
-        const int nq0,
-        const int nq1,
-        const int nq2)
-    {
-        
-        const double bwdTrans = BwdTransPrism::FlopsPerElement(nm,nq0,nq1, nq2);
-        const double iprod1 =   IProductPrism<DEFORMED>::FlopsPerElement(nm, nq0, nq1, nq2);
-        const double physDeriv = PhysDerivPrism<DEFORMED>::FlopsPerElement(nq0,nq1, nq2);
-        const double metric = nq2 * nq1 * nq0 * (9 + 5*9);
-        const double iprod2 =  IProductPrism<DEFORMED>::FlopsPerElement(nm, nq0, nq1, nq2);
-        const double iprod3 =  IProductPrism<DEFORMED>::FlopsPerElement(nm, nq0, nq1, nq2);
-        const double iprod4 =  IProductPrism<DEFORMED>::FlopsPerElement(nm, nq0, nq1, nq2);
-
-        return bwdTrans + iprod1 + physDeriv + metric + iprod2 + iprod3 + iprod4;
-    }
-
-    virtual double GFlops() override
-    {
-        const int nm = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        const double flops = m_nElmt * HelmholtzPrism::FlopsPerElement(nm, nq0, nq1, nq2);
-        return flops * 1e-9;
-    }
-
     virtual NekDouble Ndof() override
     {
         return m_nmTot * this->m_nElmt;
@@ -2091,34 +1952,6 @@ struct HelmholtzPyr : public Helmholtz, public Helper<3, DEFORMED>
     }
 
 public:
-    static NekDouble FlopsPerElement(
-        const int nm,
-        const int nq0,
-        const int nq1,
-        const int nq2)
-    {
-        
-        const double bwdTrans = BwdTransPyr::FlopsPerElement(nm,nq0,nq1, nq2);
-        const double iprod1 =   IProductPyr<DEFORMED>::FlopsPerElement(nm, nq0, nq1, nq2);
-        const double physDeriv = PhysDerivPyr<DEFORMED>::FlopsPerElement(nq0,nq1, nq2);
-        const double metric = nq2 * nq1 * nq0 * (9 + 5*9);
-        const double iprod2 =  IProductPyr<DEFORMED>::FlopsPerElement(nm, nq0, nq1, nq2);
-        const double iprod3 =  IProductPyr<DEFORMED>::FlopsPerElement(nm, nq0, nq1, nq2);
-        const double iprod4 =  IProductPyr<DEFORMED>::FlopsPerElement(nm, nq0, nq1, nq2);
-
-        return bwdTrans + iprod1 + physDeriv + metric + iprod2 + iprod3 + iprod4;
-    }
-
-    virtual double GFlops() override
-    {
-        const int nm = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        const double flops = m_nElmt * HelmholtzPyr::FlopsPerElement(nm, nq0, nq1, nq2);
-        return flops * 1e-9;
-    }
 
     virtual NekDouble Ndof() override
     {
@@ -2615,33 +2448,6 @@ struct HelmholtzTet : public Helmholtz, public Helper<3, DEFORMED>
     }
 
 public:
-    static NekDouble FlopsPerElement(const int nm,
-                                     const int nq0,
-                                     const int nq1,
-                                     const int nq2)
-    {
-
-        const double bwdTrans = BwdTransTet::FlopsPerElement(nm,nq0,nq1, nq2);
-        const double iprod1   = IProductTet<DEFORMED>::FlopsPerElement(nm, nq0, nq1, nq2);
-        const double physDeriv = PhysDerivTet<DEFORMED>::FlopsPerElement(nq0,nq1, nq2);
-        const double metric = nq2 * nq1 * (2 + nq0 * (1 + 12 + 9 + 5*9));
-        const double iprod2 = IProductTet<DEFORMED>::FlopsPerElement(nm, nq0, nq1, nq2);
-        const double iprod3 = IProductTet<DEFORMED>::FlopsPerElement(nm, nq0, nq1, nq2);
-        const double iprod4 = IProductTet<DEFORMED>::FlopsPerElement(nm, nq0, nq1, nq2);
-
-        return bwdTrans + iprod1 + physDeriv + metric + iprod2 + iprod3 + iprod4;
-    }
-
-    virtual double GFlops() override
-    {
-        const int nm = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        const double flops = m_nElmt * HelmholtzTet::FlopsPerElement(nm, nq0, nq1, nq2);
-        return flops * 1e-9;
-    }
 
     virtual NekDouble Ndof() override
     {

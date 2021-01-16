@@ -33,6 +33,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/VmathSIMD.hpp>
+#include <array>
 
 #include <boost/core/ignore_unused.hpp>
 #include <boost/test/auto_unit_test.hpp>
@@ -41,6 +42,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
+
 
 namespace Nektar
 {

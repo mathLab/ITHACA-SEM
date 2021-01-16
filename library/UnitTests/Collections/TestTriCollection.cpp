@@ -381,7 +381,7 @@ namespace Nektar
             BOOST_CHECK_CLOSE(physRef[i], phys[i], epsilon);
         }
     }
-
+        
     BOOST_AUTO_TEST_CASE(TestTriBwdTrans_MatrixFree_UniformP_OverInt)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(
@@ -2041,7 +2041,104 @@ namespace Nektar
         }
     }
 
-     BOOST_AUTO_TEST_CASE(TestTriIProductWRTDerivBase_MatrixFree_UniformP_Deformed_MultiElmt)
+    BOOST_AUTO_TEST_CASE(TestTriIProductWRTDerivBase_MatrixFree_UniformP_Undeformed_MultiElmt)
+    {
+        SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u,
+            0u, -1.0, -1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u,
+            1u,  1.0, -1.0, 0.0));
+        SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u,
+            2u, -1.0,  1.0, 0.0));
+
+        SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
+
+        unsigned int numQuadPoints = 5;
+        unsigned int numModes = 4;
+        Nektar::LibUtilities::PointsType triPointsTypeDir1 =
+            Nektar::LibUtilities::eGaussLobattoLegendre;
+        const Nektar::LibUtilities::PointsKey triPointsKeyDir1(numQuadPoints,
+            triPointsTypeDir1);
+        Nektar::LibUtilities::BasisType basisTypeDir1 =
+            Nektar::LibUtilities::eModified_A;
+        const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,
+            numModes, triPointsKeyDir1);
+
+        Nektar::LibUtilities::PointsType triPointsTypeDir2 =
+            Nektar::LibUtilities::eGaussRadauMAlpha1Beta0;
+        const Nektar::LibUtilities::PointsKey triPointsKeyDir2(numQuadPoints-1,
+            triPointsTypeDir2);
+        Nektar::LibUtilities::BasisType basisTypeDir2 =
+            Nektar::LibUtilities::eModified_B;
+        const Nektar::LibUtilities::BasisKey basisKeyDir2(basisTypeDir2,
+            numModes, triPointsKeyDir2);
+        Nektar::LocalRegions::TriExpSharedPtr Exp =
+            MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(
+            basisKeyDir1, basisKeyDir2, triGeom);
+
+        int nelmts = 10;
+
+        std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+        for(int i = 0; i < nelmts; ++i)
+        {
+            CollExp.push_back(Exp);
+        }
+
+        LibUtilities::SessionReaderSharedPtr dummySession;
+        Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+        Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+
+        // ... only one op at the time ...
+        impTypes[Collections::eIProductWRTDerivBase] = Collections::eMatrixFree;
+        Collections::Collection     c(CollExp, impTypes);
+
+
+        const int nq = Exp->GetTotPoints();
+        const int nm = Exp->GetNcoeffs();
+        Array<OneD, NekDouble> phys1(nelmts*nq);
+        Array<OneD, NekDouble> phys2(nelmts*nq);
+        Array<OneD, NekDouble> coeffsRef(nelmts*nm);
+        Array<OneD, NekDouble> coeffs(nelmts*nm),tmp;
+
+        Array<OneD, NekDouble> xc(nq), yc(nq);
+
+        Exp->GetCoords(xc, yc);
+
+        for (int i = 0; i < nq; ++i)
+        {
+            phys1[i] = sin(xc[i])*cos(yc[i]);
+            phys2[i] = cos(xc[i])*sin(yc[i]);
+        }
+
+        for(int i = 1; i < nelmts; ++i)
+        {
+            Vmath::Vcopy(nq,phys1,1,tmp = phys1+i*nq,1);
+            Vmath::Vcopy(nq,phys2,1,tmp = phys2+i*nq,1);
+        }
+
+        for(int i = 0; i < nelmts; ++i)
+        {
+            // Standard routines
+            Exp->IProductWRTDerivBase(0, phys1 + i*nq,
+                                      tmp = coeffsRef + i*nm);
+            Exp->IProductWRTDerivBase(1, phys2 + i*nq,
+                                      tmp = coeffs + i*nm);
+            Vmath::Vadd(nm, coeffsRef + i*nm, 1,
+                        coeffs + i*nm, 1, tmp = coeffsRef + i*nm, 1);
+        }
+        
+        c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1,
+                        phys2, coeffs);
+
+        double epsilon = 1.0e-8;
+        for(int i = 0; i < coeffsRef.size(); ++i)
+        {
+            coeffsRef[i] = (std::abs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
+            coeffs[i] = (std::abs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
+            BOOST_CHECK_CLOSE(coeffsRef[i], coeffs[i], epsilon);
+        }
+    }
+        
+    BOOST_AUTO_TEST_CASE(TestTriIProductWRTDerivBase_MatrixFree_UniformP_Deformed)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u,
             0u, -1.0, -1.0, 0.0));

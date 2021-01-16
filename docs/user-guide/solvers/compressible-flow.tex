@@ -231,6 +231,27 @@ conditions are employed (i.e. $T_{w}$). Default value = 300.15$K$;
  (it is only possible to set one of them). By default, this is obtained from the Prandtl number;
 \end{itemize}
 
+\subsection*{Time Integration Scheme}
+Under this section it is possible to set the time integration scheme
+information.
+\begin{lstlisting}[style=XmlStyle]
+<TIMEINTEGRATIONSCHEME>
+  <METHOD> RungeKutta </METHOD>
+  <VARIANT> SSP </VARIANT>
+  <ORDER> 3 </ORDER>
+</TIMEINTEGRATIONSCHEME>
+\end{lstlisting}
+\begin{itemize}
+\item \inltt{TimeIntegrationScheme} is the time-integration scheme we want to use.
+Note that only an explicit discretisation is supported:
+\begin{itemize}
+\item \inltt{Method ForwardEuler, Order 1};
+\item \inltt{Method RungeKutta, Variant SSP, Order 2};
+\item \inltt{Method RungeKutta, Variant SSP, Order 3};
+\item \inltt{Method RungeKutta, Order 4}.
+\end{itemize}
+\end{itemize}
+
 \subsection*{Solver info}
 Under this section it is possible to set the solver information.
 \begin{lstlisting}[style=XmlStyle]
@@ -239,7 +260,6 @@ Under this section it is possible to set the solver information.
   <I PROPERTY="Projection"            VALUE="DisContinuous"        />
   <I PROPERTY="AdvectionType"         VALUE="WeakDG"               />
   <I PROPERTY="DiffusionType"         VALUE="LDGNS"                />
-  <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
   <I PROPERTY="UpwindType"            VALUE="ExactToro"            />
   <I PROPERTY="ProblemType"           VALUE="General"              />
   <I PROPERTY="ViscosityType"         VALUE="Constant"             />
@@ -280,14 +300,6 @@ for the Navier-Stokes equations:
 \item \inltt{LFRcinfNS} (Flux-Reconstruction with $c = \infty$).
 \end{itemize}
 Note that only \inltt{LDGNS} is fully supported, the other operators work only with quadrilateral elements ($2D$ or $2.5D$).
-\item \inltt{TimeIntegrationMethod} is the time-integration scheme we want to use.
-Note that only an explicit discretisation is supported:
-\begin{itemize}
-\item \inltt{ForwardEuler};
-\item \inltt{RungeKutta2\_SSP};
-\item \inltt{RungeKutta3\_SSP};
-\item \inltt{ClassicalRungeKutta4}.
-\end{itemize}
 \item \inltt{UpwindType} is the numerical interface flux (i.e. Riemann solver)
 we want to use for the advection operator:
 \begin{itemize}

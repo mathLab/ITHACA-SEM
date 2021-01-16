@@ -151,6 +151,9 @@ inline void RoeKernel(
     rhowf = 0.5*(rhoL*uL*wL + rhoR*uR*wR);
     Ef    = 0.5*(uL*(EL + pL) + uR*(ER + pR));
 
+    // Needed to get right overload resolution for std::abs
+    using std::abs;
+
     // Compute eigenvalues \lambda_i (equation 11.58).
     T uRoeAbs = abs(uRoe);
     T lambda[5] = {
@@ -172,6 +175,7 @@ inline void RoeKernel(
         rhowf -= uRoeAbs*k[i][3];
         Ef    -= uRoeAbs*k[i][4];
     }
+
 }
 
 

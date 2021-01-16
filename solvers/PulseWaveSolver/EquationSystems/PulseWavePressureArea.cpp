@@ -10,6 +10,7 @@
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
 //
+// License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation
@@ -34,34 +35,27 @@
 
 #include <PulseWaveSolver/EquationSystems/PulseWavePressureArea.h>
 
-using namespace std;
-
 namespace Nektar
 {
 
-    /**
-     * @class PulseWavePressureArea
-     *
-     */
-  PulseWavePressureArea::PulseWavePressureArea(
-      Array<OneD, MultiRegions::ExpListSharedPtr> &pVessel, 
-      const LibUtilities::SessionReaderSharedPtr &pSession)
-    : m_vessels(pVessel),
-      m_session(pSession)
-    {
-    }
-
-    PulseWavePressureArea::~PulseWavePressureArea()
-    {
-    }
-
-        
-    /**
-     *
-     */
-    PressureAreaFactory& GetPressureAreaFactory()
-    {
-        static PressureAreaFactory instance;
-        return instance;
-    }
+PulseWavePressureArea::PulseWavePressureArea(
+    Array<OneD, MultiRegions::ExpListSharedPtr> &pVessel,
+    const LibUtilities::SessionReaderSharedPtr &pSession)
+    : m_vessels(pVessel), m_session(pSession)
+{
+    m_session->LoadParameter("pext", m_PExt, 0);
+    m_session->LoadParameter("rho", m_rho, 0.5);
 }
+
+PulseWavePressureArea::~PulseWavePressureArea()
+{
+}
+
+
+PressureAreaFactory &GetPressureAreaFactory()
+{
+    static PressureAreaFactory instance;
+    return instance;
+}
+
+} // namespace Nektar

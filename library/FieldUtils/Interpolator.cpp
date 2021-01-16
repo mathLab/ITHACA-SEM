@@ -102,6 +102,7 @@ void Interpolator::Interpolate(
         m_expOutField[0]->GetCoords(coords[0], coords[1], coords[2]);
     }
 
+    int elmtid = -1; 
     for (int i = 0; i < nOutPts; ++i)
     {
         for (int j = 0; j < nOutDim; ++j)
@@ -110,9 +111,10 @@ void Interpolator::Interpolate(
         }
 
         // Obtain Element and LocalCoordinate to interpolate
-        int elmtid = m_expInField[0]->GetExpIndex(Scoords, Lcoords,
-                                                  NekConstants::kGeomFactorsTol,
-                                                  true);
+        elmtid = m_expInField[0]->GetExpIndex(Scoords, Lcoords,
+                                              NekConstants::kGeomFactorsTol,
+                                              true, elmtid,
+                                              NekConstants::kGeomFactorsTol*1e3);
 
         // we use kGeomFactorsTol as tolerance, while StdPhysEvaluate has
         // kNekZeroTol hardcoded, so we need to limit Lcoords to not produce
@@ -194,6 +196,7 @@ void Interpolator::Interpolate(
     int nOutPts  = m_ptsOutField->GetNpoints();
     int lastProg = 0;
 
+    int elmtid = -1; 
     for (int i = 0; i < nOutPts; ++i)
     {
         Array<OneD, NekDouble> Lcoords(nInDim, 0.0);
@@ -204,9 +207,10 @@ void Interpolator::Interpolate(
         }
 
         // Obtain Element and LocalCoordinate to interpolate.
-        int elmtid = m_expInField[0]->GetExpIndex(
+        elmtid = m_expInField[0]->GetExpIndex(
             coords, Lcoords,
-            NekConstants::kGeomFactorsTol);
+            NekConstants::kGeomFactorsTol, true, elmtid,
+            NekConstants::kGeomFactorsTol*1e3);
 
         // Homogeneous case, need to find the right plane
         int targetPlane = -1;

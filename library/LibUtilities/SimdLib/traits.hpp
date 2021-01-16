@@ -1,4 +1,39 @@
-#pragma once
+///////////////////////////////////////////////////////////////////////////////
+//
+// File: traits.cpp
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description: Vector type traits and tags.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+#ifndef NEKTAR_LIB_LIBUTILITES_SIMDLIB_TRAITS_H
+#define NEKTAR_LIB_LIBUTILITES_SIMDLIB_TRAITS_H
 
 #include <type_traits>
 
@@ -6,9 +41,9 @@ namespace tinysimd
 {
 
 // Load tags
-static constexpr struct is_aligned_t {} is_aligned;
-static constexpr struct is_not_aligned_t {} is_not_aligned;
-static constexpr struct is_not_reused_t {} is_not_reused; // streaming, skip cache
+static constexpr struct is_aligned_t {} is_aligned{};
+static constexpr struct is_not_aligned_t {} is_not_aligned{};
+static constexpr struct is_not_reused_t {} is_not_reused{}; // streaming, skip cache
 
 // Check load tags
 template <class T>
@@ -81,9 +116,5 @@ struct is_vector_floating_point<T,
 > : std::integral_constant
     <bool, std::is_floating_point<typename T::scalarType>::value> {};
 
-// Helper c++17 style
-// template <class T>
-// inline constexpr bool is_vector_floating_point_v = is_vector_floating_point<T>::value;
-
-
 } // namespace tinysimd
+#endif

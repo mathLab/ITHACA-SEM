@@ -2533,5 +2533,102 @@ namespace Nektar
                 BOOST_CHECK_CLOSE(coeffsRef[i], coeffs[i], epsilon);
             }
         }        
+
+        BOOST_AUTO_TEST_CASE(TestTetIProductWRTDerivBase_MatrixFree_UniformP_Undeformed)
+    {
+        SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u,
+            0u, -2.0, -3.0, -4.0));
+        SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(3u,
+            1u, 1.0, -1.0, -1.0));
+        SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u,
+            2u, -1.0, 1.0, -1.0));
+        SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u,
+            3u, -1.0, -1.0, 1.0));
+
+        SpatialDomains::TetGeomSharedPtr tetGeom = CreateTet(v0, v1, v2, v3);
+
+        unsigned int numQuadPoints = 5;
+        unsigned int numModes = 4;
+
+        Nektar::LibUtilities::PointsType triPointsTypeDir1 =
+            Nektar::LibUtilities::eGaussLobattoLegendre;
+        const Nektar::LibUtilities::PointsKey triPointsKeyDir1(numQuadPoints,
+            triPointsTypeDir1);
+        Nektar::LibUtilities::BasisType basisTypeDir1 =
+            Nektar::LibUtilities::eModified_A;
+        const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,
+            numModes, triPointsKeyDir1);
+
+        Nektar::LibUtilities::PointsType triPointsTypeDir2 =
+            Nektar::LibUtilities::eGaussRadauMAlpha1Beta0;
+        const Nektar::LibUtilities::PointsKey triPointsKeyDir2(numQuadPoints-1,
+            triPointsTypeDir2);
+        Nektar::LibUtilities::BasisType basisTypeDir2 =
+            Nektar::LibUtilities::eModified_B;
+        const Nektar::LibUtilities::BasisKey basisKeyDir2(basisTypeDir2,
+            numModes, triPointsKeyDir2);
+
+        Nektar::LibUtilities::PointsType triPointsTypeDir3 =
+            Nektar::LibUtilities::eGaussRadauMAlpha2Beta0;
+        const Nektar::LibUtilities::PointsKey triPointsKeyDir3(numQuadPoints-1,
+            triPointsTypeDir3);
+        Nektar::LibUtilities::BasisType basisTypeDir3 =
+            Nektar::LibUtilities::eModified_C;
+        const Nektar::LibUtilities::BasisKey basisKeyDir3(basisTypeDir3,
+            numModes, triPointsKeyDir3);
+
+        Nektar::LocalRegions::TetExpSharedPtr Exp =
+            MemoryManager<Nektar::LocalRegions::TetExp>::AllocateSharedPtr(
+            basisKeyDir1, basisKeyDir2, basisKeyDir3, tetGeom);
+
+        std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+        CollExp.push_back(Exp);
+
+        LibUtilities::SessionReaderSharedPtr dummySession;
+        Collections::CollectionOptimisation colOpt(dummySession,
+            Collections::eStdMat);
+        Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+        // ... only one op at the time ...
+        impTypes[Collections::eIProductWRTDerivBase] = Collections::eMatrixFree;
+        Collections::Collection c(CollExp, impTypes);
+
+
+        const int nq = Exp->GetTotPoints();
+        const int nm = Exp->GetNcoeffs();
+        Array<OneD, NekDouble> phys1(nq);
+        Array<OneD, NekDouble> phys2(nq);
+        Array<OneD, NekDouble> phys3(nq);
+        Array<OneD, NekDouble> coeffsRef(nm);
+        Array<OneD, NekDouble> coeffs(nm);
+
+        Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+
+        Exp->GetCoords(xc, yc, zc);
+
+        for (int i = 0; i < nq; ++i)
+        {
+            phys1[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
+            phys2[i] = cos(xc[i])*sin(yc[i])*cos(zc[i]);
+            phys3[i] = cos(xc[i])*sin(yc[i])*sin(zc[i]);
+        }
+
+        // Standard routines
+        Exp->IProductWRTDerivBase(0, phys1, coeffsRef);
+        Exp->IProductWRTDerivBase(1, phys2, coeffs);
+        Vmath::Vadd(nm,coeffsRef,1,coeffs,1,coeffsRef,1);
+        Exp->IProductWRTDerivBase(2, phys3, coeffs);
+        Vmath::Vadd(nm,coeffsRef,1,coeffs,1,coeffsRef,1);
+
+        c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1,
+                        phys2, phys3, coeffs);
+
+        double epsilon = 1.0e-7;
+        for(int i = 0; i < coeffsRef.size(); ++i)
+        {
+            coeffsRef[i] = (std::abs(coeffsRef[i]) < 1e-14)? 0.0: coeffsRef[i];
+            coeffs[i] = (std::abs(coeffs[i]) < 1e-14)? 0.0: coeffs[i];
+            BOOST_CHECK_CLOSE(coeffsRef[i], coeffs[i], epsilon);
+        }
     }
+    } // namespace
 }

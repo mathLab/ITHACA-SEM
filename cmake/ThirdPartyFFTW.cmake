@@ -54,8 +54,6 @@ IF (NEKTAR_USE_FFTW)
         SET(FFTW_INCLUDE_DIR ${TPDIST}/include CACHE FILEPATH
             "FFTW include" FORCE)
 
-        LINK_DIRECTORIES(${TPDIST}/lib)
-
         MESSAGE(STATUS "Build FFTW: ${TPDIST}/lib/lib${FFTW_LIBRARY}.so")
         SET(FFTW_CONFIG_INCLUDE_DIR ${TPINC})
     ELSE ()

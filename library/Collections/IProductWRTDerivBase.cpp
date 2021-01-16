@@ -405,7 +405,6 @@ class IProductWRTDerivBase_MatrixFree : public Operator, MatrixFreeMultiInOneOut
             m_oper = std::dynamic_pointer_cast<MatrixFree::
                                                IProductWRTDerivBase>(oper);
             ASSERTL0(m_oper, "Failed to cast pointer.");
-
         }
 };
 
@@ -428,9 +427,9 @@ OperatorKey IProductWRTDerivBase_MatrixFree::m_typeArr[] = {
         IProductWRTDerivBase_MatrixFree::create, "IProductWRTDerivBase_MatrixFree_Prism"),
     GetOperatorFactory().RegisterCreatorFunction(
        OperatorKey(ePyramid, eIProductWRTDerivBase, eMatrixFree, false),
-        IProductWRTDerivBase_MatrixFree::create, "IProductWRTDerivBase_MatrixFree_Prism")
+       IProductWRTDerivBase_MatrixFree::create, "IProductWRTDerivBase_MatrixFree_Pyr"),
     GetOperatorFactory().RegisterCreatorFunction(
-    OperatorKey(eTetrahedron, eIProductWRTDerivBase, eMatrixFree, false),
+        OperatorKey(eTetrahedron, eIProductWRTDerivBase, eMatrixFree, false),
         IProductWRTDerivBase_MatrixFree::create, "IProductWRTDerivBase_MatrixFree_Tet")
 };
 
@@ -800,23 +799,23 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
                 for(int e = 0; e < m_numElmt; ++e)
                 {
                     Vmath::Smul(m_nquad0, m_derivFac[0][e],
-                                &in[0] + e*m_nquad0,   1,
-                                &wsp[0] + e*m_nquad0,   1);
+                                in[0] + e*m_nquad0,   1,
+                                t = wsp + e*m_nquad0,   1);
                 }
                 
                 for(int i = 1; i < m_coordim; ++i)
                 {
                     for(int e = 0; e < m_numElmt; ++e)
                     {
-                        Vmath::Svtvp (m_wspSize,m_derivFac[i][e],
-                                      &in[i]  + e*m_nquad0,1,
-                                      &wsp[0] + e*m_nquad0,1,
-                                      &wsp[0] + e*m_nquad0,1);
+                        Vmath::Svtvp (m_nquad0, m_derivFac[i][e],
+                                      in[i] + e*m_nquad0,1,
+                                      wsp   + e*m_nquad0,1,
+                                      t = wsp + e*m_nquad0,1);
                     }
                 }
             }
 
-            Vmath::Vmul(m_wspSize, m_jac, 1, wsp, 1, wsp, 1);
+            Vmath::Vmul(m_wspSize, m_jacWStdW, 1, wsp, 1, wsp, 1);
 
             // out = B0*in;
             Blas::Dgemm('T', 'N', m_nmodes0, m_numElmt, m_nquad0,
@@ -841,6 +840,7 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
         Array<OneD, const NekDouble>    m_jacWStdW;
         Array<OneD, const NekDouble>    m_derbase0;
         Array<TwoD, const NekDouble>    m_derivFac;
+        int                             m_coordim;
 
     private:
         IProductWRTDerivBase_SumFac_Seg(
@@ -851,6 +851,7 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
               m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
               m_derbase0(m_stdExp->GetBasis(0)->GetDbdata())
         {
+            m_coordim  = pCollExp[0]->GetCoordim();
             m_wspSize = m_numElmt*m_nquad0;
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
             m_jacWStdW = pGeomData->GetJacWithStdWeights(pCollExp);
@@ -972,7 +973,7 @@ protected:
     const bool                      m_colldir1;
     int                             m_coordim;
     Array<TwoD, const NekDouble>    m_derivFac;
-    Array<OneD, const NekDouble>    m_jac;
+    Array<OneD, const NekDouble>    m_jacWStdW;
     Array<OneD, const NekDouble>    m_base0;
     Array<OneD, const NekDouble>    m_base1;
     Array<OneD, const NekDouble>    m_derbase0;
@@ -998,7 +999,7 @@ private:
         m_coordim  = pCollExp[0]->GetCoordim();
 
         m_derivFac = pGeomData->GetDerivFactors(pCollExp);
-        m_jacWStdW      = pGeomData->GetJacWithStdWeights(pCollExp);
+        m_jacWStdW = pGeomData->GetJacWithStdWeights(pCollExp);
         m_wspSize  = 4 * m_numElmt * (max(m_nquad0*m_nquad1,
                                           m_nmodes0*m_nmodes1));
     }

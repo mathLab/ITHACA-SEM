@@ -32,72 +32,33 @@ struct PhysDerivSeg : public PhysDeriv, public Helper<1, DEFORMED>
         return std::make_shared<PhysDerivSeg<DEFORMED>>(basis, nElmt);
     }
 
-    static NekDouble FlopsPerElement(
-        const int nq0)
-    {
-        int derivTensor = 2 * nq0 *nq0; 
-        int deriv = nq0  * 6;
-        return (derivTensor + deriv);
-    }
-
-    double GFlops() final
-    {
-        const int nq0 = m_basis[0]->GetNumPoints();
-
-        int flops = this->m_nElmt * PhysDerivSeg::FlopsPerElement(nq0);
-        return flops * 1e-9;
-    }
 
     NekDouble Ndof() final
     {
         return m_nmTot * this->m_nElmt;
     }
 
-    NekDouble NLoads() final
-    {
-        const int nq0 = m_basis[0]->GetNumPoints();
-
-        int t_d0 = nq0 * nq0 * 2;
-        int physDerivTensor = t_d0;
-
-        int physDeriv = nq0 * 2;
-        int load_expected = physDerivTensor + physDeriv;
-
-        return this->m_nElmt * load_expected;
-    }
-
-    NekDouble NStores() final
-    {
-        const int nq0 = m_basis[0]->GetNumPoints();
-
-        int physDerivTensor = nq0*2;
-        int physDeriv = nq0;
-
-        return this->m_nElmt * (physDerivTensor + physDeriv);
-    }
-
-
     void operator()(const Array<OneD, const NekDouble> &in,
                     Array<OneD, Array<OneD, NekDouble> >&out) final
     {
         switch(m_basis[0]->GetNumPoints())
         {
-            case 2:
-                PhysDerivSegImpl<2>(in, out); break;
-            case 3:
-                PhysDerivSegImpl<3>(in, out); break;
-            case 4:
-                PhysDerivSegImpl<4>(in, out); break;
-            case 5:
-                PhysDerivSegImpl<5>(in, out); break;
-            case 6:
-                PhysDerivSegImpl<6>(in, out); break;
-            case 7:
-                PhysDerivSegImpl<7>(in, out); break;
-            case 8:
-                PhysDerivSegImpl<8>(in, out); break;
-            case 9:
-                PhysDerivSegImpl<9>(in, out); break;
+        case 2:
+            PhysDerivSegImpl<2>(in, out); break;
+        case 3:
+            PhysDerivSegImpl<3>(in, out); break;
+        case 4:
+            PhysDerivSegImpl<4>(in, out); break;
+        case 5:
+            PhysDerivSegImpl<5>(in, out); break;
+        case 6:
+            PhysDerivSegImpl<6>(in, out); break;
+        case 7:
+            PhysDerivSegImpl<7>(in, out); break;
+        case 8:
+            PhysDerivSegImpl<8>(in, out); break;
+        case 9:
+            PhysDerivSegImpl<9>(in, out); break;
             case 10:
                 PhysDerivSegImpl<10>(in, out); break;
             case 11:
@@ -156,7 +117,7 @@ struct PhysDerivSeg : public PhysDeriv, public Helper<1, DEFORMED>
                  
                  // Get Basic derivative
                  PhysDerivTensor1DKernel<NQ0>(tmpIn, this->m_D[0], tmpOut_d0);
-                 df_ptr = &(this->m_df[edfs]);
+                 df_ptr = &((*this->m_df)[edfs]);
                  
                  if(!DEFORMED)
                  {
@@ -197,7 +158,7 @@ struct PhysDerivSeg : public PhysDeriv, public Helper<1, DEFORMED>
                 
                 // Get Basic derivative
                 PhysDerivTensor1DKernel<NQ0>(tmpIn, this->m_D[0], tmpOut_d0);
-                df_ptr = &(this->m_df[edfs]);
+                df_ptr = &((*this->m_df)[edfs]);
                 
                 if(!DEFORMED)
                 {
@@ -245,7 +206,7 @@ struct PhysDerivSeg : public PhysDeriv, public Helper<1, DEFORMED>
                 
                 // Get Basic derivative
                 PhysDerivTensor1DKernel<NQ0>(tmpIn, this->m_D[0],tmpOut_d0);
-                df_ptr = &(this->m_df[edfs]);
+                df_ptr = &((*this->m_df)[edfs]);
                 
                 if(!DEFORMED)
                 {
@@ -570,23 +531,7 @@ struct PhysDerivHex : public PhysDeriv, public Helper<3,DEFORMED>
     }
 
     void operator()(const Array<OneD, const NekDouble> &in,
-<<<<<<< HEAD
                     Array<OneD, Array<OneD, NekDouble> >&out) final
-=======
-                    Array<OneD,       NekDouble> &out_d0,
-                    Array<OneD,       NekDouble> &out_d1) final
-    {
-        // Only for 2D, but need to implement since its abstract
-        boost::ignore_unused(in, out_d0, out_d1);
-        NEKERROR(ErrorUtil::efatal,
-                 "Something went horribly wrong... calling 2D op for 3D element");
-    }
-
-    void operator()(const Array<OneD, const NekDouble> &in,
-                                  Array<OneD,       NekDouble> &out_d0,
-                                  Array<OneD,       NekDouble> &out_d1,
-                                  Array<OneD,       NekDouble> &out_d2) final
->>>>>>> castigli/nektar-feature/vectorization
     {
         // Check preconditions
         ASSERTL0(m_basis[0]->GetNumPoints() == m_basis[1]->GetNumPoints() &&
@@ -723,21 +668,7 @@ struct PhysDerivPrism : public PhysDeriv, public Helper<3, DEFORMED>
     }
 
     void operator()(const Array<OneD, const NekDouble> &in,
-<<<<<<< HEAD
                     Array<OneD, Array<OneD, NekDouble> >&out) final
-=======
-                                Array<OneD,       NekDouble> &out_d0,
-                                Array<OneD,       NekDouble> &out_d1) final
-    {
-        boost::ignore_unused(in, out_d0, out_d1);
-        throw; //Only for 2D, but need to implement since its abstract
-    }
-
-    void operator()(const Array<OneD, const NekDouble> &in,
-                          Array<OneD,       NekDouble> &out_d0,
-                          Array<OneD,       NekDouble> &out_d1,
-                          Array<OneD,       NekDouble> &out_d2) final
->>>>>>> castigli/nektar-feature/vectorization
     {
         // Check preconditions
         ASSERTL0(m_basis[0]->GetNumPoints() == m_basis[1]->GetNumPoints() &&
@@ -867,64 +798,6 @@ struct PhysDerivPyr : public PhysDeriv, public Helper<3, DEFORMED>
         return m_nmTot * this->m_nElmt;
     }
 
-    static NekDouble FlopsPerElement(
-        const int nq0,
-        const int nq1,
-        const int nq2)
-    {
-        //PhysDerivTensor
-        int pdt0 = nq0 * nq1 * nq2 * nq0 * 2;
-        int pdt1 = nq2 * nq0 * nq1 * nq1 * 2;
-        int pdt2 = nq0 * nq1 * nq2 * nq2 * 2;
-        int physDerivTensor = pdt0 + pdt1 + pdt2;
-
-        //PhysDeriv
-        int physDeriv = nq2*(2 + nq1*nq0*(20));
-
-        return (physDeriv + physDerivTensor);
-    }
-
-    double GFlops() final
-    {
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int flops = m_nElmt * PhysDerivPyr::FlopsPerElement(nq0, nq1, nq2);
-        return flops * 1e-9;
-    }
-
-    NekDouble NLoads() final
-    {
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int load_d0 = nq0 * nq1 * nq2 * nq0 * 2;
-        int load_d1 = nq2 * nq0 * nq1 * nq1 * 2;
-        int load_d2 = nq0 * nq1 * nq2 * nq2 * 2;;
-        int physDerivTensor = load_d0 + load_d1 + load_d2;
-        int physDeriv = nq2 * (1 + nq1 * nq0 *4);
-
-        return m_nElmt * (physDeriv + physDerivTensor);
-
-    }
-
-    NekDouble NStores() final
-    {
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int store_d0 = nq0 * nq1 * nq2;
-        int store_d1 = nq2 * nq0 * nq1;
-        int store_d2 = nq0 * nq1 * nq2;
-        int physDerivTensor = store_d0 + store_d1 + store_d2;
-        int physDeriv = nq2*nq1*nq0*3;
-
-        return m_nElmt * (physDeriv + physDerivTensor);
-    }
-
     void operator()(const Array<OneD, const NekDouble> &in,
                     Array<OneD, Array<OneD, NekDouble> >&out) final
     {
@@ -1007,7 +880,7 @@ struct PhysDerivPyr : public PhysDeriv, public Helper<3, DEFORMED>
         for (int e = 0; e < this->m_nBlocks; ++e)
         {
 
-            df_ptr = &(this->m_df[e*dfSize]);
+            df_ptr = &((*this->m_df)[e*dfSize]);
 
             // Load and transpose data
             load_interleave(inptr, nqTot, tmpIn);

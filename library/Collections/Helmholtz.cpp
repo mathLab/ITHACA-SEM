@@ -35,9 +35,9 @@
 #include <boost/core/ignore_unused.hpp>
 
 #include <MatrixFreeOps/Operator.hpp>
-#include <MatrixFreeOps/Util.hpp>
 
 #include <Collections/Operator.h>
+#include <Collections/MatrixFreeBase.h>
 #include <Collections/Collection.h>
 #include <Collections/IProduct.h>
 
@@ -218,47 +218,96 @@ class Helmholtz_IterPerExp : public Operator
                 m_stdExp->PhysDeriv(tmpphys, dtmp[0], dtmp[1], dtmp[2]);
 
                 // determine mass matrix term 
-                Vmath::Vmul(nPhys,m_jac+i*nPhys,1,tmpphys,1,tmpphys,1);
+                if(m_isDeformed)
+                {
+                    Vmath::Vmul(nPhys,m_jac+i*nPhys,1,tmpphys,1,tmpphys,1);
+                }
+                else
+                {
+                    Vmath::Smul(nPhys,m_jac[i],tmpphys,1,tmpphys,1);
+                }
+
                 m_stdExp->IProductWRTBase(tmpphys,t1 = output + i*nCoeffs); 
                 Vmath::Smul(nCoeffs,lambda,output + i*nCoeffs,1,
                             t1 = output+i*nCoeffs,1);
                 
                 // calculate full derivative
-                for(int j = 0; j < m_coordim; ++j)
+                if(m_isDeformed)
                 {
-                    Vmath::Vmul(nPhys,m_derivFac[j*m_dim].origin() + i*nPhys,1,
-                                &dtmp[0][0],1,&tmp[j][0],1);
-
-                    for(int k = 1; k < m_dim; ++k)
+                    for(int j = 0; j < m_coordim; ++j)
                     {
-                        Vmath::Vvtvp (nPhys, m_derivFac[j*m_dim+k].origin()
-                                      + i*nPhys, 1, &dtmp[k][0], 1,
-                                      &tmp[j][0],   1,  &tmp[j][0],   1);
+                        Vmath::Vmul(nPhys,m_derivFac[j*m_dim].origin() + i*nPhys,1,
+                                    &dtmp[0][0],1,&tmp[j][0],1);
+                        
+                        for(int k = 1; k < m_dim; ++k)
+                        {
+                            Vmath::Vvtvp (nPhys, m_derivFac[j*m_dim+k].origin()
+                                          + i*nPhys, 1, &dtmp[k][0], 1,
+                                          &tmp[j][0],   1,  &tmp[j][0],   1);
+                        }
+                    }
+
+                    // calculate dx/dxi tmp[0] + dy/dxi tmp[2] + dz/dxi tmp[3]
+                    for(int j = 0; j < m_dim; ++j)
+                    {
+                        Vmath::Vmul (nPhys,m_derivFac[j].origin() + i*nPhys,1,
+                                     &tmp[0][0], 1, &dtmp[j][0],1);
+                        
+                        for(int k = 1; k < m_coordim; ++k)
+                        {
+                            Vmath::Vvtvp (nPhys, m_derivFac[j +k*m_dim].origin()
+                                          + i*nPhys, 1, &tmp[k][0], 1,
+                                          &dtmp[j][0], 1, &dtmp[j][0], 1);
+                        }
+                    }
+                    
+                    // calculate Iproduct WRT Std Deriv
+                    for(int j = 0; j < m_dim; ++j)
+                    {
+                        // multiply by Jacobian
+                        Vmath::Vmul(nPhys,m_jac+i*nPhys,1,dtmp[j],1,dtmp[j],1);
+                        m_stdExp->IProductWRTDerivBase(j,dtmp[j],tmp[0]);
+                        Vmath::Vadd(nCoeffs,tmp[0],1,output+i*nCoeffs,1,
+                                    t1 = output+i*nCoeffs,1);
                     }
                 }
-
-                // calculate dx/dxi tmp[0] + dy/dxi tmp[2] + dz/dxi tmp[3]
-                for(int j = 0; j < m_dim; ++j)
+                else
                 {
-                    Vmath::Vmul (nPhys,m_derivFac[j].origin() + i*nPhys,1,
-                                 &tmp[0][0], 1, &dtmp[j][0],1);
-
-                    for(int k = 1; k < m_coordim; ++k)
+                    for(int j = 0; j < m_coordim; ++j)
                     {
-                        Vmath::Vvtvp (nPhys, m_derivFac[j +k*m_dim].origin()
-                                      + i*nPhys, 1, &tmp[k][0], 1,
-                                      &dtmp[j][0], 1, &dtmp[j][0], 1);
+                        Vmath::Smul(nPhys,m_derivFac[j*m_dim][i],
+                                    &dtmp[0][0],1,&tmp[j][0],1);
+                        
+                        for(int k = 1; k < m_dim; ++k)
+                        {
+                            Vmath::Svtvp (nPhys, m_derivFac[j*m_dim+k][i],
+                                          &dtmp[k][0], 1, &tmp[j][0], 1, &tmp[j][0], 1);
+                        }
                     }
-                }
 
-                // calculate Iproduct WRT Std Deriv
-                for(int j = 0; j < m_dim; ++j)
-                {
-                    // multiply by Jacobian
-                    Vmath::Vmul(nPhys,m_jac+i*nPhys,1,dtmp[j],1,dtmp[j],1);
-                    m_stdExp->IProductWRTDerivBase(j,dtmp[j],tmp[0]);
-                    Vmath::Vadd(nCoeffs,tmp[0],1,output+i*nCoeffs,1,
-                                t1 = output+i*nCoeffs,1);
+                    // calculate dx/dxi tmp[0] + dy/dxi tmp[2] + dz/dxi tmp[3]
+                    for(int j = 0; j < m_dim; ++j)
+                    {
+                        Vmath::Smul (nPhys,m_derivFac[j][i],
+                                     &tmp[0][0], 1, &dtmp[j][0],1);
+
+                        for(int k = 1; k < m_coordim; ++k)
+                        {
+                            Vmath::Svtvp (nPhys, m_derivFac[j +k*m_dim][i],
+                                          &tmp[k][0], 1, &dtmp[j][0], 1, &dtmp[j][0], 1);
+                        }
+                        
+                    }
+                    
+                    // calculate Iproduct WRT Std Deriv
+                    for(int j = 0; j < m_dim; ++j)
+                    {
+                        // multiply by Jacobian
+                        Vmath::Smul(nPhys,m_jac[i],dtmp[j],1,dtmp[j],1);
+                        m_stdExp->IProductWRTDerivBase(j,dtmp[j],tmp[0]);
+                        Vmath::Vadd(nCoeffs,tmp[0],1,output+i*nCoeffs,1,
+                                    t1 = output+i*nCoeffs,1);
+                    }
                 }
             }
         }
@@ -343,7 +392,7 @@ OperatorKey Helmholtz_IterPerExp::m_typeArr[] = {
 /**
  * @brief Helmholtz operator using matrix free operators.
  */
-class Helmholtz_MatrixFree : public Operator
+class Helmholtz_MatrixFree : public Operator, MatrixFreeOneInOneOut
 {
 public:
     OPERATOR_CREATE(Helmholtz_MatrixFree)
@@ -380,7 +429,6 @@ public:
         {
             (*m_oper)(input, output0);
         }
-
     }
     
     virtual void operator()(int                           dir,
@@ -394,83 +442,19 @@ public:
     
 private:
     std::shared_ptr<MatrixFree::Helmholtz> m_oper;
-    /// flag for padding
-    bool m_isPadded{false};
-    /// padded or unpadded input/output vectors
-    Array<OneD, NekDouble> m_input;
-    Array<OneD, NekDouble> m_output;
     unsigned int m_nmtot; 
     
     Helmholtz_MatrixFree(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                          CoalescedGeomDataSharedPtr                pGeomData)
-        : Operator(pCollExp, pGeomData)
+        : Operator(pCollExp, pGeomData),
+          MatrixFreeOneInOneOut(pCollExp[0]->GetStdExp()->GetNcoeffs(),
+                                pCollExp[0]->GetStdExp()->GetNcoeffs(),
+                                pCollExp.size())
     {
-        const auto nmElmt = pCollExp[0]->GetStdExp()->GetNcoeffs();
-        const auto nqElmt = pCollExp[0]->GetStdExp()->GetTotPoints();
 
-        int coordim = pCollExp[0]->GetCoordim();
+        m_nmtot = m_numElmt*pCollExp[0]->GetStdExp()->GetNcoeffs();
         
-        // Padding if needed
-        using vec_t = tinysimd::simd<NekDouble>;
-        const auto nElmtNoPad = pCollExp.size();
-        auto nElmtPad = nElmtNoPad;
-        
-        m_nmtot = nElmtNoPad*nmElmt; 
-
-        if (nElmtNoPad % vec_t::width != 0)
-        {
-            m_isPadded = true;
-            nElmtPad = nElmtNoPad + vec_t::width -
-                (nElmtNoPad % vec_t::width);
-            m_input  = Array<OneD, NekDouble>{nmElmt * nElmtPad, 0.0};
-            m_output = Array<OneD, NekDouble>{nmElmt * nElmtPad, 0.0};
-        }
-        else
-        {
-            m_output = Array<OneD, NekDouble>{nmElmt*nElmtNoPad, 0.0};
-        }
-       
-        // Check if deformed
-        bool deformed{pGeomData->IsDeformed(pCollExp)};
-
-        // Size of jacobian
-        int jacSizeNoPad{nElmtNoPad};
-        int jacSizePad{nElmtPad};
-
-        if (deformed)
-        {
-            jacSizeNoPad = nElmtNoPad * nqElmt;
-            jacSizePad = nElmtPad * nqElmt;
-        }
-        
-        // Get Jacobian
-        Array<OneD, NekDouble> jac{jacSizePad, 0.0};
-        Vmath::Vcopy(jacSizeNoPad, pGeomData->GetJac(pCollExp), 1, jac, 1);
-        
-        // Get derivative factors
         const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
-        Array<TwoD, NekDouble> df(dim * coordim, jacSizePad, 0.0);
-
-        if (deformed)
-        {
-            for (unsigned int j = 0; j < dim * coordim; ++j)
-            {
-                Vmath::Vcopy(jacSizeNoPad,
-                             &(pGeomData->GetDerivFactors(pCollExp))[j][0], 1,
-                             &df[j][0], 1);
-            }
-        }
-        else
-        {
-            for (unsigned int e = 0; e < nElmtNoPad; ++e)
-            {
-                for (unsigned int j = 0; j < dim * coordim; ++j)
-                {
-                    df[j][e] =
-                        (pGeomData->GetDerivFactors(pCollExp))[j][e*nqElmt];
-                }
-            }
-        }
 
         // Basis vector.
         std::vector<LibUtilities::BasisSharedPtr> basis(dim);
@@ -484,15 +468,16 @@ private:
         
         // Generate operator string and create operator.
         std::string op_string = "Helmholtz";
-        op_string += MatrixFree::GetOpstring(shapeType, deformed);
+        op_string += MatrixFree::GetOpstring(shapeType, m_isDeformed);
         auto oper = MatrixFree::GetOperatorFactory().
-            CreateInstance(op_string, basis, nElmtPad);
+            CreateInstance(op_string, basis, m_nElmtPad);
         
         // Set Jacobian
-        oper->SetJac(jac);
+        oper->SetJac(pGeomData->GetJacInterLeave(pCollExp,m_nElmtPad));
         
         // Store derivative factor
-        oper->SetDF(df);
+        oper->SetDF(pGeomData->GetDerivFactorsInterLeave
+                    (pCollExp,m_nElmtPad));
         
         m_oper = std::dynamic_pointer_cast<MatrixFree::Helmholtz>(oper);
         ASSERTL0(m_oper, "Failed to cast pointer.");

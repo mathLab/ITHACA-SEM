@@ -153,12 +153,13 @@ public:
     }
 
     void operator()(const Array<OneD, const NekDouble> &input,
-                    Array<OneD, NekDouble> &output0,
-                    Array<OneD, NekDouble> &output1,
-                    Array<OneD, NekDouble> &output2,
-                    Array<OneD, NekDouble> &wsp) final
+                    Array<OneD,       NekDouble> &output0,
+                    Array<OneD,       NekDouble> &output1,
+                    Array<OneD,       NekDouble> &output2,
+                    Array<OneD,       NekDouble> &wsp,
+                    const StdRegions::ConstFactorMap   &factors) final
     {
-        boost::ignore_unused(output1, output2, wsp);
+        boost::ignore_unused(output1, output2, wsp, factors);
         if (m_isPadded)
         {
             // copy into padded vector
@@ -168,32 +169,12 @@ public:
             // copy out of padded vector
             Vmath::Vcopy(output0.size(), m_output, 1, output0, 1);
         }
-
-        void operator()(
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output0,
-                      Array<OneD,       NekDouble> &output1,
-                      Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp,
-                const StdRegions::ConstFactorMap   &factors) final
+        else
         {
-            boost::ignore_unused(output1, output2, wsp, factors);
-            if (m_isPadded)
-            {
-                // copy into padded vector
-                Vmath::Vcopy(input.size(), input, 1, m_input, 1);
-                // call op
-                (*m_oper)(m_input, m_output);
-                // copy out of padded vector
-                Vmath::Vcopy(output0.size(), m_output, 1, output0, 1);
-            }
-            else
-            {
-                (*m_oper)(input, output0);
-            }
+            (*m_oper)(input, output0);
         }
     }
-
+    
     void operator()(int dir, const Array<OneD, const NekDouble> &input,
                     Array<OneD, NekDouble> &output,
                     Array<OneD, NekDouble> &wsp) final
@@ -517,7 +498,7 @@ public:
                             Array<OneD, NekDouble> &wsp,
                             const StdRegions::ConstFactorMap   &factors)
     {
-        boost::ignore_unused(output1, output2);
+        boost::ignore_unused(output1, output2,factors);
 
         int i = 0;
         if (m_colldir0 && m_colldir1)
@@ -718,54 +699,54 @@ public:
                             Array<OneD, NekDouble> &wsp,
                             const StdRegions::ConstFactorMap   &factors)
  {
-        boost::ignore_unused(output1, output2);
+     boost::ignore_unused(output1, output2,factors);
+     
+     if (m_colldir0 && m_colldir1 && m_colldir2)
+     {
+         Vmath::Vcopy(m_numElmt * m_nmodes0 * m_nmodes1 * m_nmodes2,
+                      input.get(), 1,
+                      output.get(), 1);
+     }
+     else
+     {
+         ASSERTL1(wsp.size() == m_wspSize, "Incorrect workspace size");
+         
+         // Assign second half of workspace for 2nd DGEMM operation.
+         int totmodes = m_nmodes0 * m_nmodes1 * m_nmodes2;
+         
+         Array<OneD, NekDouble> wsp2 =
+             wsp + m_nmodes0 * m_nmodes1 * m_nquad2 * m_numElmt;
+         
+         // loop over elements  and do bwd trans wrt c
+         for (int n = 0; n < m_numElmt; ++n)
+         {
+             Blas::Dgemm('N', 'T', m_nquad2, m_nmodes0 * m_nmodes1,
+                         m_nmodes2, 1.0, m_base2.get(), m_nquad2,
+                         &input[n * totmodes], m_nmodes0 * m_nmodes1, 0.0,
+                         &wsp[n * m_nquad2], m_nquad2 * m_numElmt);
+         }
+         
+         // trans wrt b
+         Blas::Dgemm('N', 'T', m_nquad1, m_nquad2 * m_numElmt * m_nmodes0,
+                     m_nmodes1, 1.0, m_base1.get(), m_nquad1, wsp.get(),
+                     m_nquad2 * m_numElmt * m_nmodes0, 0.0, wsp2.get(),
+                     m_nquad1);
+         
+         // trans wrt a
+         Blas::Dgemm('N', 'T', m_nquad0, m_nquad1 * m_nquad2 * m_numElmt,
+                     m_nmodes0, 1.0, m_base0.get(), m_nquad0, wsp2.get(),
+                     m_nquad1 * m_nquad2 * m_numElmt, 0.0, output.get(),
+                     m_nquad0);
+     }
+ }
 
-        if (m_colldir0 && m_colldir1 && m_colldir2)
-        {
-            Vmath::Vcopy(m_numElmt * m_nmodes0 * m_nmodes1 * m_nmodes2,
-                         input.get(), 1,
-                         output.get(), 1);
-        }
-        else
-        {
-            ASSERTL1(wsp.size() == m_wspSize, "Incorrect workspace size");
-
-            // Assign second half of workspace for 2nd DGEMM operation.
-            int totmodes = m_nmodes0 * m_nmodes1 * m_nmodes2;
-
-            Array<OneD, NekDouble> wsp2 =
-                wsp + m_nmodes0 * m_nmodes1 * m_nquad2 * m_numElmt;
-
-            // loop over elements  and do bwd trans wrt c
-            for (int n = 0; n < m_numElmt; ++n)
-            {
-                Blas::Dgemm('N', 'T', m_nquad2, m_nmodes0 * m_nmodes1,
-                            m_nmodes2, 1.0, m_base2.get(), m_nquad2,
-                            &input[n * totmodes], m_nmodes0 * m_nmodes1, 0.0,
-                            &wsp[n * m_nquad2], m_nquad2 * m_numElmt);
-            }
-
-            // trans wrt b
-            Blas::Dgemm('N', 'T', m_nquad1, m_nquad2 * m_numElmt * m_nmodes0,
-                        m_nmodes1, 1.0, m_base1.get(), m_nquad1, wsp.get(),
-                        m_nquad2 * m_numElmt * m_nmodes0, 0.0, wsp2.get(),
-                        m_nquad1);
-
-            // trans wrt a
-            Blas::Dgemm('N', 'T', m_nquad0, m_nquad1 * m_nquad2 * m_numElmt,
-                        m_nmodes0, 1.0, m_base0.get(), m_nquad0, wsp2.get(),
-                        m_nquad1 * m_nquad2 * m_numElmt, 0.0, output.get(),
-                        m_nquad0);
-        }
-    }
-
-    virtual void operator()(int dir, const Array<OneD, const NekDouble> &input,
-                            Array<OneD, NekDouble> &output,
-                            Array<OneD, NekDouble> &wsp)
-    {
-        boost::ignore_unused(dir, input, output, wsp);
-        ASSERTL0(false, "Not valid for this operator.");
-    }
+virtual void operator()(int dir, const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp)
+{
+    boost::ignore_unused(dir, input, output, wsp);
+    ASSERTL0(false, "Not valid for this operator.");
+}
 
 protected:
     const int m_nquad0;
@@ -826,21 +807,21 @@ public:
                             Array<OneD, NekDouble> &output2,
                             Array<OneD, NekDouble> &wsp,
                             const StdRegions::ConstFactorMap   &factors)
- {
-        boost::ignore_unused(output1, output2);
-
+    {
+        boost::ignore_unused(output1, output2, factors);
+        
         ASSERTL1(wsp.size() == m_wspSize, "Incorrect workspace size");
-
+        
         Array<OneD, NekDouble> tmp = wsp;
         Array<OneD, NekDouble> tmp1 =
             tmp + m_numElmt * m_nquad2 * m_nmodes0 *
-                      (2 * m_nmodes1 - m_nmodes0 + 1) / 2;
-
+            (2 * m_nmodes1 - m_nmodes0 + 1) / 2;
+        
         int mode    = 0;
         int mode1   = 0;
         int cnt     = 0;
         int ncoeffs = m_stdExp->GetNcoeffs();
-
+        
         // Perform summation over '2' direction
         for (int i = 0; i < m_nmodes0; ++i)
         {
@@ -996,7 +977,7 @@ public:
                             Array<OneD, NekDouble> &wsp,
                             const StdRegions::ConstFactorMap   &factors)
     {
-        boost::ignore_unused(output1, output2);
+        boost::ignore_unused(output1, output2, factors);
 
         ASSERTL1(wsp.size() == m_wspSize, "Incorrect workspace size");
 
@@ -1134,7 +1115,7 @@ public:
                             Array<OneD, NekDouble> &wsp,
                             const StdRegions::ConstFactorMap   &factors)
     {
-        boost::ignore_unused(output1, output2);
+        boost::ignore_unused(output1, output2, factors);
 
         ASSERTL1(wsp.size() == m_wspSize, "Incorrect workspace size");
 

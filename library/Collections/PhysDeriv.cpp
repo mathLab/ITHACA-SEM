@@ -292,8 +292,12 @@ class PhysDeriv_MatrixFree : public Operator, MatrixFreeOneInMultiOut
             // copy into padded vector
             Vmath::Vcopy(m_nqtot, input, 1, m_input, 1);
         }
-
+           
         (*m_oper)(input, m_output);
+
+        // currently using temporary local temporary space for output
+        // to allow for other operator call below which is
+        // directionally dependent
         switch(m_coordim)
         {
         case 1:
@@ -310,7 +314,7 @@ class PhysDeriv_MatrixFree : public Operator, MatrixFreeOneInMultiOut
             break;
         default:
             NEKERROR(ErrorUtil::efatal,
-                     "Unknown coordiminate dimension");
+                     "Unknown coordinate dimension");
             break;
         }
     }
@@ -352,8 +356,24 @@ private:
         bool deformed{pGeomData->IsDeformed(pCollExp)};
         const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
         
-        m_nqtot = m_numElmts*m_nqe;
+        m_nqtot = m_numElmt*m_nqe;
         
+        if(m_isPadded == false) // declare local space non-padded case
+        {
+            int nOut = pCollExp[0]->GetStdExp()->GetTotPoints();
+            m_output = Array<OneD, Array<OneD, NekDouble>> (m_coordim);
+            m_output[0] = Array<OneD, NekDouble>{nOut * m_nElmtPad, 0.0};
+            if(m_coordim == 2)
+            {
+                m_output[1] = Array<OneD, NekDouble>{nOut * m_nElmtPad, 0.0};
+            }
+            else if (m_coordim == 3)
+            {
+                m_output[1] = Array<OneD, NekDouble>{nOut * m_nElmtPad, 0.0};
+                m_output[2] = Array<OneD, NekDouble>{nOut * m_nElmtPad, 0.0};
+            }
+        }
+
         // Basis vector.
         std::vector<LibUtilities::BasisSharedPtr> basis(dim);
         for (unsigned int i = 0; i < dim; ++i)
@@ -419,13 +439,12 @@ public:
     {
     }
 
-    virtual void operator()(
-                            const Array<OneD, const NekDouble> &input,
+    virtual void operator()( const Array<OneD, const NekDouble> &input,
                             Array<OneD,       NekDouble> &output0,
                             Array<OneD,       NekDouble> &output1,
                             Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp,
-                const StdRegions::ConstFactorMap   &factors)
+                            Array<OneD,       NekDouble> &wsp,
+                            const StdRegions::ConstFactorMap   &factors)
         {
             boost::ignore_unused(factors);            
 

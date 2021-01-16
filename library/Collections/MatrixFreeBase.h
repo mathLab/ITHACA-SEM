@@ -140,6 +140,7 @@ namespace Collections
             const auto nElmtNoPad = nCollSize;
             m_nElmtPad = nElmtNoPad;
 
+            
             if (nElmtNoPad % vec_t::width != 0)
             {
                 m_isPadded = true;
@@ -150,9 +151,13 @@ namespace Collections
 
                 m_output = Array<OneD, Array<OneD, NekDouble>> (m_coordim);
                 m_output[0] = Array<OneD, NekDouble>{nOut * m_nElmtPad, 0.0};
-                m_output[1] = Array<OneD, NekDouble>{nOut * m_nElmtPad, 0.0};
-                if (m_coordim == 3)
+                if(m_coordim == 2)
                 {
+                    m_output[1] = Array<OneD, NekDouble>{nOut * m_nElmtPad, 0.0};
+                }
+                else if (m_coordim == 3)
+                {
+                    m_output[1] = Array<OneD, NekDouble>{nOut * m_nElmtPad, 0.0};
                     m_output[2] = Array<OneD, NekDouble>{nOut * m_nElmtPad, 0.0};
                 }
             }

@@ -267,7 +267,16 @@ const Array<TwoD, const NekDouble> &CoalescedGeomData::GetDerivFactors(
         }
 
 
-        Array<TwoD, NekDouble> newDFac(dim*coordim,npts*nElmts);
+        Array<TwoD, NekDouble> newDFac;
+
+        if(IsDeformed(pCollExp))
+        {
+            newDFac = Array<TwoD, NekDouble>(dim*coordim,npts*nElmts);
+        }
+        else
+        {
+            newDFac = Array<TwoD, NekDouble>(dim*coordim,nElmts);
+        }
 
         //copy Jacobians into a continuous list and set new chatched value
         int cnt = 0;

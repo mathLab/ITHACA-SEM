@@ -216,11 +216,11 @@ public:
             for (int e = 0; e < this->m_nBlocks; ++e)
             {
                 // Jacobian
-                jac_ptr = &(this->m_jac[e*dJSize]);
+                jac_ptr = &((*this->m_jac)[dJSize*e]);
                 
                 // Derivative factor
-                df_ptr = &(this->m_df[e*dfSize]);
-
+                df_ptr = &((*this->m_df)[dfSize*e]);
+                
                 // Load and transpose data
                 load_interleave(inptr0, nqTot, tmpIn0);
                 
@@ -261,10 +261,10 @@ public:
             for (int e = 0; e < this->m_nBlocks; ++e)
             {
                 // Jacobian
-                jac_ptr = &(this->m_jac[e*dJSize]);
+                jac_ptr = &((*this->m_jac)[dJSize*e]);
                 
                 // Derivative factor
-                df_ptr = &(this->m_df[e*dfSize]);
+                df_ptr = &((*this->m_df)[dfSize*e]);
                 
                 // Load and transpose data
                 load_interleave(inptr0, nqTot, tmpIn0);
@@ -312,10 +312,10 @@ public:
             for (int e = 0; e < this->m_nBlocks; ++e)
             {
                 // Jacobian
-                jac_ptr = &(this->m_jac[e*dJSize]);
+                jac_ptr = &((*this->m_jac)[dJSize*e]);
                 
                 // Derivative factor
-                df_ptr = &(this->m_df[e*dfSize]);
+                df_ptr = &((*this->m_df)[dfSize*e]);
                 
                 // Load and transpose data
                 load_interleave(inptr0, nqTot, tmpIn0);
@@ -2208,6 +2208,7 @@ private:
     int m_nmTot;
 };
 
+template<bool DEFORMED = false>
 struct IProductWRTDerivBaseTet : public IProductWRTDerivBase, public Helper<3, DEFORMED>
 {
     IProductWRTDerivBaseTet(std::vector<LibUtilities::BasisSharedPtr> basis,

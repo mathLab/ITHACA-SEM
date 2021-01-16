@@ -171,7 +171,7 @@ struct HelmholtzQuad : public Helmholtz, public Helper<2, DEFORMED>
 
         for (int e = 0; e < this->m_nBlocks; e++)
         {
-            df_ptr = &(this->m_df[e*dfSize]);
+            df_ptr = &((*this->m_df)[e*dfSize]);
 
             // Load and transpose data
             load_interleave(inptr, m_nmTot, tmpIn);
@@ -189,11 +189,11 @@ struct HelmholtzQuad : public Helmholtz, public Helper<2, DEFORMED>
                 metric11 = df1*df1;
                 metric11.fma(df3,df3);
 
-                jac_ptr = &(this->m_jac[e]);
+                jac_ptr = &((*this->m_jac)[e]);
             }
             else
             {
-                jac_ptr = &(this->m_jac[e*nqTot]);
+                jac_ptr = &((*this->m_jac)[e*nqTot]);
             }
 
             // Step 1: BwdTrans
@@ -540,7 +540,7 @@ struct HelmholtzTri : public Helmholtz, public Helper<2, DEFORMED>
 
         for (int e = 0; e < this->m_nBlocks; e++)
         {
-            df_ptr = &(this->m_df[e*dfSize]);
+            df_ptr = &((*this->m_df)[e*dfSize]);
 
             // Load and transpose data
             load_interleave(inptr, m_nmTot, tmpIn);
@@ -558,11 +558,11 @@ struct HelmholtzTri : public Helmholtz, public Helper<2, DEFORMED>
                 metric11 = df1*df1;
                 metric11.fma(df3,df3);
 
-                jac_ptr = &(this->m_jac[e]);
+                jac_ptr = &((*this->m_jac)[e]);
             }
             else
             {
-                jac_ptr = &(this->m_jac[e*nqTot]);
+                jac_ptr = &((*this->m_jac)[e*nqTot]);
             }
 
             // Step 1: BwdTrans
@@ -796,7 +796,7 @@ struct HelmholtzHex : public Helmholtz, public Helper<3, DEFORMED>
         for (int e = 0; e < this->m_nBlocks; e++)
         {
             // Precompute Laplacian metrics
-            df_ptr = &(this->m_df[e*dfSize]);
+            df_ptr = &((*this->m_df)[e*dfSize]);
 
             // Load and transpose data
             load_interleave(inptr, m_nmTot, tmpIn);
@@ -832,11 +832,11 @@ struct HelmholtzHex : public Helmholtz, public Helper<3, DEFORMED>
                 metric22.fma(df5, df5);
                 metric22.fma(df8, df8);
                 
-                jac_ptr = &(this->m_jac[e]);
+                jac_ptr = &((*this->m_jac)[e]);
             }
             else
             {
-                jac_ptr = &(this->m_jac[e*nqTot]);
+                jac_ptr = &((*this->m_jac)[e*nqTot]);
             }
 
             // Step 1: BwdTrans
@@ -1321,7 +1321,7 @@ struct HelmholtzPrism : public Helmholtz, public Helper<3, DEFORMED>
         for (int e = 0; e < this->m_nBlocks; e++)
         {
             // Precompute Laplacian metrics
-            df_ptr = &(this->m_df[e*dfSize]);
+            df_ptr = &((*this->m_df)[e*dfSize]);
 
             // Load and transpose data
             load_interleave(inptr, m_nmTot, tmpIn);
@@ -1332,11 +1332,11 @@ struct HelmholtzPrism : public Helmholtz, public Helper<3, DEFORMED>
                 df3 = df_ptr[3];  df4 = df_ptr[4]; df5 = df_ptr[5];
                 df6 = df_ptr[6];  df7 = df_ptr[7]; df8 = df_ptr[8];
 
-                jac_ptr = &(this->m_jac[e]);
+                jac_ptr = &((*this->m_jac)[e]);
             }
             else
             {
-                jac_ptr = &(this->m_jac[e*nqTot]);
+                jac_ptr = &((*this->m_jac)[e*nqTot]);
             }
 
             // Step 1: BwdTrans
@@ -1801,7 +1801,7 @@ struct HelmholtzPyr : public Helmholtz, public Helper<3, DEFORMED>
         for (int e = 0; e < this->m_nBlocks; e++)
         {
             // Precompute Laplacian metrics
-            df_ptr = &(this->m_df[e*dfSize]);
+            df_ptr = &((*this->m_df)[dfSize*e]);
 
             // Load and transpose data
             load_interleave(inptr, m_nmTot, tmpIn);
@@ -1812,11 +1812,11 @@ struct HelmholtzPyr : public Helmholtz, public Helper<3, DEFORMED>
                 df3 = df_ptr[3];  df4 = df_ptr[4]; df5 = df_ptr[5];
                 df6 = df_ptr[6];  df7 = df_ptr[7]; df8 = df_ptr[8];
 
-                jac_ptr = &(this->m_jac[e]);
+                jac_ptr = &((*this->m_jac)[e]);
             }
             else
             {
-                jac_ptr = &(this->m_jac[e*nqTot]);
+                jac_ptr = &((*this->m_jac)[e*nqTot]);
             }
 
             // Step 1: BwdTrans
@@ -2296,7 +2296,7 @@ struct HelmholtzTet : public Helmholtz, public Helper<3, DEFORMED>
         for (int e = 0; e < this->m_nBlocks; e++)
         {
             // Precompute Laplacian metrics
-            df_ptr = &(this->m_df[e*dfSize]);
+            df_ptr = &((*this->m_df)[dfSize*e]);
 
             // Load and transpose data
             load_interleave(inptr, m_nmTot, tmpIn);
@@ -2307,11 +2307,11 @@ struct HelmholtzTet : public Helmholtz, public Helper<3, DEFORMED>
                 df3 = df_ptr[3];  df4 = df_ptr[4]; df5 = df_ptr[5];
                 df6 = df_ptr[6];  df7 = df_ptr[7]; df8 = df_ptr[8];
 
-                jac_ptr = &(this->m_jac[e]);
+                jac_ptr = &((*this->m_jac)[e]);
             }
             else
             {
-                jac_ptr = &(this->m_jac[e*nqTot]);
+                jac_ptr = &((*this->m_jac)[e*nqTot]);
             }
 
             // Step 1: BwdTrans

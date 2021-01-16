@@ -2090,6 +2090,7 @@ namespace Nektar
         // ... only one op at the time ...
         impTypes[Collections::eIProductWRTDerivBase] = Collections::eMatrixFree;
         Collections::Collection     c(CollExp, impTypes);
+        c.Initialise(Collections::eIProductWRTDerivBase);
 
 
         const int nq = Exp->GetTotPoints();

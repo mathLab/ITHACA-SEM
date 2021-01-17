@@ -108,9 +108,13 @@ namespace Collections
 
                 m_input = Array<OneD, Array<OneD, NekDouble>> (m_coordim);
                 m_input[0] = Array<OneD, NekDouble>{nIn * m_nElmtPad, 0.0};
-                m_input[1] = Array<OneD, NekDouble>{nIn * m_nElmtPad, 0.0};
-                if (m_coordim == 3)
+                if (m_coordim == 2)
+		{
+                    m_input[1] = Array<OneD, NekDouble>{nIn * m_nElmtPad, 0.0};
+		}
+		else if (m_coordim == 3)
                 {
+                    m_input[1] = Array<OneD, NekDouble>{nIn * m_nElmtPad, 0.0};
                     m_input[2] = Array<OneD, NekDouble>{nIn * m_nElmtPad, 0.0};
                 }
                 m_output = Array<OneD, NekDouble>{nOut * m_nElmtPad, 0.0};

@@ -48,13 +48,21 @@ namespace Collections
     public:
         // Default constructor
         MatrixFreeBase(){}
+
+        MatrixFreeBase(const unsigned int nIn,
+                       const unsigned int nOut,
+                       const unsigned int nCollSize):
+            m_nIn(nIn*nCollSize),
+            m_nOut(nOut*nCollSize)
+        {}
         
     protected:
         /// flag for padding
         bool m_isPadded{false};
         ///  size after padding 
-        unsigned int  m_nElmtPad; 
-
+        unsigned int m_nElmtPad;
+        unsigned int m_nIn;
+        unsigned int m_nOut; 
     };
     
     class MatrixFreeOneInOneOut: protected MatrixFreeBase
@@ -62,7 +70,8 @@ namespace Collections
     public:
         /// Constructor
         MatrixFreeOneInOneOut(const unsigned int nIn, const unsigned int nOut,
-                              const unsigned int nCollSize)
+                              const unsigned int nCollSize):
+            MatrixFreeBase(nIn,nOut,nCollSize)
         {
             // Padding if needed
             using vec_t = tinysimd::simd<NekDouble>;
@@ -91,7 +100,8 @@ namespace Collections
         MatrixFreeMultiInOneOut(const unsigned int coordim,
                                 const unsigned int nIn,
                                 const unsigned int nOut,
-                                const unsigned int nCollSize)
+                                const unsigned int nCollSize):
+            MatrixFreeBase(nIn,nOut,nCollSize)
         {
             m_coordim = coordim;
 
@@ -135,7 +145,8 @@ namespace Collections
         MatrixFreeOneInMultiOut(const unsigned int coordim,
                                 const unsigned int nIn,
                                 const unsigned int nOut,
-                                const unsigned int nCollSize)
+                                const unsigned int nCollSize):
+            MatrixFreeBase(nIn,nOut,nCollSize)
         {
             m_coordim = coordim;
 

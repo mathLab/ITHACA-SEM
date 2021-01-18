@@ -301,18 +301,18 @@ class IProductWRTDerivBase_MatrixFree : public Operator, MatrixFreeMultiInOneOut
                 {
                 case 1:
                     output = entry1;
-                    Vmath::Vcopy(entry0.size(), entry0, 1, m_input[0], 1);
+                    Vmath::Vcopy(m_nIn, entry0, 1, m_input[0], 1);
                     break;
                 case 2:
                     output = entry2;
-                    Vmath::Vcopy(entry0.size(), entry0, 1, m_input[0], 1);
-                    Vmath::Vcopy(entry1.size(), entry1, 1, m_input[1], 1);
+                    Vmath::Vcopy(m_nIn, entry0, 1, m_input[0], 1);
+                    Vmath::Vcopy(m_nIn, entry1, 1, m_input[1], 1);
                     break;
                 case 3:
                     output = entry3;
-                    Vmath::Vcopy(entry0.size(), entry0, 1, m_input[0], 1);
-                    Vmath::Vcopy(entry1.size(), entry1, 1, m_input[1], 1);
-                    Vmath::Vcopy(entry0.size(), entry2, 1, m_input[2], 1);
+                    Vmath::Vcopy(m_nIn, entry0, 1, m_input[0], 1);
+                    Vmath::Vcopy(m_nIn, entry1, 1, m_input[1], 1);
+                    Vmath::Vcopy(m_nIn, entry2, 1, m_input[2], 1);
                     break;
                 default:
                     NEKERROR(ErrorUtil::efatal, "coordim not valid");
@@ -322,7 +322,7 @@ class IProductWRTDerivBase_MatrixFree : public Operator, MatrixFreeMultiInOneOut
                 // call op
                 (*m_oper)(m_input, m_output);
                 // copy out of padded vector
-                Vmath::Vcopy(output.size(), m_output, 1, output, 1);
+                Vmath::Vcopy(m_nOut, m_output, 1, output, 1);
             }
             else
             {

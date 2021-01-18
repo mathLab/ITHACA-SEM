@@ -163,11 +163,11 @@ public:
         if (m_isPadded)
         {
             // copy into padded vector
-            Vmath::Vcopy(input.size(), input, 1, m_input, 1);
+            Vmath::Vcopy(m_nIn, input, 1, m_input, 1);
             // call op
             (*m_oper)(m_input, m_output);
             // copy out of padded vector
-            Vmath::Vcopy(output0.size(), m_output, 1, output0, 1);
+            Vmath::Vcopy(m_nOut, m_output, 1, output0, 1);
         }
         else
         {

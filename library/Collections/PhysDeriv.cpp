@@ -290,7 +290,7 @@ class PhysDeriv_MatrixFree : public Operator, MatrixFreeOneInMultiOut
         if (m_isPadded)
         {
             // copy into padded vector
-            Vmath::Vcopy(m_nqtot, input, 1, m_input, 1);
+            Vmath::Vcopy(m_nIn, input, 1, m_input, 1);
         }
            
         (*m_oper)(input, m_output);
@@ -301,16 +301,16 @@ class PhysDeriv_MatrixFree : public Operator, MatrixFreeOneInMultiOut
         switch(m_coordim)
         {
         case 1:
-            Vmath::Vcopy(m_nqtot, m_output[0], 1, output0, 1);
+            Vmath::Vcopy(m_nOut, m_output[0], 1, output0, 1);
             break;
         case 2:
-            Vmath::Vcopy(m_nqtot, m_output[0], 1, output0, 1);
-            Vmath::Vcopy(m_nqtot, m_output[1], 1, output1, 1);
+            Vmath::Vcopy(m_nOut, m_output[0], 1, output0, 1);
+            Vmath::Vcopy(m_nOut, m_output[1], 1, output1, 1);
             break;
         case 3:
-            Vmath::Vcopy(m_nqtot, m_output[0], 1, output0, 1);
-            Vmath::Vcopy(m_nqtot, m_output[1], 1, output1, 1);
-            Vmath::Vcopy(m_nqtot, m_output[2], 1, output2, 1);
+            Vmath::Vcopy(m_nOut, m_output[0], 1, output0, 1);
+            Vmath::Vcopy(m_nOut, m_output[1], 1, output1, 1);
+            Vmath::Vcopy(m_nOut, m_output[2], 1, output2, 1);
             break;
         default:
             NEKERROR(ErrorUtil::efatal,
@@ -329,19 +329,18 @@ class PhysDeriv_MatrixFree : public Operator, MatrixFreeOneInMultiOut
         if (m_isPadded)
         {
             // copy into padded vector
-            Vmath::Vcopy(input.size(), input, 1, m_input, 1);
+            Vmath::Vcopy(m_nIn, input, 1, m_input, 1);
             (*m_oper)(m_input, m_output);
         }
         else
         {
             (*m_oper)(input, m_output);
         }
-        Vmath::Vcopy(m_nqtot, m_output[dir], 1, output, 1);
+        Vmath::Vcopy(m_nOut, m_output[dir], 1, output, 1);
     }
 
 private:
     std::shared_ptr<MatrixFree::PhysDeriv> m_oper;
-    int m_nqtot;
     
     PhysDeriv_MatrixFree(
                          vector<StdRegions::StdExpansionSharedPtr> pCollExp,
@@ -355,8 +354,6 @@ private:
         // Check if deformed
         bool deformed{pGeomData->IsDeformed(pCollExp)};
         const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
-        
-        m_nqtot = m_numElmt*m_nqe;
         
         if(m_isPadded == false) // declare local space non-padded case
         {

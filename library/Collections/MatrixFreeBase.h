@@ -48,13 +48,21 @@ namespace Collections
     public:
         // Default constructor
         MatrixFreeBase(){}
+
+        MatrixFreeBase(const unsigned int nIn,
+                       const unsigned int nOut,
+                       const unsigned int nCollSize):
+            m_nIn(nIn*nCollSize),
+            m_nOut(nOut*nCollSize)
+        {}
         
     protected:
         /// flag for padding
         bool m_isPadded{false};
         ///  size after padding 
-        unsigned int  m_nElmtPad; 
-
+        unsigned int m_nElmtPad;
+        unsigned int m_nIn;
+        unsigned int m_nOut; 
     };
     
     class MatrixFreeOneInOneOut: protected MatrixFreeBase
@@ -62,7 +70,8 @@ namespace Collections
     public:
         /// Constructor
         MatrixFreeOneInOneOut(const unsigned int nIn, const unsigned int nOut,
-                              const unsigned int nCollSize)
+                              const unsigned int nCollSize):
+            MatrixFreeBase(nIn,nOut,nCollSize)
         {
             // Padding if needed
             using vec_t = tinysimd::simd<NekDouble>;
@@ -91,7 +100,8 @@ namespace Collections
         MatrixFreeMultiInOneOut(const unsigned int coordim,
                                 const unsigned int nIn,
                                 const unsigned int nOut,
-                                const unsigned int nCollSize)
+                                const unsigned int nCollSize):
+            MatrixFreeBase(nIn,nOut,nCollSize)
         {
             m_coordim = coordim;
 
@@ -108,9 +118,13 @@ namespace Collections
 
                 m_input = Array<OneD, Array<OneD, NekDouble>> (m_coordim);
                 m_input[0] = Array<OneD, NekDouble>{nIn * m_nElmtPad, 0.0};
-                m_input[1] = Array<OneD, NekDouble>{nIn * m_nElmtPad, 0.0};
-                if (m_coordim == 3)
+                if (m_coordim == 2)
+		{
+                    m_input[1] = Array<OneD, NekDouble>{nIn * m_nElmtPad, 0.0};
+		}
+		else if (m_coordim == 3)
                 {
+                    m_input[1] = Array<OneD, NekDouble>{nIn * m_nElmtPad, 0.0};
                     m_input[2] = Array<OneD, NekDouble>{nIn * m_nElmtPad, 0.0};
                 }
                 m_output = Array<OneD, NekDouble>{nOut * m_nElmtPad, 0.0};
@@ -131,7 +145,8 @@ namespace Collections
         MatrixFreeOneInMultiOut(const unsigned int coordim,
                                 const unsigned int nIn,
                                 const unsigned int nOut,
-                                const unsigned int nCollSize)
+                                const unsigned int nCollSize):
+            MatrixFreeBase(nIn,nOut,nCollSize)
         {
             m_coordim = coordim;
 
@@ -140,6 +155,7 @@ namespace Collections
             const auto nElmtNoPad = nCollSize;
             m_nElmtPad = nElmtNoPad;
 
+            
             if (nElmtNoPad % vec_t::width != 0)
             {
                 m_isPadded = true;
@@ -150,9 +166,13 @@ namespace Collections
 
                 m_output = Array<OneD, Array<OneD, NekDouble>> (m_coordim);
                 m_output[0] = Array<OneD, NekDouble>{nOut * m_nElmtPad, 0.0};
-                m_output[1] = Array<OneD, NekDouble>{nOut * m_nElmtPad, 0.0};
-                if (m_coordim == 3)
+                if(m_coordim == 2)
                 {
+                    m_output[1] = Array<OneD, NekDouble>{nOut * m_nElmtPad, 0.0};
+                }
+                else if (m_coordim == 3)
+                {
+                    m_output[1] = Array<OneD, NekDouble>{nOut * m_nElmtPad, 0.0};
                     m_output[2] = Array<OneD, NekDouble>{nOut * m_nElmtPad, 0.0};
                 }
             }

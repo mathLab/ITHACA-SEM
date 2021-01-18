@@ -294,17 +294,17 @@ class IProductWRTDerivBase_MatrixFree : public Operator, MatrixFreeMultiInOneOut
             if (m_isPadded)
             {
                 // copy into padded vector
-                Vmath::Vcopy(entry0.size(), entry0, 1, m_input[0], 1);
-                Vmath::Vcopy(entry1.size(), entry1, 1, m_input[1], 1);
+                Vmath::Vcopy(m_nIn, entry0, 1, m_input[0], 1);
+                Vmath::Vcopy(m_nIn, entry1, 1, m_input[1], 1);
                 if (m_coordim == 3)
                 {
-                    Vmath::Vcopy(entry0.size(), entry2, 1, m_input[2], 1);
+                    Vmath::Vcopy(m_nIn, entry2, 1, m_input[2], 1);
                 }
 
                 // call op
                 (*m_oper)(m_input, m_output);
                 // copy out of padded vector
-                Vmath::Vcopy(output.size(), m_output, 1, output, 1);
+                Vmath::Vcopy(m_nOut, m_output, 1, output, 1);
             }
             else
             {

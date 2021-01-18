@@ -286,22 +286,22 @@ class PhysDeriv_MatrixFree : public Operator, MatrixFreeOneInMultiOut
             if (m_isPadded)
             {
                 // copy into padded vector
-                Vmath::Vcopy(input.size(), input, 1, m_input, 1);
+                Vmath::Vcopy(m_nIn, input, 1, m_input, 1);
                 // call op
                 if (m_coordim == 2)
                 {
                     (*m_oper)(m_input, m_output[0], m_output[1]);
                     // copy out of padded vector
-                    Vmath::Vcopy(output1.size(), m_output[0], 1, output0, 1);
-                    Vmath::Vcopy(output1.size(), m_output[1], 1, output1, 1);
+                    Vmath::Vcopy(m_nOut, m_output[0], 1, output0, 1);
+                    Vmath::Vcopy(m_nOut, m_output[1], 1, output1, 1);
                 }
                 else
                 {
                     (*m_oper)(m_input, m_output[0], m_output[1], m_output[2]);
                     // copy out of padded vector
-                    Vmath::Vcopy(output2.size(), m_output[0], 1, output0, 1);
-                    Vmath::Vcopy(output2.size(), m_output[1], 1, output1, 1);
-                    Vmath::Vcopy(output2.size(), m_output[2], 1, output2, 1);
+                    Vmath::Vcopy(m_nOut, m_output[0], 1, output0, 1);
+                    Vmath::Vcopy(m_nOut, m_output[1], 1, output1, 1);
+                    Vmath::Vcopy(m_nOut, m_output[2], 1, output2, 1);
                 }
             }
             else

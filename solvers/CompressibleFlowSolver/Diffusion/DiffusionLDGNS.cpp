@@ -243,8 +243,6 @@ void DiffusionLDGNS::v_DiffuseCoeffs(
     std::size_t nScalars  = inarray.size();
     std::size_t nTracePts = fields[0]->GetTrace()->GetTotPoints();
 
-    Array<OneD, NekDouble>               tmp1{nCoeffs};
-    Array<OneD, Array<OneD, NekDouble> > tmp2{nConvectiveFields};
 
     TensorOfArray3D<NekDouble> derivativesO1{m_spaceDim};
 
@@ -285,21 +283,24 @@ void DiffusionLDGNS::v_DiffuseCoeffs(
     DiffuseTraceFlux(fields, inarray, derivativesO1, m_viscTensor, viscousFlux,
                         pFwd, pBwd);
 
+    Array<OneD, NekDouble>               tmpOut{nCoeffs};
+    Array<OneD, Array<OneD, NekDouble>>  tmpIn{nDim};
+
     for (std::size_t i = 0; i < nConvectiveFields; ++i)
     {
-        tmp2[i] = Array<OneD, NekDouble>{nCoeffs, 0.0};
-
+        // Temporary fix to call collection op
+        // we can reorder m_viscTensor later
         for (std::size_t j = 0; j < nDim; ++j)
         {
-            fields[i]->IProductWRTDerivBase(j, m_viscTensor[j][i], tmp1);
-            Vmath::Vadd(nCoeffs, tmp1, 1, tmp2[i], 1, tmp2[i], 1);
+            tmpIn[j] = m_viscTensor[j][i];
         }
+        fields[i]->IProductWRTDerivBase(tmpIn, tmpOut);
 
         // Evaulate  <\phi, \hat{F}\cdot n> - outarray[i]
-        Vmath::Neg                      (nCoeffs, tmp2[i], 1);
-        fields[i]->AddTraceIntegral     (viscousFlux[i], tmp2[i]);
+        Vmath::Neg                      (nCoeffs, tmpOut, 1);
+        fields[i]->AddTraceIntegral     (viscousFlux[i], tmpOut);
         fields[i]->SetPhysState         (false);
-        fields[i]->MultiplyByElmtInvMass(tmp2[i], outarray[i]);
+        fields[i]->MultiplyByElmtInvMass(tmpOut, outarray[i]);
     }
 }
 

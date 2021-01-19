@@ -51,20 +51,20 @@ namespace Nektar
                 return RiemannSolverSharedPtr(
                     new UpwindLDGSolver(pSession));
             }
-            
+
             static std::string solverName;
-            
+
         protected:
             UpwindLDGSolver(
                     const LibUtilities::SessionReaderSharedPtr& pSession);
-            
-            virtual void v_Solve(
+
+            void v_Solve(
                 const int                                         nDim,
                 const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
                 const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-                      Array<OneD,       Array<OneD, NekDouble> > &flux);
-        }; 
+                      Array<OneD,       Array<OneD, NekDouble> > &flux) final;
+        };
     }
 }
-    
+
 #endif

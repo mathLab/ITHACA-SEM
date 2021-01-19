@@ -387,9 +387,8 @@ namespace Nektar
 
             ///
             inline void BwdTrans (
-                const Array<OneD,
-                const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray);
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,NekDouble> &outarray);
 
             /// This function calculates the coordinates of all the elemental
             /// quadrature points \f$\boldsymbol{x}_i\f$.

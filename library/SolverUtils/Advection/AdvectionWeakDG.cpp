@@ -38,6 +38,8 @@
 #include <iostream>
 #include <iomanip>
 
+#include <LibUtilities/BasicUtils/Timer.h>
+
 namespace Nektar
 {
     namespace SolverUtils
@@ -97,10 +99,16 @@ namespace Nektar
                 nConvectiveFields, fields, advVel, inarray, tmp, time,
                 pFwd, pBwd);
 
+            // why was this broken in many loops over convective fields?
+            // this is terrible for locality
+            LibUtilities::Timer timer;
+            timer.Start();
             for (int i = 0; i < nConvectiveFields; ++i)
             {
                 fields[i]->BwdTrans(tmp[i], outarray[i]);
             }
+            timer.Stop();
+            timer.AccumulateRegion("BwdTrans");
         }
 
         void AdvectionWeakDG::v_AdvectCoeffs(
@@ -130,15 +138,23 @@ namespace Nektar
                 }
             }
 
-            v_AdvectVolumeFlux(nConvectiveFields, fields, advVel,inarray,
+            LibUtilities::Timer timer;
+            timer.Start();
+            v_AdvectVolumeFlux(nConvectiveFields, fields, advVel, inarray,
                                 fluxvector, time);
+            timer.Stop();
+            timer.AccumulateRegion("m_fluxVector");
 
+
+            timer.Start();
             // Get the advection part (without numerical flux)
             for (int i = 0; i < nConvectiveFields; ++i)
             {
                 Vmath::Fill(outarray[i].size(), 0.0, outarray[i], 1);
                 fields[i]->IProductWRTDerivBase(fluxvector[i], outarray[i]);
             }
+            timer.Stop();
+            timer.AccumulateRegion("IProductWRTDerivBase");
 
             Array<OneD, Array<OneD, NekDouble> >
                 numflux{size_t(nConvectiveFields)};
@@ -149,14 +165,23 @@ namespace Nektar
             }
 
             v_AdvectTraceFlux(nConvectiveFields, fields, advVel, inarray,
-                                numflux,time, pFwd, pBwd);
+                numflux, time, pFwd, pBwd);
 
             for (int i = 0; i < nConvectiveFields; ++i)
             {
                 Vmath::Neg                      (nCoeffs, outarray[i], 1);
+
+                timer.Start();
                 fields[i]->AddTraceIntegral     (numflux[i], outarray[i]);
+                timer.Stop();
+                timer.AccumulateRegion("AddTraceIntegral");
+
+                timer.Start();
                 fields[i]->MultiplyByElmtInvMass(outarray[i], outarray[i]);
+                timer.Stop();
+                timer.AccumulateRegion("MultiplyByElmtInvMass");
             }
+
         }
 
         void AdvectionWeakDG::v_AdvectTraceFlux(
@@ -198,7 +223,12 @@ namespace Nektar
                 }
             }
 
+            LibUtilities::Timer timer;
+            timer.Start();
             m_riemann->Solve(m_spaceDim, Fwd, Bwd, TraceFlux);
+            timer.Stop();
+            timer.AccumulateRegion("m_riemann");
+
         }
     }//end of namespace SolverUtils
 }//end of namespace Nektar

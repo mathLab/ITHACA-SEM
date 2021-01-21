@@ -312,16 +312,16 @@ namespace Nektar
 
         int ntmp;
         m_session->LoadParameter("DEBUG_ADVECTION_JAC_MAT",     ntmp      ,    1);
-        m_DEBUG_ADVECTION_JAC_MAT             = true;
+        m_AdvectionJacFlag             = true;
         if(0==ntmp)
         {
-            m_DEBUG_ADVECTION_JAC_MAT = false;
+            m_AdvectionJacFlag = false;
         }
         m_session->LoadParameter("DEBUG_VISCOUS_JAC_MAT",                 ntmp      ,    1);
-        m_DEBUG_VISCOUS_JAC_MAT             = true;
+        m_ViscousJacFlag             = true;
         if(0==ntmp)
         {
-            m_DEBUG_VISCOUS_JAC_MAT = false;
+            m_ViscousJacFlag = false;
         }
     }
 
@@ -941,7 +941,7 @@ namespace Nektar
 
         Array<OneD, NekDouble > mu                 (npoints, 0.0);
         Array<OneD, NekDouble > DmuDT              (npoints, 0.0);
-        if(m_DEBUG_VISCOUS_JAC_MAT)
+        if(m_ViscousJacFlag)
         {
             CalcMuDmuDT(inarray,mu,DmuDT);
         }
@@ -1047,7 +1047,7 @@ namespace Nektar
                 locVars[j] = inarray[j]+noffset;
             }
             
-            if(m_DEBUG_ADVECTION_JAC_MAT)
+            if(m_AdvectionJacFlag)
             {
                 for(int nfluxDir = 0; nfluxDir < nSpaceDim; nfluxDir++)
                 {
@@ -1056,7 +1056,7 @@ namespace Nektar
                 }
             }
 
-            if(m_DEBUG_VISCOUS_JAC_MAT)
+            if(m_ViscousJacFlag)
             {
                 for(int j = 0; j < nSpaceDim; j++)
                 {   
@@ -1074,7 +1074,7 @@ namespace Nektar
                 }
             }
 
-            if(m_DEBUG_VISCOUS_JAC_MAT)
+            if(m_ViscousJacFlag)
             {
                 locmu       =   mu      + noffset;
                 for(int nfluxDir = 0; nfluxDir < nSpaceDim; nfluxDir++)
@@ -1123,7 +1123,7 @@ namespace Nektar
                 }
             }
 
-            if(m_DEBUG_VISCOUS_JAC_MAT)
+            if(m_ViscousJacFlag)
             {
                 for(int m=0; m<nvariable;m++)
                 {
@@ -1189,7 +1189,7 @@ namespace Nektar
                 }
             }
 
-            if(m_DEBUG_VISCOUS_JAC_MAT)
+            if(m_ViscousJacFlag)
             {
                 for(int nd0 =0;nd0<m_spacedim;nd0++)
                 {
@@ -1565,7 +1565,7 @@ namespace Nektar
         const MultiRegions::AssemblyMapDGSharedPtr  TraceMap=fields[0]->GetTraceMap();
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    qBwd(nDim);
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    qFwd(nDim);
-        if(m_DEBUG_VISCOUS_JAC_MAT)
+        if(m_ViscousJacFlag)
         {
             for (int nd = 0; nd < nDim; ++nd)
             {
@@ -1730,7 +1730,7 @@ namespace Nektar
         boost::ignore_unused(nDim, nPts, PenaltyFactor2, time, qFwd, qBwd, 
             MuVarTrace);
 
-        if (m_DEBUG_ADVECTION_JAC_MAT)
+        if (m_AdvectionJacFlag)
         {
             m_advObject->AdvectTraceFlux(nConvectiveFields, m_fields, AdvVel,inarray, traceflux, m_BndEvaluateTime,vFwd, vBwd);
         }
@@ -1742,7 +1742,7 @@ namespace Nektar
             }
         }
         
-        if(m_DEBUG_VISCOUS_JAC_MAT)
+        if(m_ViscousJacFlag)
         {
             Array<OneD, Array<OneD, NekDouble > > visflux(nConvectiveFields);
             for(int i = 0; i < nConvectiveFields; i++)
@@ -1774,7 +1774,7 @@ namespace Nektar
     {
         boost::ignore_unused(time, MuVarTrace);
 
-        if(m_DEBUG_VISCOUS_JAC_MAT)
+        if(m_ViscousJacFlag)
         {
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  VolumeFlux;
             m_diffusion->DiffuseTraceSymmFlux(nConvectiveFields,fields,inarray,qfield,VolumeFlux,
@@ -1831,7 +1831,7 @@ namespace Nektar
     {
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield;
 
-        if(m_DEBUG_VISCOUS_JAC_MAT)
+        if(m_ViscousJacFlag)
         {
             CalphysDeriv(inarray,qfield);
         }

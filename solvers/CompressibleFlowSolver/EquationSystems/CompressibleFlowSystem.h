@@ -165,21 +165,9 @@ namespace Nektar
         // Parameters for local time-stepping
         bool                                m_useLocalTimeStep;
 
-        bool                                m_DEBUG_VISCOUS_JAC_MAT;
-        bool                                m_DEBUG_ADVECTION_JAC_MAT;
+        bool                                m_ViscousJacFlag;
+        bool                                m_AdvectionJacFlag;
         bool                                m_updatePrecMatFlag;
-
-        // 1: Adv; 2: Dif; Default: all
-        int                                 m_DebugAdvDiffSwitch; 
-       // 1: Vol; 2: Trace; Default: all
-        int                                 m_DebugVolTraceSwitch; 
-       // 1: Con; 2: Deriv; Default: all
-        int                                 m_DebugConsDerivSwitch; 
-
-        int                                 m_DebugInvMassSwitch   ; 
-        int                                 m_DebugPlusSourceSwitch; 
-
-        int                                 m_DebugIPSymmFluxJacSwitch; 
 
         TensorOfArray4D<NekDouble>          m_StdDMatDataDBB;
         TensorOfArray5D<NekDouble>          m_StdDMatDataDBDB;

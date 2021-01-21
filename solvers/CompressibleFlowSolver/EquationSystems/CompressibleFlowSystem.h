@@ -52,8 +52,6 @@
 #include <LocalRegions/Expansion2D.h>
 #include <LibUtilities/LinearAlgebra/NekNonlinSys.h>
 
-#define DEMO_IMPLICITSOLVER_JFNK_COEFF
-#define CFS_DEBUGMODE
 namespace Nektar
 {
     /**

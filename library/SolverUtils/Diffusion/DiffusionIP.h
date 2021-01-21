@@ -37,7 +37,6 @@
 #define NEKTAR_SOLVERUTILS_DIFFUSIONWEAKDG
 
 #include <SolverUtils/Diffusion/Diffusion.h>
-#define CFS_DEBUGMODE
 
 namespace Nektar
 {

@@ -329,24 +329,6 @@ namespace Nektar
         {
             m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT = true;
         }
-        
-#ifdef CFS_DEBUGMODE
-        m_session->LoadParameter("DebugAdvDiffSwitch",    m_DebugAdvDiffSwitch   , 0);
-        m_session->LoadParameter("DebugVolTraceSwitch",   m_DebugVolTraceSwitch  , 0);
-        m_session->LoadParameter("DebugConsDerivSwitch",  m_DebugConsDerivSwitch , 0);
-        m_session->LoadParameter("DebugInvMassSwitch",    m_DebugInvMassSwitch   , 1);
-        m_session->LoadParameter("DebugPlusSourceSwitch", m_DebugPlusSourceSwitch, 1);
-
-        m_session->LoadParameter("DebugIPSymmFluxJacSwitch", m_DebugIPSymmFluxJacSwitch, 0);
-
-
-        m_session->LoadParameter("flagImplItsStatistcs", ntmp, 0);
-        m_flagImplItsStatistcs = false;
-        if(1==ntmp)
-        {
-            m_flagImplItsStatistcs = true;
-        }
-#endif
     }
 
     /**
@@ -514,8 +496,6 @@ namespace Nektar
                 break;
         }
     }
-
-#ifdef DEMO_IMPLICITSOLVER_JFNK_COEFF
 
     void CompressibleFlowSystem::preconditioner(
                                                  const Array<OneD, NekDouble> &inarray,
@@ -770,7 +750,7 @@ namespace Nektar
         const Array<OneD, Array<OneD, DataType> >                                       &TraceJacDerivSign,
         const Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>>     &TraceIPSymJacArray)
     {
-        boost::ignore_unused(FwdFluxDeriv, BwdFluxDeriv);
+        boost::ignore_unused(FwdFluxDeriv, BwdFluxDeriv, TraceIPSymJacArray);
 
         int nTracePts  = GetTraceTotPoints();
         int npoints    = GetNpoints();
@@ -802,10 +782,6 @@ namespace Nektar
             m_fields[i]->GetFwdBwdTracePhys(outpnts[i], Fwd[i], Bwd[i]);
         }
 
-#ifdef CFS_DEBUGMODE
-        if(1!=m_DebugVolTraceSwitch)
-        {
-#endif
         int indexwspTraceDataType = 0;
         Array<OneD, Array<OneD, DataType> > Fwdarray (nvariables);
         for(int m = 0; m < nvariables; ++m)
@@ -919,81 +895,15 @@ namespace Nektar
                         BwdFlux[m][i] +=  NekDouble( TraceJacDerivSign[1][i]*Fwdreslt[i] );
                     }
                 }
-
-#ifdef CFS_DEBUGMODE
-                if(m_DebugIPSymmFluxJacSwitch)
-                {
-                    for(int m = 0; m < nvariables; ++m)
-                    {
-                        for(int i = 0; i < nTracePts; ++i)
-                        {
-                            Fwdarray[m][i] =  DataType( Fwd[m][i] );
-                        }
-                    }
-                    for(int nd = 0; nd < m_spacedim; ++nd)
-                    {
-                        for(int m = 0; m < nvariables; ++m)
-                        {
-                            Vmath::Zero(nTracePts, Fwdreslt,1);
-                            for(int n = 0; n < nvariables; ++n)
-                            {
-                                Vmath::Vvtvp(nTracePts,TraceIPSymJacArray[0][nd][m][n],1,Fwdarray[n],1,Fwdreslt,1,Fwdreslt,1);
-                            }
-
-                            for(int i = 0; i < nTracePts; ++i)
-                            {
-                                numDerivFwd[nd][m][i] =  NekDouble( TraceJacDerivSign[0][i]*Fwdreslt[i] );
-                            }
-                        }
-                    }
-
-                    for(int m = 0; m < nvariables; ++m)
-                    {
-                        for(int i = 0; i < nTracePts; ++i)
-                        {
-                            Fwdarray[m][i] =  DataType( Bwd[m][i] );
-                        }
-                    }
-                    for(int nd = 0; nd < m_spacedim; ++nd)
-                    {
-                        for(int m = 0; m < nvariables; ++m)
-                        {
-                            Vmath::Zero(nTracePts, Fwdreslt,1);
-                            for(int n = 0; n < nvariables; ++n)
-                            {
-                                Vmath::Vvtvp(nTracePts,TraceIPSymJacArray[1][nd][m][n],1,Fwdarray[n],1,Fwdreslt,1,Fwdreslt,1);
-                            }
-
-                            for(int i = 0; i < nTracePts; ++i)
-                            {
-                                numDerivBwd[nd][m][i] =  NekDouble( TraceJacDerivSign[1][i]*Fwdreslt[i] );
-                            }
-                        }
-                    }
-                }
-#endif
             }
         }
 
-#ifdef CFS_DEBUGMODE
-        }
-#endif
         for(int i = 0; i < nvariables; ++i)
         {
             Vmath::Fill(nCoeffs,0.0,outarray[i],1);
             m_fields[i]->AddTraceIntegralToOffDiag       (FwdFlux[i],BwdFlux[i], outarray[i]);
         }
 
-#ifdef CFS_DEBUGMODE
-        Array<OneD, int > nonZeroIndex;
-        if(m_DEBUG_VISCOUS_JAC_MAT&&m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT&&m_DebugIPSymmFluxJacSwitch)
-        {
-            for(int i = 0; i < nvariables; ++i)
-            {
-                m_diffusion->AddSymmFluxIntegralToOffDiag(nConvectiveFields,nDim,npoints,nTracePts,m_fields,nonZeroIndex,numDerivFwd,numDerivBwd,outarray);
-            }
-        }
-#endif
         for(int i = 0; i < nvariables; ++i)
         {
             Vmath::Svtvp(nCoeffs,-m_TimeIntegLambda,outarray[i],1,inarray[i],1,outarray[i],1);
@@ -1529,14 +1439,6 @@ namespace Nektar
     {
         int nvariables = inarray.size();
         GetTraceJac(inarray,qfield,TraceJac,TraceJacDeriv,TraceJacDerivSign,TraceIPSymJacArray);
-
-#ifdef CFS_DEBUGMODE
-        if(2==m_DebugAdvDiffSwitch&&2==m_DebugConsDerivSwitch)
-        {
-            DataType tmp=0.0;
-            Fill1DArrayOfBlkDiagonalMat(TraceJac,tmp);
-        }
-#endif        
     
         if(m_DEBUG_VISCOUS_JAC_MAT&&m_DEBUG_VISCOUS_TRACE_DERIV_JAC_MAT)
         {
@@ -1605,31 +1507,6 @@ namespace Nektar
         }
 
         Array<OneD, Array<OneD, NekDouble> > AdvVel(m_spacedim);
-
-#ifdef CFS_DEBUGMODE
-        if(m_DebugIPSymmFluxJacSwitch&&(0==TraceIPSymJacArray.size()))
-        {
-            int nTracePts   = GetTraceTotPoints();
-            int nlrTot = 2;
-            TraceIPSymJacArray = Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>> (nlrTot);
-            for(int nlr = 0; nlr < nlrTot; ++nlr)
-            {
-                TraceIPSymJacArray[nlr]   =   Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>(m_spacedim);
-                for(int nd = 0; nd < m_spacedim; ++nd)
-                {
-                    TraceIPSymJacArray[nlr][nd]   =   Array<OneD, Array<OneD, Array<OneD, DataType> > >(nvariables);
-                    for(int i = 0; i < nvariables; ++i)
-                    {
-                        TraceIPSymJacArray[nlr][nd][i]   =   Array<OneD, Array<OneD, DataType> >(nvariables);
-                        for(int j = 0; j < nvariables; ++j)
-                        {
-                            TraceIPSymJacArray[nlr][nd][i][j]   =   Array<OneD, DataType>(nTracePts);
-                        }
-                    }
-                }
-            }
-        }
-#endif
 
         NumCalRiemFluxJac(nvariables, m_fields, AdvVel, inarray,qfield,
                             m_BndEvaluateTime, Fwd, Bwd, FJac, BJac,TraceIPSymJacArray);
@@ -1769,6 +1646,8 @@ namespace Nektar
         TypeNekBlkMatSharedPtr                                                  &BJac,
         Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,DataType >>>>>   &TraceIPSymJacArray)
     {
+        boost::ignore_unused(TraceIPSymJacArray);
+
         const NekDouble     PenaltyFactor2  =   0.0;
         int nvariables  = nConvectiveFields;
         int npoints     = GetNpoints();
@@ -1825,26 +1704,6 @@ namespace Nektar
 
         CalTraceNumericalFlux(nConvectiveFields,nDim,npoints,nTracePts,PenaltyFactor2,
                         fields,AdvVel,inarray,time,qfield,Fwd,Bwd,qFwd,qBwd,MuVarTrace,nonZeroIndex,numflux);
-#ifdef CFS_DEBUGMODE
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > IPSymmFlux(m_spacedim);
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > IPFluxPlus(m_spacedim);
-        if(m_DebugIPSymmFluxJacSwitch)
-        {
-            for(int nd = 0; nd < m_spacedim; ++nd)
-            {
-                IPSymmFlux[nd] = Array<OneD, Array<OneD, NekDouble> >(nvariables);
-                IPFluxPlus[nd] = Array<OneD, Array<OneD, NekDouble> >(nvariables);
-                for(int i = 0; i < nvariables; ++i)
-                {
-                    IPSymmFlux[nd][i] = Array<OneD, NekDouble>(nTracePts, 0.0);
-                    IPFluxPlus[nd][i] = Array<OneD, NekDouble>(nTracePts, 0.0);
-                }
-
-            }
-            
-            CalTraceIPSymmFlux(nConvectiveFields,nTracePts,fields,inarray,time,qfield,Fwd,Bwd,MuVarTrace,nonZeroIndex,IPSymmFlux);
-        }
-#endif
 
         int nFields = nvariables;
         // int nPts    = nTracePts;
@@ -1913,24 +1772,6 @@ namespace Nektar
                     tmpMatData[n+i*nFields] = DataType(Jacvect[n][j]);
                 }
             }
-#ifdef CFS_DEBUGMODE
-            if(m_DebugIPSymmFluxJacSwitch)
-            {
-                CalTraceIPSymmFlux(nConvectiveFields,nTracePts,fields,inarray,time,qfield,plusFwd,plusBwd,MuVarTrace,nonZeroIndex,IPFluxPlus);
-                for(int nd = 0; nd < m_spacedim; ++nd)
-                {
-                    for (int n = 0; n < nFields; n++)
-                    {
-                        Vmath::Vsub(nTracePts,IPFluxPlus[nd][n],1,IPSymmFlux[nd][n],1,Jacvect[n],1);
-                        Vmath::Smul(nTracePts, oepsvar,Jacvect[n],1,Jacvect[n],1);
-                        for(int np=0;np<nTracePts;np++)
-                        {
-                            TraceIPSymJacArray[0][nd][n][i][np] = DataType( Jacvect[n][np] );
-                        }
-                    }
-                }
-            }
-#endif
 
             Vmath::Vcopy(nTracePts, Fwd[i],1,plusFwd[i],1);
         }
@@ -1982,25 +1823,7 @@ namespace Nektar
                     tmpMatData[n+i*nFields] = DataType(Jacvect[n][j]);
                 }
             }
-#ifdef CFS_DEBUGMODE
-            if(m_DebugIPSymmFluxJacSwitch)
-            {
-                CalTraceIPSymmFlux(nConvectiveFields,nTracePts,fields,inarray,time,qfield,Fwd,plusBwd,MuVarTrace,nonZeroIndex,IPFluxPlus);
-                for(int nd = 0; nd < m_spacedim; ++nd)
-                {
-                    for (int n = 0; n < nFields; n++)
-                    {
-                        Vmath::Vsub(nTracePts,IPFluxPlus[nd][n],1,IPSymmFlux[nd][n],1,Jacvect[n],1);
-                        Vmath::Smul(nTracePts, oepsvar ,Jacvect[n],1,Jacvect[n],1);
-                        for(int np=0;np<nTracePts;np++)
-                        {
-                            TraceIPSymJacArray[1][nd][n][i][np] = DataType( Jacvect[n][np] );
-                        }
-                    }
-                }
-            }
-#endif
-            
+
             Vmath::Vcopy(nTracePts, Bwd[i],1,plusBwd[i],1);
         }
     }
@@ -2135,20 +1958,11 @@ namespace Nektar
 
         DataType zero =0.0;
         Fill2DArrayOfBlkDiagonalMat(gmtxarray,zero);
-#ifdef CFS_DEBUGMODE
-        if(2!=m_DebugVolTraceSwitch)
-        {
-#endif
-            AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray,StdMatDataDBB,StdMatDataDBDB);
-#ifdef CFS_DEBUGMODE
-        }
-        if(1!=m_DebugVolTraceSwitch)
-        {
-#endif
-            AddMatNSBlkDiag_boundary(inarray,qfield,gmtxarray,TraceJac,TraceJacDeriv,TraceJacDerivSign,TraceIPSymJacArray);
-#ifdef CFS_DEBUGMODE
-        }
-#endif
+
+        AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray,StdMatDataDBB,StdMatDataDBDB);
+
+        AddMatNSBlkDiag_boundary(inarray,qfield,gmtxarray,TraceJac,TraceJacDeriv,TraceJacDerivSign,TraceIPSymJacArray);
+
         MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda,zero);
 
         ElmtVarInvMtrx(gmtxarray,gmtVar,zero);
@@ -2454,26 +2268,11 @@ namespace Nektar
         {
             Vmath::Neg(ncoeffs, outarray[i], 1);
         }
-#ifdef CFS_DEBUGMODE
-        if(2==m_DebugAdvDiffSwitch)
-        {
-            for (int i = 0; i < nvariables; ++i)
-            {
-                Vmath::Zero(ncoeffs, outarray[i], 1);
-            }
-        }
-#endif
 
-#ifdef CFS_DEBUGMODE
-        if(1!=m_DebugAdvDiffSwitch)
-        {
-#endif
         // Add diffusion t
         // DoDiffusion(inarray, outarray, Fwd, Bwd);
         DoDiffusionCoeff(inarray, outarray, Fwd, Bwd);
-#ifdef CFS_DEBUGMODE
-        }
-#endif
+
         // Add forcing terms
         for (auto &x : m_forcing)
         {
@@ -2796,7 +2595,7 @@ namespace Nektar
         FJacData[ 4 + nVar3] = -c5*vz + d5*nza;
         FJacData[ 4 + nVar4] = c5 + l1;
     }
-#endif
+
     /**
      * @brief Compute the advection terms for the right-hand side
      */

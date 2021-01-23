@@ -57,18 +57,18 @@ public:
     {
         AllocateInitMatrix();
 
-        std::string LinSysIterSovlerType = "FixedpointJacobi";
+        std::string LinSysIterSolverType = "FixedpointJacobi";
         if (pSession->DefinesSolverInfo("LinSysIterSovler"))
         {
-            LinSysIterSovlerType = pSession->GetSolverInfo("LinSysIterSovler");
+            LinSysIterSolverType = pSession->GetSolverInfo("LinSysIterSovler");
         }
 
         ASSERTL0(LibUtilities::GetNekLinSysIterFactory().ModuleExists(
-                     LinSysIterSovlerType),
-                 "NekLinSysIter '" + LinSysIterSovlerType +
+                     LinSysIterSolverType),
+                 "NekLinSysIter '" + LinSysIterSolverType +
                      "' is not defined.\n");
         m_linsol = LibUtilities::GetNekLinSysIterFactory().CreateInstance(
-            LinSysIterSovlerType, m_session, m_comm, m_matDim,
+            LinSysIterSolverType, m_session, m_comm, m_matDim,
             LibUtilities::NekSysKey());
 
         m_NekSysOp.DefineNekSysLhsEval(&LinSysDemo::DoLhs, this);

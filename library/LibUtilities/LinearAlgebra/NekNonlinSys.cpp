@@ -71,7 +71,7 @@ NekNonlinSys::NekNonlinSys(const LibUtilities::SessionReaderSharedPtr &pSession,
     else
     {
         pSession->LoadParameter("NekNonlinSysTolerance", m_tolerance,
-            pKey.m_DefaultNekNonlinSysTolerance);
+            pKey.m_NekNonlinSysTolerance);
     }
 
     if (pSession->DefinesGlobalSysSolnInfo(variable,
@@ -85,7 +85,7 @@ NekNonlinSys::NekNonlinSys(const LibUtilities::SessionReaderSharedPtr &pSession,
     else
     {
         pSession->LoadParameter("NekNonlinSysMaxIterations", m_maxiter, 
-            pKey.m_DefaultNekNonlinSysMaxIterations);
+            pKey.m_NekNonlinSysMaxIterations);
     }
 
     if (pSession->DefinesGlobalSysSolnInfo(variable, "NonlinIterTolRelativeL2"))
@@ -97,7 +97,7 @@ NekNonlinSys::NekNonlinSys(const LibUtilities::SessionReaderSharedPtr &pSession,
     else
     {
         pSession->LoadParameter("NonlinIterTolRelativeL2",
-            m_NonlinIterTolRelativeL2, pKey.m_DefaultNonlinIterTolRelativeL2);
+            m_NonlinIterTolRelativeL2, pKey.m_NonlinIterTolRelativeL2);
     }
 
     if (pSession->DefinesGlobalSysSolnInfo(variable,
@@ -112,35 +112,35 @@ NekNonlinSys::NekNonlinSys(const LibUtilities::SessionReaderSharedPtr &pSession,
     {
         pSession->LoadParameter("LinSysRelativeTolInNonlin",
             m_LinSysRelativeTolInNonlin,
-            pKey.m_DefaultLinSysRelativeTolInNonlin);
+            pKey.m_LinSysRelativeTolInNonlin);
     }
 
     // cout << " m_LinSysRelativeTolInNonlin = " << m_LinSysRelativeTolInNonlin << endl;
 
-    m_LinSysIterSovlerType = pKey.m_DefaultLinSysIterSovlerTypeInNonlin;
+    m_LinSysIterSolverType = pKey.m_LinSysIterSolverTypeInNonlin;
     if (pSession->DefinesGlobalSysSolnInfo(variable, 
-            "LinSysIterSovlerTypeInNonlin"))
+            "LinSysIterSolverTypeInNonlin"))
     {
-        m_LinSysIterSovlerType =
+        m_LinSysIterSolverType =
             pSession->GetGlobalSysSolnInfo(variable, 
-            "LinSysIterSovlerTypeInNonlin");
+            "LinSysIterSolverTypeInNonlin");
     }
     else
     {
-        if (pSession->DefinesSolverInfo("LinSysIterSovlerTypeInNonlin"))
+        if (pSession->DefinesSolverInfo("LinSysIterSolverTypeInNonlin"))
         {
-            m_LinSysIterSovlerType =
-                pSession->GetSolverInfo("LinSysIterSovlerTypeInNonlin");
+            m_LinSysIterSolverType =
+                pSession->GetSolverInfo("LinSysIterSolverTypeInNonlin");
         }
     }
 
     ASSERTL0(LibUtilities::GetNekLinSysIterFactory().ModuleExists(
-                 m_LinSysIterSovlerType),
-             "NekLinSysIter '" + m_LinSysIterSovlerType +
+                 m_LinSysIterSolverType),
+             "NekLinSysIter '" + m_LinSysIterSolverType +
                  "' is not defined.\n");
                  
     m_linsol = LibUtilities::GetNekLinSysIterFactory().CreateInstance(
-        m_LinSysIterSovlerType, pSession, m_Comm, m_SysDimen, pKey);
+        m_LinSysIterSolverType, pSession, m_Comm, m_SysDimen, pKey);
 }
 
 void NekNonlinSys::v_InitObject()

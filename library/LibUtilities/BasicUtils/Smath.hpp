@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: Smath.cpp
+// File: Smath.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,20 +33,22 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/Smath.h>
+#ifndef NEKTAR_LIB_LIBUTILITIES_BASSICUTILS_SCALARMATH_H
+#define NEKTAR_LIB_LIBUTILITIES_BASSICUTILS_SCALARMATH_H
+
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <math.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
-
 using namespace std;
-
 namespace Smath
 {
 
     /***************** Math routines  ***************/
 
-    /// \brief Return the soft max between two scalars
-    template<class T> T Smax(const T a, const T b, const T k)
+    /// \brief Return the soft max of between two scalars
+    template<class T> LIB_UTILITIES_EXPORT T Smax(const T a, const T b,
+        const T k)
     {
         T maxi = max(a, b)*k;
         T mini = min(a, b)*k;
@@ -54,10 +56,11 @@ namespace Smath
         return xmax;
     }
 
+
     template LIB_UTILITIES_EXPORT  Nektar::NekDouble Smax(
         const Nektar::NekDouble a, const Nektar::NekDouble b,
         const Nektar::NekDouble k);
     template LIB_UTILITIES_EXPORT  int Smax(const int a, const int b,
         const int k);
-
 }
+#endif //NEKTAR_LIB_LIBUTILITIES_BASSICUTILS_SCALARMATH_H

@@ -51,7 +51,7 @@ NekSys::NekSys(const LibUtilities::SessionReaderSharedPtr &pSession,
                const LibUtilities::CommSharedPtr &vComm, const int nDimen,
                const NekSysKey &pKey)
 {
-    m_tolerance = pKey.m_DefaultTolerance;
+    m_tolerance = pKey.m_Tolerance;
     m_verbose   = false;
     m_root      = false;
     m_Comm      = vComm;

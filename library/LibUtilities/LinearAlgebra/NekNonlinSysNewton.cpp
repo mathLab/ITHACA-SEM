@@ -102,17 +102,17 @@ int NekNonlinSysNewton::v_SolveSystem(
         if (m_converged)
             break;
 
-        NekDouble GMRESRelativeIteTol;
+        NekDouble LinSysRelativeIteTol;
         CalcInexactNewtonForcing(k, resnormOld, m_SysResNorm, 
-            GMRESRelativeIteTol);
+            LinSysRelativeIteTol);
         
         // cout << " m_SysResNorm = " << m_SysResNorm << endl;
         resnormOld = m_SysResNorm;
 
-        NekDouble LinSysTol = GMRESRelativeIteTol * sqrt(m_SysResNorm);
-        int ntmpGMRESIts =
+        NekDouble LinSysTol = LinSysRelativeIteTol * sqrt(m_SysResNorm);
+        int ntmpLinSysIts =
             m_linsol->SolveSystem(ntotal, m_Residual, m_DeltSltn, 0, LinSysTol);
-        m_NtotLinSysIts += ntmpGMRESIts;
+        m_NtotLinSysIts += ntmpLinSysIts;
         Vmath::Vsub(ntotal, m_Solution, 1, m_DeltSltn, 1, m_Solution, 1);
         NttlNonlinIte++;
         m_operator.DoNekSysResEval(m_Solution, m_Residual);

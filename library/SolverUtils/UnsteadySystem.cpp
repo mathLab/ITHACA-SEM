@@ -257,7 +257,7 @@ namespace Nektar
             NekDouble totFilterTime     = 0.0;
 
             m_TotNewtonIts  = 0;
-            m_TotGMRESIts   = 0;
+            m_TotLinIts   = 0;
             m_TotImpStages  = 0;
 
            Array<OneD, int> abortFlags(2, 0);
@@ -406,7 +406,7 @@ namespace Nektar
                              << "       &&" 
                              << " TotImpStages= " << m_TotImpStages 
                              << " TotNewtonIts= " << m_TotNewtonIts
-                             << " TotGMRESIts = " << m_TotGMRESIts  
+                             << " TotLinearIts = " << m_TotLinIts  
                              << endl;
                     }
                 }
@@ -580,8 +580,8 @@ namespace Nektar
                     cout 
                     << "-------------------------------------------" << endl
                     << "Total Implicit Stages: " << m_TotImpStages << endl
-                    << "Total Newton Steps   : " << m_TotNewtonIts << endl
-                    << "Total GMRES Steps    : " << m_TotGMRESIts  << endl 
+                    << "Total Newton Its     : " << m_TotNewtonIts << endl
+                    << "Total Linear Its     : " << m_TotLinIts  << endl 
                     << "-------------------------------------------" << endl;
                 }
             }

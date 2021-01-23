@@ -5453,15 +5453,12 @@ namespace Nektar
             std::shared_ptr<LocalRegions::ExpansionVector> fieldExp= GetExp();
             int nElmtCoef  ;
 
-        WARNINGL1(false, "Debug 0");
-
             const MultiRegions::LocTraceToTraceMapSharedPtr locTraceToTraceMap =
                 GetLocTraceToTraceMap();
             const Array<OneD, const Array<OneD, int >> LRAdjExpid  =
                 locTraceToTraceMap->GetLeftRightAdjacentExpId();
             const Array<OneD, const Array<OneD, bool>> LRAdjflag   =
                 locTraceToTraceMap->GetLeftRightAdjacentExpFlag();
-        WARNINGL1(false, "Debug 1");
 
             const Array<OneD, const Array<OneD, Array<OneD, int > > > elmtLRMap 
                 = locTraceToTraceMap->GetTraceCoeffToLeftRightExpCoeffMap();
@@ -5473,18 +5470,15 @@ namespace Nektar
             int nrwAdjExp;
             int MatIndex,nPnts;
             NekDouble sign = 1.0;
-        WARNINGL1(false, "Debug 2");
             
             int nTracePntsTtl   = tracelist->GetTotPoints();
             int nlocTracePts    = locTraceToTraceMap->GetNLocTracePts();
             int nlocTracePtsFwd = locTraceToTraceMap->GetNFwdLocTracePts();
             int nlocTracePtsBwd = nlocTracePts-nlocTracePtsFwd;
-        WARNINGL1(false, "Debug 3");
 
             Array<OneD, int >  nlocTracePtsLR(2);
             nlocTracePtsLR[0]     = nlocTracePtsFwd;
             nlocTracePtsLR[1]     = nlocTracePtsBwd;
-        WARNINGL1(false, "Debug 4");
             
             Array<OneD, NekDouble>  TraceFwdPhy(nTracePntsTtl);
             Array<OneD, NekDouble>  TraceBwdPhy(nTracePntsTtl);
@@ -5494,17 +5488,15 @@ namespace Nektar
                 tmplocTrace[i] = Array<OneD, NekDouble> (nlocTracePtsLR[i]);
             }
 
-        WARNINGL1(false, "Debug 5");
             int nNumbElmt = fieldMat.size();
             Array<OneD, Array<OneD, NekDouble> > ElmtMatDataArray(nNumbElmt);
-            Array<OneD, int>  ElmtCoefArray(ntotTrace);
+            Array<OneD, int>  ElmtCoefArray(nNumbElmt);
             for(int i=0;i<nNumbElmt;i++)
             {
                 ElmtMatDataArray[i] =   fieldMat[i]->GetPtr();
                 ElmtCoefArray[i]    =   GetNcoeffs(i);
             }
 
-        WARNINGL1(false, "Debug 6");
             int nTraceCoefMax = 0;
             int nTraceCoefMin = std::numeric_limits<int>::max();
             Array<OneD, int>  TraceCoefArray(ntotTrace);
@@ -5533,7 +5525,6 @@ namespace Nektar
             }
             WARNINGL1(nTraceCoefMax==nTraceCoefMin,
                 "nTraceCoefMax!=nTraceCoefMin: Effeciency may be low ");
-        WARNINGL1(false, "Debug 7");
 
             int traceID, nfieldPnts, ElmtId, noffset;
             const Array<OneD, const Array<OneD, int > > LocTracephysToTraceIDMap 
@@ -5550,7 +5541,6 @@ namespace Nektar
                     &fieldToLocTraceMapLR[i][0],1);
                 noffset += nlocTracePtsLR[i];
             }
-        WARNINGL1(false, "Debug 8");
 
             Array<OneD, Array<OneD, int > > MatIndexArray(2);
             for(int nlr = 0; nlr<2;nlr++)
@@ -5569,7 +5559,6 @@ namespace Nektar
                     MatIndexArray[nlr][nloc] = nPnts*nElmtCoef;
                 }
             }
-        WARNINGL1(false, "Debug 9");
 
             for(int nc=0;nc<nTraceCoefMin;nc++)
             {
@@ -5610,7 +5599,7 @@ namespace Nektar
                     }
                 }
             }
-        WARNINGL1(false, "Debug 10");
+
             for(int nc=nTraceCoefMin;nc<nTraceCoefMax;nc++)
             {
                 for(int  nt = 0; nt < ntotTrace; nt++)

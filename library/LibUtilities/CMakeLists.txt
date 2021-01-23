@@ -34,7 +34,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/ThreadBoost.h
     ./BasicUtils/Vmath.hpp
     ./BasicUtils/VmathArray.hpp
-    ./BasicUtils/Smath.h
+    ./BasicUtils/Smath.hpp
     ./BasicUtils/Metis.hpp
     ./BasicUtils/VtkUtil.hpp
     )
@@ -56,7 +56,6 @@ SET(BasicUtilsSources
 ./BasicUtils/ThreadBoost.cpp
 ./BasicUtils/Timer.cpp
 ./BasicUtils/Vmath.cpp
-./BasicUtils/Smath.cpp
 )
 
 # HDF5

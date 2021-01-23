@@ -80,10 +80,10 @@ protected:
     
     // This is maximum bandwidth of Hessenburg matrix
     // if use truncted Gmres(m)
-    int m_GMRESMaxHessMatBand;
+    int m_KrylovMaxHessMatBand;
 
-    bool m_GMRESLeftPrecond  = false;
-    bool m_GMRESRightPrecond = true;
+    bool m_NekLinSysLeftPrecond  = false;
+    bool m_NekLinSysRightPrecond = true;
 
     bool m_DifferenceFlag0 = false;
     bool m_DifferenceFlag1 = false;

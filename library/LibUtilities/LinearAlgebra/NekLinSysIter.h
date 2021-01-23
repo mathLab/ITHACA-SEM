@@ -108,8 +108,10 @@ protected:
 
     NekDouble m_prec_factor = 1.0;
 
-    // This is  maximum gmres search directions for one restart
-    // (determines the max storage usage)
+    // This is  maximum number of solution vectors can be stored
+    // For example, in gmres, it is the max number of Krylov space 
+    // search directions can be stored
+    // It determines the max storage usage
     int m_LinSysMaxStorage;
 
     void Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn);

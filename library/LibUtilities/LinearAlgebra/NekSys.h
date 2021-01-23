@@ -194,22 +194,22 @@ public:
     ~NekSysKey()
     {}
 
-    NekDouble   m_DefaultTolerance                    = 
+    NekDouble   m_Tolerance                    = 
                                                 NekConstants::kNekIterativeTol;
-    int         m_DefaultNekNonlinSysMaxIterations    = 100;
-    int         m_DefaultNekLinSysMaxIterations       = 5000;
-    NekDouble   m_DefaultNekNonlinSysTolerance        = m_DefaultTolerance;
-    NekDouble   m_DefaultNekLinSysTolerance           = m_DefaultTolerance;
-    NekDouble   m_DefaultNonlinIterTolRelativeL2      = 1.0E-6;
-    NekDouble   m_DefaultLinSysRelativeTolInNonlin    = 1.0E-2;
-    int         m_DefaultLinSysMaxStorage             = 100;
-    int         m_DefaultGMRESMaxHessMatBand          = 100;
-    bool        m_DefaultGMRESLeftPrecond             = false;
-    bool        m_DefaultGMRESRightPrecond            = true;
-    bool        m_DefaultDifferenceFlag0              = false;
-    bool        m_DefaultDifferenceFlag1              = false;
-    bool        m_DefaultuseProjection                = false;
-    std::string m_DefaultLinSysIterSovlerTypeInNonlin = "GMRES";
+    int         m_NekNonlinSysMaxIterations    = 100;
+    int         m_NekLinSysMaxIterations       = 5000;
+    NekDouble   m_NekNonlinSysTolerance        = m_Tolerance;
+    NekDouble   m_NekLinSysTolerance           = m_Tolerance;
+    NekDouble   m_NonlinIterTolRelativeL2      = 1.0E-6;
+    NekDouble   m_LinSysRelativeTolInNonlin    = 1.0E-2;
+    int         m_LinSysMaxStorage             = 100;
+    int         m_KrylovMaxHessMatBand         = 100;
+    bool        m_NekLinSysLeftPrecond         = false;
+    bool        m_NekLinSysRightPrecond        = true;
+    bool        m_DifferenceFlag0              = false;
+    bool        m_DifferenceFlag1              = false;
+    bool        m_useProjection                = false;
+    std::string m_LinSysIterSolverTypeInNonlin = "GMRES";
     
 };
 

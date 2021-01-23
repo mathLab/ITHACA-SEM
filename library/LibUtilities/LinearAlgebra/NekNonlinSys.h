@@ -145,7 +145,7 @@ protected:
     NekDouble m_NonlinIterTolRelativeL2;
     NekDouble m_LinSysRelativeTolInNonlin;
 
-    std::string m_LinSysIterSovlerType;
+    std::string m_LinSysIterSolverType;
 
     int m_totalIterations = 0;
     int m_NtotLinSysIts = 0;

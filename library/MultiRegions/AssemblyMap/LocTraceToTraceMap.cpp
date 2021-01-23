@@ -586,27 +586,27 @@ void LocTraceToTraceMap::Setup(
     }
 
     TraceLocToElmtLocCoeffMap(locExp,trace);
-    FindElemNeighbs(locExp,trace);
+    FindElmtNeighbors(locExp,trace);
 }
 
-void LocTraceToTraceMap::CalcuLocTracephysToTraceIDMap(
+void LocTraceToTraceMap::CalcLocTracePhysToTraceIDMap(
     const ExpListSharedPtr &tracelist,
     const int               ndim)
 {
     switch (ndim)
     {
         case 2:
-            CalcuLocTracephysToTraceIDMap_2D(tracelist);
+            CalcLocTracePhysToTraceIDMap_2D(tracelist);
             break;
         case 3:
-            CalcuLocTracephysToTraceIDMap_3D(tracelist);
+            CalcLocTracePhysToTraceIDMap_3D(tracelist);
             break;
         default:
-            ASSERTL0(false,"CalcuLocTracephysToTraceIDMap not coded");
+            ASSERTL0(false,"CalcLocTracePhysToTraceIDMap not coded");
     }
 }
 
-void LocTraceToTraceMap::CalcuLocTracephysToTraceIDMap_2D(
+void LocTraceToTraceMap::CalcLocTracePhysToTraceIDMap_2D(
     const ExpListSharedPtr &tracelist)
 {
     std::shared_ptr<LocalRegions::ExpansionVector> traceExp= tracelist->GetExp();
@@ -684,7 +684,7 @@ void LocTraceToTraceMap::CalcuLocTracephysToTraceIDMap_2D(
         "m_LocTracephysToTraceIDMap may not be integer !!");
 }
 
-void LocTraceToTraceMap::CalcuLocTracephysToTraceIDMap_3D(
+void LocTraceToTraceMap::CalcLocTracePhysToTraceIDMap_3D(
     const ExpListSharedPtr &tracelist)
 {
     std::shared_ptr<LocalRegions::ExpansionVector> traceExp= tracelist->GetExp();
@@ -837,7 +837,7 @@ void LocTraceToTraceMap::TraceLocToElmtLocCoeffMap(
     m_traceCoeffToLeftRightExpCoeffSign     = elmtLRSign;
 }
 
-void LocTraceToTraceMap::FindElemNeighbs(
+void LocTraceToTraceMap::FindElmtNeighbors(
     const ExpList &locExp,
     const ExpListSharedPtr &trace)
 {

@@ -218,14 +218,14 @@ public:
         const Array<OneD, const NekDouble> &race,
         Array<OneD, NekDouble> &field);
 
-    MULTI_REGIONS_EXPORT void CalcuLocTracephysToTraceIDMap(
+    MULTI_REGIONS_EXPORT void CalcLocTracePhysToTraceIDMap(
         const ExpListSharedPtr &tracelist,
         const int               ndim);
     
-    MULTI_REGIONS_EXPORT void CalcuLocTracephysToTraceIDMap_2D(
+    MULTI_REGIONS_EXPORT void CalcLocTracePhysToTraceIDMap_2D(
         const ExpListSharedPtr &tracelist);
 
-    MULTI_REGIONS_EXPORT void CalcuLocTracephysToTraceIDMap_3D(
+    MULTI_REGIONS_EXPORT void CalcLocTracePhysToTraceIDMap_3D(
         const ExpListSharedPtr &tracelist);
 
     /**
@@ -406,7 +406,7 @@ private:
 
     Array<OneD, Array<OneD, int> >                  m_LocTracephysToTraceIDMap;
 
-    void FindElemNeighbs(
+    void FindElmtNeighbors(
         const ExpList &locExp,
         const ExpListSharedPtr &trace);
 };

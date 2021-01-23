@@ -160,7 +160,7 @@ namespace Nektar
             locTraceToTraceMap->SetTracePhysToLeftRightExpPhysMap(map);
             locTraceToTraceMap->SetFlagTracePhysToLeftRightExpPhysMap(flag);
 
-            locTraceToTraceMap->CalcuLocTracephysToTraceIDMap(m_fields[0]->GetTrace(),m_spacedim);
+            locTraceToTraceMap->CalcLocTracePhysToTraceIDMap(m_fields[0]->GetTrace(),m_spacedim);
             for(int i=1;i<nvariables;i++)
             {
                 m_fields[i]->GetLocTraceToTraceMap()->SetTracePhysToLeftRightExpPhysMap(map);
@@ -178,26 +178,26 @@ namespace Nektar
 
     void CompressibleFlowSystem::InitialiseNonlinSysSolver()
     {
-        std::string SovlerType = "Newton";
+        std::string SolverType = "Newton";
         if (m_session->DefinesSolverInfo("NonlinSysIterSovler"))
         {
-            SovlerType = m_session->GetSolverInfo("NonlinSysIterSovler");
+            SolverType = m_session->GetSolverInfo("NonlinSysIterSovler");
         }
         ASSERTL0(LibUtilities::GetNekNonlinSysFactory().
-            ModuleExists(SovlerType), "NekNonlinSys '" + SovlerType + 
+            ModuleExists(SolverType), "NekNonlinSys '" + SolverType + 
             "' is not defined.\n");
         int ntotal = m_fields[0]->GetNcoeffs() * m_fields.size();
 
         LibUtilities::NekSysKey key = LibUtilities::NekSysKey();
 
-        key.m_DefaultNonlinIterTolRelativeL2   = 1.0E-3;
-        key.m_DefaultLinSysRelativeTolInNonlin = 5.0E-2;
-        key.m_DefaultNekNonlinSysMaxIterations = 10;
-        key.m_DefaultNekLinSysMaxIterations    = 30;
-        key.m_DefaultLinSysMaxStorage          = 30;
+        key.m_NonlinIterTolRelativeL2   = 1.0E-3;
+        key.m_LinSysRelativeTolInNonlin = 5.0E-2;
+        key.m_NekNonlinSysMaxIterations = 10;
+        key.m_NekLinSysMaxIterations    = 30;
+        key.m_LinSysMaxStorage          = 30;
 
         m_nonlinsol = LibUtilities::GetNekNonlinSysFactory().CreateInstance(
-            SovlerType, m_session, m_comm, ntotal, key);
+            SolverType, m_session, m_comm, ntotal, key);
 
         m_NekSysOp.DefineNekSysResEval(&CompressibleFlowSystem::
             NonlinSysEvaluatorCoeff1D, this);
@@ -2644,7 +2644,7 @@ namespace Nektar
         m_TotNewtonIts +=  m_nonlinsol->SolveSystem(ntotal,inarray,
                                                     out, 0, tol2);
 
-        m_TotGMRESIts += m_nonlinsol->GetNtotLinSysIts();
+        m_TotLinIts += m_nonlinsol->GetNtotLinSysIts();
 
         m_TotImpStages++;
         m_StagesPerStep++;

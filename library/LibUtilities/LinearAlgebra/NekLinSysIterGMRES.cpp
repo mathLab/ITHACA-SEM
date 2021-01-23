@@ -61,20 +61,20 @@ NekLinSysIterGMRES::NekLinSysIterGMRES(
     variables[0]    = pSession->GetVariable(0);
     string variable = variables[0];
 
-    pSession->MatchSolverInfo("GMRESLeftPrecond", "True", m_GMRESLeftPrecond,
-                              pKey.m_DefaultGMRESLeftPrecond);
-    pSession->MatchSolverInfo("GMRESRightPrecond", "False", m_GMRESRightPrecond,
-                              pKey.m_DefaultGMRESRightPrecond);
+    pSession->MatchSolverInfo("GMRESLeftPrecond", "True", m_NekLinSysLeftPrecond,
+                              pKey.m_NekLinSysLeftPrecond);
+    pSession->MatchSolverInfo("GMRESRightPrecond", "False", m_NekLinSysRightPrecond,
+                              pKey.m_NekLinSysRightPrecond);
 
     if (pSession->DefinesGlobalSysSolnInfo(variable, "GMRESMaxHessMatBand"))
     {
-        m_GMRESMaxHessMatBand = boost::lexical_cast<int>(
+        m_KrylovMaxHessMatBand = boost::lexical_cast<int>(
             pSession->GetGlobalSysSolnInfo(variable, "GMRESMaxHessMatBand")
                 .c_str());
     }
     else
     {
-        pSession->LoadParameter("GMRESMaxHessMatBand", m_GMRESMaxHessMatBand,
+        pSession->LoadParameter("GMRESMaxHessMatBand", m_KrylovMaxHessMatBand,
                                 m_LinSysMaxStorage + 1);
     }
 
@@ -177,7 +177,7 @@ int NekLinSysIterGMRES::DoGMRES(const int nGlobal,
     bool restarted = false;
     bool truncted  = false;
 
-    if (m_GMRESMaxHessMatBand > 0)
+    if (m_KrylovMaxHessMatBand > 0)
     {
         truncted = true;
     }
@@ -307,7 +307,7 @@ NekDouble NekLinSysIterGMRES::DoGmresRestart(
         Vmath::Vcopy(nNonDir, &pInput[0] + nDir, 1, &r0[0] + nDir, 1);
     }
 
-    if (m_GMRESLeftPrecond)
+    if (m_NekLinSysLeftPrecond)
     {
         tmp1 = r0 + nDir;
         tmp2 = r0 + nDir;
@@ -325,7 +325,7 @@ NekDouble NekLinSysIterGMRES::DoGmresRestart(
     {
         if (m_prec_factor == NekConstants::kNekUnsetDouble)
         {
-            if (m_GMRESLeftPrecond)
+            if (m_NekLinSysLeftPrecond)
             {
                 // Evaluate initial residual error for exit check
                 vExchange = Vmath::Dot2(nNonDir, &pInput[0] + nDir,
@@ -350,7 +350,7 @@ NekDouble NekLinSysIterGMRES::DoGmresRestart(
     {
         id[nd]     = nd;
         id_end[nd] = nd + 1;
-        starttem   = id_end[nd] - m_GMRESMaxHessMatBand;
+        starttem   = id_end[nd] - m_KrylovMaxHessMatBand;
         if (truncted && (starttem) > 0)
         {
             id_start[nd] = starttem;
@@ -368,7 +368,7 @@ NekDouble NekLinSysIterGMRES::DoGmresRestart(
 
     // restarted Gmres(m) process
     int nswp = 0;
-    if (m_GMRESRightPrecond)
+    if (m_NekLinSysRightPrecond)
     {
         Vsingle1 = Array<OneD, NekDouble>(nGlobal, 0.0);
     }
@@ -383,7 +383,7 @@ NekDouble NekLinSysIterGMRES::DoGmresRestart(
         Vsingle2 = V_total[nd + 1];
         hsingle1 = hes[nd];
 
-        if (m_GMRESRightPrecond)
+        if (m_NekLinSysRightPrecond)
         {
             tmp1 = V_total[nd] + nDir;
             tmp2 = Vsingle1 + nDir;
@@ -415,7 +415,7 @@ NekDouble NekLinSysIterGMRES::DoGmresRestart(
         // This Gmres merge truncted Gmres to accelerate.
         // If truncted, cannot jump out because
         // the last term of eta is not residual
-        if ((!truncted) || (nd < m_GMRESMaxHessMatBand))
+        if ((!truncted) || (nd < m_KrylovMaxHessMatBand))
         {
             // If (eps * m_prec_factor < m_tolerance *
             // m_tolerance * m_rhs_magnitude )
@@ -448,7 +448,7 @@ NekDouble NekLinSysIterGMRES::DoGmresRestart(
                      &solution[0] + nDir, 1, &solution[0] + nDir, 1);
     }
 
-    if (m_GMRESRightPrecond)
+    if (m_NekLinSysRightPrecond)
     {
         tmp1 = solution + nDir;
         tmp2 = solution + nDir;
@@ -487,7 +487,7 @@ void NekLinSysIterGMRES::DoArnoldi(const int starttem, const int endtem,
 
     tmp1 = w + nDir;
     tmp2 = w + nDir;
-    if (m_GMRESLeftPrecond)
+    if (m_NekLinSysLeftPrecond)
     {
         m_operator.DoNekSysPrecond(tmp1, tmp2);
     }

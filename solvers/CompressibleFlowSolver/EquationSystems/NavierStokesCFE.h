@@ -37,7 +37,7 @@
 
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 #include <CompressibleFlowSolver/Misc/EquationOfState.h>
-#include <LibUtilities/BasicUtils/Smath.h>
+#include <LibUtilities/BasicUtils/Smath.hpp>
 #include <MultiRegions/ContField.h>
 
 namespace Nektar

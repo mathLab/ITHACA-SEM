@@ -72,7 +72,7 @@ NekLinSysIter::NekLinSysIter(
     else
     {
         pSession->LoadParameter("NekLinSysTolerance", m_tolerance,
-            pKey.m_DefaultNekLinSysTolerance);
+            pKey.m_NekLinSysTolerance);
     }
 
     if (pSession->DefinesGlobalSysSolnInfo(variable, "NekLinSysMaxIterations"))
@@ -83,7 +83,7 @@ NekLinSysIter::NekLinSysIter(
     else
     {
         pSession->LoadParameter("NekLinSysMaxIterations", m_maxiter, 
-            pKey.m_DefaultNekLinSysMaxIterations);
+            pKey.m_NekLinSysMaxIterations);
     }
 
     if (pSession->DefinesGlobalSysSolnInfo(variable, "LinSysMaxStorage"))
@@ -95,7 +95,7 @@ NekLinSysIter::NekLinSysIter(
     else
     {
         pSession->LoadParameter("LinSysMaxStorage", m_LinSysMaxStorage, 
-            pKey.m_DefaultLinSysMaxStorage);
+            pKey.m_LinSysMaxStorage);
     }
     
 }

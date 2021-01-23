@@ -57,12 +57,12 @@ public:
     {
         AllocateInitMatrix();
 
-        std::string SovlerType = "Newton";
+        std::string SolverType = "Newton";
         ASSERTL0(
-            LibUtilities::GetNekNonlinSysFactory().ModuleExists(SovlerType),
-            "NekNonlinSys '" + SovlerType + "' is not defined.\n");
+            LibUtilities::GetNekNonlinSysFactory().ModuleExists(SolverType),
+            "NekNonlinSys '" + SolverType + "' is not defined.\n");
         m_nonlinsol = LibUtilities::GetNekNonlinSysFactory().CreateInstance(
-            SovlerType, m_session, m_comm, m_matDim, LibUtilities::NekSysKey());
+            SolverType, m_session, m_comm, m_matDim, LibUtilities::NekSysKey());
 
         m_NekSysOp.DefineNekSysResEval(&LinSysDemo::DoRhs, this);
         m_NekSysOp.DefineNekSysLhsEval(&LinSysDemo::DoLhs, this);

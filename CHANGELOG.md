@@ -28,6 +28,7 @@ v5.1.0
   for parallel DG simulations (!1112)
   num_elements with size() (!1127, !1137, !1141)
 - Fix to interppointsdatatofld to allow for mpi processing of large files (!1191)
+- Fix the logic of C0Projection:helmsmoothing (!1220)
 
 **FieldConvert**:
 - Add phifile module to compute shape functions for the SPM solver (!1065)

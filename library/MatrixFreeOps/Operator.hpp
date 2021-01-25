@@ -8,8 +8,6 @@
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <Collections/Operator.h>
-// #include "AVXAssembly.h"
-
 #include <LibUtilities/SimdLib/tinysimd.hpp>
 
 namespace Nektar
@@ -27,26 +25,8 @@ public:
     {
     }
 
-    /// Number of gigflops required to compute the operator.
-    MATRIXFREE_EXPORT virtual NekDouble GFlops()
-    {
-        return 0.0;
-    }
-
     /// Number of degrees of freedom that this operator will process.
     MATRIXFREE_EXPORT virtual NekDouble Ndof()
-    {
-        return 0.0;
-    }
-
-    /// Number of stores to memory
-    MATRIXFREE_EXPORT virtual NekDouble NStores()
-    {
-        return 0.0;
-    }
-
-    /// Number of loads from memory
-    MATRIXFREE_EXPORT virtual NekDouble NLoads()
     {
         return 0.0;
     }
@@ -63,43 +43,11 @@ public:
         return false;
     }
 
-    MATRIXFREE_EXPORT virtual void SetJac(const Array<OneD, const NekDouble> &jac) = 0;
-
-    MATRIXFREE_EXPORT virtual void SetDF(const Array<TwoD, const NekDouble> &df) = 0;
-
-    // virtual void set_asmMap(MultiRegions::AssemblyMapSharedPtr asmMap)
-    // {
-    // }
-
-    // /// Provides a reference function for operators which can be used to
-    // /// validate correctness compared to Nektar++.
-    // ///
-    // /// In 2D this is taken as \f$ \sin x \cos y \f$, and in 3D \f$ \sin x \cos
-    // /// y \sin z \f$.
-    // static void RefFn(MultiRegions::ExpListSharedPtr expList,
-    //                   Array<OneD, NekDouble> &in)
-    // {
-    //     const int nq = expList->GetNpoints();
-    //     const int dim = expList->GetExp(0)->GetShapeDimension();
-
-    //     if(dim == 2){
-    //         Array<OneD, NekDouble> xc(nq), yc(nq);
-
-    //         expList->GetCoords(xc,yc);
-    //         for(int i = 0; i < nq; i++){
-    //             in[i] = sin(xc[i]) * cos(yc[i]);
-    //         }
-    //     }
-    //     else if(dim == 3){
-    //         Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
-
-    //         expList->GetCoords(xc,yc,zc);
-    //         for(int i = 0; i < nq; i++){
-    //             in[i] = sin(xc[i]) * cos(yc[i]) * sin(zc[i]);
-    //         }
-    //     }
-    // }
-
+    MATRIXFREE_EXPORT virtual void SetJac(
+     const std::shared_ptr<std::vector<vec_t, tinysimd::allocator<vec_t>>>  &jac) = 0;
+    
+    MATRIXFREE_EXPORT virtual void SetDF(
+     const std::shared_ptr<std::vector<vec_t, tinysimd::allocator<vec_t>>>  &df) = 0;
 };
 
 typedef std::shared_ptr<Operator> OperatorSharedPtr;
@@ -252,84 +200,6 @@ protected:
     int m_nElmt;
 };
 
-// template<int VW>
-// class HelmholtzGlobal : virtual public Operator
-// {
-//     public:
-//     HelmholtzGlobal(std::vector<LibUtilities::BasisSharedPtr> basis,
-//             int nElmt) :
-//             m_basis(basis), m_nElmt(nElmt)
-//     {
-//     }
-
-//     virtual ~HelmholtzGlobal()
-//     {
-//     }
-
-//     virtual bool NeedsJac() override
-//     {
-//         return true;
-//     }
-
-//     virtual bool NeedsDF() override
-//     {
-//         return true;
-//     }
-
-//     virtual void operator()(
-//         const Array<OneD, const NekDouble> &globalIn,
-//         Array<OneD,       NekDouble> &globalOut,
-//         AVXAssembly<VW>              &l2g) = 0;
-
-
-//     // void Ref(MultiRegions::ExpListSharedPtr expList,
-//     //          Array<OneD, NekDouble> &ref_exp,
-//     //          Array<OneD, NekDouble> &ref_helm)
-//     // {
-//     //     Array<OneD, NekDouble> ref_fn(expList->GetNpoints());
-//     //     this->RefFn(expList, ref_fn);
-//     //     expList->FwdTrans_IterPerExp(ref_fn, ref_exp);
-
-//     //     StdRegions::ConstFactorMap factors;
-//     //     factors[StdRegions::eFactorLambda] = 1.0;
-
-//     //     MultiRegions::GlobalMatrixKey mkey(
-//     //         StdRegions::eHelmholtz,
-//     //         MultiRegions::NullAssemblyMapSharedPtr,
-//     //         factors);
-
-//     //     expList->GeneralMatrixOp_IterPerExp(mkey, ref_exp, ref_helm);
-//     // }
-
-//     // void Ref2(MultiRegions::ExpListSharedPtr expList,
-//     //         Array<OneD, NekDouble> &ref_exp,
-//     //         Array<OneD, NekDouble> &ref_helm,
-//     //         const MultiRegions::AssemblyMapSharedPtr asmMap)
-//     // {
-//     //     Array<OneD, NekDouble> ref_fn(expList->GetNpoints());
-//     //     Array<OneD, NekDouble> ref_exp_local (expList->GetNcoeffs());
-//     //     this->RefFn(expList, ref_fn);
-//     //     expList->FwdTrans_IterPerExp(ref_fn, ref_exp_local);
-
-//     //     StdRegions::ConstFactorMap factors;
-//     //     factors[StdRegions::eFactorLambda] = 1.0;
-
-//     //     MultiRegions::GlobalMatrixKey mkey(
-//     //         StdRegions::eHelmholtz,
-//     //         MultiRegions::NullAssemblyMapSharedPtr,
-//     //         factors);
-
-//     //     Array<OneD, NekDouble> ref_helm_local(expList->GetNcoeffs());
-//     //     expList->GeneralMatrixOp_IterPerExp(mkey, ref_exp_local, ref_helm_local);
-
-//     //     asmMap->Assemble(ref_helm_local, ref_helm);
-//     // }
-
-// protected:
-//     std::vector<LibUtilities::BasisSharedPtr> m_basis;
-//     int m_nElmt;
-
-// };
 
 template <int DIM, bool DEFORMED = false>
 class Helper : virtual public Operator
@@ -340,7 +210,8 @@ protected:
         : Operator()
     {
         // Sanity check: no padding yet!
-        ASSERTL0(nElmt % vec_t::width == 0, "Number of elements not divisible by vector "
+        ASSERTL1(nElmt % vec_t::width == 0,
+                 "Number of elements not divisible by vector "
                  "width, padding not yet implemented.");
 
         // Calculate number of 'blocks', i.e. meta-elements
@@ -402,99 +273,20 @@ protected:
         }
     }
 
-    /// Set up Jacobian array for those operators that require geometric
-    /// information.
-    void SetJac(const Array<OneD, const NekDouble> &jac) final
+    void SetJac(
+     const std::shared_ptr<std::vector<vec_t, tinysimd::allocator<vec_t>>>  &jac)
+        final
     {
-        if (DEFORMED)
-        {
-            int nq = m_nq[0];
-            for (int i = 1; i < DIM; i++)
-            {
-                nq *= m_nq[i];
-            }
-
-            m_jac.resize(m_nBlocks*nq);
-
-            alignas(vec_t::alignment) NekDouble tmp[vec_t::width];
-            for (size_t block = 0; block < m_nBlocks; ++block)
-            {
-                for(size_t q = 0; q < nq; q++)
-                {
-                    for (int j = 0; j < vec_t::width; ++j)
-                    {
-                        tmp[j] = jac[block*nq*vec_t::width + nq*j + q]; //Unvalidated until I can get an actual deformed mesh.
-                    }
-
-                    //Order is [block][quadpt]
-                    m_jac[block*nq + q].load(&tmp[0]);
-                }
-            }
-        }
-        else{
-            m_jac.resize(m_nBlocks);
-
-            alignas(vec_t::alignment) NekDouble tmp[vec_t::width];
-            for (size_t i = 0; i < m_nBlocks; ++i)
-            {
-                for (int j = 0; j < vec_t::width; ++j)
-                {
-                    tmp[j] = jac[vec_t::width*i+j];
-                }
-                m_jac[i].load(&tmp[0]);
-            }
-        }
+        m_jac = jac; 
     }
-
-    void SetDF(const Array<TwoD, const NekDouble> &df) final
+    
+    void SetDF(
+     const std::shared_ptr<std::vector<vec_t, tinysimd::allocator<vec_t>>>  &df)
+        final
     {
-        constexpr unsigned int n_df = DIM * DIM;
-        alignas(vec_t::alignment) NekDouble vec[vec_t::width];
-
-        if (DEFORMED)
-        {
-            int nq = m_nq[0];
-            for (int i = 1; i < DIM; ++i)
-            {
-                nq *= m_nq[i];
-            }
-
-            m_df.resize(m_nBlocks * n_df*nq);
-            auto *df_ptr = &m_df[0];
-            for (int e = 0; e < m_nBlocks; ++e)
-            {
-                for (int q = 0; q < nq; q++)
-                {
-                    for (int dir = 0; dir < n_df; ++dir, ++df_ptr)
-                    {
-                        for (int j = 0; j < vec_t::width; ++j)
-                        {
-                            vec[j] = df[dir][(vec_t::width*e + j)*nq + q];
-                        }
-                        (*df_ptr).load(&vec[0]);
-                    }
-                }
-            }
-        }
-        else
-        {
-            m_df.resize(m_nBlocks * n_df);
-            for (int e = 0; e < m_nBlocks; ++e)
-            {
-                for (int dir = 0; dir < n_df; ++dir)
-                {
-                    for (int j = 0; j < vec_t::width; ++j)
-                    {
-                        vec[j] = df[dir][vec_t::width*e + j];
-                    }
-                    // Must have all vec_t::width elemnts aligned to do a load.
-                    m_df[e*n_df + dir].load(&vec[0]);
-                }
-            }
-        }
-
+        m_df = df; 
     }
-
+    
     int m_nBlocks;
     std::array<int, DIM> m_nm, m_nq;
     std::array<std::vector<vec_t, tinysimd::allocator<vec_t>>, DIM> m_bdata;
@@ -502,9 +294,9 @@ protected:
     std::array<std::vector<vec_t, tinysimd::allocator<vec_t>>, DIM> m_D; //Derivatives
     std::array<std::vector<vec_t, tinysimd::allocator<vec_t>>, DIM> m_Z; //Zeroes
     std::array<std::vector<vec_t, tinysimd::allocator<vec_t>>, DIM> m_w; //Weights
-    std::vector<vec_t, tinysimd::allocator<vec_t>> m_df; //Chain rule function deriviatives for each element (00, 10, 20, 30...)
-    std::vector<vec_t, tinysimd::allocator<vec_t>> m_jac;
-
+    std::shared_ptr<std::vector<vec_t, tinysimd::allocator<vec_t>>>  m_df;//Chain rule function deriviatives for each element (00, 10, 20, 30...)
+    std::shared_ptr<std::vector<vec_t, tinysimd::allocator<vec_t>>>  m_jac;
+    
 };
 
 using OperatorFactory = LibUtilities::NekFactory<

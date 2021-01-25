@@ -75,7 +75,7 @@ void Geometry3D::NewtonIterationForLocCoord(
     const Array<OneD, const NekDouble> &ptsy,
     const Array<OneD, const NekDouble> &ptsz,
     Array<OneD, NekDouble> &Lcoords,
-    NekDouble &resid)
+    NekDouble &dist)
 {
     // maximum iterations for convergence
     const int MaxIterations = 51;
@@ -119,7 +119,7 @@ void Geometry3D::NewtonIterationForLocCoord(
     Array<OneD, NekDouble> eta(3);
 
     F1 = F2 = F3 = 2000; // Starting value of Function
-
+    NekDouble resid;
     while (cnt++ < MaxIterations)
     {
         //  evaluate lagrange interpolant at Lcoords
@@ -181,6 +181,16 @@ void Geometry3D::NewtonIterationForLocCoord(
              (derx_1 * dery_2 - derx_2 * dery_1) * (coords[2] - zmap)) /
                 jac;
 
+        if( !(std::isfinite(Lcoords[0]) && std::isfinite(Lcoords[1]) &&
+              std::isfinite(Lcoords[2])) )
+        {
+            dist = 1e16;
+            std::ostringstream ss;
+            ss << "nan or inf found in NewtonIterationForLocCoord in element "
+               << GetGlobalID();
+            WARNINGL1(false, ss.str());
+            return;
+        }
         if (fabs(Lcoords[0]) > LcoordDiv || fabs(Lcoords[1]) > LcoordDiv ||
             fabs(Lcoords[0]) > LcoordDiv)
         {
@@ -188,7 +198,25 @@ void Geometry3D::NewtonIterationForLocCoord(
         }
     }
 
-    resid = sqrt(F1 * F1 + F2 * F2 + F3 * F3);
+    m_xmap->LocCoordToLocCollapsed(Lcoords, eta);
+    if(ClampLocCoords(eta, 0.))
+    {
+        I[0] = m_xmap->GetBasis(0)->GetI(eta);
+        I[1] = m_xmap->GetBasis(1)->GetI(eta + 1);
+        I[2] = m_xmap->GetBasis(2)->GetI(eta + 2);
+        // calculate the global point corresponding to Lcoords
+        xmap = m_xmap->PhysEvaluate(I, ptsx);
+        ymap = m_xmap->PhysEvaluate(I, ptsy);
+        zmap = m_xmap->PhysEvaluate(I, ptsz);
+        F1 = coords[0] - xmap;
+        F2 = coords[1] - ymap;
+        F3 = coords[2] - zmap;
+        dist = sqrt(F1 * F1 + F2 * F2 + F3 * F3);
+    }
+    else
+    {
+        dist = 0.;
+    }
 
     if (cnt >= MaxIterations)
     {
@@ -213,6 +241,117 @@ void Geometry3D::NewtonIterationForLocCoord(
             WARNINGL1(cnt < MaxIterations, ss.str());
         }
     }
+}
+
+NekDouble Geometry3D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
+                                  Array<OneD, NekDouble> &Lcoords)
+{
+    NekDouble dist = 0.;
+    if (GetMetricInfo()->GetGtype() == eRegular)
+    {
+        int v1, v2, v3;
+        if(m_shapeType == LibUtilities::eHexahedron ||
+           m_shapeType == LibUtilities::ePrism      ||
+           m_shapeType == LibUtilities::ePyramid)
+        {
+            v1 = 1;
+            v2 = 3;
+            v3 = 4;
+        }
+        else if(m_shapeType == LibUtilities::eTetrahedron)
+        {
+            v1 = 1;
+            v2 = 2;
+            v3 = 3;
+        }
+        else
+        {
+            v1 = 1;
+            v2 = 2;
+            v3 = 3;
+            ASSERTL0(false, "unrecognized 3D element type");
+        }
+        // Point inside tetrahedron
+        PointGeom r(m_coordim, 0, coords[0], coords[1], coords[2]);
+
+        // Edges
+        PointGeom er0, e10, e20, e30;
+        er0.Sub(r, *m_verts[0]);
+        e10.Sub(*m_verts[v1], *m_verts[0]);
+        e20.Sub(*m_verts[v2], *m_verts[0]);
+        e30.Sub(*m_verts[v3], *m_verts[0]);
+
+        // Cross products (Normal times area)
+        PointGeom cp1020, cp2030, cp3010;
+        cp1020.Mult(e10, e20);
+        cp2030.Mult(e20, e30);
+        cp3010.Mult(e30, e10);
+
+        // Barycentric coordinates (relative volume)
+        NekDouble iV = 2. / e30.dot(cp1020); // Hex Volume = {(e30)dot(e10)x(e20)}
+        Lcoords[0] = er0.dot(cp2030) * iV - 1.0;
+        Lcoords[1] = er0.dot(cp3010) * iV - 1.0;
+        Lcoords[2] = er0.dot(cp1020) * iV - 1.0;
+
+        // Set distance
+        Array<OneD, NekDouble> eta(3, 0.);
+        m_xmap->LocCoordToLocCollapsed(Lcoords, eta);
+        if(ClampLocCoords(eta, 0.))
+        {
+            Array<OneD, NekDouble> xi(3, 0.);
+            m_xmap->LocCollapsedToLocCoord(eta, xi);
+            xi[0] = (xi[0] + 1.) * 0.5; //re-scaled to ratio [0, 1]
+            xi[1] = (xi[1] + 1.) * 0.5;
+            xi[2] = (xi[2] + 1.) * 0.5;
+            for (int i = 0; i < m_coordim; ++i)
+            {
+                NekDouble tmp = xi[0]*e10[i] + xi[1]*e20[i]
+                            + xi[2]*e30[i] - er0[i];
+                dist += tmp * tmp;
+            }
+            dist = sqrt(dist);
+        }
+    }
+    else
+    {
+        v_FillGeom();
+        // Determine nearest point of coords  to values in m_xmap
+        int npts = m_xmap->GetTotPoints();
+        Array<OneD, NekDouble> ptsx(npts), ptsy(npts), ptsz(npts);
+        Array<OneD, NekDouble> tmp1(npts), tmp2(npts);
+
+        m_xmap->BwdTrans(m_coeffs[0], ptsx);
+        m_xmap->BwdTrans(m_coeffs[1], ptsy);
+        m_xmap->BwdTrans(m_coeffs[2], ptsz);
+
+        const Array<OneD, const NekDouble> za = m_xmap->GetPoints(0);
+        const Array<OneD, const NekDouble> zb = m_xmap->GetPoints(1);
+        const Array<OneD, const NekDouble> zc = m_xmap->GetPoints(2);
+
+        // guess the first local coords based on nearest point
+        Vmath::Sadd(npts, -coords[0], ptsx, 1, tmp1, 1);
+        Vmath::Vmul(npts, tmp1, 1, tmp1, 1, tmp1, 1);
+        Vmath::Sadd(npts, -coords[1], ptsy, 1, tmp2, 1);
+        Vmath::Vvtvp(npts, tmp2, 1, tmp2, 1, tmp1, 1, tmp1, 1);
+        Vmath::Sadd(npts, -coords[2], ptsz, 1, tmp2, 1);
+        Vmath::Vvtvp(npts, tmp2, 1, tmp2, 1, tmp1, 1, tmp1, 1);
+
+        int min_i = Vmath::Imin(npts, tmp1, 1);
+
+        // Get Local coordinates
+        int qa = za.size(), qb = zb.size();
+
+        Array<OneD, NekDouble> eta(3, 0.);
+        eta[2] = zc[min_i / (qa * qb)];
+        min_i = min_i % (qa * qb);
+        eta[1] = zb[min_i / qa];
+        eta[0] = za[min_i % qa];
+        m_xmap->LocCollapsedToLocCoord(eta, Lcoords);
+
+        // Perform newton iteration to find local coordinates
+        NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords, dist);
+    }
+    return dist;
 }
 
 /**

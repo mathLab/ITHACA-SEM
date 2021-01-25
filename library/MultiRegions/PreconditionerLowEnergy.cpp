@@ -1664,8 +1664,8 @@ namespace Nektar
             m_comm->AllReduce(nummodesmax, ReduceMax);
             m_comm->AllReduce(Shapes, ReduceMax);
 
-            if(Shapes[ePyramid]) // if Pyramids used then need Tet and Hex expansion
-	    {
+            if(Shapes[ePyramid] || Shapes[ePrism]) // if Pyramids or Prisms used then need Tet and Hex expansion
+            {
                 Shapes[eTetrahedron] = 1;
                 Shapes[eHexahedron]  = 1;
             }

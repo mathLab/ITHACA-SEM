@@ -127,14 +127,43 @@ namespace Nektar
             m_ode.DefineProjection(&CompressibleFlowSystem::DoOdeProjection, this);
         }
         else
-        {
-            ASSERTL0(false, "Implicit CFS not set up.");
+        {   
+            m_ode.DefineOdeRhs    (&CompressibleFlowSystem::DoOdeRhs, this);
+            m_ode.DefineProjection(&CompressibleFlowSystem::
+                                   DoOdeProjection, this);
+            m_ode.DefineImplicitSolve(&CompressibleFlowSystem::
+                                      DoImplicitSolvePhysToCoeff, this);
+
+            InitialiseNonlinSysSolver();
         }
 
         SetBoundaryConditionsBwdWeight();
 
         string advName;
         m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
+    }
+
+    void CompressibleFlowSystem::InitialiseNonlinSysSolver()
+    {
+        std::string SovlerType = "Newton";
+        if (m_session->DefinesSolverInfo("NonlinSysIterSovler"))
+        {
+            SovlerType = m_session->GetSolverInfo("NonlinSysIterSovler");
+        }
+        ASSERTL0(LibUtilities::GetNekNonlinSysFactory().
+                 ModuleExists(SovlerType),
+                "NekNonlinSys '" + SovlerType + "' is not defined.\n");
+        LibUtilities::CommSharedPtr v_Comm  = 
+                                    m_fields[0]->GetComm()->GetRowComm();
+        int ntotal = m_fields[0]->GetNcoeffs() * m_fields.size();
+        m_nonlinsol = LibUtilities::GetNekNonlinSysFactory().CreateInstance(
+                            SovlerType, m_session, v_Comm,ntotal);
+
+        m_NekSysOp.DefineNekSysRhsEval(&CompressibleFlowSystem
+                                                  ::NonlinSysEvaluator1D, this);
+        m_NekSysOp.DefineNekSysLhsEval(&CompressibleFlowSystem::
+                                         MatrixMultiply_MatrixFreeCoeff, this);
+        m_nonlinsol->setSysOperators(m_NekSysOp);
     }
 
     /**
@@ -175,6 +204,9 @@ namespace Nektar
             ASSERTL0(m_cflSafetyFactor != 0,
                     "Local time stepping requires CFL parameter.");
         }
+        m_session->LoadParameter ("JacobiFreeEps", m_JacobiFreeEps, 5.0E-8);
+        m_session->LoadParameter("NewtonAbsoluteIteTol", 
+                                 m_NewtonAbsoluteIteTol, 1.0E-12);
     }
 
     /**
@@ -379,17 +411,319 @@ timer.AccumulateRegion("DoDiffusion");
 
     }
 
+    void CompressibleFlowSystem::NonlinSysEvaluator1D(
+        const TensorOfArray1D<NekDouble>    &inarray,
+        TensorOfArray1D<NekDouble>          &out,
+        const bool                          &flag)
+    {
+        boost::ignore_unused(flag);
+        unsigned int nvariables     = m_fields.size();
+        unsigned int npoints        = m_fields[0]->GetNcoeffs();
+        TensorOfArray2D<NekDouble> in2D(nvariables);
+        TensorOfArray2D<NekDouble> out2D(nvariables);
+        for (int i = 0; i < nvariables; ++i)
+        {
+            int offset = i * npoints;
+            in2D[i]    = inarray + offset;
+            out2D[i]   = out + offset;
+        }
+        NonlinSysEvaluatorCoeff(in2D, out2D);
+    }
+
+    void CompressibleFlowSystem::NonlinSysEvaluatorCoeff(
+        TensorOfArray2D<NekDouble>  &inarray,
+        TensorOfArray2D<NekDouble>  &out)
+    {
+        const Array<OneD, const NekDouble> refsol 
+                                = m_nonlinsol->GetRefSolution();
+        unsigned int nvariable  = inarray.size();
+        unsigned int ncoeffs    = inarray[nvariable - 1].size();
+        unsigned int npoints    = m_fields[0]->GetNpoints();
+
+        TensorOfArray2D<NekDouble> inpnts(nvariable);
+
+        for (int i = 0; i < nvariable; ++i)
+        {
+            inpnts[i] = TensorOfArray1D<NekDouble>(npoints, 0.0);
+            m_fields[i]->BwdTrans(inarray[i], inpnts[i]);
+        }
+        
+        DoOdeProjection(inpnts, inpnts, m_BndEvaluateTime);
+        DoOdeRhsCoeff(inpnts, out, m_BndEvaluateTime);
+
+        for (int i = 0; i < nvariable; ++i)
+        {
+            int noffset = i * ncoeffs;
+            Vmath::Svtvp(ncoeffs, m_TimeIntegLambda, out[i], 1,
+                         refsol + noffset, 1, out[i], 1);
+            Vmath::Vsub(ncoeffs, inarray[i], 1,
+                        out[i], 1, out[i], 1);
+        }
+        return;
+    }
+
+    /**
+     * @brief Compute the right-hand side.
+     */
+    void CompressibleFlowSystem::DoOdeRhsCoeff(
+        const TensorOfArray2D<NekDouble>    &inarray,
+        TensorOfArray2D<NekDouble>          &outarray,
+        const NekDouble                     time)
+    {
+        int nvariables = inarray.size();
+        int nTracePts  = GetTraceTotPoints();
+        int ncoeffs    = GetNcoeffs();
+        // Store forwards/backwards space along trace space
+        TensorOfArray2D<NekDouble> Fwd    (nvariables);
+        TensorOfArray2D<NekDouble> Bwd    (nvariables);
+
+        if (m_HomogeneousType == eHomogeneous1D)
+        {
+            Fwd = NullNekDoubleArrayofArray;
+            Bwd = NullNekDoubleArrayofArray;
+        }
+        else
+        {
+            for (int i = 0; i < nvariables; ++i)
+            {
+                Fwd[i]     = TensorOfArray1D<NekDouble> (nTracePts, 0.0);
+                Bwd[i]     = TensorOfArray1D<NekDouble> (nTracePts, 0.0);
+                m_fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
+            }
+        }
+ 
+         // Calculate advection
+        DoAdvectionCoeff(inarray, outarray, time, Fwd, Bwd);
+
+        // Negate results
+        for (int i = 0; i < nvariables; ++i)
+        {
+            Vmath::Neg(ncoeffs, outarray[i], 1);
+        }
+
+        DoDiffusionCoeff(inarray, outarray, Fwd, Bwd);
+
+        // Add forcing terms
+        for (auto &x : m_forcing)
+        {
+            x->ApplyCoeff(m_fields, inarray, outarray, time);
+        }
+
+        if (m_useLocalTimeStep)
+        {
+            int nElements = m_fields[0]->GetExpSize();
+            int nq, offset;
+            NekDouble fac;
+            TensorOfArray1D<NekDouble> tmp;
+
+            TensorOfArray1D<NekDouble> tstep(nElements, 0.0);
+            GetElmtTimeStep(inarray, tstep);
+
+            // Loop over elements
+            for (int n = 0; n < nElements; ++n)
+            {
+                nq     = m_fields[0]->GetExp(n)->GetNcoeffs();
+                offset = m_fields[0]->GetCoeff_Offset(n);
+                fac    = tstep[n] / m_timestep;
+                for (int i = 0; i < nvariables; ++i)
+                {
+                    Vmath::Smul(nq, fac, outarray[i] + offset, 1,
+                                tmp = outarray[i] + offset, 1);
+                }
+            }
+        }
+    }
+
+    /**
+     * @brief Compute the advection terms for the right-hand side
+     */
+    void CompressibleFlowSystem::DoAdvectionCoeff(
+        const TensorOfArray2D<NekDouble>    &inarray,
+        TensorOfArray2D<NekDouble>          &outarray,
+        const NekDouble                     time,
+        const TensorOfArray2D<NekDouble>    &pFwd,
+        const TensorOfArray2D<NekDouble>    &pBwd)
+    {
+        int nvariables = inarray.size();
+        TensorOfArray2D<NekDouble> advVel(m_spacedim);
+
+        m_advObject->AdvectCoeffs(nvariables, m_fields, advVel, inarray,
+                                  outarray, time, pFwd, pBwd);
+    }
+
     /**
      * @brief Add the diffusions terms to the right-hand side
      * Similar to DoDiffusion() but with outarray in coefficient space
      */
-    void CompressibleFlowSystem::DoDiffusion_coeff(
+    void CompressibleFlowSystem::DoDiffusionCoeff(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
     {
-        v_DoDiffusion_coeff(inarray, outarray, pFwd, pBwd);
+        v_DoDiffusionCoeff(inarray, outarray, pFwd, pBwd);
+    }
+
+    void CompressibleFlowSystem::DoImplicitSolvePhysToCoeff(
+        const TensorOfArray2D<NekDouble>    &inpnts,
+        TensorOfArray2D<NekDouble>          &outpnt,
+        const NekDouble                     time,
+        const NekDouble                     lambda)
+    {
+        unsigned int nvariables  = inpnts.size();
+        unsigned int ncoeffs     = m_fields[0]->GetNcoeffs();
+        unsigned int ntotal      = nvariables * ncoeffs;
+
+        TensorOfArray1D<NekDouble>  inarray(ntotal);
+        TensorOfArray1D<NekDouble>  out(ntotal);
+        TensorOfArray1D<NekDouble>  tmpArray;
+
+        for (int i = 0; i < nvariables; ++i)
+        {
+            int noffset = i * ncoeffs;
+            tmpArray = inarray + noffset;
+            m_fields[i]->FwdTrans(inpnts[i], tmpArray);
+        }
+
+        DoImplicitSolveCoeff(inpnts, inarray, out, time, lambda);
+
+        for (int i = 0; i < nvariables; ++i)
+        {
+            int noffset = i * ncoeffs;
+            tmpArray = out + noffset;
+            m_fields[i]->BwdTrans(tmpArray, outpnt[i]);
+        }
+    }
+
+    void CompressibleFlowSystem::DoImplicitSolveCoeff(
+            const TensorOfArray2D<NekDouble>    &inpnts,
+            const TensorOfArray1D<NekDouble>    &inarray,
+            TensorOfArray1D<NekDouble>          &out,
+            const NekDouble                     time,
+            const NekDouble                     lambda)
+    {
+        boost::ignore_unused(inpnts);
+        m_TimeIntegLambda               = lambda;
+        m_BndEvaluateTime               = time;
+        unsigned int ntotal             = inarray.size();
+
+        if (m_inArrayNorm < 0.0)
+        {
+            CalcRefValues(inarray);
+        }
+        
+        NekDouble tol2 = m_inArrayNorm
+                        *m_NewtonAbsoluteIteTol * m_NewtonAbsoluteIteTol;
+        m_TotNewtonIts +=  m_nonlinsol->SolveSystem(ntotal,inarray,
+                                                    out, 0, tol2);
+        
+        m_TotImpStages++;
+        m_StagesPerStep++;
+    }
+
+    void CompressibleFlowSystem::CalcRefValues(
+            const TensorOfArray1D<NekDouble>    &inarray)
+    {
+        unsigned int nvariables         = m_fields.size();
+        unsigned int ntotal             = inarray.size();
+        unsigned int npoints            = ntotal/nvariables;
+
+        unsigned int ntotalGlobal       = ntotal;
+        m_comm->AllReduce(ntotalGlobal, Nektar::LibUtilities::ReduceSum);
+        unsigned int ntotalDOF          = ntotalGlobal / nvariables;
+        NekDouble ototalDOF             = 1.0 / ntotalDOF;
+
+        m_inArrayNorm = 0.0;
+        m_magnitdEstimat = Array<OneD, NekDouble>  (nvariables, 0.0);
+
+        for (int i = 0; i < nvariables; ++i)
+        {
+            int offset = i * npoints;
+            m_magnitdEstimat[i] = Vmath::Dot(npoints, inarray + offset,
+                                            inarray + offset);
+        }
+        m_comm->AllReduce(m_magnitdEstimat, Nektar::LibUtilities::ReduceSum);
+
+        for (int i = 0; i < nvariables; ++i)
+        {
+            m_inArrayNorm += m_magnitdEstimat[i];
+        }
+
+        for (int i = 2; i < nvariables - 1; ++i)
+        {
+            m_magnitdEstimat[1]   +=   m_magnitdEstimat[i] ;
+        }
+        for (int i = 2; i < nvariables - 1; ++i)
+        {
+            m_magnitdEstimat[i]   =   m_magnitdEstimat[1] ;
+        }
+
+        for (int i = 0; i < nvariables; ++i)
+        {
+            m_magnitdEstimat[i] = sqrt(m_magnitdEstimat[i] * ototalDOF);
+        }
+        bool l_verbose      = m_session->DefinesCmdLineArgument("verbose");
+        if (0 == m_session->GetComm()->GetRank() && l_verbose)
+        {
+            for (int i = 0; i < nvariables; ++i)
+            {
+                cout << "m_magnitdEstimat[" << i << "]    = "
+                     << m_magnitdEstimat[i] << endl;
+            }
+            cout << "m_inArrayNorm    = " << m_inArrayNorm << endl;
+        }
+    }
+
+    void CompressibleFlowSystem::MatrixMultiply_MatrixFreeCoeff(
+            const TensorOfArray1D<NekDouble>    &inarray,
+            TensorOfArray1D<NekDouble>          &out,
+            const bool                          &flag)
+    {
+        boost::ignore_unused(flag);
+        const Array<OneD, const NekDouble> refsol 
+                                         = m_nonlinsol->GetRefSolution();
+        const Array<OneD, const NekDouble> refres 
+                                         = m_nonlinsol->GetRefResidual();
+        NekDouble eps = m_JacobiFreeEps;
+        NekDouble magnitdEstimatMax = 0.0;
+        for (int i = 0; i < m_magnitdEstimat.size(); ++i)
+        {
+            magnitdEstimatMax = max(magnitdEstimatMax, m_magnitdEstimat[i]);
+        }
+        eps *= magnitdEstimatMax;
+        NekDouble oeps = 1.0 / eps;
+        unsigned int nvariables = m_fields.size();
+        unsigned int ntotal     = inarray.size();
+        unsigned int npoints    = ntotal / nvariables;
+        Array<OneD, NekDouble > tmp;
+        TensorOfArray2D<NekDouble> solplus(nvariables);
+        TensorOfArray2D<NekDouble> resplus(nvariables);
+        for (int i = 0; i < nvariables; ++i)
+        {
+            solplus[i] = TensorOfArray1D<NekDouble> (npoints, 0.0);
+            resplus[i] = TensorOfArray1D<NekDouble> (npoints, 0.0);
+        }
+
+        for (int i = 0; i < nvariables; ++i)
+        {
+            int noffset = i*npoints;
+            tmp = inarray + noffset;
+            Vmath::Svtvp(npoints, eps, tmp, 1, 
+                         refsol + noffset,1, solplus[i], 1);
+        }
+        
+        NonlinSysEvaluatorCoeff(solplus,resplus);
+
+        for (int i = 0; i < nvariables; ++i)
+        {
+            int noffset = i * npoints;
+            tmp = out + noffset;
+            Vmath::Vsub(npoints, &resplus[i][0], 1, 
+                       &refres[0] + noffset, 1, &tmp[0],1);
+            Vmath::Smul(npoints, oeps, &tmp[0], 1, &tmp[0], 1);
+        }
+       
+        return;
     }
 
     void CompressibleFlowSystem::SetBoundaryConditions(
@@ -985,7 +1319,7 @@ timer.AccumulateRegion("DoDiffusion");
         }
     }
 
-    void CompressibleFlowSystem::v_DoDiffusion_coeff(
+    void CompressibleFlowSystem::v_DoDiffusionCoeff(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                 Array<OneD,       Array<OneD, NekDouble> > &outarray,
         const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
@@ -1015,7 +1349,7 @@ Array<OneD, NekDouble>  CompressibleFlowSystem::GetElmtMinHP(void)
             {
                 LocalRegions::Expansion3DSharedPtr exp3D;
                 exp3D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion3D>();
-                for(int i = 0; i < exp3D->GetNtraces(); ++i)
+                for (int i = 0; i < exp3D->GetNtraces(); ++i)
                 {
                     h = min(h, exp3D->GetGeom3D()->GetEdge(i)->GetVertex(0)->
                         dist(*(exp3D->GetGeom3D()->GetEdge(i)->GetVertex(1))));
@@ -1027,7 +1361,7 @@ Array<OneD, NekDouble>  CompressibleFlowSystem::GetElmtMinHP(void)
             {
                 LocalRegions::Expansion2DSharedPtr exp2D;
                 exp2D = m_fields[0]->GetExp(e)->as<LocalRegions::Expansion2D>();
-                for(int i = 0; i < exp2D->GetNtraces(); ++i)
+                for (int i = 0; i < exp2D->GetNtraces(); ++i)
                 {
                     h = min(h, exp2D->GetGeom2D()->GetEdge(i)->GetVertex(0)->
                         dist(*(exp2D->GetGeom2D()->GetEdge(i)->GetVertex(1))));

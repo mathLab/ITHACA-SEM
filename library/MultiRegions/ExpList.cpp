@@ -1411,7 +1411,7 @@ namespace Nektar
             LibUtilities::Timer timer;
 
             LIKWID_MARKER_START("IProductWRTDerivBase_coll");
-            // timer.Start();
+            timer.Start();
 
             switch(dim)
             {
@@ -1450,11 +1450,11 @@ namespace Nektar
                 break;
             }
 
-            // timer.Stop();
+            timer.Stop();
             LIKWID_MARKER_STOP("IProductWRTDerivBase_coll");
 
             // Elapsed time
-            // timer.AccumulateRegion("IProductWRTDerivBase_coll");
+            timer.AccumulateRegion("IProductWRTDerivBase_coll");
 
         }
         /**
@@ -2345,7 +2345,7 @@ namespace Nektar
             LibUtilities::Timer timer;
 
             LIKWID_MARKER_START("v_BwdTrans_IterPerExp");
-            // timer.Start();
+            timer.Start();
 
             Array<OneD, NekDouble> tmp;
             for (int i = 0; i < m_collections.size(); ++i)
@@ -2355,26 +2355,17 @@ namespace Nektar
                                                tmp = outarray + m_coll_phys_offset[i]);
             }
 
-            // timer.Stop();
+            timer.Stop();
             LIKWID_MARKER_STOP("v_BwdTrans_IterPerExp");
 
             // Elapsed time
-            // timer.AccumulateRegion("v_BwdTrans_IterPerExp");
+            timer.AccumulateRegion("v_BwdTrans_IterPerExp");
         }
 
         LocalRegions::ExpansionSharedPtr& ExpList::GetExp(
                     const Array<OneD, const NekDouble> &gloCoord)
         {
-            Array<OneD, NekDouble> stdCoord(GetCoordim(0),0.0);
-            for (int i = 0; i < (*m_exp).size(); ++i)
-            {
-                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoord))
-                {
-                    return (*m_exp)[i];
-                }
-            }
-            ASSERTL0(false, "Cannot find element for this point.");
-            return (*m_exp)[0]; // avoid warnings
+            return GetExp(GetExpIndex(gloCoord));
         }
 
 
@@ -2386,11 +2377,13 @@ namespace Nektar
         int ExpList::GetExpIndex(
                                  const Array<OneD, const NekDouble> &gloCoord,
                                  NekDouble tol,
-                                 bool returnNearestElmt)
+                                 bool returnNearestElmt,
+                                 int cachedId,
+                                 NekDouble maxDistance)
         {
             Array<OneD, NekDouble> Lcoords(gloCoord.size());
 
-            return GetExpIndex(gloCoord,Lcoords,tol,returnNearestElmt);
+            return GetExpIndex(gloCoord,Lcoords,tol,returnNearestElmt,cachedId,maxDistance);
         }
 
 
@@ -2398,7 +2391,9 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &gloCoords,
                       Array<OneD, NekDouble> &locCoords,
                 NekDouble tol,
-                bool returnNearestElmt)
+                bool returnNearestElmt,
+                int cachedId,
+                NekDouble maxDistance)
         {
             if (GetNumElmts() == 0)
             {
@@ -2416,6 +2411,30 @@ namespace Nektar
                 }
             }
 
+            NekDouble nearpt     = 1e6;
+            NekDouble nearpt_min = 1e6;
+            int       min_id     = -1;
+            Array<OneD, NekDouble> savLocCoords(locCoords.size());
+
+            if(cachedId >= 0 && cachedId < (*m_exp).size())
+            {
+                nearpt = 1e12;
+                if((*m_exp)[cachedId]->GetGeom()->MinMaxCheck(gloCoords) &&
+                   (*m_exp)[cachedId]->GetGeom()->ContainsPoint(gloCoords,
+                                                locCoords, tol, nearpt))
+                {
+                    return cachedId;
+                }
+                else if(returnNearestElmt && (nearpt < nearpt_min))
+                {
+                    // If it does not lie within, keep track of which element
+                    // is nearest.
+                    min_id     = cachedId;
+                    nearpt_min = nearpt;
+                    Vmath::Vcopy(locCoords.size(),locCoords, 1, savLocCoords, 1);
+                }
+            }
+
             NekDouble x = (gloCoords.size() > 0 ? gloCoords[0] : 0.0);
             NekDouble y = (gloCoords.size() > 1 ? gloCoords[1] : 0.0);
             NekDouble z = (gloCoords.size() > 2 ? gloCoords[2] : 0.0);
@@ -2427,38 +2446,32 @@ namespace Nektar
             // point.
             std::vector<int> elmts = m_graph->GetElementsContainingPoint(p);
 
-            NekDouble nearpt     = 1e6;
-            NekDouble nearpt_min = 1e6;
-            int       min_id     = 0;
-            Array<OneD, NekDouble> savLocCoords(locCoords.size());
-
             // Check each element in turn to see if point lies within it.
             for (int i = 0; i < elmts.size(); ++i)
             {
-                if ((*m_exp)[m_elmtToExpId[elmts[i]]]->
-                            GetGeom()->ContainsPoint(gloCoords,
-                                                     locCoords,
-                                                     tol, nearpt))
+                int id = m_elmtToExpId[elmts[i]];
+                if(id == cachedId)
                 {
-                    return m_elmtToExpId[elmts[i]];
+                    continue;
                 }
-                else
+                if ((*m_exp)[id]->GetGeom()->ContainsPoint(gloCoords,
+                                            locCoords, tol, nearpt))
+                {
+                    return id;
+                }
+                else if(returnNearestElmt && (nearpt < nearpt_min))
                 {
                     // If it does not lie within, keep track of which element
                     // is nearest.
-                    if(nearpt < nearpt_min)
-                    {
-                        min_id     = m_elmtToExpId[elmts[i]];
-                        nearpt_min = nearpt;
-                        Vmath::Vcopy(locCoords.size(),locCoords,    1,
-                                                              savLocCoords, 1);
-                    }
+                    min_id     = id;
+                    nearpt_min = nearpt;
+                    Vmath::Vcopy(locCoords.size(),locCoords, 1, savLocCoords, 1);
                 }
             }
 
             // If the calling function is with just the nearest element, return
             // that. Otherwise return -1 to indicate no matching elemenet found.
-            if(returnNearestElmt)
+            if(returnNearestElmt && nearpt_min <= maxDistance)
             {
 
                 std::string msg = "Failed to find point within element to "
@@ -2472,8 +2485,7 @@ namespace Nektar
                         + boost::lexical_cast<std::string>(min_id);
                 WARNINGL1(false,msg.c_str());
 
-                Vmath::Vcopy(locCoords.size(),savLocCoords, 1,
-                                                      locCoords,    1);
+                Vmath::Vcopy(locCoords.size(),savLocCoords, 1, locCoords, 1);
                 return min_id;
             }
             else
@@ -4935,8 +4947,8 @@ namespace Nektar
                 Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(exp);
                 vector<StdRegions::StdExpansionSharedPtr> collExp;
 
-                int prevCoeffOffset     = m_coeff_offset[it.second[0].second];
-                int prevPhysOffset      = m_phys_offset [it.second[0].second];
+                int prevCoeffOffset = m_coeff_offset[it.second[0].second];
+                int prevPhysOffset  = m_phys_offset [it.second[0].second];
                 int collcnt;
 
                 m_coll_coeff_offset.push_back(prevCoeffOffset);
@@ -4963,12 +4975,16 @@ namespace Nektar
                     collExp.push_back(it.second[0].first);
                     int prevnCoeff = it.second[0].first->GetNcoeffs();
                     int prevnPhys  = it.second[0].first->GetTotPoints();
+                    bool prevDeformed = it.second[0].first->GetMetricInfo()->GetGtype()
+                        == SpatialDomains::eDeformed; 
                     collcnt = 1;
 
                     for (int i = 1; i < it.second.size(); ++i)
                     {
                         int nCoeffs     = it.second[i].first->GetNcoeffs();
                         int nPhys       = it.second[i].first->GetTotPoints();
+                        bool Deformed   = it.second[i].first->GetMetricInfo()->GetGtype()
+                            == SpatialDomains::eDeformed; 
                         int coeffOffset = m_coeff_offset[it.second[i].second];
                         int physOffset  = m_phys_offset [it.second[i].second];
 
@@ -4978,6 +4994,7 @@ namespace Nektar
                         if(prevCoeffOffset + nCoeffs != coeffOffset ||
                            prevnCoeff != nCoeffs ||
                            prevPhysOffset + nPhys != physOffset ||
+                           prevDeformed != Deformed || 
                            prevnPhys != nPhys || collcnt >= collmax)
                         {
 
@@ -5029,6 +5046,7 @@ namespace Nektar
 
                         prevCoeffOffset = coeffOffset;
                         prevPhysOffset  = physOffset;
+                        prevDeformed    = Deformed; 
                         prevnCoeff      = nCoeffs;
                         prevnPhys       = nPhys;
                     }

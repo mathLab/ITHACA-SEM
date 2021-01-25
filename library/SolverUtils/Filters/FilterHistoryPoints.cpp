@@ -243,7 +243,7 @@ void FilterHistoryPoints::v_Initialise(
                                         NekConstants::kGeomFactorsTol);
         }
 
-        for(int j = 0; j < 3; ++j)
+        for(int j = 0; j < locCoords.size(); ++j)
         {
             locCoords[j] = std::max(locCoords[j], -1.0);
             locCoords[j] = std::min(locCoords[j], 1.0);

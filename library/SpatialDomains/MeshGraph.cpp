@@ -112,7 +112,7 @@ MeshGraph::~MeshGraph()
 
 MeshGraphSharedPtr MeshGraph::Read(
     const LibUtilities::SessionReaderSharedPtr session,
-    DomainRangeShPtr                           rng,
+    LibUtilities::DomainRangeShPtr             rng,
     bool                                       fillGraph)
 {
     LibUtilities::CommSharedPtr comm = session->GetComm();
@@ -288,42 +288,6 @@ std::vector<int> MeshGraph::GetElementsContainingPoint(
     return vals;
 }
 
-void MeshGraph::SetDomainRange(NekDouble xmin, NekDouble xmax, NekDouble ymin,
-                               NekDouble ymax, NekDouble zmin, NekDouble zmax)
-{
-    m_domainRange->m_checkShape = false;
-
-    if (m_domainRange == NullDomainRangeShPtr)
-    {
-        m_domainRange = MemoryManager<DomainRange>::AllocateSharedPtr();
-        m_domainRange->m_doXrange = true;
-    }
-
-    m_domainRange->m_xmin = xmin;
-    m_domainRange->m_xmax = xmax;
-
-    if (ymin == NekConstants::kNekUnsetDouble)
-    {
-        m_domainRange->m_doYrange = false;
-    }
-    else
-    {
-        m_domainRange->m_doYrange = true;
-        m_domainRange->m_ymin     = ymin;
-        m_domainRange->m_ymax     = ymax;
-    }
-
-    if (zmin == NekConstants::kNekUnsetDouble)
-    {
-        m_domainRange->m_doZrange = false;
-    }
-    else
-    {
-        m_domainRange->m_doZrange = true;
-        m_domainRange->m_zmin     = zmin;
-        m_domainRange->m_zmax     = zmax;
-    }
-}
 
 int MeshGraph::GetNumElements()
 {
@@ -353,7 +317,7 @@ bool MeshGraph::CheckRange(Geometry2D &geom)
 {
     bool returnval = true;
 
-    if (m_domainRange != NullDomainRangeShPtr)
+    if (m_domainRange != LibUtilities::NullDomainRangeShPtr)
     {
         int nverts  = geom.GetNumVerts();
         int coordim = geom.GetCoordim();
@@ -455,7 +419,7 @@ bool MeshGraph::CheckRange(Geometry3D &geom)
 {
     bool returnval = true;
 
-    if (m_domainRange != NullDomainRangeShPtr)
+    if (m_domainRange != LibUtilities::NullDomainRangeShPtr)
     {
         int nverts = geom.GetNumVerts();
 
@@ -3660,6 +3624,42 @@ CompositeDescriptor MeshGraph::CreateCompositeDescriptor()
 }
 
 
+void MeshGraph::SetDomainRange(NekDouble xmin, NekDouble xmax, NekDouble ymin,
+                        NekDouble ymax, NekDouble zmin, NekDouble zmax)
+{
+    m_domainRange->m_checkShape = false;
+
+    if (m_domainRange == LibUtilities::NullDomainRangeShPtr)
+    {
+        m_domainRange = MemoryManager<LibUtilities::DomainRange>::AllocateSharedPtr();
+        m_domainRange->m_doXrange = true;
+    }
+
+    m_domainRange->m_xmin = xmin;
+    m_domainRange->m_xmax = xmax;
+
+    if (ymin == NekConstants::kNekUnsetDouble)
+    {
+        m_domainRange->m_doYrange = false;
+    }
+    else
+    {
+        m_domainRange->m_doYrange = true;
+        m_domainRange->m_ymin     = ymin;
+        m_domainRange->m_ymax     = ymax;
+    }
+
+    if (zmin == NekConstants::kNekUnsetDouble)
+    {
+        m_domainRange->m_doZrange = false;
+    }
+    else
+    {
+        m_domainRange->m_doZrange = true;
+        m_domainRange->m_zmin     = zmin;
+        m_domainRange->m_zmax     = zmax;
+    }
+}
 
 } // end of namespace
 } // end of namespace

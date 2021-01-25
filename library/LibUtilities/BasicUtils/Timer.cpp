@@ -81,7 +81,8 @@ void Timer::AccumulateRegion(std::string region)
     }
 }
 
-void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm)
+void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm,
+                                std::ostream &o)
 {
     std::vector<std::string> labels{
         "Region",
@@ -94,12 +95,12 @@ void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm)
     if (comm->GetRank() == 0 &&
         m_elapsedRegion.begin() != m_elapsedRegion.end())
     {
-        std::cout << "-------------------------------------------\n";
-        std::cout << std::setw(m_maxStringWidth+2) << labels[0] << '\t'
-                << std::setw(10) << labels[1] << '\t'
-                << std::setw(10) << labels[2] << '\t'
-                << std::setw(10) << labels[3] << '\t'
-                << std::setw(10) << labels[4] << '\n';
+        o << "-------------------------------------------\n";
+        o << std::setw(m_maxStringWidth+2) << labels[0] << '\t'
+          << std::setw(10) << labels[1] << '\t'
+          << std::setw(10) << labels[2] << '\t'
+          << std::setw(10) << labels[3] << '\t'
+          << std::setw(10) << labels[4] << '\n';
     }
     for (auto item = m_elapsedRegion.begin();
             item != m_elapsedRegion.end(); ++item)
@@ -114,11 +115,11 @@ void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm)
 
         if (comm->GetRank() == 0)
         {
-            std::cout << std::setw(m_maxStringWidth+2) << item->first << '\t'
-                << std::setw(10) << elapsedAve << '\t'
-                << std::setw(10) << elapsedMin << '\t'
-                << std::setw(10) << elapsedMax << '\t'
-                << std::setw(10) << item->second.second << '\n';
+            o << std::setw(m_maxStringWidth+2) << item->first << '\t'
+              << std::setw(10) << elapsedAve << '\t'
+              << std::setw(10) << elapsedMin << '\t'
+              << std::setw(10) << elapsedMax << '\t'
+              << std::setw(10) << item->second.second << '\n';
         }
     }
 }

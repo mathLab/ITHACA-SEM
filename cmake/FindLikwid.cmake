@@ -1,4 +1,14 @@
-# Find likwid
+# FindLikwid
+# ----------
+# Find likwid, a performance monitoring library.
+#
+#
+# This module will define the following variables:
+#
+# LIKWID_HEADER_DIR  - Location of likwid headers
+# LIKWID_INCLUDE_DIR - Location of likwid includes
+# LIKWID_LIBRARY     - Location of likwid dynamic library
+
 IF(NEKTAR_USE_LIKWID)
 
     FIND_LIBRARY(LIKWID_LIBRARY NAMES likwid PATHS ${LIKWID_DIR}/lib)

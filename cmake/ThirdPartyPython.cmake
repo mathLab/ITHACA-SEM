@@ -7,33 +7,30 @@
 ########################################################################
 
 IF (NEKTAR_BUILD_PYTHON)
-    CMAKE_DEPENDENT_OPTION(NEKTAR_USE_PYTHON3
-        "If true, prefer to use Python 3." OFF "NEKTAR_BUILD_PYTHON" OFF)
-
-    # Set the Python3 status flag as the opposite of the Python3 flag by
-    # default on first run to ensure Python is searched for.
-    IF (NOT NEKTAR_PYTHON3_STATUS)
-        SET(NEKTAR_PYTHON3_STATUS NOT ${NEKTAR_USE_PYTHON3} CACHE INTERNAL "" )
+    IF (NOT DEFINED NEKTAR_PYTHON_EXECUTABLE)
+        SET(NEKTAR_PYTHON_EXECUTABLE "" CACHE INTERNAL "")
     ENDIF()
 
-    IF (NOT NEKTAR_PYTHON3_STATUS STREQUAL NEKTAR_USE_PYTHON3)
-        unset(PYTHON_EXECUTABLE CACHE)
+    # If someone is using a newer variable name (from FindPython.cmake), set
+    # this instead to the older variable name from PythonInterp.
+    IF (DEFINED Python_EXECUTABLE)
+        SET(PYTHON_EXECUTABLE ${Python_EXECUTABLE})
+    ENDIF()
+
+    IF (NOT PYTHON_EXECUTABLE STREQUAL NEKTAR_PYTHON_EXECUTABLE)
         unset(PYTHON_INCLUDE_DIR CACHE)
         unset(PYTHON_LIBRARY CACHE)
         unset(PYTHON_LIBRARY_DEBUG CACHE)
+        unset(PYTHON_LIBRARIES CACHE)
+        unset(PYTHONLIBS_VERSION_STRING CACHE)
         unset(BOOST_PYTHON_LIB CACHE)
         unset(BOOST_NUMPY_LIB CACHE)
-        SET(NEKTAR_PYTHON3_STATUS ${NEKTAR_USE_PYTHON3} CACHE INTERNAL "")
     ENDIF()
 
-    SET(PYTHONVER 2.7)
-    IF (NEKTAR_USE_PYTHON3)
-        SET(PYTHONVER 3.0)
-    ENDIF()
+    FIND_PACKAGE(PythonInterp REQUIRED)
+    FIND_PACKAGE(PythonLibsNew REQUIRED)
 
-    # Find Python
-    FIND_PACKAGE(PythonInterp  ${PYTHONVER} REQUIRED)
-    FIND_PACKAGE(PythonLibsNew ${PYTHONVER} REQUIRED)
+    SET(NEKTAR_PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE} CACHE INTERNAL "")
 
     # Include headers from root directory for config file.
 
@@ -59,7 +56,8 @@ IF (NEKTAR_BUILD_PYTHON)
         SET(BOOST_LIB_SUFFIX "-mt")
     ENDIF()
 
-    # Try to find Boost::Python
+    # Try to find Boost::Python: prefer extensions such as 'python32', but some
+    # distributions may just use 'python3' or 'python'.
     FIND_LIBRARY(BOOST_PYTHON_LIB
         NAMES boost_python-py${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}${BOOST_LIB_SUFFIX}
         boost_python${BOOST_PYTHON_VERSION_MAJOR}${BOOST_PYTHON_VERSION_MINOR}${BOOST_LIB_SUFFIX}
@@ -84,8 +82,10 @@ IF (NEKTAR_BUILD_PYTHON)
     INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
     ADD_DEFINITIONS(-DWITH_PYTHON)
 
-    MESSAGE(STATUS "Found Python: ${PYTHON_EXECUTABLE}")
-    MESSAGE(STATUS "Found Boost.Python: ${BOOST_PYTHON_LIB}")
+    MESSAGE(STATUS "Searching for Python:")
+    MESSAGE(STATUS "-- Found interpreter: ${PYTHON_EXECUTABLE}")
+    MESSAGE(STATUS "-- Found development library: ${PYTHON_LIBRARIES}")
+    MESSAGE(STATUS "-- Found Boost.Python: ${BOOST_PYTHON_LIB}")
 
     # If we can't find it, pull it from git and compile it
     IF (NOT BOOST_NUMPY_LIB)
@@ -142,9 +142,9 @@ IF (NEKTAR_BUILD_PYTHON)
         ENDIF()
         
         INCLUDE_DIRECTORIES(SYSTEM ${TPDIST}/include)
-        MESSAGE(STATUS "Build Boost.NumPy: ${BOOST_NUMPY_LIB}")
+        MESSAGE(STATUS "-- Build Boost.NumPy: ${BOOST_NUMPY_LIB}")
     ELSE()
-        MESSAGE(STATUS "Found Boost.NumPy: ${BOOST_NUMPY_LIB}")
+        MESSAGE(STATUS "-- Found Boost.NumPy: ${BOOST_NUMPY_LIB}")
         ADD_CUSTOM_TARGET(boost-numpy ALL)
         ADD_DEFINITIONS(-DBOOST_HAS_NUMPY)
     ENDIF()

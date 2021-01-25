@@ -5,40 +5,11 @@ RelWithDebInfo MinSizeRel.")
 # Toggleable build type
 SET_PROPERTY(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug;Release;RelWithDebInfo;MinSizeRel")
 
-# Simd
-OPTION(NEKTAR_ENABLE_SIMD_SSE2 "Enable sse2 vector types" OFF)
-OPTION(NEKTAR_ENABLE_SIMD_AVX2 "Enable avx2 vector types" OFF)
-OPTION(NEKTAR_ENABLE_SIMD_AVX512 "Enable avx512 vector types" OFF)
-MARK_AS_ADVANCED(FORCE NEKTAR_ENABLE_SIMD_SSE2 NEKTAR_ENABLE_SIMD_AVX2 NEKTAR_ENABLE_SIMD_AVX512)
-IF (NEKTAR_ENABLE_SIMD_AVX512)
-    MESSAGE(STATUS "Enabling avx512, you might need to clear CMAKE_CXX_FLAGS or add the appriopriate flags")
-    ADD_DEFINITIONS(-DNEKTAR_ENABLE_SIMD_AVX512)
-    SET(CMAKE_CXX_FLAGS "-mavx512 -mfma" CACHE STRING
-        "Flags used by the CXX compiler during all build types.")
-    SET(NEKTAR_ENABLE_SIMD_AVX2 "ON" FORCE)
-    SET(NEKTAR_ENABLE_SIMD_SSE2 "ON" FORCE)
-ENDIF()
-IF (NEKTAR_ENABLE_SIMD_AVX2)
-    MESSAGE(STATUS "Enabling avx2, you might need to clear CMAKE_CXX_FLAGS or add the appriopriate flags")
-    ADD_DEFINITIONS(-DNEKTAR_ENABLE_SIMD_AVX2)
-    SET(CMAKE_CXX_FLAGS "-mavx2 -mfma" CACHE STRING
-        "Flags used by the CXX compiler during all build types.")
-    SET(NEKTAR_ENABLE_SIMD_SSE2 "ON" FORCE)
-ENDIF()
-IF (NEKTAR_ENABLE_SIMD_SSE2)
-    MESSAGE(STATUS "Enabling sse2, you might need to clear CMAKE_CXX_FLAGS or add the appriopriate flags")
-    SET(SSE_FLAGS "-msse2")
-    SET(CMAKE_CXX_FLAGS "${SSE_FLAGS}" CACHE STRING
-        "Flags used by the CXX compiler during all build types.")
-    ADD_DEFINITIONS(-DNEKTAR_ENABLE_SIMD_SSE2)
-ENDIF()
-# Vmath Simd
-OPTION(NEKTAR_ENABLE_SIMD_VMATH "Enable vector types in vmath" OFF)
-IF (NEKTAR_ENABLE_SIMD_VMATH)
-    ADD_DEFINITIONS(-DNEKTAR_ENABLE_SIMD_VMATH)
-ENDIF()
-MARK_AS_ADVANCED(FORCE NEKTAR_ENABLE_SIMD_VMATH)
+# Find the modules included with Nektar
+SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
+# Simd
+INCLUDE(NektarSIMD)
 
 PROJECT(Nektar++ C CXX)
 
@@ -85,8 +56,6 @@ INCLUDE(CMakeParseArguments)
 # Enable CTest.
 ENABLE_TESTING()
 
-# Find the modules included with Nektar
-SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 # Set default install path if not provided on the command-line
 IF (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -136,6 +105,9 @@ SET(LIB_DIR "lib")
 IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE )
     SET(LIB_DIR "lib64")
 ENDIF()
+IF (DEFINED NEKTAR_LIB_DIR)
+    SET(LIB_DIR ${NEKTAR_LIB_DIR})
+ENDIF()
 SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
 
 SET(NEKTAR_BIN_DIR bin)
@@ -145,11 +117,19 @@ SET(NEKTAR_SHARE_DIR share/nektar++)
 SET(NEKTAR_DOC_DIR share/doc/nektar++)
 SET(NEKTAR_CMAKE_DIR ${LIB_DIR}/nektar++/cmake)
 
+# Allow for overriding final include header directory (for Fedora/CentOS
+# packaging)
+IF (DEFINED NEKTAR_INCLUDE_ROOT)
+    SET(NEKTAR_INCLUDE_DIST_DIR ${NEKTAR_INCLUDE_ROOT}/nektar++)
+ELSE()
+    SET(NEKTAR_INCLUDE_DIST_DIR ${CMAKE_INSTALL_PREFIX}/${NEKTAR_INCLUDE_DIR})
+ENDIF()
+
 # Set ThirdParty locations.
 SET(TPSRC   ${CMAKE_SOURCE_DIR}/ThirdParty)
 SET(TPBUILD ${CMAKE_BINARY_DIR}/ThirdParty)
 SET(TPDIST  ${CMAKE_BINARY_DIR}/ThirdParty/dist)
-SET(TPINC   ${CMAKE_INSTALL_PREFIX}/include/ThirdParty)
+SET(TPINC   ${NEKTAR_INCLUDE_DIST_DIR}/ThirdParty)
 SET(TPLIB   ${CMAKE_INSTALL_PREFIX}/${NEKTAR_LIB_DIR}/nektar++/thirdparty)
 
 # Create ThirdParty source directory if it doesn't exist already.
@@ -162,6 +142,7 @@ SET(NEKTAR_LIBRARY_TYPE "SHARED")
 
 # Set up RPATH
 SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
+SET(CMAKE_BUILD_RPATH "${TPLIB}")
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES
      "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}" isSystemDir)
@@ -184,7 +165,6 @@ OPTION(NEKTAR_BUILD_SOLVERS    "Build example solvers."         ON)
 OPTION(NEKTAR_BUILD_UTILITIES  "Build utilities."               ON)
 OPTION(NEKTAR_BUILD_UNIT_TESTS "Build unit tests."              ON)
 OPTION(NEKTAR_BUILD_TESTS      "Build regression tests."        ON)
-OPTION(NEKTAR_BUILD_TIMINGS    "Build benchmark timing codes."  OFF)
 OPTION(NEKTAR_BUILD_PYTHON     "Build Nektar++ Python bindings" OFF)
 
 OPTION(NEKTAR_TEST_ALL "Include full set of regression tests to this build." OFF)
@@ -200,7 +180,7 @@ IF (NOT WIN32)
 ENDIF()
 
 # Use likwid for timing
-OPTION(NEKTAR_USE_LIKWID "Enable Likiwid." OFF)
+OPTION(NEKTAR_USE_LIKWID "Enable Likwid." OFF)
 MARK_AS_ADVANCED(NEKTAR_USE_LIKWID)
 
 # Build options

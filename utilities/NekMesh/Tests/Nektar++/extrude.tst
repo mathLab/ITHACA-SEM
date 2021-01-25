@@ -9,7 +9,7 @@
     </files>
     <metrics>
         <metric type="regex" id="1">
-            <regex>^Total negative Jacobians\s*:\s*(\d+)</regex>
+            <regex>.*Total negative Jacobians\s*:\s*(\d+)</regex>
             <matches>
                 <match>
                     <field id="0">0</field>
@@ -17,7 +17,7 @@
             </matches>
         </metric>
         <metric type="regex" id="2">
-            <regex>^Node count\s*:\s*(\d+)</regex>
+            <regex>^.*Node count\s*:\s*(\d+)</regex>
             <matches>
                 <match>
                     <field id="0">12</field>
@@ -25,7 +25,7 @@
             </matches>
         </metric>
         <metric type="regex" id="3">
-            <regex>^Number of composites\s*:\s*(\d+)</regex>
+            <regex>^.*Number of composites\s*:\s*(\d+)</regex>
             <matches>
                 <match>
                     <field id="0">8</field>
@@ -33,7 +33,7 @@
             </matches>
         </metric>
         <metric type="regex" id="4">
-            <regex>^Lower mesh extent\s*:\s*(-?\d+\.?\d?+)\s*(-?\d+\.?\d?+)\s*
+            <regex>^.*Lower mesh extent\s*:\s*(-?\d+\.?\d?+)\s*(-?\d+\.?\d?+)\s*
                 (-?\d+\.?\d?+)</regex>
             <matches>
                 <match>
@@ -44,7 +44,7 @@
             </matches>
         </metric>
         <metric type="regex" id="5">
-            <regex>^Upper mesh extent\s*:\s*(-?\d+\.?\d?+)\s*(-?\d+\.?\d?+)\s*
+            <regex>^.*Upper mesh extent\s*:\s*(-?\d+\.?\d?+)\s*(-?\d+\.?\d?+)\s*
                 (-?\d+\.?\d?+)</regex>
             <matches>
                 <match>

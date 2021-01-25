@@ -15,7 +15,8 @@ SET(COLLECTIONS_HEADERS
   Collection.h
   CollectionOptimisation.h
   IProduct.h
-  Operator.h
+  MatrixFreeBase.h
+  Operator.h      
 )
 
 ADD_NEKTAR_LIBRARY(Collections

@@ -72,7 +72,7 @@ ProcessFieldFromString::~ProcessFieldFromString(void)
 
 void ProcessFieldFromString::Process(po::variables_map &vm)
 {
-    boost::ignore_unused(vm);
+    m_f->SetUpExp(vm);
 
     // Check if required parameter fieldstr was provided
     ASSERTL0(m_config["fieldstr"].m_beenSet, "fieldstr must be specified");

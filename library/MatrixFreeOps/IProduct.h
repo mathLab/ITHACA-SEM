@@ -151,11 +151,11 @@ struct IProductQuad : public IProduct, public Helper<2, DEFORMED>
         {
             if (DEFORMED)
             {
-                jac_ptr = &(this->m_jac[nqTot*e]);
+                jac_ptr = &((*this->m_jac)[nqTot*e]);
             }
             else
             {
-                jac_ptr = &(this->m_jac[e]);
+                jac_ptr = &((*this->m_jac)[e]);
             }
 
             // Load and transpose data
@@ -174,52 +174,6 @@ struct IProductQuad : public IProduct, public Helper<2, DEFORMED>
         }
     }
 public:
-    static NekDouble FlopsPerElement(
-        const int nm,
-        const int nq0,
-        const int nq1)
-    {
-        int loop_ji = nm * nq0 * nq1 * 4;
-        int loop_qj = nm*nm*nq1 * 3;
-        return ( loop_ji + loop_qj);
-    }
-
-    NekDouble GFlops() final
-    {
-        const int nm = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-
-        int flops = this->m_nElmt * IProductQuad::FlopsPerElement(nm, nq0, nq1);
-        return 1e-9 * flops;
-    }
-
-    NekDouble NStores() final
-    {
-        const int nm = m_basis[0]->GetNumModes();
-        // const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-
-        int store_pj = nm * nq1;
-        int store_pq = nm * nm;
-        int store_expected = store_pj + store_pq;
-
-        return this->m_nElmt * store_expected;
-    }
-
-    NekDouble NLoads() final
-    {
-        const int nm = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-
-        int load_pji = nm * nq1 * nq0 * 3;
-        int load_pqj =  nm * nm * nq1 * 3;
-        int load_expected = load_pji + load_pqj;
-
-        return this->m_nElmt * load_expected;
-    }
-
     NekDouble Ndof() final
     {
         return m_nmTot * this->m_nElmt;
@@ -451,11 +405,11 @@ struct IProductTri : public IProduct, public Helper<2, DEFORMED>
 
             if (DEFORMED)
             {
-                jac_ptr = &(this->m_jac[nqTot*e]);
+                jac_ptr = &((*this->m_jac)[nqTot*e]);
             }
             else
             {
-                jac_ptr = &(this->m_jac[e]);
+                jac_ptr = &((*this->m_jac)[e]);
             }
 
             // Load and transpose data
@@ -475,63 +429,6 @@ struct IProductTri : public IProduct, public Helper<2, DEFORMED>
         }
     }
 public:
-    static NekDouble FlopsPerElement(
-        const int nm,
-        const int nq0,
-        const int nq1)
-    {
-        int ploop = nm * 4 * nq0 * nq1;
-        int pqloop = (nm * (nm+1) / 2) * nq1 * 3;
-
-        int corr_loop;
-        if(DEFORMED){
-            //We can't premultiply the jacobian in the outer loop.
-            corr_loop = nq1 * (1 + nq0*5);
-        }
-        else{
-            corr_loop = nq1 * ( 2 + nq0 * 4);
-        }
-
-        return (ploop + pqloop + corr_loop);
-    }
-
-    NekDouble GFlops() final
-    {
-        const int nm = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-
-        int flops = m_nElmt * IProductTri::FlopsPerElement(nm, nq0, nq1);
-        return flops * 1e-9;
-    }
-
-    NekDouble NLoads() final
-    {
-        const int nm0 = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-
-        int load_pji = nm0 * nq1 * nq0 * 3;
-        int load_pqj = nm0*(nm0+1) * nq1 *0.5 * 3;
-        int load_corr = 1 + nq1*(2 + nq0*3);
-        int load_expected = load_pji + load_pqj + load_corr;
-
-        return this->m_nElmt * load_expected;
-    }
-
-    NekDouble NStores() final
-    {
-        const int nm0 = m_basis[0]->GetNumModes();
-        // const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-
-        int store_pj = nm0*nq1;
-        int store_pq = nm0*(nm0+1) / 2.0;
-        int store_corr = 1;
-        int store_expected = store_pj + store_pq + store_corr;
-
-        return this->m_nElmt * store_expected;
-    }
 
     NekDouble Ndof() final
     {
@@ -686,11 +583,13 @@ struct IProductHex : public IProduct, public Helper<3, DEFORMED>
         vec_t* jac_ptr;
         for (int e = 0; e < this->m_nBlocks; ++e)
         {
-            if(DEFORMED){
-                jac_ptr = &(this->m_jac[nqTot*e]);
+            if (DEFORMED)
+            {
+                jac_ptr = &((*this->m_jac)[nqTot*e]);
             }
-            else{
-                jac_ptr = &(this->m_jac[e]);
+            else
+            {
+                jac_ptr = &((*this->m_jac)[e]);
             }
 
             // Load and transpose data
@@ -712,70 +611,11 @@ struct IProductHex : public IProduct, public Helper<3, DEFORMED>
 
 public:
 
-    static NekDouble FlopsPerElement(
-        const int nm,
-        const int nq0,
-        const int nq1,
-        const int nq2)
-    {
-        int loop_kji = nq2 * nq1 * nq0 * 4;
-        int loop_kj = nq2 * nq1 * 3;
-        int loop_k = nq2 * 3;
-
-        return nm*(loop_kji + nm*(loop_kj + nm*(loop_k)));
-    }
-
-    NekDouble GFlops() final
-    {
-        const int nm = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int expected = IProductHex::FlopsPerElement(nm, nq0, nq1, nq2);
-        int flops = this->m_nElmt * expected;
-        return flops * 1e-9;
-    }
-
     NekDouble Ndof() final
     {
         return m_nmTot * this->m_nElmt;
     }
 
-    NekDouble NLoads() final
-    {
-        const int nm0 = m_basis[0]->GetNumModes();
-        const int nm1 = m_basis[1]->GetNumModes();
-        const int nm2 = m_basis[2]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int load_pkji = nm0 * nq2 * nq1 * nq0 * 3;
-        int load_pqkj = nm0 * nm1 * nq2 * nq1 * 3;
-        int load_pqrk = nm0 * nm1 * nm2 * nq2 * 3;
-        int load_expected = load_pkji + load_pqkj + load_pqrk;
-
-
-        return this->m_nElmt * load_expected;
-    }
-
-    NekDouble NStores() final
-    {
-        const int nm0 = m_basis[0]->GetNumModes();
-        const int nm1 = m_basis[1]->GetNumModes();
-        const int nm2 = m_basis[2]->GetNumModes();
-        // const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int store_pkj = nm0 * nq2 * nq1;
-        int store_pqk = nm0 * nm1 * nq2;
-        int store_pqr = nm0 * nm1 * nm2;
-        int store_expected = store_pkj + store_pqk + store_pqr;
-
-        return this->m_nElmt * store_expected;
-    }
 
 private:
     /// Padded basis
@@ -1076,11 +916,11 @@ struct IProductPrism : public IProduct, public Helper<3, DEFORMED>
         {
             if (DEFORMED)
             {
-                jac_ptr = &(this->m_jac[nqTot*e]);
+                jac_ptr = &((*this->m_jac)[nqTot*e]);
             }
             else
             {
-                jac_ptr = &(this->m_jac[e]);
+                jac_ptr = &((*this->m_jac)[e]);
             }
 
             // Load and transpose data
@@ -1103,78 +943,6 @@ struct IProductPrism : public IProduct, public Helper<3, DEFORMED>
 
     }
 public:
-
-    static NekDouble FlopsPerElement(
-        const int nm,
-        const int nq0,
-        const int nq1,
-        const int nq2)
-    {
-        int loop_ijk = nm * nq0*nq1*nq2*4;
-        int loop_kj = nm*nm*nq1*nq2*3;
-        int loop_k = nm*nq2* 3 * nm*(nm+1) / 2.0;
-
-        int corr;
-        if(DEFORMED){
-            int corr_inner = 3 + nm*4;
-            corr = nq2*nq1*(1 + nq0*corr_inner);
-        }
-        else{
-            int corr_inner = 2 + nm*4;
-            corr = nq2*(1 + nq1*(1 + nq0*corr_inner));
-        }
-
-        return  (loop_ijk + loop_kj + loop_k + corr);
-    }
-
-    NekDouble GFlops() final
-    {
-        const int nm = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int flops = m_nElmt * IProductPrism::FlopsPerElement(nm, nq0, nq1, nq2);
-        return flops * 1e-9;
-    }
-
-    NekDouble NLoads() final
-    {
-        const int nm0 = m_basis[0]->GetNumModes();
-        const int nm1 = m_basis[1]->GetNumModes();
-        // const int nm2 = m_basis[2]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        const int load_pkji = nm0 * nq2 * nq1 * nq0 * 3;
-        const int load_pqkj = nm0 * nm1 * nq2 * nq1 * 3;
-        const int load_pqrk = (nm0 *(nm0+1)/2)* nm1 * nq2 * 3;
-        const int load_corr_setup = nm1;
-        const int load_corr = nq2*(1 + nq1*(1 + nq0*(4 + nm1)));
-        const int load_corr_finish = nm1;
-        const int load_expected = load_pkji + load_pqkj + load_pqrk + load_corr_setup + load_corr + load_corr_finish;
-
-        return load_expected * this->m_nElmt;
-    }
-
-    NekDouble NStores() final
-    {
-        const int nm0 = m_basis[0]->GetNumModes();
-        const int nm1 = m_basis[1]->GetNumModes();
-        // const int nm2 = m_basis[2]->GetNumModes();
-        // const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        const int store_pkj = nm0 * nq2 * nq1;
-        const int store_pqk = nm0 * nm1 * nq2;
-        const int store_pqr = (nm0*(nm0+1) / 2) * nm1;
-        const int store_corr_start_finish = nm1*2;
-        const int store_expected = store_pkj + store_pqk + store_pqr + store_corr_start_finish;
-
-        return store_expected * this->m_nElmt;
-    }
 
     NekDouble Ndof() final
     {
@@ -1478,11 +1246,11 @@ struct IProductTet : public IProduct, public Helper<3, DEFORMED>
         {
             if (DEFORMED)
             {
-                jac_ptr = &(this->m_jac[nqTot*e]);
+                jac_ptr = &((*this->m_jac)[nqTot*e]);
             }
             else
             {
-                jac_ptr = &(this->m_jac[e]);
+                jac_ptr = &((*this->m_jac)[e]);
             }
 
             // Load and transpose data
@@ -1502,78 +1270,6 @@ struct IProductTet : public IProduct, public Helper<3, DEFORMED>
         }
     }
 public:
-
-    static NekDouble FlopsPerElement(
-        const int nm,
-        const int nq0,
-        const int nq1,
-        const int nq2)
-    {
-        double loop_p = nm * nq2 * nq1 * nq0 * 4;
-        double loop_pq = nm * (nm + 1) * nq2*nq1 * 3 / 2;
-        double loop_pqr = nm * (nm + 1) * (nm + 2) * nq2 * 3 / 6;
-
-        double loop_ijk;
-        if(DEFORMED){
-            double inner = 11 + 5 * (nm - 1);
-            loop_ijk = nq2 * nq1 * (1 + nq0 * inner);
-        }
-        else{
-            double inner = 10 + 5 * (nm - 1);
-            loop_ijk = nq2 * (1 + nq1 * (1 + nq0 * inner));
-        }
-
-        return (loop_p + loop_pq + loop_pqr + loop_ijk);
-    }
-
-    NekDouble GFlops() final
-    {
-        const int nm = m_basis[0]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        double flops = m_nElmt * IProductTet::FlopsPerElement(nm, nq0, nq1, nq2);
-        return flops * 1e-9;
-    }
-
-    NekDouble NLoads() final
-    {
-        const int nm0 = m_basis[0]->GetNumModes();
-        // const int nm1 = m_basis[1]->GetNumModes();
-        const int nm2 = m_basis[2]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int load_pkji = nm0 * nq2 * nq1 * nq0 * 3;
-        int load_pqkj = (nm0*(nm0+1)/2) * nq2 * nq1 * 3;
-        int load_pqrk = (nm0*(nm0+1)*(nm0+2)/6)*nq2 * 3;
-        int load_corr_inner = 9 + (nm2-1)*3;
-        int load_corr = nq2 * (1 + nq1 * (1 + nq0*load_corr_inner));
-        int load_expected = load_pkji + load_pqkj + load_pqrk + load_corr;
-
-        return load_expected * this->m_nElmt;
-    }
-
-    NekDouble NStores() final
-    {
-        const int nm0 = m_basis[0]->GetNumModes();
-        // const int nm1 = m_basis[1]->GetNumModes();
-        const int nm2 = m_basis[2]->GetNumModes();
-        const int nq0 = m_basis[0]->GetNumPoints();
-        const int nq1 = m_basis[1]->GetNumPoints();
-        const int nq2 = m_basis[2]->GetNumPoints();
-
-        int store_pkj = nm0 * nq2 * nq1;
-        int store_pqk = (nm0*(nm0+1)/2) * nq2;
-        int store_pqr = (nm0*(nm0+1)*(nm0+2)/6);
-        int store_corr_inner = 1 + (nm2-1);
-        int store_corr = nq2 * nq1 * nq0 * store_corr_inner;
-        int store_expected =  store_pkj + store_pqk + store_pqr + store_corr;
-
-        return store_expected * this->m_nElmt;
-    }
 
     NekDouble Ndof() final
     {

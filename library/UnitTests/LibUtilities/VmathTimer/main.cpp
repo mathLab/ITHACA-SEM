@@ -55,8 +55,6 @@ int main(int argc, char const *argv[])
         constexpr short CPU_CLK_UNHALTED_REF_id = 2;
         int nevents{20};
         std::vector<double> events(nevents);
-        double time;
-        int count;
         //
         LIKWID_MARKER_GET("GathrArray", &nevents, events.data(), &time, &count);
         // print out CPE
@@ -88,8 +86,6 @@ int main(int argc, char const *argv[])
         constexpr short CPU_CLK_UNHALTED_REF_id = 2;
         int nevents{20};
         std::vector<double> events(nevents);
-        double time;
-        int count;
         //
         LIKWID_MARKER_GET("GathrSimd", &nevents, events.data(), &time, &count);
         // print out CPE
@@ -121,8 +117,6 @@ int main(int argc, char const *argv[])
         constexpr short CPU_CLK_UNHALTED_REF_id = 2;
         int nevents{20};
         std::vector<double> events(nevents);
-        double time;
-        int count;
         //
         LIKWID_MARKER_GET("GathrScalar", &nevents, events.data(), &time, &count);
         // print out CPE

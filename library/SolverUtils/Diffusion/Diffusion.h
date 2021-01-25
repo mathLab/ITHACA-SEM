@@ -530,7 +530,7 @@ namespace Nektar
                 Array< OneD, int >
                     &nonZeroIndex);
 
-            virtual void v_DiffuseTraceSymmFlux(
+            SOLVER_UTILS_EXPORT virtual void v_DiffuseTraceSymmFlux(
                 const int                                    nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>  &fields,
                 const Array<OneD, Array<OneD, NekDouble>>          &inarray,
@@ -595,13 +595,13 @@ namespace Nektar
                     &v_GetTraceNormal();
 
             /// Compute primary derivatives
-            virtual void v_GetPrimVar(
+            SOLVER_UTILS_EXPORT virtual void v_GetPrimVar(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble>>         &inarray,
                   Array<OneD, Array<OneD, NekDouble>>         &primVar);
 
             /// Compute divergence and curl squared
-            void GetDivCurl(
+            SOLVER_UTILS_EXPORT void GetDivCurl(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &pVarDer);
             

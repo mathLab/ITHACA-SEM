@@ -5479,18 +5479,36 @@ namespace Nektar
             Array<OneD, int >  nlocTracePtsLR(2);
             nlocTracePtsLR[0]     = nlocTracePtsFwd;
             nlocTracePtsLR[1]     = nlocTracePtsBwd;
+
+            size_t nFwdBwdNonZero = 0;
+            Array<OneD, int>  tmpIndex{2, -1};
+            for (int i = 0; i < 2; ++i)
+            {
+                if (nlocTracePtsLR[i] > 0)
+                {
+                    tmpIndex[nFwdBwdNonZero] = i;
+                    nFwdBwdNonZero++;
+                }
+            }
+
+            Array<OneD, int>  nlocTracePtsNonZeroIndex{nFwdBwdNonZero};
+            for (int i = 0; i < nFwdBwdNonZero; ++i)
+            {
+                nlocTracePtsNonZeroIndex[i] = tmpIndex[i];
+            }
             
             Array<OneD, NekDouble>  TraceFwdPhy(nTracePntsTtl);
             Array<OneD, NekDouble>  TraceBwdPhy(nTracePntsTtl);
             Array<OneD, Array<OneD, NekDouble> > tmplocTrace(2);
-            for(int i=0;i<2;i++)
+            for (int k = 0; k < nFwdBwdNonZero; ++k)
             {
+                size_t i = nlocTracePtsNonZeroIndex[k];
                 tmplocTrace[i] = Array<OneD, NekDouble> (nlocTracePtsLR[i]);
             }
 
             int nNumbElmt = fieldMat.size();
             Array<OneD, Array<OneD, NekDouble> > ElmtMatDataArray(nNumbElmt);
-            Array<OneD, int>  ElmtCoefArray(ntotTrace);
+            Array<OneD, int>  ElmtCoefArray(nNumbElmt);
             for(int i=0;i<nNumbElmt;i++)
             {
                 ElmtMatDataArray[i] =   fieldMat[i]->GetPtr();
@@ -5533,8 +5551,9 @@ namespace Nektar
                 locTraceToTraceMap->GetfieldToLocTraceMap();
             Array<OneD, Array<OneD, int > > fieldToLocTraceMapLR(2);
             noffset = 0;
-            for(int i=0;i<2;i++)
+            for (int k = 0; k < nFwdBwdNonZero; ++k)
             {
+                size_t i = nlocTracePtsNonZeroIndex[k];
                 fieldToLocTraceMapLR[i] = Array<OneD, int> (nlocTracePtsLR[i]);
                 Vmath::Vcopy(nlocTracePtsLR[i], 
                     &fieldToLocTraceMap[0]+noffset,1,
@@ -5543,8 +5562,9 @@ namespace Nektar
             }
 
             Array<OneD, Array<OneD, int > > MatIndexArray(2);
-            for(int nlr = 0; nlr<2;nlr++)
+            for (int k = 0; k < nFwdBwdNonZero; ++k)
             {
+                size_t nlr = nlocTracePtsNonZeroIndex[k];
                 MatIndexArray[nlr]  =   Array<OneD, int > (nlocTracePtsLR[nlr]);
                 for(int  nloc = 0; nloc < nlocTracePtsLR[nlr]; nloc++)
                 {
@@ -5575,16 +5595,18 @@ namespace Nektar
                         &TraceBwdPhy[noffset],1);
                 }
 
-                for(int i=0;i<2;i++)
+                for (int k = 0; k < nFwdBwdNonZero; ++k)
                 {
+                    size_t i = nlocTracePtsNonZeroIndex[k];
                     Vmath::Zero(nlocTracePtsLR[i],tmplocTrace[i],1);
                 }
                 
                 GetLocTraceFromTracePts(TraceFwdPhy,TraceBwdPhy,tmplocTrace[0],
                     tmplocTrace[1]);
 
-                for(int nlr = 0; nlr<2;nlr++)
+                for (int k = 0; k < nFwdBwdNonZero; ++k)
                 {
+                    size_t nlr = nlocTracePtsNonZeroIndex[k];
                     for(int  nloc = 0; nloc < nlocTracePtsLR[nlr]; nloc++)
                     {
                         traceID     = LocTracephysToTraceIDMap[nlr][nloc];
@@ -5622,15 +5644,17 @@ namespace Nektar
                     }
                 }
                 
-                for(int i=0;i<2;i++)
+                for (int k = 0; k < nFwdBwdNonZero; ++k)
                 {
+                    size_t i = nlocTracePtsNonZeroIndex[k];
                     Vmath::Zero(nlocTracePtsLR[i],tmplocTrace[i],1);
                 }
                 GetLocTraceFromTracePts(TraceFwdPhy,TraceBwdPhy,tmplocTrace[0],
                     tmplocTrace[1]);
 
-                for(int nlr = 0; nlr<2;nlr++)
+                for (int k = 0; k < nFwdBwdNonZero; ++k)
                 {
+                    size_t nlr = nlocTracePtsNonZeroIndex[k];
                     for(int  nloc = 0; nloc < nlocTracePtsLR[nlr]; nloc++)
                     {
                         traceID = LocTracephysToTraceIDMap[nlr][nloc];

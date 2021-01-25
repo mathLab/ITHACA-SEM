@@ -197,13 +197,13 @@ namespace Nektar
             SOLVER_UTILS_EXPORT bool CheckAuxScal (std::string name);
             SOLVER_UTILS_EXPORT bool CheckAuxVec  (std::string name);
 
-            virtual void v_CalcFluxJacobian(
-            const int                                         nDim,
-            const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
-            const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-            const Array<OneD, const Array<OneD, NekDouble> > &normals,
-                  DNekBlkMatSharedPtr                        &FJac,
-                  DNekBlkMatSharedPtr                        &BJac);
+            SOLVER_UTILS_EXPORT virtual void v_CalcFluxJacobian(
+                const int                                         nDim,
+                const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+                const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+                const Array<OneD, const Array<OneD, NekDouble> > &normals,
+                    DNekBlkMatSharedPtr                        &FJac,
+                    DNekBlkMatSharedPtr                        &BJac);
 
         };
 

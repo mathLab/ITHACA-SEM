@@ -46,6 +46,7 @@ ADD_NEKTAR_TEST(wss_3D_periodic)
 ADD_NEKTAR_TEST(scale_compressed_2D)
 ADD_NEKTAR_TEST(naca0012_3D_bnd)
 ADD_NEKTAR_TEST(Helmholtz)
+ADD_NEKTAR_TEST(Hex_channel_C0helmsmoothing)
 
 
 IF (NEKTAR_USE_METIS OR NEKTAR_USE_SCOTCH)

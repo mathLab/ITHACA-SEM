@@ -34,7 +34,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+
+#ifndef NEKTAR_LIB_LIBUTILITIES_BASSICUTILS_VMATHSIMD_HPP
+#define NEKTAR_LIB_LIBUTILITIES_BASSICUTILS_VMATHSIMD_HPP
 
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/SimdLib/tinysimd.hpp>
@@ -524,10 +526,6 @@ namespace SIMD
         }
     }
 
-
-
-
-
 } // namespace SIMD
 } // namespace Vmath
-
+#endif

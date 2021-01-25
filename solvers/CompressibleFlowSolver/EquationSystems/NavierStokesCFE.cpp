@@ -559,6 +559,114 @@ namespace Nektar
         }
     }
 
+      /**
+     * @brief Return the flux vector for the IP diffusion problem, based on
+     * conservative variables
+     */
+    void NavierStokesCFE::GetViscousFluxVectorConservVar(
+        const int                                              nDim,
+        const Array<OneD, Array<OneD, NekDouble> >             &inarray,
+        const TensorOfArray3D<NekDouble>                       &qfields,
+        TensorOfArray3D<NekDouble>                             &outarray,
+        Array< OneD, int >                                     &nonZeroIndex,
+        const Array<OneD, Array<OneD, NekDouble> >             &normal,
+        const Array<OneD, NekDouble>                           &ArtifDiffFactor)
+    {
+        size_t nConvectiveFields   = inarray.size();
+        size_t nPts=inarray[0].size();
+        int n_nonZero   =   nConvectiveFields - 1;
+        TensorOfArray3D<NekDouble> fluxVec;
+        Array<OneD, Array<OneD, NekDouble>> outtmp{nConvectiveFields};
+
+        for (int i = 0; i < nConvectiveFields; ++i)
+        {
+            outtmp[i]=Array<OneD, NekDouble>{nPts, 0.0};
+        }
+
+        for (int i = 0; i < outarray.size(); ++i)
+        {
+            for (int j = 0; j < nConvectiveFields; ++j)
+            {
+                Vmath::Zero(nPts, outarray[i][j], 1);
+            }
+        }
+
+        if (normal.size())
+        {
+            for (int nd = 0; nd < nDim; ++nd)
+            {
+                for (int nderiv = 0; nderiv < nDim; ++nderiv)
+                {
+                    GetViscousFluxBilinearForm(nDim, nd, nderiv, inarray,
+                                                qfields[nderiv], outtmp);
+
+                    for (int j = 0; j < nConvectiveFields; ++j)
+                    {
+                        Vmath::Vvtvp(nPts, normal[nd], 1, outtmp[j], 1,
+                            outarray[0][j], 1, outarray[0][j], 1);
+                    }
+                }
+            }
+        }
+        else
+        {
+            fluxVec = outarray;
+
+            for (int nd = 0; nd < nDim; ++nd)
+            {
+                for (int nderiv = 0; nderiv < nDim; ++nderiv)
+                {
+                    GetViscousFluxBilinearForm(nDim, nd, nderiv, inarray,
+                                                qfields[nderiv], outtmp);
+
+                    for (int j = 0; j < nConvectiveFields; ++j)
+                    {
+                        Vmath::Vadd(nPts, &outtmp[j][0], 1,
+                                    &fluxVec[nd][j][0], 1,
+                                    &fluxVec[nd][j][0], 1);
+                    }
+                }
+            }
+        }
+
+        if (ArtifDiffFactor.size())
+        {
+            n_nonZero   =   nConvectiveFields;
+
+            if (normal.size())
+            {
+                Array<OneD, NekDouble> tmparray{nPts, 0.0};
+                for (int i = 0; i < nDim; ++i)
+                {
+                    Vmath::Vmul(nPts, ArtifDiffFactor, 1, normal[i], 1,
+                                tmparray, 1);
+                    for (int j = 0; j < nConvectiveFields; ++j)
+                    {
+                        Vmath::Vvtvp(nPts, tmparray, 1, qfields[i][j], 1,
+                                    outarray[0][j], 1, outarray[0][j], 1);
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < nDim; ++i)
+                {
+                    for (int j = 0; j < nConvectiveFields; ++j)
+                    {
+                        Vmath::Vvtvp(nPts, ArtifDiffFactor, 1, qfields[i][j], 1,
+                                    outarray[i][j], 1, outarray[i][j], 1);
+                    }
+                }
+            }
+        }
+
+        nonZeroIndex = Array< OneD, int > {size_t(n_nonZero), 0};
+        for (int i = 1; i < n_nonZero + 1; ++i)
+        {
+            nonZeroIndex[n_nonZero - i] =   nConvectiveFields - i;
+        }
+    }
+
     /**
      * @brief For very special treatment. For general boundaries it does nothing
      * But for WallViscous and WallAdiabatic, special treatment is needed

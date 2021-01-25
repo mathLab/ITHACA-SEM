@@ -30,7 +30,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/SimdLib/tinysimd.hpp>
+<<<<<<< HEAD
 #include <LibUtilities/SimdLib/io.hpp>
+=======
+>>>>>>> upstream/master
 
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>

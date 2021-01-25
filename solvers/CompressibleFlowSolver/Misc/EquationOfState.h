@@ -111,6 +111,12 @@ protected:
     /// Programmatic Constructor
     EquationOfState(const NekDouble &gamma, const NekDouble &gasConstant);
 
+    virtual NekDouble v_GetTemperature(const NekDouble &rho,
+                                       const NekDouble &e) = 0;
+
+    virtual NekDouble v_GetPressure(const NekDouble &rho,
+                                    const NekDouble &e) = 0;
+
     virtual NekDouble v_GetSoundSpeed(const NekDouble &rho, const NekDouble &e);
 
     virtual NekDouble v_GetEntropy(const NekDouble &rho,

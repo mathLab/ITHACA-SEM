@@ -173,9 +173,9 @@ namespace Nektar
                 // them matches the groups in "matches"
                 for (const auto &match : m_matches)
                 {
-                    bool found_all = false;
+                    bool all_match = false;
                     for (
-                        int i=1, found_all = true;
+                        int i=1;
                         i<matches.size() && matches.size() == match.size()+1;
                         ++i)
                     {
@@ -184,9 +184,18 @@ namespace Nektar
                             matches[i].second);
                         
                         // Compare to specified pattern
-                        found_all = found_all && submatch == match[i-1];
+                        if(submatch == match[i-1])
+                        {
+                            all_match = true;
+                            continue;
+                        }
+                        else
+                        {
+                            all_match = false;
+                            break;
+                        }
                     }
-                    if (found_all)
+                    if (all_match)
                     {
                         return false;
                     }
@@ -257,14 +266,12 @@ namespace Nektar
 
         // Add all "match" tags under "matches" tag
         for (const auto &match_it : m_matches)
-        //for (int i = 0; i < m_matches.size(); ++i)
         {
             TiXmlElement *match = new TiXmlElement("match");
             matches->LinkEndChild(match);
 
             int j = 0;
-            for(const auto &field_it : match_it)
-            //for (int j = 0; j < m_matches[i].size(); ++j)
+            for (const auto &field_it : match_it)
             {
                 TiXmlElement *field = new TiXmlElement("field");
                 match->LinkEndChild(field);

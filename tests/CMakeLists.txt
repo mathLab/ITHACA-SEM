@@ -9,6 +9,7 @@ SET(TESTER_SOURCES
   MetricLInf.cpp
   MetricPrecon.cpp
   MetricRegex.cpp
+  MetricNoWarning.cpp
   TestData.cpp
   ${CMAKE_BINARY_DIR}/tests/Tester.cpp
   sha1.cpp
@@ -22,6 +23,7 @@ SET(TESTER_HEADERS
   MetricLInf.h
   MetricPrecon.h
   MetricRegex.h
+  MetricNoWarning.h
   TestData.h
   Tester.h
   sha1.h

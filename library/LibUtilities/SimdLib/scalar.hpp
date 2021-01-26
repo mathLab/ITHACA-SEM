@@ -39,6 +39,7 @@
 #include <vector>
 #include <cmath>
 #include <type_traits>
+#include <cstdint>
 #include "allocator.hpp"
 #include "traits.hpp"
 

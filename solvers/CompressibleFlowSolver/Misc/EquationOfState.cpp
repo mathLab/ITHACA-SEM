@@ -57,15 +57,6 @@ EquationOfState::EquationOfState(
 EquationOfState::EquationOfState( const NekDouble &gamma,
     const NekDouble &gasConstant): m_gamma{gamma}, m_gasConstant{gasConstant}{}
 
-NekDouble EquationOfState::GetTemperature(const NekDouble &rho,
-                                          const NekDouble &e)
-{
-    return v_GetTemperature(rho, e);
-}
-
-EquationOfState::EquationOfState( const NekDouble &gamma,
-    const NekDouble &gasConstant): m_gamma{gamma}, m_gasConstant{gasConstant}{}
-
 NekDouble EquationOfState::GetSoundSpeed(const NekDouble &rho,
                                          const NekDouble &e)
 {

@@ -36,6 +36,7 @@
 
 //#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <boost/core/ignore_unused.hpp>
+#include <boost/lexical_cast.hpp>
 #include <algorithm>
 
 namespace Nektar
@@ -65,6 +66,12 @@ namespace Nektar
                 std::cout << "tmp" << std::endl;
                 //NEKERROR(ErrorUtil::ewarning, "No text found in regex tag");
             }
+        }
+
+        // If we generate from output, we don't need to parse the xml file
+        if (m_generate)
+        {
+            return;
         }
 
         // Check if user has provided custom matching groups for regex
@@ -109,7 +116,8 @@ namespace Nektar
             // Check if user provided any match tags
             if (m_matches.size())
             {
-                // Check that all set of regex groups are the same size
+                // Check that all set of regex groups are the same size,
+                // i.e. contains the same number of "field" tags
                 int size_min = 1E3;
                 int size_max = 0;
                 for (const auto &match : m_matches)
@@ -129,7 +137,6 @@ namespace Nektar
                     //NEKERROR(ErrorUtil::ewarning, "Number of valid field tags "
                     //    "not the same for all match tags");
                 }
-
             }
             else
             {
@@ -148,11 +155,11 @@ namespace Nektar
     {
         boost::ignore_unused(pStdout, pStderr);
 
-        boost::smatch matches;
-
         // Check standard output
         for (std::string line; getline(pStdout, line); )
         {
+            boost::smatch matches;
+
             // Check if regex match against given output
             if (boost::regex_search(line, matches, m_regexWarning))
             {
@@ -192,11 +199,82 @@ namespace Nektar
             }
         }
 
-        // TODO: Check error output??
+        //
+        // TODO: We need to check stderr too
+        //
 
         // If we arrived here, the test passed
         return true;
 
+    }
+
+    /**
+     * @brief Test if the output contains the warning message.
+     *        If so, generate the .tst file
+     */
+    void MetricNoWarning::v_Generate(std::istream& pStdout, std::istream& pStderr)
+    {
+        boost::ignore_unused(pStderr);
+
+        // Check standard output
+        for (std::string line; getline(pStdout, line); )
+        {
+            boost::smatch matches;
+
+            // Check if regex match against given output
+            if (boost::regex_search(line, matches, m_regexWarning))
+            {
+                // If regex groups were not found, continue
+                if(matches.size() == 1)
+                {
+                    continue;
+                }
+                
+                // Add vector with regex groups
+                m_matches.push_back(std::vector<std::string>());
+
+                // Save all regex groups
+                for (int i=1; i<matches.size(); ++i)
+                {
+                    // Construct string object that contains submatch
+                    std::string submatch(matches[i].first,matches[i].second);
+
+                    m_matches.back().push_back(submatch);
+                }
+            }
+        }
+
+        // Remove matches if they already exist.
+        TiXmlElement *matches = m_metric->FirstChildElement("matches");
+        if (matches && !m_metric->RemoveChild(matches))
+        {
+            std::cout << "tmp" << std::endl;
+        }
+
+        // Add new "matches" tag
+        matches = new TiXmlElement("matches");
+        m_metric->LinkEndChild(matches);
+
+        // Add all "match" tags under "matches" tag
+        for (const auto &match_it : m_matches)
+        //for (int i = 0; i < m_matches.size(); ++i)
+        {
+            TiXmlElement *match = new TiXmlElement("match");
+            matches->LinkEndChild(match);
+
+            int j = 0;
+            for(const auto &field_it : match_it)
+            //for (int j = 0; j < m_matches[i].size(); ++j)
+            {
+                TiXmlElement *field = new TiXmlElement("field");
+                match->LinkEndChild(field);
+
+                field->SetAttribute(
+                    "id", boost::lexical_cast<std::string>(j++));
+
+                field->LinkEndChild(new TiXmlText(field_it));
+            }
+        }
     }
 
 } // namespace Nektar

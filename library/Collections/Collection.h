@@ -84,9 +84,17 @@ class Collection
 
         inline bool HasOperator(const OperatorType &op);
 
+        inline OperatorSharedPtr GetOpSharedPtr(const OperatorType &op)
+        {
+            return m_ops[op];
+        }
+
+        inline CoalescedGeomDataSharedPtr GetGeomSharedPtr()
+        {
+            return m_geomData;
+        }
+
     protected:
-        StdRegions::StdExpansionSharedPtr                             m_stdExp;
-        std::vector<SpatialDomains::GeometrySharedPtr>                m_geom;
         std::unordered_map<OperatorType, OperatorSharedPtr, EnumHash> m_ops;
         CoalescedGeomDataSharedPtr                                    m_geomData;
 

@@ -36,6 +36,8 @@
 
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 
+#include <LibUtilities/BasicUtils/Timer.h>
+
 using namespace std;
 
 namespace Nektar
@@ -171,9 +173,6 @@ namespace Nektar
         }
 
         SetBoundaryConditionsBwdWeight();
-
-        // string advName;
-        // m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
     }
 
     void CompressibleFlowSystem::InitialiseNonlinSysSolver()
@@ -404,9 +403,12 @@ namespace Nektar
             }
         }
 
-        //Oringinal CompressibleFlowSolver
         // Calculate advection
-        DoAdvection(inarray, outarray, time, Fwd, Bwd);
+        LibUtilities::Timer timer;
+        timer.Start();
+                DoAdvection(inarray, outarray, time, Fwd, Bwd);
+        timer.Stop();
+        timer.AccumulateRegion("DoAdvection");
 
         // Negate results
         for (int i = 0; i < nvariables; ++i)
@@ -415,7 +417,10 @@ namespace Nektar
         }
 
         // Add diffusion terms
+timer.Start();
         DoDiffusion(inarray, outarray, Fwd, Bwd);
+timer.Stop();
+timer.AccumulateRegion("DoDiffusion");
 
         // Add forcing terms
         for (auto &x : m_forcing)
@@ -2876,7 +2881,7 @@ namespace Nektar
         }
     }
     /**
-     * @brief Set up a weight on physical boundaries for boundary condition 
+     * @brief Set up a weight on physical boundaries for boundary condition
      * applications
      */
     void CompressibleFlowSystem::SetBoundaryConditionsBwdWeight()

@@ -5,6 +5,12 @@ RelWithDebInfo MinSizeRel.")
 # Toggleable build type
 SET_PROPERTY(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug;Release;RelWithDebInfo;MinSizeRel")
 
+# Find the modules included with Nektar
+SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+
+# Simd
+INCLUDE(NektarSIMD)
+
 PROJECT(Nektar++ C CXX)
 
 CMAKE_POLICY(SET CMP0022 NEW)
@@ -50,8 +56,6 @@ INCLUDE(CMakeParseArguments)
 # Enable CTest.
 ENABLE_TESTING()
 
-# Find the modules included with Nektar
-SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 # Set default install path if not provided on the command-line
 IF (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -161,7 +165,6 @@ OPTION(NEKTAR_BUILD_SOLVERS    "Build example solvers."         ON)
 OPTION(NEKTAR_BUILD_UTILITIES  "Build utilities."               ON)
 OPTION(NEKTAR_BUILD_UNIT_TESTS "Build unit tests."              ON)
 OPTION(NEKTAR_BUILD_TESTS      "Build regression tests."        ON)
-OPTION(NEKTAR_BUILD_TIMINGS    "Build benchmark timing codes."  OFF)
 OPTION(NEKTAR_BUILD_PYTHON     "Build Nektar++ Python bindings" OFF)
 
 OPTION(NEKTAR_TEST_ALL "Include full set of regression tests to this build." OFF)
@@ -176,6 +179,10 @@ IF (NOT WIN32)
     OPTION(NEKTAR_USE_MESHGEN "Build mesh generation utilities." OFF)
 ENDIF()
 
+# Use likwid for timing
+OPTION(NEKTAR_USE_LIKWID "Enable Likwid." OFF)
+MARK_AS_ADVANCED(NEKTAR_USE_LIKWID)
+
 # Build options
 OPTION(NEKTAR_FULL_DEBUG "Enable Full Debugging." OFF)
 MARK_AS_ADVANCED(NEKTAR_FULL_DEBUG)
@@ -189,6 +196,12 @@ ENDIF (${CMAKE_COMPILER_IS_GNUCXX})
 OPTION(NEKTAR_USE_MEMORY_POOLS
     "Use memory pools to accelerate memory allocation." ON)
 MARK_AS_ADVANCED(NEKTAR_USE_MEMORY_POOLS)
+
+# Memory alignement
+CMAKE_DEPENDENT_OPTION(
+    NEKTAR_USE_ALIGNED_MEM "Force memory alignement to SIMD width" OFF
+    "NOT NEKTAR_USE_MEMORY_POOLS" OFF)
+MARK_AS_ADVANCED(NEKTAR_USE_ALIGNED_MEM)
 
 # Thread safety
 OPTION(NEKTAR_USE_THREAD_SAFETY
@@ -246,6 +259,7 @@ INCLUDE (ThirdPartyCCM)
 INCLUDE (ThirdPartyBlasLapack)
 INCLUDE (ThirdPartyCwipi)
 INCLUDE (FindCFI)
+INCLUDE (FindLikwid)
 
 INCLUDE (Doxygen)
 
@@ -258,6 +272,10 @@ IF( NEKTAR_USE_MEMORY_POOLS )
 ELSE( NEKTAR_USE_MEMORY_POOLS )
     REMOVE_DEFINITIONS(-DNEKTAR_MEMORY_POOL_ENABLED)
 ENDIF( NEKTAR_USE_MEMORY_POOLS )
+
+IF (NEKTAR_USE_ALIGNED_MEM)
+    ADD_DEFINITIONS(-DNEKTAR_USE_ALIGNED_MEM)
+ENDIF()
 
 INCLUDE (ThirdPartyPETSc)
 
@@ -340,5 +358,14 @@ INSTALL(DIRECTORY ${TPDIST}/include/
     COMPONENT dev
     OPTIONAL
     )
+
+# Install ThirdParty libraries into ${NEKTAR_LIB_DIR}. These are shipped with
+# the LibUtilities library.
+IF (EXISTS ${TPDIST}/lib)
+    INSTALL(DIRECTORY ${TPDIST}/lib/
+        DESTINATION ${NEKTAR_LIB_DIR}
+        COMPONENT libutilities
+        )
+ENDIF()
 
 ADD_SUBDIRECTORY(docs)

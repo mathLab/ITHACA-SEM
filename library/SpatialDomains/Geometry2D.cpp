@@ -67,7 +67,7 @@ void Geometry2D::NewtonIterationForLocCoord(
     const Array<OneD, const NekDouble> &ptsx,
     const Array<OneD, const NekDouble> &ptsy,
     Array<OneD, NekDouble> &Lcoords,
-    NekDouble &resid)
+    NekDouble &dist)
 {
     // Maximum iterations for convergence
     const int MaxIterations = 51;
@@ -103,7 +103,7 @@ void Geometry2D::NewtonIterationForLocCoord(
     Array<OneD, NekDouble> eta(2);
 
     F1 = F2 = 2000; // Starting value of Function
-
+    NekDouble resid;
     while (cnt++ < MaxIterations)
     {
         //  evaluate lagrange interpolant at Lcoords
@@ -142,13 +142,37 @@ void Geometry2D::NewtonIterationForLocCoord(
             Lcoords[1] +
             (-dery_1 * (coords[0] - xmap) + derx_1 * (coords[1] - ymap)) / jac;
 
+        if( !(std::isfinite(Lcoords[0]) && std::isfinite(Lcoords[1])) )
+        {
+            dist = 1e16;
+            std::ostringstream ss;
+            ss << "nan or inf found in NewtonIterationForLocCoord in element "
+               << GetGlobalID();
+            WARNINGL1(false, ss.str());
+            return;
+        }
         if (fabs(Lcoords[0]) > LcoordDiv || fabs(Lcoords[1]) > LcoordDiv)
         {
             break; // lcoords have diverged so stop iteration
         }
     }
 
-    resid = sqrt(F1 * F1 + F2 * F2);
+    m_xmap->LocCoordToLocCollapsed(Lcoords, eta);
+    if(ClampLocCoords(eta, 0.))
+    {
+        I[0] = m_xmap->GetBasis(0)->GetI(eta);
+        I[1] = m_xmap->GetBasis(1)->GetI(eta + 1);
+        // calculate the global point corresponding to Lcoords
+        xmap = m_xmap->PhysEvaluate(I, ptsx);
+        ymap = m_xmap->PhysEvaluate(I, ptsy);
+        F1 = coords[0] - xmap;
+        F2 = coords[1] - ymap;
+        dist = sqrt(F1 * F1 + F2 * F2);
+    }
+    else
+    {
+        dist = 0.;
+    }
 
     if (cnt >= MaxIterations)
     {
@@ -173,6 +197,126 @@ void Geometry2D::NewtonIterationForLocCoord(
             WARNINGL1(cnt < MaxIterations, ss.str());
         }
     }
+}
+
+NekDouble Geometry2D::v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
+                                   Array<OneD, NekDouble> &Lcoords)
+{
+    NekDouble dist = 0.;
+    if (GetMetricInfo()->GetGtype() == eRegular)
+    {
+        int v2;
+        if(m_shapeType == LibUtilities::eTriangle)
+        {
+            v2 = 2;
+        }
+        else if(m_shapeType == LibUtilities::eQuadrilateral)
+        {
+            v2 = 3;
+        }
+        else
+        {
+            v2 = 2;
+            ASSERTL0(false, "unrecognized 2D element type");
+        }
+
+        NekDouble coords2 = (m_coordim == 3) ? coords[2] : 0.0;
+        PointGeom r(m_coordim, 0, coords[0], coords[1], coords2);
+
+        // Edges
+        PointGeom er0, e10, e20;
+        PointGeom norm, orth1, orth2;
+        er0.Sub(r, *m_verts[0]);
+        e10.Sub(*m_verts[1], *m_verts[0]);
+        e20.Sub(*m_verts[v2], *m_verts[0]);
+
+        // Obtain normal to element plane
+        norm.Mult(e10, e20);
+        // Obtain vector which are proportional to normal of e10 and e20.
+        orth1.Mult(norm, e10);
+        orth2.Mult(norm, e20);
+
+        // Calculate length using L/|dv1| = (x-v0).n1/(dv1.n1) for coordiante 1
+        // Then rescale to [-1,1].
+        Lcoords[0] = er0.dot(orth2) / e10.dot(orth2);
+        Lcoords[0] = 2. * Lcoords[0] - 1.;
+        Lcoords[1] = er0.dot(orth1) / e20.dot(orth1);
+        Lcoords[1] = 2. * Lcoords[1] - 1.;
+
+        // Set distance
+        Array<OneD, NekDouble> eta(2, 0.);
+        m_xmap->LocCoordToLocCollapsed(Lcoords, eta);
+        if(ClampLocCoords(eta, 0.))
+        {
+            Array<OneD, NekDouble> xi(2, 0.);
+            m_xmap->LocCollapsedToLocCoord(eta, xi);
+            xi[0] = (xi[0] + 1.) * 0.5; //re-scaled to ratio [0, 1]
+            xi[1] = (xi[1] + 1.) * 0.5;
+            for (int i = 0; i < m_coordim; ++i)
+            {
+                NekDouble tmp = xi[0]*e10[i] + xi[1]*e20[i] - er0[i];
+                dist += tmp * tmp;
+            }
+            dist = sqrt(dist);
+        }
+    }
+    else
+    {
+        v_FillGeom();
+        // Determine nearest point of coords  to values in m_xmap
+        int npts = m_xmap->GetTotPoints();
+        Array<OneD, NekDouble> ptsx(npts), ptsy(npts);
+        Array<OneD, NekDouble> tmpx(npts), tmpy(npts);
+
+        // Determine 3D manifold orientation
+        int idx = 0, idy = 1;
+        if(m_coordim == 3)
+        {
+            PointGeom e01, e21, norm;
+            e01.Sub(*m_verts[0], *m_verts[1]);
+            e21.Sub(*m_verts[2], *m_verts[1]);
+            norm.Mult(e01, e21);
+            int tmpi = 0;
+            double tmp = std::fabs(norm[0]);
+            if(tmp < fabs(norm[1]))
+            {
+                tmp = fabs(norm[1]);
+                tmpi = 1;
+            }
+            if(tmp < fabs(norm[2]))
+            {
+                tmpi = 2;
+            }
+            idx = (tmpi + 1) % 3;
+            idy = (tmpi + 2) % 3;
+        }
+        Array<OneD, NekDouble> tmpcoords(2);
+        tmpcoords[0] = coords[idx];
+        tmpcoords[1] = coords[idy];
+
+        m_xmap->BwdTrans(m_coeffs[idx], ptsx);
+        m_xmap->BwdTrans(m_coeffs[idy], ptsy);
+
+        const Array<OneD, const NekDouble> za = m_xmap->GetPoints(0);
+        const Array<OneD, const NekDouble> zb = m_xmap->GetPoints(1);
+
+        // guess the first local coords based on nearest point
+        Vmath::Sadd(npts, -tmpcoords[0], ptsx, 1, tmpx, 1);
+        Vmath::Sadd(npts, -tmpcoords[1], ptsy, 1, tmpy, 1);
+        Vmath::Vmul(npts, tmpx, 1, tmpx, 1, tmpx, 1);
+        Vmath::Vvtvp(npts, tmpy, 1, tmpy, 1, tmpx, 1, tmpx, 1);
+
+        int min_i = Vmath::Imin(npts, tmpx, 1);
+
+        Array<OneD, NekDouble> eta(2, 0.);
+        eta[0] = za[min_i % za.size()];
+        eta[1] = zb[min_i / za.size()];
+        m_xmap->LocCollapsedToLocCoord(eta, Lcoords);
+
+        // Perform newton iteration to find local coordinates
+        NewtonIterationForLocCoord(tmpcoords, ptsx, ptsy, Lcoords, dist);
+    }
+    return dist;
 }
 
 int Geometry2D::v_GetNumVerts() const

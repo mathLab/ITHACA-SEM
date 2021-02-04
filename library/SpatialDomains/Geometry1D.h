@@ -62,6 +62,9 @@ public:
 
 protected:
     virtual int v_GetShapeDim() const;
+    virtual NekDouble v_GetLocCoords(
+        const Array<OneD, const NekDouble> &coords,
+        Array<OneD, NekDouble> &Lcoords);
 };
 
 }

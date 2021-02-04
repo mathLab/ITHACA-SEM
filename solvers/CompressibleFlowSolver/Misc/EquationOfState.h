@@ -100,6 +100,9 @@ protected:
     /// Constructor
     EquationOfState(const LibUtilities::SessionReaderSharedPtr &pSession);
 
+    /// Programmatic Constructor
+    EquationOfState(const NekDouble &gamma, const NekDouble &gasConstant);
+
     virtual NekDouble v_GetTemperature(const NekDouble &rho,
                                        const NekDouble &e) = 0;
 

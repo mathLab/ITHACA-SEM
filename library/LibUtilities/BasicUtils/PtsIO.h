@@ -48,6 +48,8 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/PtsField.h>
 #include <LibUtilities/BasicUtils/FieldIOXml.h>
+#include <LibUtilities/BasicUtils/DomainRange.h>
+
 
 namespace Nektar
 {
@@ -70,20 +72,23 @@ public:
     LIB_UTILITIES_EXPORT void Import(
         const std::string &inFile,
         PtsFieldSharedPtr &ptsField,
-        FieldMetaDataMap &fieldmetadatamap = NullFieldMetaDataMap);
+        FieldMetaDataMap &fieldmetadatamap = NullFieldMetaDataMap,
+        DomainRangeShPtr &Range = NullDomainRangeShPtr);
 
     LIB_UTILITIES_EXPORT void Write(const std::string &outFile,
                                     const PtsFieldSharedPtr &ptsField,
                                     const bool backup = false);
 
     LIB_UTILITIES_EXPORT void ImportFieldData(const std::string inFile,
-                                              PtsFieldSharedPtr &ptsField);
+                                              PtsFieldSharedPtr &ptsField,
+                                              DomainRangeShPtr &Range = NullDomainRangeShPtr);
 
 protected:
 
     LIB_UTILITIES_EXPORT virtual void v_ImportFieldData(
         const std::string inFile,
-        PtsFieldSharedPtr &ptsField);
+        PtsFieldSharedPtr &ptsField,
+        DomainRangeShPtr &Range = NullDomainRangeShPtr);
 
     LIB_UTILITIES_EXPORT void SetUpFieldMetaData(const std::string outname);
 

@@ -1009,6 +1009,16 @@ namespace Nektar
                 v_LocCoordToLocCollapsed(xi,eta);
             }
 
+            /**
+             * \brief Convert local collapsed coordinates \a eta into local
+             * cartesian coordinate \a xi
+             **/
+            void LocCollapsedToLocCoord(const Array<OneD, const NekDouble>& eta,
+                                        Array<OneD, NekDouble>& xi)
+            {
+                v_LocCollapsedToLocCoord(eta,xi);
+            }
+
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients
               (const std::vector<unsigned int>  &nummodes, int &modes_offset);
 
@@ -1589,6 +1599,9 @@ namespace Nektar
                                         const Array<OneD, const NekDouble>& xi,
                                         Array<OneD, NekDouble>& eta);
 
+            STD_REGIONS_EXPORT virtual void v_LocCollapsedToLocCoord(
+                                        const Array<OneD, const NekDouble>& eta,
+                                        Array<OneD, NekDouble>& xi);
 
             STD_REGIONS_EXPORT virtual void v_FillMode(const int mode,
                                                   Array<OneD, NekDouble> &outarray);

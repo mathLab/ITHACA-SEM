@@ -819,7 +819,7 @@ namespace Nektar
     static Array<OneD, int> NullInt1DArray;
     static Array<OneD, NekDouble> NullNekDouble1DArray;
     static Array<OneD, Array<OneD, NekDouble> > NullNekDoubleArrayofArray;
-    static Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
+    static Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
             NullNekDoubleArrayofArrayofArray;
 
     template<class T>

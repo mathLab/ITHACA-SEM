@@ -2,9 +2,9 @@
 <test>
     <description>NS, Couette flow, mixed bcs, WeakDG advection and IP diffusion, Implicit, Adiabatic wall</description>
     <executable>CompressibleFlowSolver</executable>
-    <parameters>Couette_WeakDG_IP_MODIFIED_IM_Adiabatic.xml</parameters>
+    <parameters>Couette_WeakDG_IP_MODIFIED_Adiabatic.xml</parameters>
     <files>
-        <file description="Session File">Couette_WeakDG_IP_MODIFIED_IM_Adiabatic.xml</file>
+        <file description="Session File">Couette_WeakDG_IP_MODIFIED_Adiabatic.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

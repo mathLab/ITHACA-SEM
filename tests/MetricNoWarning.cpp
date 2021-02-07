@@ -34,7 +34,6 @@
 
 #include <MetricNoWarning.h>
 
-//#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <boost/core/ignore_unused.hpp>
 #include <boost/lexical_cast.hpp>
 #include <algorithm>
@@ -57,15 +56,8 @@ namespace Nektar
         {
             // Check that user provided a regex for this xml tag
             const char *tmp = regex->GetText();
-            if (tmp)
-            {
-                m_regexWarning = tmp;
-            }
-            else
-            {
-                std::cout << "tmp" << std::endl;
-                //NEKERROR(ErrorUtil::ewarning, "No text found in regex tag");
-            }
+            ASSERTL0(tmp, "No text found in regex tag");
+            m_regexWarning = tmp;
         }
 
         // If we generate from output, we don't need to parse the xml file
@@ -99,51 +91,29 @@ namespace Nektar
                         // Extract field text (i.e. regex group)
                         const char *tmp = field->GetText();
                         // Check that user provided a text
-                        if (tmp)
-                        {
-                            m_matches.back().push_back(tmp);
-                        }
-                        else
-                        {
-                            std::cout << "tmp" << std::endl;
-                            //NEKERROR(ErrorUtil::ewarning, "No text that "
-                            //    "specifies regex group found in field tag");
-                        }
-                        
+                        ASSERTL0(tmp, "No text that specifies regex group "
+                            "found in field tag");
+                        m_matches.back().push_back(tmp);
                     }
             }
 
             // Check if user provided any match tags
-            if (m_matches.size())
+            ASSERTL0(m_matches.size(), "No match tag that specifies "
+                "regex groups was found inside matches tag.");
+
+            // Check that all set of regex groups are the same size,
+            // i.e. contains the same number of "field" tags
+            int size_min = 1E3;
+            int size_max = 0;
+            for (const auto &match : m_matches)
             {
-                // Check that all set of regex groups are the same size,
-                // i.e. contains the same number of "field" tags
-                int size_min = 1E3;
-                int size_max = 0;
-                for (const auto &match : m_matches)
-                {
-                    size_min = std::min((int) match.size(), size_min);
-                    size_max = std::max((int) match.size(), size_max);
-                }
-                if (size_min == 0)
-                {
-                    std::cout << "tmp" << std::endl;
-                    //NEKERROR(ErrorUtil::ewarning, "No valid field tags found "
-                    //    "for one of the match tags");
-                }
-                if (size_min != size_max)
-                {
-                    std::cout << "tmp" << std::endl;
-                    //NEKERROR(ErrorUtil::ewarning, "Number of valid field tags "
-                    //    "not the same for all match tags");
-                }
+                size_min = std::min((int) match.size(), size_min);
+                size_max = std::max((int) match.size(), size_max);
             }
-            else
-            {
-                std::cout << "tmp" << std::endl;
-                //NEKERROR(ErrorUtil::ewarning, "No match tag that specifies "
-                //    "regex groups was found inside matches tag.");
-            }
+            ASSERTL0(size_min!=0, "No valid field tags found "
+                "for one of the match tags");
+            ASSERTL0(size_min == size_max, "Number of valid field tags "
+                "not the same for all match tags");
         }
     }
 
@@ -155,8 +125,11 @@ namespace Nektar
     {
         boost::ignore_unused(pStdout, pStderr);
 
-        // Check standard output
-        for (std::string line; getline(pStdout, line); )
+        // Loop over both standard output and error output
+        for (
+            std::string line;
+            getline(pStdout, line)||getline(pStderr, line);
+            )
         {
             boost::smatch matches;
 
@@ -208,10 +181,6 @@ namespace Nektar
             }
         }
 
-        //
-        // TODO: We need to check stderr too
-        //
-
         // If we arrived here, the test passed
         return true;
 
@@ -225,8 +194,11 @@ namespace Nektar
     {
         boost::ignore_unused(pStderr);
 
-        // Check standard output
-        for (std::string line; getline(pStdout, line); )
+        // Check both standard output and error output
+        for (
+            std::string line;
+            getline(pStdout, line)||getline(pStderr, line);
+            )
         {
             boost::smatch matches;
 
@@ -255,9 +227,10 @@ namespace Nektar
 
         // Remove matches if they already exist.
         TiXmlElement *matches = m_metric->FirstChildElement("matches");
-        if (matches && !m_metric->RemoveChild(matches))
+        if (matches)
         {
-            std::cout << "tmp" << std::endl;
+            ASSERTL0(m_metric->RemoveChild(matches), "Couln't remove mathces "
+                "from metric")
         }
 
         // Add new "matches" tag

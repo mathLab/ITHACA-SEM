@@ -1537,7 +1537,6 @@ timer.AccumulateRegion("DoDiffusion");
 
                     tmpMatinn       = ElmtJac[ntrace][npnt];
                     tmpMatinnData   = tmpMatinn->GetPtr(); 
-                    // tmpMatout       = BJac->GetBlock(pntoffset,pntoffset);
                     tmpMatoutData   = BJac->GetBlock(pntoffset,pntoffset)->GetPtr(); 
                     Vmath::Smul(nConvectiveFields*nConvectiveFields,weight,
                         tmpMatinnData,1,tmpMatinnData,1);

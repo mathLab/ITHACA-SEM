@@ -194,15 +194,10 @@ namespace Nektar
 
         PreconditionerType                  m_PrecMatStorage;
         NekDouble                           m_BndEvaluateTime;
-        // NekDouble                           m_TimeIntegLambda;
         TensorOfArray2D<NekDouble>          m_solutionPhys;
 
         NekDouble                           m_JacobiFreeEps;
-        // NekDouble                           m_inArrayNorm = -1.0;
         NekDouble                           m_NewtonAbsoluteIteTol;
-        // int                                 m_TotNewtonIts = 0;
-        // int                                 m_TotImpStages = 0;
-        // Array<OneD, NekDouble>              m_magnitdEstimat;
 
         /// cfl number for local time step(notice only for jfnk other see m_cflSafetyFactor)
         NekDouble                                   m_cflLocTimestep = -1.0;
@@ -210,7 +205,6 @@ namespace Nektar
         NekDouble                                   m_SORRelaxParam;
         /// two strategies: time accurate or not.
         int                                        m_JFNKTimeAccurate;
-        // int                                         m_PrcdMatFreezNumb;
         /// preconditioning steps
         int                                         m_JFNKPrecondStep;
 

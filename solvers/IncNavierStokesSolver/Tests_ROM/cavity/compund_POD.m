@@ -1,3 +1,6 @@
+
+% compute a compund POD from several trajectories which already underwent a POD (because they had so many timesteps)
+
 x_28 = load('28_single/VCS_fields_TT_pod_x.txt');
 x_30 = load('30_single/VCS_fields_TT_pod_x.txt');
 %x_32 = load('32_single/VCS_fields_TT_pod_x.txt');

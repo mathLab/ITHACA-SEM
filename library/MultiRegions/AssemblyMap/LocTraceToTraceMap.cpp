@@ -602,7 +602,8 @@ void LocTraceToTraceMap::CalcLocTracePhysToTraceIDMap(
             CalcLocTracePhysToTraceIDMap_3D(tracelist);
             break;
         default:
-            ASSERTL0(false,"CalcLocTracePhysToTraceIDMap not coded");
+            NEKERROR(ErrorUtil::efatal, 
+                "CalcLocTracePhysToTraceIDMap not coded");
     }
 }
 
@@ -862,10 +863,8 @@ void LocTraceToTraceMap::FindElmtNeighbors(
         {
             ntmp0   =   LRAdjExpid[0][nt];
             ntmp1   =   LRAdjExpid[1][nt];
-            if(ntmp0==ntmp1)
-            {
-                ASSERTL0(false, " ntmp0==ntmp1, trace inside a element?? ");
-            }
+            
+            ASSERTL0(ntmp0!=ntmp1, " ntmp0==ntmp1, trace inside a element?? ");
 
             std::set< std::pair<int, int> >::iterator it = neighborSet.begin();
             neighborSet.insert(it, std::make_pair(ntmp0,ntmp1)); 
@@ -1023,7 +1022,7 @@ void LocTraceToTraceMap::InterpLocTracesToTrace(
         InterpLocFacesToTrace(dir,loctraces,traces);
         break;
     default:
-        ASSERTL0(false,"Not set up");
+        NEKERROR(ErrorUtil::efatal, "Not set up");
         break;
     }
 }
@@ -1106,7 +1105,7 @@ void LocTraceToTraceMap::InterpLocEdgesToTrace(
                 }
                 break;
                 default:
-                    ASSERTL0(false,
+                    NEKERROR(ErrorUtil::efatal,
                              "Invalid interpolation type for 2D elements");
                     break;
             }
@@ -1212,7 +1211,7 @@ void LocTraceToTraceMap::RightIPTWLocEdgesToTraceInterpMat(
                 }
                 break;
                 default:
-                    ASSERTL0(false,
+                    NEKERROR(ErrorUtil::efatal,
                              "Invalid interpolation type for 2D elements");
                     break;
             }

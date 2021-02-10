@@ -408,8 +408,8 @@ namespace Nektar
                             }
                             else
                             {
-                                ASSERTL0(false,"dynamic cast to a proper "
-                                         "face geometry failed");
+                                NEKERROR(ErrorUtil::efatal,"dynamic cast to a "
+                                    "proper face geometry failed");
                             }
                         }
                         // Assign next id
@@ -498,7 +498,7 @@ namespace Nektar
                             }
                             else
                             {
-                                ASSERTL0(false,
+                                NEKERROR(ErrorUtil::efatal,
                                          "inappropriate number of points/modes (max"
                                          "num of points is not set with max order)");
                             }
@@ -566,8 +566,8 @@ namespace Nektar
                             }
                             else
                             {
-                                ASSERTL0(false,
-                                         "inappqropriate number of points/modes (max"
+                                NEKERROR(ErrorUtil::efatal,
+                                         "inappropriate number of points/modes (max"
                                          "num of points is not set with max order)");
                             }
                         }
@@ -691,7 +691,7 @@ namespace Nektar
                         }
                         else
                         {
-                            ASSERTL0(false,
+                            NEKERROR(ErrorUtil::efatal,
                                      "inappropriate number of points/modes (max "
                                      "num of points is not set with max order)");
                         }
@@ -743,7 +743,7 @@ namespace Nektar
                         }
                         else
                         {
-                            ASSERTL0(false,
+                            NEKERROR(ErrorUtil::efatal,
                                      "inappropriate number of points/modes (max "
                                      "num of points is not set with max order)");
                         }
@@ -918,7 +918,7 @@ namespace Nektar
                             m_basisKeyVector[0].GetBasisType() ==
                             LibUtilities::eGLL_Lagrange)
                         {
-                            ASSERTL0(false,"This method needs sorting");
+                            NEKERROR(ErrorUtil::efatal,"This method needs sorting");
                             TriNb = LibUtilities::eNodalTriElec;
 
                             exp = MemoryManager<LocalRegions::NodalTriExp>
@@ -946,7 +946,8 @@ namespace Nektar
                     }
                     else
                     {
-                        ASSERTL0(false,"dynamic cast to a Geom (possibly 3D) failed");
+                        NEKERROR(ErrorUtil::efatal,
+                            "dynamic cast to a Geom (possibly 3D) failed");
                     }
 
                     exp->SetElmtId(elmtid++);
@@ -1058,7 +1059,8 @@ namespace Nektar
                     }
                     else
                     {
-                        ASSERTL0(false,"dynamic cast to a 1D Geom failed");
+                        NEKERROR(ErrorUtil::efatal,
+                            "dynamic cast to a 1D Geom failed");
                     }
                 }
                 break;
@@ -1101,7 +1103,8 @@ namespace Nektar
                     }
                     else
                     {
-                        ASSERTL0(false,"dynamic cast to a 2D Geom failed");
+                        NEKERROR(ErrorUtil::efatal,
+                            "dynamic cast to a 2D Geom failed");
                     }
                 }
                 break;
@@ -1122,8 +1125,9 @@ namespace Nektar
                         if(Ba.GetBasisType() == LibUtilities::eGLL_Lagrange ||
                            Ba.GetBasisType() == LibUtilities::eGauss_Lagrange)
                         {
-                            ASSERTL0(false,"LocalRegions::NodalTetExp is not "
-                                     "implemented yet");
+                            NEKERROR(ErrorUtil::efatal,
+                                "LocalRegions::NodalTetExp is not implemented "
+                                "yet");
                         }
                         else
                         {
@@ -1153,12 +1157,14 @@ namespace Nektar
                     }
                     else
                     {
-                        ASSERTL0(false,"dynamic cast to a Geom failed");
+                        NEKERROR(ErrorUtil::efatal,
+                            "dynamic cast to a Geom failed");
                     }
                 }
                 break;
                 default:
-                    ASSERTL0(false,"Dimension of basis key is greater than 3");
+                    NEKERROR(ErrorUtil::efatal,
+                        "Dimension of basis key is greater than 3");
                 }
 
                 // Assign next id
@@ -1446,7 +1452,7 @@ namespace Nektar
                 }
                 break;
             default:
-                ASSERTL0(false,"Dimension of inarray not correct");
+                NEKERROR(ErrorUtil::efatal,"Dimension of inarray not correct");
                 break;
             }
 
@@ -1910,8 +1916,8 @@ namespace Nektar
             default:
                 {
                     NEKERROR(ErrorUtil::efatal,
-                             "Global Matrix creation not defined for this type "
-                             "of matrix");
+                             "Global Matrix creation not defined for this "
+                             "type of matrix");
                 }
             }
 
@@ -2058,8 +2064,8 @@ namespace Nektar
             default:
                 {
                     NEKERROR(ErrorUtil::efatal,
-                             "Global Matrix creation not defined for this type "
-                             "of matrix");
+                             "Global Matrix creation not defined for this "
+                             "type of matrix");
                 }
             }
 
@@ -2294,7 +2300,7 @@ namespace Nektar
 
             if (vType >= eSIZE_GlobalSysSolnType)
             {
-                ASSERTL0(false,"Matrix solution type not defined");
+                NEKERROR(ErrorUtil::efatal,"Matrix solution type not defined");
             }
             std::string vSolnType = MultiRegions::GlobalSysSolnTypeMap[vType];
 
@@ -2313,7 +2319,7 @@ namespace Nektar
 
             if (vType >= eSIZE_GlobalSysSolnType)
             {
-                ASSERTL0(false,"Matrix solution type not defined");
+                NEKERROR(ErrorUtil::efatal,"Matrix solution type not defined");
             }
             std::string vSolnType = MultiRegions::GlobalSysSolnTypeMap[vType];
 
@@ -2677,7 +2683,8 @@ namespace Nektar
                     outfile << ", ET=BRICK" << std::endl;
                     break;
                 default:
-                    ASSERTL0(false,"Not set up for this type of output");
+                    NEKERROR(ErrorUtil::efatal,
+                        "Not set up for this type of output");
                     break;
             }
 
@@ -2764,7 +2771,7 @@ namespace Nektar
             }
             else
             {
-                ASSERTL0(false,"Not set up for this dimension");
+                NEKERROR(ErrorUtil::efatal,"Not set up for this dimension");
             }
         }
 
@@ -3610,7 +3617,7 @@ namespace Nektar
         const Array<OneD,const std::shared_ptr<ExpList> >
                                         &ExpList::v_GetBndCondExpansions(void)
         {
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                      "This method is not defined or valid for this class type");
             static Array<OneD,const std::shared_ptr<ExpList> > result;
             return result;
@@ -3690,7 +3697,7 @@ namespace Nektar
             }
             break;
             default:
-                ASSERTL0(false,
+                NEKERROR(ErrorUtil::efatal,
                          "This method is not defined or valid for this class type");
                 break;
             }
@@ -4044,7 +4051,7 @@ namespace Nektar
             break;
             default:
             {
-                ASSERTL0(false,
+                NEKERROR(ErrorUtil::efatal,
                          "This method is not defined or valid for this class type");
             }
             }
@@ -4265,7 +4272,7 @@ namespace Nektar
             Array<OneD,       NekDouble>        &field)
         {
             boost::ignore_unused(field, Fwd, Bwd);
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                 "v_AddTraceQuadPhysToField is not defined for this class type");
         }
 
@@ -4275,7 +4282,7 @@ namespace Nektar
                 Array<OneD,       NekDouble>        &field)
         {
             boost::ignore_unused(field, Fwd, Bwd);
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                 "v_AddTraceQuadPhysToOffDiag is not defined for this class");
         }
 
@@ -4286,14 +4293,14 @@ namespace Nektar
             Array<OneD,       NekDouble>        &locTraceBwd)
         {
             boost::ignore_unused(Fwd,Bwd,locTraceFwd,locTraceBwd);
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                      "v_GetLocTraceFromTracePts is not defined for this class");
         }
 
         const Array<OneD,const NekDouble>
                 &ExpList::v_GetBndCondBwdWeight()
         {
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                 "v_GetBndCondBwdWeight is not defined for this class type");
             static Array<OneD, NekDouble> tmp;
             return tmp;
@@ -4304,7 +4311,7 @@ namespace Nektar
             const NekDouble value)
         {
             boost::ignore_unused(index, value);
-            ASSERTL0(false,
+            NEKERROR(ErrorUtil::efatal,
                     "v_setBndCondBwdWeight is not defined for this class type");
         }
 
@@ -4479,7 +4486,7 @@ namespace Nektar
                 }
                 break;
                 default:
-                    ASSERTL0(false,"Dimension not supported");
+                    NEKERROR(ErrorUtil::efatal,"Dimension not supported");
                     break;
             }
         }
@@ -4839,7 +4846,7 @@ namespace Nektar
             Array<OneD,       NekDouble> &weightjmp)
         {
             boost::ignore_unused(weightave, weightjmp);
-            ASSERTL0(false, "v_FillBwdWithBwdWeight not defined");
+            NEKERROR(ErrorUtil::efatal, "v_FillBwdWithBwdWeight not defined");
         }
 
         void ExpList::v_PeriodicBwdCopy(
@@ -4847,7 +4854,7 @@ namespace Nektar
                       Array<OneD,       NekDouble> &Bwd)
         {
             boost::ignore_unused(Fwd, Bwd);
-            ASSERTL0(false, "v_PeriodicBwdCopy not defined");
+            NEKERROR(ErrorUtil::efatal, "v_PeriodicBwdCopy not defined");
         }
 
         /**
@@ -5157,7 +5164,7 @@ namespace Nektar
             break;
             default:
             {
-                ASSERTL0(false,"This expansion is not set");
+                NEKERROR(ErrorUtil::efatal,"This expansion is not set");
             }
             break;
             }
@@ -5244,7 +5251,7 @@ namespace Nektar
                       Array<OneD,       NekDouble> &outarray)
         {
             boost::ignore_unused(FwdFlux, BwdFlux, outarray);
-            ASSERTL0(false,"AddTraceIntegralToOffDiag not defined");
+            NEKERROR(ErrorUtil::efatal,"AddTraceIntegralToOffDiag not defined");
         }
 
         void ExpList::GetMatIpwrtDeriveBase(
@@ -5896,7 +5903,7 @@ namespace Nektar
             break;
             default:
             {
-                ASSERTL0(false,"not setup for this expansion");
+                NEKERROR(ErrorUtil::efatal,"not setup for this expansion");
             }
             break;
             }
@@ -5905,7 +5912,7 @@ namespace Nektar
         const LocTraceToTraceMapSharedPtr
                 &ExpList::v_GetLocTraceToTraceMap() const
         {
-            ASSERTL0(false, "v_GetLocTraceToTraceMap not coded");
+            NEKERROR(ErrorUtil::efatal, "v_GetLocTraceToTraceMap not coded");
             return NullLocTraceToTraceMapSharedPtr;
         }
 

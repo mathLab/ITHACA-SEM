@@ -367,7 +367,7 @@ namespace Nektar
         {
             if (m_BndEvaluateTime < 0.0)
             {
-                ASSERTL0(false, "m_BndEvaluateTime not setup");
+                NEKERROR(ErrorUtil::efatal, "m_BndEvaluateTime not setup");
             }
             m_diffusion->Diffuse(nvariables, m_fields, inarray, outarrayDiff,
                                 m_BndEvaluateTime,
@@ -467,7 +467,7 @@ namespace Nektar
         {
             if (m_BndEvaluateTime < 0.0)
             {
-                ASSERTL0(false, "m_BndEvaluateTime not setup");
+                NEKERROR(ErrorUtil::efatal, "m_BndEvaluateTime not setup");
             }
             m_diffusion->DiffuseCoeffs(nvariables, m_fields, inarray,
                                         outarrayDiff, m_BndEvaluateTime,
@@ -2305,7 +2305,7 @@ namespace Nektar
             break;
 
         default:
-            ASSERTL0(false, "v_GetDiffusionFluxJacPoint not coded");
+            NEKERROR(ErrorUtil::efatal, "v_GetDiffusionFluxJacPoint not coded");
             break;
         }
     }

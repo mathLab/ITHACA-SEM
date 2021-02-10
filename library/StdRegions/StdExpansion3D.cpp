@@ -215,7 +215,7 @@ namespace Nektar
                 }
                 break;
             default:
-                ASSERTL0(false, "Not a 2D expansion.");
+                NEKERROR(ErrorUtil::efatal, "Not a 2D expansion.");
                 break;
             }
         }
@@ -417,14 +417,14 @@ namespace Nektar
 
         int StdExpansion3D::v_GetNedges(void) const
         {
-            ASSERTL0(false, "This function is not valid or not defined");
+            NEKERROR(ErrorUtil::efatal, "This function is not valid or not defined");
             return 0;
         }
 
         int StdExpansion3D::v_GetEdgeNcoeffs(const int i) const
         {
             boost::ignore_unused(i);
-            ASSERTL0(false, "This function is not valid or not defined");
+            NEKERROR(ErrorUtil::efatal, "This function is not valid or not defined");
             return 0;
         }
 
@@ -487,7 +487,7 @@ namespace Nektar
                 }
                 default:
                 {
-                    ASSERTL0(false, "expansion type unknown");
+                    NEKERROR(ErrorUtil::efatal, "expansion type unknown");
                     break;
                 }
             }
@@ -539,7 +539,7 @@ namespace Nektar
                         default:
                         {
 
-                            ASSERTL0(false,"invalid value to flag");
+                            NEKERROR(ErrorUtil::efatal,"invalid value to flag");
                             break;
                         }
                     }
@@ -568,7 +568,7 @@ namespace Nektar
                         }
                         default:
                         {
-                            ASSERTL0(false,"invalid value to flag");
+                            NEKERROR(ErrorUtil::efatal,"invalid value to flag");
                             break;
                         }
                     }
@@ -600,7 +600,7 @@ namespace Nektar
                         }
                         default:
                         {
-                            ASSERTL0(false,"invalid value to flag");
+                            NEKERROR(ErrorUtil::efatal,"invalid value to flag");
                             break;
                         }
                     }
@@ -608,7 +608,7 @@ namespace Nektar
                 }
                 default:
                 {
-                    ASSERTL0(false,"expansion type unknown");
+                    NEKERROR(ErrorUtil::efatal,"expansion type unknown");
                     break;
                 }
             }

@@ -565,7 +565,7 @@ namespace Nektar
                   DNekBlkMatSharedPtr                        &BJac)
         {
             boost::ignore_unused(nDim,Fwd,Bwd,normals,FJac,BJac);
-            ASSERTL0(false, "v_CalcFluxJacobian not specified.");
+            NEKERROR(ErrorUtil::efatal, "v_CalcFluxJacobian not specified.");
         }
 
     }

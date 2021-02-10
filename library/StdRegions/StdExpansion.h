@@ -1343,7 +1343,7 @@ namespace Nektar
                   DNekMatSharedPtr &mat)
             {
                 boost::ignore_unused(dir,mat);
-                ASSERTL0(false,"not defined");
+                NEKERROR(ErrorUtil::efatal,"not defined");
             }
 
             STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
@@ -1513,8 +1513,9 @@ namespace Nektar
                 Array<OneD, NekDouble> &wsp)
             {
                 boost::ignore_unused(inarray,outarray,wsp);
-                ASSERTL0(false, "StdExpansion::v_MultplyStdDerivBase0 "
-                         "has no (and should have no) implementation");
+                NEKERROR(ErrorUtil::efatal, 
+                        "StdExpansion::v_MultplyStdDerivBase0 "
+                        "has no (and should have no) implementation");
             }
 
             STD_REGIONS_EXPORT virtual void v_MultplyStdDerivBase1(
@@ -1523,7 +1524,9 @@ namespace Nektar
                 Array<OneD, NekDouble> &wsp)
             {
                 boost::ignore_unused(inarray,outarray,wsp);
-                ASSERTL0(false, "StdExpansion::v_MultplyStdDerivBase1 has no (and should have no) implementation");
+                NEKERROR(ErrorUtil::efatal, 
+                    "StdExpansion::v_MultplyStdDerivBase1 has no (and should "
+                    "have no) implementation");
             }
 
             STD_REGIONS_EXPORT virtual void v_MultplyStdDerivBase2(
@@ -1532,7 +1535,9 @@ namespace Nektar
                 Array<OneD, NekDouble> &wsp)
             {
                 boost::ignore_unused(inarray,outarray,wsp);
-                ASSERTL0(false, "StdExpansion::v_MultplyStdDerivBase2 has no (and should have no) implementation");
+                NEKERROR(ErrorUtil::efatal, 
+                    "StdExpansion::v_MultplyStdDerivBase2 has no (and should "
+                    "have no) implementation");
             }
 
             STD_REGIONS_EXPORT virtual void  v_IProductWRTDirectionalDerivBase(

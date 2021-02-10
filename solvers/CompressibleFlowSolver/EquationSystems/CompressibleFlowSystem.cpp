@@ -230,7 +230,8 @@ namespace Nektar
         {
             m_PrecMatStorage    =   eSparse;
 
-            ASSERTL0(false,"IncompleteLU preconditioner not finished yet");
+            NEKERROR(ErrorUtil::efatal,
+                "IncompleteLU preconditioner not finished yet");
 
         }
         else
@@ -481,12 +482,12 @@ timer.AccumulateRegion("DoDiffusion");
             case MultiRegions::eGalerkin:
             case MultiRegions::eMixed_CG_Discontinuous:
             {
-                ASSERTL0(false, "No Continuous Galerkin for full compressible "
-                                "Navier-Stokes equations");
+                NEKERROR(ErrorUtil::efatal, "No Continuous Galerkin for full "
+                    "compressible Navier-Stokes equations");
                 break;
             }
             default:
-                ASSERTL0(false, "Unknown projection scheme");
+                NEKERROR(ErrorUtil::efatal, "Unknown projection scheme");
                 break;
         }
     }
@@ -2332,7 +2333,7 @@ timer.AccumulateRegion("DoDiffusion");
         fsw = 0.0; // exact flux Jacobian if fsw=0.0
         if (nvariables > expDim+2)
         {
-            ASSERTL0(false,"nvariables > expDim+2 case not coded")
+            NEKERROR(ErrorUtil::efatal,"nvariables > expDim+2 case not coded")
         }
 
         Array<OneD, NekDouble> fluxJacData;
@@ -3268,8 +3269,8 @@ timer.AccumulateRegion("DoDiffusion");
         }
         else
         {
-            ASSERTL0(false, "Continuous Galerkin stability coefficients "
-                            "not introduced yet.");
+            NEKERROR(ErrorUtil::efatal, "Continuous Galerkin stability "
+                "coefficients not introduced yet.");
         }
 
         return CFL;
@@ -3491,7 +3492,7 @@ timer.AccumulateRegion("DoDiffusion");
     {
         boost::ignore_unused(explist, normals, nDervDir, inarray, ElmtJacArray,
             nfluxDir);
-        ASSERTL0(false, "v_GetFluxDerivJacDirctn not coded");
+        NEKERROR(ErrorUtil::efatal, "v_GetFluxDerivJacDirctn not coded");
     }
 
     void CompressibleFlowSystem::v_GetFluxDerivJacDirctnElmt(
@@ -3506,7 +3507,7 @@ timer.AccumulateRegion("DoDiffusion");
     {
         boost::ignore_unused(nConvectiveFields, nElmtPnt, nDervDir, locVars,
             locmu, locnormal, wspMat, PntJacArray);
-        ASSERTL0(false, "v_GetFluxDerivJacDirctn not coded");
+        NEKERROR(ErrorUtil::efatal, "v_GetFluxDerivJacDirctn not coded");
     }
     
     void CompressibleFlowSystem::v_GetFluxDerivJacDirctn(
@@ -3599,7 +3600,7 @@ Array<OneD, NekDouble>  CompressibleFlowSystem::GetElmtMinHP(void)
             }
             default:
             {
-                ASSERTL0(false,"Dimension out of bound.")
+                NEKERROR(ErrorUtil::efatal,"Dimension out of bound.")
             }
         }
 

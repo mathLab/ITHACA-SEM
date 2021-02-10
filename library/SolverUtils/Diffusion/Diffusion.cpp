@@ -189,7 +189,7 @@ namespace Nektar
         {
             boost::ignore_unused(nConvectiveFields, fields, inarray, outarray,
                                     pFwd, pBwd);
-            ASSERTL0(false, "v_Diffuse not defined");
+            NEKERROR(ErrorUtil::efatal, "v_Diffuse not defined");
         }
 
         void Diffusion::v_DiffuseCoeffs(
@@ -202,7 +202,7 @@ namespace Nektar
         {
             boost::ignore_unused(nConvectiveFields, fields, inarray,
                                     outarray, pFwd, pBwd);
-            ASSERTL0(false, "v_DiffuseCoeffs not defined");
+            NEKERROR(ErrorUtil::efatal, "v_DiffuseCoeffs not defined");
         }
 
         void Diffusion::v_DiffuseCoeffs(
@@ -217,7 +217,7 @@ namespace Nektar
         {
             boost::ignore_unused(nConvectiveFields, fields, inarray,
                                  outarray, vFwd, vBwd,qfield,nonZeroIndex);
-            ASSERTL0(false,"v_DiffuseCoeffs not defined");
+            NEKERROR(ErrorUtil::efatal,"v_DiffuseCoeffs not defined");
         }
 
         // Diffusion Calculate the physical derivatives
@@ -235,7 +235,7 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >
         &Diffusion::v_GetTraceNormal()
         {
-            ASSERTL0(false,"v_GetTraceNormal not defined");
+            NEKERROR(ErrorUtil::efatal,"v_GetTraceNormal not defined");
             return NullNekDoubleArrayofArray;
         }
 
@@ -249,7 +249,7 @@ namespace Nektar
         {
             boost::ignore_unused(nConvectiveFields, npnts, vFwd, vBwd,
                                  aver, jump);
-            ASSERTL0(false, "v_ConsVarAveJump not defined");
+            NEKERROR(ErrorUtil::efatal, "v_ConsVarAveJump not defined");
         }
 
         void Diffusion::v_DiffuseCalculateDerivative(
@@ -261,7 +261,7 @@ namespace Nektar
         {
             boost::ignore_unused(fields, inarray, qfields,
                                  pFwd, pBwd);
-            ASSERTL0(false, "Not defined for function DiffuseVolumeFLux.");
+            NEKERROR(ErrorUtil::efatal, "Not defined for function DiffuseVolumeFLux.");
         }
 
         void Diffusion::v_DiffuseVolumeFlux(
@@ -273,7 +273,7 @@ namespace Nektar
         {
             boost::ignore_unused(fields, inarray, qfields, VolumeFlux,
                                  nonZeroIndex);
-            ASSERTL0(false, "Not defined for function DiffuseVolumeFLux.");
+            NEKERROR(ErrorUtil::efatal, "Not defined for function DiffuseVolumeFLux.");
         }
 
         void Diffusion::v_DiffuseTraceFlux(
@@ -288,7 +288,7 @@ namespace Nektar
         {
             boost::ignore_unused(fields, inarray, qfields, VolumeFlux,
                                  TraceFlux, pFwd, pBwd, nonZeroIndex);
-            ASSERTL0(false, "Not defined function DiffuseTraceFLux.");
+            NEKERROR(ErrorUtil::efatal, "Not defined function DiffuseTraceFLux.");
         }
 
         /**

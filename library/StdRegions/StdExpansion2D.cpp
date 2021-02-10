@@ -269,7 +269,7 @@ namespace Nektar
                 }
                 break;
             default:
-                ASSERTL0(false, "Not a 2D expansion.");
+                NEKERROR(ErrorUtil::efatal, "Not a 2D expansion.");
                 break;
             }
         }

@@ -136,6 +136,6 @@ struct is_vector_integral<T,
 // template <class T>
 // inline constexpr bool is_vector_floating_point_v = is_vector_floating_point<T>::value;
 
-
 } // namespace tinysimd
+
 #endif

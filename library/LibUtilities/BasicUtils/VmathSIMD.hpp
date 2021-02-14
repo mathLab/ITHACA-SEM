@@ -263,19 +263,15 @@ namespace SIMD
             --cnt;
         }
     }
-
-
+    
     /// \brief  vvtvp (vector times vector plus vector): z = w*x + y
     template<class T,typename = typename std::enable_if
-        <
-            std::is_floating_point<T>::value
-        >::type
-    >
+             < std::is_floating_point<T>::value >::type >
     void Vvtvp(const size_t n, const T *w,  const T *x,  const T *y, T *z)
     {
         using namespace tinysimd;
         using vec_t = simd<T>;
-
+        
         size_t cnt = n;
         // Vectorized loop
         while (cnt >= vec_t::width)
@@ -287,13 +283,13 @@ namespace SIMD
             yChunk.load(y, is_not_aligned);
             vec_t xChunk;
             xChunk.load(x, is_not_aligned);
-
+            
             // z = w * x + y
             vec_t zChunk = wChunk * xChunk + yChunk;
-
+            
             // store
             zChunk.store(z, is_not_aligned);
-
+            
             // update pointers
             w += vec_t::width;
             x += vec_t::width;
@@ -301,7 +297,7 @@ namespace SIMD
             z += vec_t::width;
             cnt-= vec_t::width;
         }
-
+        
         // spillover loop
         while(cnt)
         {
@@ -315,18 +311,14 @@ namespace SIMD
             --cnt;
         }
     }
-
+    
     /// \brief  vvtvm (vector times vector plus vector): z = w*x - y
-    template<class T,typename = typename std::enable_if
-        <
-            std::is_floating_point<T>::value
-        >::type
-    >
+    template<class T>
     void Vvtvm(const size_t n, const T *w,  const T *x,  const T *y, T *z)
     {
         using namespace tinysimd;
         using vec_t = simd<T>;
-
+        
         size_t cnt = n;
         // Vectorized loop
         while (cnt >= vec_t::width)
@@ -338,13 +330,13 @@ namespace SIMD
             yChunk.load(y, is_not_aligned);
             vec_t xChunk;
             xChunk.load(x, is_not_aligned);
-
+            
             // z = w * x - y
             vec_t zChunk = wChunk * xChunk - yChunk;
-
+            
             // store
             zChunk.store(z, is_not_aligned);
-
+            
             // update pointers
             w += vec_t::width;
             x += vec_t::width;
@@ -352,7 +344,7 @@ namespace SIMD
             z += vec_t::width;
             cnt-= vec_t::width;
         }
-
+        
         // spillover loop
         while(cnt)
         {
@@ -366,20 +358,16 @@ namespace SIMD
             --cnt;
         }
     }
-
+    
     /// \brief  vvtvvtp (vector times vector plus vector times vector):
     // z = v*w + x*y
-    template<class T,typename = typename std::enable_if
-        <
-            std::is_floating_point<T>::value
-        >::type
-    >
+    template<class T>
     inline void Vvtvvtp (const size_t n, const T* v, const T* w, const T* x,
-        const T* y, T* z)
+                         const T* y, T* z)
     {
         using namespace tinysimd;
         using vec_t = simd<T>;
-
+        
         size_t cnt = n;
         // Vectorized loop
         while (cnt >= vec_t::width)
@@ -393,15 +381,15 @@ namespace SIMD
             yChunk.load(y, is_not_aligned);
             vec_t xChunk;
             xChunk.load(x, is_not_aligned);
-
+            
             // z = v * w + x * y;
             vec_t z1Chunk = vChunk * wChunk;
             vec_t z2Chunk = xChunk * yChunk;
             vec_t zChunk = z1Chunk + z2Chunk;
-
+            
             // store
             zChunk.store(z, is_not_aligned);
-
+            
             // update pointers
             v += vec_t::width;
             w += vec_t::width;
@@ -410,7 +398,7 @@ namespace SIMD
             z += vec_t::width;
             cnt-= vec_t::width;
         }
-
+        
         // spillover loop
         while(cnt)
         {
@@ -427,18 +415,15 @@ namespace SIMD
             --cnt;
         }
     }
-
+    
     /// \brief Gather vector z[i] = x[y[i]]
     template<class T, class I, typename = typename std::enable_if
-        <
-            std::is_floating_point<T>::value &&
-            std::is_integral<I>::value
-        >::type
-    >
+        < std::is_floating_point<T>::value &&
+          std::is_integral<I>::value >::type >
     void Gathr(const I n, const T* x,  const I* y, T* z)
     {
         using namespace tinysimd;
-        using vec_t = simd<T>;
+        using vec_t   = simd<T>;
         using vec_t_i = simd<I>;
 
         I cnt = n;
@@ -525,6 +510,7 @@ namespace SIMD
             --cnt;
         }
     }
+
 
 } // namespace SIMD
 } // namespace Vmath

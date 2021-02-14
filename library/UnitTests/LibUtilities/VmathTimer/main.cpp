@@ -126,9 +126,6 @@ int main(int argc, char const *argv[])
     }
 
 
-
-
-
 LIKWID_MARKER_CLOSE;
 
 }

@@ -364,12 +364,18 @@ namespace Nektar
         for (; p < sizeVec; p += vec_t::width)
         {
             // there is a significant penalty to use std::vector
+#if 0 
             alignas(vec_t::width) std::array<vec_t, nVarMax> inTmp{},
                 qfieldsTmp{}, outTmp{};
             alignas(vec_t::width) std::array<vec_t, nDimMax> normalTmp{};
             alignas(vec_t::width) std::array<vec_t, nVarMax * nOutMax>
                 outArrTmp{};
+#else
+            std::array<vec_t, nVarMax> inTmp{}, qfieldsTmp{}, outTmp{};
+            std::array<vec_t, nDimMax> normalTmp{};
+            std::array<vec_t, nVarMax * nOutMax> outArrTmp{};
 
+#endif
             // rearrenge and load data
             for (size_t f = 0; f < nConvectiveFields; ++f)
             {

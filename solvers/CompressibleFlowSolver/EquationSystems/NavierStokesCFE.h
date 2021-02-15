@@ -364,7 +364,6 @@ namespace Nektar
         for (; p < sizeVec; p += vec_t::width)
         {
             // there is a significant penalty to use std::vector
-
             alignas(vec_t::alignment) std::array<vec_t, nVarMax> inTmp{},
                 qfieldsTmp{}, outTmp{};
             alignas(vec_t::alignment) std::array<vec_t, nDimMax> normalTmp{};

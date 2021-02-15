@@ -48,10 +48,7 @@ namespace SIMD
 {
     /// \brief Multiply vector z = x + y
     template<class T,typename = typename std::enable_if
-        <
-            std::is_floating_point<T>::value
-        >::type
-    >
+        <std::is_floating_point<T>::value>::type>
     void Vadd(const size_t n, const T *x,  const T *y, T *z)
     {
         using namespace tinysimd;
@@ -157,10 +154,7 @@ namespace SIMD
 
     /// \brief Multiply vector z = x * y
     template<class T,typename = typename std::enable_if
-        <
-            std::is_floating_point<T>::value
-        >::type
-    >
+        <std::is_floating_point<T>::value>::type >
     void Vmul(const size_t n, const T *x,  const T *y, T *z)
     {
         using namespace tinysimd;
@@ -313,7 +307,8 @@ namespace SIMD
     }
     
     /// \brief  vvtvm (vector times vector plus vector): z = w*x - y
-    template<class T>
+    template<class T, typename = typename std::enable_if
+             <std::is_floating_point<T>::value>::type >
     void Vvtvm(const size_t n, const T *w,  const T *x,  const T *y, T *z)
     {
         using namespace tinysimd;
@@ -361,7 +356,8 @@ namespace SIMD
     
     /// \brief  vvtvvtp (vector times vector plus vector times vector):
     // z = v*w + x*y
-    template<class T>
+    template<class T, typename = typename std::enable_if
+             <std::is_floating_point<T>::value>::type >
     inline void Vvtvvtp (const size_t n, const T* v, const T* w, const T* x,
                          const T* y, T* z)
     {

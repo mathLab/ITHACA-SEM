@@ -16,7 +16,6 @@ int main(int argc, char const *argv[])
     LIKWID_MARKER_REGISTER("GathrScalar");
     LIKWID_MARKER_REGISTER("GathrSimd");
 
-
     size_t nPts;
     if (argc < 2)
     {

@@ -75,7 +75,7 @@ template <> struct scalar<std::uint64_t>{ using type = scalarT<std::uint64_t>; }
 template <> struct scalar<std::int32_t>{ using type = scalarT<std::int32_t>; };
 template <> struct scalar<std::uint32_t>{ using type = scalarT<std::uint32_t>; };
 template <> struct scalar<bool>{ using type = scalarMask; };
-template <> struct scalar<unsigned long>{ using type = scalarT<unsigned long>; };
+template <> struct scalar<size_t>{ using type = scalarT<size_t>; };
 
 } // namespace abi
 

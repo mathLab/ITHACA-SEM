@@ -15,7 +15,6 @@
                 </match>
             </matches>
         </metric>
-        <metric type="nowarning" id="2">
-        </metric>
+        <metric type="nowarning" id="2"/>
     </metrics>
 </test>

@@ -28,7 +28,42 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Implementation of the no-warning metric
+// Description: 
+// Implementation of the no-warning metric. This test metric can be used
+// in either of two ways: 
+//
+// 1. Default mode: Test fails if "WARNING" appears in output OR error stream
+//      
+//      <metric type="nowarning" id="1">
+//
+// 2. Advanced mode: Test fails if the specified regex expression appears in
+//    the output OR the error stream, AND the regex groups (caught with the
+//    parenthesises) match all the expressions specified within ONE of the 
+//    match tags (one expression = one field tag). The example here contains 
+//    two regex groups, and two possible matches. The test will therefore fail
+//    if, e.g.,
+//              "WARNING: Invalid value"
+//    or
+//              "WARNING: Invalid input value" 
+//    appears in the output OR the error stream. A simple "WARNING" will 
+//    however not fail the test. The advanced mode option is therefore 
+//    intended to target very  specific warnings/errors. Note that a regex
+//    without specific regex groups can also be specified.
+//
+//      <metric type="nowarning" id="1">
+//          <regex>.*WARNING:.(\w+).(\w+).*</regex>
+//          <matches>
+//              <match>
+//                  <field id="1">Invalid</field>
+//                  <field id="2">value</field>
+//              </match>
+//              <match>
+//                  <field id="1">Invalid</field>
+//                  <field id="2">input</field>
+//              </match>
+//          </matches>
+//      </metric>
+//
 //
 ///////////////////////////////////////////////////////////////////////////////
 

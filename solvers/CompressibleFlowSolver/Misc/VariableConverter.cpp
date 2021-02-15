@@ -471,9 +471,4 @@ void VariableConverter::GetRhoFromPT(const Array<OneD, NekDouble> &pressure,
     }
 }
 
-NekDouble VariableConverter::GetGasconstant()
-{
-    return m_gasConstant;
-}
-
 }

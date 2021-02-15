@@ -188,9 +188,9 @@ void ProcessC0Projection::Process(po::variables_map &vm)
         }
         else
         {
+            int ncoeffs      = m_f->m_exp[0]->GetNcoeffs();
             if (HelmSmoother)
             {
-                int dim          = m_f->m_graph->GetSpaceDimension();
                 int npoints      = m_f->m_exp[0]->GetNpoints();
                 NekDouble lambda = m_config["helmsmoothing"].as<NekDouble>();
                 lambda           = 2 * M_PI / lambda;
@@ -204,31 +204,20 @@ void ProcessC0Projection::Process(po::variables_map &vm)
 
                 StdRegions::ConstFactorMap factors;
                 Array<OneD, NekDouble> forcing(npoints);
-                factors[StdRegions::eFactorLambda] = -lambda;
-
-                Array<OneD, Array<OneD, NekDouble> > Velocity(dim);
-                for (int j = 0; j < dim; ++j)
-                {
-                    Velocity[j] = Array<OneD, NekDouble>(npoints, 0.0);
-                }
+                factors[StdRegions::eFactorLambda] = lambda;
 
                 Vmath::Smul(npoints, -lambda,
                             m_f->m_exp[processFields[i]]->GetPhys(), 1, forcing,
                             1);
 
-                // Note we are using the
-                // LinearAdvectionDiffusionReaction solver here
-                // instead of HelmSolve since lambda is negative and
-                // so matrices are not positive definite. Ideally
-                // should allow for negative lambda coefficient in
-                // HelmSolve
-                C0ProjectExp[processFields[i]]
-                    ->LinearAdvectionDiffusionReactionSolve(
-                        Velocity, forcing,
-                        m_f->m_exp[processFields[i]]->UpdateCoeffs(), -lambda);
+                Vmath::Zero(ncoeffs,m_f->m_exp[processFields[i]]->UpdateCoeffs(),1);
+
+                C0ProjectExp[processFields[i]]->HelmSolve(forcing,
+                    m_f->m_exp[processFields[i]]->UpdateCoeffs(), factors);
             }
             else
             {
+                Vmath::Zero(ncoeffs,m_f->m_exp[processFields[i]]->UpdateCoeffs(),1);
                 C0ProjectExp[processFields[i]]->FwdTrans(
                     m_f->m_exp[processFields[i]]->GetPhys(),
                     m_f->m_exp[processFields[i]]->UpdateCoeffs());

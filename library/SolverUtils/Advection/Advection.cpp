@@ -193,7 +193,6 @@ void Advection::AddTraceJacToMat(
                         Vmath::Vcopy(nElmtCoef,&MatData1[i*nElmtCoef],1,&SymmMatData[i],nElmtCoef);
                     }
                     Vmath::Vadd(nElmtCoef*nElmtCoef,SymmMatData,1,MatData1,1,MatData1,1);
-                    // Vmath::Smul(nElmtCoef*nElmtCoef,0.5,MatData1,1,MatData1,1);
                 }
             }
 
@@ -213,9 +212,6 @@ void Advection::AddTraceJacToMat(
                 {
                     MatData0[i] += DataType(MatData1[i]);
                 }
-
-                // Vmath::Vadd(MatData0.size(),MatData0,1,MatData1,1,MatData0,1);
-                // (*tmpGmtx)      = (*tmpGmtx)  +   (*tmp2Add);
             }
         }
     }

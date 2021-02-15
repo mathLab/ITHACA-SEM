@@ -81,12 +81,6 @@ NekLinSysIterGMRES::NekLinSysIterGMRES(
     m_maxrestart = ceil(NekDouble(m_maxiter) / NekDouble(m_LinSysMaxStorage));
     m_LinSysMaxStorage = min(m_maxiter, m_LinSysMaxStorage);
 
-    // cout 
-    //     << " m_maxiter = " << m_maxiter
-    //     << " m_maxrestart = " << m_maxrestart
-    //     << " m_LinSysMaxStorage = " << m_LinSysMaxStorage
-    //     << endl;
-
     int GMRESCentralDifference = 0;
     pSession->LoadParameter("GMRESCentralDifference", GMRESCentralDifference,
                             0);
@@ -230,7 +224,7 @@ int NekLinSysIterGMRES::DoGMRES(const int nGlobal,
         }
     }
 
-    WARNINGL1(m_converged, "GMRES did not converged !!");
+    WARNINGL1(m_converged, "GMRES did not converge.");
     return m_totalIterations;
 }
 
@@ -372,11 +366,6 @@ NekDouble NekLinSysIterGMRES::DoGmresRestart(
     {
         Vsingle1 = Array<OneD, NekDouble>(nGlobal, 0.0);
     }
-
-    // cout 
-    //     << " m_tolerance = " << m_tolerance 
-    //     << " m_rhs_magnitude = " << m_rhs_magnitude 
-    //     << endl;
 
     for (int nd = 0; nd < m_LinSysMaxStorage; ++nd)
     {

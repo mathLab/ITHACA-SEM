@@ -180,8 +180,8 @@ namespace Nektar
             const int                                  nConvectiveFields,
             const int                                  nElmtPnt,
             const Array<OneD, Array<OneD, NekDouble> >  &locVars,
-            const Array<OneD, Array<OneD,  Array<OneD, NekDouble> > > &locDerv,
-            const Array<OneD, NekDouble>                              &locmu,
+            const TensorOfArray3D<NekDouble>            &locDerv,
+            const Array<OneD, NekDouble>                &locmu,
             const Array<OneD, NekDouble>                &locDmuDT,
             const Array<OneD, NekDouble>                &normals,
             DNekMatSharedPtr                            &wspMat,
@@ -192,9 +192,7 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >  &normals,
         const int                                         nDervDir,
         const Array<OneD, const Array<OneD, NekDouble> >  &inarray,
-
-        Array<OneD, Array<OneD, Array<OneD, Array<OneD,
-        Array<OneD, NekDouble> > > > > &ElmtJacArray,
+        TensorOfArray5D<NekDouble>                        &ElmtJacArray,
         const int                                         nfluxDir);
     virtual void v_GetFluxDerivJacDirctnElmt(
         const int                                         nConvectiveFields,

@@ -2645,8 +2645,9 @@ namespace Nektar
                                 }
                                 else
                                 {
-                                    ASSERTL0(false,"Unable to align rotationally "
-                                             "periodic edge vertex");
+                                    NEKERROR(ErrorUtil::efatal,
+                                        "Unable to align rotationally "
+                                        "periodic edge vertex");
                                 }
                             }
                         }
@@ -2971,7 +2972,7 @@ namespace Nektar
                     else if (m_bndConditions[n]->GetBoundaryConditionType() !=
                                 SpatialDomains::ePeriodic)
                     {
-                        ASSERTL0(false,
+                        NEKERROR(ErrorUtil::efatal,
                                     "Method not set up for this "
                                     "boundary condition.");
                     }
@@ -3027,7 +3028,7 @@ namespace Nektar
                     else if (m_bndConditions[n]->GetBoundaryConditionType() !=
                                 SpatialDomains::ePeriodic)
                     {
-                        ASSERTL0(false,
+                        NEKERROR(ErrorUtil::efatal,
                                     "Method not set up for this boundary "
                                     "condition.");
                     }
@@ -3059,7 +3060,7 @@ namespace Nektar
             }
             else
             {
-                ASSERTL0(false,
+                NEKERROR(ErrorUtil::efatal,
                     "v_AddTraceQuadPhysToField not coded for eGauss_Lagrange");
             }
         }
@@ -3602,7 +3603,7 @@ namespace Nektar
                         }
                         else
                         {
-                            ASSERTL0(false,
+                            NEKERROR(ErrorUtil::efatal,
                                      "This type of BC not implemented yet");
                         }
                     }
@@ -3709,7 +3710,7 @@ namespace Nektar
                         }
                         else
                         {
-                            ASSERTL0(false,
+                            NEKERROR(ErrorUtil::efatal,
                                      "This type of BC not implemented yet");
                         }
                     }
@@ -3773,7 +3774,7 @@ namespace Nektar
                 else if (m_bndConditions[n]->GetBoundaryConditionType() !=
                              SpatialDomains::ePeriodic)
                 {
-                    ASSERTL0(false,
+                    NEKERROR(ErrorUtil::efatal,
                              "Method not set up for this boundary condition.");
                 }
             }
@@ -4299,7 +4300,9 @@ namespace Nektar
                     }
                     break;
                 default:
-                    ASSERTL0(false, "Wrong shape type, HDG postprocessing is not implemented");
+                    NEKERROR(ErrorUtil::efatal, 
+                        "Wrong shape type, HDG postprocessing is not "
+                        "implemented");
                 };
 
 
@@ -4343,8 +4346,7 @@ namespace Nektar
                 (*m_exp)[i]->FwdTrans(work, tmp_coeffs = outarray + m_coeff_offset[i]);
             }
         }
-//ICFS_MERGE_FLAG 
-//NOT USED
+
         void DisContField::v_GetLocTraceFromTracePts(
                 const Array<OneD, const NekDouble>  &Fwd,
                 const Array<OneD, const NekDouble>  &Bwd,
@@ -4366,7 +4368,8 @@ namespace Nektar
                     locTraceFwd);
                 break;
             default:
-                ASSERTL0(false, "GetLocTraceFromTracePts not defined");
+                NEKERROR(ErrorUtil::efatal, 
+                    "GetLocTraceFromTracePts not defined");
             }
         }
 

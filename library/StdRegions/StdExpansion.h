@@ -1009,6 +1009,16 @@ namespace Nektar
                 v_LocCoordToLocCollapsed(xi,eta);
             }
 
+            /**
+             * \brief Convert local collapsed coordinates \a eta into local
+             * cartesian coordinate \a xi
+             **/
+            void LocCollapsedToLocCoord(const Array<OneD, const NekDouble>& eta,
+                                        Array<OneD, NekDouble>& xi)
+            {
+                v_LocCollapsedToLocCoord(eta,xi);
+            }
+
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients
               (const std::vector<unsigned int>  &nummodes, int &modes_offset);
 
@@ -1333,7 +1343,7 @@ namespace Nektar
                   DNekMatSharedPtr &mat)
             {
                 boost::ignore_unused(dir,mat);
-                ASSERTL0(false,"not defined");
+                NEKERROR(ErrorUtil::efatal,"not defined");
             }
 
             STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
@@ -1503,8 +1513,9 @@ namespace Nektar
                 Array<OneD, NekDouble> &wsp)
             {
                 boost::ignore_unused(inarray,outarray,wsp);
-                ASSERTL0(false, "StdExpansion::v_MultplyStdDerivBase0 "
-                         "has no (and should have no) implementation");
+                NEKERROR(ErrorUtil::efatal, 
+                        "StdExpansion::v_MultplyStdDerivBase0 "
+                        "has no (and should have no) implementation");
             }
 
             STD_REGIONS_EXPORT virtual void v_MultplyStdDerivBase1(
@@ -1513,7 +1524,9 @@ namespace Nektar
                 Array<OneD, NekDouble> &wsp)
             {
                 boost::ignore_unused(inarray,outarray,wsp);
-                ASSERTL0(false, "StdExpansion::v_MultplyStdDerivBase1 has no (and should have no) implementation");
+                NEKERROR(ErrorUtil::efatal, 
+                    "StdExpansion::v_MultplyStdDerivBase1 has no (and should "
+                    "have no) implementation");
             }
 
             STD_REGIONS_EXPORT virtual void v_MultplyStdDerivBase2(
@@ -1522,7 +1535,9 @@ namespace Nektar
                 Array<OneD, NekDouble> &wsp)
             {
                 boost::ignore_unused(inarray,outarray,wsp);
-                ASSERTL0(false, "StdExpansion::v_MultplyStdDerivBase2 has no (and should have no) implementation");
+                NEKERROR(ErrorUtil::efatal, 
+                    "StdExpansion::v_MultplyStdDerivBase2 has no (and should "
+                    "have no) implementation");
             }
 
             STD_REGIONS_EXPORT virtual void  v_IProductWRTDirectionalDerivBase(
@@ -1589,6 +1604,9 @@ namespace Nektar
                                         const Array<OneD, const NekDouble>& xi,
                                         Array<OneD, NekDouble>& eta);
 
+            STD_REGIONS_EXPORT virtual void v_LocCollapsedToLocCoord(
+                                        const Array<OneD, const NekDouble>& eta,
+                                        Array<OneD, NekDouble>& xi);
 
             STD_REGIONS_EXPORT virtual void v_FillMode(const int mode,
                                                   Array<OneD, NekDouble> &outarray);

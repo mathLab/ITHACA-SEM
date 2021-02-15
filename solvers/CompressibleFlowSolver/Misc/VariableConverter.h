@@ -101,8 +101,6 @@ public:
         const Array<OneD, const NekDouble>  &mu, 
               Array<OneD, NekDouble>        &DmuDT);
 
-    NekDouble GetGasconstant();
-
     EquationOfStateSharedPtr Geteos()
     {
         return m_eos;

@@ -395,9 +395,8 @@ namespace Nektar
 
             ///
             inline void BwdTrans (
-                const Array<OneD,
-                const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray);
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,NekDouble> &outarray);
 
             /// This function calculates the coordinates of all the elemental
             /// quadrature points \f$\boldsymbol{x}_i\f$.
@@ -729,14 +728,34 @@ namespace Nektar
             MULTI_REGIONS_EXPORT LocalRegions::ExpansionSharedPtr& GetExp(
                 const Array<OneD, const NekDouble> &gloCoord);
 
-            /** This function returns the index of the local elemental
-             * expansion containing the arbitrary point given by \a gloCoord.
-             **/
+            /**
+             * @brief This function returns the index of the local elemental
+             * expansion containing the arbitrary point given by \a gloCoord,
+             * within a distance tolerance of tol.
+             *
+             * If returnNearestElmt is true and no element contains the point,
+             * this function returns the nearest element whose bounding box contains
+             * the point. The bounding box has a 10% margin in each direction.
+             *
+             * @param gloCoord    (input) coordinate in physics space
+             * @param locCoords   (output) local coordinate xi in the returned element
+             * @param tol         distance tolerance to judge if a point lies in an element
+             * @param returnNearestElmt if true and no element contains this point, the
+             *                          nearest element whose bounding box contains this
+             *                          point is returned
+             * @param cachedId    an initial guess of the most possible element index
+             * @param maxDistance if returnNearestElmt is set as true, the nearest
+             *                    element will be returned. But the distance of the
+             *                    nearest element and this point should be <= maxDistance.
+             *
+             * @return element index; if no element is found, -1 is returned.
+             */
             MULTI_REGIONS_EXPORT int GetExpIndex(
                 const Array<OneD, const NekDouble> &gloCoord,
                 NekDouble tol = 0.0,
                 bool returnNearestElmt = false,
-                int cachedId = -1);
+                int cachedId = -1,
+                NekDouble maxDistance = 1e6);
 
             /** This function returns the index and the Local
              * Cartesian Coordinates \a locCoords of the local
@@ -748,7 +767,8 @@ namespace Nektar
                 Array<OneD, NekDouble>       &locCoords,
                 NekDouble tol = 0.0,
                 bool returnNearestElmt = false,
-                int cachedId = -1);
+                int cachedId = -1,
+                NekDouble maxDistance = 1e6);
 
             /** This function return the expansion field value
              * at the coordinates given as input.
@@ -1124,7 +1144,7 @@ namespace Nektar
                     bool                                            &flag,
                     Array<OneD, Array<OneD, Array<OneD, int > > >   &T2Emap);
 
-            void AddTraceJacToElmtJac(
+            MULTI_REGIONS_EXPORT void AddTraceJacToElmtJac(
                 const Array<OneD, const DNekMatSharedPtr>  &FwdMat,
                 const Array<OneD, const DNekMatSharedPtr>  &BwdMat,
                 Array<OneD, DNekMatSharedPtr>  &fieldMat);

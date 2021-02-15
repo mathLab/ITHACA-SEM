@@ -106,7 +106,6 @@ int NekNonlinSysNewton::v_SolveSystem(
         CalcInexactNewtonForcing(k, resnormOld, m_SysResNorm, 
             LinSysRelativeIteTol);
         
-        // cout << " m_SysResNorm = " << m_SysResNorm << endl;
         resnormOld = m_SysResNorm;
 
         NekDouble LinSysTol = LinSysRelativeIteTol * sqrt(m_SysResNorm);

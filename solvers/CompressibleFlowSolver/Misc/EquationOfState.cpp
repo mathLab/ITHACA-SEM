@@ -51,6 +51,9 @@ EquationOfState::EquationOfState(
     pSession->LoadParameter("GasConstant", m_gasConstant, 287.058);
 }
 
+EquationOfState::EquationOfState( const NekDouble &gamma,
+    const NekDouble &gasConstant): m_gamma{gamma}, m_gasConstant{gasConstant}{}
+
 NekDouble EquationOfState::GetTemperature(const NekDouble &rho,
                                           const NekDouble &e)
 {
@@ -94,11 +97,6 @@ NekDouble EquationOfState::GetRhoFromPT(const NekDouble &p, const NekDouble &T)
     return v_GetRhoFromPT(p, T);
 }
 
-NekDouble EquationOfState::GetInternalEnergy(const NekDouble &T)
-{
-    return v_GetInternalEnergy(T);
-}
-
 // General implementation for v_GetSoundSpeed: c^2 = xi + kappa * h
 //    where xi = dpdrho - e/rho * dp/de    and  kappa = dp/de / rho
 NekDouble EquationOfState::v_GetSoundSpeed(const NekDouble &rho,
@@ -116,10 +114,4 @@ NekDouble EquationOfState::v_GetSoundSpeed(const NekDouble &rho,
     return sqrt(chi + kappa * enthalpy);
 }
 
-NekDouble EquationOfState::v_GetInternalEnergy(const NekDouble &T)
-{
-    boost::ignore_unused(T);
-    ASSERTL0(false,"v_GetInternalEnergy not defined");
-    return T;
-}
 }

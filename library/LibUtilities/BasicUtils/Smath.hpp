@@ -40,6 +40,8 @@
 #include <math.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
+#include <cstdlib>
+#include <algorithm> 
 using namespace std;
 namespace Smath
 {
@@ -50,8 +52,8 @@ namespace Smath
     template<class T> LIB_UTILITIES_EXPORT T Smax(const T a, const T b,
         const T k)
     {
-        T maxi = max(a, b)*k;
-        T mini = min(a, b)*k;
+        T maxi = std::max(a, b)*k;
+        T mini = std::min(a, b)*k;
         T xmax = ( maxi + log( 1.0 + exp( mini - maxi )))/k;
         return xmax;
     }

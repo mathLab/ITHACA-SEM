@@ -73,9 +73,12 @@ namespace Nektar
          * which solvers for various Riemann problems can be implemented.
          */
 
+        RiemannSolver::RiemannSolver()
+            : m_requiresRotation(false), m_rotStorage(3) {}
+
         RiemannSolver::RiemannSolver(
             const LibUtilities::SessionReaderSharedPtr& pSession)
-            : m_requiresRotation(false), m_rotStorage (3)
+            : m_requiresRotation(false), m_rotStorage(3)
         {
             boost::ignore_unused(pSession);
         }
@@ -139,6 +142,8 @@ namespace Nektar
                 v_Solve(nDim, Fwd, Bwd, flux);
             }
         }
+
+
 
         /**
          * @brief Rotate a vector field to trace normal.
@@ -560,7 +565,7 @@ namespace Nektar
                   DNekBlkMatSharedPtr                        &BJac)
         {
             boost::ignore_unused(nDim,Fwd,Bwd,normals,FJac,BJac);
-            ASSERTL0(false, "v_CalcFluxJacobian not specified.");
+            NEKERROR(ErrorUtil::efatal, "v_CalcFluxJacobian not specified.");
         }
 
     }

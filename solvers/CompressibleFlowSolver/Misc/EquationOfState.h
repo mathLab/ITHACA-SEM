@@ -90,15 +90,15 @@ public:
     /// Obtain the density from P and T
     NekDouble GetRhoFromPT(const NekDouble &p, const NekDouble &T);
 
-    /// Calculate the enthalpy
-    NekDouble GetInternalEnergy(const NekDouble &T);
-
 protected:
     NekDouble m_gamma;
     NekDouble m_gasConstant;
 
     /// Constructor
     EquationOfState(const LibUtilities::SessionReaderSharedPtr &pSession);
+
+    /// Programmatic Constructor
+    EquationOfState(const NekDouble &gamma, const NekDouble &gasConstant);
 
     virtual NekDouble v_GetTemperature(const NekDouble &rho,
                                        const NekDouble &e) = 0;
@@ -122,7 +122,7 @@ protected:
 
     virtual NekDouble v_GetRhoFromPT(const NekDouble &rho,
                                      const NekDouble &p) = 0;
-    virtual NekDouble v_GetInternalEnergy(const NekDouble &T);
+
 };
 }
 

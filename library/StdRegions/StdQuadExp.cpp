@@ -577,6 +577,13 @@ namespace Nektar
             eta[1] = xi[1];
         }
 
+        void StdQuadExp::v_LocCollapsedToLocCoord(const Array<OneD, const NekDouble>& eta,
+                                                 Array<OneD, NekDouble>& xi)
+        {
+            xi[0] = eta[0];
+            xi[1] = eta[1];
+        }
+
         /** \brief Fill outarray with mode \a mode of expansion
          *
          *  Note for quadrilateral expansions _base[0] (i.e. p)  modes run

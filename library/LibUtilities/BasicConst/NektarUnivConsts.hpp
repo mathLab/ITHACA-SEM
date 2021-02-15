@@ -53,6 +53,7 @@ namespace Nektar
         static const NekDouble kNekSqrtTol = 1.0e-16;
         static const NekDouble kNekIterativeTol = 1e-09;
         static const NekDouble kNekSparseNonZeroTol = 1e-16;
+        static const NekDouble kNekMachineEpsilon = std::numeric_limits<NekDouble>::epsilon();
 
         // Tolerances for mesh generation and CAD handling
         static const NekDouble GeomTol = 1E-2;

@@ -120,13 +120,13 @@ protected:
 
     NekDouble                                       m_Res0PreviousStep=-1.0;
     
-    Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >  m_PrecMatVars;
+    Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >  m_PreconMatVars;
     
-    Array<OneD, Array<OneD, NekDouble> >            m_PrecMatVarsOffDiag;
+    Array<OneD, Array<OneD, NekDouble> >            m_PreconMatVarsOffDiag;
     
-    DNekBlkMatSharedPtr                             m_PrecMat;
-    Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >  m_PrecMatVarsSingle;
-    SNekBlkMatSharedPtr                             m_PrecMatSingle;
+    DNekBlkMatSharedPtr                             m_PreconMat;
+    Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >  m_PreconMatVarsSingle;
+    SNekBlkMatSharedPtr                             m_PreconMatSingle;
     
     bool                                            m_flagImplItsStatistcs;
     
@@ -157,10 +157,10 @@ protected:
     
     NekDouble   m_inArrayNorm=-1.0;
     
-    bool m_CalcuPrecMatFlag     = true;
+    bool m_CalcPreconMatFlag     = true;
     
-    int m_CalcuPrecMatCounter  = std::numeric_limits<int>::max();
-    int m_CalcuPrecMatNumbSteps  = std::numeric_limits<int>::max();
+    int m_CalcPreconMatCounter  = std::numeric_limits<int>::max();
+    int m_CalcPreconMatNumbSteps  = std::numeric_limits<int>::max();
 
     int m_TotLinItePerStep=0;
     int m_StagesPerStep=1;
@@ -172,7 +172,7 @@ protected:
     int m_TotImpStages  =0;
     
     /// flag to update artificial viscosity
-    bool m_calcuPhysicalAV = true;
+    bool m_CalcPhysicalAV = true;
     
     
     /// Initialises UnsteadySystem class members.

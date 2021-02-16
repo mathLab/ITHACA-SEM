@@ -117,9 +117,9 @@ namespace Nektar
             TensorOfArray1D<NekDouble>          &out,
             const NekDouble                     time,
             const NekDouble                     lambda);
-        bool UpdatePrecMatCheck(
+        bool UpdatePreconMatCheck(
             const TensorOfArray1D<NekDouble>  &res);
-        void CalcPrecMat(
+        void CalcPreconMat(
             const TensorOfArray2D<NekDouble>    &inpnts,
             const NekDouble                     time,
             const NekDouble                     lambda);
@@ -167,7 +167,7 @@ namespace Nektar
 
         bool                                m_ViscousJacFlag;
         bool                                m_AdvectionJacFlag;
-        bool                                m_updatePrecMatFlag;
+        bool                                m_updatePreconMatFlag;
 
         TensorOfArray4D<NekDouble>          m_StdDMatDataDBB;
         TensorOfArray5D<NekDouble>          m_StdDMatDataDBDB;
@@ -192,7 +192,7 @@ namespace Nektar
             eSparse,
         };
 
-        PrecType                            m_PrecMatStorage;
+        PrecType                            m_PreconMatStorage;
         NekDouble                           m_BndEvaluateTime;
         TensorOfArray2D<NekDouble>          m_solutionPhys;
 
@@ -238,7 +238,7 @@ namespace Nektar
         void PrecBlkDiag(
             const Array<OneD, NekDouble>     &inarray,
             Array<OneD, NekDouble >          &outarray,
-            const TypeNekBlkMatSharedPtr     &PrecMatVars,
+            const TypeNekBlkMatSharedPtr     &PreconMatVars,
             const DataType                   &tmpDataType);
 
         void PrecBlkSORCoeff(

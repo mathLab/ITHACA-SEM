@@ -200,8 +200,8 @@ namespace Nektar
         m_NekSysOp.DefineNekSysLhsEval(&CompressibleFlowSystem::
             MatrixMultiplyMatrixFreeCoeff, this);
 
-        m_session->LoadParameter("PrcdMatFreezNumb",     
-            m_PrcdMatFreezNumb    , 1);
+        m_session->LoadParameter("PreconMatFreezNumb",     
+            m_PreconMatFreezNumb    , 1);
         m_session->LoadParameter("NewtonAbsoluteIteTol", 
             m_NewtonAbsoluteIteTol, 1.0E-12);
         m_session->LoadParameter("JFNKTimeAccurate",     
@@ -220,7 +220,7 @@ namespace Nektar
         if (boost::iequals(m_session->GetSolverInfo("PRECONDITIONER"),
                                "IncompleteLU"))
         {
-            m_PrecMatStorage    =   eSparse;
+            m_PreconMatStorage    =   eSparse;
 
             NEKERROR(ErrorUtil::efatal,
                 "IncompleteLU preconditioner not finished yet");
@@ -231,17 +231,17 @@ namespace Nektar
             int nvariables  =   m_fields.size();
             m_NekSysOp.DefineNekSysPrecond(
                     &CompressibleFlowSystem::PrecBlkSORCoeff, this);
-            m_PrecMatStorage    =   eDiagonal;
+            m_PreconMatStorage    =   eDiagonal;
             m_session->LoadParameter("nPadding", m_nPadding, 4);
     
-            m_PrecMatVarsSingle = 
+            m_PreconMatVarsSingle = 
                 TensorOfArray2D<SNekBlkMatSharedPtr>(nvariables);
             for(int i = 0; i < nvariables; i++)
             {
-                m_PrecMatVarsSingle[i] =  
+                m_PreconMatVarsSingle[i] =  
                     Array<OneD, SNekBlkMatSharedPtr> (nvariables);
             }
-            AllocatePrecBlkDiagCoeff(m_PrecMatVarsSingle);
+            AllocatePrecBlkDiagCoeff(m_PreconMatVarsSingle);
 
             int nelmts  = m_fields[0]->GetNumElmts();
             int nelmtcoef;
@@ -251,7 +251,7 @@ namespace Nektar
                 nelmtcoef   =   m_fields[0]->GetExp(i)->GetNcoeffs();
                 nelmtmatdim[i]  =   nelmtcoef*nvariables;
             }
-            AllocateNekBlkMatDig(m_PrecMatSingle,nelmtmatdim,nelmtmatdim);
+            AllocateNekBlkMatDig(m_PreconMatSingle,nelmtmatdim,nelmtmatdim);
         }
 
         m_nonlinsol->SetSysOperators(m_NekSysOp);
@@ -497,7 +497,7 @@ timer.AccumulateRegion("DoDiffusion");
     void CompressibleFlowSystem::PrecBlkDiag(
         const Array<OneD, NekDouble>  &inarray,
         Array<OneD, NekDouble >       &outarray,
-        const TypeNekBlkMatSharedPtr  &PrecMatVars,
+        const TypeNekBlkMatSharedPtr  &PreconMatVars,
         const DataType                &tmpDataType)
     {
         boost::ignore_unused(tmpDataType);
@@ -530,7 +530,7 @@ timer.AccumulateRegion("DoDiffusion");
             }
         }
 
-        outVect = (*PrecMatVars)*tmpVect;
+        outVect = (*PreconMatVars)*tmpVect;
 
         for(int m = 0; m < nvariables; m++)
         {
@@ -556,23 +556,23 @@ timer.AccumulateRegion("DoDiffusion");
     {
 
         boost::ignore_unused(flag);
-        if (m_updatePrecMatFlag)
+        if (m_updatePreconMatFlag)
         {
-            CalcPrecMat(m_solutionPhys, m_BndEvaluateTime, m_TimeIntegLambda);
+            CalcPreconMat(m_solutionPhys, m_BndEvaluateTime, m_TimeIntegLambda);
 
             m_TimeIntegLambdaPrcMat = m_TimeIntegLambda;
 
-            m_CalcuPrecMatNumbSteps += m_CalcuPrecMatCounter;
-            m_CalcuPrecMatNumbSteps = m_CalcuPrecMatNumbSteps/2;
-            m_CalcuPrecMatCounter   = 1;
+            m_CalcPreconMatNumbSteps += m_CalcPreconMatCounter;
+            m_CalcPreconMatNumbSteps = m_CalcPreconMatNumbSteps/2;
+            m_CalcPreconMatCounter   = 1;
 
-            m_CalcuPrecMatFlag = false;
+            m_CalcPreconMatFlag = false;
 
-            m_updatePrecMatFlag = false;
+            m_updatePreconMatFlag = false;
 
             if (m_verbose&&m_root)
             {
-                cout << "     ## CalcuPrecMat " << endl;
+                cout << "     ## CalcuPreconMat " << endl;
             }
         }
 
@@ -651,7 +651,7 @@ timer.AccumulateRegion("DoDiffusion");
                 wspTraceDataType[m] =   Array<OneD, NekSingle>(nTracePts);
             }
 
-            PrecBlkDiag(rhs,outarray,m_PrecMatSingle,tmpSingle);
+            PrecBlkDiag(rhs,outarray,m_PreconMatSingle,tmpSingle);
 
             for(int nsor = 0; nsor < nSORTot-1; nsor++)
             {
@@ -663,14 +663,14 @@ timer.AccumulateRegion("DoDiffusion");
                     m_TraceJacDerivArraySingle, m_TraceJacDerivSignSingle,
                     m_TraceIPSymJacArraySingle);
 
-                PrecBlkDiag(outarray,outTmp,m_PrecMatSingle,
+                PrecBlkDiag(outarray,outTmp,m_PreconMatSingle,
                     tmpSingle);
                 Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
             }
         }
     }
 
-    void CompressibleFlowSystem::CalcPrecMat(
+    void CompressibleFlowSystem::CalcPreconMat(
         const TensorOfArray2D<NekDouble>    &inpnts,
         const NekDouble                     time,
         const NekDouble                     lambda)
@@ -686,14 +686,14 @@ timer.AccumulateRegion("DoDiffusion");
         }
 
         DoOdeProjection(inpnts,intmp,m_BndEvaluateTime);
-        GetPrecNSBlkDiagCoeff(intmp, m_PrecMatVarsSingle, 
-            m_PrecMatSingle, m_TraceJacSingle, m_TraceJacDerivSingle,
+        GetPrecNSBlkDiagCoeff(intmp, m_PreconMatVarsSingle, 
+            m_PreconMatSingle, m_TraceJacSingle, m_TraceJacDerivSingle,
             m_TraceJacDerivSignSingle, m_TraceJacArraySingle, 
             m_TraceJacDerivArraySingle, m_TraceIPSymJacArraySingle,
             m_StdSMatDataDBB,m_StdSMatDataDBDB);
             
     
-        m_CalcuPrecMatFlag = false;
+        m_CalcPreconMatFlag = false;
         m_TimeIntegLambdaPrcMat = m_TimeIntegLambda;
 
         // to free the storage
@@ -2691,7 +2691,7 @@ timer.AccumulateRegion("DoDiffusion");
                         *m_NewtonAbsoluteIteTol * m_NewtonAbsoluteIteTol;
 
         m_nonlinsol->v_SetupNekNonlinSystem(ntotal, inarray, inarray, 0);
-        m_updatePrecMatFlag = UpdatePrecMatCheck(m_nonlinsol->GetRefResidual());
+        m_updatePreconMatFlag = UpdatePreconMatCheck(m_nonlinsol->GetRefResidual());
 
         m_TotNewtonIts +=  m_nonlinsol->SolveSystem(ntotal,inarray,
                                                     out, 0, tol2);
@@ -2702,7 +2702,7 @@ timer.AccumulateRegion("DoDiffusion");
         m_StagesPerStep++;
     }
 
-    bool CompressibleFlowSystem::UpdatePrecMatCheck(
+    bool CompressibleFlowSystem::UpdatePreconMatCheck(
         const TensorOfArray1D<NekDouble>  &res)
     {
         boost::ignore_unused(res);
@@ -2717,11 +2717,11 @@ timer.AccumulateRegion("DoDiffusion");
             }
             else
             {
-                if((m_CalcuPrecMatFlag) ||
+                if((m_CalcPreconMatFlag) ||
                     (m_TimeIntegLambdaPrcMat!=m_TimeIntegLambda))
                 {
                     flag = true;
-                    m_CalcuPrecMatNumbSteps = m_CalcuPrecMatCounter;
+                    m_CalcPreconMatNumbSteps = m_CalcPreconMatCounter;
                 }
             }
         }

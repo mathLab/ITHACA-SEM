@@ -363,7 +363,7 @@ namespace Nektar
             /// Time between checkpoints.
             NekDouble                                   m_checktime;
 
-            int                                         m_PrcdMatFreezNumb;
+            int                                         m_PreconMatFreezNumb;
             NekDouble                                   m_TimeIncrementFactor;
 
             /// Number of checkpoints written so far

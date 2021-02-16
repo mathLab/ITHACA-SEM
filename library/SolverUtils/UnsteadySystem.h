@@ -120,14 +120,6 @@ protected:
 
     NekDouble                                       m_Res0PreviousStep=-1.0;
     
-    ///Solution of The kth iteration in the Newton method(Nonlinear iteration)
-    // Array<OneD,       Array<OneD, NekDouble> >      m_TimeIntegtSol_k;
-    
-    /// Solution at time step n(input valure from timeintegration)
-    /// Residual of the nonlinear system at the kth iteration in the Newton method(Nonlinear iteration)
-    /// also the b of linearsys(Ax=b) stored to compute Jacobian_
-    Array<OneD,       Array<OneD, NekDouble> >      m_SysEquatResid_k;
-    
     Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >  m_PrecMatVars;
     
     Array<OneD, Array<OneD, NekDouble> >            m_PrecMatVarsOffDiag;

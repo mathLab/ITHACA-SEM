@@ -190,25 +190,6 @@ namespace StdRegions
             {
                 return 2;
             }
-      
-            inline virtual void v_MultplyStdDerivBase0(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray,
-                Array<OneD, NekDouble> &wsp)
-            {
-                IProductWRTBase_SumFacKernel(
-                        m_base[0]->GetDbdata(), m_base[1]->GetBdata(),
-                        inarray, outarray, wsp, false, true);
-            }
-            inline virtual void v_MultplyStdDerivBase1(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray,
-                Array<OneD, NekDouble> &wsp)
-            {
-                IProductWRTBase_SumFacKernel(
-                m_base[0]->GetBdata() , m_base[1]->GetDbdata(),
-                inarray, outarray, wsp, true, false);
-            }
     };
 
     typedef std::shared_ptr<StdExpansion2D> StdExpansion2DSharedPtr;

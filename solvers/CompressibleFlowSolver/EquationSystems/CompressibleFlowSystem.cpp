@@ -156,21 +156,13 @@ namespace Nektar
 
             int nvariables  =   m_fields.size();
             Array<OneD, Array<OneD, Array<OneD, int > > >   map;
-            bool flag;
             const MultiRegions::LocTraceToTraceMapSharedPtr locTraceToTraceMap =
                 m_fields[0]->GetLocTraceToTraceMap();
-            m_fields[0]->CalcuTracephysToLeftRightExpphysMap(flag,map);
-            locTraceToTraceMap->SetTracePhysToLeftRightExpPhysMap(map);
-            locTraceToTraceMap->SetFlagTracePhysToLeftRightExpPhysMap(flag);
 
             locTraceToTraceMap->CalcLocTracePhysToTraceIDMap(
                 m_fields[0]->GetTrace(),m_spacedim);
             for(int i=1;i<nvariables;i++)
             {
-                m_fields[i]->GetLocTraceToTraceMap()
-                    ->SetTracePhysToLeftRightExpPhysMap(map);
-                m_fields[i]->GetLocTraceToTraceMap()
-                    ->SetFlagTracePhysToLeftRightExpPhysMap(flag);
                 m_fields[i]->GetLocTraceToTraceMap()
                     ->SetLocTracephysToTraceIDMap(
                     locTraceToTraceMap->GetLocTracephysToTraceIDMap());
@@ -306,13 +298,13 @@ namespace Nektar
         m_session->LoadParameter ("JacobiFreeEps", m_JacobiFreeEps, 5.0E-8);
 
         int ntmp;
-        m_session->LoadParameter("DEBUG_ADVECTION_JAC_MAT", ntmp, 1);
+        m_session->LoadParameter("AdvectionJacFlag", ntmp, 1);
         m_AdvectionJacFlag             = true;
         if(0==ntmp)
         {
             m_AdvectionJacFlag = false;
         }
-        m_session->LoadParameter("DEBUG_VISCOUS_JAC_MAT", ntmp, 1);
+        m_session->LoadParameter("ViscousJacFlag", ntmp, 1);
         m_ViscousJacFlag             = true;
         if(0==ntmp)
         {
@@ -566,7 +558,7 @@ timer.AccumulateRegion("DoDiffusion");
         boost::ignore_unused(flag);
         if (m_updatePrecMatFlag)
         {
-            CalPrecMat(m_solutionPhys, m_BndEvaluateTime, m_TimeIntegLambda);
+            CalcPrecMat(m_solutionPhys, m_BndEvaluateTime, m_TimeIntegLambda);
 
             m_TimeIntegLambdaPrcMat = m_TimeIntegLambda;
 
@@ -678,7 +670,7 @@ timer.AccumulateRegion("DoDiffusion");
         }
     }
 
-    void CompressibleFlowSystem::CalPrecMat(
+    void CompressibleFlowSystem::CalcPrecMat(
         const TensorOfArray2D<NekDouble>    &inpnts,
         const NekDouble                     time,
         const NekDouble                     lambda)
@@ -1467,7 +1459,7 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
-    void CompressibleFlowSystem::CalVisFluxDerivJac(
+    void CompressibleFlowSystem::CalcVisFluxDerivJac(
         const int                           nConvectiveFields,
         const TensorOfArray2D<NekDouble>    &inarray,
         const TensorOfArray2D<NekDouble>    &Fwd,
@@ -1538,7 +1530,8 @@ timer.AccumulateRegion("DoDiffusion");
 
                     tmpMatinn       = ElmtJac[ntrace][npnt];
                     tmpMatinnData   = tmpMatinn->GetPtr(); 
-                    tmpMatoutData   = BJac->GetBlock(pntoffset,pntoffset)->GetPtr(); 
+                    tmpMatoutData = 
+                        BJac->GetBlock(pntoffset,pntoffset)->GetPtr(); 
                     Vmath::Smul(nConvectiveFields*nConvectiveFields,weight,
                         tmpMatinnData,1,tmpMatinnData,1);
                     for(int j = 0; j< nConvectiveFields;j++)
@@ -1629,7 +1622,7 @@ timer.AccumulateRegion("DoDiffusion");
             }
         }
 
-        CalTraceNumericalFlux(nConvectiveFields,nDim,npoints,nTracePts,
+        CalcTraceNumericalFlux(nConvectiveFields,nDim,npoints,nTracePts,
             PenaltyFactor2, fields,AdvVel,inarray,time,qfield,Fwd,Bwd,
             qFwd,qBwd,MuVarTrace,nonZeroIndex,numflux);
 
@@ -1682,7 +1675,7 @@ timer.AccumulateRegion("DoDiffusion");
                 m_fields[j]->FillBwdWithBoundCond(plusFwd[j], plusBwd[j]);
             }
 
-            CalTraceNumericalFlux(nConvectiveFields,nDim,npoints,nTracePts,
+            CalcTraceNumericalFlux(nConvectiveFields,nDim,npoints,nTracePts,
                 PenaltyFactor2,fields,AdvVel,inarray,time,qfield,
                 plusFwd,plusBwd,qFwd,qBwd,MuVarTrace,nonZeroIndex,plusflux);
 
@@ -1734,7 +1727,7 @@ timer.AccumulateRegion("DoDiffusion");
                 m_fields[j]->FillBwdWithBoundCond(Fwd[j], plusBwd[j]);
             }
 
-            CalTraceNumericalFlux(nConvectiveFields,nDim,npoints,nTracePts,
+            CalcTraceNumericalFlux(nConvectiveFields,nDim,npoints,nTracePts,
                 PenaltyFactor2,fields,AdvVel,inarray,time,qfield,Fwd,
                 plusBwd,qFwd,qBwd,MuVarTrace,nonZeroIndex,plusflux);
 
@@ -1756,7 +1749,7 @@ timer.AccumulateRegion("DoDiffusion");
         }
     }
 
-    void CompressibleFlowSystem::CalTraceNumericalFlux(
+    void CompressibleFlowSystem::CalcTraceNumericalFlux(
             const int                                         nConvectiveFields,
             const int                                         nDim,
             const int                                         nPts,
@@ -1809,7 +1802,7 @@ timer.AccumulateRegion("DoDiffusion");
         }
     }
 
-    void CompressibleFlowSystem::CalTraceIPSymmFlux(
+    void CompressibleFlowSystem::CalcTraceIPSymmFlux(
             const int                                         nConvectiveFields,
             const int                                         nTracePts,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -1884,7 +1877,7 @@ timer.AccumulateRegion("DoDiffusion");
 
         if(m_ViscousJacFlag)
         {
-            CalphysDeriv(inarray,qfield);
+            CalcPhysDeriv(inarray,qfield);
         }
 
         DataType zero =0.0;

@@ -558,30 +558,6 @@ namespace Nektar
                 v_IProductWRTDerivBase(dir,inarray, outarray);
             }
 
-            void MultplyStdDerivBase0(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray,
-                Array<OneD, NekDouble> &wsp)
-            {
-                v_MultplyStdDerivBase0(inarray,outarray,wsp);
-            }
-
-            void MultplyStdDerivBase1(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray,
-                Array<OneD, NekDouble> &wsp)
-            {
-                v_MultplyStdDerivBase1(inarray,outarray,wsp);
-            }
-
-            void MultplyStdDerivBase2(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray,
-                Array<OneD, NekDouble> &wsp)
-            {
-                v_MultplyStdDerivBase2(inarray,outarray,wsp);
-            }
-
             void   IProductWRTDirectionalDerivBase(
                     const Array<OneD, const NekDouble>& direction,
                     const Array<OneD, const NekDouble>& inarray,
@@ -1187,10 +1163,6 @@ namespace Nektar
             int m_elmt_id;
             int m_ncoeffs;                                   /**< Total number of coefficients used in the expansion */
 
-            // Not sure what these are needed for yet SJS
-            //Array<OneD, NekDouble > m_QuadratureWeights;
-            //Array<OneD, NekDouble > m_oQuadratureWeights;
-
             LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess>
             m_stdMatrixManager;
             LibUtilities::NekManager<StdMatrixKey, DNekBlkMat, StdMatrixKey::opLess>
@@ -1506,40 +1478,7 @@ namespace Nektar
              const int dir,
              const Array<OneD, const NekDouble>& inarray,
              Array<OneD, NekDouble> &outarray);
-            
-            STD_REGIONS_EXPORT virtual void v_MultplyStdDerivBase0(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray,
-                Array<OneD, NekDouble> &wsp)
-            {
-                boost::ignore_unused(inarray,outarray,wsp);
-                NEKERROR(ErrorUtil::efatal, 
-                        "StdExpansion::v_MultplyStdDerivBase0 "
-                        "has no (and should have no) implementation");
-            }
-
-            STD_REGIONS_EXPORT virtual void v_MultplyStdDerivBase1(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray,
-                Array<OneD, NekDouble> &wsp)
-            {
-                boost::ignore_unused(inarray,outarray,wsp);
-                NEKERROR(ErrorUtil::efatal, 
-                    "StdExpansion::v_MultplyStdDerivBase1 has no (and should "
-                    "have no) implementation");
-            }
-
-            STD_REGIONS_EXPORT virtual void v_MultplyStdDerivBase2(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray,
-                Array<OneD, NekDouble> &wsp)
-            {
-                boost::ignore_unused(inarray,outarray,wsp);
-                NEKERROR(ErrorUtil::efatal, 
-                    "StdExpansion::v_MultplyStdDerivBase2 has no (and should "
-                    "have no) implementation");
-            }
-
+    
             STD_REGIONS_EXPORT virtual void  v_IProductWRTDirectionalDerivBase(
              const Array<OneD, const NekDouble>& direction,
              const Array<OneD, const NekDouble>& inarray,

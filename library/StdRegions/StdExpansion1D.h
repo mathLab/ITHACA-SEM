@@ -88,15 +88,6 @@ namespace Nektar
             {
                 return 1;
             }
-
-            inline virtual void v_MultplyStdDerivBase0(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray,
-                Array<OneD, NekDouble> &wsp) override
-            {
-                boost::ignore_unused(wsp);
-                IProductWRTBase(m_base[0]->GetDbdata(),inarray,outarray,1);
-            }
         };
 
         typedef std::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;

@@ -477,8 +477,6 @@ namespace Nektar
                             
             Vmath::Vcopy(nqtot,inarray,1,tmp1,1);     // Dir3 metric
 
-            // MultiplyByQuadratureMetric(inarray, tmp1);
-
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 Vmath::Vmul(nqtot,&df[3*dir][0],  1,tmp1.get(),1,tmp2.get(),1);
@@ -519,11 +517,6 @@ namespace Nektar
             }
 
             Vmath::Vadd(nqtot, &tmp2[0], 1, &tmp5[0], 1, &tmp2[0], 1);
-
-            // outarray    = Array<OneD, Array<OneD, NekDouble> > (3);
-            // outarray[0] =   tmp2;   
-            // outarray[1] =   tmp3;   
-            // outarray[2] =   tmp4;   
         }
 
         //---------------------------------------

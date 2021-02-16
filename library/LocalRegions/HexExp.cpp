@@ -553,8 +553,6 @@ namespace Nektar
             
             Vmath::Vcopy(nq,inarray,1,tmp1,1);     // Dir3 metric
 
-            // MultiplyByQuadratureMetric(inarray, tmp1);
-
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 Vmath::Vmul(nq,&df[3*dir][0],  1,tmp1.get(),1,tmp2.get(),1);

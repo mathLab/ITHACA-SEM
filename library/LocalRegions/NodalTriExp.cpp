@@ -287,13 +287,6 @@ namespace Nektar
                 Vmath::Smul(nqtot, df[2*dir+1][0], inarray, 1, tmp2, 1);
             }
             Vmath::Vadd(nqtot, tmp0, 1, tmp1, 1, tmp1, 1); 
-
-            // MultiplyByQuadratureMetric(tmp1,tmp1);
-            // MultiplyByQuadratureMetric(tmp2,tmp2);
-
-            // outarray    = Array<OneD, Array<OneD, NekDouble> > (2);
-            // outarray[0] =   tmp1;   
-            // outarray[1] =   tmp2;   
         }
 
         void NodalTriExp::IProductWRTDerivBase_MatOp(const int dir,

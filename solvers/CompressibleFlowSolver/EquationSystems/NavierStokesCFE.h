@@ -219,7 +219,7 @@ namespace Nektar
             const Array<OneD, NekDouble>                        &normals,
                   DNekMatSharedPtr                              &fluxJac);
 
-    virtual void v_CalphysDeriv(
+    virtual void v_CalcPhysDeriv(
             const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield);
 

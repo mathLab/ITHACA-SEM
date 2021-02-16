@@ -270,19 +270,6 @@ public:
         return m_traceCoeffToLeftRightExpCoeffSign;
     }
 
-    MULTI_REGIONS_EXPORT inline void SetTracePhysToLeftRightExpPhysMap(
-        const Array<OneD, const Array<OneD, Array<OneD, int > > > & inarray)
-    {
-        m_tracePhysToLeftRightExpPhysMap = inarray;
-    }
-
-    MULTI_REGIONS_EXPORT inline const Array<OneD,
-        const Array<OneD, Array<OneD, int > > >
-        &GetTracePhysToLeftRightExpPhysMap() const
-    {
-        return m_tracePhysToLeftRightExpPhysMap;
-    }
-
     MULTI_REGIONS_EXPORT inline const Array<OneD, int >
            &GetElemNeighbsNumb() const
     {
@@ -293,17 +280,6 @@ public:
            &GetElemNeighbsId() const
     {
         return m_ElemNeighbsId;
-    }
-
-    MULTI_REGIONS_EXPORT inline void SetFlagTracePhysToLeftRightExpPhysMap(
-        const bool in)
-    {
-        m_flagTracePhysToLeftRightExpPhysMap = in;
-    }
-
-    MULTI_REGIONS_EXPORT inline bool GetFlagTracePhysToLeftRightExpPhysMap()
-    {
-        return m_flagTracePhysToLeftRightExpPhysMap;
     }
 
     MULTI_REGIONS_EXPORT inline const Array<OneD, const Array<OneD, int > >
@@ -389,15 +365,6 @@ private:
     /// expasion coeffs.
     Array<OneD, Array<OneD, Array<OneD, int> > >
         m_traceCoeffToLeftRightExpCoeffSign;
-    /// The map of every phys from current trace to the left & right adjacent
-    /// expasion phys. This map is only used when no interpolation is needed in
-    /// getting GetFwdBwdTracePhys. If interpolation is needed, it should be
-    /// determined as the InnerProduct of m_fieldToLocTraceMap matrix and
-    /// interpolation matrix.
-    Array<OneD, Array<OneD, Array<OneD, int> > >
-        m_tracePhysToLeftRightExpPhysMap;
-
-    bool m_flagTracePhysToLeftRightExpPhysMap;
 
     // store the number of neighbor elements for each element
     Array<OneD, int >                               m_ElemNeighbsNumb;

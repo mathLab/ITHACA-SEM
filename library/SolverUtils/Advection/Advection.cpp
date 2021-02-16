@@ -87,18 +87,19 @@ void Advection::Advect(
 
 template<typename DataType, typename TypeNekBlkMatSharedPtr>
 void Advection::AddTraceJacToMat(
-        const int                                           nConvectiveFields,
-        const int                                           nSpaceDim,
-        const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
-        const Array<OneD, TypeNekBlkMatSharedPtr>           &TracePntJacCons,
-        Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >   &gmtxarray,
-        const Array<OneD, TypeNekBlkMatSharedPtr>           &TracePntJacGrad        ,
-        const Array<OneD, Array<OneD, DataType> >           &TracePntJacGradSign    )
+        const int                                         nConvectiveFields,
+        const int                                         nSpaceDim,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const Array<OneD, TypeNekBlkMatSharedPtr>         &TracePntJacCons,
+        Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> > &gmtxarray,
+        const Array<OneD, TypeNekBlkMatSharedPtr>         &TracePntJacGrad,
+        const Array<OneD, Array<OneD, DataType> >         &TracePntJacGradSign)
 {
     MultiRegions::ExpListSharedPtr tracelist = pFields[0]->GetTrace();
-    std::shared_ptr<LocalRegions::ExpansionVector> traceExp= tracelist->GetExp();
-    int ntotTrac            = (*traceExp).size();
-    int nTracePnts          = tracelist->GetTotPoints();
+    std::shared_ptr<LocalRegions::ExpansionVector> traceExp 
+        = tracelist->GetExp();
+    int ntotTrac = (*traceExp).size();
+    int nTracePnts = tracelist->GetTotPoints();
     int nTracPnt,nTracCoef;
 
     DNekMatSharedPtr tmp2Add;
@@ -119,8 +120,9 @@ void Advection::AddTraceJacToMat(
                             ::AllocateSharedPtr(nTracCoef, nTracPnt,0.0);
     }
 
-    std::shared_ptr<LocalRegions::ExpansionVector> fieldExp= pFields[0]->GetExp();
-    int ntotElmt            = (*fieldExp).size();
+    std::shared_ptr<LocalRegions::ExpansionVector> fieldExp 
+        = pFields[0]->GetExp();
+    int ntotElmt = (*fieldExp).size();
     int nElmtPnt,nElmtCoef;
 
     Array<OneD, DNekMatSharedPtr>  ElmtJacQuad(ntotElmt);
@@ -165,7 +167,7 @@ void Advection::AddTraceJacToMat(
 
             if(TracePntJacGradflag)
             {
-                // TODO: only 1 BJac is stored here because BJac = - FJac
+                //only BJac is stored here because BJac = - FJac
                 for(int ndir = 0; ndir < nSpaceDim; ndir++)
                 {
                     // ElmtJacGrad to set 0
@@ -175,39 +177,47 @@ void Advection::AddTraceJacToMat(
                     }
                     int ngrad = n*nSpaceDim+ndir;
                     
-                    CalcJacobTraceInteg(pFields,m,ngrad,TracePntJacGrad,TracePntJacGradSign,TraceJacFwd,TraceJacBwd);
-                    pFields[0]->AddTraceJacToElmtJac(TraceJacFwd,TraceJacBwd,ElmtJacQuad);
-                    //TODO:: 3 directions together to lower down cost
-                    pFields[0]->AddRightIPTPhysDerivBase(ndir,ElmtJacQuad,ElmtJacCoef);
+                    CalcJacobTraceInteg(pFields, m,ngrad, TracePntJacGrad, 
+                        TracePntJacGradSign, TraceJacFwd, TraceJacBwd);
+                    pFields[0]->AddTraceJacToElmtJac(TraceJacFwd, TraceJacBwd, 
+                        ElmtJacQuad);
+                    // cost can be lower down by doing 3 directions together
+                    pFields[0]->AddRightIPTPhysDerivBase(ndir, ElmtJacQuad, 
+                        ElmtJacCoef);
                 }
                 for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                 {
                     nElmtCoef          = (*fieldExp)[nelmt]->GetNcoeffs();
                     if(SymmMatData.size()<nElmtCoef)
                     {
-                        SymmMatData = Array<OneD, NekDouble> (nElmtCoef*nElmtCoef);
+                        SymmMatData = 
+                            Array<OneD, NekDouble> (nElmtCoef*nElmtCoef);
                     }
                     MatData1 =  ElmtJacCoef[nelmt]->GetPtr();
                     for(int i=0;i<nElmtCoef;i++)
                     {
-                        Vmath::Vcopy(nElmtCoef,&MatData1[i*nElmtCoef],1,&SymmMatData[i],nElmtCoef);
+                        Vmath::Vcopy(nElmtCoef, &MatData1[i*nElmtCoef], 1, 
+                            &SymmMatData[i], nElmtCoef);
                     }
-                    Vmath::Vadd(nElmtCoef*nElmtCoef,SymmMatData,1,MatData1,1,MatData1,1);
+                    Vmath::Vadd(nElmtCoef*nElmtCoef, SymmMatData, 1, 
+                        MatData1, 1, MatData1, 1);
                 }
             }
 
-            CalcJacobTraceInteg(pFields,m,n,TracePntJacCons, TraceJacConsSign,TraceJacFwd,TraceJacBwd);
-            //TODO: To modify CalcJacobTraceInteg&AddTraceJacToElmtJac to Bwd after Fwd not at the same time
-            pFields[0]->AddTraceJacToElmtJac(TraceJacFwd, TraceJacBwd,ElmtJacQuad);
-            //TODO: To check whether it is ok to reuse ElmtJacQuad as output
-            pFields[0]->AddRightIPTBaseMatrix(ElmtJacQuad,ElmtJacCoef);
+            CalcJacobTraceInteg(pFields, m, n, TracePntJacCons, 
+                TraceJacConsSign, TraceJacFwd, TraceJacBwd);
+                
+            pFields[0]->AddTraceJacToElmtJac(TraceJacFwd, TraceJacBwd,
+                ElmtJacQuad);
+            //Memory can be save to explore reusing ElmtJacQuad as output
+            pFields[0]->AddRightIPTBaseMatrix(ElmtJacQuad, ElmtJacCoef);
 
             // add ElmtJacCons to gmtxarray[m][n]
             for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
             {
-                tmp2Add         = ElmtJacCoef[nelmt];
-                MatData0        = gmtxarray[m][n]->GetBlock(nelmt,nelmt)->GetPtr();
-                MatData1        = tmp2Add->GetPtr();
+                tmp2Add = ElmtJacCoef[nelmt];
+                MatData0 = gmtxarray[m][n]->GetBlock(nelmt,nelmt)->GetPtr();
+                MatData1 = tmp2Add->GetPtr();
                 for(int i=0;i<MatData0.size();i++)
                 {
                     MatData0[i] += DataType(MatData1[i]);
@@ -218,21 +228,21 @@ void Advection::AddTraceJacToMat(
 }
 
 template SOLVER_UTILS_EXPORT void Advection::AddTraceJacToMat( 
-        const int                                           nConvectiveFields,
-        const int                                           nSpaceDim,
-        const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
-        const Array<OneD, DNekBlkMatSharedPtr>              &TracePntJacCons,
-        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >      &gmtxarray,
-        const Array<OneD, DNekBlkMatSharedPtr>              &TracePntJacGrad        ,
-        const Array<OneD, Array<OneD, NekDouble> >          &TracePntJacGradSign    );
+        const int                                         nConvectiveFields,
+        const int                                         nSpaceDim,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const Array<OneD, DNekBlkMatSharedPtr>            &TracePntJacCons,
+        Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >    &gmtxarray,
+        const Array<OneD, DNekBlkMatSharedPtr>            &TracePntJacGrad,
+        const Array<OneD, Array<OneD, NekDouble> >        &TracePntJacGradSign);
 template SOLVER_UTILS_EXPORT void Advection::AddTraceJacToMat( 
-        const int                                           nConvectiveFields,
-        const int                                           nSpaceDim,
-        const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
-        const Array<OneD, SNekBlkMatSharedPtr>              &TracePntJacCons,
-        Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >      &gmtxarray,
-        const Array<OneD, SNekBlkMatSharedPtr>              &TracePntJacGrad        ,
-        const Array<OneD, Array<OneD, NekSingle> >          &TracePntJacGradSign    );
+        const int                                         nConvectiveFields,
+        const int                                         nSpaceDim,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const Array<OneD, SNekBlkMatSharedPtr>            &TracePntJacCons,
+        Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >    &gmtxarray,
+        const Array<OneD, SNekBlkMatSharedPtr>            &TracePntJacGrad,
+        const Array<OneD, Array<OneD, NekSingle> >        &TracePntJacGradSign);
 
 
 // TODO: To change it into one by one
@@ -247,7 +257,8 @@ void Advection::CalcJacobTraceInteg(
     Array<OneD, DNekMatSharedPtr>                         & TraceJacBwd)
 {
     MultiRegions::ExpListSharedPtr tracelist = pFields[0]->GetTrace();
-    std::shared_ptr<LocalRegions::ExpansionVector> traceExp= tracelist->GetExp();
+    std::shared_ptr<LocalRegions::ExpansionVector> traceExp = 
+        tracelist->GetExp();
     int ntotTrac            = (*traceExp).size();
     int nTracPnt,noffset,pntoffset;
 
@@ -273,11 +284,11 @@ void Advection::CalcJacobTraceInteg(
         for(int npnt = 0; npnt < nTracPnt; npnt++)
         {
             pntoffset = noffset+npnt;
-            ftmp                    =   (*PntJac[0]->GetBlock(pntoffset,pntoffset))(m,n);
-            JacFwd[nelmt][npnt]     =   NekDouble(PntJacSign[0][pntoffset]*ftmp);
+            ftmp = (*PntJac[0]->GetBlock(pntoffset,pntoffset))(m,n);
+            JacFwd[nelmt][npnt] = NekDouble(PntJacSign[0][pntoffset]*ftmp);
 
-            btmp                    =   (*PntJac[1]->GetBlock(pntoffset,pntoffset))(m,n);
-            JacBwd[nelmt][npnt]     =   NekDouble(PntJacSign[1][pntoffset]*btmp);
+            btmp = (*PntJac[1]->GetBlock(pntoffset,pntoffset))(m,n);
+            JacBwd[nelmt][npnt] = NekDouble(PntJacSign[1][pntoffset]*btmp);
         }
     }
     tracelist->GetDiagMatIpwrtBase(JacFwd,TraceJacFwd);

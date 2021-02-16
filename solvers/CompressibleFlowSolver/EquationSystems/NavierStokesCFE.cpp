@@ -1127,7 +1127,6 @@ namespace Nektar
 
         int nAuxVars_count = 0;
 
-        //TODO: to get primary variable outside.(even in the beginning of DoODERhs)
         Array<OneD,Array<OneD,NekDouble>> u(nDim);
         Array<OneD,Array<OneD,NekDouble>> u2(nDim);
         for(int i=0;i<nDim;i++)
@@ -2564,7 +2563,7 @@ namespace Nektar
         }
     }
     
-    void NavierStokesCFE::v_CalphysDeriv(
+    void NavierStokesCFE::v_CalcPhysDeriv(
         const Array<OneD, const Array<OneD, NekDouble> >          &inarray,
         Array<OneD,       Array<OneD, Array<OneD, NekDouble> > >  &qfield)
     {

@@ -275,16 +275,15 @@ void DiffusionIP::v_DiffuseCoeffs(
     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > elmtFlux(nDim);
     for (j = 0; j < nDim; ++j)
     {
-        elmtFlux[j]     = Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
+        elmtFlux[j] = Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
         for (i = 0; i < nConvectiveFields; ++i)
         {
-            elmtFlux[j][i]   = Array<OneD, NekDouble>(nPts, 0.0);
+            elmtFlux[j][i] = Array<OneD, NekDouble>(nPts, 0.0);
         }
     }
     
     DiffuseVolumeFlux(fields,inarray,qfield,elmtFlux,nonZeroIndex);
     
-    //TODO: TO GET TRACE QFIELD FIRST AND RELEASE qfield. AddDiffusionSymmFluxToCoeff DON'T NEED qfield
     Array<OneD, Array<OneD, NekDouble> > tmpFluxIprdct(nDim);
     // volume intergration: the nonZeroIndex indicates which flux is nonzero
     for(i = 0; i < nonZeroIndex.size(); ++i)

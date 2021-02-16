@@ -119,7 +119,7 @@ namespace Nektar
             const NekDouble                     lambda);
         bool UpdatePrecMatCheck(
             const TensorOfArray1D<NekDouble>  &res);
-        void CalPrecMat(
+        void CalcPrecMat(
             const TensorOfArray2D<NekDouble>    &inpnts,
             const NekDouble                     time,
             const NekDouble                     lambda);
@@ -410,7 +410,7 @@ namespace Nektar
             const Array<OneD, NekDouble>                &normals, 
             DNekMatSharedPtr                            &fluxJac);
         
-        void CalTraceNumericalFlux(
+        void CalcTraceNumericalFlux(
             const int                                         nConvectiveFields,
             const int                                           nDim,
             const int                                           nPts,
@@ -429,7 +429,7 @@ namespace Nektar
             Array<OneD, int >                                   &nonZeroIndex,
             TensorOfArray2D<NekDouble>                          &traceflux);
         
-        void CalTraceIPSymmFlux(
+        void CalcTraceIPSymmFlux(
             const int                                         nConvectiveFields,
             const int                                         nTracePts,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -443,7 +443,7 @@ namespace Nektar
             TensorOfArray3D<NekDouble>                  &traceflux);
 
         template<typename DataType, typename TypeNekBlkMatSharedPtr>
-        void CalVisFluxDerivJac(
+        void CalcVisFluxDerivJac(
             const int                           nConvectiveFields,
             const TensorOfArray2D<NekDouble>    &inarray,
             const TensorOfArray2D<NekDouble>    &Fwd,
@@ -502,11 +502,11 @@ namespace Nektar
             v_GetFluxDerivJacDirctn(explist,normals,nDervDir,inarray,ElmtJac);
         }
 
-        void CalphysDeriv(
+        void CalcPhysDeriv(
             const Array<OneD, const Array<OneD, NekDouble>> &inarray,
             TensorOfArray3D<NekDouble>   &qfield)
         {
-            v_CalphysDeriv(inarray, qfield);
+            v_CalcPhysDeriv(inarray, qfield);
         }
         void GetDiffusionFluxJacPoint(
             const Array<OneD, NekDouble>                        &conservVar, 
@@ -635,7 +635,7 @@ namespace Nektar
             const Array<OneD, NekDouble>                        &normals,
                   DNekMatSharedPtr                              &fluxJac);
 
-        virtual void v_CalphysDeriv(
+        virtual void v_CalcPhysDeriv(
             const Array<OneD, const Array<OneD, NekDouble>> &inarray,
             TensorOfArray3D<NekDouble>                      &qfield)
         {

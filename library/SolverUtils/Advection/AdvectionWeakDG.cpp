@@ -282,26 +282,27 @@ namespace Nektar
                         (*mtxPerVar[nelmt])        =    0.0;
                     }
 
-                    explist->GetMatIpwrtDeriveBase(ElmtJacArray[m][n],mtxPerVar);
-                    //TODO:: To reuse mtxPerVar
+                    explist->GetMatIpwrtDeriveBase(ElmtJacArray[m][n], 
+                        mtxPerVar);
+                    // Memory can be saved by reusing mtxPerVar
                     explist->AddRightIPTBaseMatrix(mtxPerVar,mtxPerVarCoeff);
 
                     for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
                     {
-                        nElmtCoef       = elmtcoef[nelmt];
-                        nElmtPnt        = elmtpnts[nelmt];
-                        int ntotDofs    = nElmtCoef*nElmtCoef;
+                        nElmtCoef = elmtcoef[nelmt];
+                        nElmtPnt = elmtpnts[nelmt];
+                        int ntotDofs = nElmtCoef*nElmtCoef;
 
                         if(Elmt_dataSingle.size()<ntotDofs)
                         {
                             Elmt_dataSingle = Array<OneD, NekSingle> (ntotDofs);
                         }
 
-                        tmpGmtx         = gmtxarray[m][n]->GetBlock(nelmt,nelmt);
-                        ElmtMat         = mtxPerVarCoeff[nelmt];
+                        tmpGmtx = gmtxarray[m][n]->GetBlock(nelmt,nelmt);
+                        ElmtMat = mtxPerVarCoeff[nelmt];
 
-                        GMat_data       = tmpGmtx->GetPtr();
-                        Elmt_data       = ElmtMat->GetPtr();
+                        GMat_data = tmpGmtx->GetPtr();
+                        Elmt_data = ElmtMat->GetPtr();
 
                         for(int i=0;i<ntotDofs;i++)
                         {

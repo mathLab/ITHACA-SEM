@@ -1140,10 +1140,6 @@ namespace Nektar
                 Array<OneD, const std::pair<int, int> >
                 &GetCoeffsToElmt() const;
 
-            MULTI_REGIONS_EXPORT void CalcuTracephysToLeftRightExpphysMap(
-                    bool                                            &flag,
-                    Array<OneD, Array<OneD, Array<OneD, int > > >   &T2Emap);
-
             MULTI_REGIONS_EXPORT void AddTraceJacToElmtJac(
                 const Array<OneD, const DNekMatSharedPtr>  &FwdMat,
                 const Array<OneD, const DNekMatSharedPtr>  &BwdMat,

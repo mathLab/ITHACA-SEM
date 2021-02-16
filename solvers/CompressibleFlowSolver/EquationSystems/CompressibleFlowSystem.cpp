@@ -230,7 +230,7 @@ namespace Nektar
         {
             int nvariables  =   m_fields.size();
             m_NekSysOp.DefineNekSysPrecond(
-                    &CompressibleFlowSystem::preconditionerBlkSORCoeff, this);
+                    &CompressibleFlowSystem::PrecBlkSORCoeff, this);
             m_PrecMatStorage    =   eDiagonal;
             m_session->LoadParameter("nPadding", m_nPadding, 4);
     
@@ -241,7 +241,7 @@ namespace Nektar
                 m_PrecMatVarsSingle[i] =  
                     Array<OneD, SNekBlkMatSharedPtr> (nvariables);
             }
-            AllocatePrecondBlkDiagCoeff(m_PrecMatVarsSingle);
+            AllocatePrecBlkDiagCoeff(m_PrecMatVarsSingle);
 
             int nelmts  = m_fields[0]->GetNumElmts();
             int nelmtcoef;
@@ -484,7 +484,7 @@ timer.AccumulateRegion("DoDiffusion");
         }
     }
 
-    void CompressibleFlowSystem::preconditioner(
+    void CompressibleFlowSystem::Prec(
         const Array<OneD, NekDouble> &inarray,
         Array<OneD, NekDouble >&out)
     {
@@ -494,7 +494,7 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
-    void CompressibleFlowSystem::preconditioner_BlkDiag(
+    void CompressibleFlowSystem::PrecBlkDiag(
         const Array<OneD, NekDouble>  &inarray,
         Array<OneD, NekDouble >       &outarray,
         const TypeNekBlkMatSharedPtr  &PrecMatVars,
@@ -549,7 +549,7 @@ timer.AccumulateRegion("DoDiffusion");
         }
     }
 
-    void CompressibleFlowSystem::preconditionerBlkSORCoeff(
+    void CompressibleFlowSystem::PrecBlkSORCoeff(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&outarray,
             const bool                   &flag)
@@ -580,7 +580,7 @@ timer.AccumulateRegion("DoDiffusion");
         int nSORTot   =   m_JFNKPrecondStep;
         if (0==nSORTot)
         {
-            preconditioner(inarray,outarray);
+            Prec(inarray,outarray);
         }
         else
         {
@@ -592,7 +592,7 @@ timer.AccumulateRegion("DoDiffusion");
             unsigned int ntotpnt    = inarray.size();
             
             ASSERTL0(nvariables*npoints==ntotpnt,
-                "nvariables*npoints!=ntotpnt in preconditioner_BlkSOR");
+                "nvariables*npoints!=ntotpnt in PrecBlkSORCoeff");
 
             Array<OneD, NekDouble> rhs(ntotpnt);
 
@@ -651,7 +651,7 @@ timer.AccumulateRegion("DoDiffusion");
                 wspTraceDataType[m] =   Array<OneD, NekSingle>(nTracePts);
             }
 
-            preconditioner_BlkDiag(rhs,outarray,m_PrecMatSingle,tmpSingle);
+            PrecBlkDiag(rhs,outarray,m_PrecMatSingle,tmpSingle);
 
             for(int nsor = 0; nsor < nSORTot-1; nsor++)
             {
@@ -663,7 +663,7 @@ timer.AccumulateRegion("DoDiffusion");
                     m_TraceJacDerivArraySingle, m_TraceJacDerivSignSingle,
                     m_TraceIPSymJacArraySingle);
 
-                preconditioner_BlkDiag(outarray,outTmp,m_PrecMatSingle,
+                PrecBlkDiag(outarray,outTmp,m_PrecMatSingle,
                     tmpSingle);
                 Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
             }
@@ -686,7 +686,7 @@ timer.AccumulateRegion("DoDiffusion");
         }
 
         DoOdeProjection(inpnts,intmp,m_BndEvaluateTime);
-        GetpreconditionerNSBlkDiagCoeff(intmp, m_PrecMatVarsSingle, 
+        GetPrecNSBlkDiagCoeff(intmp, m_PrecMatVarsSingle, 
             m_PrecMatSingle, m_TraceJacSingle, m_TraceJacDerivSingle,
             m_TraceJacDerivSignSingle, m_TraceJacArraySingle, 
             m_TraceJacDerivArraySingle, m_TraceIPSymJacArraySingle,
@@ -1835,7 +1835,7 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     template<typename TypeNekBlkMatSharedPtr>
-    void CompressibleFlowSystem::AllocatePrecondBlkDiagCoeff(
+    void CompressibleFlowSystem::AllocatePrecBlkDiagCoeff(
         TensorOfArray2D<TypeNekBlkMatSharedPtr> &gmtxarray,
         const int                                          &nscale )
     {
@@ -1860,7 +1860,7 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
-    void CompressibleFlowSystem::GetpreconditionerNSBlkDiagCoeff(
+    void CompressibleFlowSystem::GetPrecNSBlkDiagCoeff(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
         TensorOfArray2D<TypeNekBlkMatSharedPtr>          &gmtxarray,
         TypeNekBlkMatSharedPtr                           &gmtVar,

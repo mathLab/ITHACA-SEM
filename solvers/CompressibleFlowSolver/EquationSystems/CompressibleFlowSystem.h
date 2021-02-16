@@ -185,14 +185,14 @@ namespace Nektar
         // Forcing term
         std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
 
-        enum PreconditionerType
+        enum PrecType
         {
             eNull,    ///< No Solution type specified
             eDiagonal,
             eSparse,
         };
 
-        PreconditionerType                  m_PrecMatStorage;
+        PrecType                            m_PrecMatStorage;
         NekDouble                           m_BndEvaluateTime;
         TensorOfArray2D<NekDouble>          m_solutionPhys;
 
@@ -230,18 +230,18 @@ namespace Nektar
                   TensorOfArray2D<NekDouble> &outarray,
             const NekDouble                                   time);
 
-        void preconditioner(
+        void Prec(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&out);
  
         template<typename DataType, typename TypeNekBlkMatSharedPtr>
-        void preconditioner_BlkDiag(
+        void PrecBlkDiag(
             const Array<OneD, NekDouble>     &inarray,
             Array<OneD, NekDouble >          &outarray,
             const TypeNekBlkMatSharedPtr     &PrecMatVars,
             const DataType                   &tmpDataType);
 
-        void preconditionerBlkSORCoeff(
+        void PrecBlkSORCoeff(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&outarray,
             const bool                   &flag);
@@ -344,7 +344,7 @@ namespace Nektar
             const DataType                          valu);
 
         template<typename TypeNekBlkMatSharedPtr>
-        void AllocatePrecondBlkDiagCoeff(
+        void AllocatePrecBlkDiagCoeff(
             TensorOfArray2D<TypeNekBlkMatSharedPtr> &gmtxarray,
             const int                               &nscale=1 );
 
@@ -368,7 +368,7 @@ namespace Nektar
         }
 
         template<typename DataType, typename TypeNekBlkMatSharedPtr>
-        void GetpreconditionerNSBlkDiagCoeff(
+        void GetPrecNSBlkDiagCoeff(
             const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
             TensorOfArray2D<TypeNekBlkMatSharedPtr> &gmtxarray,
             TypeNekBlkMatSharedPtr              &gmtVar,

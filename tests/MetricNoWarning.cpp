@@ -264,7 +264,7 @@ namespace Nektar
         TiXmlElement *matches = m_metric->FirstChildElement("matches");
         if (matches)
         {
-            ASSERTL0(m_metric->RemoveChild(matches), "Couln't remove mathces "
+            ASSERTL0(m_metric->RemoveChild(matches), "Couldn't remove matches "
                 "from metric")
         }
 

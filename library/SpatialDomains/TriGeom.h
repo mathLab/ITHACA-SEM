@@ -87,14 +87,6 @@ protected:
 
     SPATIAL_DOMAINS_EXPORT virtual void v_GenGeomFactors();
     SPATIAL_DOMAINS_EXPORT virtual void v_FillGeom();
-    SPATIAL_DOMAINS_EXPORT virtual NekDouble v_GetLocCoords(
-        const Array<OneD, const NekDouble> &coords,
-        Array<OneD, NekDouble> &Lcoords);
-    SPATIAL_DOMAINS_EXPORT virtual bool v_ContainsPoint(
-        const Array<OneD, const NekDouble> &gloCoord,
-        Array<OneD, NekDouble> &locCoord,
-        NekDouble tol,
-        NekDouble &resid);
     SPATIAL_DOMAINS_EXPORT virtual int v_GetDir(const int faceidx, const int facedir) const;
 
     SPATIAL_DOMAINS_EXPORT virtual void v_Reset(CurveMap &curvedEdges,

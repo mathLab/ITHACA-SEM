@@ -59,12 +59,6 @@ public:
 
 protected:
     virtual void v_GenGeomFactors();
-    virtual NekDouble v_GetLocCoords(const Array<OneD, const NekDouble> &coords,
-                                     Array<OneD, NekDouble> &Lcoords);
-    virtual bool v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
-                                 Array<OneD, NekDouble> &locCoord,
-                                 NekDouble tol,
-                                 NekDouble &resid);
     virtual int v_GetDir(const int faceidx, const int facedir) const;
     virtual void v_Reset(CurveMap &curvedEdges, CurveMap &curvedFaces);
     virtual void v_Setup();

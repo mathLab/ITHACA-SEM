@@ -610,10 +610,8 @@ namespace Nektar
 
                     for (int j = 0; j < nConvectiveFields; ++j)
                     {
-                        Vmath::Vvtvp(nPts, &normal[nd][0], 1,
-                                    &outtmp[j][0], 1,
-                                    &outarray[0][j][0], 1,
-                                    &outarray[0][j][0], 1);
+                        Vmath::Vvtvp(nPts, normal[nd], 1, outtmp[j], 1,
+                            outarray[0][j], 1, outarray[0][j], 1);
                     }
                 }
             }
@@ -759,9 +757,8 @@ namespace Nektar
                     m_varConv->GetEFromRhoP(bndRho, bndPressure, bndIntEndy);
                     m_varConv->GetDynamicEnergy(bndCons, bndTotEngy);
 
-                    Vmath::Vvtvp(nBndEdgePts, &bndIntEndy[0], 1,
-                                &bndCons[ndens][0], 1, &bndTotEngy[0], 1,
-                                &bndTotEngy[0], 1);
+                    Vmath::Vvtvp(nBndEdgePts, bndIntEndy, 1, bndCons[ndens], 1,
+                        bndTotEngy, 1, bndTotEngy, 1);
 
 
                     Vmath::Vcopy(nBndEdgePts,
@@ -814,8 +811,8 @@ namespace Nektar
 
                 for (int i = 0; i < nConvectiveFields; ++i)
                 {
-                    Vmath::Vvtvp(nPts, &outtmp[i][0], 1, &normals[nderiv][0], 1,
-                                &outarray[nd][i][0], 1, &outarray[nd][i][0], 1);
+                    Vmath::Vvtvp(nPts, outtmp[i], 1, normals[nderiv], 1,
+                        outarray[nd][i], 1, outarray[nd][i], 1);
                 }
             }
         }
@@ -859,8 +856,8 @@ namespace Nektar
         Array<OneD, NekDouble> q2{nPts, 0.0};
         Array<OneD, NekDouble> E_minus_q2{nPts, 0.0};
         Array<OneD, NekDouble> orho{nPts, 0.0};
-        Array<OneD, NekDouble>tmp {nPts, 0.0};
-        Array<OneD, NekDouble>tmp1{nPts, 0.0};
+        Array<OneD, NekDouble> tmp {nPts, 0.0};
+        Array<OneD, NekDouble> tmp1{nPts, 0.0};
 
         //Constants
         int nDim_plus_one = nDim + 1;
@@ -869,50 +866,44 @@ namespace Nektar
         NekDouble Pr = m_Prandtl;
         NekDouble gammaoPr = gamma / Pr;
         NekDouble one_minus_gammaoPr = 1.0 - gammaoPr;
-        const NekDouble OneThird = 1. / 3.;
-        const NekDouble TwoThird = 2. * OneThird;
-        const NekDouble FourThird = 4. * OneThird;
+        constexpr NekDouble OneThird = 1. / 3.;
+        constexpr NekDouble TwoThird = 2. * OneThird;
+        constexpr NekDouble FourThird = 4. * OneThird;
 
         Vmath::Sdiv(nPts, 1.0, &inaverg[0][0], 1, &orho[0], 1);
         m_varConv->GetVelocityVector(inaverg, u);
         for (int i = 0; i < nDim; ++i)
         {
-            Vmath::Vmul(nPts, &u[i][0], 1, &u[i][0], 1, &u2[i][0], 1);
-            Vmath::Vadd(nPts, &q2[0], 1, &u2[i][0], 1, &q2[0], 1);
+            Vmath::Vmul(nPts, u[i], 1, u[i], 1, u2[i], 1);
+            Vmath::Vadd(nPts, q2, 1, u2[i], 1, q2, 1);
         }
-        Vmath::Vmul(nPts, &inaverg[nDim_plus_one][0], 1,
-                    &orho[0], 1, &E_minus_q2[0], 1);
-        Vmath::Vsub(nPts, &E_minus_q2[0], 1, &q2[0], 1, &E_minus_q2[0], 1);
-        Vmath::Vmul(nPts, &mu[0], 1, &orho[0], 1, &tmp[0], 1);
+        Vmath::Vmul(nPts, inaverg[nDim_plus_one], 1, orho, 1, E_minus_q2, 1);
+        Vmath::Vsub(nPts, E_minus_q2, 1, q2, 1, E_minus_q2, 1);
+        Vmath::Vmul(nPts, mu, 1, orho, 1, tmp, 1);
 
         int DerivDirection_plus_one = DerivDirection + 1;
         if (DerivDirection == FluxDirection)
         {
-            Vmath::Svtvp(nPts, OneThird, &u2[FluxDirection][0], 1,
-                        &q2[0], 1, &tmp1[0], 1);
-            Vmath::Svtvp(nPts, gammaoPr, &E_minus_q2[0], 1,
-                        &tmp1[0], 1,
-                        &tmp1[0], 1);
-            Vmath::Vmul(nPts, &tmp1[0], 1, &injumpp[0][0], 1, &tmp1[0], 1);
+            Vmath::Svtvp(nPts, OneThird, u2[FluxDirection], 1, q2, 1, tmp1, 1);
+            Vmath::Svtvp(nPts, gammaoPr, E_minus_q2, 1, tmp1, 1, tmp1, 1);
+            Vmath::Vmul(nPts, tmp1, 1, injumpp[0], 1, tmp1, 1);
             //orho is tmperary array
-            Vmath::Svtvm(nPts, gammaoPr, &injumpp[nDim_plus_one][0], 1,
-                        &tmp1[0], 1, &orho[0], 1);
+            Vmath::Svtvm(nPts, gammaoPr, injumpp[nDim_plus_one], 1, tmp1, 1,
+                orho, 1);
 
             for (int i = 0; i < nDim; ++i)
             {
                 int i_plus_one = i + 1;
                 //flux[rhou, rhov, rhow]
-                Vmath::Vvtvm(nPts, &u[i][0], 1, &injumpp[0][0], 1,
-                            &injumpp[i_plus_one][0], 1,
-                            &outtmp[i_plus_one][0], 1);
+                Vmath::Vvtvm(nPts, u[i], 1, injumpp[0], 1,
+                    injumpp[i_plus_one], 1, outtmp[i_plus_one], 1);
                 Vmath::Neg(nPts, &outtmp[i_plus_one][0], 1);
-                Vmath::Vmul(nPts, &tmp[0], 1, &outtmp[i_plus_one][0], 1,
-                            &outtmp[i_plus_one][0], 1);
+                Vmath::Vmul(nPts, tmp, 1, outtmp[i_plus_one], 1,
+                    outtmp[i_plus_one], 1);
                 //flux rhoE
                 Vmath::Smul(nPts, one_minus_gammaoPr, &u[i][0], 1, &tmp1[0], 1);
-                Vmath::Vvtvp(nPts, &tmp1[0], 1, &injumpp[i_plus_one][0], 1,
-                            &outtmp[nDim_plus_one][0], 1,
-                            &outtmp[nDim_plus_one][0], 1);
+                Vmath::Vvtvp(nPts, tmp1, 1, injumpp[i_plus_one], 1,
+                    outtmp[nDim_plus_one], 1, outtmp[nDim_plus_one], 1);
 
                 if (i == FluxDirection)
                 {
@@ -920,48 +911,44 @@ namespace Nektar
                                 &outtmp[i_plus_one][0], 1);
                     Vmath::Smul(nPts, OneThird,
                                 &u[FluxDirection][0], 1, &tmp1[0], 1);
-                    Vmath::Vvtvp(nPts, &tmp1[0], 1,
-                                &injumpp[FluxDirection_plus_one][0], 1,
-                                &outtmp[nDim_plus_one][0], 1,
-                                &outtmp[nDim_plus_one][0], 1);
+                    Vmath::Vvtvp(nPts, tmp1, 1,
+                        injumpp[FluxDirection_plus_one], 1,
+                        outtmp[nDim_plus_one], 1,
+                        outtmp[nDim_plus_one], 1);
                 }
             }
             Vmath::Vadd(nPts, &orho[0], 1, &outtmp[nDim_plus_one][0], 1,
                         &outtmp[nDim_plus_one][0], 1);
-            Vmath::Vmul(nPts, &tmp[0], 1, &outtmp[nDim_plus_one][0], 1,
-                        &outtmp[nDim_plus_one][0], 1);
+            Vmath::Vmul(nPts, tmp, 1, outtmp[nDim_plus_one], 1,
+                outtmp[nDim_plus_one], 1);
 
         }
         else
         {
-            Vmath::Vvtvm(nPts, &u[DerivDirection][0], 1, &injumpp[0][0], 1,
-                        &injumpp[DerivDirection_plus_one][0], 1, &tmp1[0], 1);
+            Vmath::Vvtvm(nPts, u[DerivDirection], 1, injumpp[0], 1,
+                injumpp[DerivDirection_plus_one], 1, tmp1, 1);
             Vmath::Smul(nPts, TwoThird, &tmp1[0], 1, &tmp1[0], 1);
-            Vmath::Vmul(nPts, &tmp[0], 1, &tmp1[0], 1,
-                        &outtmp[FluxDirection_plus_one][0], 1);
+            Vmath::Vmul(nPts, tmp, 1, tmp1, 1,
+                outtmp[FluxDirection_plus_one], 1);
 
-            Vmath::Vvtvm(nPts, &u[FluxDirection][0], 1, &injumpp[0][0], 1,
-                        &injumpp[FluxDirection_plus_one][0], 1, &tmp1[0], 1);
+            Vmath::Vvtvm(nPts, u[FluxDirection], 1, injumpp[0], 1,
+                injumpp[FluxDirection_plus_one], 1, tmp1, 1);
             Vmath::Neg(nPts, &tmp1[0], 1);
-            Vmath::Vmul(nPts, &tmp[0], 1, &tmp1[0], 1,
-                        &outtmp[DerivDirection_plus_one][0], 1);
+            Vmath::Vmul(nPts, tmp, 1, tmp1, 1,
+                        outtmp[DerivDirection_plus_one], 1);
 
             Vmath::Smul(nPts, OneThird, &u[FluxDirection][0], 1, &tmp1[0], 1);
-            Vmath::Vmul(nPts, &tmp1[0], 1, &u[DerivDirection][0], 1,
-                        &tmp1[0], 1);
-            Vmath::Vmul(nPts, &tmp1[0], 1, &injumpp[0][0], 1, &tmp1[0], 1);
+            Vmath::Vmul(nPts, tmp1, 1, u[DerivDirection], 1, tmp1, 1);
+            Vmath::Vmul(nPts, tmp1, 1, injumpp[0], 1, tmp1, 1);
             //previous orho as a tmperary memory because it is non-used any more
             Vmath::Smul(nPts, TwoThird, &u[FluxDirection][0], 1, &orho[0], 1);
-            Vmath::Vmul(nPts, &orho[0], 1,
-                        &injumpp[DerivDirection_plus_one][0], 1,
-                        &orho[0], 1);
-            Vmath::Vadd(nPts, &tmp1[0], 1, &orho[0], 1, &tmp1[0], 1);
-            Vmath::Neg(nPts, &tmp1[0], 1);
-            Vmath::Vvtvp(nPts, &u[DerivDirection][0], 1,
-                        &injumpp[FluxDirection_plus_one][0], 1, &tmp1[0], 1,
-                        &tmp1[0], 1);
-            Vmath::Vmul(nPts, &tmp[0], 1, &tmp1[0], 1,
-                        &outtmp[nDim_plus_one][0], 1);
+            Vmath::Vmul(nPts, orho, 1, injumpp[DerivDirection_plus_one], 1,
+                        orho, 1);
+            Vmath::Vadd(nPts, tmp1, 1, orho, 1, tmp1, 1);
+            Vmath::Neg(nPts, tmp1, 1);
+            Vmath::Vvtvp(nPts, u[DerivDirection], 1,
+                injumpp[FluxDirection_plus_one], 1, tmp1, 1, tmp1, 1);
+            Vmath::Vmul(nPts, tmp, 1, tmp1, 1, outtmp[nDim_plus_one], 1);
         }
     }
 

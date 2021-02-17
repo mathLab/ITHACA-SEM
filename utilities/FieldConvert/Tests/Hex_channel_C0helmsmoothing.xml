@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="3" SPACE="3">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx9jscRAzEMA885+5xTM+i/C5SAEvzSaOyRli+K0HI5DFyTn5f1n0+bef03a26t+Rzt1gL91hL91gr91hr90Qb90Rb90Q790b4zL5ND567SHZG3RuStE/LRGfno0rmr1LXjLZMb8tYdeeuBfPREPno187rnjbn1wTz6AscgP5oA</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1ktlSwkAURBMIhBhAUFR2lUUQcGH7/1/j5Z4HTlXy0tVN03em5ybJ/ZcK+eqBNemZfk/ly6Q3hPj4f1M6PJcP3tIccgvp+B/kI7+smNdWDvM6FfO6ymHeo3KZ11MuOX3p+J/kI/9ZHP8gkN4490sgPXPPV3H8b9K551A+7jkKzKWPA+mHnIk4/ql0+prJR1/zwFL6eyD9kPMhjv8zkL2l94U4vS+l0/tKPvpeS+c9vgLZK3I24vi34vT6LT/vupOfd90HFvIfxPH/iNPrbyD3Yj/+xNmjf+nszVHnRD+Jsxdn6ezZRedEv4rz/jf15grb</EDGE>
+        <FACE>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxdkklCAkEQBFERHXABBlQWcVBhAHFB4P9f45JxIPoSh86s7KrqRuP8XIXX4YXIaYa34aVInVbYls85N2FHPvTkU7+Qjzq8h7yO9C3p7sNueKe61HkI+/JRh5zHsJSvEMnpyUce7yGvlJ48+h6GT+FAOdw/h+OQedAP/pdwIh/9UJ85jeSjH95J3kT6ru6n4Zvy6Bv/a1jJx7yozztm8pUieZX09DkP38PPkH88lO4jXIb8Y+ZLnUVYy8e8yWFPK/mYNzm1dPynkXTr8Ctk/+yBOptwKx97IIc9fcvHXsjZSse+2Av9/oS/IfOd6f4v3IXMhX3iZ57/8lXqYycd85jrfh8eQvplr/jp/ygfe2YOB+l4/wkf1xDL</Q>
+        </FACE>
+        <ELEMENT>
+            <H COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxd0MsOgkAQRNEBHcAHKihvFMH//0c2txbWbE4q6VS6J4T/l2CKBzxitDnlDHMs8IRn671Y/xVLvOHd5pTV/8AKa3za3i9ssMXO9uoxWh5wxAl174z6h7f1f3BB3fu1HmX1r7ih7v3hDgCeA0EA</H>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> H[0-7] </C>
+            <C ID="1"> F[0,11,20,29] </C>
+            <C ID="2"> F[1,6,21,25] </C>
+            <C ID="3"> F[22,26,30,33] </C>
+            <C ID="4"> F[13,17,31,34] </C>
+            <C ID="5"> F[4,9,14,18] </C>
+            <C ID="6"> F[10,19,28,35] </C>
+        </COMPOSITE>
+        <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+    <Metadata>
+        <Provenance>
+            <GitBranch>refs/heads/fix/FC_helmsmoothing</GitBranch>
+            <GitSHA1>f5e6973ad4439aa8885ef353e8d9225884896fa7</GitSHA1>
+            <Hostname>ubuntu-NUC8i7HVK</Hostname>
+            <NektarVersion>5.0.0</NektarVersion>
+            <Timestamp>20-Jan-2021 05:15:05</Timestamp>
+        </Provenance>
+        <NekMeshCommandLine>xml.xml Hex_channel_m3.xml </NekMeshCommandLine>
+    </Metadata>
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="4" FIELDS="u,v,w,p" TYPE="MODIFIED" />
+    </EXPANSIONS>
+    <CONDITIONS>
+        <SOLVERINFO>
+            <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
+            <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
+            <I PROPERTY="AdvectionForm" VALUE="Convective" />
+            <I PROPERTY="Projection" VALUE="Galerkin" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
+            <I PROPERTY="GlobalSysSoln"  VALUE="IterativeStaticCond" />
+        </SOLVERINFO>
+
+        <PARAMETERS>
+            <P> TimeStep      = 0.001 </P>
+            <P> NumSteps      = 10 </P>
+            <P> IO_CheckSteps = 10    </P>
+            <P> IO_InfoSteps  = 10    </P>
+            <P> Kinvis        = 1   </P>
+        </PARAMETERS>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> v </V>
+            <V ID="2"> w </V>
+            <V ID="3"> p </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>  <!-- Inlet -->
+            <B ID="1"> C[6] </B>    <!-- Outlet -->
+            <B ID="2"> C[2] </B>    <!-- Wall -->
+            <B ID="3"> C[3] </B>    <!-- Wall left -->
+            <B ID="4"> C[4] </B>    <!-- Wall -->
+            <B ID="5"> C[5] </B>    <!-- Wall right -->
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="0" />
+                <N VAR="p" VALUE="0" />
+            </REGION>
+            <REGION REF="1">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="0" />
+                <N VAR="p" VALUE="0" />
+            </REGION>
+            <REGION REF="2">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="0" />
+                <N VAR="p" VALUE="0" />
+            </REGION>
+            <REGION REF="3">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="0" />
+                <N VAR="p" VALUE="0" />
+            </REGION>
+            <REGION REF="4">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="0" />
+                <N VAR="p" VALUE="0" />
+            </REGION>
+            <REGION REF="5">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="0" />
+                <N VAR="p" VALUE="0" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="sin(2.*PI*y) + cos(6.*PI*y)" />
+            <E VAR="v" VALUE="sin(2.*PI*x) + cos(6.*PI*x)" />
+            <E VAR="w" VALUE="sin(2.*PI*z) + cos(6.*PI*z)" />
+            <E VAR="p" VALUE="sin(2.*PI*x) + sin(2.*PI*y) + sin(2.*PI*z) + cos(6.*PI*x) + cos(6.*PI*y) + cos(6.*PI*z)" />
+        </FUNCTION>
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="sin(2.*PI*y) + cos(6.*PI*y)" />
+            <E VAR="v" VALUE="sin(2.*PI*x) + cos(6.*PI*x)" />
+            <E VAR="w" VALUE="sin(2.*PI*z) + cos(6.*PI*z)" />
+            <E VAR="p" VALUE="sin(2.*PI*x) + sin(2.*PI*y) + sin(2.*PI*z) + cos(6.*PI*x) + cos(6.*PI*y) + cos(6.*PI*z)" />
+    </CONDITIONS>
+</NEKTAR>

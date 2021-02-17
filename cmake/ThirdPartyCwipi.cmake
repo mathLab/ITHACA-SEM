@@ -42,55 +42,39 @@ IF ( NEKTAR_USE_CWIPI )
         ENDIF()
 
         EXTERNALPROJECT_ADD(
-            cwipi-0.8.2
-            URL ${TPURL}/cwipi-0.8.2.tgz
-            URL_MD5 "cd28dbea20a08d71f5ff4b4770867268"
+            cwipi-0.11.1
+            URL ${TPURL}/cwipi-0.11.1.tgz
+            URL_MD5 "bf51abe03a1007fd084cea670d79d2d5"
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
-            SOURCE_DIR ${TPSRC}/cwipi-0.8.2
-            PATCH_COMMAND patch -p 0 < ${PROJECT_SOURCE_DIR}/cmake/thirdparty-patches/cwipi_fix-compile.patch
-            BINARY_DIR ${TPBUILD}/cwipi-0.8.2
-            TMP_DIR ${TPBUILD}/cwipi-0.8.2-tmp
+            SOURCE_DIR ${TPSRC}/cwipi-0.11.1
+            BINARY_DIR ${TPBUILD}/cwipi-0.11.1
+            TMP_DIR ${TPBUILD}/cwipi-0.11.1-tmp
             INSTALL_DIR ${TPDIST}
+            PATCH_COMMAND patch -p1 < ${PROJECT_SOURCE_DIR}/cmake/thirdparty-patches/cwipi-disable-warnings.patch
+            COMMAND patch -p1 < ${PROJECT_SOURCE_DIR}/cmake/thirdparty-patches/cwipi-disable-fortran.patch
             CONFIGURE_COMMAND
-                OMPI_FC=${CMAKE_Fortran_COMPILER}
-                OMPI_CC=${CMAKE_C_COMPILER}
-                OMPI_CXX=${CMAKE_CXX_COMPILER}
-                CFLAGS=-std=c99
-                CXXFLAGS=-std=c++11
-                ${TPSRC}/cwipi-0.8.2/configure
+                CFLAGS=-w
+                CXXFLAGS=-w
                 CC=${MPI_C_COMPILER}
                 CXX=${MPI_CXX_COMPILER}
                 FC=${MPI_Fortran_COMPILER}
-                --prefix=${TPDIST}
-                --libdir=${TPDIST}/lib
-                --quiet
-            BUILD_COMMAND make -j 1
+                ${CMAKE_COMMAND}
+                    -DCMAKE_INSTALL_PREFIX=${TPDIST}
+                    ${TPSRC}/cwipi-0.11.1
         )
 
-        THIRDPARTY_LIBRARY(CWIPI_LIBRARY SHARED cwipi
+        THIRDPARTY_LIBRARY(CWIPI_LIBRARY SHARED cwp
             DESCRIPTION "CWIPI main library")
-        THIRDPARTY_LIBRARY(CWIPI_LIBRARY_FVMC SHARED fvmc
-            DESCRIPTION "CWIPI fvmc library")
-        THIRDPARTY_LIBRARY(CWIPI_LIBRARY_BFTC SHARED bftc
-            DESCRIPTION "CWIPI bftc library")
 
         SET(CWIPI_INCLUDE_DIR ${TPDIST}/include CACHE FILEPATH
             "CWIPI include" FORCE)
 
-        LINK_DIRECTORIES(${TPDIST}/lib)
-
-        MESSAGE(STATUS "Build CWIPI:
-            ${CWIPI_LIBRARY}
-            ${CWIPI_LIBRARY_FVMC}
-            ${CWIPI_LIBRARY_BFTC}")
+        MESSAGE(STATUS "Build CWIPI: ${CWIPI_LIBRARY}")
         SET(CWIPI_CONFIG_INCLUDE_DIR ${TPINC})
     ELSE ()
-        ADD_CUSTOM_TARGET(cwipi-0.8.2 ALL)
-        MESSAGE(STATUS "Found CWIPI:
-            ${CWIPI_LIBRARY}
-            ${CWIPI_LIBRARY_FVMC}
-            ${CWIPI_LIBRARY_BFTC}")
+        ADD_CUSTOM_TARGET(cwipi-0.11.1 ALL)
+        MESSAGE(STATUS "Found CWIPI: ${CWIPI_LIBRARY}")
         SET(CWIPI_CONFIG_INCLUDE_DIR ${CWIPI_INCLUDE_DIR})
     ENDIF()
 ENDIF( NEKTAR_USE_CWIPI )
@@ -98,6 +82,4 @@ ENDIF( NEKTAR_USE_CWIPI )
 INCLUDE_DIRECTORIES(SYSTEM ${CWIPI_INCLUDE_DIR})
 
 MARK_AS_ADVANCED(CWIPI_LIBRARY)
-MARK_AS_ADVANCED(CWIPI_LIBRARY_FVMC)
-MARK_AS_ADVANCED(CWIPI_LIBRARY_BFTC)
 MARK_AS_ADVANCED(CWIPI_INCLUDE_DIR)

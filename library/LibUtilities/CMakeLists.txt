@@ -33,10 +33,12 @@ SET(BasicUtilsHeaders
     ./BasicUtils/Thread.h
     ./BasicUtils/ThreadBoost.h
     ./BasicUtils/Vmath.hpp
+    ./BasicUtils/VmathSIMD.hpp
     ./BasicUtils/VmathArray.hpp
     ./BasicUtils/Metis.hpp
     ./BasicUtils/VtkUtil.hpp
-    )
+    ./BasicUtils/Likwid.hpp
+)
 
 SET(BasicUtilsSources
 ./BasicUtils/CompressData.cpp
@@ -382,14 +384,18 @@ HEADERS ${LibUtilityHeaders}
 SUMMARY "Nektar++ LibUtilities library"
 DESCRIPTION "This library provides core routines including linear algebra and integration with ThirdParty libraries.")
 
-ADD_DEPENDENCIES(LibUtilities boost tinyxml-2.6.2 zlib-1.2.7)
+# tinysimd
+ADD_LIBRARY(tinysimd INTERFACE)
+TARGET_INCLUDE_DIRECTORIES(tinysimd INTERFACE SimdLib)
+
+ADD_DEPENDENCIES(LibUtilities boost tinyxml-2.6.2 zlib-1.2.7 tinysimd)
 
 ### Libraries needed specifically by LibUtilities ###
 
 # CWIPI
 IF ( NEKTAR_USE_CWIPI )
-TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${CWIPI_LIBRARY} ${CWIPI_LIBRARY_FVMC} ${CWIPI_LIBRARY_BFTC})
-ADD_DEPENDENCIES(LibUtilities cwipi-0.8.2)
+TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${CWIPI_LIBRARY})
+ADD_DEPENDENCIES(LibUtilities cwipi-0.11.1)
 ENDIF ()
 
 # FFTW
@@ -465,6 +471,13 @@ IF( NEKTAR_USE_HDF5 )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${HDF5_LIBRARIES})
     ADD_DEPENDENCIES(LibUtilities hdf5-1.8.16)
 ENDIF( NEKTAR_USE_HDF5 )
+
+# Likwid
+IF (NEKTAR_USE_LIKWID)
+   TARGET_LINK_LIBRARIES(LibUtilities LINK_PUBLIC ${LIKWID_LIBRARY})
+   TARGET_INCLUDE_DIRECTORIES(LibUtilities PUBLIC ${LIKWID_INCLUDE_DIR})
+ENDIF()
+
 
 INSTALL(DIRECTORY ./
     DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities

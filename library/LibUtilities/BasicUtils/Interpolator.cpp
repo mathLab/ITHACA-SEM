@@ -157,7 +157,7 @@ void Interpolator::CalcWeights(const LibUtilities::PtsFieldSharedPtr ptsInField,
         case eShepard:
         {
             int numPts = m_ptsInField->GetDim();
-            numPts     = 2 << numPts; // 2 ^ numPts
+            numPts     = 1 << numPts; // 2 ^ numPts
             numPts     = min(numPts, int(m_ptsInField->GetNpoints() / 2));
 
             m_weights   = Array<TwoD, NekDouble>(nOutPts, numPts, 0.0);

@@ -68,14 +68,18 @@ struct scalarMask;
 namespace abi
 {
 
-// mapping between abstract types and concrete types
-template <> struct scalar<double>{ using type = scalarT<double>; };
-template <> struct scalar<std::int64_t>{ using type = scalarT<std::int64_t>; };
-template <> struct scalar<std::uint64_t>{ using type = scalarT<std::uint64_t>; };
-template <> struct scalar<std::int32_t>{ using type = scalarT<std::int32_t>; };
-template <> struct scalar<std::uint32_t>{ using type = scalarT<std::uint32_t>; };
-template <> struct scalar<bool>{ using type = scalarMask; };
-template <> struct scalar<size_t>{ using type = scalarT<size_t>; };
+    // mapping between abstract types and concrete types
+    template <> struct scalar<double>{ using type = scalarT<double>; };
+    template <> struct scalar<std::int64_t>{ using type = scalarT<std::int64_t>; };
+    template <> struct scalar<std::uint64_t>{ using type = scalarT<std::uint64_t>; };
+    template <> struct scalar<std::int32_t>{ using type = scalarT<std::int32_t>; };
+    template <> struct scalar<std::uint32_t>{ using type = scalarT<std::uint32_t>; };
+    template <> struct scalar<bool>{ using type = scalarMask; };
+
+
+#ifdef __APPLE__  // for apple size_t is recognised as uint64_t 
+    template <> struct scalar<size_t>{ using type = scalarT<size_t>; };
+#endif
 
 } // namespace abi
 

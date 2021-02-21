@@ -35,7 +35,8 @@ int main(int argc, char const *argv[])
         // data should be randomized
         Array<OneD, NekDouble> data{nPts*10, 0.0};
         Array<OneD, NekDouble> dataTrace{nPts, 0.0};
-        Array<OneD, size_t> indexTrace{nPts, 0.0};
+        size_t zero = 0; 
+        Array<OneD, size_t> indexTrace{nPts, zero};
 
         // inizialize index (should be randomized)
         for (size_t i = 0; i < nPts; ++i)
@@ -66,7 +67,8 @@ int main(int argc, char const *argv[])
         // data should be randomized
         Array<OneD, NekDouble> data{nPts*10, 0.0};
         Array<OneD, NekDouble> dataTrace{nPts, 0.0};
-        Array<OneD, size_t> indexTrace{nPts, 0.0};
+        size_t zero = 0; 
+        Array<OneD, size_t> indexTrace{nPts, zero};
 
         // inizialize index (should be randomized)
         for (size_t i = 0; i < nPts; ++i)
@@ -97,7 +99,8 @@ int main(int argc, char const *argv[])
         // data should be randomized
         Array<OneD, NekDouble> data{nPts*10, 0.0};
         Array<OneD, NekDouble> dataTrace{nPts, 0.0};
-        Array<OneD, size_t> indexTrace{nPts, 0.0};
+        size_t zero = 0; 
+        Array<OneD, size_t> indexTrace{nPts, zero};
 
         // inizialize index (should be randomized)
         for (size_t i = 0; i < nPts; ++i)

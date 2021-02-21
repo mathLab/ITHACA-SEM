@@ -47,7 +47,7 @@ template <class T, typename = typename std::enable_if
     >
 std::ostream& operator<<(std::ostream& os, const T& avec)
 {
-    alignas(T::alignment) typename T::scalarArray tmp;
+    typename T::scalarArray tmp;
     avec.store(tmp);
     for (unsigned short i = 0; i < T::width; ++i)
     {

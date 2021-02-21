@@ -19,6 +19,7 @@ v5.1.0
 - Fix compiler warning of maybe-uninitialized elType in InputStar (!1217)
 - Add vectorisation of most element on basix operations (!1158)
 - Limit MPI methods based on core count (!1208)
+- Split out IProduct.cpp and IProductWRTDerivBase.cpp in order to avoid long time compilations (!1228)
 
 **FieldConvert**
 - Refactored time integration code using factory pattern (!1034)

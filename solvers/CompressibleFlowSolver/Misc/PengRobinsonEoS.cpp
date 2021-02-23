@@ -200,7 +200,7 @@ NekDouble PengRobinsonEoS::v_GetRhoFromPT(const NekDouble &p,
     NekDouble residual = 1;
     NekDouble f, df;
     unsigned int cnt = 0;
-    while (abs(residual) > tol && cnt < maxIter)
+    while ((fabs(residual) > tol) && cnt < maxIter)
     {
         f        = Z * Z * Z + k1 * Z * Z + k2 * Z + k3;
         df       = 3 * Z * Z + 2 * k1 * Z + k2;

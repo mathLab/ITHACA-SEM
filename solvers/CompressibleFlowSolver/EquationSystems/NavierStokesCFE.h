@@ -224,7 +224,7 @@ namespace Nektar
             // load 1/rho
             T oneOrho = 1.0 / inaverg[0]; // load 1x
             // get vel, vel^2, sum of vel^2
-            std::array<T, 3> u{}, u2{};
+            std::array<T, 3> u, u2;
             T u2sum{};
             for (unsigned short d = 0; d < nDim; ++d)
             {
@@ -284,7 +284,7 @@ namespace Nektar
             // load 1/rho
             T oneOrho = 1.0 / inaverg[0]; // load 1x
             // get vel, vel^2, sum of vel^2
-            std::array<T, 3> u{}, u2{};
+            std::array<T, 3> u, u2;
             T u2sum{};
             for (unsigned short d = 0; d < nDim; ++d)
             {
@@ -364,11 +364,11 @@ namespace Nektar
         for (; p < sizeVec; p += vec_t::width)
         {
             // there is a significant penalty to use std::vector
-            alignas(vec_t::alignment) std::array<vec_t, nVarMax> inTmp{},
-                qfieldsTmp{}, outTmp{};
-            alignas(vec_t::alignment) std::array<vec_t, nDimMax> normalTmp{};
+            alignas(vec_t::alignment) std::array<vec_t, nVarMax> inTmp,
+                qfieldsTmp, outTmp;
+            alignas(vec_t::alignment) std::array<vec_t, nDimMax> normalTmp;
             alignas(vec_t::alignment) std::array<vec_t, nVarMax * nOutMax>
-                outArrTmp{};
+                outArrTmp;
 
             // rearrenge and load data
             for (size_t f = 0; f < nConvectiveFields; ++f)
@@ -455,9 +455,9 @@ namespace Nektar
         // scalar loop
         for (; p < nPts; ++p)
         {
-            std::array<NekDouble, nVarMax> inTmp{}, qfieldsTmp{}, outTmp{};
-            std::array<NekDouble, nDimMax> normalTmp{};
-            std::array<NekDouble, nVarMax * nOutMax> outArrTmp{};
+            std::array<NekDouble, nVarMax> inTmp, qfieldsTmp, outTmp;
+            std::array<NekDouble, nDimMax> normalTmp;
+            std::array<NekDouble, nVarMax * nOutMax> outArrTmp;
             // rearrenge and load data
             for (int f = 0; f < nConvectiveFields; ++f)
             {

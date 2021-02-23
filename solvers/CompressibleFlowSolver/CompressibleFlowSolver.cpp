@@ -73,7 +73,12 @@ int main(int argc, char *argv[])
         // Print out timings if verbose
         if (session->DefinesCmdLineArgument("verbose"))
         {
-            LibUtilities::Timer::PrintElapsedRegions(session->GetComm());
+            int iolevel;
+
+            session->LoadParameter("IO_Timer_Level",iolevel,1);
+            
+            LibUtilities::Timer::PrintElapsedRegions(session->GetComm(),
+                                                     std::cout, iolevel);
         }
 
         // Finalise communications

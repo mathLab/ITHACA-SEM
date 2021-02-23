@@ -34,10 +34,12 @@
 
 #ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_MISC_REDLICHKWONGEOS
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_MISC_REDLICHKWONGEOS
-
+#include <cmath>
 #include "EquationOfState.h"
 
 #include <LibUtilities/SimdLib/io.hpp>
+
+using namespace std;
 
 namespace Nektar
 {

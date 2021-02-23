@@ -160,12 +160,16 @@ void DiffusionIP::v_Diffuse(
     const Array<OneD, Array<OneD, NekDouble>> &pBwd)
 {
 
+    LibUtilities::Timer timer;
+    timer.Start();
     DiffusionIP::v_DiffuseCoeffs(nConvectiveFields, fields, inarray, m_wspDiff,
         pFwd, pBwd);
     for (int i = 0; i < nConvectiveFields; ++i)
     {
         fields[i]->BwdTrans(m_wspDiff[i], outarray[i]);
     }
+    timer.Stop();
+    timer.AccumulateRegion("Diffusion IP");
 }
 
 void DiffusionIP::v_DiffuseCoeffs(
@@ -176,6 +180,9 @@ void DiffusionIP::v_DiffuseCoeffs(
     const Array<OneD, Array<OneD, NekDouble>> &pFwd,
     const Array<OneD, Array<OneD, NekDouble>> &pBwd)
 {
+    LibUtilities::Timer timer;
+    timer.Start();
+
     size_t nDim      = fields[0]->GetCoordim(0);
     size_t nPts      = fields[0]->GetTotPoints();
     size_t nCoeffs   = fields[0]->GetNcoeffs();
@@ -276,6 +283,8 @@ void DiffusionIP::v_DiffuseCoeffs(
 
         fields[j]->MultiplyByElmtInvMass(outarray[j], outarray[j]);
     }
+    timer.Stop();
+    timer.AccumulateRegion("DiffIP:Diffusion Coeff:");
 }
 
 void DiffusionIP::v_DiffuseCalculateDerivative(
@@ -328,7 +337,7 @@ void DiffusionIP::v_DiffuseVolumeFlux(
     m_FunctorDiffusionfluxCons(nDim, inarray, qfield, VolumeFlux, nonZeroIndex,
                                tmparray2D, muvar);
     timer.Stop();
-    timer.AccumulateRegion("m_FunctorDiffusionfluxCons");
+    timer.AccumulateRegion("DiffIP:_FunctorDiffFluxCons",1);
 }
 
 void DiffusionIP::v_DiffuseTraceFlux(
@@ -356,7 +365,7 @@ void DiffusionIP::v_DiffuseTraceFlux(
                     fields, inarray, qfield, pFwd, pBwd, m_MuVarTrace,
                     nonZeroIndex, traceflux3D, m_traceAver, m_traceJump);
     timer.Stop();
-    timer.AccumulateRegion("CalTraceNumFlux");
+    timer.AccumulateRegion("DiffIP:_CalcTraceNumFlux",1);
 }
 
 void DiffusionIP::v_AddDiffusionSymmFluxToCoeff(
@@ -689,7 +698,7 @@ void DiffusionIP::CalTraceNumFlux(
     Array<OneD, NekDouble> Bwd{nTracePts, 0.0};
 
     timer.Stop();
-    timer.AccumulateRegion("CalTraceNumFlux_alloc");
+    timer.AccumulateRegion("DiffIP:_CalcTraceNumFlux_alloc",1);
 
 
     timer.Start();
@@ -701,7 +710,7 @@ void DiffusionIP::CalTraceNumFlux(
     }
 
     timer.Stop();
-    timer.AccumulateRegion("AddSecondDerivToTrace");
+    timer.AccumulateRegion("DiffIP:_AddSecondDerivToTrace",1);
 
     for (int nd = 0; nd < nDim; ++nd)
     {
@@ -714,7 +723,7 @@ void DiffusionIP::CalTraceNumFlux(
             fields[i]->GetFwdBwdTracePhys(qfield[nd][i], Fwd, Bwd, true, true,
                 false);
             timer.Stop();
-            timer.AccumulateRegion("GetFwdBwdTracePhys");
+            timer.AccumulateRegion("DiffIP:_GetFwdBwdTracePhys",1);
 
             for (size_t p = 0; p < nTracePts; ++p)
             {
@@ -726,7 +735,7 @@ void DiffusionIP::CalTraceNumFlux(
             TraceMap->GetAssemblyCommDG()->PerformExchange(m_wspNumDerivFwd[nd][i],
                                                            m_wspNumDerivBwd[nd][i]);
             timer.Stop();
-            timer.AccumulateRegion("PerformExchange");
+            timer.AccumulateRegion("DiffIP:_PerformExchange",1);
 
             Vmath::Vadd(nTracePts, m_wspNumDerivFwd[nd][i], 1, m_wspNumDerivBwd[nd][i], 1,
                         m_wspNumDerivFwd[nd][i], 1);
@@ -737,7 +746,7 @@ void DiffusionIP::CalTraceNumFlux(
     ConsVarAveJump(nConvectiveFields, nTracePts, vFwd, vBwd, solution_Aver,
                    solution_jump);
     timer.Stop();
-    timer.AccumulateRegion("ConsVarAveJump");
+    timer.AccumulateRegion("DiffIP:_ConsVarAveJump",1);
 
     for (size_t p = 0; p < nTracePts; ++p)
     {
@@ -759,7 +768,7 @@ void DiffusionIP::CalTraceNumFlux(
     m_FunctorDiffusionfluxConsTrace(nDim, solution_Aver, m_wspNumDerivFwd, traceflux,
                                nonZeroIndexflux, m_traceNormals, MuVarTrace);
     timer.Stop();
-    timer.AccumulateRegion("m_FunctorDiffusionfluxConsTrace");
+    timer.AccumulateRegion("DiffIP:_FunctorDiffFluxConsTrace",1);
 }
 
 void DiffusionIP::AddSecondDerivToTrace(

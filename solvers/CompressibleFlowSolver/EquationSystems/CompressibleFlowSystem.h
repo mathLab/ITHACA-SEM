@@ -206,7 +206,7 @@ namespace Nektar
         /// two strategies: time accurate or not.
         int                                        m_JFNKTimeAccurate;
         /// preconditioning steps
-        int                                         m_JFNKPrecondStep;
+        int                                         m_JFNKPreconStep;
 
         LibUtilities::NekNonlinSysSharedPtr         m_nonlinsol;
         LibUtilities::NekSysOperators         m_NekSysOp;
@@ -230,18 +230,18 @@ namespace Nektar
                   TensorOfArray2D<NekDouble> &outarray,
             const NekDouble                                   time);
 
-        void Prec(
+        void PreconNaive(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&out);
  
         template<typename DataType, typename TypeNekBlkMatSharedPtr>
-        void PrecBlkDiag(
+        void PreconBlkDiag(
             const Array<OneD, NekDouble>     &inarray,
             Array<OneD, NekDouble >          &outarray,
             const TypeNekBlkMatSharedPtr     &PreconMatVars,
             const DataType                   &tmpDataType);
 
-        void PrecBlkSORCoeff(
+        void PreconBlkSORCoeff(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&outarray,
             const bool                   &flag);
@@ -344,7 +344,7 @@ namespace Nektar
             const DataType                          valu);
 
         template<typename TypeNekBlkMatSharedPtr>
-        void AllocatePrecBlkDiagCoeff(
+        void AllocatePreconBlkDiagCoeff(
             TensorOfArray2D<TypeNekBlkMatSharedPtr> &gmtxarray,
             const int                               &nscale=1 );
 

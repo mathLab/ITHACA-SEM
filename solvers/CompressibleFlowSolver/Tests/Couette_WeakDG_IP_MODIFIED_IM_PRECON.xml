@@ -58,7 +58,7 @@
       <P> LinSysRelativeTolInNonlin = 0.01                     </P>
       <P> NonlinIterTolRelativeL2 = 0.001                     </P>
 
-      <P> JFNKPrecondStep = 7                     </P>
+      <P> JFNKPreconStep = 7                     </P>
 
       <P> flagImplItsStatistcs  = 1                     </P> 
 

@@ -206,8 +206,8 @@ namespace Nektar
             m_NewtonAbsoluteIteTol, 1.0E-12);
         m_session->LoadParameter("JFNKTimeAccurate",     
             m_JFNKTimeAccurate, 1);
-        m_session->LoadParameter("JFNKPrecondStep",      
-            m_JFNKPrecondStep, 7);
+        m_session->LoadParameter("JFNKPreconStep",      
+            m_JFNKPreconStep, 7);
         m_session->LoadParameter("SORRelaxParam",        
             m_SORRelaxParam, 1.0);
 
@@ -230,7 +230,7 @@ namespace Nektar
         {
             int nvariables  =   m_fields.size();
             m_NekSysOp.DefineNekSysPrecond(
-                    &CompressibleFlowSystem::PrecBlkSORCoeff, this);
+                    &CompressibleFlowSystem::PreconBlkSORCoeff, this);
             m_PreconMatStorage    =   eDiagonal;
             m_session->LoadParameter("nPadding", m_nPadding, 4);
     
@@ -241,7 +241,7 @@ namespace Nektar
                 m_PreconMatVarsSingle[i] =  
                     Array<OneD, SNekBlkMatSharedPtr> (nvariables);
             }
-            AllocatePrecBlkDiagCoeff(m_PreconMatVarsSingle);
+            AllocatePreconBlkDiagCoeff(m_PreconMatVarsSingle);
 
             int nelmts  = m_fields[0]->GetNumElmts();
             int nelmtcoef;
@@ -484,7 +484,7 @@ timer.AccumulateRegion("DoDiffusion");
         }
     }
 
-    void CompressibleFlowSystem::Prec(
+    void CompressibleFlowSystem::PreconNaive(
         const Array<OneD, NekDouble> &inarray,
         Array<OneD, NekDouble >&out)
     {
@@ -494,7 +494,7 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
-    void CompressibleFlowSystem::PrecBlkDiag(
+    void CompressibleFlowSystem::PreconBlkDiag(
         const Array<OneD, NekDouble>  &inarray,
         Array<OneD, NekDouble >       &outarray,
         const TypeNekBlkMatSharedPtr  &PreconMatVars,
@@ -549,7 +549,7 @@ timer.AccumulateRegion("DoDiffusion");
         }
     }
 
-    void CompressibleFlowSystem::PrecBlkSORCoeff(
+    void CompressibleFlowSystem::PreconBlkSORCoeff(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&outarray,
             const bool                   &flag)
@@ -577,10 +577,10 @@ timer.AccumulateRegion("DoDiffusion");
         }
 
 
-        int nSORTot   =   m_JFNKPrecondStep;
+        int nSORTot   =   m_JFNKPreconStep;
         if (0==nSORTot)
         {
-            Prec(inarray,outarray);
+            PreconNaive(inarray,outarray);
         }
         else
         {
@@ -592,7 +592,7 @@ timer.AccumulateRegion("DoDiffusion");
             unsigned int ntotpnt    = inarray.size();
             
             ASSERTL0(nvariables*npoints==ntotpnt,
-                "nvariables*npoints!=ntotpnt in PrecBlkSORCoeff");
+                "nvariables*npoints!=ntotpnt in PreconBlkSORCoeff");
 
             Array<OneD, NekDouble> rhs(ntotpnt);
 
@@ -651,7 +651,7 @@ timer.AccumulateRegion("DoDiffusion");
                 wspTraceDataType[m] =   Array<OneD, NekSingle>(nTracePts);
             }
 
-            PrecBlkDiag(rhs,outarray,m_PreconMatSingle,tmpSingle);
+            PreconBlkDiag(rhs,outarray,m_PreconMatSingle,tmpSingle);
 
             for(int nsor = 0; nsor < nSORTot-1; nsor++)
             {
@@ -663,7 +663,7 @@ timer.AccumulateRegion("DoDiffusion");
                     m_TraceJacDerivArraySingle, m_TraceJacDerivSignSingle,
                     m_TraceIPSymJacArraySingle);
 
-                PrecBlkDiag(outarray,outTmp,m_PreconMatSingle,
+                PreconBlkDiag(outarray,outTmp,m_PreconMatSingle,
                     tmpSingle);
                 Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
             }
@@ -1835,7 +1835,7 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     template<typename TypeNekBlkMatSharedPtr>
-    void CompressibleFlowSystem::AllocatePrecBlkDiagCoeff(
+    void CompressibleFlowSystem::AllocatePreconBlkDiagCoeff(
         TensorOfArray2D<TypeNekBlkMatSharedPtr> &gmtxarray,
         const int                                          &nscale )
     {
@@ -2709,7 +2709,7 @@ timer.AccumulateRegion("DoDiffusion");
 
         bool flag = false;
 
-        if(0 < m_JFNKPrecondStep)
+        if(0 < m_JFNKPreconStep)
         {
             if (m_cflLocTimestep > 0.0)
             {

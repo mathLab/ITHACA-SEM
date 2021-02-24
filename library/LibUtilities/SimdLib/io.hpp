@@ -28,7 +28,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -47,7 +47,7 @@ template <class T, typename = typename std::enable_if
     >
 std::ostream& operator<<(std::ostream& os, const T& avec)
 {
-    typename T::scalarArray tmp;
+    alignas(T::alignment) typename T::scalarType tmp[T::width];
     avec.store(tmp);
     for (unsigned short i = 0; i < T::width; ++i)
     {

@@ -117,7 +117,7 @@ void NekLinSysIterCG::DoConjugateGradient(
     Array<OneD, NekDouble> tmp;
 
     // Create NekVector wrappers for linear algebra operations
-    NekVector<NekDouble> in(nNonDir, pInput + nDir, eWrapper);
+    NekVector<NekDouble> in(nNonDir, tmp = pInput + nDir, eWrapper);
     NekVector<NekDouble> out(nNonDir, tmp = pOutput + nDir, eWrapper);
     NekVector<NekDouble> w(nNonDir, tmp = w_A + nDir, eWrapper);
     NekVector<NekDouble> s(nNonDir, tmp = s_A + nDir, eWrapper);

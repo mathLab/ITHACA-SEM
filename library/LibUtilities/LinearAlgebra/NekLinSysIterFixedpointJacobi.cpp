@@ -89,9 +89,13 @@ int NekLinSysIterFixedpointJacobi::v_SolveSystem(
     {
         m_operator.DoNekSysFixPointIte(pRhs, pSol0, pSolution);
         Vmath::Vsub(nGlobal, pSolution, 1, pSol0, 1, pSol0, 1);
-        m_converged = ConvergenceCheck(i, pSol0, m_tolerance);
         Vmath::Vcopy(nGlobal, pSolution, 1, pSol0, 1);
         niterations++;
+        m_converged = ConvergenceCheck(i, pSol0, m_tolerance);
+        if (m_converged)
+        {
+            break;
+        }
     }
 
     return niterations;

@@ -202,7 +202,7 @@ namespace Nektar
         /// cfl number for local time step(notice only for jfnk other see m_cflSafetyFactor)
         NekDouble                                   m_cflLocTimestep = -1.0;
         /// In Jacobi iteration the SOR relaxation parameter
-        NekDouble                                   m_SORRelaxParam;
+        NekDouble                                   m_BRJRelaxParam;
         /// two strategies: time accurate or not.
         int                                        m_JFNKTimeAccurate;
         /// preconditioning steps
@@ -241,7 +241,7 @@ namespace Nektar
             const TypeNekBlkMatSharedPtr     &PreconMatVars,
             const DataType                   &tmpDataType);
 
-        void PreconBlkSORCoeff(
+        void PreconBRJCoeff(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&outarray,
             const bool                   &flag);

@@ -177,7 +177,7 @@ protected:
         DoNekSysPrecond      :
             Preconditioning operator of the system.
         DoNekSysFixPointIte  :
-            Operator to calculate RHS of fix point iterations
+            Operator to calculate RHS of fixed point iterations
             (x^{n+1}=M^{-1}(b-N*x^{n}), with M+N=A).
     */
     FunctorType1Array m_functors1;

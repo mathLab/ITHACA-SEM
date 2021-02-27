@@ -208,8 +208,8 @@ namespace Nektar
             m_JFNKTimeAccurate, 1);
         m_session->LoadParameter("JFNKPreconStep",      
             m_JFNKPreconStep, 7);
-        m_session->LoadParameter("SORRelaxParam",        
-            m_SORRelaxParam, 1.0);
+        m_session->LoadParameter("BRJRelaxParam",        
+            m_BRJRelaxParam, 1.0);
 
         // when no time accuracy needed
         if(m_JFNKTimeAccurate < 1)
@@ -230,7 +230,7 @@ namespace Nektar
         {
             int nvariables  =   m_fields.size();
             m_NekSysOp.DefineNekSysPrecond(
-                    &CompressibleFlowSystem::PreconBlkSORCoeff, this);
+                    &CompressibleFlowSystem::PreconBRJCoeff, this);
             m_PreconMatStorage    =   eDiagonal;
             m_session->LoadParameter("nPadding", m_nPadding, 4);
     
@@ -549,7 +549,7 @@ timer.AccumulateRegion("DoDiffusion");
         }
     }
 
-    void CompressibleFlowSystem::PreconBlkSORCoeff(
+    void CompressibleFlowSystem::PreconBRJCoeff(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&outarray,
             const bool                   &flag)
@@ -577,22 +577,22 @@ timer.AccumulateRegion("DoDiffusion");
         }
 
 
-        int nSORTot   =   m_JFNKPreconStep;
-        if (0==nSORTot)
+        int nBRJIterTot   =   m_JFNKPreconStep;
+        if (0==nBRJIterTot)
         {
             PreconNull(inarray,outarray);
         }
         else
         {
-            const NekDouble SORParam        =   m_SORRelaxParam;
-            const NekDouble OmSORParam      =   1.0-SORParam;
+            const NekDouble BRJParam        =   m_BRJRelaxParam;
+            const NekDouble OmBRJParam      =   1.0-BRJParam;
 
             unsigned int nvariables = m_fields.size();
             unsigned int npoints    = GetNcoeffs();
             unsigned int ntotpnt    = inarray.size();
             
             ASSERTL0(nvariables*npoints==ntotpnt,
-                "nvariables*npoints!=ntotpnt in PreconBlkSORCoeff");
+                "nvariables*npoints!=ntotpnt in PreconBRJCoeff");
 
             Array<OneD, NekDouble> rhs(ntotpnt);
 
@@ -653,9 +653,9 @@ timer.AccumulateRegion("DoDiffusion");
 
             PreconBlkDiag(rhs,outarray,m_PreconMatSingle,tmpSingle);
 
-            for(int nsor = 0; nsor < nSORTot-1; nsor++)
+            for(int nrelax = 0; nrelax < nBRJIterTot-1; nrelax++)
             {
-                Vmath::Smul(ntotpnt,OmSORParam,outarray,1,outN,1);
+                Vmath::Smul(ntotpnt,OmBRJParam,outarray,1,outN,1);
                 
                 MinusOffDiag2Rhs(nvariables,npoints,rhs2d,out_2d,
                     flagUpdateDervFlux,FwdFluxDeriv,BwdFluxDeriv,qfield,
@@ -665,7 +665,7 @@ timer.AccumulateRegion("DoDiffusion");
 
                 PreconBlkDiag(outarray,outTmp,m_PreconMatSingle,
                     tmpSingle);
-                Vmath::Svtvp(ntotpnt,SORParam,outTmp,1,outN,1,outarray,1);
+                Vmath::Svtvp(ntotpnt,BRJParam,outTmp,1,outN,1,outarray,1);
             }
         }
     }

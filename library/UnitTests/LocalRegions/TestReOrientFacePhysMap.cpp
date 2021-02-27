@@ -33,7 +33,7 @@
 #include <SpatialDomains/MeshGraph.h>
 #include <LocalRegions/Expansion3D.h>
 #include <StdRegions/StdRegions.hpp>
-#include <boost/test/auto_unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 
 namespace Nektar
 {

@@ -38,6 +38,7 @@
 #include "traits.hpp"
 #include "tinysimd.hpp"
 #include <ostream>
+#include <memory>
 
 namespace tinysimd
 {
@@ -47,7 +48,7 @@ template <class T, typename = typename std::enable_if
     >
 std::ostream& operator<<(std::ostream& os, const T& avec)
 {
-    alignas(T::alignment) typename T::scalarType tmp[T::width];
+    alignas((unsigned int) T::alignment) typename T::scalarArray tmp;
     avec.store(tmp);
     for (unsigned short i = 0; i < T::width; ++i)
     {

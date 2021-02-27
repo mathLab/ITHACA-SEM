@@ -151,7 +151,7 @@ namespace Nektar
             m_ode.DefineProjection(&CompressibleFlowSystem::
                                    DoOdeProjection, this);
             m_ode.DefineImplicitSolve(&CompressibleFlowSystem::
-                                      DoImplicitSolvePhysToCoeff, this);
+                                      DoImplicitSolve, this);
             InitialiseNonlinSysSolver();
 
             int nvariables  =   m_fields.size();
@@ -484,7 +484,7 @@ timer.AccumulateRegion("DoDiffusion");
         }
     }
 
-    void CompressibleFlowSystem::PreconNaive(
+    void CompressibleFlowSystem::PreconNull(
         const Array<OneD, NekDouble> &inarray,
         Array<OneD, NekDouble >&out)
     {
@@ -580,7 +580,7 @@ timer.AccumulateRegion("DoDiffusion");
         int nSORTot   =   m_JFNKPreconStep;
         if (0==nSORTot)
         {
-            PreconNaive(inarray,outarray);
+            PreconNull(inarray,outarray);
         }
         else
         {
@@ -2637,7 +2637,7 @@ timer.AccumulateRegion("DoDiffusion");
         v_DoDiffusionCoeff(inarray, outarray, pFwd, pBwd);
     }
 
-    void CompressibleFlowSystem::DoImplicitSolvePhysToCoeff(
+    void CompressibleFlowSystem::DoImplicitSolve(
         const TensorOfArray2D<NekDouble>    &inpnts,
         TensorOfArray2D<NekDouble>          &outpnt,
         const NekDouble                     time,

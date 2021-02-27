@@ -106,7 +106,7 @@ namespace Nektar
             const NekDouble                     time,
             const TensorOfArray2D<NekDouble>    &pFwd,
             const TensorOfArray2D<NekDouble>    &pBwd);
-        void DoImplicitSolvePhysToCoeff(
+        void DoImplicitSolve(
             const TensorOfArray2D<NekDouble>    &inpnts,
             TensorOfArray2D<NekDouble>          &outpnt,
             const NekDouble                     time,
@@ -230,7 +230,7 @@ namespace Nektar
                   TensorOfArray2D<NekDouble> &outarray,
             const NekDouble                                   time);
 
-        void PreconNaive(
+        void PreconNull(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&out);
  

@@ -51,6 +51,9 @@ EquationOfState::EquationOfState(
     pSession->LoadParameter("GasConstant", m_gasConstant, 287.058);
 }
 
+EquationOfState::EquationOfState( const NekDouble &gamma,
+    const NekDouble &gasConstant): m_gamma{gamma}, m_gasConstant{gasConstant}{}
+
 NekDouble EquationOfState::GetTemperature(const NekDouble &rho,
                                           const NekDouble &e)
 {

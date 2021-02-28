@@ -47,6 +47,8 @@
 #include <LibUtilities/BasicUtils/ParseUtils.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 
+
+
 using namespace std;
 
 namespace Nektar
@@ -68,7 +70,8 @@ PtsIO::PtsIO(CommSharedPtr pComm, bool sharedFilesystem)
  */
 void PtsIO::Import(const string &inFile,
                    PtsFieldSharedPtr &ptsField,
-                   FieldMetaDataMap &fieldmetadatamap)
+                   FieldMetaDataMap &fieldmetadatamap,
+                   DomainRangeShPtr &Range)
 {
     std::string infile = inFile;
 
@@ -107,12 +110,12 @@ void PtsIO::Import(const string &inFile,
 
             if (i == 0)
             {
-                ImportFieldData(fname, ptsField);
+                ImportFieldData(fname, ptsField, Range);
             }
             else
             {
                 LibUtilities::PtsFieldSharedPtr newPtsField;
-                ImportFieldData(fname, newPtsField);
+                ImportFieldData(fname, newPtsField, Range);
                 Array<OneD, Array<OneD, NekDouble> > pts;
                 newPtsField->GetPts(pts);
                 ptsField->AddPoints(pts);
@@ -122,7 +125,7 @@ void PtsIO::Import(const string &inFile,
     }
     else
     {
-        ImportFieldData(infile, ptsField);
+        ImportFieldData(infile, ptsField, Range);
     }
 }
 
@@ -208,14 +211,15 @@ void PtsIO::Write(const string &outFile,
     doc.SaveFile(filename);
     */
 }
-void PtsIO::ImportFieldData(const string inFile, PtsFieldSharedPtr &ptsField)
+void PtsIO::ImportFieldData(const string inFile, PtsFieldSharedPtr &ptsField, DomainRangeShPtr &Range)
 {
-    v_ImportFieldData(inFile, ptsField);
+    v_ImportFieldData(inFile, ptsField, Range);
 }
 
 
-void PtsIO::v_ImportFieldData(const string inFile, PtsFieldSharedPtr &ptsField)
+void PtsIO::v_ImportFieldData(const string inFile, PtsFieldSharedPtr &ptsField, DomainRangeShPtr &Range)
 {
+    boost::ignore_unused(Range);
     TiXmlDocument docInput(inFile);
     bool loadOkay1 = docInput.LoadFile();
 

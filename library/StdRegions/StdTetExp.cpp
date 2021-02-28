@@ -874,32 +874,42 @@ namespace Nektar
                                         const Array<OneD, const NekDouble>& xi,
                                         Array<OneD, NekDouble>& eta)
         {
-            if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
+            NekDouble d2 = 1.0-xi[2];
+            NekDouble d12 = -xi[1]-xi[2];
+            if(fabs(d2) < NekConstants::kNekZeroTol)
             {
-                // Very top point of the tetrahedron
-                eta[0] = -1.0;
-                eta[1] = -1.0;
-                eta[2] = xi[2];
-            }
-            else
-            {
-                if( fabs(xi[1]-1.0) <  NekConstants::kNekZeroTol )
+                if(d2>=0.)
                 {
-                    // Distant diagonal edge shared by all eta_x
-                    // coordinate planes: the xi_y == -xi_z line
-                    eta[0] = -1.0;
-                }
-                else if (fabs(xi[1] + xi[2]) < NekConstants::kNekZeroTol)
-                {
-                    eta[0] = -1.0;
+                    d2 =  NekConstants::kNekZeroTol;
                 }
                 else
                 {
-                    eta[0] = 2.0*(1.0+xi[0])/(-xi[1]-xi[2]) - 1.0;
+                    d2 = -NekConstants::kNekZeroTol;
                 }
-                eta[1] = 2.0*(1.0+xi[1])/(1.0-xi[2]) - 1.0;
-                eta[2] = xi[2];
             }
+            if(fabs(d12) < NekConstants::kNekZeroTol)
+            {
+                if(d12>=0.)
+                {
+                    d12 =  NekConstants::kNekZeroTol;
+                }
+                else
+                {
+                    d12 = -NekConstants::kNekZeroTol;
+                }
+            }
+            eta[0] = 2.0*(1.0+xi[0])/d12 - 1.0;
+            eta[1] = 2.0*(1.0+xi[1])/d2 - 1.0;
+            eta[2] = xi[2];
+        }
+
+        void StdTetExp::v_LocCollapsedToLocCoord(
+                                        const Array<OneD, const NekDouble>& eta,
+                                        Array<OneD, NekDouble>& xi)
+        {
+            xi[1] = (1.0 + eta[0]) * (   1.0 - eta[2]) * 0.5 - 1.0;
+            xi[0] = (1.0 + eta[0]) * (-xi[1] - eta[2]) * 0.5 - 1.0;
+            xi[2] = eta[2];
         }
 
         void StdTetExp::v_FillMode(

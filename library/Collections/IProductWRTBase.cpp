@@ -34,9 +34,12 @@
 
 #include <boost/core/ignore_unused.hpp>
 
+#include <MatrixFreeOps/Operator.hpp>
+
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
 #include <Collections/IProduct.h>
+#include <Collections/MatrixFreeBase.h>
 
 using namespace std;
 
@@ -75,8 +78,19 @@ class IProductWRTBase_StdMat : public Operator
             ASSERTL1(wsp.size() == m_wspSize,
                      "Incorrect workspace size");
 
-            Vmath::Vmul(m_jac.size(),m_jac,1,input,1,wsp,1);
-
+            if(m_isDeformed)
+            {
+                Vmath::Vmul(m_jac.size(),m_jac,1,input,1,wsp,1);
+            }
+            else
+            {
+                Array<OneD,NekDouble> tmp;
+                for(int e = 0; e < m_numElmt; ++e)
+                {
+                    Vmath::Smul(m_nqe,m_jac[e],input+e*m_nqe,1,tmp = wsp+e*m_nqe,1);
+                }
+            }
+            
             Blas::Dgemm('N', 'N', m_mat->GetRows(), m_numElmt,
                         m_mat->GetColumns(), 1.0, m_mat->GetRawPtr(),
                         m_mat->GetRows(), wsp.get(), m_stdExp->GetTotPoints(),
@@ -96,7 +110,7 @@ class IProductWRTBase_StdMat : public Operator
     protected:
         DNekMatSharedPtr                m_mat;
         Array<OneD, const NekDouble>    m_jac;
-
+    
     private:
         IProductWRTBase_StdMat(
                 vector<StdRegions::StdExpansionSharedPtr> pCollExp,
@@ -107,7 +121,8 @@ class IProductWRTBase_StdMat : public Operator
             StdRegions::StdMatrixKey key(StdRegions::eIProductWRTBase,
                                          m_stdExp->DetShapeType(), *m_stdExp);
             m_mat = m_stdExp->GetStdMatrix(key);
-            m_wspSize = m_stdExp->GetTotPoints()*m_numElmt;
+            m_nqe = m_stdExp->GetTotPoints();
+            m_wspSize = m_nqe*m_numElmt;
         }
 };
 
@@ -148,6 +163,109 @@ OperatorKey IProductWRTBase_StdMat::m_typeArr[] = {
         IProductWRTBase_StdMat::create, "IProductWRTBase_SumFac_Pyr")
 };
 
+/**
+ * @brief Inner product operator using operator using matrix free operators.
+ */
+class IProductWRTBase_MatrixFree : public Operator, MatrixFreeOneInOneOut
+{
+    public:
+        OPERATOR_CREATE(IProductWRTBase_MatrixFree)
+
+        virtual ~IProductWRTBase_MatrixFree()
+        {
+        }
+
+        virtual void operator()(
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &output1,
+                      Array<OneD,       NekDouble> &output2,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            boost::ignore_unused(output1, output2, wsp);
+            if (m_isPadded)
+            {
+                // copy into padded vector
+                Vmath::Vcopy(m_nIn, input, 1, m_input, 1);
+                // call op
+                (*m_oper)(m_input, m_output);
+                // copy out of padded vector
+                Vmath::Vcopy(m_nOut, m_output, 1, output, 1);
+            }
+            else
+            {
+                (*m_oper)(input, output);
+            }
+        }
+
+        virtual void operator()(
+                      int                           dir,
+                const Array<OneD, const NekDouble> &input,
+                      Array<OneD,       NekDouble> &output,
+                      Array<OneD,       NekDouble> &wsp)
+        {
+            boost::ignore_unused(dir, input, output, wsp);
+            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
+        }
+
+    private:
+        std::shared_ptr<MatrixFree::IProduct> m_oper;
+
+        IProductWRTBase_MatrixFree(
+                vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                CoalescedGeomDataSharedPtr                pGeomData)
+            : Operator(pCollExp, pGeomData),
+              MatrixFreeOneInOneOut(pCollExp[0]->GetStdExp()->GetTotPoints(),
+                                    pCollExp[0]->GetStdExp()->GetNcoeffs(),
+                                    pCollExp.size())
+        {
+
+            // Basis vector
+            const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
+            std::vector<LibUtilities::BasisSharedPtr> basis(dim);
+            for (unsigned int i = 0; i < dim; ++i)
+            {
+                basis[i] = pCollExp[0]->GetBasis(i);
+            }
+
+            // Get shape type
+            auto shapeType = pCollExp[0]->GetStdExp()->DetShapeType();
+
+            // Generate operator string and create operator.
+            std::string op_string = "IProduct";
+            op_string += MatrixFree::GetOpstring(shapeType, m_isDeformed);
+            auto oper = MatrixFree::GetOperatorFactory().
+                CreateInstance(op_string, basis, m_nElmtPad);
+
+            // Set Jacobian
+            oper->SetJac(pGeomData->GetJacInterLeave(pCollExp,m_nElmtPad));
+
+            m_oper = std::dynamic_pointer_cast<MatrixFree::IProduct>(oper);
+            ASSERTL0(m_oper, "Failed to cast pointer.");
+
+        }
+};
+
+/// Factory initialisation for the IProductWRTBase_MatrixFree operators
+OperatorKey IProductWRTBase_MatrixFree::m_typeArr[] = {
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eQuadrilateral, eIProductWRTBase, eMatrixFree, false),
+        IProductWRTBase_MatrixFree::create, "IProductWRTBase_MatrixFree_Quad"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eTriangle, eIProductWRTBase, eMatrixFree, false),
+        IProductWRTBase_MatrixFree::create, "IProductWRTBase_MatrixFree_Tri"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eHexahedron, eIProductWRTBase, eMatrixFree, false),
+        IProductWRTBase_MatrixFree::create, "IProductWRTBase_MatrixFree_Hex"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(ePrism, eIProductWRTBase, eMatrixFree, false),
+        IProductWRTBase_MatrixFree::create, "IProductWRTBase_MatrixFree_Prism"),
+    GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eTetrahedron, eIProductWRTBase, eMatrixFree, false),
+        IProductWRTBase_MatrixFree::create, "IProductWRTBase_MatrixFree_Tet")
+
+};
+
 
 /**
  * @brief Inner product operator using element-wise operation
@@ -177,7 +295,7 @@ class IProductWRTBase_IterPerExp : public Operator
             const int nPhys   = m_stdExp->GetTotPoints();
             Array<OneD, NekDouble> tmp;
 
-            Vmath::Vmul(m_jac.size(),m_jac,1,input,1,wsp,1);
+            Vmath::Vmul(m_jacWStdW.size(),m_jacWStdW,1,input,1,wsp,1);
 
             for (int i = 0; i < m_numElmt; ++i)
             {
@@ -198,7 +316,7 @@ class IProductWRTBase_IterPerExp : public Operator
         }
 
     protected:
-        Array<OneD, NekDouble> m_jac;
+        Array<OneD, NekDouble> m_jacWStdW;
 
     private:
         IProductWRTBase_IterPerExp(
@@ -213,7 +331,7 @@ class IProductWRTBase_IterPerExp : public Operator
                 nqtot *= PtsKey[i].GetNumPoints();
             }
 
-            m_jac = pGeomData->GetJacWithStdWeights(pCollExp);
+            m_jacWStdW = pGeomData->GetJacWithStdWeights(pCollExp);
 
             m_wspSize = nqtot*m_numElmt;
         }
@@ -389,11 +507,11 @@ class IProductWRTBase_SumFac_Seg : public Operator
 
             if(m_colldir0)
             {
-                Vmath::Vmul(m_numElmt*m_nquad0,m_jac,1,input,1,output,1);
+                Vmath::Vmul(m_numElmt*m_nquad0,m_jacWStdW,1,input,1,output,1);
             }
             else
             {
-                Vmath::Vmul(m_numElmt*m_nquad0,m_jac,1,input,1,wsp,1);
+                Vmath::Vmul(m_numElmt*m_nquad0,m_jacWStdW,1,input,1,wsp,1);
 
                 // out = B0*in;
                 Blas::Dgemm('T','N', m_nmodes0, m_numElmt, m_nquad0,
@@ -417,7 +535,7 @@ class IProductWRTBase_SumFac_Seg : public Operator
         const int                       m_nquad0;
         const int                       m_nmodes0;
         const bool                      m_colldir0;
-        Array<OneD, const NekDouble>    m_jac;
+        Array<OneD, const NekDouble>    m_jacWStdW;
         Array<OneD, const NekDouble>    m_base0;
 
     private:
@@ -431,7 +549,7 @@ class IProductWRTBase_SumFac_Seg : public Operator
               m_base0   (m_stdExp->GetBasis(0)->GetBdata())
         {
             m_wspSize = m_numElmt*m_nquad0;
-            m_jac = pGeomData->GetJacWithStdWeights(pCollExp);
+            m_jacWStdW = pGeomData->GetJacWithStdWeights(pCollExp);
         }
 };
 
@@ -470,7 +588,7 @@ class IProductWRTBase_SumFac_Quad : public Operator
                          m_nquad0,  m_nquad1,
                          m_nmodes0, m_nmodes1,
                          m_base0,   m_base1,
-                         m_jac, input, output, wsp);
+                         m_jacWStdW, input, output, wsp);
         }
 
         virtual void operator()(
@@ -490,7 +608,7 @@ class IProductWRTBase_SumFac_Quad : public Operator
         const int                       m_nmodes1;
         const bool                      m_colldir0;
         const bool                      m_colldir1;
-        Array<OneD, const NekDouble>    m_jac;
+        Array<OneD, const NekDouble>    m_jacWStdW;
         Array<OneD, const NekDouble>    m_base0;
         Array<OneD, const NekDouble>    m_base1;
 
@@ -508,7 +626,7 @@ class IProductWRTBase_SumFac_Quad : public Operator
               m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
               m_base1   (m_stdExp->GetBasis(1)->GetBdata())
         {
-            m_jac     = pGeomData->GetJacWithStdWeights(pCollExp);
+            m_jacWStdW     = pGeomData->GetJacWithStdWeights(pCollExp);
             m_wspSize = 2 * m_numElmt
                           * (max(m_nquad0*m_nquad1,m_nmodes0*m_nmodes1));
         }
@@ -546,7 +664,7 @@ class IProductWRTBase_SumFac_Tri : public Operator
                      "Incorrect workspace size");
 
             TriIProduct(m_sortTopVertex, m_numElmt, m_nquad0, m_nquad1,
-                        m_nmodes0, m_nmodes1,m_base0,m_base1,m_jac, input,
+                        m_nmodes0, m_nmodes1,m_base0,m_base1,m_jacWStdW, input,
                         output,wsp);
         }
 
@@ -565,7 +683,7 @@ class IProductWRTBase_SumFac_Tri : public Operator
         const int                       m_nquad1;
         const int                       m_nmodes0;
         const int                       m_nmodes1;
-        Array<OneD, const NekDouble>    m_jac;
+        Array<OneD, const NekDouble>    m_jacWStdW;
         Array<OneD, const NekDouble>    m_base0;
         Array<OneD, const NekDouble>    m_base1;
         bool                            m_sortTopVertex;
@@ -582,7 +700,7 @@ class IProductWRTBase_SumFac_Tri : public Operator
               m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
               m_base1   (m_stdExp->GetBasis(1)->GetBdata())
         {
-            m_jac     = pGeomData->GetJacWithStdWeights(pCollExp);
+            m_jacWStdW     = pGeomData->GetJacWithStdWeights(pCollExp);
             m_wspSize = 2 * m_numElmt
                           * (max(m_nquad0*m_nquad1,m_nmodes0*m_nmodes1));
             if(m_stdExp->GetBasis(0)->GetBasisType()
@@ -632,7 +750,7 @@ class IProductWRTBase_SumFac_Hex : public Operator
                         m_nquad0,  m_nquad1,  m_nquad2,
                         m_nmodes0, m_nmodes1, m_nmodes2,
                         m_base0,   m_base1,   m_base2,
-                        m_jac,input,output,wsp);
+                        m_jacWStdW,input,output,wsp);
         }
 
         virtual void operator()(
@@ -655,7 +773,7 @@ class IProductWRTBase_SumFac_Hex : public Operator
         const bool                      m_colldir0;
         const bool                      m_colldir1;
         const bool                      m_colldir2;
-        Array<OneD, const NekDouble>    m_jac;
+        Array<OneD, const NekDouble>    m_jacWStdW;
         Array<OneD, const NekDouble>    m_base0;
         Array<OneD, const NekDouble>    m_base1;
         Array<OneD, const NekDouble>    m_base2;
@@ -679,7 +797,7 @@ class IProductWRTBase_SumFac_Hex : public Operator
               m_base2    (m_stdExp->GetBasis(2)->GetBdata())
 
         {
-            m_jac = pGeomData->GetJacWithStdWeights(pCollExp);
+            m_jacWStdW = pGeomData->GetJacWithStdWeights(pCollExp);
             m_wspSize = 3 * m_numElmt * (max(m_nquad0*m_nquad1*m_nquad2,
                                              m_nmodes0*m_nmodes1*m_nmodes2));
         }
@@ -721,7 +839,7 @@ class IProductWRTBase_SumFac_Tet : public Operator
                         m_nquad0,  m_nquad1,  m_nquad2,
                         m_nmodes0, m_nmodes1, m_nmodes2,
                         m_base0,   m_base1,   m_base2,
-                        m_jac,input,output,wsp);
+                        m_jacWStdW,input,output,wsp);
 
         }
 
@@ -742,7 +860,7 @@ class IProductWRTBase_SumFac_Tet : public Operator
         const int                       m_nmodes0;
         const int                       m_nmodes1;
         const int                       m_nmodes2;
-        Array<OneD, const NekDouble>    m_jac;
+        Array<OneD, const NekDouble>    m_jacWStdW;
         Array<OneD, const NekDouble>    m_base0;
         Array<OneD, const NekDouble>    m_base1;
         Array<OneD, const NekDouble>    m_base2;
@@ -763,7 +881,7 @@ class IProductWRTBase_SumFac_Tet : public Operator
               m_base1   (m_stdExp->GetBasis(1)->GetBdata()),
               m_base2   (m_stdExp->GetBasis(2)->GetBdata())
         {
-            m_jac     = pGeomData->GetJacWithStdWeights(pCollExp);
+            m_jacWStdW     = pGeomData->GetJacWithStdWeights(pCollExp);
             m_wspSize = m_numElmt*(max(m_nquad0*m_nquad1*m_nquad2,
                         m_nquad2*m_nmodes0*(2*m_nmodes1-m_nmodes0+1)/2)+
                                    m_nquad2*m_nquad1*m_nmodes0);
@@ -816,7 +934,7 @@ class IProductWRTBase_SumFac_Prism : public Operator
                         m_nquad0,  m_nquad1,  m_nquad2,
                         m_nmodes0, m_nmodes1, m_nmodes2,
                         m_base0,   m_base1,   m_base2,
-                        m_jac,input,output,wsp);
+                        m_jacWStdW,input,output,wsp);
         }
 
         virtual void operator()(
@@ -836,7 +954,7 @@ class IProductWRTBase_SumFac_Prism : public Operator
         const int                       m_nmodes0;
         const int                       m_nmodes1;
         const int                       m_nmodes2;
-        Array<OneD, const NekDouble>    m_jac;
+        Array<OneD, const NekDouble>    m_jacWStdW;
         Array<OneD, const NekDouble>    m_base0;
         Array<OneD, const NekDouble>    m_base1;
         Array<OneD, const NekDouble>    m_base2;
@@ -858,7 +976,7 @@ class IProductWRTBase_SumFac_Prism : public Operator
               m_base2    (m_stdExp->GetBasis(2)->GetBdata())
 
         {
-            m_jac = pGeomData->GetJacWithStdWeights(pCollExp);
+            m_jacWStdW = pGeomData->GetJacWithStdWeights(pCollExp);
 
             m_wspSize = m_numElmt * m_nquad2
                                   *(max(m_nquad0*m_nquad1,m_nmodes0*m_nmodes1))
@@ -911,7 +1029,7 @@ class IProductWRTBase_SumFac_Pyr : public Operator
                         m_nquad0,  m_nquad1,  m_nquad2,
                         m_nmodes0, m_nmodes1, m_nmodes2,
                         m_base0,   m_base1,   m_base2,
-                        m_jac,input,output,wsp);
+                        m_jacWStdW,input,output,wsp);
         }
 
         virtual void operator()(
@@ -931,7 +1049,7 @@ class IProductWRTBase_SumFac_Pyr : public Operator
         const int                       m_nmodes0;
         const int                       m_nmodes1;
         const int                       m_nmodes2;
-        Array<OneD, const NekDouble>    m_jac;
+        Array<OneD, const NekDouble>    m_jacWStdW;
         Array<OneD, const NekDouble>    m_base0;
         Array<OneD, const NekDouble>    m_base1;
         Array<OneD, const NekDouble>    m_base2;
@@ -953,7 +1071,7 @@ class IProductWRTBase_SumFac_Pyr : public Operator
               m_base2   (m_stdExp->GetBasis(2)->GetBdata())
 
         {
-            m_jac = pGeomData->GetJacWithStdWeights(pCollExp);
+            m_jacWStdW = pGeomData->GetJacWithStdWeights(pCollExp);
 
             m_wspSize = m_numElmt * m_nquad2
                                   *(max(m_nquad0*m_nquad1,m_nmodes0*m_nmodes1))

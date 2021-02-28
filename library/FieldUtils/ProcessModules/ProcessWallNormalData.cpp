@@ -41,7 +41,7 @@
 
 #include "ProcessWallNormalData.h"
 
-#define _DEBUG_
+//#define _DEBUG_
 
 using namespace std;
 

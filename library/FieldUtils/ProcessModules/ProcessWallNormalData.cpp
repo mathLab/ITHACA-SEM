@@ -73,7 +73,7 @@ ProcessWallNormalData::ProcessWallNormalData(FieldSharedPtr f) : ProcessBoundary
     m_config["nh"]   = ConfigOption(false, "5", 
                        "Number of sampling points along the wall normals.");
     m_config["d"]    = ConfigOption(false, "0.1", 
-                       "Points distribution control in h direction, in (0,1)");
+                       "Points distribution control in h direction.");
 }
 
 ProcessWallNormalData::~ProcessWallNormalData()
@@ -100,7 +100,7 @@ ProcessWallNormalData::~ProcessWallNormalData()
 * h is the sampling depth in the wall-normal direction
 * nh is the number of sampling points along h.
 * d is a destribution control parameter of the sampling points. It should be in
-* the range (0,1). d=0.99 gives approximately evenly spaced array.
+* the range (0,0.95] for controlled array. d>0.95 gives evenly spaced array.
 */
 void ProcessWallNormalData::Process(po::variables_map &vm)
 {
@@ -282,20 +282,37 @@ void ProcessWallNormalData::Process(po::variables_map &vm)
 
     
     //-------------------------------------------------------------------------
-    // Set the sampling array
-    // Expression in Agrawal's paper:
-    // h = 1- tanh((1-ksi)*atanh(sqrt(1-delta)))/sqrt(1-delta), ksi in [0,1]
-    Array<OneD, NekDouble> h(nptsH);
-    NekDouble tmp1;
-    const NekDouble tmp2 = 1.0/(static_cast<NekDouble>(nptsH)-1.0);
-    const NekDouble tmp3 = sqrt(1.0-delta);
-    const NekDouble tmp4 = atanh(tmp3);
-    const NekDouble tmp5 = 1.0/tmp3;
-    for (int i=0; i<nptsH; ++i)
+    // Set the depth of sampling array
+    Array<OneD, NekDouble> h(nptsH, 0.0);
+    if (delta > 0 && delta <= 0.95)
     {
-        tmp1 = 1.0 - i * tmp2; // tmp1 = 1-ksi
-        h[i] = 1 - tanh(tmp1*tmp4)*tmp5;
-        h[i] *= distanceH; // physical distance in normal direction
+        // Use expression in Agrawal's paper:
+        // h = 1-tanh((1-ksi)*atanh(sqrt(1-delta)))/sqrt(1-delta), ksi in [0,1]
+        NekDouble tmp1;
+        const NekDouble tmp2 = 1.0/(static_cast<NekDouble>(nptsH)-1.0);
+        const NekDouble tmp3 = sqrt(1.0-delta);
+        const NekDouble tmp4 = atanh(tmp3);
+        const NekDouble tmp5 = 1.0/tmp3;
+        for (int i=1; i<nptsH; ++i)
+        {
+            tmp1 = 1.0 - i * tmp2; // tmp1 = 1-ksi
+            h[i] = 1 - tanh(tmp1*tmp4)*tmp5;
+            h[i] *= distanceH; // physical distance in normal direction
+        }
+    }
+    else if (delta > 0.95)
+    {
+        // Evenly spaced array
+        const NekDouble tmp1 = 1.0/(static_cast<NekDouble>(nptsH)-1.0);
+        for (int i=1; i<nptsH; ++i)
+        {
+            h[i] = i * tmp1;
+            h[i] *= distanceH; // physical distance in normal direction
+        }
+
+    }
+    else{
+        ASSERTL0(false, "Input error. Delta needs to be greater than 0.0.");
     }
 
     // Set pts coordinates and interpoate the data

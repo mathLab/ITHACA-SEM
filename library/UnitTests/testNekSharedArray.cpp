@@ -40,7 +40,8 @@
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
-#include <boost/test/unit_test.hpp>
+#include <boost/test/auto_unit_test.hpp>
+#include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 #include <iostream>

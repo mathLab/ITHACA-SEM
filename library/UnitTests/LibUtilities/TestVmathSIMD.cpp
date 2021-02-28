@@ -281,7 +281,6 @@ namespace VmathSIMDUnitTests
 
     }
 
-#if 0 
     BOOST_AUTO_TEST_CASE(TestGathrSizet)
     {
         using dataType = double;
@@ -355,6 +354,5 @@ namespace VmathSIMDUnitTests
         }
 
     }
-#endif
 }
 }

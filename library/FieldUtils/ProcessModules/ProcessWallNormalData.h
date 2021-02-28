@@ -28,7 +28,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Export data in the wall normal direction along the surface.
+//  Description: Get the wall-normal data at a given origin.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -69,7 +69,7 @@ public:
 
     virtual std::string GetModuleDescription()
     {
-        return "Calculating N-factor along the surface";
+        return "Get the wall-normal data at a given origin.";
     }
 
 protected:
@@ -77,24 +77,44 @@ protected:
 private:
     int m_spacedim;
 
-    // functions for organizing the data locally in this module
-    void Heapify_max(Array<OneD, Array<OneD, NekDouble> > A, 
-                                     const int curLen, 
-                                     const int rootId);
+    bool isInProjectedArea2D(
+        SpatialDomains::GeometrySharedPtr bndGeom,
+        const Array<OneD, const NekDouble > & gloCoord,
+        const int projDir);
+    
+    bool isInProjectedArea3D(
+        SpatialDomains::GeometrySharedPtr bndGeom,
+        const Array<OneD, const NekDouble > & gloCoord,
+        const int projDir);
 
-    void HeapSort(Array<OneD, Array<OneD, NekDouble> > A);
+    bool BisectionForLocCoordOnBndElmt(
+        SpatialDomains::GeometrySharedPtr bndGeom,
+        const Array<OneD, const NekDouble > & gloCoord,
+        const Array<OneD, const Array<OneD, NekDouble> > & pts,
+        const int projDir,
+        Array< OneD, NekDouble > & locCoord,
+        NekDouble & dist);
 
+    bool NewtonIterationForLocCoordOnBndElmt(
+        SpatialDomains::GeometrySharedPtr bndGeom,
+        const Array<OneD, const NekDouble> &coords,
+        const Array<OneD, const Array<OneD, NekDouble> > &pts,
+        const int projDir,
+        Array<OneD, NekDouble> &Lcoords,
+        NekDouble &dist);
 
-    int CleanRepeatedPts(Array<OneD, Array<OneD, NekDouble> > A);
+    bool BndElmtContainsPoint(
+        SpatialDomains::GeometrySharedPtr bndGeom,
+        const Array< OneD, const NekDouble > & gloCoord,
+        Array< OneD, NekDouble > & locCoord,
+        const bool isUseY, 
+        const NekDouble geomTol,
+        NekDouble & dist);
 
-    // write data in pts format
-    void WriteDataInPts(const std::string &outFile, 
-        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > > data, 
-        const int len);
-
-    void CreateFieldPts(
-        const Array<OneD, Array<OneD, Array<OneD, NekDouble> > > data, 
-        const int len);
+    void GetNormals(
+        SpatialDomains::GeometrySharedPtr bndGeom,
+        Array< OneD, NekDouble > & locCoord, 
+        Array< OneD, NekDouble > & normals);
 
 };
 }

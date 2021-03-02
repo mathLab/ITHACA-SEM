@@ -396,7 +396,7 @@ namespace Nektar
             const NekDouble                         dtlamda,
             const DataType                          tmpDataType);
 
-        void GetFluxVectorJacDirctnElmt(
+        void GetFluxVectorJacDirElmt(
             const int                        nConvectiveFields,
             const int                        nElmtPnt,
             const TensorOfArray2D<NekDouble> &locVars,

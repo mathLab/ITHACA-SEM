@@ -1050,7 +1050,7 @@ timer.AccumulateRegion("DoDiffusion");
                 for(int nfluxDir = 0; nfluxDir < nSpaceDim; nfluxDir++)
                 {
                     normals =   normal3D[nfluxDir];
-                    GetFluxVectorJacDirctnElmt(nvariable,nElmtPnt,locVars,
+                    GetFluxVectorJacDirElmt(nvariable,nElmtPnt,locVars,
                         normals,wspMat,PntJacCons[nfluxDir]);
                 }
             }
@@ -2283,7 +2283,7 @@ timer.AccumulateRegion("DoDiffusion");
 
     }
 
-    void CompressibleFlowSystem::GetFluxVectorJacDirctnElmt(
+    void CompressibleFlowSystem::GetFluxVectorJacDirElmt(
         const int                           nConvectiveFields,
         const int                           nElmtPnt,
         const TensorOfArray2D<NekDouble>    &locVars,

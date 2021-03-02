@@ -462,6 +462,7 @@ namespace Nektar
             for (int f = 0; f < nConvectiveFields; ++f)
             {
                 inTmp[f] = inarray[f][p];
+#if 0 
                 // zero output vector
                 if (IS_TRACE)
                 {
@@ -474,7 +475,19 @@ namespace Nektar
                         outArrTmp[f + nConvectiveFields * d] = 0.0;
                     }
                 }
+#else
+                outArrTmp[f] = 0.0;
+                // zero output vector
+                if (!IS_TRACE)
+                {
+                    for (int d = 1; d < nDim; ++d)
+                    {
+                        outArrTmp[f + nConvectiveFields * d] = 0.0;
+                    }
+                }
+#endif
             }
+            
 
             if (IS_TRACE)
             {

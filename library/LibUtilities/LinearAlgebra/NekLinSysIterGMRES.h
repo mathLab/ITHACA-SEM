@@ -91,18 +91,18 @@ protected:
     virtual void v_InitObject();
 
     virtual int v_SolveSystem(const int nGlobal,
-                              const TensorOfArray1D<NekDouble> &pInput,
+                              const Array<OneD, const NekDouble> &pInput,
                               Array<OneD, NekDouble> &pOutput, const int nDir,
                               const NekDouble tol, const NekDouble factor);
 
 private:
-    /// Actual iterative solve-GMRS
-    int DoGMRES(const int pNumRows, const TensorOfArray1D<NekDouble> &pInput,
+    /// Actual iterative solve-GMRES
+    int DoGMRES(const int pNumRows, const Array<OneD, const NekDouble> &pInput,
                 Array<OneD, NekDouble> &pOutput, const int pNumDir);
     /// Actual iterative gmres solver for one restart
     NekDouble DoGmresRestart(const bool restarted, const bool truncted,
                              const int nGlobal,
-                             const TensorOfArray1D<NekDouble> &pInput,
+                             const Array<OneD, const NekDouble> &pInput,
                              Array<OneD, NekDouble> &pOutput, const int nDir);
 
     // Arnoldi process
@@ -126,7 +126,7 @@ private:
     // of least square problem
     // To notice, Hessenburg's columnns and rows are reverse
     void DoBackward(const int number, Array<OneD, Array<OneD, NekDouble>> &A,
-                    const TensorOfArray1D<NekDouble> &b,
+                    const Array<OneD, const NekDouble> &b,
                     Array<OneD, NekDouble> &y);
     static std::string lookupIds[];
     static std::string def;

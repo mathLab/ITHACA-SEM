@@ -1793,7 +1793,7 @@ timer.AccumulateRegion("DoDiffusion");
             }
 
             m_diffusion->DiffuseTraceFlux(fields, inarray, qfield, 
-                NullTensorOfArray3DDouble, visflux, vFwd, vBwd, nonZeroIndex);
+                NullNekDoubleTensorOfArray3D, visflux, vFwd, vBwd, nonZeroIndex);
             for(int i = 0; i < nConvectiveFields; i++)
             {
                 Vmath::Vsub(nTracePts,traceflux[i],1,visflux[i],1,
@@ -2161,8 +2161,8 @@ timer.AccumulateRegion("DoDiffusion");
         {
             for (int i = 0; i < nvariables; ++i)
             {
-                Fwd[i]     = TensorOfArray1D<NekDouble> (nTracePts, 0.0);
-                Bwd[i]     = TensorOfArray1D<NekDouble> (nTracePts, 0.0);
+                Fwd[i] = Array<OneD, NekDouble> (nTracePts, 0.0);
+                Bwd[i] = Array<OneD, NekDouble> (nTracePts, 0.0);
                 m_fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
             }
         }
@@ -2189,9 +2189,9 @@ timer.AccumulateRegion("DoDiffusion");
             int nElements = m_fields[0]->GetExpSize();
             int nq, offset;
             NekDouble fac;
-            TensorOfArray1D<NekDouble> tmp;
+            Array<OneD, NekDouble> tmp;
 
-            TensorOfArray1D<NekDouble> tstep(nElements, 0.0);
+            Array<OneD, NekDouble> tstep(nElements, 0.0);
             GetElmtTimeStep(inarray, tstep);
 
             // Loop over elements
@@ -2539,20 +2539,20 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     void CompressibleFlowSystem::NonlinSysEvaluatorCoeff1D(
-        const TensorOfArray1D<NekDouble>    &inarray,
-        TensorOfArray1D<NekDouble>          &out,
+        const Array<OneD, const NekDouble>  &inarray,
+              Array<OneD,       NekDouble>  &out,
         const bool                          &flag)
     {
-        const TensorOfArray1D<NekDouble> refsource 
+        const Array<OneD, const NekDouble> refsource 
             = m_nonlinsol->GetRefSourceVec();
         NonlinSysEvaluatorCoeff(inarray, out, flag, refsource);
     }
 
     void CompressibleFlowSystem::NonlinSysEvaluatorCoeff(
-        const TensorOfArray1D<NekDouble>    &inarray,
-        TensorOfArray1D<NekDouble>          &out,
+        const Array<OneD, const NekDouble>  &inarray,
+              Array<OneD,       NekDouble>  &out,
         const bool                          &flag,
-        const TensorOfArray1D<NekDouble>    &source)
+        const Array<OneD, const NekDouble>  &source)
     {
         boost::ignore_unused(flag);
         unsigned int nvariables     = m_fields.size();
@@ -2583,7 +2583,7 @@ timer.AccumulateRegion("DoDiffusion");
 
         for (int i = 0; i < nvariable; ++i)
         {
-            inpnts[i] = TensorOfArray1D<NekDouble>(npoints, 0.0);
+            inpnts[i] = Array<OneD, NekDouble>(npoints, 0.0);
             m_fields[i]->BwdTrans(inarray[i], inpnts[i]);
         }
         
@@ -2596,7 +2596,7 @@ timer.AccumulateRegion("DoDiffusion");
                          inarray[i], 1, out[i], 1);
         }
 
-        if (NullTensorOfArray2DDouble != source)
+        if (NullNekDoubleArrayofArray != source)
         {
             for (int i = 0; i < nvariable; ++i)
             {
@@ -2647,9 +2647,9 @@ timer.AccumulateRegion("DoDiffusion");
         unsigned int ncoeffs     = m_fields[0]->GetNcoeffs();
         unsigned int ntotal      = nvariables * ncoeffs;
 
-        TensorOfArray1D<NekDouble>  inarray(ntotal);
-        TensorOfArray1D<NekDouble>  out(ntotal);
-        TensorOfArray1D<NekDouble>  tmpArray;
+        Array<OneD, NekDouble>  inarray(ntotal);
+        Array<OneD, NekDouble>  out(ntotal);
+        Array<OneD, NekDouble>  tmpArray;
 
         for (int i = 0; i < nvariables; ++i)
         {
@@ -2670,8 +2670,8 @@ timer.AccumulateRegion("DoDiffusion");
 
     void CompressibleFlowSystem::DoImplicitSolveCoeff(
             const TensorOfArray2D<NekDouble>    &inpnts,
-            const TensorOfArray1D<NekDouble>    &inarray,
-            TensorOfArray1D<NekDouble>          &out,
+            const Array<OneD, const NekDouble>  &inarray,
+                  Array<OneD,       NekDouble>  &out,
             const NekDouble                     time,
             const NekDouble                     lambda)
     {
@@ -2703,7 +2703,7 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     bool CompressibleFlowSystem::UpdatePreconMatCheck(
-        const TensorOfArray1D<NekDouble>  &res)
+        const Array<OneD, const NekDouble>  &res)
     {
         boost::ignore_unused(res);
 
@@ -2729,7 +2729,7 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     void CompressibleFlowSystem::CalcRefValues(
-            const TensorOfArray1D<NekDouble>    &inarray)
+            const Array<OneD, const NekDouble> &inarray)
     {
         unsigned int nvariables         = m_fields.size();
         unsigned int ntotal             = inarray.size();
@@ -2781,8 +2781,8 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     void CompressibleFlowSystem::MatrixMultiplyMatrixFreeCoeff(
-            const TensorOfArray1D<NekDouble>    &inarray,
-            TensorOfArray1D<NekDouble>          &out,
+            const Array<OneD, const NekDouble>  &inarray,
+                  Array<OneD,       NekDouble>  &out,
             const bool                          &flag)
     {
         boost::ignore_unused(flag);
@@ -2801,8 +2801,8 @@ timer.AccumulateRegion("DoDiffusion");
 
         NekDouble oeps = 1.0 / eps;
         unsigned int ntotal     = inarray.size();
-        TensorOfArray1D<NekDouble> solplus{ntotal, 0.0};
-        TensorOfArray1D<NekDouble> resplus{ntotal, 0.0};
+        Array<OneD, NekDouble> solplus{ntotal, 0.0};
+        Array<OneD, NekDouble> resplus{ntotal, 0.0};
 
         Vmath::Svtvp(ntotal, eps, inarray, 1, refsol, 1, solplus, 1);
 

@@ -76,7 +76,7 @@ NekNonlinSysNewton::~NekNonlinSysNewton()
  *
  **/
 int NekNonlinSysNewton::v_SolveSystem(
-    const int nGlobal, const TensorOfArray1D<NekDouble> &pInput,
+    const int nGlobal, const Array<OneD, const NekDouble> &pInput,
     Array<OneD, NekDouble> &pOutput, const int nDir, const NekDouble tol,
     const NekDouble factor)
 {
@@ -133,7 +133,7 @@ int NekNonlinSysNewton::v_SolveSystem(
 }
 
 bool NekNonlinSysNewton::v_ConvergenceCheck(
-    const int nIteration, const TensorOfArray1D<NekDouble> &Residual,
+    const int nIteration, const Array<OneD, const NekDouble> &Residual,
     const NekDouble tol)
 {
     bool converged     = false;
@@ -206,8 +206,8 @@ void NekNonlinSysNewton::CalcInexactNewtonForcing(
 }
 
 void NekNonlinSysNewton::v_SetupNekNonlinSystem(
-    const int nGlobal, const TensorOfArray1D<NekDouble> &pInput,
-    const TensorOfArray1D<NekDouble> &pSource,
+    const int nGlobal, const Array<OneD, const NekDouble> &pInput,
+    const Array<OneD, const NekDouble> &pSource,
     const int nDir)
 {
     boost::ignore_unused(nGlobal, nDir);

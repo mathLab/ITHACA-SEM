@@ -73,7 +73,7 @@ NekLinSysIterCG::~NekLinSysIterCG()
  *
  */
 int NekLinSysIterCG::v_SolveSystem(const int nGlobal,
-                                   const TensorOfArray1D<NekDouble> &pInput,
+                                   const Array<OneD, const NekDouble> &pInput,
                                    Array<OneD, NekDouble> &pOutput,
                                    const int nDir, const NekDouble tol,
                                    const NekDouble factor)
@@ -102,7 +102,7 @@ int NekLinSysIterCG::v_SolveSystem(const int nGlobal,
  * @param       pOutput     Solution vector of all DOFs.  
  */
 void NekLinSysIterCG::DoConjugateGradient(
-    const int nGlobal, const TensorOfArray1D<NekDouble> &pInput,
+    const int nGlobal, const Array<OneD, const NekDouble> &pInput,
     Array<OneD, NekDouble> &pOutput, const int nDir)
 {
     // Get vector sizes
@@ -117,7 +117,7 @@ void NekLinSysIterCG::DoConjugateGradient(
     Array<OneD, NekDouble> tmp;
 
     // Create NekVector wrappers for linear algebra operations
-    NekVector<NekDouble> in(nNonDir, tmp = pInput + nDir, eWrapper);
+    NekVector<NekDouble> in(nNonDir, pInput + nDir, eWrapper);
     NekVector<NekDouble> out(nNonDir, tmp = pOutput + nDir, eWrapper);
     NekVector<NekDouble> w(nNonDir, tmp = w_A + nDir, eWrapper);
     NekVector<NekDouble> s(nNonDir, tmp = s_A + nDir, eWrapper);

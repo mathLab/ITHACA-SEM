@@ -75,14 +75,14 @@ protected:
     virtual void v_InitObject();
 
     virtual int v_SolveSystem(const int nGlobal,
-                              const TensorOfArray1D<NekDouble> &pInput,
+                              const Array<OneD, const NekDouble> &pInput,
                               Array<OneD, NekDouble> &pOutput, const int nDir,
                               const NekDouble tol, const NekDouble factor);
 
 private:
     /// Actual iterative solve
     void DoConjugateGradient(const int pNumRows,
-                             const TensorOfArray1D<NekDouble> &pInput,
+                             const Array<OneD, const NekDouble> &pInput,
                              Array<OneD, NekDouble> &pOutput,
                              const int pNumDir);
 };

@@ -80,21 +80,21 @@ namespace Nektar
         void InitialiseNonlinSysSolver();
 
         void NonlinSysEvaluatorCoeff1D(
-            const TensorOfArray1D<NekDouble>    &inarray,
-            TensorOfArray1D<NekDouble>          &out,
+            const Array<OneD, const NekDouble>  &inarray,
+                  Array<OneD,       NekDouble>  &out,
             const bool                          &flag);
         void NonlinSysEvaluatorCoeff(
-            const TensorOfArray1D<NekDouble>    &inarray,
-            TensorOfArray1D<NekDouble>          &out,
+            const Array<OneD, const NekDouble>  &inarray,
+                  Array<OneD,       NekDouble>  &out,
             const bool                          &flag = true,
-            const TensorOfArray1D<NekDouble>    &source =
-                NullTensorOfArray1DDouble);
+            const Array<OneD, const NekDouble>  &source =
+                NullNekDouble1DArray);
 
         void NonlinSysEvaluatorCoeff(
             const TensorOfArray2D<NekDouble>    &inarray,
             TensorOfArray2D<NekDouble>          &out,
             const TensorOfArray2D<NekDouble>    &source = 
-                NullTensorOfArray2DDouble);
+                NullNekDoubleArrayofArray);
         void DoOdeRhsCoeff(
             const TensorOfArray2D<NekDouble>    &inarray,
             TensorOfArray2D<NekDouble>          &outarray,
@@ -113,18 +113,18 @@ namespace Nektar
             const NekDouble                     lambda);
         void DoImplicitSolveCoeff(
             const TensorOfArray2D<NekDouble>    &inpnts,
-            const TensorOfArray1D<NekDouble>    &inarray,
-            TensorOfArray1D<NekDouble>          &out,
+            const Array<OneD, const NekDouble>  &inarray,
+                  Array<OneD,       NekDouble>  &out,
             const NekDouble                     time,
             const NekDouble                     lambda);
         bool UpdatePreconMatCheck(
-            const TensorOfArray1D<NekDouble>  &res);
+            const Array<OneD, const NekDouble>  &res);
         void CalcPreconMat(
             const TensorOfArray2D<NekDouble>    &inpnts,
             const NekDouble                     time,
             const NekDouble                     lambda);
          void CalcRefValues(
-            const TensorOfArray1D<NekDouble>    &inarray);
+            const Array<OneD, const NekDouble>  &inarray);
     
         virtual void GetPressure(
             const Array<OneD, const Array<OneD, NekDouble> > &physfield,
@@ -538,8 +538,8 @@ namespace Nektar
             const TensorOfArray2D<NekDouble>       &pFwd,
             const TensorOfArray2D<NekDouble>       &pBwd);
         void MatrixMultiplyMatrixFreeCoeff(
-            const  TensorOfArray1D<NekDouble>   &inarray,
-            TensorOfArray1D<NekDouble>          &out,
+            const Array<OneD, const NekDouble>  &inarray,
+                  Array<OneD,       NekDouble>  &out,
             const bool                          &flag = false);
 
         void GetFluxVector(

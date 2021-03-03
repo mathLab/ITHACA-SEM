@@ -1406,6 +1406,7 @@ namespace Nektar
                     }
                 }
 
+#if 0 
                 Array<OneD, int> pairSizes(n, 0);
                 pairSizes[p] = allCompPairs.size();
                 vComm->AllReduce(pairSizes, LibUtilities::ReduceSum);
@@ -1440,6 +1441,7 @@ namespace Nektar
                 {
                     allCompPairs[first[cnt]] = second[cnt];
                 }
+#endif
 
                 // Search for periodic vertices and edges which are not in
                 // a periodic composite but lie in this process. First, loop
@@ -2335,6 +2337,7 @@ namespace Nektar
                     }
                 }
 
+#if 0 
                 Array<OneD, int> pairSizes(n, 0);
                 pairSizes[p] = allCompPairs.size();
                 vComm->AllReduce(pairSizes, LibUtilities::ReduceSum);
@@ -2373,8 +2376,10 @@ namespace Nektar
                 {
                     allCompPairs[first[cnt]] = second[cnt];
                 }
-
-                // make global list of faces to composite ids if rotComp is non-zero
+                
+                
+                // make global list of faces to composite ids if
+                // rotComp is non-zero
 
                 if(rotComp.size())
                 {
@@ -2399,6 +2404,7 @@ namespace Nektar
                         fIdToCompId[first[cnt]] = second[cnt];
                     }
                 }
+#endif
 
                 // also will need an edge id to composite id at end of routine
                 map<int,int> eIdToCompId;

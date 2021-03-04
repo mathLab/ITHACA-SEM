@@ -3604,7 +3604,11 @@ namespace Nektar
 		}
 
 		Eigen::MatrixXd curr_xy_reproj = reproject_from_basis(curr_xy_proj);
-
+		
+		double relative_L2_error = L2norm_abs_error_ITHACA(curr_PhysBaseVec_x, curr_PhysBaseVec_y, snapshot_x_collection[current_index], snapshot_y_collection[current_index]) / L2norm_ITHACA(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
+		double relative_Linf_error = Linfnorm_abs_error_ITHACA(curr_PhysBaseVec_x, curr_PhysBaseVec_y, snapshot_x_collection[current_index], snapshot_y_collection[current_index]) / Linfnorm_ITHACA(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
+		cout << "relative L2 error: " << relative_L2_error << endl;
+		cout << "relative Linf error: " << relative_Linf_error << endl;
 		cout << "relative euclidean error norm in x coords: " << diff_x_RB_solve.norm() / snap_x.norm() << " of snapshot number " << iter_index << endl;
 		cout << "relative euclidean error norm in y coords: " << diff_y_RB_solve.norm() / snap_y.norm() << " of snapshot number " << iter_index << endl;
 		Eigen::VectorXd diff_x_proj = curr_xy_reproj.col(0) - snap_x;

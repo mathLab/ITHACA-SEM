@@ -2337,7 +2337,72 @@ namespace Nektar
                     }
                 }
 
-#if 0 
+                // Make sure that the nubmer of face paris and the
+                // face Id to composite Id map match in size
+                ASSERTL1(allCompPairs.size() == fIdToCompId.size(),
+                         "At this point the size of allCompPairs "
+                         "should have been the same as fIdToCompId");
+
+                // Distribute the size of the periodic boundary to all 
+                // processes. We assume that all processes which owns periodic
+                // faces have the same local copy of allCompPairs
+                int NPairs  = allCompPairs.size();
+                vComm->AllReduce(NPairs, LibUtilities::ReduceMax);
+
+                // Check that the previous assertion regarding allCompPairs
+                // is correct
+                ASSERTL0(
+                    allCompPairs.size() == NPairs || allCompPairs.size() == 0,
+                    "Error, local copy of allCompPairs not the same for all"
+                    " processes."
+                );
+
+                // Allocate local vectors that will contain the content of
+                // allCompPairs if process owns faces on periodic boundary
+                Array<OneD, int> first(NPairs, 0);
+                Array<OneD, int> second(NPairs, 0);
+                cnt = 0;
+                for(const auto &it : allCompPairs)
+                {
+                    first[cnt]    = it.first;
+                    second[cnt++] = it.second;
+                }
+                
+                // Distribute the content in first and second to all processes
+                vComm->AllReduce(first,  LibUtilities::ReduceMax);
+                vComm->AllReduce(second, LibUtilities::ReduceMax);
+
+                // Put content back in allCompPairs
+                allCompPairs.clear();
+                for(cnt = 0; cnt < NPairs; ++cnt)
+                {
+                    allCompPairs[first[cnt]] = second[cnt];
+                }
+
+                // Store face ID to composite ID map for rotational boundaries
+                if(rotComp.size())
+                {
+                    Vmath::Zero(NPairs,first,1);
+                    Vmath::Zero(NPairs,second,1);
+
+                    cnt = 0;
+                    for (const auto &pIt : fIdToCompId)
+                    {
+                        first [cnt  ] = pIt.first;
+                        second[cnt++] = pIt.second;
+                    }
+
+                    vComm->AllReduce(first,  LibUtilities::ReduceMax);
+                    vComm->AllReduce(second, LibUtilities::ReduceMax);
+
+                    fIdToCompId.clear();
+                    for(cnt = 0; cnt < NPairs; ++cnt)
+                    {
+                        fIdToCompId[first[cnt]] = second[cnt];
+                    }
+                }
+
+#if 0
                 Array<OneD, int> pairSizes(n, 0);
                 pairSizes[p] = allCompPairs.size();
                 vComm->AllReduce(pairSizes, LibUtilities::ReduceSum);
@@ -2376,8 +2441,8 @@ namespace Nektar
                 {
                     allCompPairs[first[cnt]] = second[cnt];
                 }
-                
-                
+
+
                 // make global list of faces to composite ids if
                 // rotComp is non-zero
 

@@ -368,7 +368,7 @@ namespace Nektar
                 qfieldsTmp, outTmp;
             alignas(vec_t::alignment) std::array<vec_t, nDimMax> normalTmp;
             alignas(vec_t::alignment) std::array<vec_t, nVarMax * nOutMax>
-                outArrTmp;
+                outArrTmp{};
 
             // rearrenge and load data
             for (size_t f = 0; f < nConvectiveFields; ++f)

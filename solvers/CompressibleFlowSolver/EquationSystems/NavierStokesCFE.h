@@ -457,12 +457,11 @@ namespace Nektar
         {
             std::array<NekDouble, nVarMax> inTmp, qfieldsTmp, outTmp;
             std::array<NekDouble, nDimMax> normalTmp;
-            std::array<NekDouble, nVarMax * nOutMax> outArrTmp;
+            std::array<NekDouble, nVarMax * nOutMax> outArrTmp{};
             // rearrenge and load data
             for (int f = 0; f < nConvectiveFields; ++f)
             {
                 inTmp[f] = inarray[f][p];
-#if 0 
                 // zero output vector
                 if (IS_TRACE)
                 {
@@ -475,17 +474,6 @@ namespace Nektar
                         outArrTmp[f + nConvectiveFields * d] = 0.0;
                     }
                 }
-#else
-                outArrTmp[f] = 0.0;
-                // zero output vector
-                if (!IS_TRACE)
-                {
-                    for (int d = 1; d < nDim; ++d)
-                    {
-                        outArrTmp[f + nConvectiveFields * d] = 0.0;
-                    }
-                }
-#endif
             }
             
 

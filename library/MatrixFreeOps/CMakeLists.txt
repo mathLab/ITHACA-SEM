@@ -1,7 +1,15 @@
 SET(MATRIXFREEOPS_SOURCES
     BwdTrans.cpp
-    IProduct.cpp
-    IProductWRTDerivBase.cpp
+    IProductQuad.cpp
+    IProductTri.cpp
+    IProductTet.cpp
+    IProductPrism.cpp
+    IProductHex.cpp
+    IProductWRTDerivBaseQuad.cpp
+    IProductWRTDerivBaseTri.cpp
+    IProductWRTDerivBaseTet.cpp
+    IProductWRTDerivBasePrism.cpp
+    IProductWRTDerivBaseHex.cpp
     PhysDeriv.cpp
     Operator.cpp
   )

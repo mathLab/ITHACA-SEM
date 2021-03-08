@@ -65,36 +65,59 @@ class IdealGasEoS : public EquationOfState
 
     protected:
 
-        virtual NekDouble v_GetTemperature(
-            const NekDouble &rho, const NekDouble &e);
+        NekDouble GetTemperature(const NekDouble& rho, const NekDouble& e) final;
 
-        virtual NekDouble v_GetPressure(
-            const NekDouble &rho, const NekDouble &e);
+        vec_t GetTemperature(const vec_t& rho, const vec_t& e) final;
 
-        virtual NekDouble v_GetSoundSpeed(
-            const NekDouble &rho, const NekDouble &e);
+        NekDouble GetPressure(const NekDouble& rho, const NekDouble& e) final;
 
-        virtual NekDouble v_GetEntropy(
-            const NekDouble &rho, const NekDouble &e);
+        vec_t GetPressure(const vec_t& rho, const vec_t& e) final;
 
-        virtual NekDouble v_GetDPDrho_e(
-            const NekDouble &rho, const NekDouble &e);
+        NekDouble v_GetSoundSpeed(const NekDouble &rho, const NekDouble &e) final;
 
-        virtual NekDouble v_GetDPDe_rho(
-            const NekDouble &rho, const NekDouble &e);
+        NekDouble v_GetEntropy(const NekDouble &rho, const NekDouble &e) final;
 
-        virtual NekDouble v_GetEFromRhoP(
-            const NekDouble &rho, const NekDouble &p);
+        NekDouble v_GetDPDrho_e(const NekDouble &rho, const NekDouble &e) final;
 
-        virtual NekDouble v_GetRhoFromPT(
-            const NekDouble &rho, const NekDouble &p);
-            
+        NekDouble v_GetDPDe_rho(const NekDouble &rho, const NekDouble &e) final;
+
+        NekDouble v_GetEFromRhoP(const NekDouble &rho, const NekDouble &p) final;
+
+        NekDouble v_GetRhoFromPT(const NekDouble &rho, const NekDouble &p) final;
     private:
         IdealGasEoS(const LibUtilities::SessionReaderSharedPtr& pSession);
-        
-        virtual ~IdealGasEoS(void){};
+
+        ~IdealGasEoS(void){};
+
+
+    // type agnostic kernels
+    template <class T, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    inline T GetTemperatureKernel(const T& e)
+    {
+        return e * m_gammaMoneOgasConst;
+    }
+
+    template <class T, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    inline T GetPressureKernel(const T& rho, const T& e)
+    {
+        return rho * e * m_gammaMone;
+    }
+
+
+
+
 };
 
-}
+} // namespace
 
 #endif

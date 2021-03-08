@@ -62,20 +62,28 @@ struct avx2
 template<typename T> struct avx2Int8;
 template<typename T> struct avx2Long4;
 struct avx2Double4;
+struct avx2Mask;
 
 namespace abi
 {
 
 // mapping between abstract types and concrete types
-template <> struct avx2<std::int32_t> { using type = avx2Int8<std::int32_t>; };
-template <> struct avx2<std::uint32_t> { using type = avx2Int8<std::uint32_t>; };
+template <> struct avx2<double> { using type = avx2Double4; };
 template <> struct avx2<std::int64_t> { using type = avx2Long4<std::int64_t>; };
 template <> struct avx2<std::uint64_t> { using type = avx2Long4<std::uint64_t>; };
-template <> struct avx2<double> { using type = avx2Double4; };
+template <> struct avx2<bool> { using type = avx2Mask; };
+#if defined(__AVX512F__) && defined(NEKTAR_ENABLE_SIMD_AVX512)
+// these types are used for indexes only
+// should be enabled only with avx512 otherwise they get selected by the wrapper
+// instead of sse2int4. The concrete type avx2Int8 is available in case someone
+// wants to explicity use it
+template <> struct avx2<std::int32_t> { using type = avx2Int8<std::int32_t>; };
+template <> struct avx2<std::uint32_t> { using type = avx2Int8<std::uint32_t>; };
+#endif
 
 } // namespace abi
 
-// concrete types, could add enable if to allow only unsigned int and int...
+// concrete types
 template<typename T>
 struct avx2Int8
 {
@@ -565,6 +573,21 @@ inline avx2Double4 abs(avx2Double4 in)
     return _mm256_andnot_pd(sign_mask, in._data);        // !sign_mask & x
 }
 
+inline avx2Double4 log(avx2Double4 in)
+{
+    // there is no avx2 log intrinsic
+    // this is a dreadful implementation and is simply a stop gap measure
+    alignas(avx2Double4::alignment) avx2Double4::scalarArray tmp;
+    in.store(tmp);
+    tmp[0] = std::log(tmp[0]);
+    tmp[1] = std::log(tmp[1]);
+    tmp[2] = std::log(tmp[2]);
+    tmp[3] = std::log(tmp[3]);
+    avx2Double4 ret;
+    ret.load(tmp);
+    return ret;
+}
+
 inline void load_interleave(
     const double* in,
     size_t dataLen,
@@ -618,6 +641,40 @@ inline void deinterleave_store(
         index0 = index0 + 1;
     }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+// mask type
+// mask is a int type with special properties (broad boolean vector)
+// broad boolean vectors defined and allowed values are:
+// false=0x0 and true=0xFFFFFFFF
+//
+// VERY LIMITED SUPPORT...just enough to make cubic eos work...
+//
+struct avx2Mask : avx2Long4<std::uint64_t>
+{
+    // bring in ctors
+    using avx2Long4::avx2Long4;
+
+    static constexpr scalarType true_v = -1;
+    static constexpr scalarType false_v = 0;
+};
+
+inline avx2Mask operator>(avx2Double4 lhs, avx2Double4 rhs)
+{
+
+    return reinterpret_cast<__m256i>(_mm256_cmp_pd(rhs._data, lhs._data, 1));
+}
+
+inline bool operator&&(avx2Mask lhs, bool rhs)
+{
+    bool tmp = _mm256_testc_si256(lhs._data, _mm256_set1_epi64x(avx2Mask::true_v));
+
+    return tmp && rhs;
+}
+
+
 
 #endif // defined(__AVX2__)
 

@@ -633,7 +633,6 @@ namespace QuadCollectionTests
         {
             phys[i] = sin(xc[i])*cos(yc[i]);
         }
-        c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
         Exp->IProductWRTBase(phys, coeffs1);
         c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
@@ -2275,16 +2274,16 @@ namespace QuadCollectionTests
             phys1[i] = sin(xc[i])*cos(yc[i]);
             phys2[i] = cos(xc[i])*sin(yc[i]);
         }
-    }
+    
 
         // Standard routines
         Exp->IProductWRTDerivBase(0, phys1, coeffs1);
         Exp->IProductWRTDerivBase(1, phys2, coeffs2);
         Vmath::Vadd(nm,coeffs1,1,coeffs2,1,coeffs1,1);
-
+        
         c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1,
                         phys2, coeffs2);
-
+        
         double epsilon = 1.0e-8;
         for(int i = 0; i < coeffs1.size(); ++i)
         {
@@ -2293,8 +2292,7 @@ namespace QuadCollectionTests
             BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
         }
     }
-
-
+    
     BOOST_AUTO_TEST_CASE(TestQuadIProductWRTDerivBase_StdMat_VariableP_MultiElmt)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.5, 0.0));

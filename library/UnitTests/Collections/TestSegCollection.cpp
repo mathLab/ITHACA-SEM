@@ -508,17 +508,22 @@ namespace Nektar
             }
         }
 
-
+        
         BOOST_AUTO_TEST_CASE(TestSegIProductWRTBase_MatrixFree_UniformP_MultiElmt)
         {
-            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(1u, 0u, -1.5, 0.0, 0.0));
-            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(1u, 1u,  1.0, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::
+                                       PointGeom(1u, 0u, -1.5, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::
+                                       PointGeom(1u, 1u,  1.0, 0.0, 0.0));
 
             SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
 
-            Nektar::LibUtilities::PointsType segPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
-            const Nektar::LibUtilities::PointsKey segPointsKeyDir1(5, segPointsTypeDir1);
-            Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            Nektar::LibUtilities::PointsType segPointsTypeDir1 =
+                Nektar::LibUtilities::eGaussLobattoLegendre;
+            const Nektar::LibUtilities::PointsKey segPointsKeyDir1(5,
+                                       segPointsTypeDir1);
+            Nektar::LibUtilities::BasisType       basisTypeDir1 =
+                Nektar::LibUtilities::eModified_A;
             const Nektar::LibUtilities::BasisKey  basisKeyDir1(basisTypeDir1,4,segPointsKeyDir1);
 
             Nektar::LocalRegions::SegExpSharedPtr Exp =

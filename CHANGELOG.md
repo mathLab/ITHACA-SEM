@@ -48,6 +48,9 @@ v5.1.0
 - Add new filter AeroForcesSPM to compute aerodynamic forces in immersed
   boundaries (!1065)
 
+
+**CompressibleFlowSolver**
+- Added vectorisation of the Interior Penalty method (!!223)
 **PulseWaveSolver**
 - Added viscoelasticity (!1138)
 - Added empirical and power laws (!1138)

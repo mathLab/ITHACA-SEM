@@ -641,7 +641,7 @@ void LocTraceToTraceMap::CalcLocTracePhysToTraceIDMap_2D(
         int cnt1 = 0;
 
         Array<OneD, NekDouble> tmp(m_nTracePts,0.0);
-        Vmath::Gathr(m_LocTraceToTraceMap[dir].size(),
+        Vmath::Gathr((int)m_LocTraceToTraceMap[dir].size(),
                     tracePnts.get(),
                     m_LocTraceToTraceMap[dir].get(),
                     tmp.get());
@@ -720,7 +720,7 @@ void LocTraceToTraceMap::CalcLocTracePhysToTraceIDMap_3D(
 
         // tmp space assuming forward map is of size of trace
         Array<OneD, NekDouble> tmp(m_nTracePts,0.0);
-        Vmath::Gathr(m_LocTraceToTraceMap[dir].size(),
+        Vmath::Gathr((int)m_LocTraceToTraceMap[dir].size(),
                     tracePnts.get(),
                     m_LocTraceToTraceMap[dir].get(),
                     tmp.get());
@@ -1148,10 +1148,14 @@ void LocTraceToTraceMap::RightIPTWLocEdgesToTraceInterpMat(
     // The static cast is necessary because m_LocTraceToTraceMap should be
     // Array<OneD, size_t> ... or at least the same type as
     // m_LocTraceToTraceMap.size() ...
-    Vmath::Gathr(static_cast<int>(m_LocTraceToTraceMap[dir].size()),
-                 edges,
-                 m_LocTraceToTraceMap[dir],
-                 tmp);
+    int n = m_LocTraceToTraceMap[dir].size();
+    if(n)
+    {
+        Vmath::Gathr(n,
+                     edges,
+                     m_LocTraceToTraceMap[dir],
+                     tmp);
+    }
 
     for (int i = 0; i < m_interpTrace[dir].size(); ++i)
     {

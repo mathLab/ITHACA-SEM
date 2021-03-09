@@ -152,7 +152,6 @@ namespace Nektar
                                    DoOdeProjection, this);
             m_ode.DefineImplicitSolve(&CompressibleFlowSystem::
                                       DoImplicitSolvePhysToCoeff, this);
-            InitialiseNonlinSysSolver();
 
             int nvariables  =   m_fields.size();
             Array<OneD, Array<OneD, Array<OneD, int > > >   map;
@@ -167,6 +166,8 @@ namespace Nektar
                     ->SetLocTracephysToTraceIDMap(
                     locTraceToTraceMap->GetLocTracephysToTraceIDMap());
             }
+
+            InitialiseNonlinSysSolver();
         }
 
         SetBoundaryConditionsBwdWeight();
@@ -2865,9 +2866,6 @@ timer.AccumulateRegion("DoDiffusion");
     {
         auto nVariables = physfield.size();
         auto nPts = physfield[0].size();
-
-        Array<OneD, NekDouble> pressure(nq);
-        TensorOfArray2D<NekDouble> velocity(m_spacedim);
 
         constexpr unsigned short maxVel = 3;
         constexpr unsigned short maxFld = 5;

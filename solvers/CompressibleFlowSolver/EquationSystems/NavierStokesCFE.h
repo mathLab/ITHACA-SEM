@@ -129,6 +129,10 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >  &inarray,
               Array<OneD,             NekDouble  >  &muav);
 
+    void CalcViscosity(
+        const Array<OneD, const Array<OneD, NekDouble> >   &inaverg,
+        Array<OneD, NekDouble>                             &mu);
+    
     virtual void v_InitObject();
 
     virtual void v_ExtraFldOutput(

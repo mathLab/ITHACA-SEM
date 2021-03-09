@@ -209,11 +209,8 @@ namespace Vmath
 
     /// \brief Gather vector z[i] = x[y[i]]
     template<class T, class I, typename = typename std::enable_if
-        <
-            std::is_floating_point<T>::value &&
-            std::is_integral<I>::value
-        >::type
-    >
+             <std::is_floating_point<T>::value &&
+              std::is_integral<I>::value>::type>
     void Gathr(I n, const T *x, const I *y, T *z)
     {
         while (n--)

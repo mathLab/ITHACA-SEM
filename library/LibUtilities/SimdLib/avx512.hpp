@@ -66,9 +66,10 @@ namespace abi
 {
 
 // mapping between abstract types and concrete types
+template <> struct avx512<double> { using type = avx512Double8; };
 template <> struct avx512<std::int64_t> { using type = avx512Long8<std::int64_t>; };
 template <> struct avx512<std::uint64_t> { using type = avx512Long8<std::uint64_t>; };
-template <> struct avx512<double> { using type = avx512Double8; };
+template <> struct avx512<bool> { using type = avx512Mask; };
 
 } // namespace abi
 
@@ -404,6 +405,25 @@ inline avx512Double8 abs(avx512Double8 in)
     return _mm512_abs_pd(in._data);
 }
 
+inline avx512Double8 log(avx512Double8 in)
+{
+    // there is no avx512 log intrinsic
+    // this is a dreadful implementation and is simply a stop gap measure
+    alignas(avx512Double8::alignment) avx512Double8::scalarArray tmp;
+    in.store(tmp);
+    tmp[0] = std::log(tmp[0]);
+    tmp[1] = std::log(tmp[1]);
+    tmp[2] = std::log(tmp[2]);
+    tmp[3] = std::log(tmp[3]);
+    tmp[4] = std::log(tmp[4]);
+    tmp[5] = std::log(tmp[5]);
+    tmp[6] = std::log(tmp[6]);
+    tmp[7] = std::log(tmp[7]);
+    avx512Double8 ret;
+    ret.load(tmp);
+    return ret;
+}
+
 inline void load_interleave(
     const double* in,
     size_t dataLen,
@@ -510,7 +530,64 @@ inline void deinterleave_store(
     }
 #endif
 
+}
 
+////////////////////////////////////////////////////////////////////////////////
+
+// mask type
+// avx512 support a narrow bolean type, i.e. a bitwise mask: __mask8
+//
+// VERY LIMITED SUPPORT...just enough to make cubic eos work...
+// NOT TESTED
+//
+struct avx512Mask
+{
+    static constexpr unsigned int width = 1;
+    static constexpr unsigned int alignment = 8;
+
+    using scalarType = bool;
+    using vectorType = __mmask8;
+    using scalarArray = std::uint8_t;
+
+    // storage
+    vectorType _data;
+
+    // true false type
+    static constexpr scalarType true_v = true;
+    static constexpr scalarType false_v = false;
+
+    // ctors
+    inline avx512Mask() = default;
+    inline avx512Mask(const avx512Mask& rhs) = default;
+    inline avx512Mask(const vectorType& rhs) : _data(rhs){}
+    inline avx512Mask(const scalarType rhs)
+    {
+        _data = _mm512_set1_epi64(rhs);
+    }
+    explicit inline avx512Mask(scalarArray& rhs)
+    {
+        _data = _mm512_load_epi64(rhs);
+    }
+
+    // load
+    inline void load(scalarArray* p) const
+    {
+        _load_mask8(reinterpret_cast<vectorType*>(p), _data);
+    }
+
+};
+
+inline avx512Mask operator>(avx512Double8 lhs, avx512Double8 rhs)
+{
+
+    return _mm512_cmp_pd_mask(rhs._data, lhs._data, 1);
+}
+
+inline bool operator&&(avx512Mask lhs, bool rhs)
+{
+    static constexpr std::uint8_t mask_true = 0xFF;
+    bool tmp = _ktestc_mask8_u8(lhs._data, _load_mask8(&mask_true));
+    return tmp && rhs;
 }
 
 #endif // defined(__avx512__)

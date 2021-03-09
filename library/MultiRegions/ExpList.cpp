@@ -1454,7 +1454,7 @@ namespace Nektar
             LIKWID_MARKER_STOP("IProductWRTDerivBase_coll");
 
             // Elapsed time
-            timer.AccumulateRegion("IProductWRTDerivBase_coll");
+            timer.AccumulateRegion("Collections:IProductWRTDerivBase");
 
         }
         /**
@@ -1519,7 +1519,7 @@ namespace Nektar
             }
             timer.Stop();
             // Elapsed time
-            timer.AccumulateRegion("v_PhysDeriv");
+            timer.AccumulateRegion("Collections:PhysDeriv");
         }
 
         void ExpList::v_PhysDeriv(const int dir,
@@ -2359,7 +2359,7 @@ namespace Nektar
             LIKWID_MARKER_STOP("v_BwdTrans_IterPerExp");
 
             // Elapsed time
-            timer.AccumulateRegion("v_BwdTrans_IterPerExp");
+            timer.AccumulateRegion("Collections:BwdTrans");
         }
 
         LocalRegions::ExpansionSharedPtr& ExpList::GetExp(

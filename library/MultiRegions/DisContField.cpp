@@ -2855,14 +2855,12 @@ namespace Nektar
            (const Array<OneD, const NekDouble> &field,
             Array<OneD, NekDouble> &Fwd,
             Array<OneD, NekDouble> &Bwd,
-            bool FillBnd,
+            bool FillBnd,           // these should be template params so that compiler can remove them
             bool PutFwdInBwdOnBCs,
             bool DoExchange)
         {
-            int cnt, n, e, npts, phys_offset;
-
+            // Is this zeroing necessary?
             // Zero forward/backward vectors.
-
             Vmath::Zero(Fwd.size(), Fwd, 1);
             Vmath::Zero(Bwd.size(), Bwd, 1);
 
@@ -2884,21 +2882,21 @@ namespace Nektar
             else
             {
                 // Loop over elements and collect forward expansion
-                int nexp = GetExpSize();
+                auto nexp = GetExpSize();
                 Array<OneD,NekDouble> e_tmp;
                 LocalRegions::ExpansionSharedPtr exp;
 
                 Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
-                for(cnt = n = 0; n < nexp; ++n)
+                for (int n = 0, cnt = 0; n < nexp; ++n)
                 {
                     exp = (*m_exp)[n];
-                    phys_offset = GetPhys_Offset(n);
+                    auto phys_offset = GetPhys_Offset(n);
 
-                    for(e = 0; e < exp->GetNtraces(); ++e, ++cnt)
+                    for(int e = 0; e < exp->GetNtraces(); ++e, ++cnt)
                     {
-                        int offset = m_trace->GetPhys_Offset(
+                        auto offset = m_trace->GetPhys_Offset(
                             elmtToTrace[n][e]->GetElmtId());
 
                         e_tmp = (m_leftAdjacentTraces[cnt])? Fwd + offset:
@@ -2912,45 +2910,45 @@ namespace Nektar
 
             DisContField::v_PeriodicBwdCopy(Fwd,Bwd);
 
-            if(FillBnd)
+            if (FillBnd)
             {
                 // Fill boundary conditions into missing elements
-                int id1, id2 = 0;
-
-                if(PutFwdInBwdOnBCs) // just set Bwd value to be Fwd value on BCs
+                if (PutFwdInBwdOnBCs) // just set Bwd value to be Fwd value on BCs
                 {
                     // Fill boundary conditions into missing elements
-                    for (int n = cnt = 0; n < m_bndCondExpansions.size(); ++n)
+                    for (int n = 0, cnt = 0; n < m_bndCondExpansions.size(); ++n)
                     {
                         if (m_bndConditions[n]->GetBoundaryConditionType() ==
                             SpatialDomains::eDirichlet)
                         {
-                            for (e=0; e<m_bndCondExpansions[n]->GetExpSize();++e)
+                            auto ne = m_bndCondExpansions[n]->GetExpSize();
+                            for (int e = 0; e < ne; ++e)
                             {
-                                npts = m_bndCondExpansions[n]->
+                                auto npts = m_bndCondExpansions[n]->
                                     GetExp(e)->GetTotPoints();
-                                int id2 = m_trace->GetPhys_Offset(m_traceMap->
+                                auto id2 = m_trace->GetPhys_Offset(m_traceMap->
                                           GetBndCondIDToGlobalTraceID(cnt+e));
                                 Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
                             }
 
-                            cnt += e;
+                            cnt += ne;
                         }
                         else if (m_bndConditions[n]->GetBoundaryConditionType() ==
                                  SpatialDomains::eNeumann ||
                                  m_bndConditions[n]->GetBoundaryConditionType() ==
                                  SpatialDomains::eRobin)
                         {
-                            for (e=0; e<m_bndCondExpansions[n]->GetExpSize(); ++e)
+                            auto ne = m_bndCondExpansions[n]->GetExpSize();
+                            for (int e = 0; e < ne; ++e)
                             {
-                                npts = m_bndCondExpansions[n]->
+                                auto npts = m_bndCondExpansions[n]->
                                     GetExp(e)->GetTotPoints();
-                                int id2 = m_trace->GetPhys_Offset(m_traceMap->
+                                auto id2 = m_trace->GetPhys_Offset(m_traceMap->
                                           GetBndCondIDToGlobalTraceID(cnt+e));
                                 Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
                             }
 
-                            cnt += e;
+                            cnt += ne;
                         }
                         else if (m_bndConditions[n]->GetBoundaryConditionType() !=
                                  SpatialDomains::ePeriodic)
@@ -2963,45 +2961,47 @@ namespace Nektar
                 }
                 else
                 {
-                    for (cnt = n = 0; n < m_bndCondExpansions.size(); ++n)
+                    for (int n = 0, cnt = 0; n < m_bndCondExpansions.size(); ++n)
                     {
                         if (m_bndConditions[n]->GetBoundaryConditionType() ==
                             SpatialDomains::eDirichlet)
                         {
-                            for (e=0; e<m_bndCondExpansions[n]->GetExpSize(); ++e)
+                            auto ne = m_bndCondExpansions[n]->GetExpSize();
+                            for (int e = 0; e < ne; ++e)
                             {
-                                npts = m_bndCondExpansions[n]->GetExp(e)
+                                auto npts = m_bndCondExpansions[n]->GetExp(e)
                                     ->GetTotPoints();
-                                id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
-                                id2 = m_trace->GetPhys_Offset(m_traceMap->
+                                auto id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
+                                auto id2 = m_trace->GetPhys_Offset(m_traceMap->
                                            GetBndCondIDToGlobalTraceID(cnt+e));
                                 Vmath::Vcopy(npts,
                                              &(m_bndCondExpansions[n]->GetPhys())
                                              [id1], 1, &Bwd[id2], 1);
                             }
 
-                            cnt += e;
+                            cnt += ne;
                         }
                         else if (m_bndConditions[n]->GetBoundaryConditionType() ==
                                  SpatialDomains::eNeumann ||
                                  m_bndConditions[n]->GetBoundaryConditionType() ==
                                  SpatialDomains::eRobin)
                         {
-                            for(e=0; e<m_bndCondExpansions[n]->GetExpSize(); ++e)
+                            auto ne = m_bndCondExpansions[n]->GetExpSize();
+                            for(int e = 0; e < ne; ++e)
                             {
-                                npts = m_bndCondExpansions[n]->GetExp(e)
+                                auto npts = m_bndCondExpansions[n]->GetExp(e)
                                     ->GetTotPoints();
-                                id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
+                                auto id1  = m_bndCondExpansions[n]->GetPhys_Offset(e);
                                 ASSERTL0((m_bndCondExpansions[n]->GetPhys())[id1]
                                          ==0.0,
                                          "Method not set up for non-zero Neumann "
                                          "boundary condition");
-                                id2  = m_trace->GetPhys_Offset(
+                                auto id2  = m_trace->GetPhys_Offset(
                                   m_traceMap->GetBndCondIDToGlobalTraceID(cnt+e));
                                 Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
                             }
 
-                            cnt += e;
+                            cnt += ne;
                         }
                         else if (m_bndConditions[n]->GetBoundaryConditionType() ==
                                  SpatialDomains::eNotDefined)
@@ -3019,7 +3019,7 @@ namespace Nektar
                 }
             }
 
-            if(DoExchange)
+            if (DoExchange)
             {
                 // Do parallel exchange for forwards/backwards spaces.
                 m_traceMap->GetAssemblyCommDG()->PerformExchange(Fwd, Bwd);

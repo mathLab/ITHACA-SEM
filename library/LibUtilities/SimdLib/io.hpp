@@ -1,4 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
+//
+// File: io.hpp
+//
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
@@ -25,12 +28,36 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Unit tests for LibUtilities
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#define BOOST_AUTO_TEST_MAIN
-#define BOOST_TEST_MODULE LocalRegsionUnitTests test
-#include <boost/test/auto_unit_test.hpp>
-#include <boost/test/included/unit_test_framework.hpp>
+#ifndef NEKTAR_LIB_LIBUTILITES_SIMDLIB_IO_HPP
+#define NEKTAR_LIB_LIBUTILITES_SIMDLIB_IO_HPP
 
+#include "traits.hpp"
+#include "tinysimd.hpp"
+#include <ostream>
+#include <memory>
+
+namespace tinysimd
+{
+
+template <class T, typename = typename std::enable_if
+        <tinysimd::is_vector<T>::value>::type
+    >
+std::ostream& operator<<(std::ostream& os, const T& avec)
+{
+    // Note the type cast to 'unsigned int' is only necessary to
+    // overcome a bug in Centos 7 gcc 4.8.5 package
+    alignas((unsigned int) T::alignment) typename T::scalarArray tmp;
+    avec.store(tmp);
+    for (unsigned short i = 0; i < T::width; ++i)
+    {
+        os << tmp[i] << '\t';
+    }
+    return os;
+}
+
+} // namespace tinysimd
+#endif

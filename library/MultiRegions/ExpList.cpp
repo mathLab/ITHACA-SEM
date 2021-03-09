@@ -2438,6 +2438,12 @@ namespace Nektar
                                                    tmp = outarray + m_coll_phys_offset[i]);
                 }
             }
+
+            timer.Stop();
+            LIKWID_MARKER_STOP("v_BwdTrans_IterPerExp");
+
+            // Elapsed time
+            timer.AccumulateRegion("v_BwdTrans_IterPerExp");
         }
 
         LocalRegions::ExpansionSharedPtr& ExpList::GetExp(

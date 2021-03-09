@@ -32,8 +32,8 @@ inline static void BwdTransSegKernel(
     }
 }
 
-template<int NUMMODE0, int NUMMODE1,
-         int NUMQUAD0, int NUMQUAD1>
+template<unsigned short NUMMODE0, unsigned short NUMMODE1,
+         unsigned short NUMQUAD0, unsigned short NUMQUAD1>
 inline static void BwdTransQuadKernel(
     const std::vector<vec_t, allocator<vec_t>> &in,
     const std::vector<vec_t, allocator<vec_t>> &bdata0,
@@ -74,7 +74,7 @@ inline static void BwdTransQuadKernel(
     }
 
 }
-    
+
 template<int NUMMODE0, int NUMMODE1,
          int NUMQUAD0, int NUMQUAD1,
          bool CORRECT>

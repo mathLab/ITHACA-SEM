@@ -89,37 +89,6 @@ inline static void PhysDerivTensor2DKernel(
 
 }
 
-#if 0 
-template<int NUMQUAD0, bool DEFORMED>
-static void PhysDerivSegKernel(
-    const std::vector<vec_t, allocator<vec_t>> &in,
-    const std::vector<vec_t, allocator<vec_t>> &D0,
-    const vec_t* df_ptr,
-    std::vector<vec_t, allocator<vec_t>> &out_d0)
-{
-
-    constexpr auto nq0 = NUMQUAD0;
-
-    PhysDerivTensor1DKernel<NUMQUAD0>(in, D0, out_d0);
-    //Results written to out_d0
-
-    vec_t df0;
-    if (!DEFORMED)
-    {
-        df0 = df_ptr[0];
-    }
-
-    for (int j = 0; j < nq0; ++j)
-    {
-        if (DEFORMED)
-        {
-            df0 = df_ptr[j];
-        }
-        //Multiply by derivative factors
-        out_d0[j] *= df0; //Store 1x
-    }
-}
-#endif
     
 template<int NUMQUAD0, int NUMQUAD1, bool DEFORMED>
 static void PhysDerivQuadKernel(

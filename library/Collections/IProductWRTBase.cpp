@@ -185,6 +185,7 @@ class IProductWRTBase_MatrixFree : public Operator, MatrixFreeOneInOneOut
                 const StdRegions::ConstFactorMap   &factors) final
         {
             boost::ignore_unused(output1, output2, wsp, factors);
+
             if (m_isPadded)
             {
                 // copy into padded vector

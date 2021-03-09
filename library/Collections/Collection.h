@@ -107,7 +107,6 @@ class Collection
     // store details for initialisation on call rather than default initialisation
     std::vector<StdRegions::StdExpansionSharedPtr>                m_collExp; 
     OperatorImpMap                                                m_impTypes;
-
 };
 
 typedef std::vector<Collection> CollectionVector;

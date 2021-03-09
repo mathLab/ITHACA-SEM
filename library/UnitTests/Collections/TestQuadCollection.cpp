@@ -633,6 +633,7 @@ namespace QuadCollectionTests
         {
             phys[i] = sin(xc[i])*cos(yc[i]);
         }
+        c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
 
         Exp->IProductWRTBase(phys, coeffs1);
         c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
@@ -2274,6 +2275,7 @@ namespace QuadCollectionTests
             phys1[i] = sin(xc[i])*cos(yc[i]);
             phys2[i] = cos(xc[i])*sin(yc[i]);
         }
+    }
 
         // Standard routines
         Exp->IProductWRTDerivBase(0, phys1, coeffs1);
@@ -2375,7 +2377,7 @@ namespace QuadCollectionTests
         }
     }
 
-    BOOST_AUTO_TEST_CASE(TestQuadIProductWRTDerivBase_SumFac_UniformP)
+ BOOST_AUTO_TEST_CASE(TestQuadIProductWRTDerivBase_SumFac_UniformP)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
         SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
@@ -2778,6 +2780,5 @@ namespace QuadCollectionTests
             BOOST_CHECK_CLOSE(coeffsRef[i], coeffs[i], epsilon);
         }
     }
-
 } // namespace QuadCollectionTests
 } // namespace Nektar

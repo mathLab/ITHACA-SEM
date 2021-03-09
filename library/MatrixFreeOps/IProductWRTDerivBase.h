@@ -1739,6 +1739,7 @@ struct IProductWRTDerivBasePrism : public IProductWRTDerivBase, public Helper<3,
                 }
             }
 
+
             // IP DB0 B1 B2
             IProductPrismKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, CORRECT, false,
                 false, DEFORMED>(
@@ -1781,7 +1782,6 @@ private:
 };
 
 template<bool DEFORMED = false>
-
 struct IProductWRTDerivBasePyr : public IProductWRTDerivBase, public Helper<3, DEFORMED>
 {
     IProductWRTDerivBasePyr(std::vector<LibUtilities::BasisSharedPtr> basis,

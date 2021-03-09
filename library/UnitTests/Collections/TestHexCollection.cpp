@@ -2051,7 +2051,6 @@ namespace Nektar
             Collections::Collection     c(CollExp, impTypes);
             c.Initialise(Collections::ePhysDeriv);
 
-
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
             Array<OneD, NekDouble> phys(nq),tmp,tmp1,tmp2;
@@ -2130,7 +2129,6 @@ namespace Nektar
                 colOpt.GetOperatorImpMap(stdExp);
             Collections::Collection     c(CollExp, impTypes);
             c.Initialise(Collections::ePhysDeriv);
-
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);

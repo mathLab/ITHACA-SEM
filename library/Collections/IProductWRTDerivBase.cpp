@@ -379,6 +379,7 @@ class IProductWRTDerivBase_MatrixFree : public Operator, MatrixFreeMultiInOneOut
         {
             // Check if deformed
             const auto dim = pCollExp[0]->GetStdExp()->GetShapeDimension();
+            
             // Basis vector
             std::vector<LibUtilities::BasisSharedPtr> basis(dim);
             for (unsigned int i = 0; i < dim; ++i)
@@ -405,6 +406,7 @@ class IProductWRTDerivBase_MatrixFree : public Operator, MatrixFreeMultiInOneOut
             m_oper = std::dynamic_pointer_cast<MatrixFree::
                                                IProductWRTDerivBase>(oper);
             ASSERTL0(m_oper, "Failed to cast pointer.");
+
         }
 };
 

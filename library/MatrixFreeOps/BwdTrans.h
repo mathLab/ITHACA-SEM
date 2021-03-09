@@ -755,6 +755,7 @@ struct BwdTransTet : public BwdTrans, public Helper<3>
         return m_nmTot * this->m_nElmt;
     }
 
+
     void operator()(const Array<OneD, const NekDouble> &in,
         Array<OneD, NekDouble> &out) final
     {

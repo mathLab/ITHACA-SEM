@@ -131,7 +131,7 @@ inline static void IProductQuadKernel(
     }
 
 }
-    
+
 template<int NUMMODE0, int NUMMODE1,
          int NUMQUAD0, int NUMQUAD1,
          bool CORRECT, bool SCALE, bool APPEND,

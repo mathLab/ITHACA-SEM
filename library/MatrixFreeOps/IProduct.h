@@ -345,7 +345,6 @@ private:
     int m_nmTot;
 };
 
-
 template<bool DEFORMED = false>
 struct IProductTri : public IProduct, public Helper<2, DEFORMED>
 {

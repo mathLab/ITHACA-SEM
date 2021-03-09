@@ -366,7 +366,6 @@ namespace Nektar
         Collections::Collection     c(CollExp, impTypes);
         c.Initialise(Collections::eBwdTrans);
 
-
         Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
         Array<OneD, NekDouble> physRef(Exp->GetTotPoints());
         Array<OneD, NekDouble> phys(Exp->GetTotPoints());
@@ -428,7 +427,6 @@ namespace Nektar
         impTypes[Collections::eBwdTrans] = Collections::eMatrixFree;
         Collections::Collection     c(CollExp, impTypes);
         c.Initialise(Collections::eBwdTrans);
-
 
         Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
         Array<OneD, NekDouble> physRef(Exp->GetTotPoints());
@@ -1101,9 +1099,6 @@ namespace Nektar
         }
     }
 
-
-        
-
     BOOST_AUTO_TEST_CASE(TestTriIProductWRTBase_MatrixFree_UniformP_Deformed_OverInt)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u,
@@ -1718,7 +1713,6 @@ namespace Nektar
         Collections::Collection     c(CollExp, impTypes);
         c.Initialise(Collections::ePhysDeriv);
 
-
         const int nq = Exp->GetTotPoints();
         Array<OneD, NekDouble> xc(nq), yc(nq);
         Array<OneD, NekDouble> phys(nq),tmp,tmp1;
@@ -1789,7 +1783,6 @@ namespace Nektar
         impTypes[Collections::ePhysDeriv] = Collections::eMatrixFree;
         Collections::Collection     c(CollExp, impTypes);
         c.Initialise(Collections::ePhysDeriv);
-
 
         const int nq = Exp->GetTotPoints();
         Array<OneD, NekDouble> xc(nq), yc(nq);
@@ -2006,7 +1999,6 @@ namespace Nektar
         Collections::Collection     c(CollExp, impTypes);
         c.Initialise(Collections::eIProductWRTDerivBase);
 
-
         const int nq = Exp->GetTotPoints();
         const int nm = Exp->GetNcoeffs();
         Array<OneD, NekDouble> phys1(nq);
@@ -2091,7 +2083,6 @@ namespace Nektar
         impTypes[Collections::eIProductWRTDerivBase] = Collections::eMatrixFree;
         Collections::Collection     c(CollExp, impTypes);
         c.Initialise(Collections::eIProductWRTDerivBase);
-
 
         const int nq = Exp->GetTotPoints();
         const int nm = Exp->GetNcoeffs();
@@ -2190,14 +2181,12 @@ namespace Nektar
         Collections::Collection     c(CollExp, impTypes);
         c.Initialise(Collections::eIProductWRTDerivBase);
 
-
         const int nq = Exp->GetTotPoints();
         const int nm = Exp->GetNcoeffs();
         Array<OneD, NekDouble> phys1(nelmts*nq);
         Array<OneD, NekDouble> phys2(nelmts*nq);
         Array<OneD, NekDouble> coeffsRef(nelmts*nm);
         Array<OneD, NekDouble> coeffs(nelmts*nm);
-
         Array<OneD, NekDouble> xc(nq), yc(nq), tmp;
 
         Exp->GetCoords(xc, yc);
@@ -2241,7 +2230,6 @@ namespace Nektar
         }
     }
         
-#if 1
         BOOST_AUTO_TEST_CASE(TestTriIProductWRTDerivBase_MatrixFree_UniformP_Deformed_MultiElmt_ThreeD)
     {
         SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u,
@@ -2351,7 +2339,6 @@ namespace Nektar
             BOOST_CHECK_CLOSE(coeffsRef[i], coeffs[i], epsilon);
         }
     }
-#endif
         
     BOOST_AUTO_TEST_CASE(TestTriIProductWRTDerivBase_MatrixFree_UniformP_Deformed_OverInt)
     {
@@ -2398,7 +2385,6 @@ namespace Nektar
         impTypes[Collections::eIProductWRTDerivBase] = Collections::eMatrixFree;
         Collections::Collection     c(CollExp, impTypes);
         c.Initialise(Collections::eIProductWRTDerivBase);
-
 
         const int nq = Exp->GetTotPoints();
         const int nm = Exp->GetNcoeffs();

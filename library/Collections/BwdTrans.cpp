@@ -60,8 +60,7 @@ class BwdTrans_StdMat : public Operator
 {
 public:
     OPERATOR_CREATE(BwdTrans_StdMat)
-    
-        virtual ~BwdTrans_StdMat()
+    virtual ~BwdTrans_StdMat()
     {
     }
     
@@ -160,6 +159,7 @@ public:
                     const StdRegions::ConstFactorMap   &factors) final
     {
         boost::ignore_unused(output1, output2, wsp, factors);
+
         if (m_isPadded)
         {
             // copy into padded vector
@@ -174,7 +174,7 @@ public:
             (*m_oper)(input, output0);
         }
     }
-    
+
     void operator()(int dir, const Array<OneD, const NekDouble> &input,
                     Array<OneD, NekDouble> &output,
                     Array<OneD, NekDouble> &wsp) final
@@ -363,7 +363,7 @@ public:
         boost::ignore_unused(dir, input, output, wsp);
         ASSERTL0(false, "Not valid for this operator.");
     }
-    
+
 protected:
     vector<StdRegions::StdExpansionSharedPtr> m_expList;
     
@@ -418,7 +418,7 @@ class BwdTrans_SumFac_Seg : public Operator
 {
 public:
     OPERATOR_CREATE(BwdTrans_SumFac_Seg)
-    
+
     virtual ~BwdTrans_SumFac_Seg()
     {
     }
@@ -821,7 +821,7 @@ public:
         int mode1   = 0;
         int cnt     = 0;
         int ncoeffs = m_stdExp->GetNcoeffs();
-        
+
         // Perform summation over '2' direction
         for (int i = 0; i < m_nmodes0; ++i)
         {

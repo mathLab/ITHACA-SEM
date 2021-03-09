@@ -18,6 +18,9 @@ v5.1.0
 - Fix distance in ContainsPoint and GetLocCoords (!1200)
 - Fix compiler warning of maybe-uninitialized elType in InputStar (!1217)
 - Extend vectoisation to include all elements and initialise collections on first call (!1162)
+- Add vectorisation of most element on basix operations (!1158)
+- Limit MPI methods based on core count (!1208)
+- Split out IProduct.cpp and IProductWRTDerivBase.cpp in order to avoid long time compilations (!1228)
 
 **FieldConvert**
 - Refactored time integration code using factory pattern (!1034)
@@ -28,6 +31,7 @@ v5.1.0
   for parallel DG simulations (!1112)
   num_elements with size() (!1127, !1137, !1141)
 - Fix to interppointsdatatofld to allow for mpi processing of large files (!1191)
+- Fix the logic of C0Projection:helmsmoothing (!1220)
 
 **FieldConvert**:
 - Add phifile module to compute shape functions for the SPM solver (!1065)

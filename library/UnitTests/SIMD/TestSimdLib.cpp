@@ -574,7 +574,6 @@ namespace SimdLibTests
         }
 
     }
-
-
 }
 }
+

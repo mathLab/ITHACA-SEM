@@ -378,7 +378,6 @@ private:
 
 };
 
-    
 template<bool DEFORMED=false>
 struct PhysDerivTri : public PhysDeriv, public Helper<2,DEFORMED>
 {
@@ -942,7 +941,6 @@ struct PhysDerivTet : public PhysDeriv, public Helper<3, DEFORMED>
         Array<OneD, NekDouble> out_d0 = out[0];
         Array<OneD, NekDouble> out_d1 = out[1];
         Array<OneD, NekDouble> out_d2 = out[2];
-
 
         switch(m_basis[0]->GetNumPoints())
         {

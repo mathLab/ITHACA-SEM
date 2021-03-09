@@ -37,6 +37,8 @@
 
 #include <iomanip>
 
+#include <iomanip>
+
 namespace Nektar
 {
 namespace LibUtilities

@@ -116,38 +116,7 @@ protected:
     /// coefff of spacial derivatives(rhs or m_F in GLM) in calculating the residual of the whole equation(used in unsteady time integrations)
     NekDouble                                       m_TimeIntegLambda=0.0;
 
-    NekDouble                                       m_TimeIntegLambdaPrcMat=0.0;
-
-    NekDouble                                       m_Res0PreviousStep=-1.0;
-    
-    Array<OneD, Array<OneD, DNekBlkMatSharedPtr> >  m_PreconMatVars;
-    
-    Array<OneD, Array<OneD, NekDouble> >            m_PreconMatVarsOffDiag;
-    
-    DNekBlkMatSharedPtr                             m_PreconMat;
-    Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >  m_PreconMatVarsSingle;
-    SNekBlkMatSharedPtr                             m_PreconMatSingle;
-    
     bool                                            m_flagImplItsStatistcs;
-    
-    Array<OneD, DNekBlkMatSharedPtr >               m_TraceJac;
-    Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekDouble >>>>  m_TraceJacArray;
-    
-    Array<OneD, DNekBlkMatSharedPtr >               m_TraceJacDeriv;
-    Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekDouble >>>>  m_TraceJacDerivArray;
-    
-    Array<OneD,       Array<OneD, NekDouble> >      m_TraceJacDerivSign;
-    
-    Array<OneD, SNekBlkMatSharedPtr >               m_TraceJacSingle;
-    Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekSingle >>>>  m_TraceJacArraySingle;
-    
-    Array<OneD, SNekBlkMatSharedPtr >               m_TraceJacDerivSingle;
-    Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekSingle >>>>  m_TraceJacDerivArraySingle;
-    
-    Array<OneD,       Array<OneD, NekSingle> >      m_TraceJacDerivSignSingle;
-    
-    Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekSingle >>>>>  m_TraceIPSymJacArraySingle;
-    Array<OneD,Array<OneD,Array<OneD,Array<OneD,Array<OneD,NekDouble >>>>>  m_TraceIPSymJacArray;
     
     /// estimate the magnitude of each conserved varibles
     Array<OneD, NekDouble>                          m_magnitdEstimat;
@@ -157,11 +126,6 @@ protected:
     
     NekDouble   m_inArrayNorm=-1.0;
     
-    bool m_CalcPreconMatFlag     = true;
-    
-    int m_CalcPreconMatCounter  = std::numeric_limits<int>::max();
-    int m_CalcPreconMatNumbSteps  = std::numeric_limits<int>::max();
-
     int m_TotLinItePerStep=0;
     int m_StagesPerStep=1;
     

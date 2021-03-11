@@ -40,6 +40,7 @@
 #include <CompressibleFlowSolver/ArtificialDiffusion/ArtificialDiffusion.h>
 #include <CompressibleFlowSolver/Misc/VariableConverter.h>
 #include <CompressibleFlowSolver/BoundaryConditions/CFSBndCond.h>
+#include <CompressibleFlowSolver/Preconditioner/PreconCfsOp.h>
 #include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
@@ -117,8 +118,6 @@ namespace Nektar
                   Array<OneD,       NekDouble>              &out,
             const NekDouble                                 time,
             const NekDouble                                 lambda);
-        bool UpdatePreconMatCheck(
-            const Array<OneD, const NekDouble>  &res);
         void CalcPreconMat(
             const Array<OneD, const Array<OneD, NekDouble>> &inpnts,
             const NekDouble                                 time,
@@ -167,12 +166,6 @@ namespace Nektar
 
         bool                                m_ViscousJacFlag;
         bool                                m_AdvectionJacFlag;
-        bool                                m_updatePreconMatFlag;
-
-        TensorOfArray4D<NekDouble>          m_StdDMatDataDBB;
-        TensorOfArray5D<NekDouble>          m_StdDMatDataDBDB;
-        TensorOfArray4D<NekSingle>          m_StdSMatDataDBB;
-        TensorOfArray5D<NekSingle>          m_StdSMatDataDBDB;
 
         int                                 m_nPadding = 1;
 
@@ -185,31 +178,16 @@ namespace Nektar
         // Forcing term
         std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
 
-        enum PrecType
-        {
-            eNull,    ///< No Solution type specified
-            eDiagonal,
-            eSparse,
-        };
-
-        PrecType                            m_PreconMatStorage;
         NekDouble                           m_BndEvaluateTime;
         Array<OneD, Array<OneD, NekDouble>> m_solutionPhys;
 
         NekDouble                           m_JacobiFreeEps;
         NekDouble                           m_NewtonAbsoluteIteTol;
 
-        /// cfl number for local time step(notice only for jfnk other see m_cflSafetyFactor)
-        NekDouble                                   m_cflLocTimestep = -1.0;
-        /// In Jacobi iteration the SOR relaxation parameter
-        NekDouble                                   m_BRJRelaxParam;
-        /// two strategies: time accurate or not.
-        int                                        m_JFNKTimeAccurate;
-        /// preconditioning steps
-        int                                         m_JFNKPreconStep;
-
         LibUtilities::NekNonlinSysSharedPtr         m_nonlinsol;
         LibUtilities::NekSysOperators               m_NekSysOp;
+
+        PreconCfsOpSharedPtr                        m_PreconCfs;
         
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession,
@@ -234,34 +212,10 @@ namespace Nektar
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble> &out);
  
-        template<typename DataType, typename TypeNekBlkMatSharedPtr>
-        void PreconBlkDiag(
-            const Array<OneD, NekDouble>    &inarray,
-                  Array<OneD, NekDouble>    &outarray,
-            const TypeNekBlkMatSharedPtr    &PreconMatVars,
-            const DataType                  &tmpDataType);
-
-        void PreconBRJCoeff(
+        void PreconCoeff(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble> &outarray,
             const bool                   &flag);
-
-        template<typename DataType>
-        void MinusOffDiag2Rhs(
-            const int                                       nvariables,
-            const int                                       nCoeffs,
-            const Array<OneD, const Array<OneD, NekDouble>> &inarray,
-                  Array<OneD,       Array<OneD, NekDouble>> &outarray,
-            bool                                            flagUpdateDervFlux,
-                  Array<OneD,       Array<OneD, NekDouble>> &FwdFluxDeriv,
-                  Array<OneD,       Array<OneD, NekDouble>> &BwdFluxDeriv,
-                  TensorOfArray3D<NekDouble>                &qfield,
-                  TensorOfArray3D<NekDouble>                &wspTrace,
-                  Array<OneD,       Array<OneD, DataType>>  &wspTraceDataType,
-            const TensorOfArray4D<DataType>                 &TraceJacArray,
-            const TensorOfArray4D<DataType>                 &TraceJacDerivArray,
-            const Array<OneD, const Array<OneD, DataType>>  &TraceJacDerivSign,
-            const TensorOfArray5D<DataType>                 &TraceIPSymJacArray);
 
         template<typename DataType, typename TypeNekBlkMatSharedPtr>
         void AddMatNSBlkDiag_volume(
@@ -342,11 +296,6 @@ namespace Nektar
         void Fill1DArrayOfBlkDiagonalMat( 
                   Array<OneD, TypeNekBlkMatSharedPtr>   &gmtxarray,
             const DataType                              valu);
-
-        template<typename TypeNekBlkMatSharedPtr>
-        void AllocatePreconBlkDiagCoeff(
-                  Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr>> &gmtxarray,
-            const int                                              &nscale=1);
 
         inline void AllocateNekBlkMatDig(
                   SNekBlkMatSharedPtr       &mat,

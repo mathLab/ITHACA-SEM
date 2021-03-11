@@ -42,47 +42,77 @@
 
 namespace Nektar
 {
+    enum PrecType
+    {
+        eNull,    ///< No Solution type specified
+        eDiagonal,
+        eSparse,
+    };
+
     class PreconCfs
     {
     public:
         PreconCfs(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const LibUtilities::CommSharedPtr &vComm);
 
         virtual ~PreconCfs() {}
 
-        inline void DoPreconCfs(
+        void DoPreconCfs(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const Array<OneD, NekDouble> &pInput,
             Array<OneD, NekDouble> &pOutput,
             const bool &flag);
 
-        inline void BuildPreconCfs();
+        inline void BuildPreconCfs(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+            const Array<OneD, const Array<OneD, NekDouble>>   &intmp,
+            const NekDouble                                   time,
+            const NekDouble                                   lambda);
 
         inline void InitObject();
 
-        inline bool UpdatePreconMatCheck();
+        virtual bool UpdatePreconMatCheck(
+            const Array<OneD, const NekDouble>  &res,
+            const NekDouble                     dtLambda);
 
     protected:
         // PreconCfsType                       m_preconType;
-        LibUtilities::CommSharedPtr         m_comm;
+        LibUtilities::CommSharedPtr         m_Comm;
+        bool                                m_root;
+        bool                                m_verbose;
+        int                                 m_spacedim;
+
         int                                 m_PreconMatFreezNumb;
+        int                                 m_CalcPreconMatNumbSteps;
+        int                                 m_CalcPreconMatCounter;
+        
+        NekDouble                           m_DtLambdaPreconMat = 0.0;
+        NekDouble                           m_BndEvaluateTime;
+
+        bool                                m_CalcPreconMatFlag = false;
     
         virtual void v_InitObject();
-
-    private:
 
         void DoNullPrecon(
             const Array<OneD, NekDouble> &pInput,
             Array<OneD, NekDouble> &pOutput,
             const bool &flag);
 
+    private:
 
         virtual void v_DoPreconCfs(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const Array<OneD, NekDouble> &pInput,
             Array<OneD, NekDouble> &pOutput,
             const bool &flag);
 
-        virtual void v_BuildPreconCfs();
+        virtual void v_BuildPreconCfs(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+            const Array<OneD, const Array<OneD, NekDouble>>   &intmp,
+            const NekDouble                                   time,
+            const NekDouble                                   lambda);
     };
     typedef std::shared_ptr<PreconCfs>  PreconCfsSharedPtr;
 
@@ -97,9 +127,13 @@ namespace Nektar
     /**
      *
      */
-    inline void PreconCfs::BuildPreconCfs()
+    inline void PreconCfs::BuildPreconCfs(
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const Array<OneD, const Array<OneD, NekDouble>>   &intmp,
+        const NekDouble                                   time,
+        const NekDouble                                   lambda)
     {
-        v_BuildPreconCfs();
+        v_BuildPreconCfs(pFields, intmp, time, lambda);
     }
 }
 

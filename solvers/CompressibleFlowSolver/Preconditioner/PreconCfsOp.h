@@ -163,6 +163,7 @@ namespace Nektar
 
     /// Declaration of the boundary condition factory
     typedef LibUtilities::NekFactory<std::string, PreconCfsOp,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &,
             const LibUtilities::SessionReaderSharedPtr&,
             const LibUtilities::CommSharedPtr &> PreconCfsOpFactory;
 
@@ -186,6 +187,7 @@ namespace Nektar
     {
     public:
         PreconCfsOp(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const LibUtilities::CommSharedPtr &vComm);
         virtual ~PreconCfsOp() {}
@@ -201,11 +203,16 @@ namespace Nektar
 
 
         virtual void v_DoPreconCfs(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const Array<OneD, NekDouble> &pInput,
             Array<OneD, NekDouble> &pOutput,
             const bool &flag);
 
-        virtual void v_BuildPreconCfs();
+        virtual void v_BuildPreconCfs(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+            const Array<OneD, const Array<OneD, NekDouble>>   &intmp,
+            const NekDouble                                   time,
+            const NekDouble                                   lambda);
 
         static std::string lookupIds[];
         static std::string def;

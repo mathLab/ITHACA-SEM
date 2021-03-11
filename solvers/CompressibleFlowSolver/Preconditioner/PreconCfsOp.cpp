@@ -46,9 +46,10 @@ namespace Nektar
     }
 
     PreconCfsOp::PreconCfsOp(
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
         const LibUtilities::SessionReaderSharedPtr &pSession,
         const LibUtilities::CommSharedPtr &vComm)
-        : PreconCfs(pSession, vComm)
+        : PreconCfs(pFields, pSession, vComm)
     {
         
     }
@@ -59,6 +60,7 @@ namespace Nektar
     }
 
     void PreconCfsOp::v_DoPreconCfs(
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
         const Array<OneD, NekDouble> &pInput,
         Array<OneD, NekDouble> &pOutput,
         const bool &flag)
@@ -66,7 +68,11 @@ namespace Nektar
         NEKERROR(ErrorUtil::efatal, "v_DoPreconCfs not defined");
     }
 
-    void PreconCfsOp::v_BuildPreconCfs()
+    void PreconCfsOp::v_BuildPreconCfs(
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const Array<OneD, const Array<OneD, NekDouble>>   &intmp,
+        const NekDouble                                   time,
+        const NekDouble                                   lambda)
     {
         NEKERROR(ErrorUtil::efatal, "v_BuildPreconCfs not defined");
     }

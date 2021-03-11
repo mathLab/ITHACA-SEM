@@ -268,7 +268,6 @@ namespace Nektar
             }
 
             NekDouble tmp_cflSafetyFactor = m_cflSafetyFactor;
-            m_CalcPreconMatCounter = m_PreconMatFreezNumb;
             bool flagFreezeCFL = false;
 
             m_timestepMax = m_timestep;
@@ -314,14 +313,10 @@ namespace Nektar
                 m_CalcPhysicalAV = true;
 
                 // Frozen preconditioner checks
-                if ((m_CalcPreconMatCounter >= m_PreconMatFreezNumb)||
-                   (m_time + m_timestep > m_fintime && m_fintime > 0.0)||
+                if ((m_time + m_timestep > m_fintime && m_fintime > 0.0)||
                    (m_checktime && m_time + m_timestep - lastCheckTime >=
                     m_checktime))
                 {
-
-                    m_CalcPreconMatFlag      =   true;
-                    m_CalcPreconMatCounter   =   0;
                     m_cflSafetyFactor       =   tmp_cflSafetyFactor;
 
                     if (m_cflSafetyFactor)
@@ -343,8 +338,6 @@ namespace Nektar
                         doCheckTime    = true;
                     }
                 }
-
-                m_CalcPreconMatCounter++;
 
                 if (m_TimeIncrementFactor > 1.0)
                 {

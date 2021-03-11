@@ -201,60 +201,16 @@ namespace Nektar
             NonlinSysEvaluatorCoeff1D, this);
         m_NekSysOp.DefineNekSysLhsEval(&CompressibleFlowSystem::
             MatrixMultiplyMatrixFreeCoeff, this);
+        m_NekSysOp.DefineNekSysPrecond(
+                    &CompressibleFlowSystem::PreconCoeff, this);
+        
+        m_PreconCfs = GetPreconCfsOpFactory().CreateInstance(
+            "PreconCfsBRJ", m_fields, m_session, m_comm);
 
-        m_session->LoadParameter("PreconMatFreezNumb",     
-            m_PreconMatFreezNumb    , 1);
         m_session->LoadParameter("NewtonAbsoluteIteTol", 
             m_NewtonAbsoluteIteTol, 1.0E-12);
-        m_session->LoadParameter("JFNKTimeAccurate",     
-            m_JFNKTimeAccurate, 1);
-        m_session->LoadParameter("JFNKPreconStep",      
-            m_JFNKPreconStep, 7);
-        m_session->LoadParameter("BRJRelaxParam",        
-            m_BRJRelaxParam, 1.0);
 
-        // when no time accuracy needed
-        if(m_JFNKTimeAccurate < 1)
-        {
-            m_NewtonAbsoluteIteTol = 1.0E-10;
-        }
-
-        if (boost::iequals(m_session->GetSolverInfo("PRECONDITIONER"),
-                               "IncompleteLU"))
-        {
-            m_PreconMatStorage    =   eSparse;
-
-            NEKERROR(ErrorUtil::efatal,
-                "IncompleteLU preconditioner not finished yet");
-
-        }
-        else
-        {
-            int nvariables  =   m_fields.size();
-            m_NekSysOp.DefineNekSysPrecond(
-                    &CompressibleFlowSystem::PreconBRJCoeff, this);
-            m_PreconMatStorage    =   eDiagonal;
-            m_session->LoadParameter("nPadding", m_nPadding, 4);
-    
-            m_PreconMatVarsSingle = 
-                TensorOfArray2D<SNekBlkMatSharedPtr>(nvariables);
-            for(int i = 0; i < nvariables; i++)
-            {
-                m_PreconMatVarsSingle[i] =  
-                    Array<OneD, SNekBlkMatSharedPtr> (nvariables);
-            }
-            AllocatePreconBlkDiagCoeff(m_PreconMatVarsSingle);
-
-            int nelmts  = m_fields[0]->GetNumElmts();
-            int nelmtcoef;
-            Array<OneD, unsigned int > nelmtmatdim(nelmts);
-            for(int i = 0; i < nelmts; i++)
-            {
-                nelmtcoef   =   m_fields[0]->GetExp(i)->GetNcoeffs();
-                nelmtmatdim[i]  =   nelmtcoef*nvariables;
-            }
-            AllocateNekBlkMatDig(m_PreconMatSingle,nelmtmatdim,nelmtmatdim);
-        }
+        m_session->LoadParameter("nPadding", m_nPadding, 4);
 
         m_nonlinsol->SetSysOperators(m_NekSysOp);
     }
@@ -495,328 +451,29 @@ namespace Nektar
         return;
     }
 
-    template<typename DataType, typename TypeNekBlkMatSharedPtr>
-    void CompressibleFlowSystem::PreconBlkDiag(
-        const Array<OneD, NekDouble> &inarray,
-              Array<OneD, NekDouble> &outarray,
-        const TypeNekBlkMatSharedPtr &PreconMatVars,
-        const DataType               &tmpDataType)
-    {
-        boost::ignore_unused(tmpDataType);
-
-        unsigned int nvariables = m_fields.size();
-        unsigned int npoints    = GetNcoeffs();
-        unsigned int npointsVar = nvariables*npoints;
-        Array<OneD, DataType> Sinarray(npointsVar);
-        Array<OneD, DataType> Soutarray(npointsVar);
-        NekVector<DataType> tmpVect(npointsVar,Sinarray,eWrapper);
-        NekVector<DataType> outVect(npointsVar,Soutarray,eWrapper);
-
-        std::shared_ptr<LocalRegions::ExpansionVector> expvect =    
-            m_fields[0]->GetExp();
-        int ntotElmt            = (*expvect).size();
-
-        for(int m = 0; m < nvariables; m++)
-        {
-            int nVarOffset = m*npoints;
-            for(int ne=0;ne<ntotElmt;ne++)
-            {
-                int nCoefOffset = GetCoeff_Offset(ne);
-                int nElmtCoef   = GetNcoeffs(ne);
-                int inOffset    = nVarOffset+nCoefOffset;
-                int outOffset   = nCoefOffset*nvariables+m*nElmtCoef;
-                for(int i=0;i<nElmtCoef;i++)
-                {
-                    Sinarray[outOffset+i]  =  DataType(inarray[inOffset+i]);
-                }
-            }
-        }
-
-        outVect = (*PreconMatVars)*tmpVect;
-
-        for(int m = 0; m < nvariables; m++)
-        {
-            int nVarOffset = m*npoints;
-            for(int ne=0;ne<ntotElmt;ne++)
-            {
-                int nCoefOffset = GetCoeff_Offset(ne);
-                int nElmtCoef   = GetNcoeffs(ne);
-                int inOffset    = nVarOffset+nCoefOffset;
-                int outOffset   = nCoefOffset*nvariables+m*nElmtCoef;
-                for(int i=0;i<nElmtCoef;i++)
-                {
-                    outarray[inOffset+i]  =  NekDouble(Soutarray[outOffset+i]);
-                }
-            }
-        }
-    }
-
-    void CompressibleFlowSystem::PreconBRJCoeff(
+    void CompressibleFlowSystem::PreconCoeff(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble >&outarray,
             const bool                   &flag)
     {
-
-        boost::ignore_unused(flag);
-        if (m_updatePreconMatFlag)
+        if (m_PreconCfs->UpdatePreconMatCheck(NullNekDouble1DArray, 
+            m_TimeIntegLambda))
         {
-            CalcPreconMat(m_solutionPhys, m_BndEvaluateTime, m_TimeIntegLambda);
+            int nvariables = m_solutionPhys.size();
 
-            m_TimeIntegLambdaPrcMat   = m_TimeIntegLambda;
-
-            m_CalcPreconMatNumbSteps += m_CalcPreconMatCounter;
-            m_CalcPreconMatNumbSteps  = m_CalcPreconMatNumbSteps/2;
-            m_CalcPreconMatCounter    = 1;
-
-            m_CalcPreconMatFlag = false;
-
-            m_updatePreconMatFlag = false;
-
-            if (m_verbose&&m_root)
+            int nphspnt = m_solutionPhys[nvariables - 1].size();
+            Array<OneD, Array<OneD, NekDouble>> intmp(nvariables);
+            for(int i = 0; i < nvariables; i++)
             {
-                cout << "     ## CalcuPreconMat " << endl;
-            }
-        }
-
-
-        int nBRJIterTot   =   m_JFNKPreconStep;
-        if (0==nBRJIterTot)
-        {
-            PreconNull(inarray,outarray);
-        }
-        else
-        {
-            const NekDouble BRJParam        =   m_BRJRelaxParam;
-            const NekDouble OmBRJParam      =   1.0-BRJParam;
-
-            unsigned int nvariables = m_fields.size();
-            unsigned int npoints    = GetNcoeffs();
-            unsigned int ntotpnt    = inarray.size();
-            
-            ASSERTL0(nvariables*npoints==ntotpnt,
-                "nvariables*npoints!=ntotpnt in PreconBRJCoeff");
-
-            Array<OneD, NekDouble> rhs(ntotpnt);
-
-            Array<OneD, NekDouble>  outN(ntotpnt);
-            Array<OneD, NekDouble>  outTmp(ntotpnt);
-            Array<OneD, Array<OneD, NekDouble>>rhs2d(nvariables);
-            Array<OneD, Array<OneD, NekDouble>>out_2d(nvariables);
-            Array<OneD, Array<OneD, NekDouble>>outTmp_2d(nvariables);
-            for(int m = 0; m < nvariables; m++)
-            {
-                int moffset     = m*npoints;
-                rhs2d[m]        = rhs       + moffset;
-                out_2d[m]       = outarray  + moffset;
-                outTmp_2d[m]    = outTmp    + moffset;
-                m_fields[m]->MultiplyByMassMatrix(inarray+moffset,rhs2d[m]);
+                intmp[i]    =   Array<OneD, NekDouble>(nphspnt,0.0);
             }
 
-            int nphysic    = GetNpoints();
-            int nTracePts  = GetTraceTotPoints();
-            TensorOfArray3D<NekDouble> qfield(m_spacedim);
-            for(int i = 0; i< m_spacedim; i++)
-            {
-                qfield[i]   =   
-                    Array<OneD, Array<OneD, NekDouble>>(nvariables);
-                for(int j = 0; j< nvariables; j++)
-                {
-                    qfield[i][j]   =   Array<OneD, NekDouble>(nphysic);
-                }
-            }
-            int ntmpTrace = 4+2*m_spacedim;
-            TensorOfArray3D<NekDouble> tmpTrace(ntmpTrace);
-            for(int i = 0; i< ntmpTrace; i++)
-            {
-                tmpTrace[i]   =   
-                    Array<OneD, Array<OneD, NekDouble>>(nvariables);
-                for(int j = 0; j< nvariables; j++)
-                {
-                    tmpTrace[i][j]   =   Array<OneD, NekDouble>(nTracePts);
-                }
-            }
-            Array<OneD, Array<OneD, NekDouble>> FwdFluxDeriv(nvariables);
-            Array<OneD, Array<OneD, NekDouble>> BwdFluxDeriv(nvariables);
-            for(int j = 0; j< nvariables; j++)
-            {
-                FwdFluxDeriv[j]   =   Array<OneD, NekDouble>(nTracePts);
-                BwdFluxDeriv[j]   =   Array<OneD, NekDouble>(nTracePts);
-            }
+            DoOdeProjection(m_solutionPhys,intmp,m_BndEvaluateTime);
 
-            bool flagUpdateDervFlux = false;
+            m_PreconCfs->BuildPreconCfs(m_fields, intmp, m_BndEvaluateTime,
+                m_TimeIntegLambda);
 
-            const int nwspTraceDataType = nvariables+1;
-            NekSingle tmpSingle;
-            Array<OneD, Array<OneD, NekSingle>> wspTraceDataType(nwspTraceDataType);
-            for(int m=0;m<nwspTraceDataType;m++)
-            {
-                wspTraceDataType[m] =   Array<OneD, NekSingle>(nTracePts);
-            }
-
-            PreconBlkDiag(rhs,outarray,m_PreconMatSingle,tmpSingle);
-
-            for(int nrelax = 0; nrelax < nBRJIterTot-1; nrelax++)
-            {
-                Vmath::Smul(ntotpnt,OmBRJParam,outarray,1,outN,1);
-                
-                MinusOffDiag2Rhs(nvariables,npoints,rhs2d,out_2d,
-                    flagUpdateDervFlux,FwdFluxDeriv,BwdFluxDeriv,qfield,
-                    tmpTrace,wspTraceDataType,m_TraceJacArraySingle, 
-                    m_TraceJacDerivArraySingle, m_TraceJacDerivSignSingle,
-                    m_TraceIPSymJacArraySingle);
-
-                PreconBlkDiag(outarray,outTmp,m_PreconMatSingle,
-                    tmpSingle);
-                Vmath::Svtvp(ntotpnt,BRJParam,outTmp,1,outN,1,outarray,1);
-            }
-        }
-    }
-
-    void CompressibleFlowSystem::CalcPreconMat(
-        const Array<OneD, const Array<OneD, NekDouble>> &inpnts,
-        const NekDouble                                 time,
-        const NekDouble                                 lambda)
-    {
-        boost::ignore_unused(time, lambda);
-        int nvariables = inpnts.size();
-
-        int nphspnt = inpnts[0].size();
-        Array<OneD, Array<OneD, NekDouble>> intmp(nvariables);
-        for(int i = 0; i < nvariables; i++)
-        {
-            intmp[i]    =   Array<OneD, NekDouble>(nphspnt,0.0);
-        }
-
-        DoOdeProjection(inpnts,intmp,m_BndEvaluateTime);
-        GetPrecNSBlkDiagCoeff(intmp, m_PreconMatVarsSingle, 
-            m_PreconMatSingle, m_TraceJacSingle, m_TraceJacDerivSingle,
-            m_TraceJacDerivSignSingle, m_TraceJacArraySingle, 
-            m_TraceJacDerivArraySingle, m_TraceIPSymJacArraySingle,
-            m_StdSMatDataDBB,m_StdSMatDataDBDB);
-            
-    
-        m_CalcPreconMatFlag = false;
-        m_TimeIntegLambdaPrcMat = m_TimeIntegLambda;
-
-        // to free the storage
-        for(int i = 0; i < nvariables; i++)
-        {
-            intmp[i]    =   NullNekDouble1DArray;
-        }
-    }
-
-    template<typename DataType>
-    void CompressibleFlowSystem::MinusOffDiag2Rhs(
-        const int                                       nvariables,
-        const int                                       nCoeffs,
-        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
-              Array<OneD,       Array<OneD, NekDouble>> &outarray,
-        bool                                            flagUpdateDervFlux,
-              Array<OneD,       Array<OneD, NekDouble>> &FwdFluxDeriv,
-              Array<OneD,       Array<OneD, NekDouble>> &BwdFluxDeriv,
-              TensorOfArray3D<NekDouble>                &qfield,
-              TensorOfArray3D<NekDouble>                &wspTrace,
-              Array<OneD,       Array<OneD, DataType>>  &wspTraceDataType,
-        const TensorOfArray4D<DataType>                 &TraceJacArray,
-        const TensorOfArray4D<DataType>                 &TraceJacDerivArray,
-        const Array<OneD, const Array<OneD, DataType>>  &TraceJacDerivSign,
-        const TensorOfArray5D<DataType>                 &TraceIPSymJacArray)
-    {
-        boost::ignore_unused(flagUpdateDervFlux, qfield, TraceJacDerivArray, 
-            TraceJacDerivSign, FwdFluxDeriv, BwdFluxDeriv, TraceIPSymJacArray);
-
-        int nTracePts  = GetTraceTotPoints();
-        int npoints    = GetNpoints();
-        int nDim       = m_spacedim;
-
-        Array<OneD, Array<OneD, NekDouble>> outpnts(nvariables);
-        for(int i = 0; i < nvariables; i++)
-        {
-            outpnts[i]  =  Array<OneD, NekDouble> (npoints,0.0);
-            m_fields[i]->BwdTrans(outarray[i],outpnts[i]);
-        }
-
-        // Store forwards/backwards space along trace space
-        Array<OneD, Array<OneD, NekDouble>> Fwd    ;
-        Array<OneD, Array<OneD, NekDouble>> Bwd    ;
-        Array<OneD, Array<OneD, NekDouble>> FwdFlux;
-        Array<OneD, Array<OneD, NekDouble>> BwdFlux;
-        TensorOfArray3D<NekDouble>    numDerivBwd(nDim);
-        TensorOfArray3D<NekDouble>    numDerivFwd(nDim);
-        int indexwspTrace = 0;
-        Fwd     =   wspTrace[indexwspTrace], indexwspTrace++;
-        Bwd     =   wspTrace[indexwspTrace], indexwspTrace++;
-        FwdFlux =   wspTrace[indexwspTrace], indexwspTrace++;
-        BwdFlux =   wspTrace[indexwspTrace], indexwspTrace++;
-       
-        for(int i = 0; i < nvariables; ++i)
-        {
-            m_fields[i]->GetFwdBwdTracePhys(outpnts[i], Fwd[i], Bwd[i]);
-        }
-
-        int indexwspTraceDataType = 0;
-        Array<OneD, Array<OneD, DataType>> Fwdarray (nvariables);
-        for(int m = 0; m < nvariables; ++m)
-        {
-            Fwdarray[m] = wspTraceDataType[indexwspTraceDataType], indexwspTraceDataType++;
-        }
-        Array<OneD, DataType> Fwdreslt;
-        Fwdreslt = wspTraceDataType[indexwspTraceDataType], indexwspTraceDataType++;
-
-        for(int m = 0; m < nvariables; ++m)
-        {
-            for(int i = 0; i < nTracePts; ++i)
-            {
-                Fwdarray[m][i] =  DataType( Fwd[m][i] );
-            }
-        }
-        for(int m = 0; m < nvariables; ++m)
-        {
-            Vmath::Zero(nTracePts, Fwdreslt,1);
-            for(int n = 0; n < nvariables; ++n)
-            {
-                Vmath::Vvtvp(nTracePts, TraceJacArray[0][m][n], 1, 
-                    Fwdarray[n], 1, Fwdreslt, 1, Fwdreslt, 1);
-            }
-
-            for(int i = 0; i < nTracePts; ++i)
-            {
-                FwdFlux[m][i] =  NekDouble( Fwdreslt[i] );
-            }
-        }
-
-        for(int m = 0; m < nvariables; ++m)
-        {
-            for(int i = 0; i < nTracePts; ++i)
-            {
-                Fwdarray[m][i] =  DataType( Bwd[m][i] );
-            }
-        }
-        for(int m = 0; m < nvariables; ++m)
-        {
-            Vmath::Zero(nTracePts, Fwdreslt,1);
-            for(int n = 0; n < nvariables; ++n)
-            {
-                Vmath::Vvtvp(nTracePts,TraceJacArray[1][m][n],1,Fwdarray[n],1,
-                    Fwdreslt,1,Fwdreslt,1);
-            }
-            for(int i = 0; i < nTracePts; ++i)
-            {
-                BwdFlux[m][i] =  NekDouble( Fwdreslt[i] );
-            }
-        }
-
-        for(int i = 0; i < nvariables; ++i)
-        {
-            Vmath::Fill(nCoeffs,0.0,outarray[i],1);
-            m_fields[i]->AddTraceIntegralToOffDiag(FwdFlux[i],BwdFlux[i], 
-                outarray[i]);
-        }
-
-        for(int i = 0; i < nvariables; ++i)
-        {
-            Vmath::Svtvp(nCoeffs,-m_TimeIntegLambda,outarray[i],1,inarray[i],1,
-                outarray[i],1);
+            m_PreconCfs->DoPreconCfs(m_fields, inarray, outarray, flag);
         }
     }
 
@@ -1836,30 +1493,6 @@ namespace Nektar
         }
     }
 
-    template<typename TypeNekBlkMatSharedPtr>
-    void CompressibleFlowSystem::AllocatePreconBlkDiagCoeff(
-              Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr>>  &gmtxarray,
-        const int                                               &nscale )
-    {
-
-        int nvars = m_fields.size();
-        int nelmts  = m_fields[0]->GetNumElmts();
-        int nelmtcoef;
-        Array<OneD, unsigned int > nelmtmatdim(nelmts);
-        for(int i = 0; i < nelmts; i++)
-        {
-            nelmtcoef   =   m_fields[0]->GetExp(i)->GetNcoeffs();
-            nelmtmatdim[i]  =   nelmtcoef*nscale;
-        }
-
-        for(int i = 0; i < nvars; i++)
-        {
-            for(int j = 0; j < nvars; j++)
-            {
-                AllocateNekBlkMatDig(gmtxarray[i][j],nelmtmatdim,nelmtmatdim);
-            }
-        }
-    }
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::GetPrecNSBlkDiagCoeff(
@@ -1915,16 +1548,7 @@ namespace Nektar
         NekDouble Negdtlamda    =   -dtlamda;
 
         Array<OneD, NekDouble> pseudotimefactor(ntotElmt,0.0);
-        if(m_cflLocTimestep>0.0)
-        {
-            NekDouble Neglamda      =   Negdtlamda/m_timestep;
-            Vmath::Svtvp(ntotElmt,Neglamda,m_locTimeStep,1,
-                pseudotimefactor,1,pseudotimefactor,1);
-        }
-        else
-        {
-            Vmath::Fill(ntotElmt,Negdtlamda,pseudotimefactor,1);
-        }
+        Vmath::Fill(ntotElmt,Negdtlamda,pseudotimefactor,1);
 
         Array<OneD, DataType>    GMatData;
         for(int m = 0; m < nConvectiveFields; m++)
@@ -2105,37 +1729,6 @@ namespace Nektar
             MatrixMultiplyMatrixFreeCoeff(inarray,out);
         }
 
-        if(m_cflLocTimestep>0.0)
-        {
-            int nElements = m_fields[0]->GetExpSize();
-            int nelmtcoeffs,offset,varoffset;
-            NekDouble fac;
-            Array<OneD, NekDouble> tmp;
-            Array<OneD, NekDouble> tmpout;
-            unsigned int nvariables = m_fields.size();
-            unsigned int ntotcoeffs = GetNcoeffs();
-
-            Array<OneD, NekDouble> pseudotimefactor(nElements,0.0);
-            NekDouble   otimestep   =   1.0/m_timestep;
-            Vmath::Smul(nElements,otimestep,m_locTimeStep,1,pseudotimefactor,1);
-
-            Vmath::Vsub(inarray.size(),out,1,inarray,1,out,1);
-            for(int i = 0; i < nvariables; ++i)
-            {
-                varoffset = i*ntotcoeffs;
-                tmpout = out + varoffset;
-                // Loop over elements
-                for(int n = 0; n < nElements; ++n)
-                {
-                    nelmtcoeffs = m_fields[0]->GetExp(n)->GetNcoeffs();
-                    offset      = m_fields[0]->GetCoeff_Offset(n);
-                    fac         = pseudotimefactor[n];
-                    tmp         = tmpout + offset;
-                    Vmath::Smul(nelmtcoeffs,fac,tmp,1,tmp,1);
-                }
-            }
-            Vmath::Vadd(inarray.size(),out,1,inarray,1,out,1);
-        }
         return;
     }
 
@@ -2693,7 +2286,6 @@ namespace Nektar
                         *m_NewtonAbsoluteIteTol * m_NewtonAbsoluteIteTol;
 
         m_nonlinsol->v_SetupNekNonlinSystem(ntotal, inarray, inarray, 0);
-        m_updatePreconMatFlag = UpdatePreconMatCheck(m_nonlinsol->GetRefResidual());
 
         m_TotNewtonIts +=  m_nonlinsol->SolveSystem(ntotal,inarray,
                                                     out, 0, tol2);
@@ -2702,32 +2294,6 @@ namespace Nektar
 
         m_TotImpStages++;
         m_StagesPerStep++;
-    }
-
-    bool CompressibleFlowSystem::UpdatePreconMatCheck(
-        const Array<OneD, const NekDouble>  &res)
-    {
-        boost::ignore_unused(res);
-
-        bool flag = false;
-
-        if(0 < m_JFNKPreconStep)
-        {
-            if (m_cflLocTimestep > 0.0)
-            {
-                flag = true;
-            }
-            else
-            {
-                if((m_CalcPreconMatFlag) ||
-                    (m_TimeIntegLambdaPrcMat!=m_TimeIntegLambda))
-                {
-                    flag = true;
-                    m_CalcPreconMatNumbSteps = m_CalcPreconMatCounter;
-                }
-            }
-        }
-        return flag;
     }
 
     void CompressibleFlowSystem::CalcRefValues(

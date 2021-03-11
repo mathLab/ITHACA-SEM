@@ -201,6 +201,12 @@ namespace Nektar
 
         /// cfl number for local time step(notice only for jfnk other see m_cflSafetyFactor)
         NekDouble                                   m_cflLocTimestep = -1.0;
+        /// In Jacobi iteration the SOR relaxation parameter
+        NekDouble                                   m_BRJRelaxParam;
+        /// two strategies: time accurate or not.
+        int                                        m_JFNKTimeAccurate;
+        /// preconditioning steps
+        int                                         m_JFNKPreconStep;
 
         LibUtilities::NekNonlinSysSharedPtr         m_nonlinsol;
         LibUtilities::NekSysOperators               m_NekSysOp;

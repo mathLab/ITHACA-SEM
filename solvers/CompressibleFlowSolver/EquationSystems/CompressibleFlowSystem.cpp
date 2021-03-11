@@ -202,8 +202,22 @@ namespace Nektar
         m_NekSysOp.DefineNekSysLhsEval(&CompressibleFlowSystem::
             MatrixMultiplyMatrixFreeCoeff, this);
 
+        m_session->LoadParameter("PreconMatFreezNumb",     
+            m_PreconMatFreezNumb    , 1);
         m_session->LoadParameter("NewtonAbsoluteIteTol", 
             m_NewtonAbsoluteIteTol, 1.0E-12);
+        m_session->LoadParameter("JFNKTimeAccurate",     
+            m_JFNKTimeAccurate, 1);
+        m_session->LoadParameter("JFNKPreconStep",      
+            m_JFNKPreconStep, 7);
+        m_session->LoadParameter("BRJRelaxParam",        
+            m_BRJRelaxParam, 1.0);
+
+        // when no time accuracy needed
+        if(m_JFNKTimeAccurate < 1)
+        {
+            m_NewtonAbsoluteIteTol = 1.0E-10;
+        }
 
         if (boost::iequals(m_session->GetSolverInfo("PRECONDITIONER"),
                                "IncompleteLU"))
@@ -2625,7 +2639,6 @@ namespace Nektar
         v_DoDiffusionCoeff(inarray, outarray, pFwd, pBwd);
     }
 
-    void CompressibleFlowSystem::DoImplicitSolvePhysToCoeff(
     void CompressibleFlowSystem::DoImplicitSolve(
         const Array<OneD, const Array<OneD, NekDouble>> &inpnts,
               Array<OneD,       Array<OneD, NekDouble>> &outpnt,

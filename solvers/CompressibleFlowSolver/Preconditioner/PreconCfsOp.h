@@ -49,7 +49,7 @@ namespace Nektar
     class NekPreconCfsOperators
     {
     public:
-        typedef const TensorOfArray1D<NekDouble> InArrayType;
+        typedef const Array<OneD, NekDouble> InArrayType;
         typedef Array<OneD, NekDouble> OutArrayType;
 
         typedef std::function<void(InArrayType &, OutArrayType &, const bool &)>

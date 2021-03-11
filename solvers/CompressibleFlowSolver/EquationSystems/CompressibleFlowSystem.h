@@ -146,7 +146,7 @@ namespace Nektar
     protected:
         SolverUtils::DiffusionSharedPtr     m_diffusion;
         ArtificialDiffusionSharedPtr        m_artificialDiffusion;
-        TensorOfArray2D<NekDouble>m_vecLocs;
+        TensorOfArray2D<NekDouble>          m_vecLocs;
         NekDouble                           m_gamma;
         std::string                         m_shockCaptureType;
 
@@ -175,6 +175,7 @@ namespace Nektar
         TensorOfArray5D<NekSingle>          m_StdSMatDataDBDB;
 
         int                                m_nPadding = 1;
+        
 
         // Auxiliary object to convert variables
         VariableConverterSharedPtr          m_varConv;
@@ -201,12 +202,6 @@ namespace Nektar
 
         /// cfl number for local time step(notice only for jfnk other see m_cflSafetyFactor)
         NekDouble                                   m_cflLocTimestep = -1.0;
-        /// In Jacobi iteration the SOR relaxation parameter
-        NekDouble                                   m_BRJRelaxParam;
-        /// two strategies: time accurate or not.
-        int                                        m_JFNKTimeAccurate;
-        /// preconditioning steps
-        int                                         m_JFNKPreconStep;
 
         LibUtilities::NekNonlinSysSharedPtr         m_nonlinsol;
         LibUtilities::NekSysOperators         m_NekSysOp;

@@ -335,10 +335,10 @@ namespace Nektar
     }
 
     void NavierStokesCFE::v_DoDiffusion(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD,       Array<OneD, NekDouble>> &outarray,
+        const Array<OneD, const Array<OneD, NekDouble>> &pFwd,
+        const Array<OneD, const Array<OneD, NekDouble>> &pBwd)
     {
         size_t nvariables = inarray.size();
         size_t npoints    = GetNpoints();
@@ -433,10 +433,10 @@ namespace Nektar
 
 
     void NavierStokesCFE::v_DoDiffusionCoeff(
-        const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
-        Array<OneD, Array<OneD, NekDouble> >                &outarray,
-        const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
-        const Array<OneD, Array<OneD, NekDouble> >          &pBwd)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD,       Array<OneD, NekDouble>> &outarray,
+        const Array<OneD, const Array<OneD, NekDouble>> &pFwd,
+        const Array<OneD, const Array<OneD, NekDouble>> &pBwd)
     {
         size_t nvariables = inarray.size();
         size_t npoints    = GetNpoints();
@@ -539,9 +539,9 @@ namespace Nektar
      * \todo Complete the viscous flux vector
      */
     void NavierStokesCFE::v_GetViscousFluxVector(
-        const Array<OneD, Array<OneD, NekDouble> >              &physfield,
-        TensorOfArray3D<NekDouble>                              &derivativesO1,
-        TensorOfArray3D<NekDouble>                              &viscousTensor)
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+              TensorOfArray3D<NekDouble>                &derivativesO1,
+              TensorOfArray3D<NekDouble>                &viscousTensor)
     {
         // Auxiliary variables
         size_t nScalar    = physfield.size();
@@ -647,9 +647,9 @@ namespace Nektar
      * \todo Complete the viscous flux vector
      */
     void NavierStokesCFE::v_GetViscousFluxVectorDeAlias(
-        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
-              TensorOfArray3D<NekDouble>                         &derivativesO1,
-              TensorOfArray3D<NekDouble>                         &viscousTensor)
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+              TensorOfArray3D<NekDouble>                &derivativesO1,
+              TensorOfArray3D<NekDouble>                &viscousTensor)
     {
         // Factor to rescale 1d points in dealiasing.
         NekDouble OneDptscale = 2;
@@ -806,7 +806,7 @@ namespace Nektar
      *
      */
     void NavierStokesCFE::SpecialBndTreat(
-              Array<OneD,       Array<OneD, NekDouble> >    &consvar)
+        Array<OneD, Array<OneD, NekDouble>> &consvar)
     {
         size_t nConvectiveFields = consvar.size();
         int ndens       = 0;
@@ -895,8 +895,8 @@ namespace Nektar
      * @brief Calculate and return the ArtificialViscosity for shock-capturing.
      */
     void NavierStokesCFE::GetArtificialViscosity(
-        const Array<OneD, Array<OneD, NekDouble> >  &inarray,
-              Array<OneD,             NekDouble  >  &muav)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD, NekDouble>                    &muav)
     {
         m_artificialDiffusion->GetArtificialViscosity(inarray, muav);
     }
@@ -905,12 +905,12 @@ namespace Nektar
      * @brief Calculate and return the Symmetric flux in IP method.
      */
     void NavierStokesCFE::GetViscousSymmtrFluxConservVar(
-        const int                                           nDim,
-        const Array<OneD, Array<OneD, NekDouble> >          &inaverg,
-        const Array<OneD, Array<OneD, NekDouble > >         &inarray,
-        TensorOfArray3D<NekDouble>                          &outarray,
-        Array< OneD, int >                                  &nonZeroIndex,
-        const Array<OneD, Array<OneD, NekDouble> >          &normal)
+        const int                                       nDim,
+        const Array<OneD, const Array<OneD, NekDouble>> &inaverg,
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              TensorOfArray3D<NekDouble>                &outarray,
+              Array<OneD, int>                          &nonZeroIndex,
+        const Array<OneD, const Array<OneD, NekDouble>> &normal)
     {
         size_t nConvectiveFields   = inarray.size();
         size_t nPts                = inaverg[nConvectiveFields - 1].size();
@@ -1004,8 +1004,8 @@ namespace Nektar
     }
         
     void NavierStokesCFE::CalcViscosity(
-        const Array<OneD, const Array<OneD, NekDouble> >    &inaverg,
-        Array<OneD, NekDouble>                              &mu)
+        const Array<OneD, const Array<OneD, NekDouble>> &inaverg,
+              Array<OneD, NekDouble>                    &mu)
     {
         int nConvectiveFields = inaverg.size();
         int nPts = inaverg[nConvectiveFields-1].size();
@@ -1431,12 +1431,12 @@ namespace Nektar
      * OutputMatrix dFLux_dU,  the matrix sign is consistent with SIPG
      */
     void NavierStokesCFE::GetdFlux_dU_2D(
-        const Array<OneD, NekDouble>                        &normals,
-        const NekDouble                                     mu,
-        const NekDouble                                     dmu_dT,
-        const Array<OneD, NekDouble>                        &U,
-        const Array<OneD, const Array<OneD, NekDouble> >    &qfield,
-              DNekMatSharedPtr                              &OutputMatrix)
+        const Array<OneD, NekDouble>                    &normals,
+        const NekDouble                                 mu,
+        const NekDouble                                 dmu_dT,
+        const Array<OneD, NekDouble>                    &U,
+        const Array<OneD, const Array<OneD, NekDouble>> &qfield,
+              DNekMatSharedPtr                          &OutputMatrix)
     {
         Array<OneD, NekDouble> tmpArray;
         tmpArray = OutputMatrix->GetPtr();
@@ -1596,12 +1596,12 @@ namespace Nektar
      * OutputMatrix dFLux_dU,  the matrix sign is consistent with SIPG
      */
     void NavierStokesCFE::GetdFlux_dU_3D(
-        const Array<OneD, NekDouble>                        &normals,
-        const NekDouble                                     mu,
-        const NekDouble                                     dmu_dT,
-        const Array<OneD, NekDouble>                        &U,
-        const Array<OneD, const Array<OneD, NekDouble> >    &qfield,
-              DNekMatSharedPtr                              &OutputMatrix)
+        const Array<OneD, NekDouble>                    &normals,
+        const NekDouble                                 mu,
+        const NekDouble                                 dmu_dT,
+        const Array<OneD, NekDouble>                    &U,
+        const Array<OneD, const Array<OneD, NekDouble>> &qfield,
+              DNekMatSharedPtr                          &OutputMatrix)
     {
         Array<OneD, NekDouble> tmpArray;
         tmpArray = OutputMatrix->GetPtr();
@@ -1846,15 +1846,15 @@ namespace Nektar
     }
 
     void NavierStokesCFE::v_MinusDiffusionFluxJacDirctnElmt(
-        const int                                   nConvectiveFields,
-        const int                                   nElmtPnt,
-        const Array<OneD, Array<OneD, NekDouble> >  &locVars,
-        const TensorOfArray3D<NekDouble>            &locDerv,
-        const Array<OneD, NekDouble>                &locmu,
-        const Array<OneD, NekDouble>                &locDmuDT,
-        const Array<OneD, NekDouble>                &normals,
-        DNekMatSharedPtr                            &wspMat,
-        Array<OneD, Array<OneD, NekDouble> >        &PntJacArray)
+        const int                                       nConvectiveFields,
+        const int                                       nElmtPnt,
+        const Array<OneD, const Array<OneD, NekDouble>> &locVars,
+        const TensorOfArray3D<NekDouble>                &locDerv,
+        const Array<OneD, NekDouble>                    &locmu,
+        const Array<OneD, NekDouble>                    &locDmuDT,
+        const Array<OneD, NekDouble>                    &normals,
+              DNekMatSharedPtr                          &wspMat,
+              Array<OneD,       Array<OneD, NekDouble>> &PntJacArray)
     {
         int nSpaceDim           = m_graph->GetSpaceDimension();  
 
@@ -1907,9 +1907,9 @@ namespace Nektar
      * @brief Return the penalty vector for the LDGNS diffusion problem.
      */
     void NavierStokesCFE::v_GetFluxPenalty(
-        const Array<OneD, Array<OneD, NekDouble> >  &uFwd,
-        const Array<OneD, Array<OneD, NekDouble> >  &uBwd,
-              Array<OneD, Array<OneD, NekDouble> >  &penaltyCoeff)
+        const Array<OneD, const Array<OneD, NekDouble>> &uFwd,
+        const Array<OneD, const Array<OneD, NekDouble>> &uBwd,
+              Array<OneD,       Array<OneD, NekDouble>> &penaltyCoeff)
     {
         unsigned int nTracePts  = uFwd[0].size();
 
@@ -1945,12 +1945,12 @@ namespace Nektar
     }
 
     void NavierStokesCFE::v_GetDiffusionFluxJacPoint(
-            const Array<OneD, NekDouble>                        &conservVar, 
-            const Array<OneD, const Array<OneD, NekDouble> >    &conseDeriv, 
-            const NekDouble                                     mu,
-            const NekDouble                                     DmuDT,
-            const Array<OneD, NekDouble>                        &normals,
-                 DNekMatSharedPtr                               &fluxJac)
+        const Array<OneD, NekDouble>                    &conservVar, 
+        const Array<OneD, const Array<OneD, NekDouble>> &conseDeriv, 
+        const NekDouble                                 mu,
+        const NekDouble                                 DmuDT,
+        const Array<OneD, NekDouble>                    &normals,
+              DNekMatSharedPtr                          &fluxJac)
     {
         switch (m_spacedim)
         {
@@ -1969,12 +1969,12 @@ namespace Nektar
     }
 
     void NavierStokesCFE::v_GetFluxDerivJacDirctn(
-        const MultiRegions::ExpListSharedPtr                &explist,
-        const Array<OneD, const Array<OneD, NekDouble> >    &normals,
-        const int                                           nDervDir,
-        const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
-        TensorOfArray5D<NekDouble>                          &ElmtJacArray,
-        const int                                           nfluxDir)
+        const MultiRegions::ExpListSharedPtr            &explist,
+        const Array<OneD, const Array<OneD, NekDouble>> &normals,
+        const int                                       nDervDir,
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              TensorOfArray5D<NekDouble>                &ElmtJacArray,
+        const int                                       nfluxDir)
     {
         int nConvectiveFields   = inarray.size();
         std::shared_ptr<LocalRegions::ExpansionVector> expvect =    
@@ -2058,14 +2058,14 @@ namespace Nektar
     }
 
     void NavierStokesCFE::v_GetFluxDerivJacDirctnElmt(
-        const int                                   nConvectiveFields,
-        const int                                   nElmtPnt,
-        const int                                   nDervDir,
-        const Array<OneD, Array<OneD, NekDouble> >  &locVars,
-        const Array<OneD, NekDouble>                &locmu,
-        const Array<OneD, Array<OneD, NekDouble> >  &locnormal,
-        DNekMatSharedPtr                            &wspMat,
-        Array<OneD, Array<OneD, NekDouble> >        &PntJacArray)
+        const int                                       nConvectiveFields,
+        const int                                       nElmtPnt,
+        const int                                       nDervDir,
+        const Array<OneD, const Array<OneD, NekDouble>> &locVars,
+        const Array<OneD, NekDouble>                    &locmu,
+        const Array<OneD, const Array<OneD, NekDouble>> &locnormal,
+              DNekMatSharedPtr                          &wspMat,
+              Array<OneD,       Array<OneD, NekDouble>> &PntJacArray)
     {
         int nSpaceDim           = m_graph->GetSpaceDimension();  
         
@@ -2105,11 +2105,11 @@ namespace Nektar
     }
     
     void NavierStokesCFE::v_GetFluxDerivJacDirctn(
-        const MultiRegions::ExpListSharedPtr                &explist,
-        const Array<OneD, const Array<OneD, NekDouble> >    &normals,
-        const int                                           nDervDir,
-        const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
-              Array<OneD, Array<OneD, DNekMatSharedPtr> >   &ElmtJac)
+        const MultiRegions::ExpListSharedPtr                   &explist,
+        const Array<OneD, const Array<OneD, NekDouble>>        &normals,
+        const int                                              nDervDir,
+        const Array<OneD, const Array<OneD, NekDouble>>        &inarray,
+              Array<OneD,       Array<OneD, DNekMatSharedPtr>> &ElmtJac)
     {
         int nConvectiveFields   = inarray.size();
         std::shared_ptr<LocalRegions::ExpansionVector> expvect =
@@ -2223,19 +2223,19 @@ namespace Nektar
     }
     
     void NavierStokesCFE::v_CalcPhysDeriv(
-        const Array<OneD, const Array<OneD, NekDouble> >          &inarray,
-        Array<OneD,       Array<OneD, Array<OneD, NekDouble> > >  &qfield)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              TensorOfArray3D<NekDouble>                &qfield)
     {
         int nConvectiveFields = m_fields.size();
         int npoints           = GetTotPoints();
-        const Array<OneD, Array<OneD, NekDouble> >                  pFwd;
-        const Array<OneD, Array<OneD, NekDouble> >                  pBwd;
+        const Array<OneD, Array<OneD, NekDouble>> pFwd;
+        const Array<OneD, Array<OneD, NekDouble>> pBwd;
         if(!qfield.size())
         {
             qfield  = TensorOfArray3D<NekDouble> (m_spacedim);
             for(int i = 0; i< m_spacedim; i++)
             {
-                qfield[i] = TensorOfArray2D<NekDouble>(nConvectiveFields);
+                qfield[i] = Array<OneD, Array<OneD, NekDouble>>(nConvectiveFields);
                 for(int j = 0; j< nConvectiveFields; j++)
                 {
                     qfield[i][j] = Array<OneD, NekDouble>(npoints,0.0);
@@ -2247,9 +2247,9 @@ namespace Nektar
     }
 
     void NavierStokesCFE::v_CalcMuDmuDT(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-        Array<OneD, NekDouble>                           &mu,
-        Array<OneD, NekDouble>                           &DmuDT)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD, NekDouble>                    &mu,
+              Array<OneD, NekDouble>                    &DmuDT)
     {
         int npoints = mu.size();
         if (m_ViscosityType == "Variable")
@@ -2277,8 +2277,8 @@ namespace Nektar
      */
     void NavierStokesCFE::GetViscosityAndThermalCondFromTemp(
         const Array<OneD, NekDouble> &temperature,
-        Array<OneD, NekDouble> &mu,
-        Array<OneD, NekDouble> &thermalCond)
+              Array<OneD, NekDouble> &mu,
+              Array<OneD, NekDouble> &thermalCond)
     {
         int nPts = temperature.size();
 

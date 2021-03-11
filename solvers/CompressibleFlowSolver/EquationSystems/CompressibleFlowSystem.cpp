@@ -74,7 +74,7 @@ namespace Nektar
         m_homoInitialFwd = false;
 
         // Set up locations of velocity vector.
-        m_vecLocs = TensorOfArray2D<NekDouble>(1);
+        m_vecLocs = Array<OneD, Array<OneD, NekDouble>>(1);
         m_vecLocs[0] = Array<OneD, NekDouble>(m_spacedim);
         for (int i = 0; i < m_spacedim; ++i)
         {
@@ -294,19 +294,19 @@ namespace Nektar
         if (m_useLocalTimeStep)
         {
             ASSERTL0(m_cflSafetyFactor != 0,
-                    "Local time stepping requires CFL parameter.");
+                "Local time stepping requires CFL parameter.");
         }
         m_session->LoadParameter ("JacobiFreeEps", m_JacobiFreeEps, 5.0E-8);
 
         int ntmp;
         m_session->LoadParameter("AdvectionJacFlag", ntmp, 1);
-        m_AdvectionJacFlag             = true;
+        m_AdvectionJacFlag = true;
         if(0==ntmp)
         {
             m_AdvectionJacFlag = false;
         }
         m_session->LoadParameter("ViscousJacFlag", ntmp, 1);
-        m_ViscousJacFlag             = true;
+        m_ViscousJacFlag = true;
         if(0==ntmp)
         {
             m_ViscousJacFlag = false;
@@ -320,7 +320,7 @@ namespace Nektar
     {
         // Check if projection type is correct
         ASSERTL0(m_projectionType == MultiRegions::eDiscontinuous,
-                "Unsupported projection type.");
+            "Unsupported projection type.");
 
         string advName, riemName;
         m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
@@ -335,8 +335,8 @@ namespace Nektar
         }
         else
         {
-            m_advObject->SetFluxVector  (&CompressibleFlowSystem::
-                                          GetFluxVector, this);
+            m_advObject->SetFluxVector(&CompressibleFlowSystem::
+                                       GetFluxVector, this);
         }
 
         // Setting up Riemann solver for advection operator
@@ -355,27 +355,27 @@ namespace Nektar
             "N",       &CompressibleFlowSystem::GetNormals, this);
 
         // Concluding initialisation of advection / diffusion operators
-        m_advObject->SetRiemannSolver   (riemannSolver);
-        m_advObject->InitObject         (m_session, m_fields);
+        m_advObject->SetRiemannSolver(riemannSolver);
+        m_advObject->InitObject      (m_session, m_fields);
     }
 
     /**
      * @brief Compute the right-hand side.
      */
     void CompressibleFlowSystem::DoOdeRhs(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              TensorOfArray2D<NekDouble> &outarray,
-        const NekDouble                                   time)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD,       Array<OneD, NekDouble>> &outarray,
+        const NekDouble                                 time)
     {
         int nvariables = inarray.size();
         int npoints    = GetNpoints();
         int nTracePts  = GetTraceTotPoints();
 
-        m_BndEvaluateTime   = time;
+        m_BndEvaluateTime = time;
 
         // Store forwards/backwards space along trace space
-        TensorOfArray2D<NekDouble> Fwd    (nvariables);
-        TensorOfArray2D<NekDouble> Bwd    (nvariables);
+        Array<OneD, Array<OneD, NekDouble>> Fwd(nvariables);
+        Array<OneD, Array<OneD, NekDouble>> Bwd(nvariables);
 
         if (m_HomogeneousType == eHomogeneous1D)
         {
@@ -386,8 +386,8 @@ namespace Nektar
         {
             for (int i = 0; i < nvariables; ++i)
             {
-                Fwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
-                Bwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
+                Fwd[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
+                Bwd[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
                 m_fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
             }
         }
@@ -395,7 +395,7 @@ namespace Nektar
         // Calculate advection
         LibUtilities::Timer timer;
         timer.Start();
-                DoAdvection(inarray, outarray, time, Fwd, Bwd);
+        DoAdvection(inarray, outarray, time, Fwd, Bwd);
         timer.Stop();
         timer.AccumulateRegion("DoAdvection");
 
@@ -406,10 +406,10 @@ namespace Nektar
         }
 
         // Add diffusion terms
-timer.Start();
+        timer.Start();
         DoDiffusion(inarray, outarray, Fwd, Bwd);
-timer.Stop();
-timer.AccumulateRegion("DoDiffusion");
+        timer.Stop();
+        timer.AccumulateRegion("DoDiffusion");
 
         // Add forcing terms
         for (auto &x : m_forcing)
@@ -447,9 +447,9 @@ timer.AccumulateRegion("DoDiffusion");
      * boundary conditions in case of discontinuous projection.
      */
     void CompressibleFlowSystem::DoOdeProjection(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              TensorOfArray2D<NekDouble> &outarray,
-        const NekDouble                                   time)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD,       Array<OneD, NekDouble>> &outarray,
+        const NekDouble                                 time)
     {
         int nvariables = inarray.size();
 
@@ -487,7 +487,7 @@ timer.AccumulateRegion("DoDiffusion");
 
     void CompressibleFlowSystem::PreconNaive(
         const Array<OneD, NekDouble> &inarray,
-        Array<OneD, NekDouble >&out)
+              Array<OneD, NekDouble> &out)
     {
         int ntotal = inarray.size();
         Vmath::Vcopy(ntotal, inarray, 1, out, 1);
@@ -496,18 +496,18 @@ timer.AccumulateRegion("DoDiffusion");
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::PreconBlkDiag(
-        const Array<OneD, NekDouble>  &inarray,
-        Array<OneD, NekDouble >       &outarray,
-        const TypeNekBlkMatSharedPtr  &PreconMatVars,
-        const DataType                &tmpDataType)
+        const Array<OneD, NekDouble> &inarray,
+              Array<OneD, NekDouble> &outarray,
+        const TypeNekBlkMatSharedPtr &PreconMatVars,
+        const DataType               &tmpDataType)
     {
         boost::ignore_unused(tmpDataType);
 
         unsigned int nvariables = m_fields.size();
         unsigned int npoints    = GetNcoeffs();
         unsigned int npointsVar = nvariables*npoints;
-        Array<OneD, DataType >Sinarray(npointsVar);
-        Array<OneD, DataType > Soutarray(npointsVar);
+        Array<OneD, DataType> Sinarray(npointsVar);
+        Array<OneD, DataType> Soutarray(npointsVar);
         NekVector<DataType> tmpVect(npointsVar,Sinarray,eWrapper);
         NekVector<DataType> outVect(npointsVar,Soutarray,eWrapper);
 
@@ -561,11 +561,11 @@ timer.AccumulateRegion("DoDiffusion");
         {
             CalcPreconMat(m_solutionPhys, m_BndEvaluateTime, m_TimeIntegLambda);
 
-            m_TimeIntegLambdaPrcMat = m_TimeIntegLambda;
+            m_TimeIntegLambdaPrcMat   = m_TimeIntegLambda;
 
             m_CalcPreconMatNumbSteps += m_CalcPreconMatCounter;
-            m_CalcPreconMatNumbSteps = m_CalcPreconMatNumbSteps/2;
-            m_CalcPreconMatCounter   = 1;
+            m_CalcPreconMatNumbSteps  = m_CalcPreconMatNumbSteps/2;
+            m_CalcPreconMatCounter    = 1;
 
             m_CalcPreconMatFlag = false;
 
@@ -599,9 +599,9 @@ timer.AccumulateRegion("DoDiffusion");
 
             Array<OneD, NekDouble>  outN(ntotpnt);
             Array<OneD, NekDouble>  outTmp(ntotpnt);
-            TensorOfArray2D<NekDouble>rhs2d(nvariables);
-            TensorOfArray2D<NekDouble>out_2d(nvariables);
-            TensorOfArray2D<NekDouble>outTmp_2d(nvariables);
+            Array<OneD, Array<OneD, NekDouble>>rhs2d(nvariables);
+            Array<OneD, Array<OneD, NekDouble>>out_2d(nvariables);
+            Array<OneD, Array<OneD, NekDouble>>outTmp_2d(nvariables);
             for(int m = 0; m < nvariables; m++)
             {
                 int moffset     = m*npoints;
@@ -617,7 +617,7 @@ timer.AccumulateRegion("DoDiffusion");
             for(int i = 0; i< m_spacedim; i++)
             {
                 qfield[i]   =   
-                    TensorOfArray2D<NekDouble>(nvariables);
+                    Array<OneD, Array<OneD, NekDouble>>(nvariables);
                 for(int j = 0; j< nvariables; j++)
                 {
                     qfield[i][j]   =   Array<OneD, NekDouble>(nphysic);
@@ -628,14 +628,14 @@ timer.AccumulateRegion("DoDiffusion");
             for(int i = 0; i< ntmpTrace; i++)
             {
                 tmpTrace[i]   =   
-                    TensorOfArray2D<NekDouble>(nvariables);
+                    Array<OneD, Array<OneD, NekDouble>>(nvariables);
                 for(int j = 0; j< nvariables; j++)
                 {
                     tmpTrace[i][j]   =   Array<OneD, NekDouble>(nTracePts);
                 }
             }
-            TensorOfArray2D<NekDouble> FwdFluxDeriv(nvariables);
-            TensorOfArray2D<NekDouble> BwdFluxDeriv(nvariables);
+            Array<OneD, Array<OneD, NekDouble>> FwdFluxDeriv(nvariables);
+            Array<OneD, Array<OneD, NekDouble>> BwdFluxDeriv(nvariables);
             for(int j = 0; j< nvariables; j++)
             {
                 FwdFluxDeriv[j]   =   Array<OneD, NekDouble>(nTracePts);
@@ -646,7 +646,7 @@ timer.AccumulateRegion("DoDiffusion");
 
             const int nwspTraceDataType = nvariables+1;
             NekSingle tmpSingle;
-            TensorOfArray2D<NekSingle> wspTraceDataType(nwspTraceDataType);
+            Array<OneD, Array<OneD, NekSingle>> wspTraceDataType(nwspTraceDataType);
             for(int m=0;m<nwspTraceDataType;m++)
             {
                 wspTraceDataType[m] =   Array<OneD, NekSingle>(nTracePts);
@@ -672,15 +672,15 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     void CompressibleFlowSystem::CalcPreconMat(
-        const TensorOfArray2D<NekDouble>    &inpnts,
-        const NekDouble                     time,
-        const NekDouble                     lambda)
+        const Array<OneD, const Array<OneD, NekDouble>> &inpnts,
+        const NekDouble                                 time,
+        const NekDouble                                 lambda)
     {
         boost::ignore_unused(time, lambda);
         int nvariables = inpnts.size();
 
         int nphspnt = inpnts[0].size();
-        TensorOfArray2D<NekDouble> intmp(nvariables);
+        Array<OneD, Array<OneD, NekDouble>> intmp(nvariables);
         for(int i = 0; i < nvariables; i++)
         {
             intmp[i]    =   Array<OneD, NekDouble>(nphspnt,0.0);
@@ -709,16 +709,16 @@ timer.AccumulateRegion("DoDiffusion");
         const int                                       nvariables,
         const int                                       nCoeffs,
         const Array<OneD, const Array<OneD, NekDouble>> &inarray,
-        TensorOfArray2D<NekDouble>                      &outarray,
+              Array<OneD,       Array<OneD, NekDouble>> &outarray,
         bool                                            flagUpdateDervFlux,
-        TensorOfArray2D<NekDouble>                      &FwdFluxDeriv,
-        TensorOfArray2D<NekDouble>                      &BwdFluxDeriv,
-        TensorOfArray3D<NekDouble>                      &qfield,
-        TensorOfArray3D<NekDouble>                      &wspTrace,
-        TensorOfArray2D<DataType>                       &wspTraceDataType,
+              Array<OneD,       Array<OneD, NekDouble>> &FwdFluxDeriv,
+              Array<OneD,       Array<OneD, NekDouble>> &BwdFluxDeriv,
+              TensorOfArray3D<NekDouble>                &qfield,
+              TensorOfArray3D<NekDouble>                &wspTrace,
+              Array<OneD,       Array<OneD, DataType>>  &wspTraceDataType,
         const TensorOfArray4D<DataType>                 &TraceJacArray,
         const TensorOfArray4D<DataType>                 &TraceJacDerivArray,
-        const TensorOfArray2D<DataType>                 &TraceJacDerivSign,
+        const Array<OneD, const Array<OneD, DataType>>  &TraceJacDerivSign,
         const TensorOfArray5D<DataType>                 &TraceIPSymJacArray)
     {
         boost::ignore_unused(flagUpdateDervFlux, qfield, TraceJacDerivArray, 
@@ -728,7 +728,7 @@ timer.AccumulateRegion("DoDiffusion");
         int npoints    = GetNpoints();
         int nDim       = m_spacedim;
 
-        TensorOfArray2D<NekDouble> outpnts(nvariables);
+        Array<OneD, Array<OneD, NekDouble>> outpnts(nvariables);
         for(int i = 0; i < nvariables; i++)
         {
             outpnts[i]  =  Array<OneD, NekDouble> (npoints,0.0);
@@ -736,10 +736,10 @@ timer.AccumulateRegion("DoDiffusion");
         }
 
         // Store forwards/backwards space along trace space
-        TensorOfArray2D<NekDouble> Fwd    ;
-        TensorOfArray2D<NekDouble> Bwd    ;
-        TensorOfArray2D<NekDouble> FwdFlux;
-        TensorOfArray2D<NekDouble> BwdFlux;
+        Array<OneD, Array<OneD, NekDouble>> Fwd    ;
+        Array<OneD, Array<OneD, NekDouble>> Bwd    ;
+        Array<OneD, Array<OneD, NekDouble>> FwdFlux;
+        Array<OneD, Array<OneD, NekDouble>> BwdFlux;
         TensorOfArray3D<NekDouble>    numDerivBwd(nDim);
         TensorOfArray3D<NekDouble>    numDerivFwd(nDim);
         int indexwspTrace = 0;
@@ -754,7 +754,7 @@ timer.AccumulateRegion("DoDiffusion");
         }
 
         int indexwspTraceDataType = 0;
-        TensorOfArray2D<DataType> Fwdarray (nvariables);
+        Array<OneD, Array<OneD, DataType>> Fwdarray (nvariables);
         for(int m = 0; m < nvariables; ++m)
         {
             Fwdarray[m] = wspTraceDataType[indexwspTraceDataType], indexwspTraceDataType++;
@@ -821,9 +821,9 @@ timer.AccumulateRegion("DoDiffusion");
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::ElmtVarInvMtrx(
-        TensorOfArray2D<TypeNekBlkMatSharedPtr> &gmtxarray,
-        TypeNekBlkMatSharedPtr                  &gmtVar,
-        const DataType                          &tmpDataType)
+              Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr>>  &gmtxarray,
+              TypeNekBlkMatSharedPtr                            &gmtVar,
+        const DataType                                          &tmpDataType)
     {
         boost::ignore_unused(tmpDataType);
 
@@ -915,11 +915,11 @@ timer.AccumulateRegion("DoDiffusion");
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::AddMatNSBlkDiag_volume(
-        const Array<OneD, const Array<OneD, NekDouble>>     &inarray,
-        const Array<OneD, const TensorOfArray2D<NekDouble>> &qfield,
-        TensorOfArray2D<TypeNekBlkMatSharedPtr>             &gmtxarray,
-        TensorOfArray4D<DataType>                           &StdMatDataDBB,
-        TensorOfArray5D<DataType>                           &StdMatDataDBDB)
+        const Array<OneD, const Array<OneD, NekDouble>>         &inarray,
+        const Array<OneD, const TensorOfArray2D<NekDouble>>     &qfield,
+              Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr>>  &gmtxarray,
+              TensorOfArray4D<DataType>                         &StdMatDataDBB,
+              TensorOfArray5D<DataType>                         &StdMatDataDBDB)
     {
         if (StdMatDataDBB.size() == 0)
         {
@@ -942,7 +942,7 @@ timer.AccumulateRegion("DoDiffusion");
         }
 
         Array<OneD, NekDouble> normals;
-        TensorOfArray2D<NekDouble> normal3D(3);
+        Array<OneD, Array<OneD, NekDouble>> normal3D(3);
         for(int i = 0; i < 3; i++)
         {
             normal3D[i] = Array<OneD, NekDouble>(3,0.0);
@@ -950,7 +950,7 @@ timer.AccumulateRegion("DoDiffusion");
         normal3D[0][0] = 1.0;
         normal3D[1][1] = 1.0;
         normal3D[2][2] = 1.0;
-        TensorOfArray2D<NekDouble> normalPnt(3);
+        Array<OneD, Array<OneD, NekDouble>> normalPnt(3);
         
         DNekMatSharedPtr wspMat     = 
             MemoryManager<DNekMat>::AllocateSharedPtr(nvariable,nvariable,0.0);
@@ -963,8 +963,8 @@ timer.AccumulateRegion("DoDiffusion");
         Array<OneD, NekDouble> tmppnts;
         TensorOfArray3D<NekDouble> PntJacCons(m_spacedim); // Nvar*Nvar*Ndir*Nelmt*Npnt
         TensorOfArray3D<DataType>  PntJacConsStd(m_spacedim); // Nvar*Nvar*Ndir*Nelmt*Npnt
-        TensorOfArray2D<NekDouble> ConsStdd(m_spacedim);
-        TensorOfArray2D<NekDouble> ConsCurv(m_spacedim);
+        Array<OneD, Array<OneD, NekDouble>> ConsStdd(m_spacedim);
+        Array<OneD, Array<OneD, NekDouble>> ConsCurv(m_spacedim);
         TensorOfArray4D<NekDouble> PntJacDerv(m_spacedim); // Nvar*Nvar*Ndir*Nelmt*Npnt
         TensorOfArray4D<DataType>  PntJacDervStd(m_spacedim); // Nvar*Nvar*Ndir*Nelmt*Npnt
         TensorOfArray3D<NekDouble> DervStdd(m_spacedim); // Nvar*Nvar*Ndir*Nelmt*Npnt
@@ -973,17 +973,17 @@ timer.AccumulateRegion("DoDiffusion");
         {
             PntJacDerv[ndir]  =   TensorOfArray3D<NekDouble>(m_spacedim);
             PntJacDervStd[ndir] = TensorOfArray3D<DataType>(m_spacedim);
-            DervStdd[ndir]    =   TensorOfArray2D<NekDouble>(m_spacedim);
-            DervCurv[ndir]    =   TensorOfArray2D<NekDouble>(m_spacedim);
+            DervStdd[ndir]    =   Array<OneD, Array<OneD, NekDouble>>(m_spacedim);
+            DervCurv[ndir]    =   Array<OneD, Array<OneD, NekDouble>>(m_spacedim);
         }
 
         Array<OneD, NekDouble> locmu;
         Array<OneD, NekDouble> locDmuDT;
-        TensorOfArray2D<NekDouble> locVars(nvariable);
+        Array<OneD, Array<OneD, NekDouble>> locVars(nvariable);
         TensorOfArray3D<NekDouble> locDerv(m_spacedim);
         for(int ndir=0; ndir<m_spacedim;ndir++)
         {
-            locDerv[ndir] = TensorOfArray2D<NekDouble>(nvariable);
+            locDerv[ndir] = Array<OneD, Array<OneD, NekDouble>>(nvariable);
         }
 
         int nElmtCoefOld = -1;
@@ -1015,8 +1015,8 @@ timer.AccumulateRegion("DoDiffusion");
                 {
                     ConsCurv[ndir] = Array<OneD, NekDouble> (nElmtPnt);
                     ConsStdd[ndir] = Array<OneD, NekDouble> (nElmtPnt);
-                    PntJacCons[ndir] = TensorOfArray2D<NekDouble> (nElmtPnt);
-                    PntJacConsStd[ndir] = TensorOfArray2D<DataType> (nElmtPnt);
+                    PntJacCons[ndir] = Array<OneD, Array<OneD, NekDouble>> (nElmtPnt);
+                    PntJacConsStd[ndir] = Array<OneD, Array<OneD, DataType>> (nElmtPnt);
                     for(int i=0; i<nElmtPnt;i++)
                     {
                         PntJacCons[ndir][i] = Array<OneD, NekDouble>(nVar2);
@@ -1025,8 +1025,8 @@ timer.AccumulateRegion("DoDiffusion");
                     
                     for(int ndir1=0; ndir1<m_spacedim;ndir1++)
                     {
-                        PntJacDerv[ndir][ndir1] = TensorOfArray2D<NekDouble> (nElmtPnt);
-                        PntJacDervStd[ndir][ndir1] = TensorOfArray2D<DataType> (nElmtPnt);
+                        PntJacDerv[ndir][ndir1] = Array<OneD, Array<OneD, NekDouble>> (nElmtPnt);
+                        PntJacDervStd[ndir][ndir1] = Array<OneD, Array<OneD, DataType>> (nElmtPnt);
                         DervStdd[ndir][ndir1] = Array<OneD, NekDouble> (nElmtPnt);
                         DervCurv[ndir][ndir1] = Array<OneD, NekDouble> (nElmtPnt);
                         for(int i=0; i<nElmtPnt;i++)
@@ -1260,7 +1260,7 @@ timer.AccumulateRegion("DoDiffusion");
         vector< TensorOfArray4D<DataType> > VectStdDervBase_DervBase;
         DNekMatSharedPtr MatStdDerivBase0;
         Array<OneD, DNekMatSharedPtr> ArrayStdMat(m_spacedim);
-        TensorOfArray2D<NekDouble>    ArrayStdMatData(m_spacedim);
+        Array<OneD, Array<OneD, NekDouble>>    ArrayStdMatData(m_spacedim);
         for(int ne=0; ne<ntotElmt;ne++)
         {
             StdRegions::StdExpansionSharedPtr stdExp;
@@ -1328,7 +1328,7 @@ timer.AccumulateRegion("DoDiffusion");
 
                 for(int nd0=0;nd0<m_spacedim;nd0++)
                 {
-                    tmpStdDBB[nd0]  = TensorOfArray2D<DataType> (nElmtPnt);
+                    tmpStdDBB[nd0]  = Array<OneD, Array<OneD, DataType>> (nElmtPnt);
                     for(int i=0;i<nElmtPnt;i++)
                     {
                         tmpStdDBB[nd0][i] = Array<OneD, DataType> (nPaded,0.0);
@@ -1349,7 +1349,7 @@ timer.AccumulateRegion("DoDiffusion");
                     for(int nd1=0;nd1<m_spacedim;nd1++)
                     {
                         tmpStdDBDB[nd0][nd1] = 
-                            TensorOfArray2D<DataType> (nElmtPnt);
+                            Array<OneD, Array<OneD, DataType>> (nElmtPnt);
                         for(int i=0;i<nElmtPnt;i++)
                         {
                             tmpStdDBDB[nd0][nd1][i] = 
@@ -1382,20 +1382,20 @@ timer.AccumulateRegion("DoDiffusion");
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::AddMatNSBlkDiag_boundary(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-        TensorOfArray3D<NekDouble>                       &qfield,
-        TensorOfArray2D<TypeNekBlkMatSharedPtr>          &gmtxarray,
-        Array<OneD, TypeNekBlkMatSharedPtr >             &TraceJac,
-        Array<OneD, TypeNekBlkMatSharedPtr >             &TraceJacDeriv,
-        TensorOfArray2D<DataType>                        &TraceJacDerivSign,
-        TensorOfArray5D<DataType>                        &TraceIPSymJacArray)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              TensorOfArray3D<NekDouble>                &qfield,
+              TensorOfArray2D<TypeNekBlkMatSharedPtr>   &gmtxarray,
+              Array<OneD, TypeNekBlkMatSharedPtr>       &TraceJac,
+              Array<OneD, TypeNekBlkMatSharedPtr>       &TraceJacDeriv,
+              Array<OneD, Array<OneD, DataType>>        &TraceJacDerivSign,
+              TensorOfArray5D<DataType>                 &TraceIPSymJacArray)
     {
         int nvariables = inarray.size();
         GetTraceJac(inarray,qfield,TraceJac,TraceJacDeriv,TraceJacDerivSign,
             TraceIPSymJacArray);
         
         Array<OneD, TypeNekBlkMatSharedPtr > tmpJac;
-        TensorOfArray2D<DataType>  tmpSign;
+        Array<OneD, Array<OneD, DataType>>  tmpSign;
 
         m_advObject->AddTraceJacToMat(nvariables,m_spacedim,m_fields, 
             TraceJac,gmtxarray,tmpJac,tmpSign);
@@ -1403,12 +1403,12 @@ timer.AccumulateRegion("DoDiffusion");
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::GetTraceJac(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-        TensorOfArray3D<NekDouble>                       &qfield,
-        Array<OneD, TypeNekBlkMatSharedPtr >             &TraceJac,
-        Array<OneD, TypeNekBlkMatSharedPtr >             &TraceJacDeriv,
-        TensorOfArray2D<DataType>                        &TraceJacDerivSign,
-        TensorOfArray5D<DataType>                        &TraceIPSymJacArray)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              TensorOfArray3D<NekDouble>                &qfield,
+              Array<OneD, TypeNekBlkMatSharedPtr >      &TraceJac,
+              Array<OneD, TypeNekBlkMatSharedPtr >      &TraceJacDeriv,
+              Array<OneD,       Array<OneD, DataType>>  &TraceJacDerivSign,
+              TensorOfArray5D<DataType>                 &TraceIPSymJacArray)
     {
         boost::ignore_unused(TraceJacDeriv, TraceJacDerivSign);
 
@@ -1416,8 +1416,8 @@ timer.AccumulateRegion("DoDiffusion");
         int nTracePts  = GetTraceTotPoints();
 
         // Store forwards/backwards space along trace space
-        TensorOfArray2D<NekDouble> Fwd (nvariables);
-        TensorOfArray2D<NekDouble> Bwd (nvariables);
+        Array<OneD, Array<OneD, NekDouble>> Fwd (nvariables);
+        Array<OneD, Array<OneD, NekDouble>> Bwd (nvariables);
 
         TypeNekBlkMatSharedPtr FJac,BJac;
         Array<OneD, unsigned int> n_blks1(nTracePts, nvariables);
@@ -1450,7 +1450,7 @@ timer.AccumulateRegion("DoDiffusion");
             }
         }
 
-        TensorOfArray2D<NekDouble> AdvVel(m_spacedim);
+        Array<OneD, Array<OneD, NekDouble>> AdvVel(m_spacedim);
 
         NumCalRiemFluxJac(nvariables, m_fields, AdvVel, inarray,qfield,
             m_BndEvaluateTime, Fwd, Bwd, FJac, BJac,TraceIPSymJacArray);
@@ -1461,12 +1461,12 @@ timer.AccumulateRegion("DoDiffusion");
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::CalcVisFluxDerivJac(
-        const int                           nConvectiveFields,
-        const TensorOfArray2D<NekDouble>    &inarray,
-        const TensorOfArray2D<NekDouble>    &Fwd,
-        const TensorOfArray2D<NekDouble>    &Bwd,
-        TypeNekBlkMatSharedPtr              &BJac,
-        DataType                            &tmpDataType)
+        const int                                       nConvectiveFields,
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+        const Array<OneD, const Array<OneD, NekDouble>> &Fwd,
+        const Array<OneD, const Array<OneD, NekDouble>> &Bwd,
+              TypeNekBlkMatSharedPtr                    &BJac,
+              DataType                                  &tmpDataType)
     {
         boost::ignore_unused(inarray, tmpDataType);
         MultiRegions::ExpListSharedPtr tracelist = 
@@ -1485,8 +1485,8 @@ timer.AccumulateRegion("DoDiffusion");
         Vmath::Ssub(nTracePts,2.0,tracBwdWeightJump,1,tracBwdWeightJump,1);
         Vmath::Smul(nTracePts,0.5,tracBwdWeightJump,1,tracBwdWeightJump,1);
         
-        TensorOfArray2D<NekDouble>    solution_jump(nConvectiveFields);
-        TensorOfArray2D<NekDouble>    solution_Aver(nConvectiveFields);
+        Array<OneD, Array<OneD, NekDouble>>    solution_jump(nConvectiveFields);
+        Array<OneD, Array<OneD, NekDouble>>    solution_Aver(nConvectiveFields);
         for (int i = 0; i < nConvectiveFields; ++i)
         {
             solution_jump[i]    =   Array<OneD, NekDouble>(nTracePts,0.0);
@@ -1554,15 +1554,15 @@ timer.AccumulateRegion("DoDiffusion");
     void CompressibleFlowSystem::NumCalRiemFluxJac(
         const int                                         nConvectiveFields,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-        const TensorOfArray2D<NekDouble>                  &AdvVel,
-        const TensorOfArray2D<NekDouble>                  &inarray,
-        TensorOfArray3D<NekDouble>                        &qfield,
+        const Array<OneD, const Array<OneD, NekDouble>>   &AdvVel,
+        const Array<OneD, const Array<OneD, NekDouble>>   &inarray,
+              TensorOfArray3D<NekDouble>                  &qfield,
         const NekDouble                                   &time,
-        const TensorOfArray2D<NekDouble>                  &Fwd,
-        const TensorOfArray2D<NekDouble>                  &Bwd,
-        TypeNekBlkMatSharedPtr                            &FJac,
-        TypeNekBlkMatSharedPtr                            &BJac,
-        TensorOfArray5D<DataType>                         &TraceIPSymJacArray)
+        const Array<OneD, const Array<OneD, NekDouble>>   &Fwd,
+        const Array<OneD, const Array<OneD, NekDouble>>   &Bwd,
+              TypeNekBlkMatSharedPtr                      &FJac,
+              TypeNekBlkMatSharedPtr                      &BJac,
+              TensorOfArray5D<DataType>                   &TraceIPSymJacArray)
     {
         boost::ignore_unused(TraceIPSymJacArray);
 
@@ -1575,7 +1575,7 @@ timer.AccumulateRegion("DoDiffusion");
 
         Array<OneD, int > nonZeroIndex;
 
-        TensorOfArray2D<NekDouble>  tmpinarry(nvariables);
+        Array<OneD, Array<OneD, NekDouble>>  tmpinarry(nvariables);
         for(int i = 0; i < nvariables; i++)
         {
             tmpinarry[i]    =    Array<OneD, NekDouble>(npoints,0.0);
@@ -1594,7 +1594,7 @@ timer.AccumulateRegion("DoDiffusion");
             muvar       =   NullNekDouble1DArray;
         }
 
-        TensorOfArray2D<NekDouble> numflux(nvariables);
+        Array<OneD, Array<OneD, NekDouble>> numflux(nvariables);
         for(int i = 0; i < nvariables; ++i)
         {
             numflux[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
@@ -1608,8 +1608,8 @@ timer.AccumulateRegion("DoDiffusion");
         {
             for (int nd = 0; nd < nDim; ++nd)
             {
-                qBwd[nd] = TensorOfArray2D<NekDouble> (nConvectiveFields);
-                qFwd[nd] = TensorOfArray2D<NekDouble> (nConvectiveFields);
+                qBwd[nd] = Array<OneD, Array<OneD, NekDouble>> (nConvectiveFields);
+                qFwd[nd] = Array<OneD, Array<OneD, NekDouble>> (nConvectiveFields);
                 for (int i = 0; i < nConvectiveFields; ++i)
                 {
                     qBwd[nd][i] = Array<OneD, NekDouble>(nTracePts,0.0);
@@ -1628,10 +1628,10 @@ timer.AccumulateRegion("DoDiffusion");
             qFwd,qBwd,MuVarTrace,nonZeroIndex,numflux);
 
         int nFields = nvariables;
-        TensorOfArray2D<NekDouble>  plusFwd(nFields),plusBwd(nFields);
-        TensorOfArray2D<NekDouble>  Jacvect(nFields);
-        TensorOfArray2D<NekDouble>  FwdBnd(nFields);
-        TensorOfArray2D<NekDouble>  plusflux(nFields);
+        Array<OneD, Array<OneD, NekDouble>>  plusFwd(nFields),plusBwd(nFields);
+        Array<OneD, Array<OneD, NekDouble>>  Jacvect(nFields);
+        Array<OneD, Array<OneD, NekDouble>>  FwdBnd(nFields);
+        Array<OneD, Array<OneD, NekDouble>>  plusflux(nFields);
         for(int i = 0; i < nFields; i++)
         {
             Jacvect[i]  = Array<OneD, NekDouble>(nTracePts,0.0);
@@ -1757,17 +1757,17 @@ timer.AccumulateRegion("DoDiffusion");
             const int                                         nTracePts,
             const NekDouble                                   PenaltyFactor2,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const TensorOfArray2D<NekDouble>                  &AdvVel,
-            const TensorOfArray2D<NekDouble>                  &inarray,
+            const Array<OneD, const Array<OneD, NekDouble>>   &AdvVel,
+            const Array<OneD, const Array<OneD, NekDouble>>   &inarray,
             const NekDouble                                   time,
-            TensorOfArray3D<NekDouble>                        &qfield,
-            const TensorOfArray2D<NekDouble>                  &vFwd,
-            const TensorOfArray2D<NekDouble>                  &vBwd,
+                  TensorOfArray3D<NekDouble>                  &qfield,
+            const Array<OneD, const Array<OneD, NekDouble>>   &vFwd,
+            const Array<OneD, const Array<OneD, NekDouble>>   &vBwd,
             const Array<OneD, const TensorOfArray2D<NekDouble>> &qFwd,
             const Array<OneD, const TensorOfArray2D<NekDouble>> &qBwd,
-            const Array<OneD, NekDouble >                       &MuVarTrace,
-            Array<OneD, int >                                   &nonZeroIndex,
-            TensorOfArray2D<NekDouble>                          &traceflux)
+            const Array<OneD, NekDouble >                     &MuVarTrace,
+                  Array<OneD, int >                           &nonZeroIndex,
+                  Array<OneD, Array<OneD,       NekDouble>>   &traceflux)
     {
         boost::ignore_unused(nDim, nPts, PenaltyFactor2, time, qFwd, qBwd, 
             MuVarTrace);
@@ -1804,17 +1804,17 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     void CompressibleFlowSystem::CalcTraceIPSymmFlux(
-            const int                                         nConvectiveFields,
-            const int                                         nTracePts,
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const TensorOfArray2D<NekDouble>                  &inarray,
-            const NekDouble                                   time,
+            const int                                           nConvectiveFields,
+            const int                                           nTracePts,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
+            const Array<OneD, const Array<OneD, NekDouble>>     &inarray,
+            const NekDouble                                     time,
             const Array<OneD, const TensorOfArray2D<NekDouble>> &qfield,
-            const TensorOfArray2D<NekDouble>                    &vFwd,
-            const TensorOfArray2D<NekDouble>                    &vBwd,
+            const Array<OneD, const Array<OneD, NekDouble>>     &vFwd,
+            const Array<OneD, const Array<OneD, NekDouble>>     &vBwd,
             const Array<OneD, NekDouble >                       &MuVarTrace,
-            Array<OneD, int >                                   &nonZeroIndex,
-            TensorOfArray3D<NekDouble>                          &traceflux)
+                  Array<OneD, int >                             &nonZeroIndex,
+                  TensorOfArray3D<NekDouble>                    &traceflux)
     {
         boost::ignore_unused(time, MuVarTrace);
 
@@ -1837,8 +1837,8 @@ timer.AccumulateRegion("DoDiffusion");
 
     template<typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::AllocatePreconBlkDiagCoeff(
-        TensorOfArray2D<TypeNekBlkMatSharedPtr> &gmtxarray,
-        const int                                          &nscale )
+              Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr>>  &gmtxarray,
+        const int                                               &nscale )
     {
 
         int nvars = m_fields.size();
@@ -1862,17 +1862,17 @@ timer.AccumulateRegion("DoDiffusion");
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::GetPrecNSBlkDiagCoeff(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-        TensorOfArray2D<TypeNekBlkMatSharedPtr>          &gmtxarray,
-        TypeNekBlkMatSharedPtr                           &gmtVar,
-        Array<OneD, TypeNekBlkMatSharedPtr >             &TraceJac,
-        Array<OneD, TypeNekBlkMatSharedPtr >             &TraceJacDeriv,
-        TensorOfArray2D<DataType>                        &TraceJacDerivSign,
-        TensorOfArray4D<DataType>                        &TraceJacArray,
-        TensorOfArray4D<DataType>                        &TraceJacDerivArray,
-        TensorOfArray5D<DataType>                        &TraceIPSymJacArray,
-        TensorOfArray4D<DataType>                        &StdMatDataDBB,
-        TensorOfArray5D<DataType>                        &StdMatDataDBDB)
+        const Array<OneD, const Array<OneD, NekDouble>>        &inarray,
+              Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr>> &gmtxarray,
+              TypeNekBlkMatSharedPtr                           &gmtVar,
+              Array<OneD, TypeNekBlkMatSharedPtr>              &TraceJac,
+              Array<OneD, TypeNekBlkMatSharedPtr>              &TraceJacDeriv,
+              Array<OneD,       Array<OneD, DataType>>         &TraceJacDerivSign,
+              TensorOfArray4D<DataType>                        &TraceJacArray,
+              TensorOfArray4D<DataType>                        &TraceJacDerivArray,
+              TensorOfArray5D<DataType>                        &TraceIPSymJacArray,
+              TensorOfArray4D<DataType>                        &StdMatDataDBB,
+              TensorOfArray5D<DataType>                        &StdMatDataDBDB)
     {
         TensorOfArray3D<NekDouble> qfield;
 
@@ -1900,9 +1900,9 @@ timer.AccumulateRegion("DoDiffusion");
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::MultiplyElmtInvMass_PlusSource(
-        TensorOfArray2D<TypeNekBlkMatSharedPtr> &gmtxarray,
-        const NekDouble                         dtlamda,
-        const DataType                          tmpDataType)
+              Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr>>  &gmtxarray,
+        const NekDouble                                         dtlamda,
+        const DataType                                          tmpDataType)
     {
         boost::ignore_unused(tmpDataType);
 
@@ -1999,10 +1999,10 @@ timer.AccumulateRegion("DoDiffusion");
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::TransTraceJacMatToArray(
-        const Array<OneD, TypeNekBlkMatSharedPtr > &TraceJac,
-        const Array<OneD, TypeNekBlkMatSharedPtr > &TraceJacDeriv,
-        TensorOfArray4D<DataType>                  &TraceJacArray,
-        TensorOfArray4D<DataType>                  &TraceJacDerivArray)
+        const Array<OneD, TypeNekBlkMatSharedPtr> &TraceJac,
+        const Array<OneD, TypeNekBlkMatSharedPtr> &TraceJacDeriv,
+              TensorOfArray4D<DataType>           &TraceJacArray,
+              TensorOfArray4D<DataType>           &TraceJacDerivArray)
     {
         boost::ignore_unused(TraceJacArray, TraceJacDeriv, TraceJacDerivArray);
 
@@ -2024,7 +2024,7 @@ timer.AccumulateRegion("DoDiffusion");
                 TraceJacArray[nlr] = TensorOfArray3D<DataType> (nvar0Jac);
                 for(int m=0;m<nvar0Jac;m++)
                 {
-                    TraceJacArray[nlr][m] = TensorOfArray2D<DataType>(nvar1Jac);
+                    TraceJacArray[nlr][m] = Array<OneD, Array<OneD, DataType>>(nvar1Jac);
                     for(int n=0;n<nvar1Jac;n++)
                     {
                         TraceJacArray[nlr][m][n] = 
@@ -2045,8 +2045,8 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     void CompressibleFlowSystem::MatrixMultiplyMatrixFreeCoeffCentral(
-            const  Array<OneD, NekDouble> &inarray,
-                Array<OneD, NekDouble >&out)
+        const Array<OneD, NekDouble> &inarray,
+              Array<OneD, NekDouble> &out)
     {
         NekDouble eps = m_JacobiFreeEps;
         unsigned int ntotalGlobal     = inarray.size();
@@ -2058,9 +2058,9 @@ timer.AccumulateRegion("DoDiffusion");
         unsigned int nvariables = m_fields.size();
         unsigned int npoints    = GetNcoeffs();
         Array<OneD, NekDouble > tmp;
-        TensorOfArray2D<NekDouble> solplus(nvariables);
-        TensorOfArray2D<NekDouble> resplus(nvariables);
-        TensorOfArray2D<NekDouble> resminus(nvariables);
+        Array<OneD, Array<OneD, NekDouble>> solplus(nvariables);
+        Array<OneD, Array<OneD, NekDouble>> resplus(nvariables);
+        Array<OneD, Array<OneD, NekDouble>> resminus(nvariables);
         for(int i = 0; i < nvariables; i++)
         {
             solplus[i] =  Array<OneD, NekDouble>(npoints,0.0);
@@ -2091,9 +2091,9 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     void CompressibleFlowSystem::MatrixMultiplyMatrixFreeCoeffDualtimestep(
-        const  Array<OneD, NekDouble> &inarray,
-            Array<OneD, NekDouble >&out,
-        const  bool                   &controlFlag)
+        const Array<OneD, NekDouble> &inarray,
+              Array<OneD, NekDouble> &out,
+        const bool                   &controlFlag)
     {
         if(controlFlag)
         {
@@ -2142,16 +2142,16 @@ timer.AccumulateRegion("DoDiffusion");
      * @brief Compute the right-hand side.
      */
     void CompressibleFlowSystem::DoOdeRhsCoeff(
-        const TensorOfArray2D<NekDouble>    &inarray,
-        TensorOfArray2D<NekDouble>          &outarray,
-        const NekDouble                     time)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD,       Array<OneD, NekDouble>> &outarray,
+        const NekDouble                                 time)
     {
         int nvariables = inarray.size();
         int nTracePts  = GetTraceTotPoints();
         int ncoeffs    = GetNcoeffs();
         // Store forwards/backwards space along trace space
-        TensorOfArray2D<NekDouble> Fwd    (nvariables);
-        TensorOfArray2D<NekDouble> Bwd    (nvariables);
+        Array<OneD, Array<OneD, NekDouble>> Fwd    (nvariables);
+        Array<OneD, Array<OneD, NekDouble>> Bwd    (nvariables);
 
         if (m_HomogeneousType == eHomogeneous1D)
         {
@@ -2212,8 +2212,8 @@ timer.AccumulateRegion("DoDiffusion");
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::TranSamesizeBlkDiagMatIntoArray(
-        const TypeNekBlkMatSharedPtr                        &BlkMat,
-        TensorOfArray3D<DataType>       &MatArray)
+        const TypeNekBlkMatSharedPtr    &BlkMat,
+              TensorOfArray3D<DataType> &MatArray)
     {
         Array<OneD, unsigned int> rowSizes;
         Array<OneD, unsigned int> colSizes;
@@ -2240,8 +2240,8 @@ timer.AccumulateRegion("DoDiffusion");
     
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::Fill2DArrayOfBlkDiagonalMat(
-        TensorOfArray2D<TypeNekBlkMatSharedPtr>   &gmtxarray,
-        const DataType                                      valu)
+              Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr>>  &gmtxarray,
+        const DataType                                          valu)
     {
 
         int n1d = gmtxarray.size();
@@ -2255,8 +2255,8 @@ timer.AccumulateRegion("DoDiffusion");
     
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CompressibleFlowSystem::Fill1DArrayOfBlkDiagonalMat( 
-        Array<OneD, TypeNekBlkMatSharedPtr >    &gmtxarray,
-        const DataType                          valu)
+              Array<OneD, TypeNekBlkMatSharedPtr>   &gmtxarray,
+        const DataType                              valu)
     {
         int n1d = gmtxarray.size();
 
@@ -2285,12 +2285,12 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     void CompressibleFlowSystem::GetFluxVectorJacDirElmt(
-        const int                           nConvectiveFields,
-        const int                           nElmtPnt,
-        const TensorOfArray2D<NekDouble>    &locVars,
-        const Array<OneD, NekDouble>        &normals,
-        DNekMatSharedPtr                    &wspMat,
-        TensorOfArray2D<NekDouble>          &PntJacArray)
+        const int                                       nConvectiveFields,
+        const int                                       nElmtPnt,
+        const Array<OneD, const Array<OneD, NekDouble>> &locVars,
+        const Array<OneD, NekDouble>                    &normals,
+              DNekMatSharedPtr                          &wspMat,
+              Array<OneD,       Array<OneD, NekDouble>> &PntJacArray)
     {
         Array<OneD, NekDouble> wspMatData = wspMat->GetPtr();
 
@@ -2313,10 +2313,10 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     void CompressibleFlowSystem::GetFluxVectorJacPoint(
-        const int                                   nConvectiveFields,
-        const Array<OneD, NekDouble>                &conservVar, 
-        const Array<OneD, NekDouble>                &normals, 
-        DNekMatSharedPtr                            &fluxJac)
+        const int                       nConvectiveFields,
+        const Array<OneD, NekDouble>    &conservVar, 
+        const Array<OneD, NekDouble>    &normals, 
+              DNekMatSharedPtr          &fluxJac)
     {
         int nvariables      = conservVar.size();
         const int nvariables3D    = 5;
@@ -2389,7 +2389,7 @@ timer.AccumulateRegion("DoDiffusion");
             const Array<OneD, NekDouble> &Fwd,
             const Array<OneD, NekDouble> &normals,
                   DNekMatSharedPtr       &FJac,
-            const NekDouble efix,   const NekDouble fsw)
+            const NekDouble efix, const NekDouble fsw)
     {
         Array<OneD, NekDouble> FJacData = FJac->GetPtr();
         const int nvariables3D    = 5;
@@ -2509,14 +2509,14 @@ timer.AccumulateRegion("DoDiffusion");
      * @brief Compute the advection terms for the right-hand side
      */
     void CompressibleFlowSystem::DoAdvection(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              TensorOfArray2D<NekDouble> &outarray,
-        const NekDouble                                   time,
-        const TensorOfArray2D<NekDouble>       &pFwd,
-        const TensorOfArray2D<NekDouble>       &pBwd)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD,       Array<OneD, NekDouble>> &outarray,
+        const NekDouble                                 time,
+        const Array<OneD, const Array<OneD, NekDouble>> &pFwd,
+        const Array<OneD, const Array<OneD, NekDouble>> &pBwd)
     {
         int nvariables = inarray.size();
-        TensorOfArray2D<NekDouble> advVel(m_spacedim);
+        Array<OneD, Array<OneD, NekDouble>> advVel(m_spacedim);
 
         m_advObject->Advect(nvariables, m_fields, advVel, inarray,
                             outarray, time, pFwd, pBwd);
@@ -2526,10 +2526,10 @@ timer.AccumulateRegion("DoDiffusion");
      * @brief Add the diffusions terms to the right-hand side
      */
     void CompressibleFlowSystem::DoDiffusion(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              TensorOfArray2D<NekDouble> &outarray,
-            const TensorOfArray2D<NekDouble>   &pFwd,
-            const TensorOfArray2D<NekDouble>   &pBwd)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD,       Array<OneD, NekDouble>> &outarray,
+        const Array<OneD, const Array<OneD, NekDouble>> &pFwd,
+        const Array<OneD, const Array<OneD, NekDouble>> &pBwd)
     {
         v_DoDiffusion(inarray, outarray, pFwd, pBwd);
 
@@ -2558,9 +2558,9 @@ timer.AccumulateRegion("DoDiffusion");
         boost::ignore_unused(flag);
         unsigned int nvariables     = m_fields.size();
         unsigned int npoints        = m_fields[0]->GetNcoeffs();
-        TensorOfArray2D<NekDouble> in2D(nvariables);
-        TensorOfArray2D<NekDouble> out2D(nvariables);
-        TensorOfArray2D<NekDouble> source2D(nvariables);
+        Array<OneD, Array<OneD, NekDouble>> in2D(nvariables);
+        Array<OneD, Array<OneD, NekDouble>> out2D(nvariables);
+        Array<OneD, Array<OneD, NekDouble>> source2D(nvariables);
         for (int i = 0; i < nvariables; ++i)
         {
             int offset = i * npoints;
@@ -2572,15 +2572,15 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     void CompressibleFlowSystem::NonlinSysEvaluatorCoeff(
-        const TensorOfArray2D<NekDouble> &inarray,
-        TensorOfArray2D<NekDouble>       &out,
-        const TensorOfArray2D<NekDouble> &source)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD,       Array<OneD, NekDouble>> &out,
+        const Array<OneD, const Array<OneD, NekDouble>> &source)
     {
         unsigned int nvariable  = inarray.size();
         unsigned int ncoeffs    = inarray[nvariable - 1].size();
         unsigned int npoints    = m_fields[0]->GetNpoints();
 
-        TensorOfArray2D<NekDouble> inpnts(nvariable);
+        Array<OneD, Array<OneD, NekDouble>> inpnts(nvariable);
 
         for (int i = 0; i < nvariable; ++i)
         {
@@ -2612,14 +2612,14 @@ timer.AccumulateRegion("DoDiffusion");
      * @brief Compute the advection terms for the right-hand side
      */
     void CompressibleFlowSystem::DoAdvectionCoeff(
-        const TensorOfArray2D<NekDouble>    &inarray,
-        TensorOfArray2D<NekDouble>          &outarray,
-        const NekDouble                     time,
-        const TensorOfArray2D<NekDouble>    &pFwd,
-        const TensorOfArray2D<NekDouble>    &pBwd)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD,       Array<OneD, NekDouble>> &outarray,
+        const NekDouble                                 time,
+        const Array<OneD, const Array<OneD, NekDouble>> &pFwd,
+        const Array<OneD, const Array<OneD, NekDouble>> &pBwd)
     {
         int nvariables = inarray.size();
-        TensorOfArray2D<NekDouble> advVel(m_spacedim);
+        Array<OneD, Array<OneD, NekDouble>> advVel(m_spacedim);
 
         m_advObject->AdvectCoeffs(nvariables, m_fields, advVel, inarray,
                                   outarray, time, pFwd, pBwd);
@@ -2630,19 +2630,19 @@ timer.AccumulateRegion("DoDiffusion");
      * Similar to DoDiffusion() but with outarray in coefficient space
      */
     void CompressibleFlowSystem::DoDiffusionCoeff(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              TensorOfArray2D<NekDouble> &outarray,
-            const TensorOfArray2D<NekDouble>   &pFwd,
-            const TensorOfArray2D<NekDouble>   &pBwd)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD,       Array<OneD, NekDouble>> &outarray,
+        const Array<OneD, const Array<OneD, NekDouble>> &pFwd,
+        const Array<OneD, const Array<OneD, NekDouble>> &pBwd)
     {
         v_DoDiffusionCoeff(inarray, outarray, pFwd, pBwd);
     }
 
     void CompressibleFlowSystem::DoImplicitSolvePhysToCoeff(
-        const TensorOfArray2D<NekDouble>    &inpnts,
-        TensorOfArray2D<NekDouble>          &outpnt,
-        const NekDouble                     time,
-        const NekDouble                     lambda)
+        const Array<OneD, const Array<OneD, NekDouble>> &inpnts,
+              Array<OneD,       Array<OneD, NekDouble>> &outpnt,
+        const NekDouble                                 time,
+        const NekDouble                                 lambda)
     {
         unsigned int nvariables  = inpnts.size();
         unsigned int ncoeffs     = m_fields[0]->GetNcoeffs();
@@ -2670,11 +2670,11 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     void CompressibleFlowSystem::DoImplicitSolveCoeff(
-            const TensorOfArray2D<NekDouble>    &inpnts,
-            const Array<OneD, const NekDouble>  &inarray,
-                  Array<OneD,       NekDouble>  &out,
-            const NekDouble                     time,
-            const NekDouble                     lambda)
+            const Array<OneD, const Array<OneD, NekDouble>> &inpnts,
+            const Array<OneD, const NekDouble>              &inarray,
+                  Array<OneD,       NekDouble>              &out,
+            const NekDouble                                 time,
+            const NekDouble                                 lambda)
     {
         boost::ignore_unused(inpnts);
 
@@ -2816,13 +2816,13 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     void CompressibleFlowSystem::SetBoundaryConditions(
-            TensorOfArray2D<NekDouble>             &physarray,
-            NekDouble                                         time)
+        Array<OneD, Array<OneD, NekDouble>> &physarray,
+        NekDouble                           time)
     {
         int nTracePts  = GetTraceTotPoints();
         int nvariables = physarray.size();
 
-        TensorOfArray2D<NekDouble> Fwd(nvariables);
+        Array<OneD, Array<OneD, NekDouble>> Fwd(nvariables);
         for (int i = 0; i < nvariables; ++i)
         {
             Fwd[i] = Array<OneD, NekDouble>(nTracePts);
@@ -2861,8 +2861,8 @@ timer.AccumulateRegion("DoDiffusion");
      * @param flux        Resulting flux.
      */
     void CompressibleFlowSystem::GetFluxVector(
-        const TensorOfArray2D<NekDouble>  &physfield,
-        TensorOfArray3D<NekDouble>                  &flux)
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+              TensorOfArray3D<NekDouble>                &flux)
     {
         auto nVariables = physfield.size();
         auto nPts = physfield[0].size();
@@ -2924,8 +2924,8 @@ timer.AccumulateRegion("DoDiffusion");
      * @param flux        Resulting flux.
      */
     void CompressibleFlowSystem::GetFluxVectorDeAlias(
-        const TensorOfArray2D<NekDouble>      &physfield,
-        TensorOfArray3D<NekDouble>                      &flux)
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+              TensorOfArray3D<NekDouble>                &flux)
     {
         int i, j;
         int nq = physfield[0].size();
@@ -2936,15 +2936,15 @@ timer.AccumulateRegion("DoDiffusion");
         nq = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
 
         Array<OneD, NekDouble> pressure(nq);
-        TensorOfArray2D<NekDouble> velocity(m_spacedim);
+        Array<OneD, Array<OneD, NekDouble>> velocity(m_spacedim);
 
-        TensorOfArray2D<NekDouble> physfield_interp(nVariables);
+        Array<OneD, Array<OneD, NekDouble>> physfield_interp(nVariables);
         TensorOfArray3D<NekDouble> flux_interp(nVariables);
 
         for (i = 0; i < nVariables; ++ i)
         {
             physfield_interp[i] = Array<OneD, NekDouble>(nq);
-            flux_interp[i] = TensorOfArray2D<NekDouble>(m_spacedim);
+            flux_interp[i] = Array<OneD, Array<OneD, NekDouble>>(m_spacedim);
             m_fields[0]->PhysInterp1DScaled(
                 OneDptscale, physfield[i], physfield_interp[i]);
 
@@ -3013,8 +3013,8 @@ timer.AccumulateRegion("DoDiffusion");
      *        subject to CFL restrictions.
      */
     void CompressibleFlowSystem::GetElmtTimeStep(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD, NekDouble> &tstep)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD, NekDouble>                    &tstep)
     {
         boost::ignore_unused(inarray);
 
@@ -3127,7 +3127,7 @@ timer.AccumulateRegion("DoDiffusion");
         int offset;
         Array<OneD, NekDouble> tmp;
 
-        TensorOfArray2D<NekDouble> physfields(nfields);
+        Array<OneD, Array<OneD, NekDouble>> physfields(nfields);
         for (int i = 0; i < nfields; ++i)
         {
             physfields[i] = m_fields[i]->GetPhys();
@@ -3136,9 +3136,9 @@ timer.AccumulateRegion("DoDiffusion");
         Array<OneD, NekDouble> stdV(n_element, 0.0);
 
         // Getting the velocity vector on the 2D normal space
-        TensorOfArray2D<NekDouble> velocity   (m_spacedim);
-        TensorOfArray2D<NekDouble> stdVelocity(m_spacedim);
-        TensorOfArray2D<NekDouble> stdSoundSpeed(m_spacedim);
+        Array<OneD, Array<OneD, NekDouble>> velocity   (m_spacedim);
+        Array<OneD, Array<OneD, NekDouble>> stdVelocity(m_spacedim);
+        Array<OneD, Array<OneD, NekDouble>> stdSoundSpeed(m_spacedim);
         Array<OneD, NekDouble>               soundspeed (nTotQuadPoints);
         LibUtilities::PointsKeyVector        ptsKeys;
 
@@ -3301,15 +3301,15 @@ timer.AccumulateRegion("DoDiffusion");
         {
             const int nPhys   = m_fields[0]->GetNpoints();
             const int nCoeffs = m_fields[0]->GetNcoeffs();
-            TensorOfArray2D<NekDouble> tmp(m_fields.size());
+            Array<OneD, Array<OneD, NekDouble>> tmp(m_fields.size());
 
             for (int i = 0; i < m_fields.size(); ++i)
             {
                 tmp[i] = m_fields[i]->GetPhys();
             }
 
-            TensorOfArray2D<NekDouble> velocity(m_spacedim);
-            TensorOfArray2D<NekDouble> velFwd  (m_spacedim);
+            Array<OneD, Array<OneD, NekDouble>> velocity(m_spacedim);
+            Array<OneD, Array<OneD, NekDouble>> velFwd  (m_spacedim);
             for (int i = 0; i < m_spacedim; ++i)
             {
                 velocity[i] = Array<OneD, NekDouble> (nPhys);
@@ -3328,7 +3328,7 @@ timer.AccumulateRegion("DoDiffusion");
             m_varConv->GetSoundSpeed(tmp, soundspeed);
             m_varConv->GetMach      (tmp, soundspeed, mach);
 
-            TensorOfArray2D<NekDouble> velocities(m_spacedim);
+            Array<OneD, Array<OneD, NekDouble>> velocities(m_spacedim);
             for (int i=0;i<m_spacedim;i++)
             {
                 velocities[i] = Array<OneD, NekDouble> (nPhys);
@@ -3412,8 +3412,8 @@ timer.AccumulateRegion("DoDiffusion");
      *
      */
     void CompressibleFlowSystem::GetPressure(
-        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-              Array<OneD, NekDouble>                     &pressure)
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+              Array<OneD, NekDouble>                    &pressure)
     {
         m_varConv->GetPressure(physfield, pressure);
     }
@@ -3422,8 +3422,8 @@ timer.AccumulateRegion("DoDiffusion");
      *
      */
     void CompressibleFlowSystem::GetDensity(
-        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-              Array<OneD, NekDouble>                     &density)
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+              Array<OneD, NekDouble>                    &density)
     {
         density = physfield[0];
     }
@@ -3432,21 +3432,21 @@ timer.AccumulateRegion("DoDiffusion");
      *
      */
     void CompressibleFlowSystem::GetVelocity(
-        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-              TensorOfArray2D<NekDouble>       &velocity)
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+              Array<OneD, Array<OneD, NekDouble>>       &velocity)
     {
         m_varConv->GetVelocityVector(physfield, velocity);
     }
 
     void CompressibleFlowSystem::v_SteadyStateResidual(
-                int                         step, 
-                Array<OneD, NekDouble>      &L2)
+        int                     step, 
+        Array<OneD, NekDouble>  &L2)
     {
         boost::ignore_unused(step);
         const int nPoints = GetTotPoints();
         const int nFields = m_fields.size();
-        TensorOfArray2D<NekDouble> rhs (nFields);
-        TensorOfArray2D<NekDouble> inarray (nFields);
+        Array<OneD, Array<OneD, NekDouble>> rhs (nFields);
+        Array<OneD, Array<OneD, NekDouble>> inarray (nFields);
         for (int i = 0; i < nFields; ++i)
         {
             rhs[i] =   Array<OneD, NekDouble> (nPoints,0.0);
@@ -3478,12 +3478,12 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     void CompressibleFlowSystem::v_GetFluxDerivJacDirctn(
-            const MultiRegions::ExpListSharedPtr             &explist,
-            const Array<OneD, const Array<OneD, NekDouble> > &normals,
-            const int                                        nDervDir,
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-            TensorOfArray5D<NekDouble>                       &ElmtJacArray,
-            const int                                        nfluxDir)
+        const MultiRegions::ExpListSharedPtr            &explist,
+        const Array<OneD, const Array<OneD, NekDouble>> &normals,
+        const int                                       nDervDir,
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              TensorOfArray5D<NekDouble>                &ElmtJacArray,
+        const int                                       nfluxDir)
     {
         boost::ignore_unused(explist, normals, nDervDir, inarray, ElmtJacArray,
             nfluxDir);
@@ -3491,14 +3491,14 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     void CompressibleFlowSystem::v_GetFluxDerivJacDirctnElmt(
-            const int                        nConvectiveFields,
-            const int                        nElmtPnt,
-            const int                        nDervDir,
-            const TensorOfArray2D<NekDouble> &locVars,
-            const Array<OneD, NekDouble>     &locmu,
-            const TensorOfArray2D<NekDouble> &locnormal,
-            DNekMatSharedPtr                 &wspMat,
-            TensorOfArray2D<NekDouble>       &PntJacArray)
+        const int                                       nConvectiveFields,
+        const int                                       nElmtPnt,
+        const int                                       nDervDir,
+        const Array<OneD, const Array<OneD, NekDouble>> &locVars,
+        const Array<OneD, NekDouble>                    &locmu,
+        const Array<OneD, const Array<OneD, NekDouble>> &locnormal,
+              DNekMatSharedPtr                          &wspMat,
+              Array<OneD,       Array<OneD, NekDouble>> &PntJacArray)
     {
         boost::ignore_unused(nConvectiveFields, nElmtPnt, nDervDir, locVars,
             locmu, locnormal, wspMat, PntJacArray);
@@ -3506,22 +3506,22 @@ timer.AccumulateRegion("DoDiffusion");
     }
     
     void CompressibleFlowSystem::v_GetFluxDerivJacDirctn(
-            const MultiRegions::ExpListSharedPtr            &explist,
-            const Array<OneD, const Array<OneD, NekDouble>> &normals,
-            const int                                       nDervDir,
-            const Array<OneD, const Array<OneD, NekDouble>> &inarray,
-            TensorOfArray2D<DNekMatSharedPtr>               &ElmtJac)
+        const MultiRegions::ExpListSharedPtr            &explist,
+        const Array<OneD, const Array<OneD, NekDouble>> &normals,
+        const int                                       nDervDir,
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+        TensorOfArray2D<DNekMatSharedPtr>               &ElmtJac)
     {
         boost::ignore_unused(explist, normals, nDervDir, inarray, ElmtJac);
     }
 
     void CompressibleFlowSystem::v_GetDiffusionFluxJacPoint(
-            const Array<OneD, NekDouble>                        &conservVar, 
-            const Array<OneD, const Array<OneD, NekDouble> >    &conseDeriv, 
-            const NekDouble                                     mu,
-            const NekDouble                                     DmuDT,
-            const Array<OneD, NekDouble>                        &normals,
-                  DNekMatSharedPtr                              &fluxJac)
+        const Array<OneD, NekDouble>                    &conservVar, 
+        const Array<OneD, const Array<OneD, NekDouble>> &conseDeriv, 
+        const NekDouble                                 mu,
+        const NekDouble                                 DmuDT,
+        const Array<OneD, NekDouble>                    &normals,
+              DNekMatSharedPtr                          &fluxJac)
     {
         boost::ignore_unused(conservVar, conseDeriv, mu, DmuDT, normals, 
             fluxJac);
@@ -3529,15 +3529,15 @@ timer.AccumulateRegion("DoDiffusion");
     }
 
     void CompressibleFlowSystem::v_MinusDiffusionFluxJacDirctnElmt(
-            const int                           nConvectiveFields,
-            const int                           nElmtPnt,
-            const TensorOfArray2D<NekDouble>    &locVars,
-            const TensorOfArray3D<NekDouble>    &locDerv,
-            const Array<OneD, NekDouble>        &locmu,
-            const Array<OneD, NekDouble>        &locDmuDT,
-            const Array<OneD, NekDouble>        &normals,
-            DNekMatSharedPtr                    &wspMat,
-            TensorOfArray2D<NekDouble>          &PntJacArray)
+        const int                                       nConvectiveFields,
+        const int                                       nElmtPnt,
+        const Array<OneD, const Array<OneD, NekDouble>> &locVars,
+        const TensorOfArray3D<NekDouble>                &locDerv,
+        const Array<OneD, NekDouble>                    &locmu,
+        const Array<OneD, NekDouble>                    &locDmuDT,
+        const Array<OneD, NekDouble>                    &normals,
+              DNekMatSharedPtr                          &wspMat,
+              Array<OneD,       Array<OneD, NekDouble>> &PntJacArray)
     {
         boost::ignore_unused(nConvectiveFields, nElmtPnt, locVars, locDerv,
                 locmu, locDmuDT, normals, wspMat, PntJacArray);

@@ -2929,7 +2929,6 @@ namespace Nektar
                                                   bool PutFwdInBwdOnBCs)
         {
             // Fill boundary conditions into missing elements
-            int cnt, id1, id2 = 0;
 
             if(PutFwdInBwdOnBCs) // just set Bwd value to be Fwd value on BCs
             {

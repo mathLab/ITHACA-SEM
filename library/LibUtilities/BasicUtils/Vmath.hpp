@@ -47,10 +47,10 @@
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
-namespace Vmath 
+namespace Vmath
 {
     /***************** Math routines  ***************/
-    
+
     /// \brief Fill a vector with a constant value
     template<class T>  LIB_UTILITIES_EXPORT void Fill( int n, const T alpha,  T *x, const int incx );
 
@@ -73,30 +73,30 @@ namespace Vmath
     /// \brief Multiply vector z = x/y
     template<class T>  LIB_UTILITIES_EXPORT void Vdiv( int n, const T *x, const int incx, const T *y,
                   const int incy,  T*z, const int incz);
-    
+
     /// \brief Scalar multiply  y = alpha/y
-    template<class T>  LIB_UTILITIES_EXPORT void Sdiv( int n, const T alpha, const T *x, 
+    template<class T>  LIB_UTILITIES_EXPORT void Sdiv( int n, const T alpha, const T *x,
                                   const int incx, T *y, const int incy);
 
     /// \brief Add vector z = x+y
     template<class T>  LIB_UTILITIES_EXPORT void Vadd( int n, const T *x, const int incx, const T *y,
                                   const int incy,  T *z, const int incz);
-    
+
     /// \brief Add vector y = alpha + x
     template<class T>  LIB_UTILITIES_EXPORT void Sadd( int n, const T alpha, const T *x,
                   const int incx, T *y, const int incy);
-    
+
     /// \brief Subtract vector z = x-y
     template<class T>  LIB_UTILITIES_EXPORT void Vsub( int n, const T *x, const int incx, const T *y,
                                   const int incy,  T *z, const int incz);
-    
+
     /// \brief Zero vector
     template<class T>  LIB_UTILITIES_EXPORT void Zero(int n, T *x, const int incx);
-    
+
     /// \brief Negate x = -x
     template<class T>  LIB_UTILITIES_EXPORT void Neg( int n, T *x, const int incx);
-    
-    
+
+
     template<class T> void Vlog(int n, const T *x, const int incx,
                  T *y, const int incy)
     {
@@ -135,20 +135,20 @@ namespace Vmath
     /// \brief sqrt y = sqrt(x)
     template<class T> LIB_UTILITIES_EXPORT void Vsqrt(int n, const T *x, const int incx,
                  T *y, const int incy);
-    
+
     /// \brief vabs: y = |x|
-    template<class T> LIB_UTILITIES_EXPORT void Vabs(int n, const T *x, const int incx, 
+    template<class T> LIB_UTILITIES_EXPORT void Vabs(int n, const T *x, const int incx,
                 T *y, const int incy);
-    
+
     /********** Triad  routines  ***********************/
 
     /// \brief  vvtvp (vector times vector plus vector): z = w*x + y
-    template<class T> LIB_UTILITIES_EXPORT void Vvtvp( int n, 
-                                                       const T *w, const int incw, 
-                                                       const T *x, const int incx, 
+    template<class T> LIB_UTILITIES_EXPORT void Vvtvp( int n,
+                                                       const T *w, const int incw,
+                                                       const T *x, const int incx,
                                                        const T *y, const int incy,
                                                        T *z,       const int incz );
-    
+
     /// \brief vvtvm (vector times vector plus vector): z = w*x - y
     template<class T> LIB_UTILITIES_EXPORT void Vvtvm(int n, const T *w, const int incw, const T *x,
                  const int incx, const T *y, const int incy,
@@ -164,7 +164,7 @@ namespace Vmath
                                                         const int incx, const T *y, const int incy,
                                                         T *z, const int incz );
 
-    /// \brief  vvtvvtp (vector times vector plus vector times vector): 
+    /// \brief  vvtvvtp (vector times vector plus vector times vector):
     // z = v*w + x*y
     //
     // @param n  Number of items in each vector.
@@ -175,7 +175,7 @@ namespace Vmath
                                                           const T*  y, int incy,
                                                                 T*  z, int incz );
 
-    /// \brief  vvtvvtm (vector times vector minus vector times vector): 
+    /// \brief  vvtvvtm (vector times vector minus vector times vector):
     // z = v*w - x*y
     template<class T> LIB_UTILITIES_EXPORT void Vvtvvtm (int n,
                                     const T* v, int incv,
@@ -183,7 +183,7 @@ namespace Vmath
                                     const T* x, int incx,
                                     const T* y, int incy,
                                           T* z, int incz);
-    /// \brief  Svtsvtp (scalar times vector plus scalar times vector): 
+    /// \brief  Svtsvtp (scalar times vector plus scalar times vector):
     // z = alpha*x + beta*y
     template<class T> LIB_UTILITIES_EXPORT void Svtsvtp (int n,
                                     const T alpha,
@@ -192,7 +192,7 @@ namespace Vmath
                                     const T* y, int incy,
                                           T* z, int incz);
 
-    /// \brief  Vstvpp (scalar times vector plus vector plus vector): 
+    /// \brief  Vstvpp (scalar times vector plus vector plus vector):
     // z = v*w + x*y
     template<class T> LIB_UTILITIES_EXPORT void Vstvpp(int n,
                                   const T alpha,
@@ -200,17 +200,29 @@ namespace Vmath
                                   const T* w, int incw,
                                   const T* x, int incx,
                                   T* z, int incz);
-    
+
     /************ Misc routine from Veclib (and extras)  ************/
-    
+
     /// \brief Gather vector z[i] = x[y[i]]
-    template<class T>  LIB_UTILITIES_EXPORT void Gathr(int n, const T *x, const int *y,
-                  T *z);
+    template<class T, class I, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value &&
+            std::is_integral<I>::value
+        >::type
+    >
+    void Gathr(I n, const T *x, const I *y, T *z)
+    {
+        while (n--)
+        {
+            *z++ = *(x + *y++);
+        }
+        return;
+    }
 
     /// \brief Gather vector z[i] = sign[i]*x[y[i]]
     template<class T>  LIB_UTILITIES_EXPORT void Gathr(int n, const T *sign, const T *x, const int *y,
                   T *z);
-    
+
     /// \brief Scatter vector z[y[i]] = x[i]
     template<class T>  LIB_UTILITIES_EXPORT void Scatr(int n, const T *x, const int *y,
                   T *z);
@@ -218,7 +230,7 @@ namespace Vmath
     /// \brief Scatter vector z[y[i]] = sign[i]*x[i]
     template<class T>  LIB_UTILITIES_EXPORT void Scatr(int n, const T *sign, const T *x, const int *y,
                   T *z);
-    
+
     /// \brief Assemble z[y[i]] += x[i]; z should be zero'd first
     template<class T>  LIB_UTILITIES_EXPORT void Assmb(int n, const T *x, const int *y,
                   T *z);
@@ -226,33 +238,33 @@ namespace Vmath
     /// \brief Assemble z[y[i]] += sign[i]*x[i]; z should be zero'd first
     template<class T>  LIB_UTILITIES_EXPORT void Assmb(int n, const T *sign, const T *x, const int *y,
                   T *z);
- 
-    
+
+
     /************* Reduction routines  *****************/
-    
+
     /// \brief Subtract return sum(x)
     template<class T>  LIB_UTILITIES_EXPORT T Vsum( int n, const T *x, const int incx);
-    
-    
+
+
     /// \brief Return the index of the maximum element in x
     template<class T>  LIB_UTILITIES_EXPORT int Imax( int n, const T *x, const int incx);
-    
+
     /// \brief Return the maximum element in x -- called vmax to avoid
     /// conflict with max
     template<class T>  LIB_UTILITIES_EXPORT T Vmax( int n, const T *x, const int incx);
-    
+
     /// \brief Return the index of the maximum absolute element in x
     template<class T>  LIB_UTILITIES_EXPORT int Iamax( int n, const T *x, const int incx);
-    
+
     /// \brief Return the maximum absolute element in x
     /// called vamax to avoid conflict with max
     template<class T>  LIB_UTILITIES_EXPORT T Vamax( int n, const T *x, const int incx);
-    
-    
+
+
     /// \brief Return the index of the minimum element in x
     template<class T>  LIB_UTILITIES_EXPORT int Imin( int n, const T *x, const int incx);
-    
-    
+
+
     /// \brief Return the minimum element in x - called vmin to avoid
     /// conflict with min
     template<class T>  LIB_UTILITIES_EXPORT T Vmin( int n, const T *x, const int incx);
@@ -260,7 +272,7 @@ namespace Vmath
     /// \brief Return number of NaN elements of x
     template<class T>  LIB_UTILITIES_EXPORT int Nnan(int n, const T *x, const int incx);
 
-    
+
     /// \brief  vvtvp (vector times vector times vector): z = w*x*y
     template<class T> LIB_UTILITIES_EXPORT T Dot(     int n,
                                  const T   *w,

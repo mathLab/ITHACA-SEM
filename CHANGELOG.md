@@ -16,6 +16,10 @@ v5.1.0
 - Fix intel c compiler error in AeroFilters (!1198)
 - Fix compilation errors when CWIPI interface enabled (!1207)
 - Fix distance in ContainsPoint and GetLocCoords (!1200)
+- Fix compiler warning of maybe-uninitialized elType in InputStar (!1217)
+- Add vectorisation of most element on basix operations (!1158)
+- Limit MPI methods based on core count (!1208)
+- Split out IProduct.cpp and IProductWRTDerivBase.cpp in order to avoid long time compilations (!1228)
 
 **FieldConvert**
 - Refactored time integration code using factory pattern (!1034)
@@ -24,10 +28,16 @@ v5.1.0
   num_elements with size() (!1127, !1137, !1141)
 - Use base MPI functions instead of the GS library in the trace exchange
   for parallel DG simulations (!1112)
+  num_elements with size() (!1127, !1137, !1141)
+- Fix to interppointsdatatofld to allow for mpi processing of large files (!1191)
+- Fix the logic of C0Projection:helmsmoothing (!1220)
+
+**FieldConvert**:
 - Add phifile module to compute shape functions for the SPM solver (!1065)
 - Fix mean and innerProduct modules in 3DH1D cases (!1157)
 - Add Python interface (!1081)
 - Fix wss module with nparts option and reading of parallel xml files when the root partition is missing(!1197)
+- Fix a segment error in the gradient module when the number of fields is smaller than space dimension(!1216)
 
 **CardiacEPSolver**
 - Added additional parameter sets to Fenton-Karma model (!1119)
@@ -37,6 +47,9 @@ v5.1.0
   (!1065)
 - Add new filter AeroForcesSPM to compute aerodynamic forces in immersed
   boundaries (!1065)
+
+**CompressibleFlowSolver**
+- Added vectorisation of the Interior Penalty method (!!223)
 
 **PulseWaveSolver**
 - Added viscoelasticity (!1138)

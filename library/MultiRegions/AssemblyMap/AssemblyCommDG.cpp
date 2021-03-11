@@ -361,15 +361,22 @@ AssemblyCommDG::AssemblyCommDG(
         std::vector<ExchangeMethodSharedPtr> MPIFuncs;
         std::vector<std::string> MPIFuncsNames;
 
-        MPIFuncs.emplace_back(
-            ExchangeMethodSharedPtr(MemoryManager<AllToAll>::AllocateSharedPtr(
-                comm, m_maxQuad, m_nRanks, m_rankSharedEdges, m_edgeToTrace)));
-        MPIFuncsNames.emplace_back("AllToAll");
+        // Toggle off AllToAll/AllToAllV methods if cores greater than 16 for
+        // performance reasons unless override solver info parameter is present
+        if (locExp.GetSession()->MatchSolverInfo("OverrideMPI", "ON") ||
+            m_nRanks <= 16)
+        {
+            MPIFuncs.emplace_back(ExchangeMethodSharedPtr(
+                MemoryManager<AllToAll>::AllocateSharedPtr(
+                    comm, m_maxQuad, m_nRanks, m_rankSharedEdges,
+                    m_edgeToTrace)));
+            MPIFuncsNames.emplace_back("AllToAll");
 
-        MPIFuncs.emplace_back(
-            ExchangeMethodSharedPtr(MemoryManager<AllToAllV>::AllocateSharedPtr(
-                comm, m_rankSharedEdges, m_edgeToTrace, m_nRanks)));
-        MPIFuncsNames.emplace_back("AllToAllV");
+            MPIFuncs.emplace_back(ExchangeMethodSharedPtr(
+                MemoryManager<AllToAllV>::AllocateSharedPtr(
+                    comm, m_rankSharedEdges, m_edgeToTrace, m_nRanks)));
+            MPIFuncsNames.emplace_back("AllToAllV");
+        }
 
         MPIFuncs.emplace_back(
             ExchangeMethodSharedPtr(MemoryManager<Pairwise>::AllocateSharedPtr(

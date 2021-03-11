@@ -38,9 +38,11 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <LibUtilities/SimdLib/traits.hpp>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
 #include <string>
+
 
 namespace Nektar
 {
@@ -103,7 +105,7 @@ namespace Nektar
             {
                 m_params[name] = fp;
             }
-            
+
             template<typename FuncPointerT, typename ObjectPointerT>
             void SetAuxScal(std::string    name,
                               FuncPointerT   func,
@@ -118,6 +120,11 @@ namespace Nektar
                                  ObjectPointerT obj)
             {
                 m_auxVec[name] = std::bind(func, obj);
+            }
+
+            void SetAuxVec(std::string name, RSVecFuncType fp)
+            {
+                m_auxVec[name] = fp;
             }
 
             std::map<std::string, RSScalarFuncType> &GetScalars()
@@ -156,6 +163,7 @@ namespace Nektar
             /// Rotation storage
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_rotStorage;
 
+            SOLVER_UTILS_EXPORT RiemannSolver();
             SOLVER_UTILS_EXPORT RiemannSolver(
                 const LibUtilities::SessionReaderSharedPtr& pSession);
 
@@ -168,7 +176,7 @@ namespace Nektar
                 const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                       Array<OneD,       Array<OneD, NekDouble> > &flux) = 0;
 
-            void GenerateRotationMatrices(
+            SOLVER_UTILS_EXPORT void GenerateRotationMatrices(
                 const Array<OneD, const Array<OneD, NekDouble> > &normals);
             void FromToRotation(
                 Array<OneD, const NekDouble> &from,
@@ -199,7 +207,59 @@ namespace Nektar
                                 const LibUtilities::SessionReaderSharedPtr&>
             RiemannSolverFactory;
         SOLVER_UTILS_EXPORT RiemannSolverFactory& GetRiemannSolverFactory();
-    }
+
+
+        template <class T, typename = typename std::enable_if
+            <
+                std::is_floating_point<T>::value ||
+                tinysimd::is_vector_floating_point<T>::value
+            >::type
+        >
+        inline void rotateToNormalKernel(T* in, T* rotMat, T* out)
+        {
+
+            // Apply rotation matrices.
+            out[0] = in[0] * rotMat[0]
+                   + in[1] * rotMat[1]
+                   + in[2] * rotMat[2];
+
+            out[1] = in[0] * rotMat[3]
+                   + in[1] * rotMat[4]
+                   + in[2] * rotMat[5];
+
+            out[2] = in[0] * rotMat[6]
+                   + in[1] * rotMat[7]
+                   + in[2] * rotMat[8];
+        }
+
+        template <class T, typename = typename std::enable_if
+            <
+                std::is_floating_point<T>::value ||
+                tinysimd::is_vector_floating_point<T>::value
+            >::type
+        >
+        inline void rotateFromNormalKernel(T* in, T* rotMat, T* out)
+        {
+
+            // Apply rotation matrices.
+            out[0] = in[0] * rotMat[0]
+                   + in[1] * rotMat[3]
+                   + in[2] * rotMat[6];
+
+            out[1] = in[0] * rotMat[1]
+                   + in[1] * rotMat[4]
+                   + in[2] * rotMat[7];
+
+            out[2] = in[0] * rotMat[2]
+                   + in[1] * rotMat[5]
+                   + in[2] * rotMat[8];
+        }
+
+
+
+
+
+    } // namespace SolverUtils
 }
 
 #endif

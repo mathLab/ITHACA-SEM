@@ -6,7 +6,7 @@ MACRO(SOLVER_COMPONENT_NAME name var)
 ENDMACRO()
 
 MACRO(ADD_SOLVER_EXECUTABLE name)
-    CMAKE_PARSE_ARGUMENTS(SOLVER "" "COMPONENT" "SOURCES;LIBRARY_SOURCES" ${ARGN})
+    CMAKE_PARSE_ARGUMENTS(SOLVER "" "COMPONENT" "SOURCES;LIBRARY_SOURCES;DEPENDS" ${ARGN} )
 
     IF (SOLVER_LIBRARY_SOURCES)
         ADD_LIBRARY(${name}-obj OBJECT ${SOLVER_LIBRARY_SOURCES})
@@ -43,7 +43,7 @@ ENDMACRO()
 # Generate list of available subdirectories
 FILE(GLOB dir_list "*")
 FOREACH(dir ${dir_list})
-    IF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)    
+    IF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
         ADD_SUBDIRECTORY(${dir})
     ENDIF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
 ENDFOREACH(dir ${dir_list})

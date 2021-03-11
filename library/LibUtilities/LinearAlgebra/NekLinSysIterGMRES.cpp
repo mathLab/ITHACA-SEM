@@ -116,7 +116,7 @@ NekLinSysIterGMRES::~NekLinSysIterGMRES()
  *
  */
 int NekLinSysIterGMRES::v_SolveSystem(
-    const int nGlobal, const TensorOfArray1D<NekDouble> &pInput,
+    const int nGlobal, const Array<OneD, const NekDouble> &pInput,
     Array<OneD, NekDouble> &pOutput, const int nDir, const NekDouble tol,
     const NekDouble factor)
 {
@@ -141,7 +141,7 @@ int NekLinSysIterGMRES::v_SolveSystem(
  */
 
 int NekLinSysIterGMRES::DoGMRES(const int nGlobal,
-                                const TensorOfArray1D<NekDouble> &pInput,
+                                const Array<OneD, const NekDouble> &pInput,
                                 Array<OneD, NekDouble> &pOutput, const int nDir)
 {
     m_prec_factor = NekConstants::kNekUnsetDouble;
@@ -230,7 +230,7 @@ int NekLinSysIterGMRES::DoGMRES(const int nGlobal,
 
 NekDouble NekLinSysIterGMRES::DoGmresRestart(
     const bool restarted, const bool truncted, const int nGlobal,
-    const TensorOfArray1D<NekDouble> &pInput, Array<OneD, NekDouble> &pOutput,
+    const Array<OneD, const NekDouble> &pInput, Array<OneD, NekDouble> &pOutput,
     const int nDir)
 {
     int nNonDir = nGlobal - nDir;
@@ -572,7 +572,7 @@ void NekLinSysIterGMRES::DoGivensRotation(const int starttem, const int endtem,
 // and row changes due to use Array<OneD,Array<OneD,NekDouble>>
 void NekLinSysIterGMRES::DoBackward(const int number,
                                     Array<OneD, Array<OneD, NekDouble>> &A,
-                                    const TensorOfArray1D<NekDouble> &b,
+                                    const Array<OneD, const NekDouble> &b,
                                     Array<OneD, NekDouble> &y)
 {
     // Number is the entry number

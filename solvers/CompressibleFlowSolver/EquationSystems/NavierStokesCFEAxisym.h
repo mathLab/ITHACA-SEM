@@ -76,19 +76,19 @@ namespace Nektar
     virtual void v_InitObject();
 
     virtual void v_DoDiffusion(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
-        const Array<OneD, Array<OneD, NekDouble> >   &pBwd);
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD,       Array<OneD, NekDouble>> &outarray,
+        const Array<OneD, const Array<OneD, NekDouble>> &pFwd,
+        const Array<OneD, const Array<OneD, NekDouble>> &pBwd);
 
     virtual void v_GetViscousFluxVector(
-        const Array<OneD, Array<OneD, NekDouble> >         &physfield,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+              TensorOfArray3D<NekDouble>                &derivatives,
+              TensorOfArray3D<NekDouble>                &viscousTensor);
     virtual void v_GetViscousFluxVectorDeAlias(
-        const Array<OneD, Array<OneD, NekDouble> >         &physfield,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+              TensorOfArray3D<NekDouble>                &derivatives,
+              TensorOfArray3D<NekDouble>                &viscousTensor)
     {
         boost::ignore_unused(physfield, derivatives, viscousTensor);
         NEKERROR(ErrorUtil::efatal,

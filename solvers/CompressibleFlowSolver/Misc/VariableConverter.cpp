@@ -55,10 +55,12 @@ VariableConverter::VariableConverter(
     m_session->LoadParameter("rhoInf", m_rhoInf, 1.225);
     m_session->LoadParameter("GasConstant", m_gasConstant, 287.058);
     m_session->LoadParameter("mu", m_mu, 1.78e-05);
+    m_oneOverT_star  = (m_rhoInf * m_gasConstant) / m_pInf;
 
     // Parameters for sensor
     m_session->LoadParameter("Skappa", m_Skappa, -1.0);
     m_session->LoadParameter("Kappa", m_Kappa, 0.25);
+
 
 }
 
@@ -194,15 +196,10 @@ void VariableConverter::GetDynamicViscosity(
     const Array<OneD, const NekDouble> &temperature, Array<OneD, NekDouble> &mu)
 {
     const int nPts    = temperature.size();
-    const NekDouble C = .38175;
-    NekDouble mu_star = m_mu;
-    NekDouble T_star  = m_pInf / (m_rhoInf * m_gasConstant);
-    NekDouble ratio;
 
     for (int i = 0; i < nPts; ++i)
     {
-        ratio = temperature[i] / T_star;
-        mu[i] = mu_star * ratio * sqrt(ratio) * (1 + C) / (ratio + C);
+        mu[i] = GetDynamicViscosity(temperature[i]);
     }
 }
 

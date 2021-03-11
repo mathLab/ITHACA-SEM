@@ -47,7 +47,7 @@ using namespace Nektar::LibUtilities;
 
 class LinSysDemo
 {
-    typedef const TensorOfArray1D<NekDouble> InArrayType;
+    typedef const Array<OneD, const NekDouble> InArrayType;
     typedef Array<OneD, NekDouble> OutArrayType;
 
 public:

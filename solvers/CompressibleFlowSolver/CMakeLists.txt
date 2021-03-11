@@ -57,6 +57,9 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
         RiemannSolvers/LaxFriedrichsSolver.cpp
         RiemannSolvers/RoeSolver.cpp
         RiemannSolvers/RoeSolverSIMD.cpp
+        Preconditioner/PreconCfs.cpp
+        Preconditioner/PreconCfsOp.cpp
+        Preconditioner/PreconCfsBRJ.cpp
         )
     IF(NEKTAR_BUILD_UNIT_TESTS)
       ADD_SUBDIRECTORY(RiemannSolvers/UnitTests)

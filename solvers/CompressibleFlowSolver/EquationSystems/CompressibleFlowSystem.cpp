@@ -206,6 +206,10 @@ namespace Nektar
         
         m_PreconCfs = GetPreconCfsOpFactory().CreateInstance(
             "PreconCfsBRJ", m_fields, m_session, m_comm);
+        NekPreconCfsOperators tmpPreconOp;
+        tmpPreconOp.DefineCalcPreconMatBRJCoeff(&CompressibleFlowSystem::
+            CalcPreconMatBRJCoeff, this);
+        m_PreconCfs->SetOperators(tmpPreconOp);
 
         m_session->LoadParameter("NewtonAbsoluteIteTol", 
             m_NewtonAbsoluteIteTol, 1.0E-12);
@@ -1493,20 +1497,56 @@ namespace Nektar
         }
     }
 
+    // template<typename DataType, typename TypeNekBlkMatSharedPtr>
+    // void CompressibleFlowSystem::CalcPreconMatBRJCoeff(
+    //     const Array<OneD, const Array<OneD, NekDouble>>        &inarray,
+    //           Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr>> &gmtxarray,
+    //           TypeNekBlkMatSharedPtr                           &gmtVar,
+    //           Array<OneD, TypeNekBlkMatSharedPtr>              &TraceJac,
+    //           Array<OneD, TypeNekBlkMatSharedPtr>              &TraceJacDeriv,
+    //           Array<OneD,       Array<OneD, DataType>>         &TraceJacDerivSign,
+    //           TensorOfArray4D<DataType>                        &TraceJacArray,
+    //           TensorOfArray4D<DataType>                        &TraceJacDerivArray,
+    //           TensorOfArray5D<DataType>                        &TraceIPSymJacArray,
+    //           TensorOfArray4D<DataType>                        &StdMatDataDBB,
+    //           TensorOfArray5D<DataType>                        &StdMatDataDBDB)
+    // {
+    //     TensorOfArray3D<NekDouble> qfield;
 
-    template<typename DataType, typename TypeNekBlkMatSharedPtr>
-    void CompressibleFlowSystem::GetPrecNSBlkDiagCoeff(
-        const Array<OneD, const Array<OneD, NekDouble>>        &inarray,
-              Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr>> &gmtxarray,
-              TypeNekBlkMatSharedPtr                           &gmtVar,
-              Array<OneD, TypeNekBlkMatSharedPtr>              &TraceJac,
-              Array<OneD, TypeNekBlkMatSharedPtr>              &TraceJacDeriv,
-              Array<OneD,       Array<OneD, DataType>>         &TraceJacDerivSign,
-              TensorOfArray4D<DataType>                        &TraceJacArray,
-              TensorOfArray4D<DataType>                        &TraceJacDerivArray,
-              TensorOfArray5D<DataType>                        &TraceIPSymJacArray,
-              TensorOfArray4D<DataType>                        &StdMatDataDBB,
-              TensorOfArray5D<DataType>                        &StdMatDataDBDB)
+    //     if(m_ViscousJacFlag)
+    //     {
+    //         CalcPhysDeriv(inarray,qfield);
+    //     }
+
+    //     DataType zero =0.0;
+    //     Fill2DArrayOfBlkDiagonalMat(gmtxarray,zero);
+
+    //     AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray,StdMatDataDBB,
+    //         StdMatDataDBDB);
+
+    //     AddMatNSBlkDiag_boundary(inarray,qfield,gmtxarray,TraceJac,
+    //         TraceJacDeriv,TraceJacDerivSign,TraceIPSymJacArray);
+
+    //     MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda,zero);
+
+    //     ElmtVarInvMtrx(gmtxarray,gmtVar,zero);
+
+    //     TransTraceJacMatToArray(TraceJac,TraceJacDeriv,TraceJacArray, 
+    //         TraceJacDerivArray);
+    // }
+
+    void CompressibleFlowSystem::CalcPreconMatBRJCoeff(
+        const Array<OneD, const Array<OneD, NekDouble>>  &inarray,
+        Array<OneD, Array<OneD, SNekBlkMatSharedPtr>>    &gmtxarray,
+        SNekBlkMatSharedPtr              &gmtVar,
+        Array<OneD, SNekBlkMatSharedPtr> &TraceJac,
+        Array<OneD, SNekBlkMatSharedPtr> &TraceJacDeriv,
+        Array<OneD, Array<OneD, NekSingle>> &TraceJacDerivSign,
+        TensorOfArray4D<NekSingle>          &TraceJacArray,
+        TensorOfArray4D<NekSingle>          &TraceJacDerivArray,
+        TensorOfArray5D<NekSingle>          &TraceIPSymJacArray,
+        TensorOfArray4D<NekSingle>          &StdMatDataDBB,
+        TensorOfArray5D<NekSingle>          &StdMatDataDBDB)
     {
         TensorOfArray3D<NekDouble> qfield;
 
@@ -1515,7 +1555,7 @@ namespace Nektar
             CalcPhysDeriv(inarray,qfield);
         }
 
-        DataType zero =0.0;
+        NekSingle zero =0.0;
         Fill2DArrayOfBlkDiagonalMat(gmtxarray,zero);
 
         AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray,StdMatDataDBB,

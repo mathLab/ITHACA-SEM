@@ -316,20 +316,32 @@ namespace Nektar
             }
         }
 
-        template<typename DataType, typename TypeNekBlkMatSharedPtr>
-        void GetPrecNSBlkDiagCoeff(
-            const Array<OneD, const Array<OneD, NekDouble>> &inarray,
-                  Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr>> 
-                    &gmtxarray,
-                  TypeNekBlkMatSharedPtr                    &gmtVar,
-                  Array<OneD, TypeNekBlkMatSharedPtr>       &TraceJac,
-                  Array<OneD, TypeNekBlkMatSharedPtr>       &TraceJacDeriv,
-                  Array<OneD,       Array<OneD, DataType>>  &TraceJacDerivSign,
-                  TensorOfArray4D<DataType>                 &TraceJacArray,
-                  TensorOfArray4D<DataType>                 &TraceJacDerivArray,
-                  TensorOfArray5D<DataType>                 &TraceIPSymJacArray,
-                  TensorOfArray4D<DataType>                 &StdMatDataDBB,
-                  TensorOfArray5D<DataType>                 &StdMatDataDBDB);
+        // template<typename DataType, typename TypeNekBlkMatSharedPtr>
+        // void CalcPreconMatBRJCoeff(
+        //     const Array<OneD, const Array<OneD, NekDouble>>  &inarray,
+        //     Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr>> &gmtxarray,
+        //     TypeNekBlkMatSharedPtr              &gmtVar,
+        //     Array<OneD, TypeNekBlkMatSharedPtr> &TraceJac,
+        //     Array<OneD, TypeNekBlkMatSharedPtr> &TraceJacDeriv,
+        //     Array<OneD, Array<OneD, DataType>>  &TraceJacDerivSign,
+        //     TensorOfArray4D<DataType>           &TraceJacArray,
+        //     TensorOfArray4D<DataType>           &TraceJacDerivArray,
+        //     TensorOfArray5D<DataType>           &TraceIPSymJacArray,
+        //     TensorOfArray4D<DataType>           &StdMatDataDBB,
+        //     TensorOfArray5D<DataType>           &StdMatDataDBDB);
+
+        void CalcPreconMatBRJCoeff(
+            const Array<OneD, const Array<OneD, NekDouble>>  &inarray,
+            Array<OneD, Array<OneD, SNekBlkMatSharedPtr>>    &gmtxarray,
+            SNekBlkMatSharedPtr              &gmtVar,
+            Array<OneD, SNekBlkMatSharedPtr> &TraceJac,
+            Array<OneD, SNekBlkMatSharedPtr> &TraceJacDeriv,
+            Array<OneD, Array<OneD, NekSingle>> &TraceJacDerivSign,
+            TensorOfArray4D<NekSingle>          &TraceJacArray,
+            TensorOfArray4D<NekSingle>          &TraceJacDerivArray,
+            TensorOfArray5D<NekSingle>          &TraceIPSymJacArray,
+            TensorOfArray4D<NekSingle>          &StdMatDataDBB,
+            TensorOfArray5D<NekSingle>          &StdMatDataDBDB);
 
         void MatrixMultiplyMatrixFreeCoeffCentral(
             const Array<OneD, NekDouble> &inarray,

@@ -195,14 +195,11 @@ namespace Nektar
         const NekDouble                                   time,
         const NekDouble                                   lambda)
     {
-        // m_operator.DoBuildPreconMat(inpnts, time, lambda);
-        // CalcPreconMat(m_solutionPhys, m_BndEvaluateTime, m_TimeIntegLambda);
-            
-        // m_operator.GetPrecNSBlkDiagCoeff(intmp, m_PreconMatVarsSingle, 
-        //     m_PreconMatSingle, m_TraceJacSingle, m_TraceJacDerivSingle,
-        //     m_TraceJacDerivSignSingle, m_TraceJacArraySingle, 
-        //     m_TraceJacDerivArraySingle, m_TraceIPSymJacArraySingle,
-        //     m_StdSMatDataDBB,m_StdSMatDataDBDB);
+        m_operator.DoCalcPreconMatBRJCoeff(intmp, m_PreconMatVarsSingle, 
+            m_PreconMatSingle, m_TraceJacSingle, m_TraceJacDerivSingle,
+            m_TraceJacDerivSignSingle, m_TraceJacArraySingle, 
+            m_TraceJacDerivArraySingle, m_TraceIPSymJacArraySingle,
+            m_StdSMatDataDBB,m_StdSMatDataDBDB);
 
         m_BndEvaluateTime = time;
         m_DtLambdaPreconMat = lambda;

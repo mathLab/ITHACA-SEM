@@ -52,15 +52,27 @@ namespace Nektar
         typedef const Array<OneD, NekDouble> InArrayType;
         typedef Array<OneD, NekDouble> OutArrayType;
 
-        typedef std::function<void(InArrayType &, OutArrayType &, const bool &)>
+        typedef std::function<void(            
+            const Array<OneD, const Array<OneD, NekDouble>> &,
+            Array<OneD, Array<OneD, SNekBlkMatSharedPtr>>   &,
+            SNekBlkMatSharedPtr                             &,
+            Array<OneD, SNekBlkMatSharedPtr>                &,
+            Array<OneD, SNekBlkMatSharedPtr>                &,
+            Array<OneD, Array<OneD, NekSingle>>             &,
+            TensorOfArray4D<NekSingle>                      &,
+            TensorOfArray4D<NekSingle>                      &,
+            TensorOfArray5D<NekSingle>                      &,
+            TensorOfArray4D<NekSingle>                      &,
+            TensorOfArray5D<NekSingle>                      & )>
             FunctorType1;
+
         typedef std::function<void(InArrayType &, InArrayType &, OutArrayType &,
                                 const bool &)>
             FunctorType2;
         typedef Array<OneD, FunctorType1> FunctorType1Array;
         typedef Array<OneD, FunctorType2> FunctorType2Array;
         static const int nfunctor1 = 1;
-        static const int nfunctor2 = 1;
+        static const int nfunctor2 = 0;
 
         NekPreconCfsOperators(void) 
             : m_functors1(nfunctor1), m_functors2(nfunctor2)
@@ -94,42 +106,33 @@ namespace Nektar
         }
 
         template <typename FuncPointerT, typename ObjectPointerT>
-        void DefineBuildPreconMat(FuncPointerT func, ObjectPointerT obj)
+        void DefineCalcPreconMatBRJCoeff(FuncPointerT func, ObjectPointerT obj)
         {
             m_functors1[0] = std::bind(func, obj, std::placeholders::_1, 
-                    std::placeholders::_2, std::placeholders::_3);
-        }
-        template <typename FuncPointerT, typename ObjectPointerT>
-        void DefineNekSysLhsEval(FuncPointerT func, ObjectPointerT obj)
-        {
-            m_functors1[1] = std::bind(func, obj, std::placeholders::_1, 
-                    std::placeholders::_2, std::placeholders::_3);
-        }
-        template <typename FuncPointerT, typename ObjectPointerT>
-        void DefineDoPreconCfs(FuncPointerT func, ObjectPointerT obj)
-        {
-            m_functors1[2] = std::bind(func, obj, std::placeholders::_1, 
-                    std::placeholders::_2, std::placeholders::_3);
+                std::placeholders::_2, std::placeholders::_3,
+                std::placeholders::_4, std::placeholders::_5,
+                std::placeholders::_6, std::placeholders::_7,
+                std::placeholders::_8, std::placeholders::_9,
+                std::placeholders::_10, std::placeholders::_11);
         }
 
-        inline void DoBuildPreconMat(InArrayType &inarray, 
-            OutArrayType &outarray, const bool &flag = false) const
+        inline void DoCalcPreconMatBRJCoeff(
+            const Array<OneD, const Array<OneD, NekDouble>>  &inarray,
+            Array<OneD, Array<OneD, SNekBlkMatSharedPtr>>    &gmtxarray,
+            SNekBlkMatSharedPtr              &gmtVar,
+            Array<OneD, SNekBlkMatSharedPtr> &TraceJac,
+            Array<OneD, SNekBlkMatSharedPtr> &TraceJacDeriv,
+            Array<OneD, Array<OneD, NekSingle>> &TraceJacDerivSign,
+            TensorOfArray4D<NekSingle>          &TraceJacArray,
+            TensorOfArray4D<NekSingle>          &TraceJacDerivArray,
+            TensorOfArray5D<NekSingle>          &TraceIPSymJacArray,
+            TensorOfArray4D<NekSingle>          &StdMatDataDBB,
+            TensorOfArray5D<NekSingle>          &StdMatDataDBDB)
         {
             ASSERTL1(m_functors1[0], "DoNekSysResEval should be defined");
-            m_functors1[0](inarray, outarray, flag);
-        }
-
-        inline void DoPreconCfs(InArrayType &inarray, 
-            OutArrayType &outarray, const bool &flag = false) const
-        {
-            if (m_functors1[1])
-            {
-                m_functors1[1](inarray, outarray, flag);
-            }
-            else
-            {
-                Vmath::Vcopy(outarray.size(), inarray, 1, outarray, 1);
-            }
+            m_functors1[0](inarray, gmtxarray, gmtVar, TraceJac, TraceJacDeriv,
+                TraceJacDerivSign, TraceJacArray, TraceJacDerivArray,
+                TraceIPSymJacArray, StdMatDataDBB, StdMatDataDBDB);
         }
 
     protected:
@@ -191,6 +194,11 @@ namespace Nektar
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const LibUtilities::CommSharedPtr &vComm);
         virtual ~PreconCfsOp() {}
+
+        inline void SetOperators(const NekPreconCfsOperators &in)
+        {
+            m_operator = in;
+        }
         
     protected:
 

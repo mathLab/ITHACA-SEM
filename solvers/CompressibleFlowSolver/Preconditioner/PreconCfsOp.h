@@ -149,7 +149,7 @@ namespace Nektar
                 For nonlinear system A is the coefficient matrix in
                 each nonlinear iterations, for example A is the
                 Jacobian matrix for Newton method;
-            DoNekSysPrecond      :
+            DoNekSysPrecon      :
                 Preconditioning operator of the system.
             DoNekSysFixPointIte  :
                 Operator to calculate RHS of fixed point iterations

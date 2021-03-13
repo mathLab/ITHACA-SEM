@@ -82,8 +82,8 @@ protected:
     // if use truncted Gmres(m)
     int m_KrylovMaxHessMatBand;
 
-    bool m_NekLinSysLeftPrecond  = false;
-    bool m_NekLinSysRightPrecond = true;
+    bool m_NekLinSysLeftPrecon  = false;
+    bool m_NekLinSysRightPrecon = true;
 
     bool m_DifferenceFlag0 = false;
     bool m_DifferenceFlag1 = false;

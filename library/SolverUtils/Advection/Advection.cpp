@@ -416,11 +416,10 @@ void Advection::v_AdvectCoeffs(
 }
 
 void Advection::v_AddVolumJacToMat( 
-        const Array<OneD, MultiRegions::ExpListSharedPtr>     &pFields,
-        const int                                             &nConvectiveFields,
-        const Array<OneD, const Array<OneD,  Array<OneD,
-        Array<OneD,  Array<OneD,  NekDouble> > > > >          &ElmtJacArray,
-        Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >        &gmtxarray)
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const int &nConvectiveFields,
+        const TensorOfArray5D<NekDouble> &ElmtJacArray,
+        Array<OneD, Array<OneD, SNekBlkMatSharedPtr>> &gmtxarray)
     {
         boost::ignore_unused(pFields,nConvectiveFields,ElmtJacArray,gmtxarray);
         ASSERTL0(false,"v_AddVolumJacToMat NOT SPECIFIED");

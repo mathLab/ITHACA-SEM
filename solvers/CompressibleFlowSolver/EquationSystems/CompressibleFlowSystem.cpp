@@ -199,7 +199,7 @@ namespace Nektar
             NonlinSysEvaluatorCoeff1D, this);
         m_NekSysOp.DefineNekSysLhsEval(&CompressibleFlowSystem::
             MatrixMultiplyMatrixFreeCoeff, this);
-        m_NekSysOp.DefineNekSysPrecond(
+        m_NekSysOp.DefineNekSysPrecon(
                     &CompressibleFlowSystem::PreconCoeff, this);
         
         m_PreconCfs = GetPreconCfsOpFactory().CreateInstance(
@@ -1495,44 +1495,6 @@ namespace Nektar
         }
     }
 
-    // template<typename DataType, typename TypeNekBlkMatSharedPtr>
-    // void CompressibleFlowSystem::CalcPreconMatBRJCoeff(
-    //     const Array<OneD, const Array<OneD, NekDouble>>        &inarray,
-    //           Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr>> &gmtxarray,
-    //           TypeNekBlkMatSharedPtr                           &gmtVar,
-    //           Array<OneD, TypeNekBlkMatSharedPtr>              &TraceJac,
-    //           Array<OneD, TypeNekBlkMatSharedPtr>              &TraceJacDeriv,
-    //           Array<OneD,       Array<OneD, DataType>>         &TraceJacDerivSign,
-    //           TensorOfArray4D<DataType>                        &TraceJacArray,
-    //           TensorOfArray4D<DataType>                        &TraceJacDerivArray,
-    //           TensorOfArray5D<DataType>                        &TraceIPSymJacArray,
-    //           TensorOfArray4D<DataType>                        &StdMatDataDBB,
-    //           TensorOfArray5D<DataType>                        &StdMatDataDBDB)
-    // {
-    //     TensorOfArray3D<NekDouble> qfield;
-
-    //     if(m_ViscousJacFlag)
-    //     {
-    //         CalcPhysDeriv(inarray,qfield);
-    //     }
-
-    //     DataType zero =0.0;
-    //     Fill2DArrayOfBlkDiagonalMat(gmtxarray,zero);
-
-    //     AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray,StdMatDataDBB,
-    //         StdMatDataDBDB);
-
-    //     AddMatNSBlkDiag_boundary(inarray,qfield,gmtxarray,TraceJac,
-    //         TraceJacDeriv,TraceJacDerivSign,TraceIPSymJacArray);
-
-    //     MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda,zero);
-
-    //     ElmtVarInvMtrx(gmtxarray,gmtVar,zero);
-
-    //     TransTraceJacMatToArray(TraceJac,TraceJacDeriv,TraceJacArray, 
-    //         TraceJacDerivArray);
-    // }
-
     void CompressibleFlowSystem::CalcPreconMatBRJCoeff(
         const Array<OneD, const Array<OneD, NekDouble>>  &inarray,
         Array<OneD, Array<OneD, SNekBlkMatSharedPtr>>    &gmtxarray,
@@ -2050,9 +2012,7 @@ namespace Nektar
         // Internal energy (per unit mass)
         NekDouble eL =
                 (EL - 0.5 * (rhouL * vx + rhovL * vy + rhowL * vz)) / rhoL;
-        // TODO:
-        // ps = m_eos->GetPressure(rhoL, eL);
-        // gama = m_eos->GetGamma();
+
         ps      = m_varConv->Geteos()->GetPressure(rhoL, eL);
         gama    = m_gamma;
 

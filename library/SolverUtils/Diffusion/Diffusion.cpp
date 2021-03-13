@@ -221,14 +221,14 @@ namespace Nektar
         }
 
         // Diffusion Calculate the physical derivatives
-        void Diffusion::DiffuseCalculateDerivative(
+        void Diffusion::DiffuseCalcDerivative(
               const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
               const Array<OneD, Array<OneD, NekDouble>>         &inarray,
               TensorOfArray3D<NekDouble>                        &qfields,
               const Array<OneD, Array<OneD, NekDouble>>         &pFwd,
               const Array<OneD, Array<OneD, NekDouble>>         &pBwd)
         {
-            v_DiffuseCalculateDerivative(fields, inarray, qfields, pFwd, pBwd);
+            v_DiffuseCalcDerivative(fields, inarray, qfields, pFwd, pBwd);
         }
 
 
@@ -252,7 +252,7 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "v_ConsVarAveJump not defined");
         }
 
-        void Diffusion::v_DiffuseCalculateDerivative(
+        void Diffusion::v_DiffuseCalcDerivative(
                                                      const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                                                      const Array<OneD, Array<OneD, NekDouble>>         &inarray,
                                                      TensorOfArray3D<NekDouble>                       &qfields,

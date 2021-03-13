@@ -111,7 +111,7 @@ public:
                       std::placeholders::_3);
     }
     template <typename FuncPointerT, typename ObjectPointerT>
-    void DefineNekSysPrecond(FuncPointerT func, ObjectPointerT obj)
+    void DefineNekSysPrecon(FuncPointerT func, ObjectPointerT obj)
     {
         m_functors1[2] =
             std::bind(func, obj, std::placeholders::_1, std::placeholders::_2,
@@ -139,7 +139,7 @@ public:
         m_functors1[1](inarray, outarray, flag);
     }
 
-    inline void DoNekSysPrecond(InArrayType &inarray, OutArrayType &outarray,
+    inline void DoNekSysPrecon(InArrayType &inarray, OutArrayType &outarray,
                                 const bool &flag = false) const
     {
         if (m_functors1[2])
@@ -174,7 +174,7 @@ protected:
             For nonlinear system A is the coefficient matrix in
             each nonlinear iterations, for example A is the
             Jacobian matrix for Newton method;
-        DoNekSysPrecond      :
+        DoNekSysPrecon      :
             Preconditioning operator of the system.
         DoNekSysFixPointIte  :
             Operator to calculate RHS of fixed point iterations
@@ -204,8 +204,8 @@ public:
     NekDouble   m_LinSysRelativeTolInNonlin    = 1.0E-2;
     int         m_LinSysMaxStorage             = 100;
     int         m_KrylovMaxHessMatBand         = 100;
-    bool        m_NekLinSysLeftPrecond         = false;
-    bool        m_NekLinSysRightPrecond        = true;
+    bool        m_NekLinSysLeftPrecon         = false;
+    bool        m_NekLinSysRightPrecon        = true;
     bool        m_DifferenceFlag0              = false;
     bool        m_DifferenceFlag1              = false;
     bool        m_useProjection                = false;

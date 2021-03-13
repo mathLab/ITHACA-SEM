@@ -207,11 +207,10 @@ public:
         Array<OneD, DNekMatSharedPtr>                         & TraceJacBwd);
 
     SOLVER_UTILS_EXPORT void AddVolumJacToMat( 
-        const Array<OneD, MultiRegions::ExpListSharedPtr>                       &pFields,
-        const int                                                               &nConvectiveFields,
-        const Array<OneD, const Array<OneD,  Array<OneD, 
-            Array<OneD,  Array<OneD,  NekDouble> > > > >                        &ElmtJacArray,
-        Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >                          &gmtxarray)
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const int &nConvectiveFields,
+        const TensorOfArray5D<NekDouble> &ElmtJacArray,
+        Array<OneD, Array<OneD, SNekBlkMatSharedPtr>> &gmtxarray)
     {
         v_AddVolumJacToMat(pFields,nConvectiveFields,ElmtJacArray,gmtxarray);
     }
@@ -281,11 +280,10 @@ protected:
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
  
     SOLVER_UTILS_EXPORT virtual void v_AddVolumJacToMat( 
-        const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
-        const int                                           &nConvectiveFields,
-        const Array<OneD, const Array<OneD,  Array<OneD, 
-            Array<OneD,  Array<OneD,  NekDouble> > > > >    &ElmtJacArray,
-        Array<OneD, Array<OneD, SNekBlkMatSharedPtr> >      &gmtxarray);
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const int &nConvectiveFields,
+        const TensorOfArray5D<NekDouble> &ElmtJacArray,
+        Array<OneD, Array<OneD, SNekBlkMatSharedPtr>> &gmtxarray);
 
 };
 

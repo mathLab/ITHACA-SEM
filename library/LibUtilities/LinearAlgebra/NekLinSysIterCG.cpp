@@ -170,7 +170,7 @@ void NekLinSysIterCG::DoConjugateGradient(
         return;
     }
 
-    m_operator.DoNekSysPrecond(r_A, tmp = w_A + nDir);
+    m_operator.DoNekSysPrecon(r_A, tmp = w_A + nDir);
 
     m_operator.DoNekSysLhsEval(w_A, s_A);
 
@@ -217,7 +217,7 @@ void NekLinSysIterCG::DoConjugateGradient(
         Vmath::Svtvp(nNonDir, -alpha, &q_A[0], 1, &r_A[0], 1, &r_A[0], 1);
 
         // Apply preconditioner
-        m_operator.DoNekSysPrecond(r_A, tmp = w_A + nDir);
+        m_operator.DoNekSysPrecon(r_A, tmp = w_A + nDir);
 
         // Perform the method-specific matrix-vector multiply operation.
         m_operator.DoNekSysLhsEval(w_A, s_A);

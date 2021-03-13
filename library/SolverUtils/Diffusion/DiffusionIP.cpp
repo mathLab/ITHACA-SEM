@@ -232,7 +232,7 @@ void DiffusionIP::v_DiffuseCoeffs(
         }
     }
 
-    DiffuseCalculateDerivative(fields, inarray, qfield, vFwd, vBwd);
+    DiffuseCalcDerivative(fields, inarray, qfield, vFwd, vBwd);
     
     Array<OneD, int> nonZeroIndex;
     DiffuseVolumeFlux(fields, inarray, qfield, elmtFlux, nonZeroIndex);
@@ -355,7 +355,7 @@ void DiffusionIP::v_DiffuseCoeffs(
                                 elmtFlux, outarray, vFwd, vBwd);    
 }
 
-void DiffusionIP::v_DiffuseCalculateDerivative(
+void DiffusionIP::v_DiffuseCalcDerivative(
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     const Array<OneD, Array<OneD, NekDouble>> &inarray,
     TensorOfArray3D<NekDouble> &qfield,
@@ -418,18 +418,14 @@ void DiffusionIP::v_DiffuseTraceFlux(
     Array<OneD, int> &nonZeroIndex)
 {
     boost::ignore_unused(VolumeFlux);
-    size_t nDim      = fields[0]->GetCoordim(0);
-    size_t nPts      = fields[0]->GetTotPoints();
-    size_t nTracePts = fields[0]->GetTrace()->GetTotPoints();
+    size_t nConvectiveFields = fields.size();
 
     Array<OneD, Array<OneD, Array<OneD, NekDouble>>> traceflux3D(1);
     traceflux3D[0] = TraceFlux;
 
-    size_t nConvectiveFields = fields.size();
-
     LibUtilities::Timer timer;
     timer.Start();
-    CalTraceNumFlux(nConvectiveFields, nDim, nPts, nTracePts, m_IP2ndDervCoeff,
+    CalcTraceNumFlux(m_IP2ndDervCoeff,
                     fields, inarray, qfield, pFwd, pBwd, m_MuVarTrace,
                     nonZeroIndex, traceflux3D, m_traceAver, m_traceJump);
     timer.Stop();
@@ -521,11 +517,11 @@ void DiffusionIP::DiffuseTraceSymmFlux(
     boost::ignore_unused(inarray, qfield, VolumeFlux, pFwd, pBwd);
     size_t nDim = fields[0]->GetCoordim(0);
 
-    CalTraceSymFlux(nConvectiveFields, nDim, fields, m_traceAver, m_traceJump,
+    CalcTraceSymFlux(nConvectiveFields, nDim, fields, m_traceAver, m_traceJump,
                     nonZeroIndex, SymmFlux);
 }
 
-void DiffusionIP::CalTraceSymFlux(
+void DiffusionIP::CalcTraceSymFlux(
     const std::size_t nConvectiveFields, const size_t nDim,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     const Array<OneD, Array<OneD, NekDouble>> &solution_Aver,
@@ -675,7 +671,7 @@ void DiffusionIP::GetPenaltyFactor(
     }
 }
 
-void DiffusionIP::GetPenaltyFactor_const(
+void DiffusionIP::GetPenaltyFactorConst(
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     Array<OneD, NekDouble> &factor)
 {
@@ -734,9 +730,8 @@ void DiffusionIP::v_ConsVarAveJump(
     }
 }
 
-void DiffusionIP::CalTraceNumFlux(
-    const std::size_t nConvectiveFields, const size_t nDim, const size_t nPts,
-    const size_t nTracePts, const NekDouble PenaltyFactor2,
+void DiffusionIP::CalcTraceNumFlux(
+    const NekDouble PenaltyFactor2,
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     const Array<OneD, Array<OneD, NekDouble>> &inarray,
     const TensorOfArray3D<NekDouble> &qfield,
@@ -747,6 +742,11 @@ void DiffusionIP::CalTraceNumFlux(
     Array<OneD, Array<OneD, NekDouble>> &solution_Aver,
     Array<OneD, Array<OneD, NekDouble>> &solution_jump)
 {
+    size_t nDim      = fields[0]->GetCoordim(0);
+    size_t nPts      = fields[0]->GetTotPoints();
+    size_t nTracePts = fields[0]->GetTrace()->GetTotPoints();
+    size_t nConvectiveFields = fields.size();
+
     boost::ignore_unused(inarray);
     const MultiRegions::AssemblyMapDGSharedPtr TraceMap =
         fields[0]->GetTraceMap();

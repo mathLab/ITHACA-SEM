@@ -255,7 +255,7 @@ void DiffusionLDGNS::v_DiffuseCoeffs(
         }
     }
 
-    DiffuseCalculateDerivative(fields, inarray, derivativesO1, pFwd, pBwd);
+    DiffuseCalcDerivative(fields, inarray, derivativesO1, pFwd, pBwd);
 
     // Initialisation viscous tensor
     m_viscTensor = TensorOfArray3D<NekDouble> {m_spaceDim};
@@ -303,7 +303,7 @@ void DiffusionLDGNS::v_DiffuseCoeffs(
     }
 }
 
-void DiffusionLDGNS::v_DiffuseCalculateDerivative(
+void DiffusionLDGNS::v_DiffuseCalcDerivative(
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
     TensorOfArray3D<NekDouble>                        &qfields,

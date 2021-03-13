@@ -222,7 +222,7 @@ namespace Nektar
                     &pBwd = NullNekDoubleArrayofArray);
             
             // Diffusion Calculate the physical derivatives
-            SOLVER_UTILS_EXPORT void DiffuseCalculateDerivative(
+            SOLVER_UTILS_EXPORT void DiffuseCalcDerivative(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble>>         &inarray,
                 TensorOfArray3D<NekDouble>                        &qfields, 
@@ -518,7 +518,7 @@ namespace Nektar
                       Array<OneD,       Array<OneD, NekDouble> >    &jump);
 
             /// Diffusion Flux, calculate the physical derivatives
-            SOLVER_UTILS_EXPORT virtual void v_DiffuseCalculateDerivative(
+            SOLVER_UTILS_EXPORT virtual void v_DiffuseCalcDerivative(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 TensorOfArray3D<NekDouble>                        &qfields,

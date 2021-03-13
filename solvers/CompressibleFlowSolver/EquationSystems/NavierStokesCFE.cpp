@@ -2242,7 +2242,7 @@ namespace Nektar
                 }
             }
         }
-        m_diffusion->DiffuseCalculateDerivative(m_fields,inarray,qfield,
+        m_diffusion->DiffuseCalcDerivative(m_fields,inarray,qfield,
             pFwd,pBwd);
     }
 

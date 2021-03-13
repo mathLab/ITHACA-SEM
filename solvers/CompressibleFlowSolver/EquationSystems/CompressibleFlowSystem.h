@@ -316,20 +316,6 @@ namespace Nektar
             }
         }
 
-        // template<typename DataType, typename TypeNekBlkMatSharedPtr>
-        // void CalcPreconMatBRJCoeff(
-        //     const Array<OneD, const Array<OneD, NekDouble>>  &inarray,
-        //     Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr>> &gmtxarray,
-        //     TypeNekBlkMatSharedPtr              &gmtVar,
-        //     Array<OneD, TypeNekBlkMatSharedPtr> &TraceJac,
-        //     Array<OneD, TypeNekBlkMatSharedPtr> &TraceJacDeriv,
-        //     Array<OneD, Array<OneD, DataType>>  &TraceJacDerivSign,
-        //     TensorOfArray4D<DataType>           &TraceJacArray,
-        //     TensorOfArray4D<DataType>           &TraceJacDerivArray,
-        //     TensorOfArray5D<DataType>           &TraceIPSymJacArray,
-        //     TensorOfArray4D<DataType>           &StdMatDataDBB,
-        //     TensorOfArray5D<DataType>           &StdMatDataDBDB);
-
         void CalcPreconMatBRJCoeff(
             const Array<OneD, const Array<OneD, NekDouble>>  &inarray,
             Array<OneD, Array<OneD, SNekBlkMatSharedPtr>>    &gmtxarray,

@@ -55,7 +55,7 @@ namespace Nektar
         const LibUtilities::CommSharedPtr &vComm)
         : PreconCfsOp(pFields, pSession, vComm)
     {
-        pSession->LoadParameter("JFNKPreconStep",      
+        pSession->LoadParameter("PreconItsStep",      
             m_PreconItsStep, 7);
         pSession->LoadParameter("BRJRelaxParam",        
             m_BRJRelaxParam, 1.0);
@@ -195,25 +195,25 @@ namespace Nektar
         const NekDouble                                   time,
         const NekDouble                                   lambda)
     {
-        m_operator.DoCalcPreconMatBRJCoeff(intmp, m_PreconMatVarsSingle, 
-            m_PreconMatSingle, m_TraceJacSingle, m_TraceJacDerivSingle,
-            m_TraceJacDerivSignSingle, m_TraceJacArraySingle, 
-            m_TraceJacDerivArraySingle, m_TraceIPSymJacArraySingle,
-            m_StdSMatDataDBB,m_StdSMatDataDBDB);
+        if (0 < m_PreconItsStep)
+        {
+            m_operator.DoCalcPreconMatBRJCoeff(intmp, m_PreconMatVarsSingle, 
+                m_PreconMatSingle, m_TraceJacSingle, m_TraceJacDerivSingle,
+                m_TraceJacDerivSignSingle, m_TraceJacArraySingle, 
+                m_TraceJacDerivArraySingle, m_TraceIPSymJacArraySingle,
+                m_StdSMatDataDBB, m_StdSMatDataDBDB);
+
+            if (m_verbose && m_root)
+            {
+                cout << "     ## CalcuPreconMat " << endl;
+            }
+        }
 
         m_BndEvaluateTime = time;
         m_DtLambdaPreconMat = lambda;
 
-        m_CalcPreconMatNumbSteps += m_CalcPreconMatCounter;
-        m_CalcPreconMatNumbSteps  = m_CalcPreconMatNumbSteps/2;
-        m_CalcPreconMatCounter    = 1;
-
         m_CalcPreconMatFlag = false;
-
-        if (m_verbose&&m_root)
-        {
-            cout << "     ## CalcuPreconMat " << endl;
-        }
+        m_PreconTimesCounter = 1;
     }
 
     bool  PreconCfsBRJ::UpdatePreconMatCheck(
@@ -224,15 +224,16 @@ namespace Nektar
 
         bool flag = false;
 
-        if (0 < m_PreconItsStep)
+        if(m_CalcPreconMatFlag || (m_DtLambdaPreconMat != dtLambda))
         {
-            if(m_CalcPreconMatFlag || (m_DtLambdaPreconMat != dtLambda))
-            {
-                flag = true;
-                m_CalcPreconMatNumbSteps = m_CalcPreconMatCounter;
-                m_DtLambdaPreconMat = dtLambda;
-            }
+            flag = true;
         }
+
+        if (m_PreconMatFreezNumb < m_PreconTimesCounter)
+        {
+            flag = true;
+        }
+
         m_CalcPreconMatFlag = flag;
         return flag;
     }

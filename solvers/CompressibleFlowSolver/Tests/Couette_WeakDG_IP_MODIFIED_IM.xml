@@ -59,7 +59,7 @@
       <P> NekNonlinSysMaxIterations = 10                     </P>
       <P> NekLinSysMaxIterations    = 30                     </P>
       
-      <P> JFNKPreconStep       = 7                          </P>
+      <P> PreconItsStep       = 7                          </P>
 
       <P> SteadyStateTol    = 3.0E-7                     </P> 
     </PARAMETERS>

@@ -89,7 +89,7 @@ public:
             m_linsol->SolveSystem(m_matDim, m_SysRhs, pOutput, 0, 1.0E-9);
         boost::ignore_unused(ntmpIts);
         // The number of sigificant digits
-        int ndigits = 9;
+        int ndigits = 6;
         // Extra width to place -, E, and power
         int nothers = 10;
         // The second value determines the number of sigificant digits

@@ -188,12 +188,19 @@ protected:
         const Array<OneD, Array<OneD, NekDouble>> vel,
         StdRegions::VarCoeffMap &varCoeffMap);
 
+    SOLVER_UTILS_EXPORT virtual bool UpdateTimeStepCheck();
+
 private:
     void InitializeSteadyState();
 
     bool CheckSteadyState(int step);
     bool CheckSteadyState(int step, NekDouble totCPUTime);
 };
+
+    inline bool UnsteadySystem::UpdateTimeStepCheck()
+    {
+        return true;
+    }
 
 } // namespace SolverUtils
 } // namespace Nektar

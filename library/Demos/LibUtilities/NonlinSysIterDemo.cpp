@@ -79,7 +79,7 @@ public:
         int ntmpIts =
             m_nonlinsol->SolveSystem(m_matDim, pOutput, pOutput, 0, 1.0E-9);
 
-        int ndigits    = 9;
+        int ndigits    = 6;
         int nothers    = 10;
         int nwidthcolm = nothers + ndigits - 1;
         cout << "ntmpIts = " << ntmpIts << endl

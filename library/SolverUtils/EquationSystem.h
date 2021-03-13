@@ -362,6 +362,7 @@ namespace Nektar
             NekDouble                                   m_lambda;
             /// Time between checkpoints.
             NekDouble                                   m_checktime;
+            NekDouble                                   m_lastCheckTime;
 
             NekDouble                                   m_TimeIncrementFactor;
 

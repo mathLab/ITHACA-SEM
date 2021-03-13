@@ -56,7 +56,7 @@ namespace Nektar
 
         m_spacedim = pFields[0]->GetGraph()->GetSpaceDimension();
         pSession->LoadParameter("PreconMatFreezNumb",     
-            m_PreconMatFreezNumb    , 1);
+            m_PreconMatFreezNumb, 200);
     }
     void PreconCfs::v_InitObject()
     {
@@ -84,6 +84,7 @@ namespace Nektar
         ASSERTL0(pInput.size() == pOutput.size(), 
             "In and Out not the same size in DoNullPrecon");
         v_DoPreconCfs(pFields, pInput, pOutput, flag);
+        m_PreconTimesCounter ++;
     }
 
 

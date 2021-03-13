@@ -82,7 +82,7 @@ int NekNonlinSysNewton::v_SolveSystem(
 {
     boost::ignore_unused(factor);
 
-    int nwidthcolm = 12;
+    int nwidthcolm = 11;
 
     v_SetupNekNonlinSystem(nGlobal, pInput, pInput, nDir);
 

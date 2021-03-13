@@ -167,8 +167,6 @@ namespace Nektar
                     ->SetLocTracephysToTraceIDMap(
                     locTraceToTraceMap->GetLocTracephysToTraceIDMap());
             }
-
-            InitialiseNonlinSysSolver();
         }
 
         SetBoundaryConditionsBwdWeight();
@@ -476,9 +474,9 @@ namespace Nektar
 
             m_PreconCfs->BuildPreconCfs(m_fields, intmp, m_BndEvaluateTime,
                 m_TimeIntegLambda);
-
-            m_PreconCfs->DoPreconCfs(m_fields, inarray, outarray, flag);
         }
+
+        m_PreconCfs->DoPreconCfs(m_fields, inarray, outarray, flag);
     }
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
@@ -3212,4 +3210,22 @@ Array<OneD, NekDouble>  CompressibleFlowSystem::GetElmtMinHP(void)
     }
     return hOverP;
 }
+
+bool CompressibleFlowSystem::UpdateTimeStepCheck()
+{
+    bool flag = (m_time + m_timestep > m_fintime && m_fintime > 0.0) || 
+            (m_checktime && m_time + m_timestep - m_lastCheckTime >=
+                    m_checktime);
+    if (m_explicitAdvection)
+    {
+        flag = true;
+    }
+    else
+    {
+        flag = flag || m_PreconCfs->UpdatePreconMatCheck(NullNekDouble1DArray, 
+            m_TimeIntegLambda);
+    }
+    return flag;
+}
+
 }

@@ -250,11 +250,12 @@ namespace Nektar
             int       stepCounter       = 0;
             int       restartStep      = -1;
             NekDouble intTime           = 0.0;
-            NekDouble lastCheckTime     = 0.0;
             NekDouble cpuTime           = 0.0;
             NekDouble cpuPrevious       = 0.0;
             NekDouble elapsed           = 0.0;
             NekDouble totFilterTime     = 0.0;
+
+            m_lastCheckTime             = 0.0;
 
             m_TotNewtonIts  = 0;
             m_TotLinIts   = 0;
@@ -311,13 +312,10 @@ namespace Nektar
 
                 // Flag to update AV
                 m_CalcPhysicalAV = true;
-
-                // Frozen preconditioner checks
-                if ((m_time + m_timestep > m_fintime && m_fintime > 0.0)||
-                   (m_checktime && m_time + m_timestep - lastCheckTime >=
-                    m_checktime))
+// Frozen preconditioner checks
+                if (UpdateTimeStepCheck())
                 {
-                    m_cflSafetyFactor       =   tmp_cflSafetyFactor;
+                    m_cflSafetyFactor = tmp_cflSafetyFactor;
 
                     if (m_cflSafetyFactor)
                     {
@@ -331,10 +329,10 @@ namespace Nektar
                         m_timestep = m_fintime - m_time;
                     }
                     else if (m_checktime &&
-                             m_time + m_timestep - lastCheckTime >= m_checktime)
+                        m_time + m_timestep - m_lastCheckTime >= m_checktime)
                     {
-                        lastCheckTime += m_checktime;
-                        m_timestep     = lastCheckTime - m_time;
+                        m_lastCheckTime += m_checktime;
+                        m_timestep     = m_lastCheckTime - m_time;
                         doCheckTime    = true;
                     }
                 }

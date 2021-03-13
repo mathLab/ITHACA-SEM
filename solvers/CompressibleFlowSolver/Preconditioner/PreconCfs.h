@@ -85,8 +85,7 @@ namespace Nektar
         int                                 m_spacedim;
 
         int                                 m_PreconMatFreezNumb;
-        int                                 m_CalcPreconMatNumbSteps;
-        int                                 m_CalcPreconMatCounter;
+        int                                 m_PreconTimesCounter;
         
         NekDouble                           m_DtLambdaPreconMat = 0.0;
         NekDouble                           m_BndEvaluateTime;

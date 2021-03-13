@@ -57,15 +57,15 @@ IF(NEKTAR_USE_MESHGEN)
         ENDIF()
 
         EXTERNALPROJECT_ADD(
-            oce-0.17
+            oce-0.18.3
             PREFIX ${TPSRC}
-            URL ${TPURL}/OCE-0.17.2.tar.gz
-            URL_MD5 bf2226be4cd192606af677cf178088e5
+            URL ${TPURL}/OCE-0.18.3.tar.gz
+            URL_MD5 1686393c8493bbbb2f3f242330b33cba
             STAMP_DIR ${TPBUILD}/stamp
-            BINARY_DIR ${TPBUILD}/oce-0.17
+            BINARY_DIR ${TPBUILD}/oce-0.18.3
             DOWNLOAD_DIR ${TPSRC}
-            SOURCE_DIR ${TPSRC}/oce-0.17
-            INSTALL_DIR ${TPBUILD}/oce-0.17/dist
+            SOURCE_DIR ${TPSRC}/oce-0.18.3
+            INSTALL_DIR ${TPBUILD}/oce-0.18.3/dist
             CONFIGURE_COMMAND ${CMAKE_COMMAND}
                 -G ${CMAKE_GENERATOR}
                 -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
@@ -73,12 +73,12 @@ IF(NEKTAR_USE_MESHGEN)
                 -DOCE_INSTALL_PREFIX:PATH=${TPDIST}
                 -DOCE_TESTING=OFF
                 -DOCE_VISUALISATION=OFF
-                ${TPSRC}/oce-0.17
+                ${TPSRC}/oce-0.18.3
             )
 
         # Patch OS X libraries to fix install name problems.
         IF(APPLE)
-            EXTERNALPROJECT_ADD_STEP(oce-0.17 patch-install-path
+            EXTERNALPROJECT_ADD_STEP(oce-0.18.3 patch-install-path
                 COMMAND bash ${CMAKE_SOURCE_DIR}/cmake/scripts/patch-occ.sh ${TPDIST}/lib ${CMAKE_INSTALL_PREFIX}/${NEKTAR_LIB_DIR}
                 DEPENDEES install)
         ENDIF()
@@ -87,7 +87,7 @@ IF(NEKTAR_USE_MESHGEN)
         SET(OCC_INCLUDE_DIR ${TPDIST}/include/oce CACHE FILEPATH "OCC include" FORCE)
         MESSAGE(STATUS "Build OpenCascade community edition: ${TPDIST}/lib")
     ELSE()
-        ADD_CUSTOM_TARGET(oce-0.17 ALL)
+        ADD_CUSTOM_TARGET(oce-0.18.3 ALL)
     ENDIF()
 ENDIF()
 

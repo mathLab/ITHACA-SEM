@@ -76,6 +76,9 @@ v5.0.2
 **CI**
 - Add Debian Bullseye to CI system (!1181)
 
+**BuildSystem**
+- Updated third party zlib version to 1.2.9 to resolve OCE source build issue (!1227)
+
 v5.0.1
 ------
 **Library**

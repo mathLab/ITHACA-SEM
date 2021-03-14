@@ -39,42 +39,39 @@ using namespace std;
 
 namespace Nektar
 {
-    PreconCfsOpFactory& GetPreconCfsOpFactory()
-    {
-        static PreconCfsOpFactory instance;
-        return instance;
-    }
+PreconCfsOpFactory &GetPreconCfsOpFactory()
+{
+    static PreconCfsOpFactory instance;
+    return instance;
+}
 
-    PreconCfsOp::PreconCfsOp(
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-        const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm)
-        : PreconCfs(pFields, pSession, vComm)
-    {
-        
-    }
+PreconCfsOp::PreconCfsOp(
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+    const LibUtilities::SessionReaderSharedPtr &pSession,
+    const LibUtilities::CommSharedPtr &vComm)
+    : PreconCfs(pFields, pSession, vComm)
+{
+}
 
-    void PreconCfsOp::v_InitObject()
-    {
-        PreconCfs::v_InitObject();
-    }
+void PreconCfsOp::v_InitObject()
+{
+    PreconCfs::v_InitObject();
+}
 
-    void PreconCfsOp::v_DoPreconCfs(
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-        const Array<OneD, NekDouble> &pInput,
-        Array<OneD, NekDouble> &pOutput,
-        const bool &flag)
-    {
-        NEKERROR(ErrorUtil::efatal, "v_DoPreconCfs not defined");
-    }
+void PreconCfsOp::v_DoPreconCfs(
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+    const Array<OneD, NekDouble> &pInput, Array<OneD, NekDouble> &pOutput,
+    const bool &flag)
+{
+    NEKERROR(ErrorUtil::efatal, "v_DoPreconCfs not defined");
+}
 
-    void PreconCfsOp::v_BuildPreconCfs(
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-        const Array<OneD, const Array<OneD, NekDouble>>   &intmp,
-        const NekDouble                                   time,
-        const NekDouble                                   lambda)
-    {
-        NEKERROR(ErrorUtil::efatal, "v_BuildPreconCfs not defined");
-    }
+void PreconCfsOp::v_BuildPreconCfs(
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+    const Array<OneD, const Array<OneD, NekDouble>> &intmp,
+    const NekDouble time, const NekDouble lambda)
+{
+    NEKERROR(ErrorUtil::efatal, "v_BuildPreconCfs not defined");
+}
 
 } // namespace Nektar

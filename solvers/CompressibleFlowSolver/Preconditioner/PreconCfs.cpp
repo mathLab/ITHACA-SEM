@@ -39,80 +39,70 @@ using namespace std;
 
 namespace Nektar
 {
-    PreconCfs::PreconCfs(
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-        const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm)
+PreconCfs::PreconCfs(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                     const LibUtilities::SessionReaderSharedPtr &pSession,
+                     const LibUtilities::CommSharedPtr &vComm)
+{
+    m_Comm    = vComm;
+    m_verbose = false;
+    m_root    = false;
+
+    if (0 == m_Comm->GetRank())
     {
-        m_Comm      = vComm;
-        m_verbose   = false;
-        m_root      = false;
-
-        if (0 == m_Comm->GetRank())
-        {
-            m_root = true;
-        }
-        m_verbose = pSession->DefinesCmdLineArgument("verbose");
-
-        m_spacedim = pFields[0]->GetGraph()->GetSpaceDimension();
-        pSession->LoadParameter("PreconMatFreezNumb",     
-            m_PreconMatFreezNumb, 200);
+        m_root = true;
     }
-    void PreconCfs::v_InitObject()
-    {
+    m_verbose = pSession->DefinesCmdLineArgument("verbose");
 
-    }
+    m_spacedim = pFields[0]->GetGraph()->GetSpaceDimension();
+    pSession->LoadParameter("PreconMatFreezNumb", m_PreconMatFreezNumb, 200);
+}
+void PreconCfs::v_InitObject()
+{
+}
 
-    void PreconCfs::DoNullPrecon(
-            const Array<OneD, NekDouble> &pInput,
-            Array<OneD, NekDouble> &pOutput,
-            const bool &flag)
-    {
-        boost::ignore_unused(flag);
-        Vmath::Vcopy(pInput.size(), pInput, 1, pOutput, 1);
-    }
+void PreconCfs::DoNullPrecon(const Array<OneD, NekDouble> &pInput,
+                             Array<OneD, NekDouble> &pOutput, const bool &flag)
+{
+    boost::ignore_unused(flag);
+    Vmath::Vcopy(pInput.size(), pInput, 1, pOutput, 1);
+}
 
-    /**
-     *
-     */
-    void PreconCfs::DoPreconCfs(
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-        const Array<OneD, NekDouble> &pInput,
-        Array<OneD, NekDouble> &pOutput,
-        const bool &flag)
-    {
-        ASSERTL0(pInput.size() == pOutput.size(), 
-            "In and Out not the same size in DoNullPrecon");
-        v_DoPreconCfs(pFields, pInput, pOutput, flag);
-        m_PreconTimesCounter ++;
-    }
+/**
+ *
+ */
+void PreconCfs::DoPreconCfs(
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+    const Array<OneD, NekDouble> &pInput, Array<OneD, NekDouble> &pOutput,
+    const bool &flag)
+{
+    ASSERTL0(pInput.size() == pOutput.size(),
+             "In and Out not the same size in DoNullPrecon");
+    v_DoPreconCfs(pFields, pInput, pOutput, flag);
+    m_PreconTimesCounter++;
+}
 
+void PreconCfs::v_DoPreconCfs(
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+    const Array<OneD, NekDouble> &pInput, Array<OneD, NekDouble> &pOutput,
+    const bool &flag)
+{
+    boost::ignore_unused(pFields, pInput, pOutput, flag);
+    NEKERROR(ErrorUtil::efatal, "v_DoPreconCfs not defined");
+}
 
-    void PreconCfs::v_DoPreconCfs(
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-        const Array<OneD, NekDouble> &pInput,
-        Array<OneD, NekDouble> &pOutput,
-        const bool &flag)
-    {
-        boost::ignore_unused(pFields, pInput, pOutput, flag);
-        NEKERROR(ErrorUtil::efatal, "v_DoPreconCfs not defined");
-    }
+void PreconCfs::v_BuildPreconCfs(
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+    const Array<OneD, const Array<OneD, NekDouble>> &intmp,
+    const NekDouble time, const NekDouble lambda)
+{
+    boost::ignore_unused(pFields, intmp, time, lambda);
+    NEKERROR(ErrorUtil::efatal, "v_BuildPreconCfs not defined");
+}
 
-    void PreconCfs::v_BuildPreconCfs(
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-        const Array<OneD, const Array<OneD, NekDouble>>   &intmp,
-        const NekDouble                                   time,
-        const NekDouble                                   lambda)
-    {
-        boost::ignore_unused(pFields, intmp, time, lambda);
-        NEKERROR(ErrorUtil::efatal, "v_BuildPreconCfs not defined");
-    }
-
-    bool PreconCfs::UpdatePreconMatCheck(
-            const Array<OneD, const NekDouble>  &res,
-            const NekDouble                     dtLambda)
-    {
-        NEKERROR(ErrorUtil::efatal, "UpdatePreconMatCheck not defined");
-    }
+bool PreconCfs::UpdatePreconMatCheck(const Array<OneD, const NekDouble> &res,
+                                     const NekDouble dtLambda)
+{
+    NEKERROR(ErrorUtil::efatal, "UpdatePreconMatCheck not defined");
+}
 
 } // namespace Nektar

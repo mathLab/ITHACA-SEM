@@ -84,7 +84,7 @@ protected:
     int m_PreconMatFreezNumb;
     int m_PreconTimesCounter;
 
-    NekDouble m_DtLambdaPreconMat = 0.0;
+    NekDouble m_DtLambdaPreconMat = -1.0;
     NekDouble m_BndEvaluateTime;
 
     bool m_CalcPreconMatFlag = false;

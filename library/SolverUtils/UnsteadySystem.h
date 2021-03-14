@@ -128,6 +128,10 @@ protected:
     
     int m_TotLinItePerStep=0;
     int m_StagesPerStep=1;
+
+    // flag to control the update of preconditioning matrix
+    // Currently used to avoid PreconMat from updating in one time step 
+    bool                                m_FlagUpdatePreconMat;
     
     int m_maxLinItePerNewton;
     

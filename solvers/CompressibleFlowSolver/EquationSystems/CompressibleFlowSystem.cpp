@@ -459,7 +459,7 @@ namespace Nektar
             const bool                   &flag)
     {
         if (m_PreconCfs->UpdatePreconMatCheck(NullNekDouble1DArray, 
-            m_TimeIntegLambda))
+            m_TimeIntegLambda) && m_FlagUpdatePreconMat)
         {
             int nvariables = m_solutionPhys.size();
 
@@ -475,6 +475,8 @@ namespace Nektar
             m_PreconCfs->BuildPreconCfs(m_fields, intmp, m_BndEvaluateTime,
                 m_TimeIntegLambda);
         }
+
+        m_FlagUpdatePreconMat = false;
 
         m_PreconCfs->DoPreconCfs(m_fields, inarray, outarray, flag);
     }

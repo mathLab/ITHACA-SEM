@@ -269,7 +269,6 @@ namespace Nektar
             }
 
             NekDouble tmp_cflSafetyFactor = m_cflSafetyFactor;
-            bool flagFreezeCFL = false;
 
             m_timestepMax = m_timestep;
             while ((step   < m_steps ||
@@ -278,37 +277,13 @@ namespace Nektar
             {
                 restartStep++;
                 
-                if(m_CFLEnd>tmp_cflSafetyFactor + NekConstants::kNekZeroTol)
+                if(m_CFLGrowth > 1.0&&m_cflSafetyFactor<m_CFLEnd)
                 {
-                    if( m_steadyStateTol > 0.0 &&
-                        (NekDouble(m_TotLinItePerStep)/NekDouble(m_StagesPerStep)>0.5*NekDouble(m_maxLinItePerNewton)))
-                    {
-                        tmp_cflSafetyFactor = 0.9*tmp_cflSafetyFactor;
-                        flagFreezeCFL = true;
-                        WARNINGL1(false," tmp_cflSafetyFactor *= 0.9; ");
-                    }
-                    else if(flagFreezeCFL)
-                    {
-                        flagFreezeCFL = false;
-                    }
-                    else
-                    {
-                        if (m_steadyStateTol > 0.0 && (!((step+1)%m_steadyStateSteps)) )
-                        {
-                            if(restartStep>1)
-                            {
-                                tmp_cflSafetyFactor = min(m_CFLEnd,std::pow(m_steadyStateRes0/m_steadyStateRes,0.7)*tmp_cflSafetyFactor);
-                            }
-                        }
-                        else
-                        {
-                            if(m_CFLGrowth > 1.0&&m_cflSafetyFactor<m_CFLEnd)
-                            {
-                                tmp_cflSafetyFactor = min(m_CFLEnd,m_CFLGrowth*tmp_cflSafetyFactor);
-                            }
-                        }
-                    }
+                    tmp_cflSafetyFactor = 
+                        min(m_CFLEnd,m_CFLGrowth*tmp_cflSafetyFactor);
                 }
+
+                m_FlagUpdatePreconMat = true;
 
                 // Flag to update AV
                 m_CalcPhysicalAV = true;

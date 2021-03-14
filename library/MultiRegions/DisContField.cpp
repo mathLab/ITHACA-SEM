@@ -164,11 +164,9 @@ namespace Nektar
                 return;
             }
 
-
             // Set up matrix map
             m_globalBndMat = MemoryManager<GlobalLinSysMap>::
                 AllocateSharedPtr();
-
 
             // Set up trace space
             m_trace = MemoryManager<ExpList>::AllocateSharedPtr

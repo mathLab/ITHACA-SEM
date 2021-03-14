@@ -152,21 +152,8 @@ namespace Nektar
                                    DoOdeProjection, this);
             m_ode.DefineImplicitSolve(&CompressibleFlowSystem::
                                       DoImplicitSolve, this);
+
             InitialiseNonlinSysSolver();
-
-            int nvariables  =   m_fields.size();
-            Array<OneD, Array<OneD, Array<OneD, int > > >   map;
-            const MultiRegions::LocTraceToTraceMapSharedPtr locTraceToTraceMap =
-                m_fields[0]->GetLocTraceToTraceMap();
-
-            locTraceToTraceMap->CalcLocTracePhysToTraceIDMap(
-                m_fields[0]->GetTrace(),m_spacedim);
-            for(int i=1;i<nvariables;i++)
-            {
-                m_fields[i]->GetLocTraceToTraceMap()
-                    ->SetLocTracephysToTraceIDMap(
-                    locTraceToTraceMap->GetLocTracephysToTraceIDMap());
-            }
         }
 
         SetBoundaryConditionsBwdWeight();
@@ -201,6 +188,19 @@ namespace Nektar
             MatrixMultiplyMatrixFreeCoeff, this);
         m_NekSysOp.DefineNekSysPrecon(
                     &CompressibleFlowSystem::PreconCoeff, this);
+
+        int nvariables  =   m_fields.size();
+        const MultiRegions::LocTraceToTraceMapSharedPtr locTraceToTraceMap =
+            m_fields[0]->GetLocTraceToTraceMap();
+
+        locTraceToTraceMap->CalcLocTracePhysToTraceIDMap(
+            m_fields[0]->GetTrace(),m_spacedim);
+        for (int i = 1; i < nvariables; i++)
+        {
+            m_fields[i]->GetLocTraceToTraceMap()
+                ->SetLocTracephysToTraceIDMap(
+                locTraceToTraceMap->GetLocTracephysToTraceIDMap());
+        }
         
         m_PreconCfs = GetPreconCfsOpFactory().CreateInstance(
             "PreconCfsBRJ", m_fields, m_session, m_comm);

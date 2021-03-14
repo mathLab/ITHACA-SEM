@@ -56,6 +56,8 @@ NekSys::NekSys(const LibUtilities::SessionReaderSharedPtr &pSession,
     m_root      = false;
     m_Comm      = vComm;
 
+    m_FlagWarnings = true;
+
     if (0 == m_Comm->GetRank())
     {
         m_root = true;

@@ -5464,6 +5464,11 @@ namespace Nektar
             Array<OneD, NekDouble>  TraceFwdPhy(nTracePntsTtl);
             Array<OneD, NekDouble>  TraceBwdPhy(nTracePntsTtl);
             Array<OneD, Array<OneD, NekDouble> > tmplocTrace(2);
+            for (int k = 0; k < 2; ++k)
+            {
+                tmplocTrace[k] = NullNekDouble1DArray;
+            }
+
             for (int k = 0; k < nFwdBwdNonZero; ++k)
             {
                 size_t i = nlocTracePtsNonZeroIndex[k];

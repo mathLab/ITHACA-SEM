@@ -141,6 +141,7 @@ NekNonlinSys::NekNonlinSys(const LibUtilities::SessionReaderSharedPtr &pSession,
                  
     m_linsol = LibUtilities::GetNekLinSysIterFactory().CreateInstance(
         m_LinSysIterSolverType, pSession, m_Comm, m_SysDimen, pKey);
+    m_linsol->SetFlagWarnings(false);
 }
 
 void NekNonlinSys::v_InitObject()

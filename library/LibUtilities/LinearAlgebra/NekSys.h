@@ -271,6 +271,11 @@ public:
         const Array<OneD, const NekDouble> &pInput,
         Array<OneD, NekDouble> &pguess);
 
+    LIB_UTILITIES_EXPORT void SetFlagWarnings( bool in)
+    {
+        m_FlagWarnings = in;
+    }
+
 protected:
     /// Maximum iterations
     int m_maxiter;
@@ -284,6 +289,7 @@ protected:
     bool m_root;
     /// Verbose
     bool m_verbose;
+    bool m_FlagWarnings;
     /// Operators
     NekSysOperators m_operator;
     /// The dimension of the system

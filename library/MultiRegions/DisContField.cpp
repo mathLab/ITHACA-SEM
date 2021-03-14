@@ -4350,23 +4350,40 @@ namespace Nektar
                 Array<OneD,       NekDouble>        &locTraceFwd,
                 Array<OneD,       NekDouble>        &locTraceBwd)
         {
-            switch(m_expType)
+            if (NullNekDouble1DArray != locTraceBwd)
             {
-            case e2D:
-                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(1, Bwd, 
-                    locTraceBwd);
-                m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(0, Fwd, 
-                    locTraceFwd);
-                break;
-            case e3D:
-                m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(1, Bwd, 
-                    locTraceBwd);
-                m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(0, Fwd, 
-                    locTraceFwd);
-                break;
-            default:
-                NEKERROR(ErrorUtil::efatal, 
-                    "GetLocTraceFromTracePts not defined");
+                switch(m_expType)
+                {
+                case e2D:
+                    m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(
+                        1, Bwd, locTraceBwd);
+                    break;
+                case e3D:
+                    m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(
+                        1, Bwd, locTraceBwd);
+                    break;
+                default:
+                    NEKERROR(ErrorUtil::efatal, 
+                        "GetLocTraceFromTracePts not defined");
+                }
+            }
+
+            if (NullNekDouble1DArray != locTraceFwd)
+            {
+                switch(m_expType)
+                {
+                case e2D:
+                    m_locTraceToTraceMap->RightIPTWLocEdgesToTraceInterpMat(
+                        0, Fwd, locTraceFwd);
+                    break;
+                case e3D:
+                    m_locTraceToTraceMap->RightIPTWLocFacesToTraceInterpMat(
+                        0, Fwd, locTraceFwd);
+                    break;
+                default:
+                    NEKERROR(ErrorUtil::efatal, 
+                        "GetLocTraceFromTracePts not defined");
+                }
             }
         }
 

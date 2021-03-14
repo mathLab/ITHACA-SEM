@@ -895,8 +895,8 @@ namespace Nektar
      * @brief Calculate and return the ArtificialViscosity for shock-capturing.
      */
     void NavierStokesCFE::GetArtificialViscosity(
-        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
-              Array<OneD, NekDouble>                    &muav)
+        const Array<OneD, Array<OneD, NekDouble>> &inarray,
+        Array<OneD, NekDouble>                    &muav)
     {
         m_artificialDiffusion->GetArtificialViscosity(inarray, muav);
     }
@@ -905,12 +905,12 @@ namespace Nektar
      * @brief Calculate and return the Symmetric flux in IP method.
      */
     void NavierStokesCFE::GetViscousSymmtrFluxConservVar(
-        const int                                       nDim,
-        const Array<OneD, const Array<OneD, NekDouble>> &inaverg,
-        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
-              TensorOfArray3D<NekDouble>                &outarray,
-              Array<OneD, int>                          &nonZeroIndex,
-        const Array<OneD, const Array<OneD, NekDouble>> &normal)
+        const int                                           nDim,
+        const Array<OneD, Array<OneD, NekDouble> >          &inaverg,
+        const Array<OneD, Array<OneD, NekDouble > >         &inarray,
+        TensorOfArray3D<NekDouble>                          &outarray,
+        Array< OneD, int >                                  &nonZeroIndex,
+        const Array<OneD, Array<OneD, NekDouble> >          &normal)
     {
         size_t nConvectiveFields   = inarray.size();
         size_t nPts                = inaverg[nConvectiveFields - 1].size();
@@ -935,7 +935,7 @@ namespace Nektar
                         inAvgTmp[f] = inaverg[f][p];
                         inTmp[f] = inarray[f][p];
                     }
-
+                    
                     // get temp
                     NekDouble temperature = m_varConv->GetTemperature(inTmp.data());
                     // get viscosity

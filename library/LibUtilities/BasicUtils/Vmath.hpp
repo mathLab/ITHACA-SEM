@@ -89,11 +89,11 @@ namespace Vmath
     /// \brief Subtract vector z = x-y
     template<class T>  LIB_UTILITIES_EXPORT void Vsub( int n, const T *x, const int incx, const T *y,
                                   const int incy,  T *z, const int incz);
-
+    
     /// \brief Add vector y = alpha - x
     template<class T>  LIB_UTILITIES_EXPORT void Ssub( int n, const T alpha, 
         const T *x, const int incx, T *y, const int incy);
-    
+
     /// \brief Zero vector
     template<class T>  LIB_UTILITIES_EXPORT void Zero(int n, T *x, const int incx);
 
@@ -209,8 +209,11 @@ namespace Vmath
 
     /// \brief Gather vector z[i] = x[y[i]]
     template<class T, class I, typename = typename std::enable_if
-             <std::is_floating_point<T>::value &&
-              std::is_integral<I>::value>::type>
+        <
+            std::is_floating_point<T>::value &&
+            std::is_integral<I>::value
+        >::type
+    >
     void Gathr(I n, const T *x, const I *y, T *z)
     {
         while (n--)

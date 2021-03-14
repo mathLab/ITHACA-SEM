@@ -418,10 +418,11 @@ void DiffusionIP::v_DiffuseTraceFlux(
     Array<OneD, int> &nonZeroIndex)
 {
     boost::ignore_unused(VolumeFlux);
-    size_t nConvectiveFields = fields.size();
 
     Array<OneD, Array<OneD, Array<OneD, NekDouble>>> traceflux3D(1);
     traceflux3D[0] = TraceFlux;
+
+    size_t nConvectiveFields = fields.size();
 
     LibUtilities::Timer timer;
     timer.Start();

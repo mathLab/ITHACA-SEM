@@ -2853,12 +2853,12 @@ namespace Nektar
          * \return Updates a NekDouble array \a Fwd and \a Bwd
          */
         void DisContField::v_GetFwdBwdTracePhys
-        (const Array<OneD, const NekDouble> &field,
-         Array<OneD, NekDouble> &Fwd,
-         Array<OneD, NekDouble> &Bwd,
-         bool FillBnd,   // these should be template params so that compiler can remove them
-         bool PutFwdInBwdOnBCs,
-         bool DoExchange)
+           (const Array<OneD, const NekDouble> &field,
+            Array<OneD, NekDouble> &Fwd,
+            Array<OneD, NekDouble> &Bwd,
+            bool FillBnd,           // these should be template params so that compiler can remove them
+            bool PutFwdInBwdOnBCs,
+            bool DoExchange)
         {
             // Is this zeroing necessary?
             // Zero forward/backward vectors.
@@ -2898,7 +2898,7 @@ namespace Nektar
                     for(int e = 0; e < exp->GetNtraces(); ++e, ++cnt)
                     {
                         auto offset = m_trace->GetPhys_Offset(
-                                                              elmtToTrace[n][e]->GetElmtId());
+                            elmtToTrace[n][e]->GetElmtId());
 
                         e_tmp = (m_leftAdjacentTraces[cnt])? Fwd + offset:
                             Bwd + offset;
@@ -2913,7 +2913,7 @@ namespace Nektar
 
             if (FillBnd)
             {
-                v_FillBwdWithBoundCond(Fwd, Bwd, PutFwdInBwdOnBCs);
+                    v_FillBwdWithBoundCond(Fwd, Bwd, PutFwdInBwdOnBCs);
             }
 
             if(DoExchange)
@@ -2929,14 +2929,13 @@ namespace Nektar
                                                   bool PutFwdInBwdOnBCs)
         {
             // Fill boundary conditions into missing elements
-
-            if(PutFwdInBwdOnBCs) // just set Bwd value to be Fwd value on BCs
+            if (PutFwdInBwdOnBCs) // just set Bwd value to be Fwd value on BCs
             {
                 // Fill boundary conditions into missing elements
                 for (int n = 0, cnt = 0; n < m_bndCondExpansions.size(); ++n)
                 {
-                    if (m_bndConditions[n]->GetBoundaryConditionType() !=
-                        SpatialDomains::ePeriodic)
+                    if (m_bndConditions[n]->GetBoundaryConditionType() ==
+                        SpatialDomains::eDirichlet)
                     {
                         auto ne = m_bndCondExpansions[n]->GetExpSize();
                         for (int e = 0; e < ne; ++e)
@@ -2944,10 +2943,34 @@ namespace Nektar
                             auto npts = m_bndCondExpansions[n]->
                                 GetExp(e)->GetTotPoints();
                             auto id2 = m_trace->GetPhys_Offset(m_traceMap->
-                                           GetBndCondIDToGlobalTraceID(cnt+e));
+                                        GetBndCondIDToGlobalTraceID(cnt+e));
+                            Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
+                        }
+
+                        cnt += ne;
+                    }
+                    else if (m_bndConditions[n]->GetBoundaryConditionType() ==
+                                SpatialDomains::eNeumann ||
+                                m_bndConditions[n]->GetBoundaryConditionType() ==
+                                SpatialDomains::eRobin)
+                    {
+                        auto ne = m_bndCondExpansions[n]->GetExpSize();
+                        for (int e = 0; e < ne; ++e)
+                        {
+                            auto npts = m_bndCondExpansions[n]->
+                                GetExp(e)->GetTotPoints();
+                            auto id2 = m_trace->GetPhys_Offset(m_traceMap->
+                                        GetBndCondIDToGlobalTraceID(cnt+e));
                             Vmath::Vcopy(npts, &Fwd[id2], 1, &Bwd[id2], 1);
                         }
                         cnt += ne;
+                    }
+                    else if (m_bndConditions[n]->GetBoundaryConditionType() !=
+                                SpatialDomains::ePeriodic)
+                    {
+                        ASSERTL0(false,
+                                    "Method not set up for this "
+                                    "boundary condition.");
                     }
                 }
             }

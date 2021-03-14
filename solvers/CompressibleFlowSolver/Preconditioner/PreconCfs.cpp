@@ -103,6 +103,7 @@ bool PreconCfs::UpdatePreconMatCheck(const Array<OneD, const NekDouble> &res,
                                      const NekDouble dtLambda)
 {
     NEKERROR(ErrorUtil::efatal, "UpdatePreconMatCheck not defined");
+    return false;
 }
 
 } // namespace Nektar

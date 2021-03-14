@@ -753,8 +753,8 @@ namespace Vmath
     /************ Misc routine from Veclib (and extras)  ************/
 
     /// \brief Gather vector z[i] = sign[i]*x[y[i]]
-    template<class T>  void Gathr(int n, const T *sign, const T *x,
-                                  const int *y,T *z)
+    template<class T>  void Gathr(int n, const T *sign, const T *x, const int *y,
+                  T *z)
     {
         while (n--)
         {
@@ -763,14 +763,10 @@ namespace Vmath
         return;
     }
 
-    template LIB_UTILITIES_EXPORT  void Gathr(int n, 
-        const Nektar::NekSingle *sign, const Nektar::NekSingle *x, const int *y,
-        Nektar::NekSingle *z);
-    template LIB_UTILITIES_EXPORT  void Gathr(int n,
-                                              const Nektar::NekDouble *sign,
-                                              const Nektar::NekDouble *x,
-                                              const int *y,
-                                              Nektar::NekDouble *z);
+    template LIB_UTILITIES_EXPORT  void Gathr(int n, const Nektar::NekDouble *sign, const Nektar::NekDouble *x, const int *y,
+              Nektar::NekDouble *z);
+    template LIB_UTILITIES_EXPORT  void Gathr(int n, const Nektar::NekSingle *sign, const Nektar::NekSingle *x, const int *y,
+              Nektar::NekSingle *z);
 
     /// \brief Scatter vector z[y[i]] = x[i]
     template<class T>  void Scatr(int n, const T *x, const int *y,

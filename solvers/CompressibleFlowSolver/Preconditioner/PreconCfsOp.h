@@ -57,7 +57,6 @@ public:
         Array<OneD, Array<OneD, SNekBlkMatSharedPtr>> &, SNekBlkMatSharedPtr &,
         Array<OneD, SNekBlkMatSharedPtr> &, Array<OneD, SNekBlkMatSharedPtr> &,
         Array<OneD, Array<OneD, NekSingle>> &, TensorOfArray4D<NekSingle> &,
-        TensorOfArray4D<NekSingle> &, TensorOfArray5D<NekSingle> &,
         TensorOfArray4D<NekSingle> &, TensorOfArray5D<NekSingle> &)>
         FunctorType1;
 
@@ -106,8 +105,7 @@ public:
             func, obj, std::placeholders::_1, std::placeholders::_2,
             std::placeholders::_3, std::placeholders::_4, std::placeholders::_5,
             std::placeholders::_6, std::placeholders::_7, std::placeholders::_8,
-            std::placeholders::_9, std::placeholders::_10,
-            std::placeholders::_11);
+            std::placeholders::_9);
     }
 
     inline void DoCalcPreconMatBRJCoeff(
@@ -118,14 +116,12 @@ public:
         Array<OneD, Array<OneD, NekSingle>> &TraceJacDerivSign,
         TensorOfArray4D<NekSingle> &TraceJacArray,
         TensorOfArray4D<NekSingle> &TraceJacDerivArray,
-        TensorOfArray5D<NekSingle> &TraceIPSymJacArray,
-        TensorOfArray4D<NekSingle> &StdMatDataDBB,
-        TensorOfArray5D<NekSingle> &StdMatDataDBDB)
+        TensorOfArray5D<NekSingle> &TraceIPSymJacArray)
     {
         ASSERTL1(m_functors1[0], "DoNekSysResEval should be defined");
         m_functors1[0](inarray, gmtxarray, gmtVar, TraceJac, TraceJacDeriv,
                        TraceJacDerivSign, TraceJacArray, TraceJacDerivArray,
-                       TraceIPSymJacArray, StdMatDataDBB, StdMatDataDBDB);
+                       TraceIPSymJacArray);
     }
 
 protected:

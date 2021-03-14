@@ -74,29 +74,14 @@ protected:
     int m_PreconItsStep;
     int m_BRJRelaxParam;
 
-    Array<OneD, Array<OneD, DNekBlkMatSharedPtr>> m_PreconMatVars;
     Array<OneD, Array<OneD, SNekBlkMatSharedPtr>> m_PreconMatVarsSingle;
-
-    Array<OneD, Array<OneD, NekDouble>> m_PreconMatVarsOffDiag;
-    DNekBlkMatSharedPtr m_PreconMat;
     SNekBlkMatSharedPtr m_PreconMatSingle;
-    Array<OneD, DNekBlkMatSharedPtr> m_TraceJac;
-    TensorOfArray4D<NekDouble> m_TraceJacArray;
-    Array<OneD, DNekBlkMatSharedPtr> m_TraceJacDeriv;
-    TensorOfArray4D<NekDouble> m_TraceJacDerivArray;
-    Array<OneD, Array<OneD, NekDouble>> m_TraceJacDerivSign;
     Array<OneD, SNekBlkMatSharedPtr> m_TraceJacSingle;
     TensorOfArray4D<NekSingle> m_TraceJacArraySingle;
     Array<OneD, SNekBlkMatSharedPtr> m_TraceJacDerivSingle;
     TensorOfArray4D<NekSingle> m_TraceJacDerivArraySingle;
     Array<OneD, Array<OneD, NekSingle>> m_TraceJacDerivSignSingle;
     TensorOfArray5D<NekSingle> m_TraceIPSymJacArraySingle;
-    TensorOfArray5D<NekDouble> m_TraceIPSymJacArray;
-
-    TensorOfArray4D<NekDouble> m_StdDMatDataDBB;
-    TensorOfArray5D<NekDouble> m_StdDMatDataDBDB;
-    TensorOfArray4D<NekSingle> m_StdSMatDataDBB;
-    TensorOfArray5D<NekSingle> m_StdSMatDataDBDB;
 
     PrecType m_PreconMatStorage;
 

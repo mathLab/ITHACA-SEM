@@ -184,6 +184,9 @@ namespace Nektar
         NekDouble                           m_JacobiFreeEps;
         NekDouble                           m_NewtonAbsoluteIteTol;
 
+        TensorOfArray4D<NekSingle> m_StdSMatDataDBB;
+        TensorOfArray5D<NekSingle> m_StdSMatDataDBDB;
+
         LibUtilities::NekNonlinSysSharedPtr         m_nonlinsol;
         LibUtilities::NekSysOperators               m_NekSysOp;
 
@@ -218,7 +221,7 @@ namespace Nektar
             const bool                   &flag);
 
         template<typename DataType, typename TypeNekBlkMatSharedPtr>
-        void AddMatNSBlkDiag_volume(
+        void AddMatNSBlkDiagVol(
             const Array<OneD, const Array<OneD, NekDouble>>         &inarray,
             const Array<OneD, const TensorOfArray2D<NekDouble>>     &qfield,
                   Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr>>  &gmtxarray,
@@ -231,7 +234,7 @@ namespace Nektar
             TensorOfArray5D<DataType>   &StdMatDataDBDB);
 
         template<typename DataType, typename TypeNekBlkMatSharedPtr>
-        void AddMatNSBlkDiag_boundary(
+        void AddMatNSBlkDiagBnd(
             const Array<OneD, const Array<OneD, NekDouble>> &inarray,
                   TensorOfArray3D<NekDouble>                &qfield,
                   TensorOfArray2D<TypeNekBlkMatSharedPtr>   &gmtxarray,
@@ -256,7 +259,7 @@ namespace Nektar
                   TensorOfArray5D<DataType>                 &TraceIPSymJacArray);
        
         template<typename DataType, typename TypeNekBlkMatSharedPtr>
-        void NumCalRiemFluxJac(
+        void NumCalcRiemFluxJac(
             const int                                           nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
             const Array<OneD, const Array<OneD, NekDouble>>     &AdvVel,
@@ -269,7 +272,7 @@ namespace Nektar
                   TypeNekBlkMatSharedPtr                        &BJac,
                   TensorOfArray5D<DataType>                     &TraceIPSymJacArray);
 
-        void PointFluxJacobian_pn(
+        void PointFluxJacobianPoint(
             const Array<OneD, NekDouble> &Fwd,
             const Array<OneD, NekDouble> &normals,
                   DNekMatSharedPtr       &FJac,
@@ -325,9 +328,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekSingle>> &TraceJacDerivSign,
             TensorOfArray4D<NekSingle>          &TraceJacArray,
             TensorOfArray4D<NekSingle>          &TraceJacDerivArray,
-            TensorOfArray5D<NekSingle>          &TraceIPSymJacArray,
-            TensorOfArray4D<NekSingle>          &StdMatDataDBB,
-            TensorOfArray5D<NekSingle>          &StdMatDataDBDB);
+            TensorOfArray5D<NekSingle>          &TraceIPSymJacArray);
 
         void MatrixMultiplyMatrixFreeCoeffCentral(
             const Array<OneD, NekDouble> &inarray,

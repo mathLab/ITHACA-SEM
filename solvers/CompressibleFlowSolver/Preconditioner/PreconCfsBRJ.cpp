@@ -193,7 +193,7 @@ void PreconCfsBRJ::v_BuildPreconCfs(
             intmp, m_PreconMatVarsSingle, m_PreconMatSingle, m_TraceJacSingle,
             m_TraceJacDerivSingle, m_TraceJacDerivSignSingle,
             m_TraceJacArraySingle, m_TraceJacDerivArraySingle,
-            m_TraceIPSymJacArraySingle, m_StdSMatDataDBB, m_StdSMatDataDBDB);
+            m_TraceIPSymJacArraySingle);
 
         if (m_verbose && m_root)
         {

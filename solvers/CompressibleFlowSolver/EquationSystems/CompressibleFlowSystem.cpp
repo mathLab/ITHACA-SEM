@@ -574,7 +574,7 @@ namespace Nektar
     }
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
-    void CompressibleFlowSystem::AddMatNSBlkDiag_volume(
+    void CompressibleFlowSystem::AddMatNSBlkDiagVol(
         const Array<OneD, const Array<OneD, NekDouble>>         &inarray,
         const Array<OneD, const TensorOfArray2D<NekDouble>>     &qfield,
               Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr>>  &gmtxarray,
@@ -1041,7 +1041,7 @@ namespace Nektar
 
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
-    void CompressibleFlowSystem::AddMatNSBlkDiag_boundary(
+    void CompressibleFlowSystem::AddMatNSBlkDiagBnd(
         const Array<OneD, const Array<OneD, NekDouble>> &inarray,
               TensorOfArray3D<NekDouble>                &qfield,
               TensorOfArray2D<TypeNekBlkMatSharedPtr>   &gmtxarray,
@@ -1112,7 +1112,7 @@ namespace Nektar
 
         Array<OneD, Array<OneD, NekDouble>> AdvVel(m_spacedim);
 
-        NumCalRiemFluxJac(nvariables, m_fields, AdvVel, inarray,qfield,
+        NumCalcRiemFluxJac(nvariables, m_fields, AdvVel, inarray,qfield,
             m_BndEvaluateTime, Fwd, Bwd, FJac, BJac,TraceIPSymJacArray);
 
         TraceJac[0] = FJac;
@@ -1211,7 +1211,7 @@ namespace Nektar
     }
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
-    void CompressibleFlowSystem::NumCalRiemFluxJac(
+    void CompressibleFlowSystem::NumCalcRiemFluxJac(
         const int                                         nConvectiveFields,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
         const Array<OneD, const Array<OneD, NekDouble>>   &AdvVel,
@@ -1504,9 +1504,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekSingle>> &TraceJacDerivSign,
         TensorOfArray4D<NekSingle>          &TraceJacArray,
         TensorOfArray4D<NekSingle>          &TraceJacDerivArray,
-        TensorOfArray5D<NekSingle>          &TraceIPSymJacArray,
-        TensorOfArray4D<NekSingle>          &StdMatDataDBB,
-        TensorOfArray5D<NekSingle>          &StdMatDataDBDB)
+        TensorOfArray5D<NekSingle>          &TraceIPSymJacArray)
     {
         TensorOfArray3D<NekDouble> qfield;
 
@@ -1518,10 +1516,10 @@ namespace Nektar
         NekSingle zero =0.0;
         Fill2DArrayOfBlkDiagonalMat(gmtxarray,zero);
 
-        AddMatNSBlkDiag_volume(inarray,qfield,gmtxarray,StdMatDataDBB,
-            StdMatDataDBDB);
+        AddMatNSBlkDiagVol(inarray,qfield,gmtxarray,m_StdSMatDataDBB,
+            m_StdSMatDataDBDB);
 
-        AddMatNSBlkDiag_boundary(inarray,qfield,gmtxarray,TraceJac,
+        AddMatNSBlkDiagBnd(inarray,qfield,gmtxarray,TraceJac,
             TraceJacDeriv,TraceJacDerivSign,TraceIPSymJacArray);
 
         MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda,zero);
@@ -1930,7 +1928,7 @@ namespace Nektar
 
         if(nConvectiveFields==nvariables3D)
         {
-            PointFluxJacobian_pn(conservVar,normals,fluxJac,
+            PointFluxJacobianPoint(conservVar,normals,fluxJac,
                 efix_StegerWarming,fsw);
         }
         else
@@ -1959,7 +1957,7 @@ namespace Nektar
                 PointFwd[nj] = conservVar[j];
             }
             
-            PointFluxJacobian_pn(PointFwd,normals,PointFJac3D,
+            PointFluxJacobianPoint(PointFwd,normals,PointFJac3D,
                 efix_StegerWarming,fsw);
 
             for(int j=0; j< nvariables; j++)
@@ -1979,7 +1977,7 @@ namespace Nektar
     // if fsw=+-1 calculate the steger-Warming flux vector splitting flux Jacobian
     // if fsw=0   calculate the Jacobian of the exact flux
     // efix is the numerical flux entropy fix parameter
-    void CompressibleFlowSystem::PointFluxJacobian_pn(
+    void CompressibleFlowSystem::PointFluxJacobianPoint(
             const Array<OneD, NekDouble> &Fwd,
             const Array<OneD, NekDouble> &normals,
                   DNekMatSharedPtr       &FJac,

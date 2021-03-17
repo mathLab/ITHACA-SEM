@@ -38,10 +38,11 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
 #include <FieldUtils/Interpolator.h>
+#include <LibUtilities/BasicUtils/ParseUtils.h>
 
 #include "ProcessWallNormalData.h"
 
-//#define _DEBUG_
+#define _DEBUG_
 
 using namespace std;
 
@@ -58,12 +59,13 @@ ModuleKey ProcessWallNormalData::className = GetModuleFactory().RegisterCreatorF
 ProcessWallNormalData::ProcessWallNormalData(FieldSharedPtr f) : ProcessBoundaryExtract(f)
 {
     f->m_writeBndFld = false; // turned on in upstream ProcessBoundaryExtract
-    m_config["x"]    = ConfigOption(false, "0.1", 
-                       "x-coordinate of the sample origin.");
-    m_config["y"]    = ConfigOption(false, "0.0",
-                       "y-coordinate of the sample origin.");
-    m_config["z"]    = ConfigOption(false, "0.0",
-                       "z-coordinate of the sample origin.");
+
+    m_config["xorig"]     = ConfigOption(false, "0.5,0.0,0.0", 
+                            "An apprixomate origin for sampling.");
+    m_config["searchDir"] = ConfigOption(false, "0.0,1.0,0.0", 
+                            "The direction to search the origin on the wall.");
+
+
     m_config["tol"]  = ConfigOption(false, "0.1", 
                        "Relative tolerence to find the exact origin.");
     m_config["useY"] = ConfigOption(true, "0", 
@@ -105,18 +107,34 @@ ProcessWallNormalData::~ProcessWallNormalData()
 void ProcessWallNormalData::Process(po::variables_map &vm)
 {
     ProcessBoundaryExtract::Process(vm);
+    
+    bool valid;
+    std::vector<NekDouble> xorig, searchDir;
+    //std::vector<NekDouble> xOrig(3,0.0), projDir(3,0.0);
+    valid = ParseUtils::GenerateVector(m_config["xorig"].as<string>(), xorig);
+    valid = ParseUtils::GenerateVector(m_config["searchDir"].as<string>(), searchDir);    
+    const NekDouble relTol    = m_config["tol"].as<NekDouble>();  // removed later
+    const bool      isUseY    = m_config["useY"].as<bool>();      // removed later
+    const NekDouble distanceH = m_config["h"].as<NekDouble>();    // change name
+    const int       nptsH     = m_config["nh"].as<int>();         // change name nptsH
+    const NekDouble delta     = m_config["d"].as<NekDouble>();    // add datailed description
 
     // Initialize the sampling parameters
-    Array<OneD, NekDouble> orig(3); // gloCoord of the origin
-    orig[0]                   = m_config["x"].as<NekDouble>();
-    orig[1]                   = m_config["y"].as<NekDouble>();
-    orig[2]                   = m_config["z"].as<NekDouble>();
-    const NekDouble relTol    = m_config["tol"].as<NekDouble>();
-    const bool      isUseY    = m_config["useY"].as<bool>();
-    const NekDouble distanceH = m_config["h"].as<NekDouble>();
-    const int       nptsH     = m_config["nh"].as<int>();
-    const NekDouble delta     = m_config["d"].as<NekDouble>();  
-   
+    Array<OneD, NekDouble> orig(3), projDir(3); // gloCoord of the origin
+    for (int i=0; i<3; ++i)
+    {
+        orig[i]    = (xorig.size()>=(i+1))     ? xorig[i]     : 0.0;
+        projDir[i] = (searchDir.size()>=(i+1)) ? searchDir[i] : 0.0;
+    }
+    Vmath::Smul(3, 1.0/sqrt(Vmath::Dot(3, projDir, 1, projDir, 1)), projDir, 1, projDir, 1);
+
+    cout << valid << endl;
+    cout << "[x,y,z] = " << orig[0] << ", " << orig[1] << ", " << orig[2] << endl;
+    cout << "[nx,ny,nz] = " << projDir[0] << ", " << projDir[1] << ", " << projDir[2] << endl;
+
+
+
+
     // Get dim to store data
     const int nfields   = m_f->m_variables.size();
     const int nCoordDim = m_f->m_exp[0]->GetCoordim(0);

@@ -1326,6 +1326,14 @@ namespace Nektar
 	{
 		do_trafo_check_relative_error = 1e-9;
 	}
+	if (m_session->DefinesParameter("compute_smaller_model_errs")) 
+	{
+		compute_smaller_model_errs = m_session->GetParameter("compute_smaller_model_errs");	
+	}
+	else
+	{
+		compute_smaller_model_errs = 0;
+	}
 	if (m_session->DefinesParameter("use_fine_grid_VV")) 
 	{
 		use_fine_grid_VV = m_session->GetParameter("use_fine_grid_VV");	
@@ -3518,7 +3526,7 @@ namespace Nektar
 			current_f_all = collect_f_all.col(current_index);
 			Eigen::VectorXd current_f_all_wo_dbc = remove_rows(current_f_all, elem_loc_dbc);
 			Eigen::VectorXd proj_current_f_all_wo_dbc = RB.transpose() * current_f_all_wo_dbc;
-			cout << "proj_current_f_all_wo_dbc " << proj_current_f_all_wo_dbc << endl;
+			// cout << "proj_current_f_all_wo_dbc " << proj_current_f_all_wo_dbc << endl;
 			Eigen::VectorXd correctRHS = affine_mat_proj * proj_current_f_all_wo_dbc;
 			Eigen::VectorXd correction_RHS = correctRHS - affine_vec_proj;
 		}
@@ -3616,6 +3624,17 @@ namespace Nektar
 		cout << "relative euclidean projection error norm in x coords: " << diff_x_proj.norm() / snap_x.norm() << " of snapshot number " << iter_index << endl;
 		cout << "relative euclidean projection error norm in y coords: " << diff_y_proj.norm() / snap_y.norm() << " of snapshot number " << iter_index << endl;
 	}
+
+	if (compute_smaller_model_errs)
+	{
+		// repeat the parameter sweep with decreasing RB sizes up to 1, but in a separate function for readability
+		for (int i=1; i < RBsize; ++i)
+		{
+			online_snapshot_check_with_smaller_basis(i);
+		}
+
+	}
+
 	
 	if (use_fine_grid_VV)
 	{
@@ -3780,6 +3799,261 @@ namespace Nektar
 	
 	
     }
+    
+    
+    
+    void CoupledLinearNS_ROM::online_snapshot_check_with_smaller_basis(int reduction_int)
+	{
+
+	cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << endl;
+	cout << "initiate online_snapshot_check_with_smaller_basis RB=" << RBsize - reduction_int <<  endl;
+	cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" << endl;
+
+	Eigen::MatrixXd mat_compare = Eigen::MatrixXd::Zero(f_bnd_dbc_full_size.rows(), 3);  // is of size M_truth_size
+	Eigen::VectorXd collected_relative_euclidean_errors = Eigen::VectorXd::Zero(Nmax);
+	// start sweeping 
+	for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+	{
+		int current_index = iter_index;
+		double current_nu;
+		double w;
+		double current_geo;
+		if (parameter_space_dimension == 1)
+		{
+			
+			if (parameter_types[0] == 0)
+			{
+				current_nu = param_vector[current_index];
+			}
+			if (parameter_types[0] == 1)
+			{
+				current_geo = param_vector[current_index];
+				current_nu = m_kinvis;
+			}				
+			
+		}
+		w = current_geo;
+		if (debug_mode)
+		{
+			cout << " online phase current nu " << current_nu << endl;
+			cout << " online phase current w " << w << endl;
+		}
+		Set_m_kinvis( current_nu );
+		if (use_Newton)
+		{
+			DoInitialiseAdv(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
+		}
+
+		Eigen::MatrixXd curr_xy_proj = project_onto_basis(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
+		Eigen::MatrixXd affine_mat_proj;
+		Eigen::VectorXd affine_vec_proj;
+
+		if (parameter_space_dimension == 1)
+		{
+			if (parameter_types[0] == 0)
+			{
+				affine_mat_proj = gen_affine_mat_proj(current_nu);
+				affine_vec_proj = gen_affine_vec_proj(current_nu, w);
+			}
+			if (parameter_types[0] == 1)
+			{
+				affine_mat_proj = gen_affine_mat_proj_geo(current_nu, w);
+				affine_vec_proj = gen_affine_vec_proj_geo(current_nu, w, current_index);
+			}
+		}
+		else if (parameter_space_dimension == 2)
+		{
+			//cout << " VV online phase current nu " << current_nu << endl;
+			//cout << " VV online phase current w " << w << endl;
+//					affine_mat_proj = gen_affine_mat_proj_2d(current_nu, w);
+//					affine_vec_proj = gen_affine_vec_proj_2d(current_nu, w, current_index);
+		}
+
+		Eigen::MatrixXd affine_mat_proj_cut = affine_mat_proj.block(0,0,RBsize-reduction_int,RBsize-reduction_int);
+		Eigen::VectorXd affine_vec_proj_cut = affine_vec_proj.head(RBsize-reduction_int);
+		Eigen::VectorXd solve_affine_cut = affine_mat_proj_cut.colPivHouseholderQr().solve(affine_vec_proj_cut);
+		Eigen::VectorXd solve_affine = affine_mat_proj.colPivHouseholderQr().solve(affine_vec_proj);
+//		cout << "solve_affine " << solve_affine << endl;
+
+//		Eigen::VectorXd repro_solve_affine = RB * solve_affine;
+		Eigen::VectorXd repro_solve_affine = RB.leftCols(RBsize-reduction_int) * solve_affine_cut;
+
+		Eigen::VectorXd reconstruct_solution = reconstruct_solution_w_dbc(repro_solve_affine);
+		mat_compare.col(0) = collect_f_all.col(current_index);
+		if (debug_mode)
+		{
+			Eigen::VectorXd current_f_all = Eigen::VectorXd::Zero(collect_f_all.rows());
+			current_f_all = collect_f_all.col(current_index);
+			Eigen::VectorXd current_f_all_wo_dbc = remove_rows(current_f_all, elem_loc_dbc);
+			Eigen::VectorXd proj_current_f_all_wo_dbc = RB.transpose() * current_f_all_wo_dbc;
+//				cout << "proj_current_f_all_wo_dbc " << proj_current_f_all_wo_dbc << endl;
+			Eigen::VectorXd correctRHS = affine_mat_proj * proj_current_f_all_wo_dbc;
+			Eigen::VectorXd correction_RHS = correctRHS - affine_vec_proj;
+//				cout << "correctRHS " << correctRHS << endl;
+//				cout << "correction_RHS " << correction_RHS << endl;
+		}
+		mat_compare.col(1) = reconstruct_solution; // sembra abbastanza bene
+		mat_compare.col(2) = mat_compare.col(1) - mat_compare.col(0);
+//		cout << mat_compare << endl;
+//		cout << "relative euclidean error norm: " << mat_compare.col(2).norm() / mat_compare.col(0).norm() << " of snapshot number " << iter_index << endl;
+
+		// compare this to the projection error onto RB, cannot use collect_f_all, is numerically unstable
+/*		cout << "mat_compare.cols() " << mat_compare.cols() << endl;
+		cout << "mat_compare.rows() " << mat_compare.rows() << endl;
+		cout << "collect_f_all.cols() " << collect_f_all.cols() << endl;
+		cout << "collect_f_all.rows() " << collect_f_all.rows() << endl;
+		cout << "RB.cols() " << RB.cols() << endl;
+		cout << "RB.rows() " << RB.rows() << endl; */
+
+		
+//		cout << "curr_xy_proj.cols() " << curr_xy_proj.cols() << endl;
+	//	cout << "curr_xy_proj.rows() " << curr_xy_proj.rows() << endl; 
+
+
+//		Eigen::VectorXd proj_solution = collect_f_all.transpose() * mat_compare.col(0);
+//		Eigen::VectorXd reproj_solution = collect_f_all * proj_solution;
+		Eigen::VectorXd FOM_solution = mat_compare.col(0);
+		Eigen::VectorXd FOM_solution_wo_dbc = remove_rows(FOM_solution, elem_loc_dbc);
+		Eigen::VectorXd proj_FOM_solution_wo_dbc = RB.transpose() * FOM_solution_wo_dbc;
+		Eigen::VectorXd reproj_FOM_solution_wo_dbc = RB * proj_FOM_solution_wo_dbc;
+		Eigen::VectorXd reconstruct_FOM_solution = reconstruct_solution_w_dbc(reproj_FOM_solution_wo_dbc);
+
+//		cout << "reconstruct_FOM_solution.norm(): " << reconstruct_FOM_solution.norm() << endl;
+//		cout << "reconstruct_solution.norm(): " << reconstruct_solution.norm() << endl;
+		Eigen::VectorXd diff_projection = reconstruct_FOM_solution - mat_compare.col(0);
+
+//		cout << "relative euclidean projection error norm: " << diff_projection.norm() / mat_compare.col(0).norm() << " of snapshot number " << iter_index << endl;
+
+
+		// now only in RB:
+		Eigen::VectorXd diff_projection_RB = reproj_FOM_solution_wo_dbc - remove_rows(mat_compare.col(0), elem_loc_dbc);
+		Eigen::VectorXd diff_RB = repro_solve_affine - remove_rows(mat_compare.col(0), elem_loc_dbc);
+//		cout << "relative euclidean RB projection error norm: " << diff_projection_RB.norm() / remove_rows(mat_compare.col(0), elem_loc_dbc).norm() << " of snapshot number " << iter_index << endl;
+//		cout << "relative euclidean RB error norm: " << diff_RB.norm() / remove_rows(mat_compare.col(0), elem_loc_dbc).norm() << " of snapshot number " << iter_index << endl;
+
+		// have to use curr_xy_proj for better approximations
+
+
+		if (debug_mode)
+		{
+			cout << "snapshot_x_collection.size() " << snapshot_x_collection.size() << " snapshot_x_collection[0].size() " << snapshot_x_collection[0].size() << endl;
+		}
+
+//		if (write_ROM_field || (qoi_dof >= 0))
+//		{
+//			recover_snapshot_data(reconstruct_solution, current_index); // this is setting the fields and fieldcoeffs
+//		}
+
+	  	Eigen::VectorXd f_bnd = reconstruct_solution.head(curr_f_bnd.size());
+		Eigen::VectorXd f_int = reconstruct_solution.tail(curr_f_int.size());
+		Array<OneD, MultiRegions::ExpListSharedPtr> fields = UpdateFields(); 
+		Array<OneD, unsigned int> bmap, imap; 
+		Array<OneD, double> field_0(GetNcoeffs());
+		Array<OneD, double> field_1(GetNcoeffs());
+		Array<OneD, double> curr_PhysBaseVec_x(GetNpoints(), 0.0);
+		Array<OneD, double> curr_PhysBaseVec_y(GetNpoints(), 0.0);
+		int cnt = 0;
+		int cnt1 = 0;
+		int nvel = 2;
+		int nz_loc = 1;
+		int  nplanecoeffs = fields[0]->GetNcoeffs();
+		int  nel  = m_fields[0]->GetNumElmts();
+		for(int i = 0; i < nel; ++i) 
+		{
+		      int eid  = i;
+		      fields[0]->GetExp(eid)->GetBoundaryMap(bmap);
+		      fields[0]->GetExp(eid)->GetInteriorMap(imap);
+		      int nbnd   = bmap.size();
+		      int nint   = imap.size();
+			      int offset = fields[0]->GetCoeff_Offset(eid);
+		            
+		      for(int j = 0; j < nvel; ++j)
+		      {
+		           for(int n = 0; n < nz_loc; ++n)
+		           {
+		                    for(int k = 0; k < nbnd; ++k)
+		                    {
+		                        fields[j]->SetCoeff(n*nplanecoeffs + offset+bmap[k], f_bnd(cnt+k));
+		                    }
+		                    
+		                    for(int k = 0; k < nint; ++k)
+		                    {
+		                        fields[j]->SetCoeff(n*nplanecoeffs + offset+imap[k], f_int(cnt1+k));
+		                    }
+		                    cnt  += nbnd;
+		                    cnt1 += nint;
+		           }
+		      }
+		}
+		Array<OneD, double> test_nn = fields[0]->GetCoeffs();
+		fields[0]->BwdTrans_IterPerExp(fields[0]->GetCoeffs(), curr_PhysBaseVec_x);
+		fields[1]->BwdTrans_IterPerExp(fields[1]->GetCoeffs(), curr_PhysBaseVec_y);
+
+        std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_fields.size()+1);
+        int i;
+        for(i = 0; i < m_fields.size(); ++i)
+        {
+            fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
+	    }
+//		cout << "after recover_snapshot_data have fieldcoeffs[0].size() " << fieldcoeffs[0].size() << endl;
+
+//		cout << "after recover_snapshot_data have curr_PhysBaseVec_x.size() " << curr_PhysBaseVec_x.size() << endl;
+//		cout << "after recover_snapshot_data have snapshot_x_collection[current_index].size() " << snapshot_x_collection[current_index].size() << endl;
+
+		// have the FOM_snapshot_solution projection available as curr_xy_proj
+		// datastructure: 	Array<OneD, Array<OneD, NekDouble> > snapshot_x_collection;
+		Eigen::VectorXd diff_x_RB_solve = Eigen::VectorXd::Zero(curr_PhysBaseVec_x.size());
+		Eigen::VectorXd snap_x = Eigen::VectorXd::Zero(curr_PhysBaseVec_x.size());
+		Eigen::VectorXd diff_y_RB_solve = Eigen::VectorXd::Zero(curr_PhysBaseVec_x.size());
+		Eigen::VectorXd snap_y = Eigen::VectorXd::Zero(curr_PhysBaseVec_x.size());
+		for (int index_recr = 0; index_recr < curr_PhysBaseVec_x.size(); ++index_recr)
+		{
+			snap_x(index_recr) = snapshot_x_collection[current_index][index_recr];
+			snap_y(index_recr) = snapshot_y_collection[current_index][index_recr];
+			diff_x_RB_solve(index_recr) = curr_PhysBaseVec_x[index_recr] - snapshot_x_collection[current_index][index_recr];
+			diff_y_RB_solve(index_recr) = curr_PhysBaseVec_y[index_recr] - snapshot_y_collection[current_index][index_recr];
+		}
+
+		Eigen::MatrixXd curr_xy_reproj = reproject_from_basis(curr_xy_proj);
+
+		double rel_x = diff_x_RB_solve.norm() / snap_x.norm();
+		double rel_y = diff_y_RB_solve.norm() / snap_y.norm();
+
+		cout << "relative euclidean error norm in x coords: " << rel_x << " of snapshot number " << iter_index << endl;
+		cout << "relative euclidean error norm in y coords: " << rel_y << " of snapshot number " << iter_index << endl;
+
+		collected_relative_euclidean_errors(iter_index) = sqrt( rel_x * rel_x + rel_y * rel_y );
+
+//		cout << "curr_xy_reproj.cols() " << curr_xy_reproj.cols() << endl;
+//		cout << "curr_xy_reproj.rows() " << curr_xy_reproj.rows() << endl;
+//		cout << "snap_x.rows() " << snap_x.rows() << endl;
+
+		Eigen::VectorXd diff_x_proj = curr_xy_reproj.col(0) - snap_x;
+		Eigen::VectorXd diff_y_proj = curr_xy_reproj.col(1) - snap_y;
+		
+		cout << "relative euclidean projection error norm in x coords: " << diff_x_proj.norm() / snap_x.norm() << " of snapshot number " << iter_index << endl;
+		cout << "relative euclidean projection error norm in y coords: " << diff_y_proj.norm() / snap_y.norm() << " of snapshot number " << iter_index << endl;
+
+	} //for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+
+	std::stringstream sstm;
+	sstm << "ROM_cluster_reduc" << reduction_int << ".txt";
+	std::string ROM_txt = sstm.str();
+	const char* outname = ROM_txt.c_str();
+	ofstream myfile (outname);
+	if (myfile.is_open())
+	{
+		for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+		{
+			myfile << std::setprecision(17) << collected_relative_euclidean_errors(iter_index) << "\n";
+		}
+		myfile.close();
+	}
+	else cout << "Unable to open file"; 
+
+	}
+
+
     
     
     Eigen::VectorXd CoupledLinearNS_ROM::gen_affine_vec_proj(double current_nu, int current_index)

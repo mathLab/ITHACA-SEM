@@ -287,7 +287,7 @@ namespace Nektar
     double L2norm_ITHACA( Array< OneD, NekDouble > component_x, Array< OneD, NekDouble > component_y );
     double Linfnorm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y );
     double L2norm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y );
-
+    void online_snapshot_check_with_smaller_basis(int);
     
             
 //	int get_curr_elem_pos(int curr_elem);
@@ -409,6 +409,7 @@ namespace Nektar
 	bool do_trafo_check;
 	double do_trafo_check_relative_error;
 	bool load_cO_snapshot_data_from_files;
+	bool compute_smaller_model_errs;
 	int qoi_dof;
 	int fine_grid_dir0;
 	int fine_grid_dir1;

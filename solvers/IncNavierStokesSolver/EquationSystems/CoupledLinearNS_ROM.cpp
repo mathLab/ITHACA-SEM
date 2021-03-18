@@ -1358,7 +1358,22 @@ namespace Nektar
 	{
 		use_fine_grid_VV_random = 0;
 	}
-
+	if (m_session->DefinesParameter("use_sparse_poly")) 
+	{
+		use_sparse_poly = m_session->GetParameter("use_sparse_poly");
+	}
+	else
+	{
+		use_sparse_poly = 0;
+	} 
+	if (m_session->DefinesParameter("max_sparse_poly_approx_dimension")) 
+	{
+		max_sparse_poly_approx_dimension = m_session->GetParameter("max_sparse_poly_approx_dimension");
+	}
+	else
+	{
+		max_sparse_poly_approx_dimension = 1;
+	} 
 	
 	
 	
@@ -1559,6 +1574,111 @@ namespace Nektar
 		}
 	}
     }
+    
+    double CoupledLinearNS_ROM::lagrange_interp(double curr_param, int curr_index, int sparse_poly_approx_dimension)
+    {
+	double lagrange_value = 1;
+	for (int i = 0; i < sparse_poly_approx_dimension; ++i)
+	{
+		if (parameter_space_dimension == 1)
+		{
+			if (param_vector[curr_index] != param_vector[i])
+				lagrange_value *= (curr_param - param_vector[i]) / (param_vector[curr_index] - param_vector[i]);
+		}
+	}
+	return lagrange_value;
+    }
+    
+
+    void CoupledLinearNS_ROM::compute_sparse_poly_approx()
+    {
+	int sparse_poly_approx_dimension = max_sparse_poly_approx_dimension;
+	// L2 error works on the snapshot_x_collection and snapshot_y_collection
+	// start sweeping 
+	for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+	{
+		int current_index = iter_index;
+		double current_nu;
+		double current_geo;
+		if (parameter_space_dimension == 1)
+		{
+			if (parameter_types[0] == 0)
+			{
+				current_nu = param_vector[current_index];
+			}
+			if (parameter_types[0] == 1)
+			{
+				current_geo = param_vector[current_index];
+				current_nu = m_kinvis;
+			}
+		}		
+		Array<OneD, NekDouble> interpolant_x(snapshot_x_collection[0].size());
+		Array<OneD, NekDouble> interpolant_y(snapshot_y_collection[0].size());
+		for (int i = 0; i < snapshot_x_collection[0].size(); ++i)
+		{
+			interpolant_x[i] = 0.0;
+			interpolant_y[i] = 0.0;
+		}
+		for (int index_interpol_op = 0; index_interpol_op < sparse_poly_approx_dimension; ++index_interpol_op)
+		{
+			double lagrange_value = lagrange_interp(current_geo, index_interpol_op, sparse_poly_approx_dimension);
+			for (int i = 0; i < snapshot_x_collection[0].size(); ++i)	
+			{
+				interpolant_x[i] += snapshot_x_collection[index_interpol_op][i] * lagrange_value;
+				interpolant_y[i] += snapshot_y_collection[index_interpol_op][i] * lagrange_value;
+			}
+		}
+		double rel_L2error = L2norm_abs_error_ITHACA(interpolant_x, interpolant_y, snapshot_x_collection[iter_index], snapshot_y_collection[iter_index]) / L2norm_ITHACA(snapshot_x_collection[iter_index], snapshot_y_collection[iter_index]);
+		cout << "rel_L2error at parameter " << current_geo << " is " << rel_L2error << endl;
+	}
+	Array<OneD, NekDouble> collect_max(sparse_poly_approx_dimension);
+	Array<OneD, NekDouble> collect_mean(sparse_poly_approx_dimension);
+	double max, mean;
+	for (int approx_dim = 1; approx_dim <= sparse_poly_approx_dimension; ++approx_dim)
+	{
+//		sparse_approx_VV(approx_dim, max, mean);
+		cout << "max at dim " << approx_dim << " is " << max << endl;
+		cout << "mean at dim " << approx_dim << " is " << mean << endl;
+		collect_max[approx_dim-1] = max;
+		collect_mean[approx_dim-1] = mean;
+	}
+	{
+	std::stringstream sstm;
+	sstm << "sparse_conv_mean.txt";
+	std::string sparse_conv_mean = sstm.str();
+	const char* outname = sparse_conv_mean.c_str();
+	ofstream myfile (outname);
+	if (myfile.is_open())
+	{
+		for (int i0 = 0; i0 < sparse_poly_approx_dimension; i0++)
+		{
+			myfile << std::setprecision(17) << collect_mean[i0] << "\t";
+		}
+		myfile.close();
+	}
+	else cout << "Unable to open file"; 
+	}
+	{
+	std::stringstream sstm;
+	sstm << "sparse_conv_max.txt";
+	std::string sparse_conv_max = sstm.str();
+	const char* outname = sparse_conv_max.c_str();
+	ofstream myfile (outname);
+	if (myfile.is_open())
+	{
+		for (int i0 = 0; i0 < sparse_poly_approx_dimension; i0++)
+		{
+			myfile << std::setprecision(17) << collect_max[i0] << "\t";
+		}
+		myfile.close();
+	}
+	else cout << "Unable to open file"; 
+	}
+    }
+
+
+    
+    
 
     void CoupledLinearNS_ROM::v_DoInitialise(void)
     {
@@ -1868,11 +1988,19 @@ namespace Nektar
             ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS_ROM");
         }
         
-        if ((!ROM_started) && (!ongoing_snapshot_computation))
+        if ((!ROM_started) && (!ongoing_snapshot_computation) && (!use_sparse_poly))
         {
         	ROM_started = 1;
         	ROM_offline_phase();
 		ROM_online_phase();
+        }
+        if (use_sparse_poly)
+        {
+               	f_bnd_size = curr_f_bnd.size();
+		f_p_size = curr_f_p.size();
+		f_int_size = curr_f_int.size();
+		collect_f_all = DoTrafo();
+        	compute_sparse_poly_approx();
         }
     }
     
@@ -4928,7 +5056,7 @@ namespace Nektar
 
     Array<OneD, Array<OneD, NekDouble> > CoupledLinearNS_ROM::trafo_current_para(Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y, Array<OneD, NekDouble> parameter_of_interest, Eigen::VectorXd & ref_f_bnd, Eigen::VectorXd & ref_f_p, Eigen::VectorXd & ref_f_int)
     {
-	cout << "starting trafo_current_para " << endl;
+//	cout << "starting trafo_current_para " << endl;
 
 	double w = parameter_of_interest[0];	
 	double mKinvis = parameter_of_interest[1];
@@ -5837,7 +5965,7 @@ namespace Nektar
                     Vmath::Vsub(nLocBndDofs, F_bnd_glssc,1, F_bnd1_glssc,1, F_bnd_glssc,1);
                }
                
-		cout << "value of atLastLevel " << atLastLevel << endl;               	
+//		cout << "value of atLastLevel " << atLastLevel << endl;               	
                	
 //                if(atLastLevel)
                 if(1)
@@ -6140,10 +6268,10 @@ namespace Nektar
 
 	if (debug_mode)
 	{
-		cout << "csx0.norm() " << csx0.norm() << endl;
-		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
-		cout << "csy0.norm() " << csy0.norm() << endl;
-		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
+//		cout << "csx0.norm() " << csx0.norm() << endl;
+//		cout << "csx0_trafo.norm() " << csx0_trafo.norm() << endl;
+//		cout << "csy0.norm() " << csy0.norm() << endl;
+//		cout << "csy0_trafo.norm() " << csy0_trafo.norm() << endl;
 	}
 
 	Array<OneD, Array<OneD, NekDouble> > snapshot_result_phys_velocity_x_y(2);
@@ -6375,13 +6503,13 @@ namespace Nektar
             variables[i]   = m_boundaryConditions->GetVariable(i);
 	    if (debug_mode)
 	    {
-		    cout << "variables[i] " << variables[i] << endl;
+//		    cout << "variables[i] " << variables[i] << endl;
 	    }
         }
 
 	if (debug_mode)
 	{
-		cout << "m_singleMode " << m_singleMode << endl;	
+//		cout << "m_singleMode " << m_singleMode << endl;	
 	}
 
 	fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs(), 0.0);  
@@ -6489,7 +6617,7 @@ namespace Nektar
 
 		if (qoi_dof >= 0)
 		{
-			cout << "converged qoi dof " << snapshot_result_phys_velocity_x_y[1][qoi_dof] << endl;
+//			cout << "converged qoi dof " << snapshot_result_phys_velocity_x_y[1][qoi_dof] << endl;
 			collected_qoi[i] = snapshot_result_phys_velocity_x_y[1][qoi_dof];
 		}
 

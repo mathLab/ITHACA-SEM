@@ -288,7 +288,8 @@ namespace Nektar
     double Linfnorm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y );
     double L2norm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y );
     void online_snapshot_check_with_smaller_basis(int);
-    
+    double lagrange_interp(double curr_param, int curr_index, int sparse_poly_approx_dimension);
+    void compute_sparse_poly_approx();
             
 //	int get_curr_elem_pos(int curr_elem);
 
@@ -422,8 +423,8 @@ namespace Nektar
 	Array<OneD, Array<OneD, Eigen::VectorXd > > the_const_one_rhs_proj_2d;
 	bool use_fine_grid_VV_random;
 	bool use_fine_grid_VV_and_load_ref;
-	
-	
+	bool use_sparse_poly;
+	int max_sparse_poly_approx_dimension;
 	
 
         Array<OneD, CoupledSolverMatrices> m_mat;

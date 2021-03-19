@@ -77,6 +77,88 @@ protected:
 private:
     int m_spacedim;
 
+    /**
+    * @brief Project a single point along the given direction to a plane
+    * @param gloCoord     Global coordinate of the point. size=3.
+    * @param projDir      Projection direction, which is also the normal vector 
+    *                     of the target plane. size=3, norm=1.
+    * @param distToOrig   The distance from the origin (0,0,0) to the target plane.
+    * @param projGloCoord The global coordinate of the projecion result.
+    */ 
+    void ProjectPoint(
+        const Array<OneD, const NekDouble > & gloCoord,
+        const Array<OneD, const NekDouble > & projDir,
+        const NekDouble distToOrig,
+        Array<OneD, NekDouble > & projGloCoord);
+
+    /**
+    * @brief Project a single point along the given direction to a plane
+    * @param pts          Global coordinate of the vertices of the elmt. size=2/3.
+    * @param projDir      Projection direction, which is also the normal vector of 
+    *                     the target plane. size=3, norm=1.
+    * @param distToOrig   The distance from the origin (0,0,0) to the target plane.
+    * @param projPts      The global coordinate of the projecion result.
+    */ 
+    void ProjectVertices(
+        const Array<OneD, const Array<OneD, NekDouble> > & pts,
+        const Array<OneD, const NekDouble > & projDir,
+        const NekDouble distToOrig,
+        Array<OneD, Array<OneD, NekDouble> > & projPts);
+
+    /**
+    * @brief Determine if the projected point is inside the projected element.
+    * @param projGloCoord The global coordinate of the projected single point.
+    * @param projPts      The global coordinate of the projected vertices,size=2/3
+    * @param projDir      Projection direction, which is used as the reference
+    *                     direction. size=3, norm=1. 
+    * @param paralTol     Tolerence to check if two vectors are parallel.
+    * @param angleTol     Tolerence to check if the total angle is 2*pi.
+    * @return             Inside (true) or not (false)
+    */ 
+    bool isInProjectedArea2D_2(
+        const Array<OneD, const NekDouble > & projGloCoord,
+        const Array<OneD, const Array<OneD, NekDouble> > & projPts,
+        const NekDouble paralTol = 1.0e-12);
+
+    bool isInProjectedArea3D_2(
+        const Array<OneD, const NekDouble > & projGloCoord,
+        const Array<OneD, const Array<OneD, NekDouble> > & projPts,
+        const Array<OneD, const NekDouble > & projDir,
+        const NekDouble paralTol = 1.0e-12,
+        const NekDouble angleTol = 1.0e-6);
+
+    /**
+     * @brief Determine if the projected point is inside the projected element.
+     * @param bndGeom      Geometry to get the xmap.
+     * @param gloCoord     Global coordinate of the point. size=3.
+     * @param pts          Global coordinate of the vertices of the elmt. size=2/3.
+     * @param dieUse       The main direction(s) used to compute local coordinate
+     * @param locCoord     Iteration results for local coordinate(s) 
+     * @param iterTol      Tolerence for iteration.
+     * @param iterMax      Maximum iteration steps
+     * @return             Converged (true) or not (false)
+     */
+    bool BisectionForLocCoordOnBndElmt_2(
+        SpatialDomains::GeometrySharedPtr bndGeom,
+        const Array<OneD, const NekDouble > & gloCoord,
+        const Array<OneD, const Array<OneD, NekDouble> > & pts,
+        const Array<OneD, const int > & dirUse,
+        Array<OneD, NekDouble > & locCoord,
+        const NekDouble iterTol = 1.0e-8,
+        const int iterMax = 51);
+    
+
+
+    bool BndElmtContainsPoint_2(
+        SpatialDomains::GeometrySharedPtr bndGeom,
+        const Array<OneD, const NekDouble > & gloCoord,
+        const Array<OneD, const NekDouble > & projDir,
+        Array< OneD, NekDouble > & locCoord,
+        NekDouble & projDist,
+        const NekDouble geomTol = 1.0,
+        const NekDouble iterTol = 1.0e-8);
+
+    //===========================================
     bool isInProjectedArea2D(
         SpatialDomains::GeometrySharedPtr bndGeom,
         const Array<OneD, const NekDouble > & gloCoord,

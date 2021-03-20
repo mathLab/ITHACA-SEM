@@ -283,7 +283,7 @@ namespace Nektar
                         min(m_CFLEnd,m_CFLGrowth*tmp_cflSafetyFactor);
                 }
 
-                m_FlagUpdatePreconMat = true;
+                m_flagUpdatePreconMat = true;
 
                 // Flag to update AV
                 m_CalcPhysicalAV = true;

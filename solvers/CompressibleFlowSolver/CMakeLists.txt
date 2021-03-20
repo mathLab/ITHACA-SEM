@@ -27,10 +27,13 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
         CompressibleFlowSolver.cpp
         Diffusion/DiffusionLDGNS.cpp
         EquationSystems/CompressibleFlowSystem.cpp
+        EquationSystems/CompressibleFlowSystemImplicit.cpp
         EquationSystems/EulerCFE.cpp
+        EquationSystems/EulerImplicitCFE.cpp
         EquationSystems/IsentropicVortex.cpp
         EquationSystems/NavierStokesCFE.cpp
         EquationSystems/NavierStokesCFEAxisym.cpp
+        EquationSystems/NavierStokesImplicitCFE.cpp
         EquationSystems/RinglebFlow.cpp
         Forcing/ForcingAxiSymmetric.cpp
         Forcing/ForcingQuasi1D.cpp

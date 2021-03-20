@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File EulerCFE.cpp
+// File EulerImplicitCFE.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -28,45 +28,41 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Euler equations in consƒervative variables without artificial
+// Description: Euler Implicit equations in consƒervative variables without artificial
 // diffusion
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <CompressibleFlowSolver/EquationSystems/EulerCFE.h>
+#include <CompressibleFlowSolver/EquationSystems/EulerImplicitCFE.h>
 
 using namespace std;
 
 namespace Nektar
 {
-    string EulerCFE::className = 
+    string EulerImplicitCFE::className = 
     SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
-        "EulerCFE", EulerCFE::create, 
-        "Euler equations in conservative variables.");
+        "EulerImplicitCFE", EulerImplicitCFE::create, 
+        "Euler Implicit equations in conservative variables.");
 
-    string EulerCFE::className2 =
-    SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
-        "EulerADCFE", EulerCFE::create,
-        "Euler equations in conservative variables with "
-        "artificial diffusion (deprecated).");
-
-    EulerCFE::EulerCFE(
+    EulerImplicitCFE::EulerImplicitCFE(
         const LibUtilities::SessionReaderSharedPtr& pSession,
         const SpatialDomains::MeshGraphSharedPtr& pGraph)
         : UnsteadySystem(pSession, pGraph),
-          CompressibleFlowSystem(pSession, pGraph)
+          CompressibleFlowSystem(pSession, pGraph),
+          CFSImplicit(pSession, pGraph)
     {
     }
 
-    void EulerCFE::v_InitObject()
+    void EulerImplicitCFE::v_InitObject()
     {
         CompressibleFlowSystem::v_InitObject();
+        m_viscousJacFlag = false;
     }
 
     /**
-     * @brief Destructor for EulerCFE class.
+     * @brief Destructor for Euler Implicit CFE class.
      */
-    EulerCFE::~EulerCFE()
+    EulerImplicitCFE::~EulerImplicitCFE()
     {
     }
 }

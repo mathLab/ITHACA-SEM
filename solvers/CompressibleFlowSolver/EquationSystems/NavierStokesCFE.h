@@ -46,7 +46,7 @@ namespace Nektar
    *
    *
    **/
-  class NavierStokesCFE : public CompressibleFlowSystem
+  class NavierStokesCFE : virtual public CompressibleFlowSystem
   {
   public:
       friend class MemoryManager<NavierStokesCFE>;
@@ -65,12 +65,6 @@ namespace Nektar
     static std::string className;
 
     virtual ~NavierStokesCFE();
-
-    typedef std::function<void (
-            const Array<OneD, NekDouble>    &,
-            const NekDouble                 &,
-            const Array<OneD, NekDouble>    &,
-                DNekMatSharedPtr            &)> GetdFlux_dDeriv;
 
   protected:
     std::string                         m_ViscosityType;
@@ -92,7 +86,6 @@ namespace Nektar
     /// Equation of system for computing temperature
     EquationOfStateSharedPtr            m_eos;
 
-    Array<OneD, GetdFlux_dDeriv>        m_GetdFlux_dDeriv_Array;
     NekDouble                           m_Twall;
     NekDouble                           m_muRef;
     NekDouble                           m_thermalConductivityRef;
@@ -141,11 +134,6 @@ namespace Nektar
               Array<OneD,       Array<OneD, NekDouble>> &outarray,
         const Array<OneD, const Array<OneD, NekDouble>> &pFwd,
         const Array<OneD, const Array<OneD, NekDouble>> &pBwd);
-    virtual void v_DoDiffusionCoeff(
-        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
-              Array<OneD,       Array<OneD, NekDouble>> &outarray,
-        const Array<OneD, const Array<OneD, NekDouble>> &pFwd,
-        const Array<OneD, const Array<OneD, NekDouble>> &pBwd);
 
     virtual void v_GetViscousFluxVector(
         const Array<OneD, const Array<OneD, NekDouble>> &physfield,
@@ -164,171 +152,6 @@ namespace Nektar
     void Ducros( Array<OneD, NekDouble> &field );
     void C0Smooth(Array<OneD, NekDouble> &field);
   
-    virtual void v_MinusDiffusionFluxJacDirctnElmt(
-        const int                                       nConvectiveFields,
-        const int                                       nElmtPnt,
-        const Array<OneD, const Array<OneD, NekDouble>> &locVars,
-        const TensorOfArray3D<NekDouble>                &locDerv,
-        const Array<OneD, NekDouble>                    &locmu,
-        const Array<OneD, NekDouble>                    &locDmuDT,
-        const Array<OneD, NekDouble>                    &normals,
-        DNekMatSharedPtr                                &wspMat,
-              Array<OneD,       Array<OneD, NekDouble>> &PntJacArray);
-
-    virtual void v_GetFluxDerivJacDirctn(
-        const MultiRegions::ExpListSharedPtr            &explist,
-        const Array<OneD, const Array<OneD, NekDouble>> &normals,
-        const int                                       nDervDir,
-        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
-              TensorOfArray5D<NekDouble>                &ElmtJacArray,
-        const int                                       nfluxDir);
-    virtual void v_GetFluxDerivJacDirctnElmt(
-        const int                                       nConvectiveFields,
-        const int                                       nElmtPnt,
-        const int                                       nDervDir,
-        const Array<OneD, const Array<OneD, NekDouble>> &locVars,
-        const Array<OneD, NekDouble>                    &locmu,
-        const Array<OneD, const Array<OneD, NekDouble>> &locnormal,
-              DNekMatSharedPtr                          &wspMat,
-              Array<OneD,       Array<OneD, NekDouble>> &PntJacArray);
-    
-    virtual void v_GetFluxDerivJacDirctn(
-        const MultiRegions::ExpListSharedPtr            &explist,
-        const Array<OneD, const Array<OneD, NekDouble>> &normals,
-        const int                                       nDervDir,
-        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
-              Array<OneD, Array<OneD, DNekMatSharedPtr>>&ElmtJac);
-
-    virtual void v_GetDiffusionFluxJacPoint(
-        const Array<OneD, NekDouble>                    &conservVar, 
-        const Array<OneD, const Array<OneD, NekDouble>> &conseDeriv, 
-        const NekDouble                                 mu,
-        const NekDouble                                 DmuDT,
-        const Array<OneD, NekDouble>                    &normals,
-              DNekMatSharedPtr                          &fluxJac);
-
-    virtual void v_CalcPhysDeriv(
-        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
-              TensorOfArray3D<NekDouble>                &qfield);
-
-    virtual void v_CalcMuDmuDT(
-        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
-              Array<OneD, NekDouble>                    &mu,
-              Array<OneD, NekDouble>                    &DmuDT);
-      
-    /**
-     * @brief return part of viscous Jacobian:
-     * \todo flux derived with Qx=[drho_dx,drhou_dx,drhov_dx,drhoE_dx]
-     * Input:
-     * normals:Point normals
-     * U=[rho,rhou,rhov,rhoE]
-     * Output: 2D 3*4 Matrix (flux with rho is zero)
-     */
-    void GetdFlux_dQx_2D(
-        const Array<OneD, NekDouble> &normals,
-        const NekDouble &mu,
-        const Array<OneD, NekDouble> &U,
-        DNekMatSharedPtr &OutputMatrix );
-
-    /**
-     * @brief return part of viscous Jacobian:
-     * \todo flux derived with Qx=[drho_dy,drhou_dy,drhov_dy,drhoE_dy]
-     * Input:
-     * normals:Point normals
-     * U=[rho,rhou,rhov,rhoE]
-     * Output: 2D 3*4 Matrix (flux with rho is zero)
-     */
-    void GetdFlux_dQy_2D(
-        const Array<OneD, NekDouble> &normals,
-        const NekDouble &mu,
-        const Array<OneD, NekDouble> &U,
-        DNekMatSharedPtr &OutputMatrix );
-
-    /**
-     * @brief return part of viscous Jacobian derived with Qx=[drho_dx,drhou_dx,drhov_dx,drhow_dx,drhoE_dx]
-     * Input:
-     * normals:Point normals
-     * U=[rho,rhou,rhov,rhow,rhoE]
-     * dir: means whether derive with
-     * Qx=[drho_dx,drhou_dx,drhov_dx,drhow_dx,drhoE_dx]
-     * Output: 3D 4*5 Matrix (flux about rho is zero)
-     * OutputMatrix(dir=0)= dF_dQx;
-     */
-    void GetdFlux_dQx_3D(
-        const Array<OneD, NekDouble> &normals,
-        const NekDouble &mu,
-        const Array<OneD, NekDouble> &U,
-        DNekMatSharedPtr &OutputMatrix );
-
-    /**
-     * @brief return part of viscous Jacobian derived with Qy=[drho_dy,drhou_dy,drhov_dy,drhow_dy,drhoE_dy]
-     * Input:
-     * normals:Point normals
-     * U=[rho,rhou,rhov,rhow,rhoE]
-     * dir: means whether derive with
-     * Qy=[drho_dy,drhou_dy,drhov_dy,drhow_dy,drhoE_dy]
-     * Output: 3D 4*5 Matrix (flux about rho is zero)
-     * OutputMatrix(dir=1)= dF_dQy;
-     */
-    void GetdFlux_dQy_3D(
-        const Array<OneD, NekDouble> &normals,
-        const NekDouble &mu,
-        const Array<OneD, NekDouble> &U,
-        DNekMatSharedPtr &OutputMatrix );
-
-
-    /**
-     * @brief return part of viscous Jacobian derived with Qz=[drho_dz,drhou_dz,drhov_dz,drhow_dz,drhoE_dz]
-     * Input:
-     * normals:Point normals
-     * U=[rho,rhou,rhov,rhow,rhoE]
-     * dir: means whether derive with
-     * Qz=[drho_dz,drhou_dz,drhov_dz,drhow_dz,drhoE_dz]
-     * Output: 3D 4*5 Matrix (flux about rho is zero)
-     * OutputMatrix(dir=2)= dF_dQz;
-     */
-    void GetdFlux_dQz_3D(
-        const Array<OneD, NekDouble> &normals,
-        const NekDouble &mu,
-        const Array<OneD, NekDouble> &U,
-        DNekMatSharedPtr &OutputMatrix );
-
-
-    /**
-     * @brief return part of viscous Jacobian
-     * Input:
-     * normals:Point normals
-     * mu: dynamicviscosity
-     * dmu_dT: mu's derivative with T using Sutherland's law
-     * U=[rho,rhou,rhov,rhoE]
-     * Output: 3*4 Matrix (the flux about rho is zero)
-     * OutputMatrix dFLux_dU,  the matrix sign is consistent with SIPG
-    */
-    void GetdFlux_dU_2D(
-        const Array<OneD, NekDouble>                        &normals,
-        const NekDouble                                     mu,
-        const NekDouble                                     dmu_dT,
-        const Array<OneD, NekDouble>                        &U,
-        const Array<OneD, const Array<OneD, NekDouble> >    &qfield,
-              DNekMatSharedPtr                              &OutputMatrix);
-
-    /**
-     * @brief return part of viscous Jacobian
-     * Input:
-     * normals:Point normals
-     * mu: dynamicviscosity
-     * dmu_dT: mu's derivative with T using Sutherland's law
-     * U=[rho,rhou,rhov,rhow,rhoE]
-     * Output: 4*5 Matrix (the flux about rho is zero)
-     * OutputMatrix dFLux_dU,  the matrix sign is consistent with SIPG
-    */
-    void GetdFlux_dU_3D(
-        const Array<OneD, NekDouble>                    &normals,
-        const NekDouble                                 mu,
-        const NekDouble                                 dmu_dT,
-        const Array<OneD, NekDouble>                    &U,
-        const Array<OneD, const Array<OneD, NekDouble>> &qfield,
-              DNekMatSharedPtr                          &OutputMatrix);
 
     virtual void v_GetFluxPenalty(
         const Array<OneD, const Array<OneD, NekDouble>> &uFwd,

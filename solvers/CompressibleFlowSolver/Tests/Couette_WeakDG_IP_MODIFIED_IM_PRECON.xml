@@ -66,7 +66,7 @@
     </PARAMETERS>
 
         <SOLVERINFO>
-        <I PROPERTY="EQType"                VALUE="NavierStokesCFE"     />
+        <I PROPERTY="EQType"                VALUE="NavierStokesImplicitCFE"  />
         <I PROPERTY="Projection"            VALUE="DisContinuous"       />
         <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
         <I PROPERTY="DiffusionType"         VALUE="InteriorPenalty"     />

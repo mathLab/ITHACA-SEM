@@ -47,6 +47,7 @@ namespace Nektar
         const LibUtilities::SessionReaderSharedPtr& pSession,
         const SpatialDomains::MeshGraphSharedPtr& pGraph)
         : UnsteadySystem(pSession, pGraph),
+          CompressibleFlowSystem(pSession, pGraph),
           NavierStokesCFE(pSession, pGraph)
     {
     }

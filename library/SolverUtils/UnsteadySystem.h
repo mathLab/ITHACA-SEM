@@ -131,7 +131,7 @@ protected:
 
     // flag to control the update of preconditioning matrix
     // Currently used to avoid PreconMat from updating in one time step 
-    bool                                m_FlagUpdatePreconMat;
+    bool                                m_flagUpdatePreconMat;
     
     int m_maxLinItePerNewton;
     

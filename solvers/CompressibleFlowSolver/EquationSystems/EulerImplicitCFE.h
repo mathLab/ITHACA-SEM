@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File EulerCFE.cpp
+// File EulerImplicitCFE.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -28,45 +28,45 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Euler equations in consƒervative variables without artificial
-// diffusion
+// Description: EulerImplicit equations in conservative variables without artificial diffusion
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <CompressibleFlowSolver/EquationSystems/EulerCFE.h>
+#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EULERIMPLICITCFE_H
+#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EULERIMPLICITCFE_H
 
-using namespace std;
+#include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystemImplicit.h>
 
 namespace Nektar
 {
-    string EulerCFE::className = 
-    SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
-        "EulerCFE", EulerCFE::create, 
-        "Euler equations in conservative variables.");
 
-    string EulerCFE::className2 =
-    SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
-        "EulerADCFE", EulerCFE::create,
-        "Euler equations in conservative variables with "
-        "artificial diffusion (deprecated).");
-
-    EulerCFE::EulerCFE(
-        const LibUtilities::SessionReaderSharedPtr& pSession,
-        const SpatialDomains::MeshGraphSharedPtr& pGraph)
-        : UnsteadySystem(pSession, pGraph),
-          CompressibleFlowSystem(pSession, pGraph)
+    class EulerImplicitCFE : public CFSImplicit
     {
-    }
+    public:
+        friend class MemoryManager<EulerImplicitCFE>;
 
-    void EulerCFE::v_InitObject()
-    {
-        CompressibleFlowSystem::v_InitObject();
-    }
+        /// Creates an instance of this class.
+        static SolverUtils::EquationSystemSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const SpatialDomains::MeshGraphSharedPtr& pGraph)
+        {
+            SolverUtils::EquationSystemSharedPtr p = MemoryManager<EulerImplicitCFE>
+                ::AllocateSharedPtr(pSession, pGraph);
+            p->InitObject();
+            return p;
+        }
 
-    /**
-     * @brief Destructor for EulerCFE class.
-     */
-    EulerCFE::~EulerCFE()
-    {
-    }
+        /// Name of class.
+        static std::string className;
+
+        virtual ~EulerImplicitCFE();
+
+    protected:
+
+        EulerImplicitCFE(const LibUtilities::SessionReaderSharedPtr& pSession,
+                 const SpatialDomains::MeshGraphSharedPtr& pGraph);
+
+        virtual void v_InitObject();
+    };
 }
+#endif

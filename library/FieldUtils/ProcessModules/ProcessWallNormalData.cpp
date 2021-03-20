@@ -205,27 +205,27 @@ void ProcessWallNormalData::Process(po::variables_map &vm)
             bndCoeffs[i] = bndGeom->GetCoeffs(i); // 0/1/2 for x/y/z
             bndXmap->BwdTrans(bndCoeffs[i], pts[i]);
         }
+
+        cout << "elmt x = " << pts[0][0] << ", " << pts[0][npts-1]<< endl;
         
-
-
-        
-        valid = BndElmtContainsPoint_2(bndGeom,orig,projDir,locCoord,projDist);
-        cout << "projDist = " << projDist<< endl;
-        cout << valid << nElmts<< endl;
-
 
         // Key routine
-        isInside = BndElmtContainsPoint(bndGeom, orig, locCoord, isUseY, scaledTol, resid); 
+        //isInside = BndElmtContainsPoint(bndGeom, orig, locCoord, isUseY, scaledTol, resid); 
 
-        if (isInside) 
+        //valid = BndElmtContainsPoint_2(bndGeom, orig, projDir, locCoord, projDist); //test
+
+        if (isInside || valid) 
         {
             break;
         }
 
     }
-    //ASSERTL0(isInside, "Failed to find the sampling origin on the boundary."); 
-
-
+    ASSERTL0(isInside || valid, "Failed to find the sampling origin on the boundary."); 
+    
+    cout << isInside << ", " << valid << endl;
+    projDist=0; resid=0;
+    cout << projDist<< resid<<nElmts<<isUseY<< endl;
+ 
 
 
     /*
@@ -546,12 +546,13 @@ bool ProcessWallNormalData::isInProjectedArea3D_2(
               fabs(vec1[2]+vec2[2]) ) < paralTol )
         {
             // On the line segement, true
+            // This branch is used to aviod angle=pi but angleSign=-1 (not 1)
             return true;
         }
         else
         {
             // Off the line segement, compute angle
-            // vec3 = vec1 x vec2
+            // vec3 = vec1 x vec2, not scaled
             vec3[0] = vec1[1]*vec2[2] - vec1[2]*vec2[1];
             vec3[1] = vec1[2]*vec2[0] - vec1[0]*vec2[2];
             vec3[2] = vec1[0]*vec2[1] - vec1[1]*vec2[0];
@@ -589,14 +590,16 @@ bool ProcessWallNormalData::isInProjectedArea3D_2(
 }
 
 
-
 /**
- * @brief Determine if the projected point is inside the projected element.
+ * @brief Use iteration to get the locCoord. This routine should be used after
+ *        we have checked the projected point is inside the projected element.
  * @param bndGeom      Geometry to get the xmap.
  * @param gloCoord     Global coordinate of the point. size=3.
  * @param pts          Global coordinate of the vertices of the elmt. size=2/3.
  * @param dieUse       The main direction(s) used to compute local coordinate
  * @param locCoord     Iteration results for local coordinate(s)
+ * @param dist         Returned distance in physical space if the collapsed 
+ *                     locCoord is out of range [-1,1].
  * @param iterTol      Tolerence for iteration.
  * @param iterMax      Maximum iteration steps
  * @return             Converged (true) or not (false)
@@ -654,9 +657,165 @@ bool ProcessWallNormalData::BisectionForLocCoordOnBndElmt_2(
 }
 
 
+bool ProcessWallNormalData::NewtonIterForLocCoordOnBndElmt_2(
+    SpatialDomains::GeometrySharedPtr bndGeom,
+    const Array<OneD, const NekDouble> & gloCoord,
+    const Array<OneD, const Array<OneD, NekDouble> > & pts,
+    const Array<OneD, const int > & dirUse,
+    Array<OneD, NekDouble> & locCoord,
+    NekDouble & dist,
+    const NekDouble iterTol,
+    const int iterMax)
+{
+
+    const NekDouble LcoordDiv = 15.0;
+
+    StdRegions::StdExpansionSharedPtr bndXmap = bndGeom->GetXmap();
+
+    Array<OneD, const NekDouble> Jac =
+        bndGeom->GetMetricInfo()->GetJac(bndXmap->GetPointsKeys());
+    NekDouble scaledTol = Vmath::Vsum(Jac.size(), Jac, 1) /
+                          ((NekDouble)Jac.size());
+    scaledTol *= iterTol;
 
 
-// New code with projection
+    // Set the gloCoord used to compute locCoord
+    const int dir1 = dirUse[0]; 
+    const int dir2 = dirUse[1];
+
+    Array<OneD, NekDouble> Dx1D1(pts[dir1].size());
+    Array<OneD, NekDouble> Dx1D2(pts[dir1].size());
+    Array<OneD, NekDouble> Dx2D1(pts[dir1].size());
+    Array<OneD, NekDouble> Dx2D2(pts[dir1].size());
+
+    // Ideally this will be stored in m_geomfactors
+    bndXmap->PhysDeriv(pts[dir1], Dx1D1, Dx1D2);
+    bndXmap->PhysDeriv(pts[dir2], Dx2D1, Dx2D2);
+       
+    // Initial the locCoord, in [-1,1]
+    locCoord[0] = 0.0;
+    locCoord[1] = 0.0;
+
+    NekDouble x1map, x2map, F1, F2;
+    NekDouble derx1_1, derx1_2, derx2_1, derx2_2, jac;
+    NekDouble resid;
+    int cnt = 0;
+    bool isConverge = false;
+    
+
+    F1 = F2 = 2000; // Starting value of Function
+    while (cnt++ < iterMax)
+    {
+        x1map = bndXmap->PhysEvaluate(locCoord, pts[dir1]);
+        x2map = bndXmap->PhysEvaluate(locCoord, pts[dir2]);
+
+        F1 = gloCoord[dir1] - x1map;
+        F2 = gloCoord[dir2] - x2map;
+
+        if (F1 * F1 + F2 * F2 < scaledTol)
+        {
+            resid = sqrt(F1 * F1 + F2 * F2);
+            isConverge = true;
+            break;
+        }
+
+        // Interpolate derivative metric at locCoord
+        derx1_1 = bndXmap->PhysEvaluate(locCoord, Dx1D1);
+        derx1_2 = bndXmap->PhysEvaluate(locCoord, Dx1D2);
+        derx2_1 = bndXmap->PhysEvaluate(locCoord, Dx2D1);
+        derx2_2 = bndXmap->PhysEvaluate(locCoord, Dx2D2);
+
+        jac = derx2_2 * derx1_1 - derx2_1 * derx1_2;
+        
+        // Use analytical inverse of derivitives which are
+        // also similar to those of metric factors.
+        locCoord[0] = locCoord[0] + ( derx2_2 * (gloCoord[dir1] - x1map) -
+                                      derx1_2 * (gloCoord[dir2] - x2map)) / jac;
+
+        locCoord[1] = locCoord[1] + (-derx2_1 * (gloCoord[dir1] - x1map) +
+                                      derx1_1 * (gloCoord[dir2] - x2map)) / jac;
+
+        
+        // locCoord have diverged so stop iteration
+        if( !(std::isfinite(locCoord[0]) && std::isfinite(locCoord[1])) )
+        {
+            dist = 1e16;
+            std::ostringstream ss;
+            ss << "nan or inf found in NewtonIterForLocCoordOnProjBndElmt in element "
+               << bndGeom->GetGlobalID();
+            WARNINGL1(false, ss.str());
+            return false;
+        }
+        if (fabs(locCoord[0]) > LcoordDiv || fabs(locCoord[1]) > LcoordDiv)
+        {
+            break; 
+        }
+    }
+
+    // Check distance for collapsed coordinate 
+    Array<OneD, NekDouble> eta(2);
+    bndXmap->LocCoordToLocCollapsed(locCoord, eta);
+
+    if(bndGeom->ClampLocCoords(eta, 0.0))
+    {
+        // calculate the global point corresponding to locCoord
+        x1map = bndXmap->PhysEvaluate(eta, pts[dir1]);
+        x2map = bndXmap->PhysEvaluate(eta, pts[dir2]);
+
+        F1 = gloCoord[dir1] - x1map;
+        F2 = gloCoord[dir2] - x2map;
+
+        dist = sqrt(F1 * F1 + F2 * F2);
+    }
+    else
+    {
+        dist = 0.0;
+    }
+
+    // Warning if failed
+    if (cnt >= iterMax)
+    {
+        Array<OneD, NekDouble> collCoords(2);
+        bndXmap->LocCoordToLocCollapsed(locCoord, collCoords);
+
+        // if coordinate is inside element dump error!
+        if ((collCoords[0] >= -1.0 && collCoords[0] <= 1.0) &&
+            (collCoords[1] >= -1.0 && collCoords[1] <= 1.0))
+        {
+            std::ostringstream ss;
+
+            ss << "Reached MaxIterations (" << iterMax
+               << ") in Newton iteration ";
+            ss << "Init value (" << setprecision(4) << 0 << "," << 0
+               << ","
+               << ") ";
+            ss << "Fin  value (" << locCoord[0] << "," << locCoord[1] << ","
+               << ") ";
+            ss << "Resid = " << resid << " Tolerance = " << sqrt(scaledTol);
+
+            WARNINGL1(cnt < iterMax, ss.str());
+        }
+    }
+
+    return isConverge;
+
+}
+
+
+/**
+ * @brief Check if a point can be projected onto an oundary element in a given
+ *        direction. If yes, give the local coordinates of the projected point.
+ *        we have checked the projected point is inside the projected element.
+ * @param bndGeom      Pointer to the geometry of the boundary element.
+ * @param gloCoord     Global coordinate of the point. size=3.
+ * @param projDir      Projection direction, which is used as the reference
+ *                     direction in the 3D routine. size=3, norm=1. 
+ * @param locCoord     Iteration results for local coordinates (if inside).
+ * @param projDist     Projection distance betweem the point to the wall point.
+ * @param geomTol      Disntance to check if the wall point is desired.
+ * @param iterTol      Tolerence for iteration.
+ * @return             Inside (true) or not (false)
+ */
 bool ProcessWallNormalData::BndElmtContainsPoint_2(
     SpatialDomains::GeometrySharedPtr bndGeom,
     const Array<OneD, const NekDouble > & gloCoord,
@@ -687,11 +846,6 @@ bool ProcessWallNormalData::BndElmtContainsPoint_2(
     // Project the point and vertices of the element in the input direction
     ProjectPoint(gloCoord, projDir, 0.0, projGloCoord);
     ProjectVertices(pts, projDir, 0.0, projPts);
-
-    cout << "After proj\n  - P:  " << projGloCoord[0] << ", " << projGloCoord[1] 
-                   << ", " << projGloCoord[2] << endl;
-    cout << "After proj\n  - V0: " << projPts[0][0] << ", " << projPts[1][0]
-         << "\n  - V1: " << projPts[0][1] << ", " << projPts[1][1]<< endl;
 
 
     // Set the main direction(s) and the minor direction
@@ -748,13 +902,9 @@ bool ProcessWallNormalData::BndElmtContainsPoint_2(
 
     }
 
-    
-    cout << gloCoord[0]<<locCoord[0]<<projDist<<geomTol<<iterTol<<endl;
-    cout << "projDir = " << projDir[0] <<", "<< projDir[1]<<", "<<projDir[2]<<endl;
-    cout << "dirUse[0,1,2] = " << dirUse[0]<<dirUse[1]<<dirUse[2]<< endl;
-    
 
-    
+    // Check if the projected point is in the projected elmt
+    // If yes, then compute the locCoord and check if desired point is found
     if(nCoordDim==2)
     {
         if (isInProjectedArea2D_2(projGloCoord, projPts, 1.0e-12))
@@ -763,13 +913,19 @@ bool ProcessWallNormalData::BndElmtContainsPoint_2(
             
             isConverge = BisectionForLocCoordOnBndElmt_2(bndGeom, projGloCoord,
                              projPts, dirUse, locCoord, iterTol);
-            
+
             Array<OneD, NekDouble > tmp(2, 0.0);
             tmp[0] = bndXmap->PhysEvaluate(locCoord, pts[0]) - gloCoord[0];
             tmp[1] = bndXmap->PhysEvaluate(locCoord, pts[1]) - gloCoord[1];
-            projDist = tmp[0]*projDir[0] + tmp[1]*projDir[1]; // can be negative
+            projDist = Vmath::Dot(2, tmp, 1, projDir, 1);  // can be negative
             
-            isDesired = (projDist > 0) && (projDist < geomTol);
+            isDesired = (projDist > 0.0) && (projDist < geomTol);
+
+
+            cout << "test3"<<endl;
+            cout << isConverge << ", " << isDesired <<endl;
+            cout << "locCoord = " << locCoord[0] << endl;
+            cout << "projDist = " << projDist << endl;
 
             return isConverge && isDesired;
         }
@@ -783,10 +939,29 @@ bool ProcessWallNormalData::BndElmtContainsPoint_2(
     {
         if (isInProjectedArea3D_2(projGloCoord, projPts, projDir, 1.0e-12, 1.0e-6))
         {
-            //bool isConverge, isDesired;
-            //isConverge = NewtonIterationForLocCoordOnBndElmt
-            cout << "Not yet finished."
+            NekDouble dist; 
+            bool isConverge, isDesired;
 
+            isConverge = NewtonIterForLocCoordOnBndElmt_2(bndGeom, projGloCoord,
+                             projPts, dirUse, locCoord, dist, iterTol);
+            
+            if (dist>iterTol)
+            {
+                std::ostringstream ss;
+                ss << "Collapsed locCoord out of range.\n"
+                   << "Newton iteration gives the distance: " << dist;
+                WARNINGL1(false, ss.str());
+            }
+            
+            Array<OneD, NekDouble > tmp(3, 0.0);
+            tmp[0] = bndXmap->PhysEvaluate(locCoord, pts[0]) - gloCoord[0];
+            tmp[1] = bndXmap->PhysEvaluate(locCoord, pts[1]) - gloCoord[1];
+            tmp[2] = bndXmap->PhysEvaluate(locCoord, pts[2]) - gloCoord[2];
+            projDist = Vmath::Dot(3, tmp, 1, projDir, 1);  // can be negative
+
+            isDesired = (projDist > 0.0) && (projDist < geomTol);
+
+            return isConverge && isDesired;
         }
         else
         {
@@ -795,32 +970,6 @@ bool ProcessWallNormalData::BndElmtContainsPoint_2(
         
     }
     
-    /*
-    else
-    {
-        if( isInProjectedArea3D(bndGeom, gloCoord, dir2) )
-         {
-            NekDouble tmp;
-            bool isConverge, isDesired;
-            
-            isConverge = NewtonIterationForLocCoordOnBndElmt(bndGeom, gloCoord, pts, dir2, locCoord, dist);
-
-            tmp = bndXmap->PhysEvaluate(locCoord, pts[dir2]);
-            if (fabs(gloCoord[dir2]-tmp) < geomTol)
-            {
-                isDesired = true;
-            }
-
-            return isConverge && isDesired;
-            
-         }
-         else{
-             return false;
-         }
-    }
-    */
-
-   return true;
 }
 
 

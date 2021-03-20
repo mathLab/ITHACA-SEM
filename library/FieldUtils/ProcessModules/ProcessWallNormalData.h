@@ -128,12 +128,15 @@ private:
         const NekDouble angleTol = 1.0e-6);
 
     /**
-     * @brief Determine if the projected point is inside the projected element.
+     * @brief Use iteration to get the locCoord. This routine should be used after
+     *        we have checked the projected point is inside the projected element.
      * @param bndGeom      Geometry to get the xmap.
      * @param gloCoord     Global coordinate of the point. size=3.
      * @param pts          Global coordinate of the vertices of the elmt. size=2/3.
      * @param dieUse       The main direction(s) used to compute local coordinate
      * @param locCoord     Iteration results for local coordinate(s) 
+     * @param dist         Returned distance in physical space if the collapsed 
+     *                     locCoord is out of range [-1,1].
      * @param iterTol      Tolerence for iteration.
      * @param iterMax      Maximum iteration steps
      * @return             Converged (true) or not (false)
@@ -147,8 +150,30 @@ private:
         const NekDouble iterTol = 1.0e-8,
         const int iterMax = 51);
     
-
-
+    bool NewtonIterForLocCoordOnBndElmt_2(
+        SpatialDomains::GeometrySharedPtr bndGeom,
+        const Array<OneD, const NekDouble> & gloCoord,
+        const Array<OneD, const Array<OneD, NekDouble> > & pts,
+        const Array<OneD, const int > & dirUse,
+        Array<OneD, NekDouble> & locCoord,
+        NekDouble & dist,
+        const NekDouble iterTol = 1.0e-8,
+        const int iterMax = 51);
+    
+    /**
+    * @brief Check if a point can be projected onto an oundary element in a given
+    *        direction. If yes, give the local coordinates of the projected point.
+    *        we have checked the projected point is inside the projected element.
+    * @param bndGeom      Pointer to the geometry of the boundary element.
+    * @param gloCoord     Global coordinate of the point. size=3.
+    * @param projDir      Projection direction, which is used as the reference
+    *                     direction in the 3D routine. size=3, norm=1. 
+    * @param locCoord     Iteration results for local coordinates (if inside).
+    * @param projDist     Projection distance betweem the point to the wall point.
+    * @param geomTol      Disntance to check if the wall point is desired.
+    * @param iterTol      Tolerence for iteration.
+    * @return             Inside (true) or not (false)
+    */
     bool BndElmtContainsPoint_2(
         SpatialDomains::GeometrySharedPtr bndGeom,
         const Array<OneD, const NekDouble > & gloCoord,

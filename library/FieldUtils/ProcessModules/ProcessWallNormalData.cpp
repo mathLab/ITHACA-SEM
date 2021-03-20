@@ -42,7 +42,7 @@
 
 #include "ProcessWallNormalData.h"
 
-#define _DEBUG_
+//#define _DEBUG_
 
 using namespace std;
 
@@ -66,16 +66,15 @@ ProcessWallNormalData::ProcessWallNormalData(FieldSharedPtr f) : ProcessBoundary
                             "The direction to search the origin on the wall.");
 
 
-    m_config["tol"]  = ConfigOption(false, "0.1", 
-                       "Relative tolerence to find the exact origin.");
-    m_config["useY"] = ConfigOption(true, "0", 
-                       "Flag to set using y-coordinate to get the origin.");
-    m_config["h"]    = ConfigOption(false, "0.01", 
-                       "Sampling distance along the wall normals.");
-    m_config["nh"]   = ConfigOption(false, "5", 
-                       "Number of sampling points along the wall normals.");
-    m_config["d"]    = ConfigOption(false, "0.1", 
-                       "Points distribution control in h direction.");
+    m_config["tol"]   = ConfigOption(false, "0.1", 
+                        "Geometry tolerence to find the exact origin.");
+
+    m_config["distH"] = ConfigOption(false, "0.01", 
+                        "Sampling distance along the wall normals.");
+    m_config["nptsH"] = ConfigOption(false, "5", 
+                        "Number of sampling points along the wall normals.");
+    m_config["d"]     = ConfigOption(false, "0.1", 
+                        "Points distribution control in h direction.");
 }
 
 ProcessWallNormalData::~ProcessWallNormalData()
@@ -112,20 +111,20 @@ void ProcessWallNormalData::Process(po::variables_map &vm)
     const int nfields   = m_f->m_variables.size();
     const int nCoordDim = m_f->m_exp[0]->GetCoordim(0);
     m_spacedim          = nCoordDim + m_f->m_numHomogeneousDir;
-    const int nBndLcoordDim = nCoordDim==3 ? 2 : 1;
+    const int nBndLcoordDim = nCoordDim - 1;
     const int totVars   = m_spacedim + m_f->m_variables.size();
 
 
     // Initialize the sampling parameters
-    bool valid;
     std::vector<NekDouble> xorig, searchDir;
-    valid = ParseUtils::GenerateVector(m_config["xorig"].as<string>(), xorig);
-    valid = ParseUtils::GenerateVector(m_config["searchDir"].as<string>(), searchDir);    
-    const NekDouble relTol    = m_config["tol"].as<NekDouble>();  // removed later
-    const bool      isUseY    = m_config["useY"].as<bool>();      // removed later
-    const NekDouble distanceH = m_config["h"].as<NekDouble>();    // change name
-    const int       nptsH     = m_config["nh"].as<int>();         // change name nptsH
-    const NekDouble delta     = m_config["d"].as<NekDouble>();    // add datailed description
+    ASSERTL0(ParseUtils::GenerateVector(m_config["xorig"].as<string>(), xorig),
+             "Failed to interpret origin coordinates string");
+    ASSERTL0(ParseUtils::GenerateVector(m_config["searchDir"].as<string>(), searchDir),
+             "Failed to interpret search direction string");
+    const NekDouble geomTol = m_config["tol"].as<NekDouble>();  // add datailed description
+    const NekDouble distH   = m_config["distH"].as<NekDouble>();
+    const int       nptsH   = m_config["nptsH"].as<int>();      // change name nptsH
+    const NekDouble delta   = m_config["d"].as<NekDouble>();    // add datailed description
 
 
     Array<OneD, NekDouble> orig(3), projDir(3); // gloCoord of the origin
@@ -138,110 +137,11 @@ void ProcessWallNormalData::Process(po::variables_map &vm)
     {
         projDir[2] = 0.0;
     }
-    Vmath::Smul(3, 1.0/sqrt(Vmath::Dot(3, projDir, 1, projDir, 1)), projDir, 1, projDir, 1);
-
-    cout << valid << nBndLcoordDim<< totVars<< distanceH <<nptsH<< delta<< endl;
-    cout << "------------------------------------------" << endl;
-    cout << "[x,y,z] = " << orig[0] << ", " << orig[1] << ", " << orig[2] << endl;
-    cout << "[nx,ny,nz] = " << projDir[0] << ", " << projDir[1] << ", " << projDir[2] << endl;
-
-
-
-
-    
-
-    // Get the bnd id
-    SpatialDomains::BoundaryConditions bcs(m_f->m_session,
-                                           m_f->m_exp[0]->GetGraph());
-    const SpatialDomains::BoundaryRegionCollection bregions =
-        bcs.GetBoundaryRegions();
-    map<int, int> BndRegionMap;
-    int cnt = 0;
-    for (auto &breg_it : bregions)
-    {
-        BndRegionMap[breg_it.first] = cnt++;
-    }
-    int bnd = BndRegionMap[m_f->m_bndRegionsToWrite[0]];
-
-    // Get expansion list for boundary
-    Array<OneD, MultiRegions::ExpListSharedPtr> BndExp(nfields); 
-    for (int i = 0; i < nfields; ++i) {
-        BndExp[i] = m_f->m_exp[i]->UpdateBndCondExpansion(bnd);
-    }
-    
-    //-------------------------------------------------------------------------
-    // Find the element that contains the origin, and give the precise origin
-    SpatialDomains::GeometrySharedPtr bndGeom;
-    StdRegions::StdExpansionSharedPtr bndXmap;
-    Array<OneD, const NekDouble> Jac;
-    NekDouble scaledTol;
-    int npts;
-    Array<OneD, Array<OneD, NekDouble> >       pts(nCoordDim);
-    Array<OneD, Array<OneD, const NekDouble> > bndCoeffs(nCoordDim);
-    Array<OneD, NekDouble> locCoord(nCoordDim-1, -999.0);
-    NekDouble projDist, resid;
-    int elmtid;
-    bool isInside = false;
-
-    // Search and get precise Lcoord
-    const int nElmts = BndExp[0]->GetNumElmts();
-    for (elmtid=0; elmtid<1; ++elmtid) //nElmts
-    {    
-        bndGeom = BndExp[0]->GetExp(elmtid)->GetGeom(); 
-        bndXmap = bndGeom->GetXmap();
-        
-        // Get the scaled tol by averaged bnd elemt edge length 
-        Jac = bndGeom->GetMetricInfo()->GetJac(bndXmap->GetPointsKeys());
-        scaledTol = Vmath::Vsum(Jac.size(), Jac, 1)/((NekDouble)Jac.size());
-        scaledTol = pow(Jac[0], 
-                        1.0/(static_cast<NekDouble>(nCoordDim)-1.0))*2.0;
-        scaledTol *= relTol;
-
-        // Get the point
-        npts = bndXmap->GetTotPoints();
-        for (int i=0; i<nCoordDim; ++i) 
-        {
-            pts[i] = Array<OneD, NekDouble>(npts);
-            bndCoeffs[i] = bndGeom->GetCoeffs(i); // 0/1/2 for x/y/z
-            bndXmap->BwdTrans(bndCoeffs[i], pts[i]);
-        }
-
-        cout << "elmt x = " << pts[0][0] << ", " << pts[0][npts-1]<< endl;
-        
-
-        // Key routine
-        //isInside = BndElmtContainsPoint(bndGeom, orig, locCoord, isUseY, scaledTol, resid); 
-
-        //valid = BndElmtContainsPoint_2(bndGeom, orig, projDir, locCoord, projDist); //test
-
-        if (isInside || valid) 
-        {
-            break;
-        }
-
-    }
-    ASSERTL0(isInside || valid, "Failed to find the sampling origin on the boundary."); 
-    
-    cout << isInside << ", " << valid << endl;
-    projDist=0; resid=0;
-    cout << projDist<< resid<<nElmts<<isUseY<< endl;
- 
-
-
-    /*
-    // Update the precise sampling position
-    // x is precise, update y, or vice versa
-    if(!isUseY)
-    {
-        orig[1] = bndXmap->PhysEvaluate(locCoord, pts[1]);                 
-    }
-    else
-    {
-        orig[0] = bndXmap->PhysEvaluate(locCoord, pts[0]);
-    }
+    Vmath::Smul(3, 1.0/sqrt(Vmath::Dot(3, projDir, 1, projDir, 1)), 
+                projDir, 1, projDir, 1);
 
     // Update z according to the closest plane in 2.5D cases
-    if(m_f->m_numHomogeneousDir==1)
+    if (m_f->m_numHomogeneousDir==1)
     {
         int nPlanes    = m_f->m_exp[0]->GetHomogeneousBasis()->GetZ().size();
         NekDouble lHom = m_f->m_exp[0]->GetHomoLen();
@@ -272,6 +172,65 @@ void ProcessWallNormalData::Process(po::variables_map &vm)
     }
 
 
+    // Get the bnd id
+    SpatialDomains::BoundaryConditions bcs(m_f->m_session,
+                                           m_f->m_exp[0]->GetGraph());
+    const SpatialDomains::BoundaryRegionCollection bregions =
+        bcs.GetBoundaryRegions();
+    map<int, int> BndRegionMap;
+    int cnt = 0;
+    for (auto &breg_it : bregions)
+    {
+        BndRegionMap[breg_it.first] = cnt++;
+    }
+    int bnd = BndRegionMap[m_f->m_bndRegionsToWrite[0]];
+
+    // Get expansion list for boundary
+    Array<OneD, MultiRegions::ExpListSharedPtr> BndExp(nfields); 
+    for (int i = 0; i < nfields; ++i) {
+        BndExp[i] = m_f->m_exp[i]->UpdateBndCondExpansion(bnd);
+    }
+    
+
+    //-------------------------------------------------------------------------
+    // Find the element that contains the origin, and give the precise origin
+    SpatialDomains::GeometrySharedPtr bndGeom;
+    Array<OneD, NekDouble> locCoord(nBndLcoordDim, -999.0);
+    NekDouble projDist;
+    int elmtid;
+    bool isInside = false;
+
+    // Search and get precise locCoord
+    const int nElmts = BndExp[0]->GetNumElmts();
+    for (elmtid=0; elmtid<nElmts; ++elmtid) //nElmts
+    {    
+        bndGeom  = BndExp[0]->GetExp(elmtid)->GetGeom();         
+        isInside = BndElmtContainsPoint(bndGeom, orig, projDir, locCoord,
+                                        projDist, geomTol);
+        if (isInside) 
+        {
+            break;
+        }
+
+    }
+    ASSERTL0(isInside, "Failed to find the sampling origin on the boundary."); 
+ 
+
+    // Then Update the precise sampling position
+    StdRegions::StdExpansionSharedPtr bndXmap = bndGeom->GetXmap();
+    const int npts = bndXmap->GetTotPoints();
+    Array<OneD, Array<OneD, NekDouble> >       pts(nCoordDim);
+    Array<OneD, Array<OneD, const NekDouble> > bndCoeffs(nCoordDim);
+
+    for (int i=0; i<nCoordDim; ++i) 
+    {
+        pts[i] = Array<OneD, NekDouble>(npts);
+        bndCoeffs[i] = bndGeom->GetCoeffs(i);              // 0/1/2 for x/y/z
+        bndXmap->BwdTrans(bndCoeffs[i], pts[i]);
+        orig[i] = bndXmap->PhysEvaluate(locCoord, pts[i]); // Update wall point
+    }
+ 
+    
     // Get outward-pointing normal vectors for all quadrature points on bnd
     // Use these normals as diretion references
     Array<OneD, Array<OneD, NekDouble> > normalsQ; 
@@ -289,7 +248,7 @@ void ProcessWallNormalData::Process(po::variables_map &vm)
 
     //Get ref normal
     Array< OneD, NekDouble > normalsRef(3, 0.0);
-    int refId = elmtid*from_nPtsPerElmt; // the 1st normal in the bnd element
+    int refId = elmtid*from_nPtsPerElmt + 0; // the 1st normal in the bnd elmt
     for(int i=0;i<m_spacedim; ++i)
     {
         normalsRef[i] = normalsQ[i][refId];
@@ -305,16 +264,22 @@ void ProcessWallNormalData::Process(po::variables_map &vm)
     }
     
 #ifdef _DEBUG_
+    cout << "Input point:" << endl;
+    cout << " - [Ox,Oy,Oz] = [" << xorig[0] << ", " << xorig[1] << ", " << xorig[2] << "]" << endl;
+    cout << "Projection direction:" << endl;
+    cout << " - [nx,ny,nz] = [" << projDir[0] << ", " << projDir[1] << ", " << projDir[2] << "]" << endl;
+    cout << "Final origin on the wall:"<< endl;
+    cout << " - [Px,Py,Pz] = [" << orig[0] << ", " << orig[1] << ", " << orig[2] << "]" << endl;
+
+    cout << "----------" << endl;
     cout << "Ref normals:" << endl;
-    for(int i=0;i<from_nPtsPerElmt;++i){
-        cout << i << ", Q [nx,ny,nz] = [" 
+    for(int i=0; i<from_nPtsPerElmt; ++i){
+        cout << " - " << i << ": Q [nx,ny,nz] = [" 
              << -normalsQ[0][elmtid*from_nPtsPerElmt+i] << ", "
              << -normalsQ[1][elmtid*from_nPtsPerElmt+i] << "]" << endl;
     }
     cout << "Final normals:" << endl;
-    cout << "[nx,ny,nz] = [" << normals[0] << ", " << normals[1] << ", " << normals[2] << "]" << endl;
-    cout << "Final origin coordinates:" << endl;
-    cout << "[Ox,Oy,Oz] = [" << orig[0] << ", " << orig[1] << ", " << orig[2] << "]" << endl;   
+    cout << " - [nx,ny,nz] = [" << normals[0] << ", " << normals[1] << ", " << normals[2] << "]" << endl;
 #endif
 
     
@@ -334,7 +299,7 @@ void ProcessWallNormalData::Process(po::variables_map &vm)
         {
             tmp1 = 1.0 - i * tmp2; // tmp1 = 1-ksi
             h[i] = 1 - tanh(tmp1*tmp4)*tmp5;
-            h[i] *= distanceH; // physical distance in normal direction
+            h[i] *= distH; // physical distance in normal direction
         }
     }
     else if (delta > 0.95)
@@ -344,7 +309,7 @@ void ProcessWallNormalData::Process(po::variables_map &vm)
         for (int i=1; i<nptsH; ++i)
         {
             h[i] = i * tmp1;
-            h[i] *= distanceH; // physical distance in normal direction
+            h[i] *= distH; // physical distance in normal direction
         }
 
     }
@@ -372,7 +337,6 @@ void ProcessWallNormalData::Process(po::variables_map &vm)
 
     Interpolator interp;
     interp.Interpolate(m_f->m_exp, m_f->m_fieldPts, NekConstants::kNekUnsetDouble);
-    */
 }
 
 
@@ -398,6 +362,7 @@ void ProcessWallNormalData::ProjectPoint(
     Vmath::Smul(3, distToOrig-tmp1, projDir, 1, tmp2, 1); // d_xn = (dist-|xn|) n
     Vmath::Vadd(3, gloCoord, 1, tmp2, 1, projGloCoord,1); // x' = x + d_xn
 }
+
 
 /**
  * @brief Project the vertices of the elmt along the given direction to a plane
@@ -452,7 +417,7 @@ void ProcessWallNormalData::ProjectVertices(
  * @param angleTol     Tolerence to check if the total angle is 2*pi.
  * @return             Inside (true) or not (false)
  */
-bool ProcessWallNormalData::isInProjectedArea2D_2(
+bool ProcessWallNormalData::isInProjectedArea2D(
     const Array<OneD, const NekDouble > & projGloCoord,
     const Array<OneD, const Array<OneD, NekDouble> > & projPts,
     const NekDouble paralTol)
@@ -484,7 +449,7 @@ bool ProcessWallNormalData::isInProjectedArea2D_2(
 }
 
 
-bool ProcessWallNormalData::isInProjectedArea3D_2(
+bool ProcessWallNormalData::isInProjectedArea3D(
     const Array<OneD, const NekDouble > & projGloCoord,
     const Array<OneD, const Array<OneD, NekDouble> > & projPts,
     const Array<OneD, const NekDouble > & projDir,
@@ -604,7 +569,7 @@ bool ProcessWallNormalData::isInProjectedArea3D_2(
  * @param iterMax      Maximum iteration steps
  * @return             Converged (true) or not (false)
  */
-bool ProcessWallNormalData::BisectionForLocCoordOnBndElmt_2(
+bool ProcessWallNormalData::BisectionForLocCoordOnBndElmt(
     SpatialDomains::GeometrySharedPtr bndGeom,
     const Array<OneD, const NekDouble > & gloCoord,
     const Array<OneD, const Array<OneD, NekDouble> > & pts,
@@ -657,7 +622,7 @@ bool ProcessWallNormalData::BisectionForLocCoordOnBndElmt_2(
 }
 
 
-bool ProcessWallNormalData::NewtonIterForLocCoordOnBndElmt_2(
+bool ProcessWallNormalData::NewtonIterForLocCoordOnBndElmt(
     SpatialDomains::GeometrySharedPtr bndGeom,
     const Array<OneD, const NekDouble> & gloCoord,
     const Array<OneD, const Array<OneD, NekDouble> > & pts,
@@ -816,7 +781,7 @@ bool ProcessWallNormalData::NewtonIterForLocCoordOnBndElmt_2(
  * @param iterTol      Tolerence for iteration.
  * @return             Inside (true) or not (false)
  */
-bool ProcessWallNormalData::BndElmtContainsPoint_2(
+bool ProcessWallNormalData::BndElmtContainsPoint(
     SpatialDomains::GeometrySharedPtr bndGeom,
     const Array<OneD, const NekDouble > & gloCoord,
     const Array<OneD, const NekDouble > & projDir,
@@ -907,11 +872,11 @@ bool ProcessWallNormalData::BndElmtContainsPoint_2(
     // If yes, then compute the locCoord and check if desired point is found
     if(nCoordDim==2)
     {
-        if (isInProjectedArea2D_2(projGloCoord, projPts, 1.0e-12))
+        if (isInProjectedArea2D(projGloCoord, projPts, 1.0e-12))
         {
             bool isConverge, isDesired;
             
-            isConverge = BisectionForLocCoordOnBndElmt_2(bndGeom, projGloCoord,
+            isConverge = BisectionForLocCoordOnBndElmt(bndGeom, projGloCoord,
                              projPts, dirUse, locCoord, iterTol);
 
             Array<OneD, NekDouble > tmp(2, 0.0);
@@ -920,12 +885,6 @@ bool ProcessWallNormalData::BndElmtContainsPoint_2(
             projDist = Vmath::Dot(2, tmp, 1, projDir, 1);  // can be negative
             
             isDesired = (projDist > 0.0) && (projDist < geomTol);
-
-
-            cout << "test3"<<endl;
-            cout << isConverge << ", " << isDesired <<endl;
-            cout << "locCoord = " << locCoord[0] << endl;
-            cout << "projDist = " << projDist << endl;
 
             return isConverge && isDesired;
         }
@@ -937,12 +896,12 @@ bool ProcessWallNormalData::BndElmtContainsPoint_2(
     }
     else
     {
-        if (isInProjectedArea3D_2(projGloCoord, projPts, projDir, 1.0e-12, 1.0e-6))
+        if (isInProjectedArea3D(projGloCoord, projPts, projDir, 1.0e-12, 1.0e-6))
         {
             NekDouble dist; 
             bool isConverge, isDesired;
 
-            isConverge = NewtonIterForLocCoordOnBndElmt_2(bndGeom, projGloCoord,
+            isConverge = NewtonIterForLocCoordOnBndElmt(bndGeom, projGloCoord,
                              projPts, dirUse, locCoord, dist, iterTol);
             
             if (dist>iterTol)
@@ -973,536 +932,15 @@ bool ProcessWallNormalData::BndElmtContainsPoint_2(
 }
 
 
-
-//----------------------------------------------------------------------------------------
-
-/*
-* Check if the point is in the projected area or not
-* bndGeom   geometry of single element. It is unnecessary if
-            this routine is moved to Geometry class 
-* gloCoord  global coordinates of the point to be checked
-* projDir   projection direction, the coordinate to be computed
-*/
-bool ProcessWallNormalData::isInProjectedArea2D(
-    SpatialDomains::GeometrySharedPtr bndGeom,
-    const Array<OneD, const NekDouble > & gloCoord,
-    const int projDir)
-{
-    // Get the variables 
-    StdRegions::StdExpansionSharedPtr bndXmap = bndGeom->GetXmap();
-    const int npts      = bndXmap->GetTotPoints();
-    const int nCoordDim = m_f->m_exp[0]->GetCoordim(0);
-    Array<OneD, Array<OneD, NekDouble> >       pts(nCoordDim);
-    Array<OneD, Array<OneD, const NekDouble> > bndCoeffs(nCoordDim);
-    
-    for (int i=0; i<nCoordDim; ++i) 
-    {
-        pts[i] = Array<OneD, NekDouble>(npts);
-        bndCoeffs[i] = bndGeom->GetCoeffs(i); // 0/1/2 for x/y/z
-        bndXmap->BwdTrans(bndCoeffs[i], pts[i]);
-    }
-
-    // Set direction
-    int dir1 = 0; // Main(1) and minor(2) coordinates
-    if(projDir==0)
-    {
-        dir1 = 1;
-    }
-    else if(projDir==1)
-    {
-        dir1 = 0;
-    }
-    else{
-        ASSERTL0(false, "Incorrect minor (projection) direction."); 
-    }
-
-    // Set range
-    NekDouble valueL, valueR;
-    if(pts[dir1][0] <= pts[dir1][npts-1])
-    {
-        valueL = pts[dir1][0];
-        valueR = pts[dir1][npts-1];
-    }
-    else
-    {
-        valueL = pts[dir1][npts-1];
-        valueR = pts[dir1][0];
-    }
-
-    // Check
-    if(valueL <= gloCoord[dir1] && gloCoord[dir1] <= valueR)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-
-bool ProcessWallNormalData::isInProjectedArea3D(
-    SpatialDomains::GeometrySharedPtr bndGeom,
-    const Array<OneD, const NekDouble > & gloCoord,
-    const int projDir)
-{
-    // Get the variables 
-    StdRegions::StdExpansionSharedPtr bndXmap = bndGeom->GetXmap();
-    const int npts      = bndXmap->GetTotPoints();
-    const int nCoordDim = m_f->m_exp[0]->GetCoordim(0);
-    Array<OneD, Array<OneD, NekDouble> >       pts(nCoordDim);
-    Array<OneD, Array<OneD, const NekDouble> > bndCoeffs(nCoordDim);
-    
-    for (int i=0; i<nCoordDim; ++i) 
-    {
-        pts[i] = Array<OneD, NekDouble>(npts);
-        bndCoeffs[i] = bndGeom->GetCoeffs(i); // 0/1/2 for x/y/z
-        bndXmap->BwdTrans(bndCoeffs[i], pts[i]);
-    }
-
-    // Set direction
-    int dir1 = 2, dir2 = 0; // Main(1,2) and minor(3) coordinates
-    if(projDir==0)
-    {
-        dir1 = 1;
-        dir2 = 2;
-    }
-    else if(projDir==1)
-    {
-        dir1 = 2;
-        dir2 = 0;
-    }
-    else if(projDir==2)
-    {
-        dir1 = 0;
-        dir2 = 1;
-    }
-    else{
-        ASSERTL0(false, "Incorrect minor (projection) direction."); 
-    }
-
-
-    //Generate a polygen (quad), re-order the points on the edge
-    const int nptsEdge    = sqrt(npts);  // num of points on edge for geo representation
-    const int nptsPolygon = 4*nptsEdge-4;
-    Array<OneD, Array<OneD, NekDouble> > ptsPolygon(3);
-    for (int i=0; i<nCoordDim; ++i) 
-    {
-        ptsPolygon[i] = Array<OneD, NekDouble>(nptsPolygon);
-
-        for(int j=0; j<nptsEdge; ++j)
-        {
-            ptsPolygon[i][j] = pts[i][j];
-        }
-        for(int j=0; j<nptsEdge-2; ++j)
-        {
-            ptsPolygon[i][nptsEdge+j] = pts[i][(j+2)*nptsEdge-1];
-        }
-        for(int j=0; j<nptsEdge; ++j)
-        {
-            ptsPolygon[i][2*nptsEdge-2+j] = pts[i][npts-1-j];
-        }
-        for(int j=0; j<nptsEdge-2; ++j)
-        {
-            ptsPolygon[i][3*nptsEdge-2+j] = pts[i][nptsEdge*(nptsEdge-j-2)];
-        }
-    }
-        
-    
-    // Determine relation using angle method (sum=2*pi)
-    const NekDouble paralTol = 1.0e-12;
-    const NekDouble angleTol = 1.0e-6;
-    NekDouble angleCos, angleAbs, angleSign, angleSum = 0.0;
-    NekDouble norm1, norm2;
-    Array<OneD, NekDouble> vec1(2, 0.0), vec2(2, 0.0);
-    int id1, id2;
-
-    for(int i=0; i<nptsPolygon; ++i)
-    {
-        id1 = i;
-        id2 = (id1==(nptsPolygon-1)) ? 0 : id1+1;
-
-        vec1[0] = ptsPolygon[dir1][id1] - gloCoord[dir1];
-        vec1[1] = ptsPolygon[dir2][id1] - gloCoord[dir2];
-        vec2[0] = ptsPolygon[dir1][id2] - gloCoord[dir1];
-        vec2[1] = ptsPolygon[dir2][id2] - gloCoord[dir2];
-
-        norm1 = sqrt(vec1[0]*vec1[0] + vec1[1]*vec1[1]);
-        norm2 = sqrt(vec2[0]*vec2[0] + vec2[1]*vec2[1]);
-        vec1[0] /= norm1;
-        vec1[1] /= norm1;
-        vec2[0] /= norm2;
-        vec2[1] /= norm2;
-
-        if( (fabs(vec1[0]+vec2[0]) + fabs(vec1[1]+vec2[1])) < paralTol )
-        {
-            // On the line segement, true
-            return true;
-        }
-        else
-        {
-            // Off the line segement, compute angle
-            angleSign = ((vec1[0]*vec2[1]-vec1[1]*vec2[0]) > 0.0) ? 1.0 : -1.0;
-            angleCos  = vec1[0]*vec2[0]+vec1[1]*vec2[1];
-
-            if(angleCos>1.0)
-            {
-                angleCos=1.0;
-            }
-            else if(angleCos<-1.0)
-            {
-                angleCos=-1.0;
-            }
-
-            angleAbs = acos(angleCos);
-            angleSum += angleSign * angleAbs;
-        }   
-    }
-    
-    // Check
-    angleSum = fabs(angleSum);
-    if( fabs(angleSum-2.0*M_PI) < angleTol )
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-
-}
-
-
-/*
-* Compute the Lcoord using the coord
-* bndGeom   geometry of single element. It is unnecessary if
-            this routine is moved to Geometry class 
-* gloCoord  global coordinates of the point
-* pts       global coordinates of the geometry feature points
-* locCoord  local coordinates to be computed
-* projDir   projection direction, the coordinate to be computed
-*/
-bool ProcessWallNormalData::BisectionForLocCoordOnBndElmt(
-    SpatialDomains::GeometrySharedPtr bndGeom,
-    const Array<OneD, const NekDouble > & gloCoord,
-    const Array<OneD, const Array<OneD, NekDouble> > & pts,
-    const int projDir,
-    Array< OneD, NekDouble > & locCoord,
-    NekDouble & dist)
-{
-    const int MaxIterations = 51;     
-    const NekDouble iterTol = 1.e-8;
-  
-    // Set direction
-    int dir1 = 0; // Main(1) and minor(2) coordinates
-    if(projDir==0)
-    {
-        dir1 = 1;
-    }
-    else if(projDir==1)
-    {
-        dir1 = 0;
-    }
-    else{
-        ASSERTL0(false, "Incorrect minor (projection) direction."); 
-    }
-
-    // Bisection iteration
-    Array<OneD, NekDouble> etaLR(2); // range [-1,1]
-    etaLR[0] = -1.0; // left
-    etaLR[1] =  1.0; // right
-    NekDouble tmpL, tmpR;
-    int cnt = 0;
-
-    StdRegions::StdExpansionSharedPtr bndXmap = bndGeom->GetXmap();
-    locCoord[0] = -2.0;
-    dist = 999.0;
-    bool isConverge = false;
-    while(cnt<MaxIterations)
-    {
-        tmpL = bndXmap->PhysEvaluate(etaLR  , pts[dir1]);
-        tmpR = bndXmap->PhysEvaluate(etaLR+1, pts[dir1]);
-
-        if (fabs(gloCoord[dir1]-tmpL) >= fabs(gloCoord[dir1]-tmpR))
-        {
-            etaLR[0] = 0.5 * (etaLR[0]+etaLR[1]);
-        }
-        else
-        {
-            etaLR[1] = 0.5 * (etaLR[0]+etaLR[1]);
-        }
-
-        if ( (etaLR[1]-etaLR[0]) < iterTol )
-        {
-            locCoord[0] = 0.5 * (etaLR[0]+etaLR[1]);
-            dist = fabs(0.5*(tmpL+tmpR)-gloCoord[dir1]);
-            isConverge = true;
-            break;
-        }
-
-        ++cnt;
-    }
-
-    // Warning if failed
-    if(cnt >= MaxIterations)
-    {
-        WARNINGL1(false, "Bisection iteration is not converged");
-    }
-
-    return isConverge;
-
-}
-
-
-bool ProcessWallNormalData::NewtonIterationForLocCoordOnBndElmt(
-    SpatialDomains::GeometrySharedPtr bndGeom,
-    const Array<OneD, const NekDouble> &coords,
-    const Array<OneD, const Array<OneD, NekDouble> > &pts,
-    const int projDir,
-    Array<OneD, NekDouble> &Lcoords,
-    NekDouble &dist)
-{ 
-    // Maximum iterations for convergence
-    const int MaxIterations = 51;
-    // |x-xp|^2 < EPSILON  error    tolerance
-    const NekDouble Tol = 1.e-8;
-    // |r,s|    > LcoordDIV stop   the search
-    const NekDouble LcoordDiv = 15.0;
-
-    StdRegions::StdExpansionSharedPtr bndXmap = bndGeom->GetXmap();
-
-    Array<OneD, const NekDouble> Jac =
-        bndGeom->GetMetricInfo()->GetJac(bndXmap->GetPointsKeys());
-    NekDouble ScaledTol = Vmath::Vsum(Jac.size(), Jac, 1) /
-                          ((NekDouble)Jac.size());
-    ScaledTol *= Tol;
-
-
-
-    int dir1 = 2, dir2 = 0;
-    if(projDir==0)
-    {
-        dir1 = 1;
-        dir2 = 2;
-    }
-    else if(projDir==1)
-    {
-        dir1 = 2;
-        dir2 = 0;   
-    }
-    else if(projDir==2)
-    {
-        dir1 = 0;
-        dir2 = 1;
-    }
-    else{
-        ASSERTL0(false, "The projection direction needs to be 0 or 1 or 2.");  
-    }
-    
-
-    Array<OneD, NekDouble> Dx1D1(pts[dir1].size());
-    Array<OneD, NekDouble> Dx1D2(pts[dir1].size());
-    Array<OneD, NekDouble> Dx2D1(pts[dir1].size());
-    Array<OneD, NekDouble> Dx2D2(pts[dir1].size());
-
-    // Ideally this will be stored in m_geomfactors
-    bndXmap->PhysDeriv(pts[dir1], Dx1D1, Dx1D2);
-    bndXmap->PhysDeriv(pts[dir2], Dx2D1, Dx2D2);
-       
-    // Initial the locCoord
-    Lcoords[0] = 0.0;
-    Lcoords[1] = 0.0;
-
-    NekDouble x1map, x2map, F1, F2;
-    NekDouble derx1_1, derx1_2, derx2_1, derx2_2, jac;
-    bool isConverge = false;
-    int cnt = 0;
-
-    F1 = F2 = 2000; // Starting value of Function
-    NekDouble resid;
-    while (cnt++ < MaxIterations)
-    {
-        x1map = bndXmap->PhysEvaluate(Lcoords, pts[dir1]);
-        x2map = bndXmap->PhysEvaluate(Lcoords, pts[dir2]);
-
-        F1 = coords[dir1] - x1map;
-        F2 = coords[dir2] - x2map;
-
-        if (F1 * F1 + F2 * F2 < ScaledTol)
-        {
-            resid = sqrt(F1 * F1 + F2 * F2);
-            isConverge = true;
-            break;
-        }
-
-        // Interpolate derivative metric at Lcoords
-        derx1_1 = bndXmap->PhysEvaluate(Lcoords, Dx1D1);
-        derx1_2 = bndXmap->PhysEvaluate(Lcoords, Dx1D2);
-        derx2_1 = bndXmap->PhysEvaluate(Lcoords, Dx2D1);
-        derx2_2 = bndXmap->PhysEvaluate(Lcoords, Dx2D2);
-
-        jac = derx2_2 * derx1_1 - derx2_1 * derx1_2;
-        
-        // use analytical inverse of derivitives which are
-        // also similar to those of metric factors.
-        Lcoords[0] =
-            Lcoords[0] +
-            ( derx2_2 * (coords[dir1] - x1map) - derx1_2 * (coords[dir2] - x2map)) / jac;
-
-        Lcoords[1] =
-            Lcoords[1] +
-            (-derx2_1 * (coords[dir1] - x1map) + derx1_1 * (coords[dir2] - x2map)) / jac;
-
-        
-        if( !(std::isfinite(Lcoords[0]) && std::isfinite(Lcoords[1])) )
-        {
-            dist = 1e16;
-            std::ostringstream ss;
-            ss << "nan or inf found in NewtonIterationForLocCoord in element "
-               << bndGeom->GetGlobalID();
-            WARNINGL1(false, ss.str());
-            return false;
-        }
-        if (fabs(Lcoords[0]) > LcoordDiv || fabs(Lcoords[1]) > LcoordDiv)
-        {
-            break; // lcoords have diverged so stop iteration
-        }
-    }
-
-    Array<OneD, DNekMatSharedPtr> I(2);
-    Array<OneD, NekDouble> eta(2);
-
-    bndXmap->LocCoordToLocCollapsed(Lcoords, eta);
-    if(bndGeom->ClampLocCoords(eta, 0.0))
-    {
-        I[0] = bndXmap->GetBasis(0)->GetI(eta);
-        I[1] = bndXmap->GetBasis(1)->GetI(eta + 1);
-        // calculate the global point corresponding to Lcoords
-        x1map = bndXmap->PhysEvaluate(I, pts[dir1]);
-        x2map = bndXmap->PhysEvaluate(I, pts[dir2]);
-        F1 = coords[dir1] - x1map;
-        F2 = coords[dir2] - x2map;
-        dist = sqrt(F1 * F1 + F2 * F2);
-    }
-    else
-    {
-        dist = 0.0;
-    }
-
-    // Warning if failed
-    if (cnt >= MaxIterations)
-    {
-        Array<OneD, NekDouble> collCoords(2);
-        bndXmap->LocCoordToLocCollapsed(Lcoords, collCoords);
-
-        // if coordinate is inside element dump error!
-        if ((collCoords[0] >= -1.0 && collCoords[0] <= 1.0) &&
-            (collCoords[1] >= -1.0 && collCoords[1] <= 1.0))
-        {
-            std::ostringstream ss;
-
-            ss << "Reached MaxIterations (" << MaxIterations
-               << ") in Newton iteration ";
-            ss << "Init value (" << setprecision(4) << 0 << "," << 0
-               << ","
-               << ") ";
-            ss << "Fin  value (" << Lcoords[0] << "," << Lcoords[1] << ","
-               << ") ";
-            ss << "Resid = " << resid << " Tolerance = " << sqrt(ScaledTol);
-
-            WARNINGL1(cnt < MaxIterations, ss.str());
-        }
-    }
-
-    return isConverge;
-
-}
-
-
-/*
-* Check if the boundary element contain an input point
-* Find the Lcoord if it is inside
-*/
-bool ProcessWallNormalData::BndElmtContainsPoint(
-    SpatialDomains::GeometrySharedPtr bndGeom,
-    const Array< OneD, const NekDouble > & gloCoord,
-    Array< OneD, NekDouble > & locCoord,
-    const bool isUseY, 
-    const NekDouble geomTol,
-    NekDouble & dist)
-{
-    // Get variables
-    StdRegions::StdExpansionSharedPtr bndXmap = bndGeom->GetXmap();
-    const int npts      = bndXmap->GetTotPoints();
-    const int nCoordDim = m_f->m_exp[0]->GetCoordim(0);     // =2 for 2.5D cases
-    Array<OneD, Array<OneD, NekDouble> >       pts(nCoordDim);
-    Array<OneD, Array<OneD, const NekDouble> > bndCoeffs(nCoordDim);
-    
-    for (int i=0; i<nCoordDim; ++i) 
-    {
-        pts[i] = Array<OneD, NekDouble>(npts);
-        bndCoeffs[i] = bndGeom->GetCoeffs(i); // 0/1/2 for x/y/z
-        bndXmap->BwdTrans(bndCoeffs[i], pts[i]);
-    }
-
-    const int dir1 = isUseY ? 1 : 0; // Use x or y to determine the location
-    const int dir2 = 1 - dir1;       // The other Lcoord to be computed
-
-
-    if(nCoordDim==2)
-    {
-        if( isInProjectedArea2D(bndGeom, gloCoord, dir2) )
-        {
-            NekDouble tmp;
-            bool isConverge, isDesired;
-            
-            isConverge = BisectionForLocCoordOnBndElmt(bndGeom, gloCoord, pts, dir2, locCoord, dist);
-
-            tmp = bndXmap->PhysEvaluate(locCoord, pts[dir2]);
-            if (fabs(gloCoord[dir2]-tmp) < geomTol)
-            {
-                isDesired = true;
-            }
-
-            return isConverge && isDesired;
-
-         }
-         else{
-             return false;
-         }
-    }
-    else
-    {
-        if( isInProjectedArea3D(bndGeom, gloCoord, dir2) )
-         {
-            NekDouble tmp;
-            bool isConverge, isDesired;
-            
-            isConverge = NewtonIterationForLocCoordOnBndElmt(bndGeom, gloCoord, pts, dir2, locCoord, dist);
-
-            tmp = bndXmap->PhysEvaluate(locCoord, pts[dir2]);
-            if (fabs(gloCoord[dir2]-tmp) < geomTol)
-            {
-                isDesired = true;
-            }
-
-            return isConverge && isDesired;
-            
-         }
-         else{
-             return false;
-         }
-    }
-
-}
-
-
-/*
-* Get the normals for a given locCoord
-*/
+/**
+ * @brief Get the normals for a given locCoord
+ * @param bndGeom      Pointer to the geometry of the boundary element.
+ * @param locCoord     Iteration results for local coordinates (if inside).
+ * @param normals      Wall normal as the result
+ */
 void ProcessWallNormalData::GetNormals(
     SpatialDomains::GeometrySharedPtr bndGeom,
-    Array< OneD, NekDouble > & locCoord, 
+    const Array<OneD, const NekDouble > & locCoord, 
     Array< OneD, NekDouble > & normals)
 {
     const int nCoordDim = m_f->m_exp[0]->GetCoordim(0);     // =2 for 2.5D cases
@@ -1570,7 +1008,6 @@ void ProcessWallNormalData::GetNormals(
     }
 
 }
-
 
 
 

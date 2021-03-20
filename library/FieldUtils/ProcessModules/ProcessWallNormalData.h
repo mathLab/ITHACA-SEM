@@ -115,12 +115,12 @@ private:
     * @param angleTol     Tolerence to check if the total angle is 2*pi.
     * @return             Inside (true) or not (false)
     */ 
-    bool isInProjectedArea2D_2(
+    bool isInProjectedArea2D(
         const Array<OneD, const NekDouble > & projGloCoord,
         const Array<OneD, const Array<OneD, NekDouble> > & projPts,
         const NekDouble paralTol = 1.0e-12);
 
-    bool isInProjectedArea3D_2(
+    bool isInProjectedArea3D(
         const Array<OneD, const NekDouble > & projGloCoord,
         const Array<OneD, const Array<OneD, NekDouble> > & projPts,
         const Array<OneD, const NekDouble > & projDir,
@@ -141,7 +141,7 @@ private:
      * @param iterMax      Maximum iteration steps
      * @return             Converged (true) or not (false)
      */
-    bool BisectionForLocCoordOnBndElmt_2(
+    bool BisectionForLocCoordOnBndElmt(
         SpatialDomains::GeometrySharedPtr bndGeom,
         const Array<OneD, const NekDouble > & gloCoord,
         const Array<OneD, const Array<OneD, NekDouble> > & pts,
@@ -150,7 +150,7 @@ private:
         const NekDouble iterTol = 1.0e-8,
         const int iterMax = 51);
     
-    bool NewtonIterForLocCoordOnBndElmt_2(
+    bool NewtonIterForLocCoordOnBndElmt(
         SpatialDomains::GeometrySharedPtr bndGeom,
         const Array<OneD, const NekDouble> & gloCoord,
         const Array<OneD, const Array<OneD, NekDouble> > & pts,
@@ -174,7 +174,7 @@ private:
     * @param iterTol      Tolerence for iteration.
     * @return             Inside (true) or not (false)
     */
-    bool BndElmtContainsPoint_2(
+    bool BndElmtContainsPoint(
         SpatialDomains::GeometrySharedPtr bndGeom,
         const Array<OneD, const NekDouble > & gloCoord,
         const Array<OneD, const NekDouble > & projDir,
@@ -183,44 +183,15 @@ private:
         const NekDouble geomTol = 1.0,
         const NekDouble iterTol = 1.0e-8);
 
-    //===========================================
-    bool isInProjectedArea2D(
-        SpatialDomains::GeometrySharedPtr bndGeom,
-        const Array<OneD, const NekDouble > & gloCoord,
-        const int projDir);
-    
-    bool isInProjectedArea3D(
-        SpatialDomains::GeometrySharedPtr bndGeom,
-        const Array<OneD, const NekDouble > & gloCoord,
-        const int projDir);
-
-    bool BisectionForLocCoordOnBndElmt(
-        SpatialDomains::GeometrySharedPtr bndGeom,
-        const Array<OneD, const NekDouble > & gloCoord,
-        const Array<OneD, const Array<OneD, NekDouble> > & pts,
-        const int projDir,
-        Array< OneD, NekDouble > & locCoord,
-        NekDouble & dist);
-
-    bool NewtonIterationForLocCoordOnBndElmt(
-        SpatialDomains::GeometrySharedPtr bndGeom,
-        const Array<OneD, const NekDouble> &coords,
-        const Array<OneD, const Array<OneD, NekDouble> > &pts,
-        const int projDir,
-        Array<OneD, NekDouble> &Lcoords,
-        NekDouble &dist);
-
-    bool BndElmtContainsPoint(
-        SpatialDomains::GeometrySharedPtr bndGeom,
-        const Array< OneD, const NekDouble > & gloCoord,
-        Array< OneD, NekDouble > & locCoord,
-        const bool isUseY, 
-        const NekDouble geomTol,
-        NekDouble & dist);
-
+    /**
+    * @brief Get the normals for a given locCoord
+    * @param bndGeom      Pointer to the geometry of the boundary element.
+    * @param locCoord     Iteration results for local coordinates (if inside).
+    * @param normals      Wall normal as the result
+    */
     void GetNormals(
         SpatialDomains::GeometrySharedPtr bndGeom,
-        Array< OneD, NekDouble > & locCoord, 
+        const Array<OneD, const NekDouble > & locCoord, 
         Array< OneD, NekDouble > & normals);
 
 };

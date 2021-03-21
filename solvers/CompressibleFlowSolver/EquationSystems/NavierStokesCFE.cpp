@@ -63,6 +63,13 @@ namespace Nektar
     {
         CompressibleFlowSystem::v_InitObject();
 
+        // rest of initialisation is in this routine so it can also be called
+        // in NavierStokesImplicitCFE initialisation
+        InitObject_Explicit(); 
+    }
+
+    void NavierStokesCFE::InitObject_Explicit()
+    {
         // Get gas constant from session file and compute Cp
         NekDouble gasConstant;
         m_session->LoadParameter ("GasConstant",   gasConstant,   287.058);

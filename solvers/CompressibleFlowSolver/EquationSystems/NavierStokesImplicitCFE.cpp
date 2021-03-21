@@ -63,9 +63,10 @@ namespace Nektar
      */
     void NavierStokesImplicitCFE::v_InitObject()
     {
-        NavierStokesCFE::v_InitObject();
         CFSImplicit::v_InitObject(); 
 
+        NavierStokesCFE::InitObject_Explicit();
+        
         m_GetdFlux_dDeriv_Array = Array<OneD, GetdFlux_dDeriv> (m_spacedim);
         switch (m_spacedim)
         {

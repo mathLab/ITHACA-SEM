@@ -123,6 +123,8 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble>> &inaverg,
               Array<OneD, NekDouble>                    &mu);
 
+    void InitObject_Explicit();
+      
     virtual void v_InitObject();
 
     virtual void v_ExtraFldOutput(

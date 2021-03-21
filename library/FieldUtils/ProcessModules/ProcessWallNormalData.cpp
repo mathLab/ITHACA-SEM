@@ -42,7 +42,6 @@
 
 #include "ProcessWallNormalData.h"
 
-//#define _DEBUG_
 
 using namespace std;
 
@@ -60,21 +59,26 @@ ProcessWallNormalData::ProcessWallNormalData(FieldSharedPtr f) : ProcessBoundary
 {
     f->m_writeBndFld = false; // turned on in upstream ProcessBoundaryExtract
 
-    m_config["xorig"]     = ConfigOption(false, "0.5,0.0,0.0", 
-                            "An apprixomate origin for sampling.");
-    m_config["searchDir"] = ConfigOption(false, "0.0,1.0,0.0", 
-                            "The direction to search the origin on the wall.");
-
-
-    m_config["tol"]   = ConfigOption(false, "0.1", 
-                        "Geometry tolerence to find the exact origin.");
-
-    m_config["distH"] = ConfigOption(false, "0.01", 
-                        "Sampling distance along the wall normals.");
-    m_config["nptsH"] = ConfigOption(false, "5", 
-                        "Number of sampling points along the wall normals.");
-    m_config["d"]     = ConfigOption(false, "0.1", 
-                        "Points distribution control in h direction.");
+    m_config["xorig"]   = ConfigOption(false, "0.5,0.0,0.0",
+                          "The point to be projected onto the wall to get the \
+                          sampling origin. default=[0.5,0,0]");
+    m_config["projDir"] = ConfigOption(false, "0.0,1.0,0.0",
+                          "The direction to project the point onto the wall to \
+                          get the sampling origin. default=[0,1,0]");
+    m_config["tol"]     = ConfigOption(false, "1.0",
+                          "Tolerence to limit projection distance to find the \
+                          desired sampling origin. defalut=1.0");
+    m_config["distH"]   = ConfigOption(false, "0.01",
+                          "Sampling distance along the wall normal at the \
+                          sampling origin. default=0.1");
+    m_config["nptsH"]   = ConfigOption(false, "5",
+                          "Number of sampling points along the wall normal. \
+                          default=5");
+    m_config["d"]       = ConfigOption(false, "0.1",
+                          "The parameter that controls the sampling points' \
+                          distribution. d should be in the range (0,inf). d \
+                          in (0,0.95] gives controled points; d in (0.95,inf) \
+                          gives evenly spaced points");
 }
 
 ProcessWallNormalData::~ProcessWallNormalData()
@@ -87,21 +91,21 @@ ProcessWallNormalData::~ProcessWallNormalData()
 * The input cases can be 2D, 2.5D and 3D. 
 * The data will be exported with .pts extension.
 *
-* The user defined parameters are: bnd, x, y, z, tol, useY, h, nh, d
-* bnd is the boundary id. This boundary should contain the desired origin.
-* (x,y,z) are the coordinates of the input sampling origin. They are used as
-* references to get exact origin on the wall. By default, the projection in the
-* x-direction is used. If flag useY is set to be 1, y-direction projection will
-* be used instead. The definations of the x/y/z-direction are as follows:
-*   - The x-direction is set to be the chordwise direction
-*   - The y-direction is set to be the vertical direction
-*   - The z-direction is set to be the spanwise direction
-* tol is the relative tolerence to find the exact origin. It is the absolute 
-* tolerence over the averaged boundary element edge length
-* h is the sampling depth in the wall-normal direction
-* nh is the number of sampling points along h.
-* d is a destribution control parameter of the sampling points. It should be in
-* the range (0,0.95] for controlled array. d>0.95 gives evenly spaced array.
+* The user defined parameters are: bnd, xorig, searchDir, geomTol, distH,
+* nptsH, and d.
+*  - bnd=0 is the boundary id. This boundary should contain the desired origin.
+*  - xorig="x,y,z" are the coordinates of the input sampling origin. They are
+*    used as the references to get exact origin on the wall.
+*  - projDir="0,1,0" is the projection direction to find the point on the wall
+*  - tol=1.0 is the tolerence that constrains the projection on the wall.
+*    The projection distance should be smaller than this tolerence. This
+*    parameter is set in case the boundary is wavey so that multiple
+*    projections exist at the same time.
+*  - distH=0.01 is the sampling depth in the wall-normal direction.
+*  - nptsH=11 is the number of sampling points along wall-normal direction.
+*  - d=0.1 is a destribution control parameter of the sampling points. It
+*    should be in the range (0,inf). d in range (0,0.95] for controlled array.
+*    d>0.95 gives evenly spaced array.
 */
 void ProcessWallNormalData::Process(po::variables_map &vm)
 {
@@ -119,12 +123,12 @@ void ProcessWallNormalData::Process(po::variables_map &vm)
     std::vector<NekDouble> xorig, searchDir;
     ASSERTL0(ParseUtils::GenerateVector(m_config["xorig"].as<string>(), xorig),
              "Failed to interpret origin coordinates string");
-    ASSERTL0(ParseUtils::GenerateVector(m_config["searchDir"].as<string>(), searchDir),
+    ASSERTL0(ParseUtils::GenerateVector(m_config["projDir"].as<string>(), searchDir),
              "Failed to interpret search direction string");
-    const NekDouble geomTol = m_config["tol"].as<NekDouble>();  // add datailed description
+    const NekDouble geomTol = m_config["tol"].as<NekDouble>();
     const NekDouble distH   = m_config["distH"].as<NekDouble>();
-    const int       nptsH   = m_config["nptsH"].as<int>();      // change name nptsH
-    const NekDouble delta   = m_config["d"].as<NekDouble>();    // add datailed description
+    const int       nptsH   = m_config["nptsH"].as<int>();
+    const NekDouble delta   = m_config["d"].as<NekDouble>();
 
 
     Array<OneD, NekDouble> orig(3), projDir(3); // gloCoord of the origin
@@ -263,24 +267,46 @@ void ProcessWallNormalData::Process(po::variables_map &vm)
         Vmath::Neg(3, normals, 1);
     }
     
-#ifdef _DEBUG_
-    cout << "Input point:" << endl;
-    cout << " - [Ox,Oy,Oz] = [" << xorig[0] << ", " << xorig[1] << ", " << xorig[2] << "]" << endl;
-    cout << "Projection direction:" << endl;
-    cout << " - [nx,ny,nz] = [" << projDir[0] << ", " << projDir[1] << ", " << projDir[2] << "]" << endl;
-    cout << "Final origin on the wall:"<< endl;
-    cout << " - [Px,Py,Pz] = [" << orig[0] << ", " << orig[1] << ", " << orig[2] << "]" << endl;
-
-    cout << "----------" << endl;
-    cout << "Ref normals:" << endl;
-    for(int i=0; i<from_nPtsPerElmt; ++i){
-        cout << " - " << i << ": Q [nx,ny,nz] = [" 
-             << -normalsQ[0][elmtid*from_nPtsPerElmt+i] << ", "
-             << -normalsQ[1][elmtid*from_nPtsPerElmt+i] << "]" << endl;
+    // Output the info if -v is set
+    if (m_f->m_verbose)
+    {
+        cout << "------ wallNormalData module ------\n";
+        cout << "Input point:\n";
+        cout << "  - [Px,Py,Pz] = [" << xorig[0] << ", " << xorig[1];
+        if (xorig.size()>=3)
+        {
+            cout << ", " << xorig[2] << "]\n";
+        }
+        else
+        {
+            cout << ", " << 0.0 << "]\n";
+        }
+        cout << "Projection direction:\n";
+        cout << "  - [vx,vy,vz] = ["
+             << projDir[0] << ", " << projDir[1] << ", " << projDir[2] << "]\n";
+        cout << "Sampling origin on the wall:\n";
+        cout << "  - [Ox,Oy,Oz] = ["
+             << orig[0] << ", " << orig[1] << ", " << orig[2] << "]\n";
+        cout << "Normals at the origin:\n";
+        cout << "  - [nx,ny,nz] = ["
+             << normals[0] << ", " << normals[1] << ", " << normals[2] << "]\n";
+        cout << "Ref normals (at quadrature points in the projected element):\n";
+        for (int i=0; i<from_nPtsPerElmt; ++i)
+        {
+            cout << "  - " << i << ": [nx,ny,nz] = ["
+                 << -normalsQ[0][elmtid*from_nPtsPerElmt+i] << ", "
+                 << -normalsQ[1][elmtid*from_nPtsPerElmt+i];
+            if (m_spacedim==3)
+            {
+                cout << ", " << -normalsQ[2][elmtid*from_nPtsPerElmt+i] << "]\n";
+            }
+            else
+            {
+                cout << "]\n";
+            }
+        }
+        cout << endl;
     }
-    cout << "Final normals:" << endl;
-    cout << " - [nx,ny,nz] = [" << normals[0] << ", " << normals[1] << ", " << normals[2] << "]" << endl;
-#endif
 
     
     //-------------------------------------------------------------------------

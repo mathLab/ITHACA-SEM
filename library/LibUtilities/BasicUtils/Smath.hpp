@@ -49,7 +49,6 @@ namespace Smath
 
 /***************** Math routines  ***************/
 
-#if 1 // try removing LIB_UTILITIES_EXPORT 
 /// \brief Return the soft max of between two scalars
 template <class T> T Smax(const T a, const T b, const T k)
 {
@@ -63,18 +62,5 @@ template NekDouble Smax(const NekDouble a, const NekDouble b,
                         const NekDouble k);
     
 template int Smax(const int a, const int b, const int k);
-#else
-/// \brief Return the soft max of between two scalars
-template <class T, typename = typename std::enable_if
-          < std::is_floating_point<T>::value ||
-            std::is_integral<T> >::type > 
-LIB_UTILITIES_EXPORT T Smax(const T a, const T b, const T k)
-{
-    T maxi = std::max(a, b) * k;
-    T mini = std::min(a, b) * k;
-    T xmax = (maxi + log(1.0 + exp(mini - maxi))) / k;
-    return xmax;
-}
-#endif
 } // namespace Smath
 #endif // NEKTAR_LIB_LIBUTILITIES_BASSICUTILS_SCALARMATH_H

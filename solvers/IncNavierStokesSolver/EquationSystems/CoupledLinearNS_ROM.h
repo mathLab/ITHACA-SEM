@@ -594,6 +594,7 @@ namespace Nektar
 	bool use_sparse_poly;
 	int max_sparse_poly_approx_dimension;
 	int Geo_trafo_load;
+	bool replace_snapshot_with_transformed;
 
         Array<OneD, CoupledSolverMatrices> m_mat;
         

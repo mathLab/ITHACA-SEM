@@ -1382,6 +1382,14 @@ namespace Nektar
 	{
 		Geo_trafo_load = 1;
 	} 	
+	if (m_session->DefinesParameter("replace_snapshot_with_transformed")) 
+	{
+		replace_snapshot_with_transformed = m_session->GetParameter("replace_snapshot_with_transformed");
+	}
+	else
+	{
+		replace_snapshot_with_transformed = 1;
+	} 
 	
 	
 	
@@ -6661,9 +6669,12 @@ namespace Nektar
 
 		// need to replace the snapshot data with the converged one for error computations
 		// that means replace data in the snapshot_x_collection and snapshot_y_collection
-		snapshot_x_collection[i] = snapshot_result_phys_velocity_x_y[0];
-		snapshot_y_collection[i] = snapshot_result_phys_velocity_x_y[1];
-
+		if (replace_snapshot_with_transformed)
+		{
+			snapshot_x_collection[i] = snapshot_result_phys_velocity_x_y[0];
+			snapshot_y_collection[i] = snapshot_result_phys_velocity_x_y[1];
+		}
+		
 //		cout << "collect_f_bnd.col(i).norm() " << collect_f_bnd.col(i).norm() << endl;
 
 		// generate the correct string

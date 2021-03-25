@@ -286,12 +286,12 @@ namespace Nektar
                     Array<OneD, NekDouble> tmpout(nq);
 
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,nq);
-                    Array<OneD, NekDouble > Bwd_data = returnval->GetPtr();
+                    Array<OneD, NekDouble> Bwd_data = returnval->GetPtr();
 
                     StdRegions::StdMatrixKey  matkey(StdRegions::eBwdTrans,
                                         this->DetShapeType(), *this);
                     DNekMatSharedPtr MatBwdTrans    =   GetStdMatrix(matkey);
-                    Array<OneD, NekDouble > BwdTrans_data = MatBwdTrans->GetPtr();
+                    Array<OneD, NekDouble> BwdTrans_data = MatBwdTrans->GetPtr();
 
                     for(int i=0; i<m_ncoeffs; ++i)
                     {

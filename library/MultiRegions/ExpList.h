@@ -334,14 +334,14 @@ namespace Nektar
                  Array<OneD,       NekDouble> &outarray);
 
             inline void MultiplyByInvMassMatrix(
-                const Array<OneD,const NekDouble> &inarray,
-                Array<OneD,      NekDouble> &outarray);
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
 
             inline void MultiplyByMassMatrix(
-                const Array<OneD,const NekDouble> &inarray,
-                Array<OneD,      NekDouble> &outarray)
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray)
             {
-                Array<OneD, NekDouble > tmp (GetNpoints(),0.0);
+                Array<OneD, NekDouble> tmp (GetNpoints(),0.0);
                 BwdTrans(inarray,tmp);
                 IProductWRTBase(tmp,outarray);
             }

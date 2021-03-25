@@ -139,7 +139,7 @@ namespace Vmath
     template LIB_UTILITIES_EXPORT Nektar::NekSingle ran2 (long* idum);
 
     /// \brief Fills a vector with white noise.
-    template<class T>  void FillWhiteNoise( int n, const T eps, T *x,
+    template<class T>  void FillWhiteNoise( int n, const T eps, T* x,
                                       const int incx, int outseed)
     {
 #ifdef NEKTAR_USE_THREAD_SAFETY
@@ -190,7 +190,7 @@ namespace Vmath
 
     /// \brief Multiply vector z = x*y
     template<class T>  void Vmul( int n, const T *x, const int incx, const T *y,
-                                  const int incy,  T*z, const int incz)
+                                  const int incy, T *z, const int incz)
     {
         ++n;
         if (incx == 1 && incy == 1 && incz == 1)
@@ -218,7 +218,7 @@ namespace Vmath
                               const int incy,  Nektar::NekDouble*z, const int incz);
     template  LIB_UTILITIES_EXPORT void Vmul( int n, const Nektar::NekSingle *x, 
         const int incx, const Nektar::NekSingle *y,
-        const int incy,  Nektar::NekSingle*z, const int incz);
+        const int incy, Nektar::NekSingle *z, const int incz);
 
     /// \brief Scalar multiply  y = alpha*x
 
@@ -281,11 +281,11 @@ namespace Vmath
     }
 
     template LIB_UTILITIES_EXPORT void Vdiv( int n, const Nektar::NekDouble *x, const int incx, const Nektar::NekDouble *y,
-              const int incy,  Nektar::NekDouble*z, const int incz);
+              const int incy, Nektar::NekDouble *z, const int incz);
     
     template LIB_UTILITIES_EXPORT void Vdiv( int n, const Nektar::NekSingle *x, 
         const int incx, const Nektar::NekSingle *y,
-        const int incy,  Nektar::NekSingle*z, const int incz);
+        const int incy, Nektar::NekSingle *z, const int incz);
 
     /// \brief Scalar multiply  y = alpha/y
     template<class T>  void Sdiv( int n, const T alpha, const T *x,
@@ -335,7 +335,7 @@ namespace Vmath
                               const int incy,  Nektar::NekDouble *z, const int incz);
     template  LIB_UTILITIES_EXPORT void Vadd( int n, 
         const Nektar::NekSingle *x, const int incx, const Nektar::NekSingle *y,
-        const int incy,  Nektar::NekSingle *z, const int incz);
+        const int incy, Nektar::NekSingle *z, const int incz);
 
     /// \brief Add vector y = alpha - x
     template<class T>  void Sadd( int n, const T alpha, const T *x,
@@ -399,7 +399,7 @@ namespace Vmath
                               const int incy,  Nektar::NekDouble *z, const int incz);
     template  LIB_UTILITIES_EXPORT void Vsub( int n, 
         const Nektar::NekSingle *x, const int incx, const Nektar::NekSingle *y,
-        const int incy,  Nektar::NekSingle *z, const int incz);
+        const int incy, Nektar::NekSingle *z, const int incz);
 
     /// \brief Add vector y = alpha - x
     template<class T>  void Ssub( int n, const T alpha, const T *x,

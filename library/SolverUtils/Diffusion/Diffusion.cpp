@@ -148,7 +148,7 @@ namespace Nektar
             boost::ignore_unused(nTracePts);
             
             int nCoeffs =   outarray[nConvectiveFields-1].size();
-            Array<OneD, NekDouble > tmpCoeff(nCoeffs,0.0);
+            Array<OneD, NekDouble> tmpCoeff(nCoeffs,0.0);
             Array<OneD, Array<OneD, NekDouble> > tmpfield(nDim);
 
             for(int i = 0;i<nDim;i++)

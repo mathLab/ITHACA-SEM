@@ -108,7 +108,7 @@ protected:
 
     NekDouble m_prec_factor = 1.0;
 
-    // This is  maximum number of solution vectors can be stored
+    // This is the maximum number of solution vectors that can be stored
     // For example, in gmres, it is the max number of Krylov space 
     // search directions can be stored
     // It determines the max storage usage

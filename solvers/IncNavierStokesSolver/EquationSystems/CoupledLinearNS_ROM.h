@@ -173,7 +173,23 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > trafo_current_para(Array<OneD, NekDouble> snapshot_x, Array<OneD, NekDouble> snapshot_y, Array<OneD, NekDouble> parameter_of_interest, Eigen::VectorXd & ref_f_bnd, Eigen::VectorXd & ref_f_p, Eigen::VectorXd & ref_f_int);
 	int get_curr_elem_pos(int);   
 	
+	
 	inline double Geo_T(double w, int elemT, int index)
+	{
+		if (Geo_trafo_load == 1)
+			return Geo_T_no1(w,  elemT,  index);
+		else if (Geo_trafo_load == 2)
+			return Geo_T_no2(w,  elemT,  index); 
+		else if (Geo_trafo_load == 3)
+			return Geo_T_no3(w,  elemT,  index); 
+		else if (Geo_trafo_load == 4)
+			return Geo_T_no4(w,  elemT,  index); 
+		else if (Geo_trafo_load == 5)
+			return Geo_T_no5(w,  elemT,  index);
+		return -1; 
+	}
+	
+	inline double Geo_T_no1(double w, int elemT, int index)
 	{
 		Eigen::Matrix2d T;
 	if (elemT == 0) 
@@ -271,6 +287,158 @@ namespace Nektar
 		
 		return elements_trafo;
     }
+
+	inline double Geo_T_no2(double w, int elemT, int index)
+	{
+		Eigen::Matrix2d T;
+		T << 1, 0, 0, 1;
+		if (index == 0) 
+		{
+			return 1/(T(0,0)*T(1,1) - T(0,1)*T(1,0)); // 1/det
+		}
+		else if (index == 1) 
+		{
+			return T(0,0);
+		}
+		else if (index == 2) 
+		{
+			return T(0,1);
+		}
+		else if (index == 3) 
+		{
+			return T(1,0);
+		}
+		else if (index == 4) 
+		{
+			return T(1,1);
+		}
+		return 0;
+	    }
+
+	inline double Geo_T_no3(double w, int elemT, int index)
+	{
+		// placeholder
+		Eigen::Matrix2d T;
+		T << 1, 0, 0, 1;
+		if (index == 0) 
+		{
+			return 1/(T(0,0)*T(1,1) - T(0,1)*T(1,0)); // 1/det
+		}
+		else if (index == 1) 
+		{
+			return T(0,0);
+		}
+		else if (index == 2) 
+		{
+			return T(0,1);
+		}
+		else if (index == 3) 
+		{
+			return T(1,0);
+		}
+		else if (index == 4) 
+		{
+			return T(1,1);
+		}
+		return 0;
+	    }
+	    
+	inline double Geo_T_no4(double w, int elemT, int index)
+	{
+		// placeholder
+		Eigen::Matrix2d T;
+		T << 1, 0, 0, 1;
+		if (index == 0) 
+		{
+			return 1/(T(0,0)*T(1,1) - T(0,1)*T(1,0)); // 1/det
+		}
+		else if (index == 1) 
+		{
+			return T(0,0);
+		}
+		else if (index == 2) 
+		{
+			return T(0,1);
+		}
+		else if (index == 3) 
+		{
+			return T(1,0);
+		}
+		else if (index == 4) 
+		{
+			return T(1,1);
+		}
+		return 0;
+	    }
+	    
+    	inline double Geo_T_no5(double w, int elemT, int index)
+	{
+		// placeholder
+		Eigen::Matrix2d T;
+		T << 1, 0, 0, 1;
+		if (index == 0) 
+		{
+			return 1/(T(0,0)*T(1,1) - T(0,1)*T(1,0)); // 1/det
+		}
+		else if (index == 1) 
+		{
+			return T(0,0);
+		}
+		else if (index == 2) 
+		{
+			return T(0,1);
+		}
+		else if (index == 3) 
+		{
+			return T(1,0);
+		}
+		else if (index == 4) 
+		{
+			return T(1,1);
+		}
+		return 0;
+	    }
+    
+    inline Array<OneD, std::set<int> > set_elem_trafo_no2(int number_elem_trafo)
+    {
+    		Array<OneD, std::set<int> > elements_trafo = Array<OneD, std::set<int> > (number_elem_trafo);
+    		for (int i=0; i<36; ++i)
+    		{
+    			elements_trafo[0].insert(i); 
+		}
+		return elements_trafo;
+    }
+
+
+    inline Array<OneD, std::set<int> > set_elem_trafo_no3(int number_elem_trafo)
+    {
+    		Array<OneD, std::set<int> > elements_trafo = Array<OneD, std::set<int> > (number_elem_trafo);
+
+		// placeholder
+
+		return elements_trafo;
+    }
+
+    inline Array<OneD, std::set<int> > set_elem_trafo_no4(int number_elem_trafo)
+    {
+    		Array<OneD, std::set<int> > elements_trafo = Array<OneD, std::set<int> > (number_elem_trafo);
+
+		// placeholder
+
+		return elements_trafo;
+    }
+
+
+    inline Array<OneD, std::set<int> > set_elem_trafo_no5(int number_elem_trafo)
+    {
+    		Array<OneD, std::set<int> > elements_trafo = Array<OneD, std::set<int> > (number_elem_trafo);
+
+		// placeholder
+
+		return elements_trafo;
+    }
+
+
     
 	void write_curr_field(std::string filename);
 	Array<OneD, Array<OneD, Eigen::MatrixXd > > gen_adv_mats_proj_x_geo(Array<OneD, double> curr_PhysBaseVec_x, Array<OneD, Array<OneD, Eigen::VectorXd > > &adv_vec_proj_x_2d);
@@ -425,7 +593,7 @@ namespace Nektar
 	bool use_fine_grid_VV_and_load_ref;
 	bool use_sparse_poly;
 	int max_sparse_poly_approx_dimension;
-	
+	int Geo_trafo_load;
 
         Array<OneD, CoupledSolverMatrices> m_mat;
         

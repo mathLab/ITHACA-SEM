@@ -1374,6 +1374,14 @@ namespace Nektar
 	{
 		max_sparse_poly_approx_dimension = 1;
 	} 
+	if (m_session->DefinesParameter("Geo_trafo_load")) 
+	{
+		Geo_trafo_load = m_session->GetParameter("Geo_trafo_load");
+	}
+	else
+	{
+		Geo_trafo_load = 1;
+	} 	
 	
 	
 	
@@ -1438,7 +1446,29 @@ namespace Nektar
 		}
 //		elements_trafo = Array<OneD, std::set<int> > (number_elem_trafo);
 
-		elements_trafo = set_elem_trafo( number_elem_trafo);
+		switch(Geo_trafo_load) 
+		{
+			case 1:
+				elements_trafo = set_elem_trafo( number_elem_trafo);
+				break;
+			case 2:
+				elements_trafo = set_elem_trafo_no2( number_elem_trafo);
+				break;
+			case 3:
+				elements_trafo = set_elem_trafo_no3( number_elem_trafo);
+				break;
+			case 4:
+				elements_trafo = set_elem_trafo_no4( number_elem_trafo);
+				break;
+			case 5:
+				elements_trafo = set_elem_trafo_no5( number_elem_trafo);
+				break;
+			default:
+				cout << "error: geo trafo number not known " << endl;				
+		}				
+
+
+
 
 //	    <P> elem_1 = {32,30,11,10,9,8,17,16,15,14,25,24,23,22}   	</P>   
 //          <P> elem_2 = {12, 28, 34, 13,21,20,18,19,26,27}   		</P>   

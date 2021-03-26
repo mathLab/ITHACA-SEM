@@ -389,7 +389,7 @@ DESCRIPTION "This library provides core routines including linear algebra and in
 ADD_LIBRARY(tinysimd INTERFACE)
 TARGET_INCLUDE_DIRECTORIES(tinysimd INTERFACE SimdLib)
 
-ADD_DEPENDENCIES(LibUtilities boost tinyxml-2.6.2 zlib-1.2.7 tinysimd)
+ADD_DEPENDENCIES(LibUtilities boost tinyxml-2.6.2 zlib-1.2.9 tinysimd)
 
 ### Libraries needed specifically by LibUtilities ###
 

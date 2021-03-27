@@ -1291,8 +1291,6 @@ namespace Nektar
                 
                 pointmu     = locmu[npnt];
                 
-                // GetdFlux_dQx_2D(pointnormals,pointmu,pointVar,PointFJac);
-                // functor(pointnormals,pointmu,pointVar,PointFJac);
                 m_GetdFlux_dDeriv_Array[nDervDir](pointnormals,pointmu,
                     pointVar,PointFJac);
                 tmpMatinnData = PointFJac->GetPtr();

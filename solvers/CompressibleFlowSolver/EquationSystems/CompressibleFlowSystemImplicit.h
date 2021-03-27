@@ -101,11 +101,6 @@ namespace Nektar
             const NekDouble                                 time,
             const NekDouble                                 lambda);
 
-        void CalcPreconMat(
-            const Array<OneD, const Array<OneD, NekDouble>> &inpnts,
-            const NekDouble                                 time,
-            const NekDouble                                 lambda);
-
         void CalcRefValues(
             const Array<OneD, const NekDouble>  &inarray);
     
@@ -124,14 +119,9 @@ namespace Nektar
         TensorOfArray5D<NekSingle>          m_stdSMatDataDBDB;
 
         LibUtilities::NekNonlinSysSharedPtr m_nonlinsol;
-        LibUtilities::NekSysOperators       m_nekSysOp;
 
         PreconCfsOpSharedPtr                m_preconCfs;
         
-        void PreconNull(
-            const Array<OneD, NekDouble> &inarray,
-                  Array<OneD, NekDouble> &out);
- 
         void PreconCoeff(
             const Array<OneD, NekDouble> &inarray,
                   Array<OneD, NekDouble> &outarray,
@@ -247,17 +237,8 @@ namespace Nektar
             TensorOfArray4D<NekSingle>          &TraceJacDerivArray,
             TensorOfArray5D<NekSingle>          &TraceIPSymJacArray);
 
-        void MatrixMultiplyMatrixFreeCoeffCentral(
-            const Array<OneD, NekDouble> &inarray,
-                  Array<OneD, NekDouble> &out);
-
-        void MatrixMultiplyMatrixFreeCoeffDualtimestep(
-            const Array<OneD, NekDouble> &inarray,
-                  Array<OneD, NekDouble> &out,
-            const bool                   &controlFlag);
-
         template<typename DataType, typename TypeNekBlkMatSharedPtr>
-        void MultiplyElmtInvMass_PlusSource(
+        void MultiplyElmtInvMassPlusSource(
                   Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr>>  &gmtxarray,
             const NekDouble                                         dtlamda,
             const DataType                                          tmpDataType);
@@ -294,28 +275,6 @@ namespace Nektar
             const Array<OneD, NekDouble >                       &MuVarTrace,
                   Array<OneD, int >                             &nonZeroIndex,
                   Array<OneD,       Array<OneD, NekDouble>>     &traceflux);
-        
-        void CalcTraceIPSymmFlux(
-            const int                                           nConvectiveFields,
-            const int                                           nTracePts,
-            const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
-            const Array<OneD, const Array<OneD, NekDouble>>     &inarray,
-            const NekDouble                                     time,
-            const Array<OneD, const TensorOfArray2D<NekDouble>> &qfield,
-            const Array<OneD, const Array<OneD, NekDouble>>     &vFwd,
-            const Array<OneD, const Array<OneD, NekDouble>>     &vBwd,
-            const Array<OneD, NekDouble >                       &MuVarTrace,
-                  Array<OneD, int >                             &nonZeroIndex,
-                  TensorOfArray3D<NekDouble>                    &traceflux);
-
-        template<typename DataType, typename TypeNekBlkMatSharedPtr>
-        void CalcVisFluxDerivJac(
-            const int                                       nConvectiveFields,
-            const Array<OneD, const Array<OneD, NekDouble>> &inarray,
-            const Array<OneD, const Array<OneD, NekDouble>> &Fwd,
-            const Array<OneD, const Array<OneD, NekDouble>> &Bwd,
-                  TypeNekBlkMatSharedPtr                    &BJac,
-                  DataType                                  &tmpDataType);
 
         void MinusDiffusionFluxJacDirctnElmt(
             const int                                       nConvectiveFields,
@@ -375,18 +334,6 @@ namespace Nektar
             v_CalcPhysDeriv(inarray, qfield);
         }
         
-        void GetDiffusionFluxJacPoint(
-            const Array<OneD, NekDouble>                    &conservVar, 
-            const Array<OneD, const Array<OneD, NekDouble>> &conseDeriv, 
-            const NekDouble                                 mu,
-            const NekDouble                                 DmuDT,
-            const Array<OneD, NekDouble>                    &normals,
-                  DNekMatSharedPtr                          &fluxJac)
-        {
-            v_GetDiffusionFluxJacPoint(conservVar,conseDeriv,mu,DmuDT,normals,
-                fluxJac);
-        }
-
         void DoDiffusionCoeff(
             const Array<OneD, const Array<OneD, NekDouble>> &inarray,
                   Array<OneD,       Array<OneD, NekDouble>> &outarray,
@@ -422,14 +369,6 @@ namespace Nektar
             boost::ignore_unused(inarray, mu, DmuDT);
         }
                 
-        virtual void v_GetDiffusionFluxJacPoint(
-            const Array<OneD, NekDouble>                    &conservVar,
-            const Array<OneD, const Array<OneD, NekDouble>> &conseDeriv, 
-            const NekDouble                                 mu,
-            const NekDouble                                 DmuDT,
-            const Array<OneD, NekDouble>                    &normals,
-                  DNekMatSharedPtr                          &fluxJac);
-
         virtual void v_CalcPhysDeriv(
             const Array<OneD, const Array<OneD, NekDouble>> &inarray,
                   TensorOfArray3D<NekDouble>                &qfield)

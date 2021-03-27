@@ -96,11 +96,12 @@ namespace Nektar
         m_nonlinsol = LibUtilities::GetNekNonlinSysFactory().CreateInstance(
             SolverType, m_session, m_comm, ntotal, key);
 
-        m_nekSysOp.DefineNekSysResEval(&CFSImplicit::
+        LibUtilities::NekSysOperators       nekSysOp;
+        nekSysOp.DefineNekSysResEval(&CFSImplicit::
             NonlinSysEvaluatorCoeff1D, this);
-        m_nekSysOp.DefineNekSysLhsEval(&CFSImplicit::
+        nekSysOp.DefineNekSysLhsEval(&CFSImplicit::
             MatrixMultiplyMatrixFreeCoeff, this);
-        m_nekSysOp.DefineNekSysPrecon(
+        nekSysOp.DefineNekSysPrecon(
                     &CFSImplicit::PreconCoeff, this);
 
         int nvariables  =   m_fields.size();
@@ -128,7 +129,7 @@ namespace Nektar
 
         m_session->LoadParameter("nPadding", m_nPadding, 4);
 
-        m_nonlinsol->SetSysOperators(m_nekSysOp);
+        m_nonlinsol->SetSysOperators(nekSysOp);
     }
 
     /**
@@ -410,16 +411,6 @@ namespace Nektar
             }
             cout << "m_inArrayNorm    = " << m_inArrayNorm << endl;
         }
-    }
-
-
-    void CFSImplicit::PreconNull(
-        const Array<OneD, NekDouble> &inarray,
-              Array<OneD, NekDouble> &out)
-    {
-        int ntotal = inarray.size();
-        Vmath::Vcopy(ntotal, inarray, 1, out, 1);
-        return;
     }
 
     void CFSImplicit::PreconCoeff(
@@ -1346,38 +1337,6 @@ namespace Nektar
         }
     }
 
-    void CFSImplicit::CalcTraceIPSymmFlux(
-            const int                                           nConvectiveFields,
-            const int                                           nTracePts,
-            const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
-            const Array<OneD, const Array<OneD, NekDouble>>     &inarray,
-            const NekDouble                                     time,
-            const Array<OneD, const TensorOfArray2D<NekDouble>> &qfield,
-            const Array<OneD, const Array<OneD, NekDouble>>     &vFwd,
-            const Array<OneD, const Array<OneD, NekDouble>>     &vBwd,
-            const Array<OneD, NekDouble >                       &MuVarTrace,
-                  Array<OneD, int >                             &nonZeroIndex,
-                  TensorOfArray3D<NekDouble>                    &traceflux)
-    {
-        boost::ignore_unused(time, MuVarTrace);
-
-        if(m_viscousJacFlag)
-        {
-            TensorOfArray3D<NekDouble>  VolumeFlux;
-            m_diffusion->DiffuseTraceSymmFlux(nConvectiveFields,fields,
-                inarray,qfield,VolumeFlux,traceflux,vFwd,vBwd,nonZeroIndex);
-            for(int nd = 0; nd < m_spacedim; nd++)
-            {
-                for(int i = 0; i < nConvectiveFields; i++)
-                {
-                    Vmath::Ssub(nTracePts,0.0,traceflux[nd][i],1,
-                        traceflux[nd][i],1);
-                }
-            }
-            
-        }
-    }
-
     void CFSImplicit::CalcPreconMatBRJCoeff(
         const Array<OneD, const Array<OneD, NekDouble>>  &inarray,
         Array<OneD, Array<OneD, SNekBlkMatSharedPtr>>    &gmtxarray,
@@ -1405,7 +1364,7 @@ namespace Nektar
         AddMatNSBlkDiagBnd(inarray,qfield,gmtxarray,TraceJac,
             TraceJacDeriv,TraceJacDerivSign,TraceIPSymJacArray);
 
-        MultiplyElmtInvMass_PlusSource(gmtxarray,m_TimeIntegLambda,zero);
+        MultiplyElmtInvMassPlusSource(gmtxarray,m_TimeIntegLambda,zero);
 
         ElmtVarInvMtrx(gmtxarray,gmtVar,zero);
 
@@ -1430,98 +1389,7 @@ namespace Nektar
     }
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
-    void CFSImplicit::CalcVisFluxDerivJac(
-        const int                                       nConvectiveFields,
-        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
-        const Array<OneD, const Array<OneD, NekDouble>> &Fwd,
-        const Array<OneD, const Array<OneD, NekDouble>> &Bwd,
-              TypeNekBlkMatSharedPtr                    &BJac,
-              DataType                                  &tmpDataType)
-    {
-        boost::ignore_unused(inarray, tmpDataType);
-        MultiRegions::ExpListSharedPtr tracelist = 
-            m_fields[0]->GetTrace();
-        std::shared_ptr<LocalRegions::ExpansionVector> traceExp= 
-            tracelist->GetExp();
-        int ntotTrac            = (*traceExp).size();
-        int noffset,pntoffset;
-
-        int nTracePts  = tracelist->GetTotPoints();
-
-        Array<OneD, NekDouble> tracBwdWeightAver(nTracePts,0.0);
-        Array<OneD, NekDouble> tracBwdWeightJump(nTracePts,0.0);
-        m_fields[0]->GetBwdWeight(tracBwdWeightAver,tracBwdWeightJump);
-        tracBwdWeightAver = NullNekDouble1DArray;
-        Vmath::Ssub(nTracePts,2.0,tracBwdWeightJump,1,tracBwdWeightJump,1);
-        Vmath::Smul(nTracePts,0.5,tracBwdWeightJump,1,tracBwdWeightJump,1);
-        
-        Array<OneD, Array<OneD, NekDouble>>    solution_jump(nConvectiveFields);
-        Array<OneD, Array<OneD, NekDouble>>    solution_Aver(nConvectiveFields);
-        for (int i = 0; i < nConvectiveFields; ++i)
-        {
-            solution_jump[i]    =   Array<OneD, NekDouble>(nTracePts,0.0);
-            solution_Aver[i]    =   Array<OneD, NekDouble>(nTracePts,0.0);
-        }
-
-        m_diffusion->ConsVarAveJump(nConvectiveFields,nTracePts,Fwd,Bwd,
-            solution_Aver,solution_jump);
-
-        const Array<OneD, const Array<OneD, NekDouble> > tracenormals =   
-            m_diffusion->GetTraceNormal();
-
-        TensorOfArray2D<DNekMatSharedPtr> ElmtJac;
-        ElmtJac = TensorOfArray2D<DNekMatSharedPtr> (ntotTrac);
-        for(int  nelmt = 0; nelmt < ntotTrac; nelmt++)
-        {
-            int nTracPnt = (*traceExp)[nelmt]->GetTotPoints();
-            ElmtJac[nelmt] = Array<OneD, DNekMatSharedPtr>(nTracPnt);
-            for(int npnt = 0; npnt < nTracPnt; npnt++)
-            {
-                ElmtJac[nelmt][npnt] = MemoryManager<DNekMat>
-                    ::AllocateSharedPtr(nConvectiveFields, nConvectiveFields);
-            }
-        }
-        
-        DNekMatSharedPtr tmpMatinn;
-        Array<OneD, NekDouble > tmpMatinnData;
-        Array<OneD, DataType > tmpMatoutData;
-        for(int nDervDir = 0; nDervDir < m_spacedim; nDervDir++)
-        {
-            GetFluxDerivJacDirctn(tracelist,tracenormals,nDervDir,
-                solution_Aver,ElmtJac);
-
-            for(int  ntrace = 0; ntrace < ntotTrac; ntrace++)
-            {
-                int nTracPnt    = (*traceExp)[ntrace]->GetTotPoints();
-                noffset         = tracelist->GetPhys_Offset(ntrace);
-                for(int npnt = 0; npnt < nTracPnt; npnt++)
-                {
-                    pntoffset = noffset+npnt;
-                    NekDouble weight = tracBwdWeightJump[pntoffset];
-
-                    tmpMatinn       = ElmtJac[ntrace][npnt];
-                    tmpMatinnData   = tmpMatinn->GetPtr(); 
-                    tmpMatoutData = 
-                        BJac->GetBlock(pntoffset,pntoffset)->GetPtr(); 
-                    Vmath::Smul(nConvectiveFields*nConvectiveFields,weight,
-                        tmpMatinnData,1,tmpMatinnData,1);
-                    for(int j = 0; j< nConvectiveFields;j++)
-                    {
-                        for(int i=0;i<nConvectiveFields;i++)
-                        {
-                            tmpMatoutData[(j*m_spacedim+nDervDir)*
-                                nConvectiveFields+i] =
-                                DataType( tmpMatinnData[j*nConvectiveFields+i] );
-                        }
-                    }
-
-                }
-            }
-        }
-    }
-
-    template<typename DataType, typename TypeNekBlkMatSharedPtr>
-    void CFSImplicit::MultiplyElmtInvMass_PlusSource(
+    void CFSImplicit::MultiplyElmtInvMassPlusSource(
               Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr>>  &gmtxarray,
         const NekDouble                                         dtlamda,
         const DataType                                          tmpDataType)
@@ -1695,19 +1563,6 @@ namespace Nektar
         boost::ignore_unused(explist, normals, nDervDir, inarray, ElmtJac);
     }
 
-    void CFSImplicit::v_GetDiffusionFluxJacPoint(
-        const Array<OneD, NekDouble>                    &conservVar, 
-        const Array<OneD, const Array<OneD, NekDouble>> &conseDeriv, 
-        const NekDouble                                 mu,
-        const NekDouble                                 DmuDT,
-        const Array<OneD, NekDouble>                    &normals,
-              DNekMatSharedPtr                          &fluxJac)
-    {
-        boost::ignore_unused(conservVar, conseDeriv, mu, DmuDT, normals, 
-            fluxJac);
-   
-    }
-
     void CFSImplicit::GetFluxVectorJacDirElmt(
         const int                                       nConvectiveFields,
         const int                                       nElmtPnt,
@@ -1855,70 +1710,6 @@ namespace Nektar
        
         return;
     }
-
-    void CFSImplicit::MatrixMultiplyMatrixFreeCoeffCentral(
-        const Array<OneD, NekDouble> &inarray,
-              Array<OneD, NekDouble> &out)
-    {
-        NekDouble eps = m_jacobiFreeEps;
-        unsigned int ntotalGlobal     = inarray.size();
-        NekDouble magninarray = Vmath::Dot(ntotalGlobal,inarray,inarray);
-        m_comm->AllReduce(magninarray, Nektar::LibUtilities::ReduceSum);
-        // eps *= magnitdEstimatMax;
-        eps *= sqrt( (sqrt(m_inArrayNorm) + 1.0)/magninarray);
-        NekDouble oeps = 1.0/eps;
-        unsigned int nvariables = m_fields.size();
-        unsigned int npoints    = GetNcoeffs();
-        Array<OneD, NekDouble > tmp;
-        Array<OneD, Array<OneD, NekDouble>> solplus(nvariables);
-        Array<OneD, Array<OneD, NekDouble>> resplus(nvariables);
-        Array<OneD, Array<OneD, NekDouble>> resminus(nvariables);
-        for(int i = 0; i < nvariables; i++)
-        {
-            solplus[i] =  Array<OneD, NekDouble>(npoints,0.0);
-            resplus[i] =  Array<OneD, NekDouble>(npoints,0.0);
-            resminus[i] =  Array<OneD, NekDouble>(npoints,0.0);
-        }
-
-        for (int i = 0; i < nvariables; i++)
-        {
-            tmp = inarray + i*npoints;
-        }
-        NonlinSysEvaluatorCoeff(solplus,resplus);
-
-        for (int i = 0; i < nvariables; i++)
-        {
-            tmp = inarray + i*npoints;
-        }
-        NonlinSysEvaluatorCoeff(solplus,resminus);
-
-        for (int i = 0; i < nvariables; i++)
-        {
-            tmp = out + i*npoints;
-            Vmath::Vsub(npoints,resplus[i],1,resminus[i],1,tmp,1);
-            Vmath::Smul(npoints, 0.5*oeps ,tmp,1,tmp,1);
-        }
-       
-        return;
-    }
-
-    void CFSImplicit::MatrixMultiplyMatrixFreeCoeffDualtimestep(
-        const Array<OneD, NekDouble> &inarray,
-              Array<OneD, NekDouble> &out,
-        const bool                   &controlFlag)
-    {
-        if(controlFlag)
-        {
-            MatrixMultiplyMatrixFreeCoeffCentral(inarray,out);
-        }
-        else
-        {
-            MatrixMultiplyMatrixFreeCoeff(inarray,out);
-        }
-
-        return;
-    }
-
 
     template<typename DataType, typename TypeNekBlkMatSharedPtr>
     void CFSImplicit::TranSamesizeBlkDiagMatIntoArray(

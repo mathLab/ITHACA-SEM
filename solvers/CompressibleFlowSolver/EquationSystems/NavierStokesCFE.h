@@ -78,6 +78,7 @@ namespace Nektar
     NekDouble                           m_Cp;
     NekDouble                           m_Cv;
     NekDouble                           m_Prandtl;
+    
     NekDouble                           m_mu0;
     std::string                         m_physicalSensorType;
     std::string                         m_smoothing;
@@ -87,6 +88,7 @@ namespace Nektar
     EquationOfStateSharedPtr            m_eos;
 
     NekDouble                           m_Twall;
+
     NekDouble                           m_muRef;
     NekDouble                           m_thermalConductivityRef;
     Array<OneD, NekDouble>              m_mu;
@@ -150,7 +152,6 @@ namespace Nektar
     void GetPhysicalAV(
         const Array<OneD, const Array<OneD, NekDouble>> &physfield);
       
-    void GetTracePhysicalAV();
     void Ducros( Array<OneD, NekDouble> &field );
     void C0Smooth(Array<OneD, NekDouble> &field);
   

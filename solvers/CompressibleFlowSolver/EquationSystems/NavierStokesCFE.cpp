@@ -268,7 +268,6 @@ namespace Nektar
 
             if (m_shockCaptureType == "Physical")
             {
-                // GetPhysicalAV(tmp);
                 Array<OneD, NekDouble> muavFwd(nCoeffs);
                 m_fields[0]->FwdTrans_IterPerExp(m_muav,   muavFwd);
                 variables.push_back  ("ArtificialVisc");
@@ -1010,22 +1009,4 @@ namespace Nektar
         }
     }
 
-    /**
-    * @brief Get trace of the physical artificial viscosity
-    *
-    */
-    void NavierStokesCFE::GetTracePhysicalAV()
-    {
-        int nTracePts = m_fields[0]->GetTrace()->GetTotPoints();
-        Array<OneD, NekDouble> Fwd(nTracePts,0.0);
-        Array<OneD, NekDouble> Bwd(nTracePts,0.0);
-        // BwdMuvar is left to be 0.0 according to DiffusionLDG.cpp
-        m_fields[0]->GetFwdBwdTracePhys(m_muav,Fwd,Bwd, false);
-
-        for(int k = 0; k < nTracePts; ++k)
-        {
-            m_muavTrace[k] = 0.5 * (Fwd[k] + Bwd[k]) ;
-        }
-    }
-    
 }

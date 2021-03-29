@@ -221,7 +221,7 @@ namespace Blas
         return F77NAME(idamax)(n,x,incx) -1;
     }
 
-    /// \brief BLAS level 2: Matrix vector multiply A = A := alpha*x*y**T + A 
+    /// \brief BLAS level 2: Matrix vector multiply A = alpha*x*y**T + A 
     /// where A[m x n]
     static inline void Ger (const int& m,
                  const int& n,       const double& alpha,
@@ -232,7 +232,7 @@ namespace Blas
         F77NAME(dger) (m,n,alpha,x,incx,y,incy,a,lda);
     }
 
-    /// \brief BLAS level 2: Matrix vector multiply A = A := alpha*x*y**T + A 
+    /// \brief BLAS level 2: Matrix vector multiply A = alpha*x*y**T + A 
     /// where A[m x n]
     static inline void Ger (const int& m,
                  const int& n,       const float& alpha,

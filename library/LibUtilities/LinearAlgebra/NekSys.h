@@ -305,7 +305,7 @@ protected:
                               const NekDouble tol, const NekDouble factor)
     {
         boost::ignore_unused(nGlobal, pInput, pOutput, nDir, tol, factor);
-        ASSERTL0(false, "LinSysIterSovler NOT CORRECT.");
+        ASSERTL0(false, "LinSysIterSolver NOT CORRECT.");
         return 0;
     }
 

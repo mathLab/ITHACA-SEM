@@ -5221,8 +5221,8 @@ namespace Nektar
         }
 
         void ExpList::GetMatIpwrtDeriveBase(
-            const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >   &inarray,
-            Array<OneD, DNekMatSharedPtr>                       &mtxPerVar)
+            const TensorOfArray3D<NekDouble>    &inarray,
+            Array<OneD, DNekMatSharedPtr>       &mtxPerVar)
         {
             int ntotElmt            = (*m_exp).size();
 
@@ -5301,7 +5301,7 @@ namespace Nektar
 
                 for(int ndir =0;ndir<nspacedim;ndir++)
                 {
-                    (*m_exp)[nelmt]->ProjectVectorintoStandardExp(
+                    (*m_exp)[nelmt]->ProjectVectorIntoStandardExp(
                             ndir,inarray[ndir][nelmt],tmppnts);
                     for(int n =0;n<nspacedim;n++)
                     {

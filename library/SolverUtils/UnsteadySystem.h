@@ -116,7 +116,8 @@ protected:
     /// coefff of spacial derivatives(rhs or m_F in GLM) in calculating the residual of the whole equation(used in unsteady time integrations)
     NekDouble                                       m_TimeIntegLambda=0.0;
 
-    bool                                            m_flagImplItsStatistcs;
+    bool                                         m_flagImplicitItsStatistics;
+    bool                                         m_flagImplicitSolver = false;
     
     /// estimate the magnitude of each conserved varibles
     Array<OneD, NekDouble>                          m_magnitdEstimat;

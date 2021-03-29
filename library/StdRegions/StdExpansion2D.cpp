@@ -232,7 +232,6 @@ namespace Nektar
             int    nmodes0 = m_base[0]->GetNumModes();
 
             Array<OneD, NekDouble> tmp1(2*nqtot+m_ncoeffs+nmodes0*nquad1,0.0);
-            Array<OneD, NekDouble> tmp2(tmp1 +   nqtot);
             Array<OneD, NekDouble> tmp3(tmp1 + 2*nqtot);
             Array<OneD, NekDouble> tmp4(tmp1 + 2*nqtot+m_ncoeffs);
 

@@ -141,12 +141,12 @@ namespace Nektar
             }
 
 
-            LOCAL_REGIONS_EXPORT void ProjectVectorintoStandardExp(
+            LOCAL_REGIONS_EXPORT void ProjectVectorIntoStandardExp(
                     const int dir, 
                     const Array<OneD, const NekDouble>      &inarray, 
                     Array<OneD, Array<OneD, NekDouble> >    &outarray)
             {
-                v_ProjectVectorintoStandardExp(dir,inarray,outarray);
+                v_ProjectVectorIntoStandardExp(dir,inarray,outarray);
             }
 
             inline ExpansionSharedPtr GetLeftAdjacentElementExp() const;
@@ -360,7 +360,7 @@ namespace Nektar
             virtual NekDouble v_VectorFlux(
                     const Array<OneD, Array<OneD, NekDouble > > &vec);
 
-            virtual void v_ProjectVectorintoStandardExp
+            virtual void v_ProjectVectorIntoStandardExp
                    (const int dir, 
                     const Array<OneD, const NekDouble>      &inarray, 
                     Array<OneD, Array<OneD, NekDouble> >    &outarray);

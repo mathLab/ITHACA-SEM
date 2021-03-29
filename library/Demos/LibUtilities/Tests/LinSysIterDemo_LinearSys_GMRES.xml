@@ -5,7 +5,7 @@
 
     <CONDITIONS>
         <SOLVERINFO>
-            <I PROPERTY="LinSysIterSovler"   VALUE="GMRES"/>
+            <I PROPERTY="LinSysIterSolver"   VALUE="GMRES"/>
         </SOLVERINFO>
         <PARAMETERS>
             <P> LinSysMaxStorage = 4 </P>

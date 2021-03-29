@@ -91,6 +91,9 @@ namespace Nektar
                                        m_explicitAdvection,true);
             m_session->MatchSolverInfo("REACTIONADVANCEMENT", "Explicit",
                                        m_explicitReaction, true);
+            
+            m_session->MatchSolverInfo("FLAGIMPLICITITSSTATISTICS", "True",
+                                       m_flagImplicitItsStatistics, false);
 
             m_session->LoadParameter("CheckAbortSteps", m_abortSteps, 1);
             // Steady state tolerance
@@ -127,6 +130,8 @@ namespace Nektar
                 m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.0);
                 m_session->LoadParameter("CFLEnd", m_CFLEnd, 0.0);
                 m_session->LoadParameter("CFLGrowth", m_CFLGrowth, 1.0);
+                m_session->LoadParameter("CFLGrowth", m_CFLGrowth, 1.0);
+
 
                 // Time tolerance between filter update time and time integration
                 m_session->LoadParameter("FilterTimeWarning",
@@ -287,7 +292,7 @@ namespace Nektar
 
                 // Flag to update AV
                 m_CalcPhysicalAV = true;
-// Frozen preconditioner checks
+                // Frozen preconditioner checks
                 if (UpdateTimeStepCheck())
                 {
                     m_cflSafetyFactor = tmp_cflSafetyFactor;
@@ -364,7 +369,7 @@ namespace Nektar
                     cpuPrevious = cpuTime;
                     cpuTime = 0.0;
 
-                    if(m_flagImplItsStatistcs)
+                    if(m_flagImplicitItsStatistics && m_flagImplicitSolver)
                     {
                         cout 
                              << "       &&" 
@@ -539,7 +544,7 @@ namespace Nektar
                     cout << "Time-integration  : " << intTime  << "s"   << endl;
                 }
 
-                if(m_flagImplItsStatistcs)
+                if(m_flagImplicitItsStatistics && m_flagImplicitSolver)
                 {
                     cout 
                     << "-------------------------------------------" << endl

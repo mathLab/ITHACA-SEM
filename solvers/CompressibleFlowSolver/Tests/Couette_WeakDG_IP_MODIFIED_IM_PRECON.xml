@@ -60,8 +60,6 @@
 
       <P> PreconItsStep = 7                     </P>
 
-      <P> flagImplItsStatistcs  = 1                     </P> 
-
       <P> SteadyStateTol    = 3.0E-9                     </P> 
     </PARAMETERS>
 
@@ -76,7 +74,8 @@
         <I PROPERTY="UpwindType"            VALUE="Roe"                 />
         <I PROPERTY="ProblemType"           VALUE="General"             />
         <I PROPERTY="ViscosityType"         VALUE="Constant"            />
-        <I PROPERTY="LinSysIterSovlerInNewton" VALUE="GMRES"               />
+        <I PROPERTY="LinSysIterSolverInNewton" VALUE="GMRES"            />
+        <I PROPERTY="flagImplicitItsStatistics" VALUE = "True"          /> 
     </SOLVERINFO>
 
     <VARIABLES>

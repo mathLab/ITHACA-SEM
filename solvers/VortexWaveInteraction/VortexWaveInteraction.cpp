@@ -510,7 +510,7 @@ namespace Nektar
         // Create driver
         std::string vDriverModule;
         m_sessionWave->LoadSolverInfo("Driver", vDriverModule, "ModifiedArnoldi");
-        cout << "Setting up linearised NS sovler" << endl;
+        cout << "Setting up linearised NS Solver" << endl;
         DriverSharedPtr solverWave = GetDriverFactory().CreateInstance(vDriverModule, m_sessionWave, m_graphWave);
 
         /// Do linearised NavierStokes Session  with Modified Arnoldi

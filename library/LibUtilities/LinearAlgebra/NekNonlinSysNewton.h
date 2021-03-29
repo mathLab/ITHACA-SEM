@@ -76,8 +76,8 @@ protected:
     NekDouble m_SysResNorm;
 
     int m_InexactNewtonForcing = 0;
-    NekDouble   m_ForcingGama  = 1.0;
-    NekDouble   m_ForcingAlpha = 0.5 * (1.0 + sqrt(5));
+    NekDouble   m_forcingGamma  = 1.0;
+    NekDouble   m_forcingAlpha = 0.5 * (1.0 + sqrt(5));
 
     virtual void v_InitObject();
 

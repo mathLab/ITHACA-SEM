@@ -184,10 +184,10 @@ void NekNonlinSysNewton::CalcInexactNewtonForcing(
             }
         case 1: 
             {
-                NekDouble tmpForc = m_ForcingGama * 
-                    pow((resnorm / resnormOld), m_ForcingAlpha); 
-                NekDouble tmp = m_ForcingGama * 
-                    pow(forcing, m_ForcingAlpha);
+                NekDouble tmpForc = m_forcingGamma * 
+                    pow((resnorm / resnormOld), m_forcingAlpha); 
+                NekDouble tmp = m_forcingGamma * 
+                    pow(forcing, m_forcingAlpha);
                 if (tmp > 0.1)
                 {
                     forcing = min(m_LinSysRelativeTolInNonlin, 

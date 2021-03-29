@@ -198,13 +198,13 @@ namespace Nektar
             
             SOLVER_UTILS_EXPORT void DiffuseCoeffs(
                 const std::size_t                             nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>   &fields,
-                const Array<OneD, Array<OneD, NekDouble> >          &inarray,
-                Array<OneD, Array<OneD, NekDouble> >                &outarray,
-                const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
-                const Array<OneD, Array<OneD, NekDouble> >          &pBwd,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-                Array< OneD, int >                                  &nonZeroIndex)
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >              &outarray,
+                const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
+                const Array<OneD, Array<OneD, NekDouble> >        &pBwd,
+                TensorOfArray3D<NekDouble>                        &qfield,
+                Array< OneD, int >                                &nonZeroIndex)
             {
                 v_DiffuseCoeffs(nConvectiveFields, fields, inarray, outarray,
                                 pFwd, pBwd,qfield,nonZeroIndex);
@@ -505,8 +505,8 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> >              &outarray,
                 const Array<OneD, Array<OneD, NekDouble> >        &vFwd,
                 const Array<OneD, Array<OneD, NekDouble> >        &vBwd,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
-                Array< OneD, int >                                 &nonZeroIndex);
+                TensorOfArray3D<NekDouble>                        &qfield,
+                Array< OneD, int >                               &nonZeroIndex);
         
 
             SOLVER_UTILS_EXPORT virtual void v_ConsVarAveJump(

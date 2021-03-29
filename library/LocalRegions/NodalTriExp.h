@@ -340,7 +340,7 @@ namespace Nektar
                 IProductWRTDerivBase_SumFac(dir,inarray,outarray);
             }    
 
-            virtual void v_ProjectVectorintoStandardExp(
+            virtual void v_ProjectVectorIntoStandardExp(
                 const int dir, 
                 const Array<OneD, const NekDouble>      &inarray, 
                 Array<OneD, Array<OneD, NekDouble> >    &outarray);

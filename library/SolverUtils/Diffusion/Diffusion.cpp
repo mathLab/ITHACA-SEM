@@ -136,14 +136,14 @@ namespace Nektar
 
         void Diffusion::AddSymmFluxIntegralToOffDiag(
             const int                                          nConvectiveFields,
-            const int                                             nDim,
-            const int                                             nPts,
-            const int                                             nTracePts,
-            const Array<OneD, MultiRegions::ExpListSharedPtr>     &fields,
-            const Array<OneD, const int >                         &nonZeroIndex,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    &Fwdflux,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >    &Bwdflux,
-            Array<OneD, Array<OneD, NekDouble> >                  &outarray)
+            const int                                          nDim,
+            const int                                          nPts,
+            const int                                          nTracePts,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>  &fields,
+            const Array<OneD, const int >                      &nonZeroIndex,
+            TensorOfArray3D<NekDouble>                         &Fwdflux,
+            TensorOfArray3D<NekDouble>                         &Bwdflux,
+            Array<OneD, Array<OneD, NekDouble> >               &outarray)
         {
             boost::ignore_unused(nTracePts);
             
@@ -212,8 +212,8 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> >              &outarray,
                 const Array<OneD, Array<OneD, NekDouble> >        &vFwd,
                 const Array<OneD, Array<OneD, NekDouble> >        &vBwd,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
-                Array< OneD, int >                                 &nonZeroIndex)
+                TensorOfArray3D<NekDouble>                        &qfield,
+                Array< OneD, int >                                &nonZeroIndex)
         {
             boost::ignore_unused(nConvectiveFields, fields, inarray,
                                  outarray, vFwd, vBwd,qfield,nonZeroIndex);

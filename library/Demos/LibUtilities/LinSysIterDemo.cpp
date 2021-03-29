@@ -58,9 +58,9 @@ public:
         AllocateInitMatrix();
 
         std::string LinSysIterSolverType = "FixedpointJacobi";
-        if (pSession->DefinesSolverInfo("LinSysIterSovler"))
+        if (pSession->DefinesSolverInfo("LinSysIterSolver"))
         {
-            LinSysIterSolverType = pSession->GetSolverInfo("LinSysIterSovler");
+            LinSysIterSolverType = pSession->GetSolverInfo("LinSysIterSolver");
         }
 
         ASSERTL0(LibUtilities::GetNekLinSysIterFactory().ModuleExists(

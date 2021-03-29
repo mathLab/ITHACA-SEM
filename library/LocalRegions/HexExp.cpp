@@ -525,7 +525,7 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs, tmp5, 1, outarray, 1, outarray, 1);
         }
 
-        void HexExp::v_ProjectVectorintoStandardExp(
+        void HexExp::v_ProjectVectorIntoStandardExp(
                 const int dir, 
                 const Array<OneD, const NekDouble>      &inarray, 
                 Array<OneD, Array<OneD, NekDouble> >    &outarray)

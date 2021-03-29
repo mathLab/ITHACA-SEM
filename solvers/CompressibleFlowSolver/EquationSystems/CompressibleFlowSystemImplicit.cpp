@@ -71,14 +71,16 @@ namespace Nektar
         m_ode.DefineImplicitSolve(&CFSImplicit::DoImplicitSolve, this);
         
         InitialiseNonlinSysSolver();
+
+        m_flagImplicitSolver = true;
     }
     
     void CFSImplicit::InitialiseNonlinSysSolver()
     {
         std::string SolverType = "Newton";
-        if (m_session->DefinesSolverInfo("NonlinSysIterSovler"))
+        if (m_session->DefinesSolverInfo("NonlinSysIterSolver"))
         {
-            SolverType = m_session->GetSolverInfo("NonlinSysIterSovler");
+            SolverType = m_session->GetSolverInfo("NonlinSysIterSolver");
         }
         ASSERTL0(LibUtilities::GetNekNonlinSysFactory().
             ModuleExists(SolverType), "NekNonlinSys '" + SolverType + 
@@ -637,7 +639,7 @@ namespace Nektar
                         {
                             tmppnts[i] =  PntJacCons[ndir][i][nvarOffset];
                         }
-                        (*expvect)[ne]->ProjectVectorintoStandardExp(ndir,
+                        (*expvect)[ne]->ProjectVectorIntoStandardExp(ndir,
                             tmppnts,ConsCurv);
                         for(int nd =0;nd<m_spacedim;nd++)
                         {
@@ -684,12 +686,12 @@ namespace Nektar
                                         PntJacDerv[nd0][nd1][i][nvarOffset];
                                 }
 
-                                (*expvect)[ne]->ProjectVectorintoStandardExp(
+                                (*expvect)[ne]->ProjectVectorIntoStandardExp(
                                     nd0,tmppnts,ConsCurv);
                                 for(int nd =0;nd<m_spacedim;nd++)
                                 {
                                     (*expvect)[ne]->
-                                        ProjectVectorintoStandardExp(nd1,
+                                        ProjectVectorIntoStandardExp(nd1,
                                             ConsCurv[nd],DervCurv[nd]);
                                 }
 

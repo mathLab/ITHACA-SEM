@@ -226,7 +226,7 @@ namespace Nektar
             NodalToModalTranspose(outarray,outarray);
         }
 
-        void NodalTriExp::v_ProjectVectorintoStandardExp(
+        void NodalTriExp::v_ProjectVectorIntoStandardExp(
                 const int dir, 
                 const Array<OneD, const NekDouble>      &inarray, 
                 Array<OneD, Array<OneD, NekDouble> >    &outarray)

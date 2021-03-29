@@ -1150,8 +1150,8 @@ namespace Nektar
                 const int nDirctn, Array<OneD, DNekMatSharedPtr> &mtxPerVar);
 
             MULTI_REGIONS_EXPORT void GetMatIpwrtDeriveBase(
-                const Array<OneD, Array<OneD, Array<OneD, NekDouble> > >   &inarray,
-                Array<OneD, DNekMatSharedPtr> &mtxPerVar);
+                const TensorOfArray3D<NekDouble>    &inarray,
+                Array<OneD, DNekMatSharedPtr>       &mtxPerVar);
 
             MULTI_REGIONS_EXPORT void GetDiagMatIpwrtBase(
                 const   Array<OneD, const  Array<OneD, NekDouble> >&inarray,

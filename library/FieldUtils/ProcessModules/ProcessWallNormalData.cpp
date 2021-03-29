@@ -65,8 +65,8 @@ ProcessWallNormalData::ProcessWallNormalData(FieldSharedPtr f) : ProcessBoundary
     m_config["projDir"] = ConfigOption(false, "0.0,1.0,0.0",
                           "The direction to project the point onto the wall to \
                           get the sampling origin. default=[0,1,0]");
-    m_config["tol"]     = ConfigOption(false, "1.0",
-                          "Tolerence to limit projection distance to find the \
+    m_config["maxDist"] = ConfigOption(false, "1.0",
+                          "Distance to limit projection distance to find the \
                           desired sampling origin. defalut=1.0");
     m_config["distH"]   = ConfigOption(false, "0.01",
                           "Sampling distance along the wall normal at the \
@@ -91,14 +91,14 @@ ProcessWallNormalData::~ProcessWallNormalData()
 * The input cases can be 2D, 2.5D and 3D. 
 * The data will be exported with .pts extension.
 *
-* The user defined parameters are: bnd, xorig, searchDir, geomTol, distH,
+* The user defined parameters are: bnd, xorig, searchDir, maxDist, distH,
 * nptsH, and d.
 *  - bnd=0 is the boundary id. This boundary should contain the desired origin.
 *  - xorig="x,y,z" are the coordinates of the input sampling origin. They are
 *    used as the references to get exact origin on the wall.
 *  - projDir="0,1,0" is the projection direction to find the point on the wall
-*  - tol=1.0 is the tolerence that constrains the projection on the wall.
-*    The projection distance should be smaller than this tolerence. This
+*  - maxDist=1.0 is the distance that constrains the projection on the wall.
+*    The projection distance should be smaller than this distance. This
 *    parameter is set in case the boundary is wavey so that multiple
 *    projections exist at the same time.
 *  - distH=0.01 is the sampling depth in the wall-normal direction.
@@ -125,7 +125,7 @@ void ProcessWallNormalData::Process(po::variables_map &vm)
              "Failed to interpret origin coordinates string");
     ASSERTL0(ParseUtils::GenerateVector(m_config["projDir"].as<string>(), searchDir),
              "Failed to interpret search direction string");
-    const NekDouble geomTol = m_config["tol"].as<NekDouble>();
+    const NekDouble maxDist = m_config["maxDist"].as<NekDouble>();
     const NekDouble distH   = m_config["distH"].as<NekDouble>();
     const int       nptsH   = m_config["nptsH"].as<int>();
     const NekDouble delta   = m_config["d"].as<NekDouble>();
@@ -210,7 +210,7 @@ void ProcessWallNormalData::Process(po::variables_map &vm)
     {    
         bndGeom  = BndExp[0]->GetExp(elmtid)->GetGeom();         
         isInside = BndElmtContainsPoint(bndGeom, orig, projDir, locCoord,
-                                        projDist, geomTol);
+                                        projDist, maxDist);
         if (isInside) 
         {
             break;
@@ -803,7 +803,7 @@ bool ProcessWallNormalData::NewtonIterForLocCoordOnBndElmt(
  *                     direction in the 3D routine. size=3, norm=1. 
  * @param locCoord     Iteration results for local coordinates (if inside).
  * @param projDist     Projection distance betweem the point to the wall point.
- * @param geomTol      Disntance to check if the wall point is desired.
+ * @param maxDist      Disntance to check if the wall point is desired.
  * @param iterTol      Tolerence for iteration.
  * @return             Inside (true) or not (false)
  */
@@ -813,7 +813,7 @@ bool ProcessWallNormalData::BndElmtContainsPoint(
     const Array<OneD, const NekDouble > & projDir,
     Array< OneD, NekDouble > & locCoord,
     NekDouble & projDist,
-    const NekDouble geomTol,
+    const NekDouble maxDist,
     const NekDouble iterTol)
 {
     // Get variables
@@ -910,7 +910,7 @@ bool ProcessWallNormalData::BndElmtContainsPoint(
             tmp[1] = bndXmap->PhysEvaluate(locCoord, pts[1]) - gloCoord[1];
             projDist = Vmath::Dot(2, tmp, 1, projDir, 1);  // can be negative
             
-            isDesired = (projDist > 0.0) && (projDist < geomTol);
+            isDesired = (projDist > 0.0) && (projDist < maxDist);
 
             return isConverge && isDesired;
         }
@@ -944,7 +944,7 @@ bool ProcessWallNormalData::BndElmtContainsPoint(
             tmp[2] = bndXmap->PhysEvaluate(locCoord, pts[2]) - gloCoord[2];
             projDist = Vmath::Dot(3, tmp, 1, projDir, 1);  // can be negative
 
-            isDesired = (projDist > 0.0) && (projDist < geomTol);
+            isDesired = (projDist > 0.0) && (projDist < maxDist);
 
             return isConverge && isDesired;
         }

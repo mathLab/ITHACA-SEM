@@ -170,7 +170,7 @@ private:
     *                     direction in the 3D routine. size=3, norm=1. 
     * @param locCoord     Iteration results for local coordinates (if inside).
     * @param projDist     Projection distance betweem the point to the wall point.
-    * @param geomTol      Disntance to check if the wall point is desired.
+    * @param maxDist      Disntance to check if the wall point is desired.
     * @param iterTol      Tolerence for iteration.
     * @return             Inside (true) or not (false)
     */
@@ -180,7 +180,7 @@ private:
         const Array<OneD, const NekDouble > & projDir,
         Array< OneD, NekDouble > & locCoord,
         NekDouble & projDist,
-        const NekDouble geomTol = 1.0,
+        const NekDouble maxDist = 1.0,
         const NekDouble iterTol = 1.0e-8);
 
     /**

@@ -457,7 +457,11 @@ namespace Nektar
     double L2norm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y );
     void online_snapshot_check_with_smaller_basis(int);
     double lagrange_interp(double curr_param, int curr_index, int sparse_poly_approx_dimension);
+    double lagrange_interp_tensorised_hierarchical(Array<OneD, double> curr_param, Array<OneD, int> curr_index);
+    
+    
     void compute_sparse_poly_approx();
+    void compute_sparse_poly_approx_2D();
             
 //	int get_curr_elem_pos(int curr_elem);
 
@@ -595,7 +599,17 @@ namespace Nektar
 	int max_sparse_poly_approx_dimension;
 	int Geo_trafo_load;
 	bool replace_snapshot_with_transformed;
-
+	int number_of_snapshots_dir0;
+	int number_of_snapshots_dir1;
+	double start_param_dir0;
+	double end_param_dir0;
+	double start_param_dir1;
+	double end_param_dir1;	
+	Array<OneD, NekDouble> param_vector_dir0;   
+	Array<OneD, NekDouble> param_vector_dir1; 
+//	Array<OneD, int> multi_index;   
+	
+	
         Array<OneD, CoupledSolverMatrices> m_mat;
         
         

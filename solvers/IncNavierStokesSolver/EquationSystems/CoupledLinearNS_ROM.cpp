@@ -1409,7 +1409,51 @@ namespace Nektar
 		        param_vector[i] = m_session->GetParameter(result);
 	        }
 	}
-
+	if (parameter_space_dimension == 2)
+	{
+		parameter_types[1] = m_session->GetParameter("type_para2");
+		general_param_vector = Array<OneD, Array<OneD, NekDouble> > (Nmax);
+		number_of_snapshots_dir0 = m_session->GetParameter("number_of_snapshots_dir0");
+		number_of_snapshots_dir1 = m_session->GetParameter("number_of_snapshots_dir1");
+		int i_all = 0;
+		Array<OneD, NekDouble> parameter_point(parameter_space_dimension, 0.0);
+		for(int i = 0; i < Nmax; ++i)
+		{
+			parameter_point = Array<OneD, NekDouble> (parameter_space_dimension, 0.0);
+			general_param_vector[i] = parameter_point;
+		}
+		for(int i0 = 0; i0 < number_of_snapshots_dir0; ++i0)
+		{
+			// generate the correct string
+			std::stringstream sstm;
+			sstm << "param" << i0 << "_dir0";
+			std::string result = sstm.str();
+		        if (i0 == 0)
+				start_param_dir0 = m_session->GetParameter(result);
+		        if (i0 == number_of_snapshots_dir0-1)
+				end_param_dir0 = m_session->GetParameter(result);
+			param_vector_dir0[i0] = m_session->GetParameter(result);
+			for(int i1 = 0; i1 < number_of_snapshots_dir1; ++i1)
+			{
+				// generate the correct string
+				std::stringstream sstm1;
+				sstm1 << "param" << i1 << "_dir1";
+				std::string result1 = sstm1.str();
+			    if (i1 == 0)
+					start_param_dir1 = m_session->GetParameter(result1);
+			    if (i1 == number_of_snapshots_dir1-1)
+					end_param_dir1 = m_session->GetParameter(result1);
+				general_param_vector[i_all][0] = m_session->GetParameter(result);
+			    general_param_vector[i_all][1] = m_session->GetParameter(result1);
+				i_all = i_all + 1;
+//				general_param_vector[i_all] = Array<OneD, NekDouble> (parameter_space_dimension);
+				param_vector_dir1[i1] = m_session->GetParameter(result1);
+			}
+		}
+		
+		
+		
+	}
 		if (use_fine_grid_VV && (parameter_space_dimension == 1))
 		{
 			fine_grid_dir0 = m_session->GetParameter("fine_grid_dir0");
@@ -1627,6 +1671,24 @@ namespace Nektar
 	return lagrange_value;
     }
     
+    double CoupledLinearNS_ROM::lagrange_interp_tensorised_hierarchical(Array<OneD, double> curr_param, Array<OneD, int> curr_index)
+    {
+	double lagrange_value = 1;
+//	cout << "curr_param[0] " << curr_param[0] << " curr_param[1] " << curr_param[1] << endl;
+//	cout << "curr_index[0] " << curr_index[0] << " curr_index[1] " << curr_index[1] << endl; 
+	for (int i = 0; i < curr_index[0]; ++i)
+	{
+		lagrange_value *= (curr_param[0] - param_vector_dir0[i]) / (param_vector_dir0[curr_index[0]] - param_vector_dir0[i]);
+	}
+	if (parameter_space_dimension > 1)
+	{
+		for (int i = 0; i < curr_index[1]; ++i)
+		{
+			lagrange_value *= (curr_param[1] - param_vector_dir1[i]) / (param_vector_dir1[curr_index[1]] - param_vector_dir1[i]);
+		}
+	}
+	return lagrange_value;
+    }    
 
     void CoupledLinearNS_ROM::compute_sparse_poly_approx()
     {
@@ -1714,6 +1776,172 @@ namespace Nektar
 	}
     }
 
+    void CoupledLinearNS_ROM::compute_sparse_poly_approx_2D()
+    {
+	int sparse_poly_approx_dimension = max_sparse_poly_approx_dimension;
+	// L2 error works on the snapshot_x_collection and snapshot_y_collection
+	
+	// need to decide the grid rule 
+	Array<OneD,  Array<OneD, int> > index_set(max_sparse_poly_approx_dimension);
+	
+	for (int i=0; i < max_sparse_poly_approx_dimension; ++i)
+	{
+		index_set[i] = Array<OneD, int>(parameter_space_dimension);
+	}
+	// 0,0
+	// 1,0
+	// 0,1
+	// 1,1
+	// 2,0
+	// 0,2
+	// 3,0 ..
+	int added_indices = -1;
+	int curr_sum = 0;
+	while(added_indices < max_sparse_poly_approx_dimension)
+	{
+		for(int i=0; i <= curr_sum; ++i)
+		{
+			++added_indices;
+			if (added_indices < max_sparse_poly_approx_dimension)
+			{
+				int index1 = i;
+				int index2 = curr_sum - i;
+//				cout << "index1 " << index1 << " index2 " << index2 << endl; 				
+				index_set[added_indices][0] = index1;
+				index_set[added_indices][1] = index2;
+			}
+		
+		}
+		curr_sum++;
+		
+	}
+	
+	
+	
+	// compute the coefficients
+	Array<OneD, Array<OneD, NekDouble> > sparse_poly_coefficients_x(max_sparse_poly_approx_dimension);
+	Array<OneD, Array<OneD, NekDouble> > sparse_poly_coefficients_y(max_sparse_poly_approx_dimension);
+	for (int i=0; i < max_sparse_poly_approx_dimension; ++i)
+	{
+		sparse_poly_coefficients_x[i] = Array<OneD, NekDouble> (snapshot_x_collection[0].size());
+		sparse_poly_coefficients_y[i] = Array<OneD, NekDouble> (snapshot_x_collection[0].size());
+		for(int k=0; k<snapshot_x_collection[0].size(); ++k)
+		{
+			sparse_poly_coefficients_x[i][k] = 0;
+			sparse_poly_coefficients_y[i][k] = 0;
+		}
+	}
+	for (int i=0; i < max_sparse_poly_approx_dimension; ++i)
+	{
+		// identify the correct snapshot index based on the index_set
+		int index_all = index_set[i][1] + number_of_snapshots_dir1 * index_set[i][0]; 
+		for(int k=0; k<snapshot_x_collection[0].size(); ++k)
+		{
+			sparse_poly_coefficients_x[i][k] =  snapshot_x_collection[index_all][k];
+			sparse_poly_coefficients_y[i][k] =  snapshot_y_collection[index_all][k];
+		}
+		
+		for (int j=0; j < i; ++j)
+		{
+//			cout << "current j: " << j << " current i: " << i << endl;
+			double lith = lagrange_interp_tensorised_hierarchical(general_param_vector[index_all], index_set[j]);
+			cout << "lith " << lith << endl;
+			for(int k=0; k<snapshot_x_collection[0].size(); ++k)
+			{
+				sparse_poly_coefficients_x[i][k] -= sparse_poly_coefficients_x[j][k] * lith;
+				sparse_poly_coefficients_y[i][k] -= sparse_poly_coefficients_y[j][k] * lith;
+			}
+		}
+		
+
+
+
+	}	
+	
+	// start sweeping 
+	for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+	{
+		int current_index = iter_index;
+		double current_nu;
+		double current_geo;
+		Array<OneD, NekDouble> current_param(parameter_space_dimension, 0.0);
+		current_param = general_param_vector[current_index];
+		if (parameter_types[0] == 0)
+		{
+			current_nu = current_param[0];
+			current_geo = current_param[1];
+		}
+		if (parameter_types[0] == 1)
+		{
+			current_nu = current_param[1];
+			current_geo = current_param[0];
+		}
+		Array<OneD, NekDouble> interpolant_x(snapshot_x_collection[0].size());
+		Array<OneD, NekDouble> interpolant_y(snapshot_y_collection[0].size());
+		for (int i = 0; i < snapshot_x_collection[0].size(); ++i)
+		{
+			interpolant_x[i] = 0.0;
+			interpolant_y[i] = 0.0;
+		}
+		for (int index_interpol_op = 0; index_interpol_op < sparse_poly_approx_dimension; ++index_interpol_op)
+		{
+			double lith = lagrange_interp_tensorised_hierarchical(general_param_vector[current_index], index_set[index_interpol_op]);
+//			cout << "lith sweep " << lith << endl;
+			for (int i = 0; i < snapshot_x_collection[0].size(); ++i)	
+			{
+				interpolant_x[i] += sparse_poly_coefficients_x[index_interpol_op][i] * lith;
+				interpolant_y[i] += sparse_poly_coefficients_y[index_interpol_op][i] * lith;
+//				interpolant_x[i] += sparse_poly_coefficients_x[index_interpol_op][i];
+//				interpolant_y[i] += sparse_poly_coefficients_y[index_interpol_op][i];
+			}
+		}
+		double rel_L2error = L2norm_abs_error_ITHACA(interpolant_x, interpolant_y, snapshot_x_collection[iter_index], snapshot_y_collection[iter_index]) / L2norm_ITHACA(snapshot_x_collection[iter_index], snapshot_y_collection[iter_index]);
+		cout << "rel_L2error at parameter " << current_geo << " is " << rel_L2error << endl;
+	}
+	Array<OneD, NekDouble> collect_max(sparse_poly_approx_dimension);
+	Array<OneD, NekDouble> collect_mean(sparse_poly_approx_dimension);
+	double max, mean;
+	for (int approx_dim = 1; approx_dim <= sparse_poly_approx_dimension; ++approx_dim)
+	{
+//		sparse_approx_VV(approx_dim, max, mean);
+		cout << "max at dim " << approx_dim << " is " << max << endl;
+		cout << "mean at dim " << approx_dim << " is " << mean << endl;
+		collect_max[approx_dim-1] = max;
+		collect_mean[approx_dim-1] = mean;
+	}
+	{
+	std::stringstream sstm;
+	sstm << "sparse_conv_mean.txt";
+	std::string sparse_conv_mean = sstm.str();
+	const char* outname = sparse_conv_mean.c_str();
+	ofstream myfile (outname);
+	if (myfile.is_open())
+	{
+		for (int i0 = 0; i0 < sparse_poly_approx_dimension; i0++)
+		{
+			myfile << std::setprecision(17) << collect_mean[i0] << "\t";
+		}
+		myfile.close();
+	}
+	else cout << "Unable to open file"; 
+	}
+	{
+	std::stringstream sstm;
+	sstm << "sparse_conv_max.txt";
+	std::string sparse_conv_max = sstm.str();
+	const char* outname = sparse_conv_max.c_str();
+	ofstream myfile (outname);
+	if (myfile.is_open())
+	{
+		for (int i0 = 0; i0 < sparse_poly_approx_dimension; i0++)
+		{
+			myfile << std::setprecision(17) << collect_max[i0] << "\t";
+		}
+		myfile.close();
+	}
+	else cout << "Unable to open file"; 
+	}
+    }
 
     
     
@@ -1728,6 +1956,11 @@ namespace Nektar
 		if (parameter_space_dimension == 1)
 		{
 			load_snapshots();
+		}
+		else if (use_sparse_poly)
+		{
+			load_snapshots();
+		
 		}
 		else
 		{
@@ -2038,7 +2271,14 @@ namespace Nektar
 		f_p_size = curr_f_p.size();
 		f_int_size = curr_f_int.size();
 		collect_f_all = DoTrafo();
-        	compute_sparse_poly_approx();
+		if (parameter_space_dimension == 1)
+		{
+	        	compute_sparse_poly_approx();
+	        }
+	        if (parameter_space_dimension == 2)
+		{
+	        	compute_sparse_poly_approx_2D();
+	        }
         }
     }
     

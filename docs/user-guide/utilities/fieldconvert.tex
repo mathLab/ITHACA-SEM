@@ -281,6 +281,7 @@ possibly also Reynolds stresses) into single file;
 \item \inltt{wss}: Computes wall shear stress field.
 \item \inltt{phifile}: Computes the $\Phi$ function representing a body defined
   in an \inltt{.stl} file. Useful for the Smoothed Profile Method solver.
+\item \inltt{wallNormalData}: Interpolate values for a set of points in the wall-normal direction (for e.g. extract boundary layer profiles).
 \end{enumerate}
 The module list above can be seen by running the command
 %
@@ -1216,6 +1217,51 @@ file is limited, especially in 3D cases. In addition to this, it is recommended
 to make sure that the angles between triangles are not strictly equal to
 $90^\circ$, since the algorithm will probably fail to find the real $\Phi$
 function.
+%
+%
+%
+
+\subsection{Interpolate values for a point array: 
+\textit{wallNormalData} module}
+To obtain the values of an array of points in the wall-normal direction, such as 
+boundary layer profiles, the user can run:
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m wss:bnd=0:xorig="0.5,0,0":projDir="0,1,0":maxDist=0.1:\
+    distH=0.1:nptsH=0.01:d=0.2 test.xml test.fld test.pts
+\end{lstlisting}
+The option \inltt{bnd} specifies the target boundary region, to which the input 
+point specified by \inltt{xorig} will be projected as the first point in 
+the array. The projection direction is specified by \inltt{projDir}, which does 
+not have to be a unit vector but will be automatically normalized. The input 
+point and projetion direction must be set carefully to make sure a projected 
+point can be found on the target boundary. In cases with curved boundaries 
+on which multiple projected points might exist, the user can use 
+\inltt{maxDist} to limit the maximum projection distance between the input 
+point to the projected point.
+
+
+After the peojected point is found, this module will compute the wall-normal 
+direction at the point, and an array of points will be set in this direction.
+The number of points is specified by \inltt{nptsH}, and the parameter 
+\inltt{d} controls the distribution of the points as follows
+
+\[
+h(\xi) = H \left\{1-\frac{\tanh \left[(1-\xi) atanh(\sqrt{1-\delta}) \right]}{\sqrt{1-\delta}} \right\}
+\]
+
+where $\xi$ is equally-spaced parametric parameter varying from $0$ to $1$; 
+$H$ is the distance between the first point (on the booundary) and the last 
+point, which is specified \inltt{distH}; $\delta$ is given by \inltt{d}. This 
+distribution is employed for $0 < \delta \le 0.95$ while $\delta > 0.95$ for 
+evenly-spaced distribution.
+%
+\begin{figure}[!htbp]
+  \begin{center}
+    \includegraphics[width = 0.9 \textwidth]{img/module_wallNormalData.jpg}
+    \caption{(a) Project the input point onto the boundary, (b) Array of 
+    points to be interpolated.}
+  \end{center}
+\end{figure}
 %
 %
 %

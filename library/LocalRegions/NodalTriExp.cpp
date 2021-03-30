@@ -163,58 +163,21 @@ namespace Nektar
             ASSERTL1((dir==0)||(dir==1)||(dir==2),"Invalid direction.");
             ASSERTL1((dir==2)?(m_geom->GetCoordim()==3):true,"Invalid direction.");
 
-            int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nqtot  = nquad0*nquad1;
             int    wspsize = max(nqtot,m_ncoeffs);
 
-            const Array<TwoD, const NekDouble>& df =
-                                m_metricinfo->GetDerivFactors(GetPointsKeys());
-
-            Array<OneD, NekDouble> tmp0 (6*wspsize);
+            Array<OneD, NekDouble> tmp0 (4*wspsize);
             Array<OneD, NekDouble> tmp1 (tmp0 +   wspsize);
             Array<OneD, NekDouble> tmp2 (tmp0 + 2*wspsize);
             Array<OneD, NekDouble> tmp3 (tmp0 + 3*wspsize);
-            Array<OneD, NekDouble> gfac0(tmp0 + 4*wspsize);
-            Array<OneD, NekDouble> gfac1(tmp0 + 5*wspsize);
 
-            const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
-            const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
+            Array<OneD, Array<OneD, NekDouble>> tmp2D{2};
+            tmp2D[0] = tmp1;
+            tmp2D[1] = tmp2;
 
-            // set up geometric factor: 2/(1-z1)
-            for(i = 0; i < nquad1; ++i)
-            {
-                gfac0[i] = 2.0/(1-z1[i]);
-            }
-            for(i = 0; i < nquad0; ++i)
-            {
-                gfac1[i] = 0.5*(1+z0[i]);
-            }
-
-            for(i = 0; i < nquad1; ++i)
-            {
-                Vmath::Smul(nquad0,gfac0[i],&inarray[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
-            }
-
-            for(i = 0; i < nquad1; ++i)
-            {
-                Vmath::Vmul(nquad0,&gfac1[0],1,&tmp0[0]+i*nquad0,1,&tmp1[0]+i*nquad0,1);
-            }
-
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-            {
-                Vmath::Vmul(nqtot,&df[2*dir][0],  1,&tmp0[0],   1,&tmp0[0],1);
-                Vmath::Vmul(nqtot,&df[2*dir+1][0],1,&tmp1[0],   1,&tmp1[0],1);
-                Vmath::Vmul(nqtot,&df[2*dir+1][0],1,&inarray[0],1,&tmp2[0],1);
-            }
-            else
-            {
-                Vmath::Smul(nqtot, df[2*dir][0],   tmp0,    1, tmp0, 1);
-                Vmath::Smul(nqtot, df[2*dir+1][0], tmp1,    1, tmp1, 1);
-                Vmath::Smul(nqtot, df[2*dir+1][0], inarray, 1, tmp2, 1);
-            }
-            Vmath::Vadd(nqtot, tmp0, 1, tmp1, 1, tmp1, 1);
+            ProjectVectorIntoStandardExp(dir, inarray, tmp2D);
 
             MultiplyByQuadratureMetric(tmp1,tmp1);
             MultiplyByQuadratureMetric(tmp2,tmp2);

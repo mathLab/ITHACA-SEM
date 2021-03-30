@@ -189,7 +189,7 @@ void VariableConverter::GetMach(Array<OneD, Array<OneD, NekDouble>> &physfield,
  * WARNING, if this routine is modified the same must be done in the
  * FieldConvert utility ProcessWSS.cpp (this class should be restructured).
  *
- * @param physfield    Input physical field.
+ * @param temperature  Input temperature field.
  * @param mu           The resulting dynamic viscosity.
  */
 void VariableConverter::GetDynamicViscosity(

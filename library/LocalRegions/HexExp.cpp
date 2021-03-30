@@ -478,9 +478,6 @@ namespace Nektar
             const int nm0 = m_base[0]->GetNumModes();
             const int nm1 = m_base[1]->GetNumModes();
 
-            const Array<TwoD, const NekDouble>& df =
-                                m_metricinfo->GetDerivFactors(GetPointsKeys());
-
             Array<OneD, NekDouble> alloc(4*nq + m_ncoeffs + nm0*nq2*(nq1+nm1));
             Array<OneD, NekDouble> tmp1 (alloc);               // Quad metric
             Array<OneD, NekDouble> tmp2 (alloc +   nq);        // Dir1 metric
@@ -491,18 +488,12 @@ namespace Nektar
 
             MultiplyByQuadratureMetric(inarray, tmp1);
 
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-            {
-                Vmath::Vmul(nq,&df[3*dir][0],  1,tmp1.get(),1,tmp2.get(),1);
-                Vmath::Vmul(nq,&df[3*dir+1][0],1,tmp1.get(),1,tmp3.get(),1);
-                Vmath::Vmul(nq,&df[3*dir+2][0],1,tmp1.get(),1,tmp4.get(),1);
-            }
-            else
-            {
-                Vmath::Smul(nq, df[3*dir][0],  tmp1.get(),1,tmp2.get(), 1);
-                Vmath::Smul(nq, df[3*dir+1][0],tmp1.get(),1,tmp3.get(), 1);
-                Vmath::Smul(nq, df[3*dir+2][0],tmp1.get(),1,tmp4.get(), 1);
-            }
+            Array<OneD, Array<OneD, NekDouble>> tmp2D{3};
+            tmp2D[0] = tmp2;
+            tmp2D[1] = tmp3;
+            tmp2D[2] = tmp4;
+
+            ProjectVectorIntoStandardExp(dir, tmp1, tmp2D);
 
             IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
                                          m_base[1]->GetBdata(),

@@ -367,87 +367,22 @@ namespace Nektar
             const int order0 = m_base[0]->GetNumModes ();
             const int order1 = m_base[1]->GetNumModes ();
             const int nqtot  = nquad0*nquad1*nquad2;
-            int i;
 
-            const Array<OneD, const NekDouble> &z0 = m_base[0]->GetZ();
-            const Array<OneD, const NekDouble> &z1 = m_base[1]->GetZ();
-            const Array<OneD, const NekDouble> &z2 = m_base[2]->GetZ();
-
-            Array<OneD, NekDouble> gfac0(nquad0   );
-            Array<OneD, NekDouble> gfac1(nquad1   );
-            Array<OneD, NekDouble> gfac2(nquad2   );
             Array<OneD, NekDouble> tmp1 (nqtot    );
             Array<OneD, NekDouble> tmp2 (nqtot    );
             Array<OneD, NekDouble> tmp3 (nqtot    );
             Array<OneD, NekDouble> tmp4 (nqtot    );
-            Array<OneD, NekDouble> tmp5 (nqtot    );
             Array<OneD, NekDouble> tmp6 (m_ncoeffs);
             Array<OneD, NekDouble> wsp  (std::max(nqtot,order0*nquad2*(nquad1+order1)));
 
-            const Array<TwoD, const NekDouble>& df =
-                            m_metricinfo->GetDerivFactors(GetPointsKeys());
-
             MultiplyByQuadratureMetric(inarray, tmp1);
 
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-            {
-                Vmath::Vmul(nqtot,&df[3*dir][0],  1,tmp1.get(),1,tmp2.get(),1);
-                Vmath::Vmul(nqtot,&df[3*dir+1][0],1,tmp1.get(),1,tmp3.get(),1);
-                Vmath::Vmul(nqtot,&df[3*dir+2][0],1,tmp1.get(),1,tmp4.get(),1);
-            }
-            else
-            {
-                Vmath::Smul(nqtot, df[3*dir][0],  tmp1.get(),1,tmp2.get(), 1);
-                Vmath::Smul(nqtot, df[3*dir+1][0],tmp1.get(),1,tmp3.get(), 1);
-                Vmath::Smul(nqtot, df[3*dir+2][0],tmp1.get(),1,tmp4.get(), 1);
-            }
+            Array<OneD, Array<OneD, NekDouble>> tmp2D{3};
+            tmp2D[0] = tmp2;
+            tmp2D[1] = tmp3;
+            tmp2D[2] = tmp4;
 
-            // set up geometric factor: (1+z0)/2
-            for (i = 0; i < nquad0; ++i)
-            {
-                gfac0[i] = 0.5*(1+z0[i]);
-            }
-
-            // set up geometric factor: (1+z1)/2
-            for(i = 0; i < nquad1; ++i)
-            {
-                gfac1[i] = 0.5*(1+z1[i]);
-            }
-
-            // Set up geometric factor: 2/(1-z2)
-            for (i = 0; i < nquad2; ++i)
-            {
-            	gfac2[i] = 2.0/(1-z2[i]);
-            }
-
-            const int nq01 = nquad0*nquad1;
-
-            for (i = 0; i < nquad2; ++i)
-            {
-                Vmath::Smul(nq01,gfac2[i],&tmp2[0]+i*nq01,1,&tmp2[0]+i*nq01,1); // 2/(1-z2) for d/dxi_0
-                Vmath::Smul(nq01,gfac2[i],&tmp3[0]+i*nq01,1,&tmp3[0]+i*nq01,1); // 2/(1-z2) for d/dxi_1
-                Vmath::Smul(nq01,gfac2[i],&tmp4[0]+i*nq01,1,&tmp5[0]+i*nq01,1); // 2/(1-z2) for d/dxi_2
-            }
-
-            // (1+z0)/(1-z2) for d/d eta_0
-            for(i = 0; i < nquad1*nquad2; ++i)
-            {
-                Vmath::Vmul(nquad0,&gfac0[0],1,
-                            &tmp5[0]+i*nquad0,1,
-                             &wsp[0]+i*nquad0,1);
-            }
-
-            Vmath::Vadd(nqtot, &tmp2[0], 1, &wsp[0], 1, &tmp2[0], 1);
-
-            // (1+z1)/(1-z2) for d/d eta_1
-            for(i = 0; i < nquad1*nquad2; ++i)
-            {
-                Vmath::Smul(nquad0,gfac1[i%nquad1],
-                            &tmp5[0]+i*nquad0,1,
-                            &tmp5[0]+i*nquad0,1);
-            }
-            Vmath::Vadd(nqtot, &tmp3[0], 1, &tmp5[0], 1, &tmp3[0], 1);
-
+            ProjectVectorIntoStandardExp(dir, tmp1, tmp2D);
 
             IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
                                          m_base[1]->GetBdata (),
@@ -483,7 +418,6 @@ namespace Nektar
             const int order0 = m_base[0]->GetNumModes ();
             const int order1 = m_base[1]->GetNumModes ();
             const int nqtot  = nquad0*nquad1*nquad2;
-            int i;
 
             const Array<OneD, const NekDouble> &z0 = m_base[0]->GetZ();
             const Array<OneD, const NekDouble> &z1 = m_base[1]->GetZ();
@@ -492,9 +426,7 @@ namespace Nektar
             Array<OneD, NekDouble> gfac0(nquad0   );
             Array<OneD, NekDouble> gfac1(nquad1   );
             Array<OneD, NekDouble> gfac2(nquad2   );
-            Array<OneD, NekDouble> tmp1 (nqtot    );
             Array<OneD, NekDouble> tmp5 (nqtot    );
-            Array<OneD, NekDouble> tmp6 (m_ncoeffs);
             Array<OneD, NekDouble> wsp  (std::max(nqtot,order0*nquad2*(nquad1+order1)));
 
             Array<OneD, NekDouble> tmp2 =   outarray[0];
@@ -504,7 +436,8 @@ namespace Nektar
             const Array<TwoD, const NekDouble>& df =
                             m_metricinfo->GetDerivFactors(GetPointsKeys());
 
-            Vmath::Vcopy(nqtot,inarray,1,tmp1,1);     // Dir3 metric
+            Array<OneD, NekDouble> tmp1;
+            tmp1 = inarray;
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
@@ -520,26 +453,26 @@ namespace Nektar
             }
 
             // set up geometric factor: (1+z0)/2
-            for (i = 0; i < nquad0; ++i)
+            for (int i = 0; i < nquad0; ++i)
             {
                 gfac0[i] = 0.5*(1+z0[i]);
             }
 
             // set up geometric factor: (1+z1)/2
-            for(i = 0; i < nquad1; ++i)
+            for(int i = 0; i < nquad1; ++i)
             {
                 gfac1[i] = 0.5*(1+z1[i]);
             }
 
             // Set up geometric factor: 2/(1-z2)
-            for (i = 0; i < nquad2; ++i)
+            for (int i = 0; i < nquad2; ++i)
             {
             	gfac2[i] = 2.0/(1-z2[i]);
             }
 
             const int nq01 = nquad0*nquad1;
 
-            for (i = 0; i < nquad2; ++i)
+            for (int i = 0; i < nquad2; ++i)
             {
                 Vmath::Smul(nq01,gfac2[i],&tmp2[0]+i*nq01,1,&tmp2[0]+i*nq01,1); // 2/(1-z2) for d/dxi_0
                 Vmath::Smul(nq01,gfac2[i],&tmp3[0]+i*nq01,1,&tmp3[0]+i*nq01,1); // 2/(1-z2) for d/dxi_1
@@ -547,7 +480,7 @@ namespace Nektar
             }
 
             // (1+z0)/(1-z2) for d/d eta_0
-            for(i = 0; i < nquad1*nquad2; ++i)
+            for(int i = 0; i < nquad1*nquad2; ++i)
             {
                 Vmath::Vmul(nquad0,&gfac0[0],1,
                             &tmp5[0]+i*nquad0,1,
@@ -557,7 +490,7 @@ namespace Nektar
             Vmath::Vadd(nqtot, &tmp2[0], 1, &wsp[0], 1, &tmp2[0], 1);
             
             // (1+z1)/(1-z2) for d/d eta_1
-            for(i = 0; i < nquad1*nquad2; ++i)
+            for(int i = 0; i < nquad1*nquad2; ++i)
             {
                 Vmath::Smul(nquad0,gfac1[i%nquad1],
                             &tmp5[0]+i*nquad0,1,

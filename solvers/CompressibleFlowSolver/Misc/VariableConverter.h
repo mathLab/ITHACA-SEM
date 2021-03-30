@@ -165,7 +165,7 @@ public:
         const Array<OneD, const NekDouble>  &mu, 
               Array<OneD, NekDouble>        &DmuDT);
 
-    EquationOfStateSharedPtr Geteos()
+    const EquationOfStateSharedPtr Geteos()
     {
         return m_eos;
     }

@@ -1406,42 +1406,46 @@ namespace Nektar
                     }
                 }
 
-#if 0 
-                Array<OneD, int> pairSizes(n, 0);
-                pairSizes[p] = allCompPairs.size();
-                vComm->AllReduce(pairSizes, LibUtilities::ReduceSum);
+                // Distribute the size of the periodic boundary to all 
+                // processes. We assume that all processes who own periodic
+                // faces have the same local copy of allCompPairs
+                int NPairs  = allCompPairs.size();
+                vComm->AllReduce(NPairs, LibUtilities::ReduceMax);
 
-                int totPairSizes = Vmath::Vsum(n, pairSizes, 1);
+                // Check that the previous assertion regarding allCompPairs
+                // is correct
+                ASSERTL0(
+                    allCompPairs.size() == NPairs || allCompPairs.size() == 0,
+                    "Local copy of allCompPairs not the same for all ranks"
+                );
 
-                Array<OneD, int> pairOffsets(n, 0);
-                pairOffsets[0] = 0;
-
-                for (i = 1; i < n; ++i)
+                // Allocate local vectors that will contain the content of
+                // allCompPairs if process owns faces on periodic boundary
+                Array<OneD, int> first(NPairs, -1);
+                Array<OneD, int> second(NPairs, -1);
+                cnt = 0;
+                for(const auto &it : allCompPairs)
                 {
-                    pairOffsets[i] = pairOffsets[i-1] + pairSizes[i-1];
+                    first[cnt]    = it.first;
+                    second[cnt++] = it.second;
                 }
+                
+                // Distribute the content in first and second to all processes
+                vComm->AllReduce(first,  LibUtilities::ReduceMax);
+                vComm->AllReduce(second, LibUtilities::ReduceMax);
 
-                Array<OneD, int> first (totPairSizes, 0);
-                Array<OneD, int> second(totPairSizes, 0);
+                // Check that the MPI Allreduce routine worked
+                ASSERTL0(std::count(first.begin(), first.end(), -1) == 0, 
+                    "Distribution of allCompPairs failed");
+                ASSERTL0(std::count(second.begin(), second.end(), -1) == 0, 
+                    "Distribution of allCompParis failed")
 
-                cnt = pairOffsets[p];
-
-                for (auto &pIt : allCompPairs)
-                {
-                    first [cnt  ] = pIt.first;
-                    second[cnt++] = pIt.second;
-                }
-
-                vComm->AllReduce(first,  LibUtilities::ReduceSum);
-                vComm->AllReduce(second, LibUtilities::ReduceSum);
-
+                // Put content back in allCompPairs
                 allCompPairs.clear();
-
-                for(cnt = 0; cnt < totPairSizes; ++cnt)
+                for(cnt = 0; cnt < NPairs; ++cnt)
                 {
                     allCompPairs[first[cnt]] = second[cnt];
                 }
-#endif
 
                 // Search for periodic vertices and edges which are not in
                 // a periodic composite but lie in this process. First, loop

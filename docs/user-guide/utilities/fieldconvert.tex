@@ -1223,21 +1223,21 @@ function.
 
 \subsection{Interpolate values for a point array: 
 \textit{wallNormalData} module}
-To obtain the values of an array of points in the wall-normal direction, such as 
-boundary layer profiles, the user can run:
+To obtain the values of an array of points in the wall-normal direction, such 
+as boundary layer profiles, the user can run:
 \begin{lstlisting}[style=BashInputStyle]
 FieldConvert -m wss:bnd=0:xorig="0.5,0,0":projDir="0,1,0":maxDist=0.1:\
     distH=0.1:nptsH=0.01:d=0.2 test.xml test.fld test.pts
 \end{lstlisting}
 The option \inltt{bnd} specifies the target boundary region, to which the input 
 point specified by \inltt{xorig} will be projected as the first point in 
-the array. The projection direction is specified by \inltt{projDir}, which does 
-not have to be a unit vector but will be automatically normalized. The input 
-point and projetion direction must be set carefully to make sure a projected 
-point can be found on the target boundary. In cases with curved boundaries 
-on which multiple projected points might exist, the user can use 
-\inltt{maxDist} to limit the maximum projection distance between the input 
-point to the projected point.
+the interpolation points array. The projection direction is specified by 
+\inltt{projDir}, which does not have to be a unit vector but will be 
+automatically normalized. The input point and projetion direction must be set 
+carefully to make sure a projected point can be found on the target boundary. 
+In cases with curved boundaries on which multiple projected points might exist, 
+the user can use \inltt{maxDist} to limit the maximum projection distance 
+between the input point to the projected point.
 
 
 After the peojected point is found, this module will compute the wall-normal 
@@ -1254,6 +1254,9 @@ $H$ is the distance between the first point (on the booundary) and the last
 point, which is specified \inltt{distH}; $\delta$ is given by \inltt{d}. This 
 distribution is employed for $0 < \delta \le 0.95$ while $\delta > 0.95$ for 
 evenly-spaced distribution.
+
+Finally, this module will interpolate the values at the points from test.fld, 
+and save the result in test.pts.
 %
 \begin{figure}[!htbp]
   \begin{center}

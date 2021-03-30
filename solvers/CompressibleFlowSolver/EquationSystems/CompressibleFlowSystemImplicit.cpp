@@ -1909,4 +1909,22 @@ namespace Nektar
         FJacData[ 4 + nVar3] = -c5*vz + d5*nza;
         FJacData[ 4 + nVar4] = c5 + l1;
     }
+
+    bool CFSImplicit::UpdateTimeStepCheck()
+    {
+        bool flag = (m_time + m_timestep > m_fintime && m_fintime > 0.0) || 
+                (m_checktime && m_time + m_timestep - m_lastCheckTime >=
+                        m_checktime);
+        if (m_explicitAdvection)
+        {
+            flag = true;
+        }
+        else
+        {
+            flag = flag || m_preconCfs->UpdatePreconMatCheck(NullNekDouble1DArray, 
+                m_TimeIntegLambda);
+        }
+        return flag;
+    }
+
 }

@@ -411,6 +411,9 @@ namespace Nektar
             const int                                       nDervDir,
             const Array<OneD, const Array<OneD, NekDouble>> &inarray,
                   Array<OneD, Array<OneD, DNekMatSharedPtr>>&ElmtJac);
+        
+        virtual bool UpdateTimeStepCheck();
+
     };
 }
 #endif

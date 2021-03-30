@@ -1,0 +1,113 @@
+<!-- Tutorial: 2D cylinder flow -->
+<?xml version="1.0" encoding="utf-8"?>
+<NEKTAR>
+  <GEOMETRY DIM="2" SPACE="2">
+    <VERTEX>
+      <V ID="40">4.39198602e-01 2.53571421e-01 0.00000000e+00</V>
+      <V ID="41">4.33012706e-01 2.49999993e-01 0.00000000e+00</V>
+      <V ID="44">2.53571436e-01 4.39198593e-01 0.00000000e+00</V>
+      <V ID="45">2.50000007e-01 4.33012698e-01 0.00000000e+00</V>
+    </VERTEX>
+    <EDGE>
+      <E ID="67">40 41</E>
+      <E ID="73">40 44</E>
+      <E ID="74">44 45</E>
+      <E ID="75">45 41</E>
+    </EDGE>
+    <ELEMENT>
+      <Q ID="30">67 73 74 75</Q>
+    </ELEMENT>
+    <CURVED>
+      <E ID="124" EDGEID="75" NUMPOINTS="5" TYPE="GaussLobattoLegendre">2.50000007e-01 4.33012698e-01 0.00000000e+00   2.88074919e-01 4.08672046e-01 0.00000000e+00   3.53553396e-01 3.53553385e-01 0.00000000e+00   4.08672055e-01 2.88074906e-01 0.00000000e+00   4.33012706e-01 2.49999993e-01 0.00000000e+00   </E>
+      <E ID="145" EDGEID="73" NUMPOINTS="5" TYPE="GaussLobattoLegendre">4.39198602e-01 2.53571421e-01 0.00000000e+00   4.13369255e-01 2.91172992e-01 0.00000000e+00   3.56711053e-01 3.56711041e-01 0.00000000e+00   2.91173006e-01 4.13369246e-01 0.00000000e+00   2.53571436e-01 4.39198593e-01 0.00000000e+00   </E>
+    </CURVED>
+    <COMPOSITE>
+      <C ID="8"> E[75] </C>
+      <C ID="101"> Q[30] </C>
+    </COMPOSITE>
+    <DOMAIN> C[101] </DOMAIN>
+  </GEOMETRY>
+  
+  
+  <EXPANSIONS>
+    <E COMPOSITE="C[101]" NUMMODES="4" FIELDS="rho,rhou,rhov,E" TYPE="MODIFIED" />       
+  </EXPANSIONS>
+
+  <CONDITIONS>
+    <SOLVERINFO>
+      <I PROPERTY="EQType"                VALUE="NavierStokesCFE"     />
+      <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+      <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
+      <I PROPERTY="DiffusionType"         VALUE="LDGNS"               />
+      <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler"        /> <!-- ClassicalRungeKutta4 -->
+      <I PROPERTY="UpwindType"            VALUE="HLLC"                />
+      <I PROPERTY="ProblemType"           VALUE="General"             />
+      <I PROPERTY="EquationOfState"       VALUE="IdealGas"            />
+      <!--<I PROPERTY="ViscosityType"         VALUE="Variable"            />
+      -->
+    </SOLVERINFO>
+    <PARAMETERS>
+      <!--Computational parameters-->
+      <P> TimeStep            = 0.002  		                </P>  
+      <P> NumSteps            = 1       			</P>
+      <P> IO_CheckSteps       = 4000         			</P> 
+      <P> IO_InfoSteps        = 200            		        </P>
+      <P> IO_CFLSteps         = 200            		        </P>
+      <!-- Fluid properties -->
+      <P> Gamma               = 1.4          			</P>
+      <P> Pr                  = 0.72         			</P>
+      <P> Mach                = 0.3         			</P> <!-- 0.6 -->
+      <P> Re                  = 200.0      			</P>
+      <P> GasConstant         = 1.0/(Gamma*Mach*Mach)		</P>
+      <P> mu                  = 1.0/Re     			</P>
+      <!-- Boundary condition parameters-->
+      <P> rhoInf              = 1.0            			</P>
+      <P> TInf                = 1.0            			</P>
+      <P> pInf                = rhoInf*GasConstant*TInf	        </P>
+      <P> cInf                = sqrt(Gamma*GasConstant*TInf)    </P>
+      <P> uInf	              = Mach*cInf	       		</P>
+      <P> vInf	              = 0.0	       		        </P>
+    </PARAMETERS>
+
+    <VARIABLES>
+      <V ID="0"> rho  </V>
+      <V ID="1"> rhou </V>
+      <V ID="2"> rhov </V>
+      <V ID="3"> E    </V>     
+    </VARIABLES>
+
+    <BOUNDARYREGIONS>
+      <!-- 1-inflow (left), 2-symmetry (bottom), 3-outflow (right), 4-symmetry (top), 5,6,7,8-wall (cylinder) -->
+      <B ID="0"> C[8] </B>    
+    </BOUNDARYREGIONS>
+
+    <BOUNDARYCONDITIONS>
+      <!-- Wall -->    
+      <REGION REF="0">
+        <D VAR="rho"  USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
+        <D VAR="rhou" USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
+        <D VAR="rhov" USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
+        <D VAR="E"    USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
+      </REGION>
+    </BOUNDARYCONDITIONS>
+
+    <FUNCTION NAME="InitialConditions">
+      <E VAR="rho" VALUE="1.0" />
+      <E VAR="rhou"  VALUE="((3.057e15*(sqrt(x*x+y*y)-0.5)^6 
+                          - 6.734e13*(sqrt(x*x+y*y)-0.5)^5 
+                          + 5.53e11*(sqrt(x*x+y*y)-0.5)^4 
+                          - 1.958e9*(sqrt(x*x+y*y)-0.5)^3 
+                          + 1.873e6*(sqrt(x*x+y*y)-0.5)^2 
+                          + 4836*(sqrt(x*x+y*y)-0.5))*((sqrt(x*x+y*y)-0.5)<0.0041) 
+                          + 9.18*((sqrt(x*x+y*y)-0.5)>=0.0041))/9.18 " />	                
+      <E VAR="rhov" VALUE="1.0" />	        
+      <E VAR="E"    VALUE="1.0" />
+      
+      <!--
+      <D VAR="u" VALUE="(3.057e15*y^6 - 6.734e13*y^5 + 5.53e11*y^4 - 1.958e9*y^3 + 1.873e6*y^2 + 4836*y + 0.03797)*(y<0.0041) + Uinf*(y>=0.0041)" />
+      <F VAR="rho,rhou,rhov,E" FILE="0_cyl2D.fld" />
+      --> 
+    </FUNCTION> 
+    
+  </CONDITIONS>
+</NEKTAR>

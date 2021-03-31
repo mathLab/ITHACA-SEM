@@ -619,7 +619,7 @@ namespace Nektar
             /// Compute divergence and curl squared
             SOLVER_UTILS_EXPORT void GetDivCurl(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const Array<OneD, Array<OneD, Array<OneD, NekDouble>>> &pVarDer);
+                const TensorOfArray3D<NekDouble> &pVarDer);
             
         };
 

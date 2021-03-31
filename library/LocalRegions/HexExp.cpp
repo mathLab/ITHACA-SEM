@@ -527,16 +527,11 @@ namespace Nektar
             const int nq1 = m_base[1]->GetNumPoints();
             const int nq2 = m_base[2]->GetNumPoints();
             const int nq  = nq0*nq1*nq2;
-            const int nm0 = m_base[0]->GetNumModes();
-            const int nm1 = m_base[1]->GetNumModes();
  
             const Array<TwoD, const NekDouble>& df =
                                 m_metricinfo->GetDerivFactors(GetPointsKeys());
 
-            Array<OneD, NekDouble> alloc(nq + m_ncoeffs + nm0*nq2*(nq1+nm1));
-            Array<OneD, NekDouble> tmp1 (alloc);               // Quad metric
-            Array<OneD, NekDouble> tmp5 (alloc + nq);        // iprod tmp
-            Array<OneD, NekDouble> wsp  (tmp5  +   m_ncoeffs); // Wsp
+            Array<OneD, NekDouble> tmp1 (nq);               // Quad metric
 
             Array<OneD, NekDouble> tmp2 = outarray[0];        // Dir1 metric
             Array<OneD, NekDouble> tmp3 = outarray[1];        // Dir2 metric

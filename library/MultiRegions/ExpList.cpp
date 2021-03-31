@@ -5184,7 +5184,7 @@ namespace Nektar
             const int                                           nDirctn, 
             Array<OneD, DNekMatSharedPtr>                       &mtxPerVar)
         {
-            int ntotElmt            = (*m_exp).size();
+            int nTotElmt            = (*m_exp).size();
             int nElmtPnt            = (*m_exp)[0]->GetTotPoints();
             int nElmtCoef           = (*m_exp)[0]->GetNcoeffs();
  
@@ -5192,7 +5192,7 @@ namespace Nektar
             Array<OneD, NekDouble>  tmpCoef(nElmtCoef,0.0);
             Array<OneD, NekDouble>  tmpPhys(nElmtPnt,0.0);
 
-            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+            for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
             {
                 nElmtCoef           = (*m_exp)[nelmt]->GetNcoeffs();
                 nElmtPnt            = (*m_exp)[nelmt]->GetTotPoints();
@@ -5224,7 +5224,7 @@ namespace Nektar
             const TensorOfArray3D<NekDouble>    &inarray,
             Array<OneD, DNekMatSharedPtr>       &mtxPerVar)
         {
-            int ntotElmt            = (*m_exp).size();
+            int nTotElmt            = (*m_exp).size();
 
             int nspacedim   =   m_graph->GetSpaceDimension();
             Array<OneD, Array<OneD, NekDouble> >    projectedpnts(nspacedim);
@@ -5240,7 +5240,7 @@ namespace Nektar
             int nElmtCoefPrevious   = 0;
 
             int nElmtPnt,nElmtCoef;
-            for(int nelmt = 0; nelmt < ntotElmt; nelmt++)
+            for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
             {
                 nElmtCoef           = (*m_exp)[nelmt]->GetNcoeffs();
                 nElmtPnt            = (*m_exp)[nelmt]->GetTotPoints();
@@ -5339,7 +5339,7 @@ namespace Nektar
                 LibUtilities::eNoShapeType;
             int nElmtPntPrevious    = 0;
             int nElmtCoefPrevious   = 0;
-            int ntotElmt            = (*m_exp).size();
+            int nTotElmt            = (*m_exp).size();
             int nElmtPnt            = (*m_exp)[0]->GetTotPoints();
             int nElmtCoef           = (*m_exp)[0]->GetNcoeffs();
 
@@ -5347,7 +5347,7 @@ namespace Nektar
             Array<OneD, NekDouble > clmnArray,clmnStdMatArray;
             Array<OneD, NekDouble > stdMat_data;
 
-            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+            for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
             {
                 nElmtCoef           = (*m_exp)[nelmt]->GetNcoeffs();
                 nElmtPnt            = (*m_exp)[nelmt]->GetTotPoints();

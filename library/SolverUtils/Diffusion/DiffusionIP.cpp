@@ -419,7 +419,7 @@ void DiffusionIP::v_DiffuseTraceFlux(
 {
     boost::ignore_unused(VolumeFlux);
 
-    Array<OneD, Array<OneD, Array<OneD, NekDouble>>> traceflux3D(1);
+    TensorOfArray3D<NekDouble> traceflux3D(1);
     traceflux3D[0] = TraceFlux;
 
     size_t nConvectiveFields = fields.size();

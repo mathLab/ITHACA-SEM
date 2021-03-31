@@ -247,12 +247,12 @@ void PreconCfsBRJ::PreconBlkDiag(
 
     std::shared_ptr<LocalRegions::ExpansionVector> expvect =
         pFields[0]->GetExp();
-    int ntotElmt = (*expvect).size();
+    int nTotElmt = (*expvect).size();
 
     for (int m = 0; m < nvariables; m++)
     {
         int nVarOffset = m * npoints;
-        for (int ne = 0; ne < ntotElmt; ne++)
+        for (int ne = 0; ne < nTotElmt; ne++)
         {
             int nCoefOffset = pFields[0]->GetCoeff_Offset(ne);
             int nElmtCoef   = pFields[0]->GetNcoeffs(ne);
@@ -270,7 +270,7 @@ void PreconCfsBRJ::PreconBlkDiag(
     for (int m = 0; m < nvariables; m++)
     {
         int nVarOffset = m * npoints;
-        for (int ne = 0; ne < ntotElmt; ne++)
+        for (int ne = 0; ne < nTotElmt; ne++)
         {
             int nCoefOffset = pFields[0]->GetCoeff_Offset(ne);
             int nElmtCoef   = pFields[0]->GetNcoeffs(ne);

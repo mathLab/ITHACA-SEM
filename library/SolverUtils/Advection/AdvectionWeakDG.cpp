@@ -248,7 +248,7 @@ namespace Nektar
         {
             MultiRegions::ExpListSharedPtr explist = pFields[0];
                 std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
-            int ntotElmt            = (*pexp).size();
+            int nTotElmt            = (*pexp).size();
             int nElmtPnt,nElmtCoef;
 
             SNekMatSharedPtr        tmpGmtx;
@@ -258,10 +258,10 @@ namespace Nektar
             Array<OneD,NekDouble> Elmt_data;
             Array<OneD,NekSingle> Elmt_dataSingle;
 
-            Array<OneD, DNekMatSharedPtr>  mtxPerVar(ntotElmt);
-            Array<OneD, int > elmtpnts(ntotElmt);
-            Array<OneD, int > elmtcoef(ntotElmt);
-            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+            Array<OneD, DNekMatSharedPtr>  mtxPerVar(nTotElmt);
+            Array<OneD, int > elmtpnts(nTotElmt);
+            Array<OneD, int > elmtcoef(nTotElmt);
+            for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
             {
                 nElmtCoef           = (*pexp)[nelmt]->GetNcoeffs();
                 nElmtPnt            = (*pexp)[nelmt]->GetTotPoints();
@@ -271,8 +271,8 @@ namespace Nektar
                                     ::AllocateSharedPtr(nElmtCoef, nElmtPnt);
             }
 
-            Array<OneD, DNekMatSharedPtr>  mtxPerVarCoeff(ntotElmt);
-            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+            Array<OneD, DNekMatSharedPtr>  mtxPerVarCoeff(nTotElmt);
+            for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
             {
                 nElmtCoef   =   elmtcoef[nelmt];
                 mtxPerVarCoeff[nelmt]    =MemoryManager<DNekMat>
@@ -283,7 +283,7 @@ namespace Nektar
             {
                 for(int n = 0; n < nConvectiveFields; n++)
                 {
-                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+                    for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
                     {
                         (*mtxPerVarCoeff[nelmt])   =    0.0;
                         (*mtxPerVar[nelmt])        =    0.0;
@@ -294,7 +294,7 @@ namespace Nektar
                     // Memory can be saved by reusing mtxPerVar
                     explist->AddRightIPTBaseMatrix(mtxPerVar,mtxPerVarCoeff);
 
-                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+                    for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
                     {
                         nElmtCoef = elmtcoef[nelmt];
                         nElmtPnt = elmtpnts[nelmt];

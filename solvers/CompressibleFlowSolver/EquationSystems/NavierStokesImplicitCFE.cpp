@@ -1062,12 +1062,12 @@ namespace Nektar
         const int                                       nDervDir,
         const Array<OneD, const Array<OneD, NekDouble>> &inarray,
               TensorOfArray5D<NekDouble>                &ElmtJacArray,
-        const int                                       nfluxDir)
+        const int                                       nFluxDir)
     {
         int nConvectiveFields   = inarray.size();
         std::shared_ptr<LocalRegions::ExpansionVector> expvect =    
             explist->GetExp();
-        int ntotElmt            = (*expvect).size();
+        int nTotElmt            = (*expvect).size();
         int nPts                = explist->GetTotPoints();
         int nSpaceDim           = m_graph->GetSpaceDimension();
 
@@ -1097,7 +1097,7 @@ namespace Nektar
             ::AllocateSharedPtr(nConvectiveFields-1, nConvectiveFields);
         Array<OneD, NekDouble > PointFJac_data = PointFJac->GetPtr();
 
-        for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+        for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
         {
             int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
             int noffest             = explist->GetPhys_Offset(nelmt);
@@ -1130,14 +1130,14 @@ namespace Nektar
                     pointVar,PointFJac);
                 for (int j =0; j < nConvectiveFields; j++)
                 {
-                    ElmtJacArray[0][j][nfluxDir][nelmt][npnt] = 0.0;
+                    ElmtJacArray[0][j][nFluxDir][nelmt][npnt] = 0.0;
                 }
                 for (int j =0; j < nConvectiveFields; j++)
                 {
                     int noffset = j*(nConvectiveFields-1);
                     for (int i =0; i < nConvectiveFields-1; i++)
                     {
-                        ElmtJacArray[i+1][j][nfluxDir][nelmt][npnt] = 
+                        ElmtJacArray[i+1][j][nFluxDir][nelmt][npnt] = 
                             PointFJac_data[noffset+i];
                     }
                 }
@@ -1202,15 +1202,15 @@ namespace Nektar
         int nConvectiveFields   = inarray.size();
         std::shared_ptr<LocalRegions::ExpansionVector> expvect =
             explist->GetExp();
-        int ntotElmt            = (*expvect).size();
+        int nTotElmt            = (*expvect).size();
         int nPts                = explist->GetTotPoints();
         int nSpaceDim           = m_graph->GetSpaceDimension();
 
         //Debug
         if(!ElmtJac.size())
         {
-            ElmtJac =   Array<OneD, Array<OneD, DNekMatSharedPtr> > (ntotElmt);
-            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+            ElmtJac = Array<OneD, Array<OneD, DNekMatSharedPtr> > (nTotElmt);
+            for(int  nelmt = 0; nelmt < nTotElmt; nelmt++)
             {
                 int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
                 ElmtJac[nelmt] =   Array<OneD, DNekMatSharedPtr>(nElmtPnt);
@@ -1262,32 +1262,32 @@ namespace Nektar
         Array<OneD, NekDouble > tmpMatinnData, tmpMatoutData;
         Array<OneD, NekDouble > tmp1, tmp2;
         
-        for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+        for (int nelmt = 0; nelmt < nTotElmt; nelmt++)
         {
             int nElmtPnt            = (*expvect)[nelmt]->GetTotPoints();
             int noffest             = explist->GetPhys_Offset(nelmt);
             
-            for(int j = 0; j < nConvectiveFields; j++)
+            for (int j = 0; j < nConvectiveFields; j++)
             {
                 locVars[j] = inarray[j]+noffest;
             }
             
-            for(int j = 0; j < nSpaceDim; j++)
+            for (int j = 0; j < nSpaceDim; j++)
             {
                 locnormal[j] = normals[j]+noffest;
             }
             
             locmu       =   mu      + noffest;
-            for(int npnt = 0; npnt < nElmtPnt; npnt++)
+            for (int npnt = 0; npnt < nElmtPnt; npnt++)
             {
-                for(int j = 0; j < nConvectiveFields; j++)
+                for (int j = 0; j < nConvectiveFields; j++)
                 {
                     pointVar[j] = locVars[j][npnt];
                 }
-                for(int j = 0; j < nSpaceDim; j++)
+                for (int j = 0; j < nSpaceDim; j++)
                 {
                     pointnormals[j] = locnormal[j][npnt];
-                        }
+                }
                 
                 pointmu     = locmu[npnt];
                 

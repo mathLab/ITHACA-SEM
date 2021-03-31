@@ -297,10 +297,10 @@ namespace Nektar
             const int                                           nDervDir,
             const Array<OneD, const Array<OneD, NekDouble>>     &inarray,
                   TensorOfArray5D<NekDouble>                    &ElmtJacArray,
-            const int                                           nfluxDir)
+            const int                                           nFluxDir)
         {
             v_GetFluxDerivJacDirctn(explist,normals,nDervDir,inarray,
-                ElmtJacArray,nfluxDir);
+                ElmtJacArray,nFluxDir);
         }
 
         void GetFluxDerivJacDirctnElmt(
@@ -393,7 +393,7 @@ namespace Nektar
             const int                                       nDervDir,
             const Array<OneD, const Array<OneD, NekDouble>> &inarray,
                   TensorOfArray5D<NekDouble>                &ElmtJacArray,
-            const int                                       nfluxDir);
+            const int                                       nFluxDir);
 
         virtual void v_GetFluxDerivJacDirctnElmt(
             const int                                       nConvectiveFields,

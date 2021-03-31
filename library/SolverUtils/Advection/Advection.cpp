@@ -110,7 +110,7 @@ void Advection::AddTraceJacToMat(
     Array<OneD, DNekMatSharedPtr>  TraceJacFwd(ntotTrac);
     Array<OneD, DNekMatSharedPtr>  TraceJacBwd(ntotTrac);
 
-    for(int  nelmt = 0; nelmt < ntotTrac; nelmt++)
+    for(int nelmt = 0; nelmt < ntotTrac; nelmt++)
     {
         nTracCoef           = (*traceExp)[nelmt]->GetNcoeffs();
         nTracPnt            = (*traceExp)[nelmt]->GetTotPoints();
@@ -122,15 +122,15 @@ void Advection::AddTraceJacToMat(
 
     std::shared_ptr<LocalRegions::ExpansionVector> fieldExp 
         = pFields[0]->GetExp();
-    int ntotElmt = (*fieldExp).size();
+    int nTotElmt = (*fieldExp).size();
     int nElmtPnt,nElmtCoef;
 
-    Array<OneD, DNekMatSharedPtr>  ElmtJacQuad(ntotElmt);
-    Array<OneD, DNekMatSharedPtr>  ElmtJacCoef(ntotElmt);
+    Array<OneD, DNekMatSharedPtr>  ElmtJacQuad(nTotElmt);
+    Array<OneD, DNekMatSharedPtr>  ElmtJacCoef(nTotElmt);
 
     Array<OneD, NekDouble> SymmMatData;
     
-    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+    for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
     {
         nElmtCoef          = (*fieldExp)[nelmt]->GetNcoeffs();
         nElmtPnt           = (*fieldExp)[nelmt]->GetTotPoints();
@@ -159,7 +159,7 @@ void Advection::AddTraceJacToMat(
         for(int n = 0; n < nConvectiveFields; n++)
         {
             // ElmtJacCons to set 0
-            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+            for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
             {
                 (*ElmtJacCoef[nelmt]) =  0.0;
                 (*ElmtJacQuad[nelmt]) =  0.0;
@@ -171,7 +171,7 @@ void Advection::AddTraceJacToMat(
                 for(int ndir = 0; ndir < nSpaceDim; ndir++)
                 {
                     // ElmtJacGrad to set 0
-                    for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+                    for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
                     {
                         (*ElmtJacQuad[nelmt]) =  0.0;
                     }
@@ -185,7 +185,7 @@ void Advection::AddTraceJacToMat(
                     pFields[0]->AddRightIPTPhysDerivBase(ndir, ElmtJacQuad, 
                         ElmtJacCoef);
                 }
-                for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+                for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
                 {
                     nElmtCoef          = (*fieldExp)[nelmt]->GetNcoeffs();
                     if(SymmMatData.size()<nElmtCoef)
@@ -213,7 +213,7 @@ void Advection::AddTraceJacToMat(
             pFields[0]->AddRightIPTBaseMatrix(ElmtJacQuad, ElmtJacCoef);
 
             // add ElmtJacCons to gmtxarray[m][n]
-            for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+            for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
             {
                 tmp2Add = ElmtJacCoef[nelmt];
                 MatData0 = gmtxarray[m][n]->GetBlock(nelmt,nelmt)->GetPtr();

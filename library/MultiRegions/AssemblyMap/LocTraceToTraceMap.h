@@ -288,7 +288,7 @@ public:
         return m_LocTracephysToTraceIDMap;
     }
 
-    MULTI_REGIONS_EXPORT inline void SetLocTracephysToTraceIDMap
+    MULTI_REGIONS_EXPORT inline void SetLocTracePhysToTraceIDMap
             (const Array<OneD, Array<OneD, int > > & inarray)
     {
         m_LocTracephysToTraceIDMap = inarray;

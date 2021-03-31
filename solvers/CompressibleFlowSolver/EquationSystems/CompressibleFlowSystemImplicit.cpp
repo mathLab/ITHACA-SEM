@@ -115,7 +115,7 @@ namespace Nektar
         for (int i = 1; i < nvariables; i++)
         {
             m_fields[i]->GetLocTraceToTraceMap()
-                ->SetLocTracephysToTraceIDMap(
+                ->SetLocTracePhysToTraceIDMap(
                 locTraceToTraceMap->GetLocTracephysToTraceIDMap());
         }
         
@@ -370,10 +370,10 @@ namespace Nektar
         unsigned int ntotal             = inarray.size();
         unsigned int npoints            = ntotal/nvariables;
 
-        unsigned int ntotalGlobal       = ntotal;
-        m_comm->AllReduce(ntotalGlobal, Nektar::LibUtilities::ReduceSum);
-        unsigned int ntotalDOF          = ntotalGlobal / nvariables;
-        NekDouble ototalDOF             = 1.0 / ntotalDOF;
+        unsigned int nTotalGlobal       = ntotal;
+        m_comm->AllReduce(nTotalGlobal, Nektar::LibUtilities::ReduceSum);
+        unsigned int nTotalDOF          = nTotalGlobal / nvariables;
+        NekDouble invTotalDOF             = 1.0 / nTotalDOF;
 
         m_inArrayNorm = 0.0;
         m_magnitdEstimat = Array<OneD, NekDouble>  (nvariables, 0.0);
@@ -402,7 +402,7 @@ namespace Nektar
 
         for (int i = 0; i < nvariables; ++i)
         {
-            m_magnitdEstimat[i] = sqrt(m_magnitdEstimat[i] * ototalDOF);
+            m_magnitdEstimat[i] = sqrt(m_magnitdEstimat[i] * invTotalDOF);
         }
         if (m_root && m_verbose)
         {
@@ -462,7 +462,7 @@ namespace Nektar
         int nVar2     = nvariable*nvariable;
         std::shared_ptr<LocalRegions::ExpansionVector> expvect =    
             m_fields[0]->GetExp();
-        int ntotElmt            = (*expvect).size();
+        int nTotElmt            = (*expvect).size();
 
         Array<OneD, NekDouble > mu      (npoints, 0.0);
         Array<OneD, NekDouble > DmuDT   (npoints, 0.0);
@@ -517,7 +517,7 @@ namespace Nektar
         }
 
         int nElmtCoefOld = -1;
-        for(int ne=0; ne<ntotElmt;ne++)
+        for(int ne=0; ne<nTotElmt;ne++)
         {
             int nElmtCoef           = (*expvect)[ne]->GetNcoeffs();
             int nElmtCoef2          = nElmtCoef*nElmtCoef;
@@ -578,11 +578,11 @@ namespace Nektar
             
             if(m_advectionJacFlag)
             {
-                for(int nfluxDir = 0; nfluxDir < nSpaceDim; nfluxDir++)
+                for(int nFluxDir = 0; nFluxDir < nSpaceDim; nFluxDir++)
                 {
-                    normals =   normal3D[nfluxDir];
+                    normals =   normal3D[nFluxDir];
                     GetFluxVectorJacDirElmt(nvariable,nElmtPnt,locVars,
-                        normals,wspMat,PntJacCons[nfluxDir]);
+                        normals,wspMat,PntJacCons[nFluxDir]);
                 }
             }
 
@@ -597,28 +597,28 @@ namespace Nektar
                 }
                 locmu       =   mu      + noffset;
                 locDmuDT    =   DmuDT   + noffset;
-                for(int nfluxDir = 0; nfluxDir < nSpaceDim; nfluxDir++)
+                for(int nFluxDir = 0; nFluxDir < nSpaceDim; nFluxDir++)
                 {
-                    normals =   normal3D[nfluxDir];
+                    normals =   normal3D[nFluxDir];
                     MinusDiffusionFluxJacDirctnElmt(nvariable,nElmtPnt,
                         locVars,locDerv,locmu,locDmuDT,normals,wspMatDrv,
-                        PntJacCons[nfluxDir]);
+                        PntJacCons[nFluxDir]);
                 }
             }
 
             if(m_viscousJacFlag)
             {
                 locmu = mu + noffset;
-                for(int nfluxDir = 0; nfluxDir < nSpaceDim; nfluxDir++)
+                for(int nFluxDir = 0; nFluxDir < nSpaceDim; nFluxDir++)
                 {
-                    Vmath::Fill(npoints,1.0,normalPnt[nfluxDir],1);
+                    Vmath::Fill(npoints,1.0,normalPnt[nFluxDir],1);
                     for(int nDervDir = 0; nDervDir < nSpaceDim; nDervDir++)
                     {
                         GetFluxDerivJacDirctnElmt(nvariable,nElmtPnt,nDervDir,
                             locVars,locmu,normalPnt,wspMatDrv,
-                            PntJacDerv[nfluxDir][nDervDir]);
+                            PntJacDerv[nFluxDir][nDervDir]);
                     }
-                    Vmath::Fill(npoints,0.0,normalPnt[nfluxDir],1);
+                    Vmath::Fill(npoints,0.0,normalPnt[nFluxDir],1);
                 }
             }
 
@@ -626,7 +626,7 @@ namespace Nektar
             {
                 for(int m=0; m<nvariable;m++)
                 {
-                    int nvarOffset = m+n*nvariable;
+                    int nVarOffset = m+n*nvariable;
                     GmatxData = gmtxarray[m][n]->GetBlock(ne,ne)->GetPtr();
 
                     for(int ndStd0 =0;ndStd0<m_spacedim;ndStd0++)
@@ -637,7 +637,7 @@ namespace Nektar
                     {
                         for(int i=0; i<nElmtPnt;i++)
                         {
-                            tmppnts[i] =  PntJacCons[ndir][i][nvarOffset];
+                            tmppnts[i] =  PntJacCons[ndir][i][nVarOffset];
                         }
                         (*expvect)[ne]->ProjectVectorIntoStandardExp(ndir,
                             tmppnts,ConsCurv);
@@ -654,7 +654,7 @@ namespace Nektar
                             ConsStdd[ndir],ConsStdd[ndir]); // weight with metric
                         for(int i=0; i<nElmtPnt;i++)
                         {
-                            PntJacConsStd[ndir][i][nvarOffset] = 
+                            PntJacConsStd[ndir][i][nVarOffset] = 
                                 DataType(ConsStdd[ndir][i]);
                         }
                     }
@@ -667,7 +667,7 @@ namespace Nektar
                 {
                     for(int n=0; n<nvariable;n++)
                     {
-                        int nvarOffset = m+n*nvariable;
+                        int nVarOffset = m+n*nvariable;
                         for(int ndStd0 =0;ndStd0<m_spacedim;ndStd0++)
                         {
                             for(int ndStd1 =0;ndStd1<m_spacedim;ndStd1++)
@@ -683,7 +683,7 @@ namespace Nektar
                                 for(int i=0; i<nElmtPnt;i++)
                                 {
                                     tmppnts[i] =  
-                                        PntJacDerv[nd0][nd1][i][nvarOffset];
+                                        PntJacDerv[nd0][nd1][i][nVarOffset];
                                 }
 
                                 (*expvect)[ne]->ProjectVectorIntoStandardExp(
@@ -717,7 +717,7 @@ namespace Nektar
                                         DervStdd[nd0][nd1]); // weight with metric
                                 for(int i=0; i<nElmtPnt;i++)
                                 {
-                                    PntJacDervStd[nd0][nd1][i][nvarOffset] = 
+                                    PntJacDervStd[nd0][nd1][i][nVarOffset] = 
                                         -DataType(DervStdd[nd0][nd1][i]);
                                 }
                             }
@@ -763,10 +763,10 @@ namespace Nektar
             {
                 for(int m=0; m<nvariable;m++)
                 {
-                    int nvarOffset = m+n*nvariable;
+                    int nVarOffset = m+n*nvariable;
                     GmatxData = gmtxarray[m][n]->GetBlock(ne,ne)->GetPtr();
                     Vmath::Vcopy(nElmtCoef2, 
-                        tmpA = MatData + nvarOffset*nElmtCoef2Paded,1,
+                        tmpA = MatData + nVarOffset*nElmtCoef2Paded,1,
                         GmatxData,1);
                 }
             }
@@ -780,10 +780,10 @@ namespace Nektar
     {
         std::shared_ptr<LocalRegions::ExpansionVector> expvect =    
             m_fields[0]->GetExp();
-        int ntotElmt            = (*expvect).size();
+        int nTotElmt            = (*expvect).size();
 
-        StdMatDataDBB = TensorOfArray4D<DataType> (ntotElmt);
-        StdMatDataDBDB  = TensorOfArray5D<DataType> (ntotElmt);
+        StdMatDataDBB = TensorOfArray4D<DataType> (nTotElmt);
+        StdMatDataDBDB  = TensorOfArray5D<DataType> (nTotElmt);
 
         vector<DNekMatSharedPtr> VectStdDerivBase0;
         vector< TensorOfArray3D<DataType> > VectStdDerivBase_Base;
@@ -791,7 +791,7 @@ namespace Nektar
         DNekMatSharedPtr MatStdDerivBase0;
         Array<OneD, DNekMatSharedPtr> ArrayStdMat(m_spacedim);
         Array<OneD, Array<OneD, NekDouble>>    ArrayStdMatData(m_spacedim);
-        for(int ne=0; ne<ntotElmt;ne++)
+        for (int ne = 0; ne < nTotElmt; ne++)
         {
             StdRegions::StdExpansionSharedPtr stdExp;
             stdExp = (*expvect)[ne]->GetStdExp();
@@ -799,19 +799,19 @@ namespace Nektar
                                 stdExp->DetShapeType(), *stdExp);
             MatStdDerivBase0      =   stdExp->GetStdMatrix(matkey);
 
-            int ntotStdExp = VectStdDerivBase0.size();
-            int nfoundStdExp = -1;
-            for(int i=0;i<ntotStdExp;i++) 
+            int nTotStdExp = VectStdDerivBase0.size();
+            int nFoundStdExp = -1;
+            for (int i = 0; i < nTotStdExp; i++) 
             {
-                if((*VectStdDerivBase0[i])==(*MatStdDerivBase0))
+                if ((*VectStdDerivBase0[i])==(*MatStdDerivBase0))
                 {
-                    nfoundStdExp = i;
+                    nFoundStdExp = i;
                 }
             }
-            if(nfoundStdExp>=0)
+            if (nFoundStdExp >= 0)
             {
-                StdMatDataDBB[ne] = VectStdDerivBase_Base[nfoundStdExp];
-                StdMatDataDBDB[ne] = VectStdDervBase_DervBase[nfoundStdExp];
+                StdMatDataDBB[ne] = VectStdDerivBase_Base[nFoundStdExp];
+                StdMatDataDBDB[ne] = VectStdDervBase_DervBase[nFoundStdExp];
             }
             else
             {
@@ -950,7 +950,7 @@ namespace Nektar
         Array<OneD, unsigned int> colSizes;
 
         gmtxarray[0][0]->GetBlockSizes(rowSizes,colSizes);
-        int ntotElmt  = rowSizes.size();
+        int nTotElmt  = rowSizes.size();
         int nElmtCoef   =    rowSizes[0]-1;
         int nElmtCoef0  =    -1;
         int blocksize = -1;
@@ -961,7 +961,7 @@ namespace Nektar
         Array<OneD, DataType>    GMatData,ElmtMatData;
         Array<OneD, DataType>    tmpArray1,tmpArray2;
 
-        for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+        for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
         {
             int nrows = gmtxarray[0][0]->GetBlock(nelmt,nelmt)->GetRows();
             int ncols = gmtxarray[0][0]->GetBlock(nelmt,nelmt)->GetColumns();
@@ -972,9 +972,9 @@ namespace Nektar
             if (nElmtCoef0!=nElmtCoef)
             {
                 nElmtCoef0 = nElmtCoef;
-                int nElmtCoefVAr = nElmtCoef0*nConvectiveFields;
-                blocksize = nElmtCoefVAr*nElmtCoefVAr;
-                tmprow[0] = nElmtCoefVAr;
+                int nElmtCoefVar = nElmtCoef0*nConvectiveFields;
+                blocksize = nElmtCoefVar*nElmtCoefVar;
+                tmprow[0] = nElmtCoefVar;
                 AllocateNekBlkMatDig(tmpGmtx,tmprow,tmprow);
                 GMatData = tmpGmtx->GetBlock(0,0)->GetPtr();
             }
@@ -1400,20 +1400,20 @@ namespace Nektar
 
         MultiRegions::ExpListSharedPtr explist = m_fields[0];
         std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
-        int ntotElmt            = (*pexp).size();
+        int nTotElmt            = (*pexp).size();
         int nConvectiveFields = m_fields.size();
 
         NekDouble Negdtlamda    =   -dtlamda;
 
-        Array<OneD, NekDouble> pseudotimefactor(ntotElmt,0.0);
-        Vmath::Fill(ntotElmt,Negdtlamda,pseudotimefactor,1);
+        Array<OneD, NekDouble> pseudotimefactor(nTotElmt,0.0);
+        Vmath::Fill(nTotElmt,Negdtlamda,pseudotimefactor,1);
 
         Array<OneD, DataType>    GMatData;
         for(int m = 0; m < nConvectiveFields; m++)
         {
             for(int n = 0; n < nConvectiveFields; n++)
             {
-                for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+                for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
                 {
                     GMatData = gmtxarray[m][n]->GetBlock(nelmt,nelmt)->GetPtr();
                     DataType factor = DataType(pseudotimefactor[nelmt]);
@@ -1429,7 +1429,7 @@ namespace Nektar
         Array<OneD,DataType> MassMatDataDataType;
         LibUtilities::ShapeType ElmtTypePrevious = LibUtilities::eNoShapeType;
 
-        for(int  nelmt = 0; nelmt < ntotElmt; nelmt++)
+        for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
         {
             int nelmtcoef  = GetNcoeffs(nelmt);
             int nelmtpnts  = GetTotPoints(nelmt);
@@ -1533,10 +1533,10 @@ namespace Nektar
         const int                                       nDervDir,
         const Array<OneD, const Array<OneD, NekDouble>> &inarray,
               TensorOfArray5D<NekDouble>                &ElmtJacArray,
-        const int                                       nfluxDir)
+        const int                                       nFluxDir)
     {
         boost::ignore_unused(explist, normals, nDervDir, inarray, ElmtJacArray,
-            nfluxDir);
+            nFluxDir);
         NEKERROR(ErrorUtil::efatal, "v_GetFluxDerivJacDirctn not coded");
     }
 
@@ -1693,8 +1693,8 @@ namespace Nektar
             m_nonlinsol->GetRefSourceVec();
 
         NekDouble eps = m_jacobiFreeEps;
-        unsigned int ntotalGlobal     = inarray.size();
-        NekDouble magninarray = Vmath::Dot(ntotalGlobal,inarray,inarray);
+        unsigned int nTotalGlobal     = inarray.size();
+        NekDouble magninarray = Vmath::Dot(nTotalGlobal,inarray,inarray);
         m_comm->AllReduce(magninarray, Nektar::LibUtilities::ReduceSum);
         eps *= sqrt( (sqrt(m_inArrayNorm) + 1.0)/magninarray);
 

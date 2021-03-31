@@ -411,7 +411,6 @@ namespace Nektar
             const int order0 = m_base[0]->GetNumModes ();
             const int order1 = m_base[1]->GetNumModes ();
             const int nqtot  = nquad0*nquad1*nquad2;
-            int i;
 
             const Array<OneD, const NekDouble> &z0 = m_base[0]->GetZ();
             const Array<OneD, const NekDouble> &z2 = m_base[2]->GetZ();
@@ -447,26 +446,26 @@ namespace Nektar
             }
 
             // set up geometric factor: (1+z0)/2
-            for (i = 0; i < nquad0; ++i)
+            for (int i = 0; i < nquad0; ++i)
             {
                 gfac0[i] = 0.5*(1+z0[i]);
             }
 
             // Set up geometric factor: 2/(1-z2)
-            for (i = 0; i < nquad2; ++i)
+            for (int i = 0; i < nquad2; ++i)
             {
             	gfac2[i] = 2.0/(1-z2[i]);
             }
 
             const int nq01 = nquad0*nquad1;
 
-            for (i = 0; i < nquad2; ++i)
+            for (int i = 0; i < nquad2; ++i)
             {
                 Vmath::Smul(nq01,gfac2[i],&tmp2[0]+i*nq01,1,&tmp2[0]+i*nq01,1);
                 Vmath::Smul(nq01,gfac2[i],&tmp4[0]+i*nq01,1,&tmp5[0]+i*nq01,1);
             }
 
-            for(i = 0; i < nquad1*nquad2; ++i)
+            for (int i = 0; i < nquad1*nquad2; ++i)
             {
                 Vmath::Vmul(nquad0,&gfac0[0],1,&tmp5[0]+i*nquad0,1,
                             &tmp5[0]+i*nquad0,1);

@@ -462,17 +462,11 @@ namespace Nektar
                                                    const Array<OneD, const NekDouble>& inarray,
                                                    Array<OneD, NekDouble> & outarray)
         {
-            ASSERTL1((dir==0)||(dir==1)||(dir==2),"Invalid direction.");
-            ASSERTL1((dir==2)?(m_geom->GetCoordim()==3):true,"Invalid direction.");
-
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nqtot  = nquad0*nquad1;
             int    nmodes0 = m_base[0]->GetNumModes();
             int    wspsize = max(max(nqtot,m_ncoeffs),nquad1*nmodes0);
-
-            const Array<TwoD, const NekDouble>& df =
-                                m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             Array<OneD, NekDouble> tmp0 (4*wspsize);
             Array<OneD, NekDouble> tmp1 (tmp0 +   wspsize);
@@ -499,9 +493,9 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> >    &outarray)
         {
             ASSERTL1((dir==0)||(dir==1)||(dir==2),"Invalid direction.");
-            ASSERTL1((dir==2)?(m_geom->GetCoordim()==3):true,"Invalid direction.");
+            ASSERTL1((dir==2)?(m_geom->GetCoordim()==3):true,
+                    "Invalid direction.");
 
-            int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nqtot  = nquad0*nquad1;
@@ -523,23 +517,25 @@ namespace Nektar
             const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
 
             // set up geometric factor: 2/(1-z1)
-            for(i = 0; i < nquad1; ++i)
+            for (int i = 0; i < nquad1; ++i)
             {
                 gfac0[i] = 2.0/(1-z1[i]);
             }
-            for(i = 0; i < nquad0; ++i)
+            for (int i = 0; i < nquad0; ++i)
             {
                 gfac1[i] = 0.5*(1+z0[i]);
             }
 
-            for(i = 0; i < nquad1; ++i)
+            for (int i = 0; i < nquad1; ++i)
             {
-                Vmath::Smul(nquad0,gfac0[i],&inarray[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
+                Vmath::Smul(nquad0, gfac0[i], &inarray[0]+i*nquad0, 1, 
+                            &tmp0[0]+i*nquad0, 1);
             }
 
-            for(i = 0; i < nquad1; ++i)
+            for (int i = 0; i < nquad1; ++i)
             {
-                Vmath::Vmul(nquad0,&gfac1[0],1,&tmp0[0]+i*nquad0,1,&tmp1[0]+i*nquad0,1);
+                Vmath::Vmul(nquad0, &gfac1[0], 1, &tmp0[0]+i*nquad0, 1,
+                            &tmp1[0]+i*nquad0, 1);
             }
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)

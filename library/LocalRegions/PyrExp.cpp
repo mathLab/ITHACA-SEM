@@ -427,7 +427,8 @@ namespace Nektar
             Array<OneD, NekDouble> gfac1(nquad1   );
             Array<OneD, NekDouble> gfac2(nquad2   );
             Array<OneD, NekDouble> tmp5 (nqtot    );
-            Array<OneD, NekDouble> wsp  (std::max(nqtot,order0*nquad2*(nquad1+order1)));
+            Array<OneD, NekDouble> wsp  (std::max(nqtot, 
+                                        order0*nquad2*(nquad1+order1)));
 
             Array<OneD, NekDouble> tmp2 =   outarray[0];
             Array<OneD, NekDouble> tmp3 =   outarray[1];
@@ -480,7 +481,7 @@ namespace Nektar
             }
 
             // (1+z0)/(1-z2) for d/d eta_0
-            for(int i = 0; i < nquad1*nquad2; ++i)
+            for (int i = 0; i < nquad1*nquad2; ++i)
             {
                 Vmath::Vmul(nquad0,&gfac0[0],1,
                             &tmp5[0]+i*nquad0,1,
@@ -490,7 +491,7 @@ namespace Nektar
             Vmath::Vadd(nqtot, &tmp2[0], 1, &wsp[0], 1, &tmp2[0], 1);
             
             // (1+z1)/(1-z2) for d/d eta_1
-            for(int i = 0; i < nquad1*nquad2; ++i)
+            for (int i = 0; i < nquad1*nquad2; ++i)
             {
                 Vmath::Smul(nquad0,gfac1[i%nquad1],
                             &tmp5[0]+i*nquad0,1,

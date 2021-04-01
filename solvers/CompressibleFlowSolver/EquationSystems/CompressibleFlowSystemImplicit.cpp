@@ -417,7 +417,7 @@ namespace Nektar
 
     void CFSImplicit::PreconCoeff(
             const Array<OneD, NekDouble> &inarray,
-                  Array<OneD, NekDouble >&outarray,
+                  Array<OneD, NekDouble> &outarray,
             const bool                   &flag)
     {
         if (m_preconCfs->UpdatePreconMatCheck(NullNekDouble1DArray, 

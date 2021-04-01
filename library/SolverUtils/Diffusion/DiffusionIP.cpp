@@ -303,10 +303,10 @@ void DiffusionIP::v_DiffuseCoeffs(
     int nCoeffs   = fields[0]->GetNcoeffs();
     int nTracePts = fields[0]->GetTrace()->GetTotPoints();
     
-    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > elmtFlux(nDim);
+    TensorOfArray3D<NekDouble> elmtFlux(nDim);
     for (j = 0; j < nDim; ++j)
     {
-        elmtFlux[j] = Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
+        elmtFlux[j] = Array<OneD, Array<OneD, NekDouble>>(nConvectiveFields);
         for (i = 0; i < nConvectiveFields; ++i)
         {
             elmtFlux[j][i] = Array<OneD, NekDouble>(nPts, 0.0);
@@ -315,7 +315,7 @@ void DiffusionIP::v_DiffuseCoeffs(
     
     DiffuseVolumeFlux(fields,inarray,qfield,elmtFlux,nonZeroIndex);
     
-    Array<OneD, Array<OneD, NekDouble> > tmpFluxIprdct(nDim);
+    Array<OneD, Array<OneD, NekDouble>> tmpFluxIprdct(nDim);
     // volume intergration: the nonZeroIndex indicates which flux is nonzero
     for(i = 0; i < nonZeroIndex.size(); ++i)
     {

@@ -643,21 +643,6 @@ namespace Vmath
 
     /************ Misc routine from Veclib (and extras)  ************/
 
-    /// \brief Gather vector z[i] = x[y[i]]
-    template<class T>  void Gathr(int n, const T *x, const int *y,
-                  T *z)
-    {
-        while (n--)
-        {
-            *z++ = *(x + *y++);
-        }
-        return;
-    }
-
-    template LIB_UTILITIES_EXPORT  void Gathr(int n, const Nektar::NekDouble *x, const int *y,
-              Nektar::NekDouble *z);
-
-
     /// \brief Gather vector z[i] = sign[i]*x[y[i]]
     template<class T>  void Gathr(int n, const T *sign, const T *x, const int *y,
                   T *z)

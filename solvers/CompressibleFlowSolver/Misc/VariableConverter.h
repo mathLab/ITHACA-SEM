@@ -62,6 +62,28 @@ public:
     void GetInternalEnergy(
         const Array<OneD, const Array<OneD, NekDouble>> &physfield,
         Array<OneD, NekDouble> &energy);
+    template <class T, typename = typename std::enable_if
+    <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    inline T GetInternalEnergy(T* physfield)
+    {
+        // get dynamic energy
+        T oneOrho = 1.0 / physfield[0];
+        T dynEne{};
+        for (size_t d = 1; d < m_spacedim + 1; ++d)
+        {
+            T tmp = physfield[d]; //load 1x
+            dynEne += tmp * tmp;
+        }
+        dynEne = 0.5 * dynEne * oneOrho;
+
+        // Calculate rhoe = E - rho*V^2/2
+        T energy = physfield[m_spacedim + 1] - dynEne;
+        return energy * oneOrho;
+    }
     void GetEnthalpy(const Array<OneD, const Array<OneD, NekDouble>> &physfield,
                      Array<OneD, NekDouble> &enthalpy);
     void GetVelocityVector(const Array<OneD, Array<OneD, NekDouble>> &physfield,
@@ -71,6 +93,24 @@ public:
                  Array<OneD, NekDouble> &mach);
     void GetDynamicViscosity(const Array<OneD, const NekDouble> &temperature,
                              Array<OneD, NekDouble> &mu);
+
+    template <class T, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    inline T GetDynamicViscosity(T &temperature)
+    {
+        constexpr NekDouble C = .38175;
+        constexpr NekDouble onePlusC = 1.0 + C;
+
+        NekDouble mu_star = m_mu;
+
+        T ratio = temperature * m_oneOverT_star;
+        return mu_star * ratio * sqrt(ratio) * onePlusC / (ratio + C);
+    }
+
     void GetAbsoluteVelocity(
         const Array<OneD, const Array<OneD, NekDouble>> &physfield,
         Array<OneD, NekDouble> &Vtot);
@@ -83,8 +123,32 @@ public:
     void GetTemperature(
         const Array<OneD, const Array<OneD, NekDouble>> &physfield,
         Array<OneD, NekDouble> &temperature);
+    template <class T, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    inline T GetTemperature(T* physfield)
+    {
+        T energy = GetInternalEnergy(physfield);
+        return m_eos->GetTemperature(physfield[0], energy);
+    }
+    //
     void GetPressure(const Array<OneD, const Array<OneD, NekDouble>> &physfield,
                      Array<OneD, NekDouble> &pressure);
+    template <class T, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    inline T GetPressure(T* physfield)
+    {
+        T energy = GetInternalEnergy(physfield);
+        return m_eos->GetPressure(physfield[0], energy);
+    }
+
     void GetSoundSpeed(
         const Array<OneD, const Array<OneD, NekDouble>> &physfield,
         Array<OneD, NekDouble> &soundspeed);
@@ -107,6 +171,14 @@ protected:
     NekDouble m_mu;
     NekDouble m_Skappa;
     NekDouble m_Kappa;
+    NekDouble m_oneOverT_star;
 };
+
+
+
+
+
+
+
 }
 #endif

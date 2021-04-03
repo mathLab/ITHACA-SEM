@@ -157,6 +157,24 @@ struct sse2Int4
     }
 
 
+    // gather/scatter with sse2
+    inline void gather(scalarType const* p, const sse2Int4<T>& indices)
+    {
+        _data = _mm256_i32gather_pd(p, indices._data, 8);
+    }
+
+    inline void scatter(scalarType* out, const sse2Int4<T>& indices) const
+    {
+        // no scatter intrinsics for AVX2
+        alignas(alignment) scalarArray tmp;
+        _mm256_store_pd(tmp, _data);
+
+        out[_mm_extract_epi32(indices._data, 0)] = tmp[0]; // SSE4.1
+        out[_mm_extract_epi32(indices._data, 1)] = tmp[1];
+        out[_mm_extract_epi32(indices._data, 2)] = tmp[2];
+        out[_mm_extract_epi32(indices._data, 3)] = tmp[3];
+    }
+
     inline void broadcast(const scalarType rhs)
     {
         _data = _mm_set1_epi32(rhs);

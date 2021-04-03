@@ -34,10 +34,10 @@
 
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/Communication/CommSerial.h>
-
+#include <boost/algorithm/string.hpp>
+#include <iostream>
 #include <iomanip>
-
-#include <iomanip>
+#include <tuple>
 
 namespace Nektar
 {
@@ -64,14 +64,14 @@ NekDouble Timer::TimePerTest(unsigned int n)
     return Elapsed().count() / static_cast<NekDouble>(n);
 }
 
-void Timer::AccumulateRegion(std::string region)
+void Timer::AccumulateRegion(std::string region, int iolevel)
 {
     // search for region
     auto search = m_elapsedRegion.find(region);
     if (search == m_elapsedRegion.end())
     {
         m_elapsedRegion.insert({region,
-            std::make_pair<Timer::Seconds, size_t>(this->Elapsed(),1)});
+         std::make_tuple<Timer::Seconds, size_t>(this->Elapsed(),1, iolevel)});
         // update width field width
         m_maxStringWidth = std::max(
             static_cast<decltype(m_maxStringWidth)>(region.size()),
@@ -79,8 +79,8 @@ void Timer::AccumulateRegion(std::string region)
     }
     else
     {
-        search->second.first += this->Elapsed();
-        search->second.second += 1;
+        std::get<0>(search->second) += this->Elapsed();
+        std::get<1>(search->second) += 1;
     }
 }
 
@@ -96,7 +96,8 @@ void Timer::PrintElapsedRegions()
 }
     
 void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm,
-                                std::ostream &o)
+                                std::ostream &o,
+                                int iolevel)
 {
     std::vector<std::string> labels{
         "Region",
@@ -116,30 +117,60 @@ void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm,
           << std::setw(10) << labels[3] << '\t'
           << std::setw(10) << labels[4] << '\n';
     }
-    for (auto item = m_elapsedRegion.begin();
-            item != m_elapsedRegion.end(); ++item)
+    // first write out execute time
+    auto item = m_elapsedRegion.find("Execute");
+    if(item != m_elapsedRegion.end())
     {
-        auto elapsedAve = item->second.first.count();
+        auto elapsedAve = std::get<0>(item->second).count();
         comm->AllReduce(elapsedAve, LibUtilities::ReduceSum);
         elapsedAve /= comm->GetSize();
-        auto elapsedMin = item->second.first.count();
+        auto elapsedMin = std::get<0>(item->second).count();
         comm->AllReduce(elapsedMin, LibUtilities::ReduceMin);
-        auto elapsedMax = item->second.first.count();
+        auto elapsedMax = std::get<0>(item->second).count();
         comm->AllReduce(elapsedMax, LibUtilities::ReduceMax);
-
+        
         if (comm->GetRank() == 0)
         {
-            o << std::setw(m_maxStringWidth+2) << item->first << '\t'
+            o << std::setw(m_maxStringWidth+2) << item->first  << '\t'
               << std::setw(10) << elapsedAve << '\t'
               << std::setw(10) << elapsedMin << '\t'
               << std::setw(10) << elapsedMax << '\t'
-              << std::setw(10) << item->second.second << '\n';
+              << std::setw(10) << std::get<1>(item->second) << '\n';
+        }
+    }            
+
+    // write out all other timings order alphabetically on string
+    for (auto item = m_elapsedRegion.begin();
+            item != m_elapsedRegion.end(); ++item)
+    {
+        if(std::get<2>(item->second) < iolevel)
+        {
+            if(boost::iequals(item->first,"Execute"))
+            {
+                continue;
+            }
+
+            auto elapsedAve = std::get<0>(item->second).count();
+            comm->AllReduce(elapsedAve, LibUtilities::ReduceSum);
+            elapsedAve /= comm->GetSize();
+            auto elapsedMin = std::get<0>(item->second).count();
+            comm->AllReduce(elapsedMin, LibUtilities::ReduceMin);
+            auto elapsedMax = std::get<0>(item->second).count();
+            comm->AllReduce(elapsedMax, LibUtilities::ReduceMax);
+
+            if (comm->GetRank() == 0)
+            {
+                o << std::setw(m_maxStringWidth+2) << item->first  << '\t'
+                  << std::setw(10) << elapsedAve << '\t'
+                  << std::setw(10) << elapsedMin << '\t'
+                  << std::setw(10) << elapsedMax << '\t'
+                  << std::setw(10) << std::get<1>(item->second) << '\n';
+            }
         }
     }
 }
-
 // static members init
-std::unordered_map<std::string, std::pair<Timer::Seconds, size_t>>
+std::map<std::string, std::tuple<Timer::Seconds, size_t, int>>
     Timer::m_elapsedRegion{};
 
 unsigned short Timer::m_maxStringWidth = 10;

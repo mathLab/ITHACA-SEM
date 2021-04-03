@@ -54,10 +54,48 @@ public:
     static std::string type;
 
     /// Calculate the average of conservative variables on traces
-    void ConsVarAve(const std::size_t nConvectiveFields, const size_t npnts,
-                    const Array<OneD, const Array<OneD, NekDouble>> &vFwd,
-                    const Array<OneD, const Array<OneD, NekDouble>> &vBwd,
-                    Array<OneD, Array<OneD, NekDouble>> &aver);
+    template <class T, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    inline void ConsVarAve(
+    const size_t nConvectiveFields,
+    const T& Bweight,
+    const std::vector<T>& vFwd,
+    const std::vector<T>& vBwd,
+    std::vector<T>& aver)
+    {
+        constexpr int nvelst = 1;
+        int nEngy  = nConvectiveFields - 1;
+        int nveled = nEngy;
+
+        T Fweight = 1.0 - Bweight;
+        for (size_t v = 0; v < nEngy; ++v)
+        {
+            aver[v] = Fweight * vFwd[v] + Bweight * vBwd[v];
+        }
+
+        T LinternalEngy{};
+        T RinternalEngy{};
+        T AinternalEngy{};
+        for (size_t j = nvelst; j < nveled; ++j)
+        {
+            LinternalEngy += vFwd[j] * vFwd[j];
+            RinternalEngy += vBwd[j] * vBwd[j];
+            AinternalEngy += aver[j] * aver[j];
+        }
+        LinternalEngy *= -0.5 / vFwd[0];
+        RinternalEngy *= -0.5 / vBwd[0];
+        LinternalEngy += vFwd[nEngy];
+        RinternalEngy += vBwd[nEngy];
+
+        aver[nEngy] = Fweight * LinternalEngy + Bweight * RinternalEngy;
+        aver[nEngy] += AinternalEngy * (0.5 / aver[0]);
+
+    }
+
 
 protected:
     DiffusionIP();
@@ -71,6 +109,12 @@ protected:
     Array<OneD, Array<OneD, NekDouble>> m_traceNormals;
     Array<OneD, Array<OneD, NekDouble>> m_traceAver;
     Array<OneD, Array<OneD, NekDouble>> m_traceJump;
+    /// Workspace for v_Diffusion
+    Array<OneD, Array<OneD, NekDouble>> m_wspDiff;
+    /// Workspace for CallTraceNumFlux
+    TensorOfArray3D<NekDouble> m_wspNumDerivBwd;
+    TensorOfArray3D<NekDouble> m_wspNumDerivFwd;
+
     Array<OneD, NekDouble> m_tracBwdWeightAver;
     Array<OneD, NekDouble> m_tracBwdWeightJump;
     Array<OneD, NekDouble> m_traceNormDirctnElmtLength;

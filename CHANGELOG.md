@@ -49,6 +49,9 @@ v5.1.0
 - Add new filter AeroForcesSPM to compute aerodynamic forces in immersed
   boundaries (!1065)
 
+**CompressibleFlowSolver**
+- Added vectorisation of the Interior Penalty method (!!223)
+
 **PulseWaveSolver**
 - Added viscoelasticity (!1138)
 - Added empirical and power laws (!1138)
@@ -67,11 +70,15 @@ v5.1.0
 - Toggle build type (!1135)
 - Updated minimum required CMake version to 3.5.1 (!1152)
 - Updated third party Boost version 1.71 (!1152)
+- Updated third party OCE version to 0.18.3 (!1234)
 
 v5.0.2
 ------
 **CI**
 - Add Debian Bullseye to CI system (!1181)
+
+**BuildSystem**
+- Updated third party zlib version to 1.2.9 to resolve OCE source build issue (!1227)
 
 v5.0.1
 ------

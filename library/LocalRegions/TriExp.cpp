@@ -477,13 +477,17 @@ namespace Nektar
             tmp2D[0] = tmp1;
             tmp2D[1] = tmp2;
 
-            ProjectVectorIntoStandardExp(dir, inarray, tmp2D);
+            TriExp::v_ProjectVectorIntoStandardExp(dir, inarray, tmp2D);
 
             MultiplyByQuadratureMetric(tmp1,tmp1);
             MultiplyByQuadratureMetric(tmp2,tmp2);
 
-            IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),m_base[1]->GetBdata() ,tmp1,tmp3    ,tmp0);
-            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata() ,m_base[1]->GetDbdata(),tmp2,outarray,tmp0);
+            IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                         m_base[1]->GetBdata() ,
+                                         tmp1,tmp3,tmp0);
+            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata() ,
+                                         m_base[1]->GetDbdata(),
+                                         tmp2,outarray,tmp0);
             Vmath::Vadd(m_ncoeffs, tmp3, 1, outarray, 1, outarray, 1);
         }
 

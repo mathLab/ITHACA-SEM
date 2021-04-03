@@ -507,7 +507,7 @@ namespace Nektar
             tmp2D[0] = tmp1;
             tmp2D[1] = tmp2;
 
-            ProjectVectorIntoStandardExp(dir, inarray, tmp2D);
+            QuadExp::v_ProjectVectorIntoStandardExp(dir, inarray, tmp2D);
 
             MultiplyByQuadratureMetric(tmp1,tmp1);
             MultiplyByQuadratureMetric(tmp2,tmp2);

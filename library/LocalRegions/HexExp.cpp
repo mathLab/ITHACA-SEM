@@ -493,7 +493,7 @@ namespace Nektar
             tmp2D[1] = tmp3;
             tmp2D[2] = tmp4;
 
-            ProjectVectorIntoStandardExp(dir, tmp1, tmp2D);
+            HexExp::v_ProjectVectorIntoStandardExp(dir, tmp1, tmp2D);
 
             IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
                                          m_base[1]->GetBdata(),

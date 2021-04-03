@@ -211,7 +211,7 @@ void DiffusionIP::v_DiffuseCoeffs(
     Array<OneD, Array<OneD, NekDouble>> vFwd{nConvectiveFields};
     Array<OneD, Array<OneD, NekDouble>> vBwd{nConvectiveFields};
     // when does this happen?
-    if (pFwd == NullNekDoubleArrayofArray || pBwd == NullNekDoubleArrayofArray)
+    if (pFwd == NullNekDoubleArrayOfArray || pBwd == NullNekDoubleArrayOfArray)
     {
         for (int i = 0; i < nConvectiveFields; ++i)
         {
@@ -253,7 +253,7 @@ void DiffusionIP::v_DiffuseCoeffs(
     // release qfield, elmtFlux and muvar;
     for (int j = 0; j < nDim; ++j)
     {
-        elmtFlux[j] = NullNekDoubleArrayofArray;
+        elmtFlux[j] = NullNekDoubleArrayOfArray;
     }
 
     // pre-allocate this?
@@ -340,7 +340,7 @@ void DiffusionIP::v_DiffuseCoeffs(
     // release qfield, elmtFlux and muvar;
     for (j = 0; j < nDim; ++j)
     {
-        elmtFlux[j]     = NullNekDoubleArrayofArray;
+        elmtFlux[j]     = NullNekDoubleArrayOfArray;
     }
     
     for(i = 0; i < nonZeroIndex.size(); ++i)
@@ -398,7 +398,7 @@ void DiffusionIP::v_DiffuseVolumeFlux(
         GetAVmu(fields, inarray, muvar, m_MuVarTrace);
     }
 
-    Array<OneD, Array<OneD, NekDouble>> tmparray2D = NullNekDoubleArrayofArray;
+    Array<OneD, Array<OneD, NekDouble>> tmparray2D = NullNekDoubleArrayOfArray;
 
     LibUtilities::Timer timer;
     timer.Start();

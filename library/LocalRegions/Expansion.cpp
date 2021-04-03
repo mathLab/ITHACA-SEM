@@ -752,13 +752,13 @@ namespace Nektar
             return x->second;
         }
 
-        void Expansion::v_ProjectVectorIntoStandardExp(
+        void Expansion::v_AlignVectorToCollapsedDir(
                     const int dir, 
                     const Array<OneD, const NekDouble>      &inarray, 
                     Array<OneD, Array<OneD, NekDouble> >    &outarray)
         {
             boost::ignore_unused(dir,inarray,outarray);
-            NEKERROR(ErrorUtil::efatal, "v_ProjectVectorIntoStandardExp is not defined");
+            NEKERROR(ErrorUtil::efatal, "v_AlignVectorToCollapsedDir is not defined");
         }
     } //end of namespace
 } //end of namespace

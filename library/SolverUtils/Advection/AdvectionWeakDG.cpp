@@ -213,8 +213,8 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble>> Fwd(nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble>> Bwd(nConvectiveFields);
 
-            if (pFwd == NullNekDoubleArrayofArray ||
-                pBwd == NullNekDoubleArrayofArray)
+            if (pFwd == NullNekDoubleArrayOfArray ||
+                pBwd == NullNekDoubleArrayOfArray)
             {
                 for (int i = 0; i < nConvectiveFields; ++i)
                 {

@@ -172,8 +172,8 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
-                const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+                const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayOfArray,
+                const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayOfArray);
 
             SOLVER_UTILS_EXPORT void DiffuseCoeffs(
                 const std::size_t                             nConvectiveFields,
@@ -181,9 +181,9 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >          &inarray,
                 Array<OneD, Array<OneD, NekDouble> >                &outarray,
                 const Array<OneD, Array<OneD, NekDouble> >
-                    &pFwd = NullNekDoubleArrayofArray,
+                    &pFwd = NullNekDoubleArrayOfArray,
                 const Array<OneD, Array<OneD, NekDouble> >
-                    &pBwd = NullNekDoubleArrayofArray);
+                    &pBwd = NullNekDoubleArrayOfArray);
 
             SOLVER_UTILS_EXPORT void Diffuse(
                 const std::size_t                             nConvectiveFields,
@@ -192,9 +192,9 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> >              &outarray,
                 NekDouble                                         time,
                 const Array<OneD, Array<OneD, NekDouble> >
-                    &pFwd = NullNekDoubleArrayofArray,
+                    &pFwd = NullNekDoubleArrayOfArray,
                 const Array<OneD, Array<OneD, NekDouble> >
-                    &pBwd = NullNekDoubleArrayofArray);
+                    &pBwd = NullNekDoubleArrayOfArray);
             
             SOLVER_UTILS_EXPORT void DiffuseCoeffs(
                 const std::size_t                             nConvectiveFields,
@@ -217,9 +217,9 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> >              &outarray,
                 NekDouble                                         time,
                 const Array<OneD, Array<OneD, NekDouble> >
-                    &pFwd = NullNekDoubleArrayofArray,
+                    &pFwd = NullNekDoubleArrayOfArray,
                 const Array<OneD, Array<OneD, NekDouble> >
-                    &pBwd = NullNekDoubleArrayofArray);
+                    &pBwd = NullNekDoubleArrayOfArray);
             
             // Diffusion Calculate the physical derivatives
             SOLVER_UTILS_EXPORT void DiffuseCalcDerivative(
@@ -227,9 +227,9 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble>>         &inarray,
                 TensorOfArray3D<NekDouble>                        &qfields, 
                 const Array<OneD, Array<OneD, NekDouble>>         &pFwd
-                      =NullNekDoubleArrayofArray,
+                      =NullNekDoubleArrayOfArray,
                 const Array<OneD, Array<OneD, NekDouble>>         &pBwd
-                      =NullNekDoubleArrayofArray);
+                      =NullNekDoubleArrayOfArray);
 
             /// Diffusion Volume FLux
 
@@ -253,9 +253,9 @@ namespace Nektar
                 TensorOfArray3D<NekDouble>                          &VolumeFlux,
                 Array<OneD, Array<OneD, NekDouble> >                &TraceFlux,
                 const Array<OneD, Array<OneD, NekDouble>>
-                    &pFwd           =   NullNekDoubleArrayofArray,
+                    &pFwd           =   NullNekDoubleArrayOfArray,
                 const Array<OneD, Array<OneD, NekDouble>>
-                    &pBwd           =   NullNekDoubleArrayofArray,
+                    &pBwd           =   NullNekDoubleArrayOfArray,
                 Array< OneD, int >
                     &nonZeroIndex   =   NullInt1DArray)
             {
@@ -273,8 +273,8 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble>>          &pFwd,
                 const Array<OneD, Array<OneD, NekDouble>>          &pBwd,
                 Array< OneD, int >                                 &nonZeroIndex,
-                Array<OneD, Array<OneD, NekDouble> >               &solution_Aver = NullNekDoubleArrayofArray,
-                Array<OneD, Array<OneD, NekDouble> >               &solution_jump = NullNekDoubleArrayofArray)
+                Array<OneD, Array<OneD, NekDouble> >               &solution_Aver = NullNekDoubleArrayOfArray,
+                Array<OneD, Array<OneD, NekDouble> >               &solution_jump = NullNekDoubleArrayOfArray)
             {
                 v_DiffuseTraceSymmFlux(nConvectiveFields,fields,inarray,qfield,
                                        VolumeFlux,SymmFlux,pFwd,pBwd,

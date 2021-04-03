@@ -382,7 +382,7 @@ namespace Nektar
             tmp2D[1] = tmp3;
             tmp2D[2] = tmp4;
 
-            PyrExp::v_ProjectVectorIntoStandardExp(dir, tmp1, tmp2D);
+            PyrExp::v_AlignVectorToCollapsedDir(dir, tmp1, tmp2D);
 
             IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
                                          m_base[1]->GetBdata (),
@@ -407,7 +407,7 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs, tmp6, 1, outarray, 1, outarray, 1);
         }
 
-        void PyrExp::v_ProjectVectorIntoStandardExp(
+        void PyrExp::v_AlignVectorToCollapsedDir(
                 const int dir, 
                 const Array<OneD, const NekDouble>      &inarray, 
                 Array<OneD, Array<OneD, NekDouble> >    &outarray)

@@ -74,7 +74,7 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble>> &inarray,
                   Array<OneD,       Array<OneD, NekDouble>> &out,
             const Array<OneD, const Array<OneD, NekDouble>> &source = 
-                NullNekDoubleArrayofArray);
+                NullNekDoubleArrayOfArray);
 
         void DoOdeRhsCoeff(
             const Array<OneD, const Array<OneD, NekDouble>> &inarray,
@@ -276,7 +276,7 @@ namespace Nektar
                   Array<OneD, int >                             &nonZeroIndex,
                   Array<OneD,       Array<OneD, NekDouble>>     &traceflux);
 
-        void MinusDiffusionFluxJacDirctnElmt(
+        void MinusDiffusionFluxJacPoint(
             const int                                       nConvectiveFields,
             const int                                       nElmtPnt,
             const Array<OneD, const Array<OneD, NekDouble>> &locVars,
@@ -287,7 +287,7 @@ namespace Nektar
                   DNekMatSharedPtr                          &wspMat,
                   Array<OneD,       Array<OneD, NekDouble>> &PntJacArray)
         {
-            v_MinusDiffusionFluxJacDirctnElmt(nConvectiveFields,nElmtPnt,
+            v_MinusDiffusionFluxJacPoint(nConvectiveFields,nElmtPnt,
                 locVars,locDerv,locmu,locDmuDT,normals,wspMat,PntJacArray);
         }
 
@@ -376,7 +376,7 @@ namespace Nektar
             boost::ignore_unused(inarray, qfield);
         }
 
-        virtual void v_MinusDiffusionFluxJacDirctnElmt(
+        virtual void v_MinusDiffusionFluxJacPoint(
             const int                                       nConvectiveFields,
             const int                                       nElmtPnt,
             const Array<OneD, const Array<OneD, NekDouble>> &locVars,

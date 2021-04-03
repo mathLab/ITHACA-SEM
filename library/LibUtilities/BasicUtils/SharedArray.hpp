@@ -818,7 +818,7 @@ namespace Nektar
 
     static Array<OneD, int> NullInt1DArray;
     static Array<OneD, NekDouble> NullNekDouble1DArray;
-    static Array<OneD, Array<OneD, NekDouble> > NullNekDoubleArrayofArray;
+    static Array<OneD, Array<OneD, NekDouble> > NullNekDoubleArrayOfArray;
     
     // TODO: Consider removing this declaration
     static Array<OneD, 

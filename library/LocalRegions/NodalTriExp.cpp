@@ -174,7 +174,7 @@ namespace Nektar
             tmp2D[0] = tmp1;
             tmp2D[1] = tmp2;
 
-            ProjectVectorIntoStandardExp(dir, inarray, tmp2D);
+            AlignVectorToCollapsedDir(dir, inarray, tmp2D);
 
             MultiplyByQuadratureMetric(tmp1,tmp1);
             MultiplyByQuadratureMetric(tmp2,tmp2);
@@ -186,7 +186,7 @@ namespace Nektar
             NodalToModalTranspose(outarray,outarray);
         }
 
-        void NodalTriExp::v_ProjectVectorIntoStandardExp(
+        void NodalTriExp::v_AlignVectorToCollapsedDir(
                 const int dir, 
                 const Array<OneD, const NekDouble>      &inarray, 
                 Array<OneD, Array<OneD, NekDouble> >    &outarray)

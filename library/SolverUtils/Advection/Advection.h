@@ -89,8 +89,8 @@ public:
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray,
         const NekDouble                                   &time,
-        const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-        const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+        const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayOfArray,
+        const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayOfArray);
 
     /// Interface function to advect the Volume field.
     SOLVER_UTILS_EXPORT void AdvectVolumeFlux(
@@ -114,9 +114,9 @@ public:
         Array<OneD, Array<OneD, NekDouble>>               &pTraceFlux,
         const NekDouble                                   &pTime,
         const Array<OneD, Array<OneD, NekDouble>>
-            &pFwd = NullNekDoubleArrayofArray,
+            &pFwd = NullNekDoubleArrayOfArray,
         const Array<OneD, Array<OneD, NekDouble>>
-            &pBwd = NullNekDoubleArrayofArray)
+            &pBwd = NullNekDoubleArrayOfArray)
     {
         v_AdvectTraceFlux(nConvectiveFields, pFields, pAdvVel, pInarray,
                   pTraceFlux, pTime, pFwd, pBwd);
@@ -136,9 +136,9 @@ public:
         Array<OneD, Array<OneD, NekDouble> >              &outarray,
         const NekDouble                                   &time,
         const Array<OneD, Array<OneD, NekDouble> >
-            &pFwd = NullNekDoubleArrayofArray,
+            &pFwd = NullNekDoubleArrayOfArray,
         const Array<OneD, Array<OneD, NekDouble> >
-            &pBwd = NullNekDoubleArrayofArray);
+            &pBwd = NullNekDoubleArrayOfArray);
 
     /**
      * @brief Set the flux vector callback function.
@@ -237,8 +237,8 @@ protected:
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
               Array<OneD, Array<OneD, NekDouble> >        &outarray,
         const NekDouble                                   &time,
-        const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-        const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray)=0;
+        const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayOfArray,
+        const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayOfArray)=0;
 
     /// Advects Volume Flux.
     SOLVER_UTILS_EXPORT virtual void v_AdvectVolumeFlux(
@@ -258,9 +258,9 @@ protected:
         Array<OneD, Array<OneD, NekDouble>>               &pTraceFlux,
         const NekDouble                                   &time,
         const Array<OneD, Array<OneD, NekDouble> >
-            &pFwd = NullNekDoubleArrayofArray,
+            &pFwd = NullNekDoubleArrayOfArray,
         const Array<OneD, Array<OneD, NekDouble> >
-            &pBwd = NullNekDoubleArrayofArray);
+            &pBwd = NullNekDoubleArrayOfArray);
 
     SOLVER_UTILS_EXPORT virtual void v_AdvectCoeffs(
         const int nConvectiveFields,
@@ -270,9 +270,9 @@ protected:
               Array<OneD, Array<OneD, NekDouble> >        &outarray,
         const NekDouble                                   &time,
         const Array<OneD, Array<OneD, NekDouble> >
-            &pFwd = NullNekDoubleArrayofArray,
+            &pFwd = NullNekDoubleArrayOfArray,
         const Array<OneD, Array<OneD, NekDouble> >
-            &pBwd = NullNekDoubleArrayofArray);
+            &pBwd = NullNekDoubleArrayOfArray);
 
     /// Overrides the base flow used during linearised advection
     SOLVER_UTILS_EXPORT virtual void v_SetBaseFlow(

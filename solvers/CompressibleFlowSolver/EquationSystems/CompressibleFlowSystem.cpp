@@ -254,8 +254,8 @@ namespace Nektar
 
         if (m_HomogeneousType == eHomogeneous1D)
         {
-            Fwd = NullNekDoubleArrayofArray;
-            Bwd = NullNekDoubleArrayofArray;
+            Fwd = NullNekDoubleArrayOfArray;
+            Bwd = NullNekDoubleArrayOfArray;
         }
         else
         {

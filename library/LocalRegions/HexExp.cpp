@@ -493,7 +493,7 @@ namespace Nektar
             tmp2D[1] = tmp3;
             tmp2D[2] = tmp4;
 
-            HexExp::v_ProjectVectorIntoStandardExp(dir, tmp1, tmp2D);
+            HexExp::v_AlignVectorToCollapsedDir(dir, tmp1, tmp2D);
 
             IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
                                          m_base[1]->GetBdata(),
@@ -516,7 +516,7 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs, tmp5, 1, outarray, 1, outarray, 1);
         }
 
-        void HexExp::v_ProjectVectorIntoStandardExp(
+        void HexExp::v_AlignVectorToCollapsedDir(
                 const int dir, 
                 const Array<OneD, const NekDouble>      &inarray, 
                 Array<OneD, Array<OneD, NekDouble> >    &outarray)

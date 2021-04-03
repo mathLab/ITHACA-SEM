@@ -5301,7 +5301,7 @@ namespace Nektar
 
                 for(int ndir =0;ndir<nspacedim;ndir++)
                 {
-                    (*m_exp)[nelmt]->ProjectVectorIntoStandardExp(
+                    (*m_exp)[nelmt]->AlignVectorToCollapsedDir(
                             ndir,inarray[ndir][nelmt],tmppnts);
                     for(int n =0;n<nspacedim;n++)
                     {

@@ -89,7 +89,7 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble>> &pFwd,
         const Array<OneD, const Array<OneD, NekDouble>> &pBwd);
   
-    virtual void v_MinusDiffusionFluxJacDirctnElmt(
+    virtual void v_MinusDiffusionFluxJacPoint(
         const int                                       nConvectiveFields,
         const int                                       nElmtPnt,
         const Array<OneD, const Array<OneD, NekDouble>> &locVars,

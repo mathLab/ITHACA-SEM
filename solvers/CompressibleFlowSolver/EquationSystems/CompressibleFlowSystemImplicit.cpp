@@ -199,7 +199,7 @@ namespace Nektar
                          inarray[i], 1, out[i], 1);
         }
 
-        if (NullNekDoubleArrayofArray != source)
+        if (NullNekDoubleArrayOfArray != source)
         {
             for (int i = 0; i < nvariable; ++i)
             {
@@ -227,8 +227,8 @@ namespace Nektar
 
         if (m_HomogeneousType == eHomogeneous1D)
         {
-            Fwd = NullNekDoubleArrayofArray;
-            Bwd = NullNekDoubleArrayofArray;
+            Fwd = NullNekDoubleArrayOfArray;
+            Bwd = NullNekDoubleArrayOfArray;
         }
         else
         {
@@ -600,7 +600,7 @@ namespace Nektar
                 for(int nFluxDir = 0; nFluxDir < nSpaceDim; nFluxDir++)
                 {
                     normals =   normal3D[nFluxDir];
-                    MinusDiffusionFluxJacDirctnElmt(nvariable,nElmtPnt,
+                    MinusDiffusionFluxJacPoint(nvariable,nElmtPnt,
                         locVars,locDerv,locmu,locDmuDT,normals,wspMatDrv,
                         PntJacCons[nFluxDir]);
                 }
@@ -639,7 +639,7 @@ namespace Nektar
                         {
                             tmppnts[i] =  PntJacCons[ndir][i][nVarOffset];
                         }
-                        (*expvect)[ne]->ProjectVectorIntoStandardExp(ndir,
+                        (*expvect)[ne]->AlignVectorToCollapsedDir(ndir,
                             tmppnts,ConsCurv);
                         for(int nd =0;nd<m_spacedim;nd++)
                         {
@@ -686,12 +686,12 @@ namespace Nektar
                                         PntJacDerv[nd0][nd1][i][nVarOffset];
                                 }
 
-                                (*expvect)[ne]->ProjectVectorIntoStandardExp(
+                                (*expvect)[ne]->AlignVectorToCollapsedDir(
                                     nd0,tmppnts,ConsCurv);
                                 for(int nd =0;nd<m_spacedim;nd++)
                                 {
                                     (*expvect)[ne]->
-                                        ProjectVectorIntoStandardExp(nd1,
+                                        AlignVectorToCollapsedDir(nd1,
                                             ConsCurv[nd],DervCurv[nd]);
                                 }
 
@@ -1064,8 +1064,8 @@ namespace Nektar
         
         if (m_HomogeneousType == eHomogeneous1D)
         {
-            Fwd = NullNekDoubleArrayofArray;
-            Bwd = NullNekDoubleArrayofArray;
+            Fwd = NullNekDoubleArrayOfArray;
+            Bwd = NullNekDoubleArrayOfArray;
         }
         else
         {
@@ -1374,7 +1374,7 @@ namespace Nektar
             TraceJacDerivArray);
     }
 
-    void CFSImplicit::v_MinusDiffusionFluxJacDirctnElmt(
+    void CFSImplicit::v_MinusDiffusionFluxJacPoint(
         const int                                       nConvectiveFields,
         const int                                       nElmtPnt,
         const Array<OneD, const Array<OneD, NekDouble>> &locVars,

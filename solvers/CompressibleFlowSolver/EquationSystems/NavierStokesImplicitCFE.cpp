@@ -175,11 +175,11 @@ namespace Nektar
             m_varConv->GetVelocityVector(inarray, inarrayDiff);
 
             // Repeat calculation for trace space
-            if (pFwd == NullNekDoubleArrayofArray ||
-                pBwd == NullNekDoubleArrayofArray)
+            if (pFwd == NullNekDoubleArrayOfArray ||
+                pBwd == NullNekDoubleArrayOfArray)
             {
-                inFwd = NullNekDoubleArrayofArray;
-                inBwd = NullNekDoubleArrayofArray;
+                inFwd = NullNekDoubleArrayOfArray;
+                inBwd = NullNekDoubleArrayOfArray;
             }
             else
             {
@@ -974,7 +974,7 @@ namespace Nektar
         tmpArray[3+4*nrow]=tmpArray[3+4*nrow]-dqx_dU5-dqy_dU5-dqz_dU5;
     }
 
-    void NavierStokesImplicitCFE::v_MinusDiffusionFluxJacDirctnElmt(
+    void NavierStokesImplicitCFE::v_MinusDiffusionFluxJacPoint(
         const int                                       nConvectiveFields,
         const int                                       nElmtPnt,
         const Array<OneD, const Array<OneD, NekDouble>> &locVars,

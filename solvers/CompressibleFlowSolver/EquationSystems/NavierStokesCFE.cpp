@@ -363,11 +363,11 @@ namespace Nektar
             m_varConv->GetVelocityVector(inarray, inarrayDiff);
 
             // Repeat calculation for trace space
-            if (pFwd == NullNekDoubleArrayofArray ||
-                pBwd == NullNekDoubleArrayofArray)
+            if (pFwd == NullNekDoubleArrayOfArray ||
+                pBwd == NullNekDoubleArrayOfArray)
             {
-                inFwd = NullNekDoubleArrayofArray;
-                inBwd = NullNekDoubleArrayofArray;
+                inFwd = NullNekDoubleArrayOfArray;
+                inBwd = NullNekDoubleArrayOfArray;
             }
             else
             {

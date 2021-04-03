@@ -245,8 +245,8 @@ void DiffusionLDG::NumFluxforScalar(
     for (std::size_t i = 0; i < nvariables; ++i)
     {
         // Compute Fwd and Bwd value of ufield of i direction
-        if (pFwd == NullNekDoubleArrayofArray ||
-            pBwd == NullNekDoubleArrayofArray)
+        if (pFwd == NullNekDoubleArrayOfArray ||
+            pBwd == NullNekDoubleArrayOfArray)
         {
             fields[i]->GetFwdBwdTracePhys(ufield[i], Fwd, Bwd);
         }

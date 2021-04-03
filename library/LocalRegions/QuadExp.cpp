@@ -507,7 +507,7 @@ namespace Nektar
             tmp2D[0] = tmp1;
             tmp2D[1] = tmp2;
 
-            QuadExp::v_ProjectVectorIntoStandardExp(dir, inarray, tmp2D);
+            QuadExp::v_AlignVectorToCollapsedDir(dir, inarray, tmp2D);
 
             MultiplyByQuadratureMetric(tmp1,tmp1);
             MultiplyByQuadratureMetric(tmp2,tmp2);
@@ -521,7 +521,7 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs, tmp3, 1, outarray, 1, outarray, 1);
         }
 
-        void QuadExp::v_ProjectVectorIntoStandardExp(
+        void QuadExp::v_AlignVectorToCollapsedDir(
             const int dir,
             const Array<OneD, const NekDouble>      &inarray,
             Array<OneD, Array<OneD, NekDouble> >    &outarray)

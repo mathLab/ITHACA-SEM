@@ -236,7 +236,7 @@ namespace Nektar
         &Diffusion::v_GetTraceNormal()
         {
             NEKERROR(ErrorUtil::efatal,"v_GetTraceNormal not defined");
-            return NullNekDoubleArrayofArray;
+            return NullNekDoubleArrayOfArray;
         }
 
         void Diffusion::v_ConsVarAveJump(

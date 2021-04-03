@@ -104,7 +104,7 @@ namespace Nektar
         TensorOfArray3D<NekDouble>                               &outarray,
         Array< OneD, int > &nonZeroIndex = NullInt1DArray,
         const Array<OneD, Array<OneD, NekDouble>>
-            &normal             =   NullNekDoubleArrayofArray,
+            &normal             =   NullNekDoubleArrayOfArray,
         const Array<OneD, NekDouble> &ArtifDiffFactor = NullNekDouble1DArray);
     void GetViscousSymmtrFluxConservVar(
             const int                                           nSpaceDim,

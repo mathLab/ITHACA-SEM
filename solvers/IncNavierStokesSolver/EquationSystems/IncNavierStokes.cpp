@@ -784,8 +784,10 @@ namespace Nektar
     /**
      *
      */
-    Array<OneD, NekDouble> IncNavierStokes::v_GetMaxStdVelocity(void)
+    Array<OneD, NekDouble> IncNavierStokes::v_GetMaxStdVelocity(
+        const NekDouble SpeedSoundFactor)
     {
+        boost::ignore_unused(SpeedSoundFactor);
         int nvel  = m_velocity.size();
         int nelmt = m_fields[0]->GetExpSize();
 

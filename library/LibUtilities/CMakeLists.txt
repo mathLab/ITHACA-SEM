@@ -35,6 +35,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/Vmath.hpp
     ./BasicUtils/VmathSIMD.hpp
     ./BasicUtils/VmathArray.hpp
+    ./BasicUtils/Smath.hpp
     ./BasicUtils/Metis.hpp
     ./BasicUtils/VtkUtil.hpp
     ./BasicUtils/Likwid.hpp

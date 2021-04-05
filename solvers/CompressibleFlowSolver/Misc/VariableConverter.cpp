@@ -189,7 +189,7 @@ void VariableConverter::GetMach(Array<OneD, Array<OneD, NekDouble>> &physfield,
  * WARNING, if this routine is modified the same must be done in the
  * FieldConvert utility ProcessWSS.cpp (this class should be restructured).
  *
- * @param physfield    Input physical field.
+ * @param temperature  Input temperature field.
  * @param mu           The resulting dynamic viscosity.
  */
 void VariableConverter::GetDynamicViscosity(
@@ -200,6 +200,31 @@ void VariableConverter::GetDynamicViscosity(
     for (int i = 0; i < nPts; ++i)
     {
         mu[i] = GetDynamicViscosity(temperature[i]);
+    }
+}
+
+/**
+ * @brief Compute the dynamic viscosity using the Sutherland's law
+ * \f$ \mu = \mu_star * (T / T_star)^3/2 * (T_star + 110) / (T + 110) \f$,
+ * where:   \mu_star = 1.7894 * 10^-5 Kg / (m * s)
+ *          T_star   = 288.15 K
+ *
+ * @param physfield    Input physical field.
+ * @param mu           The resulting dynamic viscosity.
+ */
+void VariableConverter::GetDmuDT(
+    const Array<OneD, const NekDouble>  &temperature,
+    const Array<OneD, const NekDouble>  &mu,
+          Array<OneD, NekDouble>        &DmuDT)
+{
+    const int nPts      = temperature.size();
+    NekDouble tmp       = 0.0;
+
+    for (int i = 0; i < nPts; ++i)
+    {
+        tmp = 0.5* (temperature[i]+3.0*110.0)/
+                        (temperature[i]*(temperature[i]+110.0));
+        DmuDT[i] = mu[i]*tmp;
     }
 }
 
@@ -443,4 +468,5 @@ void VariableConverter::GetRhoFromPT(const Array<OneD, NekDouble> &pressure,
         rho[i] = m_eos->GetRhoFromPT(pressure[i], temperature[i]);
     }
 }
+
 }

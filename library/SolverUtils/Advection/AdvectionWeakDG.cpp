@@ -141,7 +141,7 @@ namespace Nektar
                     Array<OneD, Array<OneD, NekDouble> > {size_t(m_spaceDim)};
                 for (int j = 0; j < m_spaceDim; ++j)
                 {
-                    fluxvector[i][j] = Array<OneD, NekDouble> {nPointsTot};
+                    fluxvector[i][j] = Array<OneD, NekDouble>(nPointsTot,0.0);
                 }
             }
 
@@ -174,7 +174,8 @@ namespace Nektar
             v_AdvectTraceFlux(nConvectiveFields, fields, advVel, inarray,
                 numflux, time, pFwd, pBwd);
 
-            for (int i = 0; i < nConvectiveFields; ++i)
+            // Evaulate <\phi, \hat{F}\cdot n> - OutField[i]
+            for(int i = 0; i < nConvectiveFields; ++i)
             {
                 Vmath::Neg                      (nCoeffs, outarray[i], 1);
 
@@ -191,7 +192,7 @@ namespace Nektar
             timer1.Stop();
             timer1.AccumulateRegion("AdvWeakDG: Coeff All");
         }
-
+        
         void AdvectionWeakDG::v_AdvectTraceFlux(
             const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -212,8 +213,8 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble>> Fwd(nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble>> Bwd(nConvectiveFields);
 
-            if (pFwd == NullNekDoubleArrayofArray ||
-                pBwd == NullNekDoubleArrayofArray)
+            if (pFwd == NullNekDoubleArrayOfArray ||
+                pBwd == NullNekDoubleArrayOfArray)
             {
                 for (int i = 0; i < nConvectiveFields; ++i)
                 {
@@ -238,5 +239,88 @@ namespace Nektar
             timer.AccumulateRegion("AdvWeakDG:_Riemann",1);
 
         }
+
+        void AdvectionWeakDG::v_AddVolumJacToMat( 
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+            const int &nConvectiveFields,
+            const TensorOfArray5D<NekDouble> &ElmtJacArray,
+            Array<OneD, Array<OneD, SNekBlkMatSharedPtr>> &gmtxarray)
+        {
+            MultiRegions::ExpListSharedPtr explist = pFields[0];
+                std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
+            int nTotElmt            = (*pexp).size();
+            int nElmtPnt,nElmtCoef;
+
+            SNekMatSharedPtr        tmpGmtx;
+            DNekMatSharedPtr        ElmtMat;
+
+            Array<OneD,NekSingle> GMat_data;
+            Array<OneD,NekDouble> Elmt_data;
+            Array<OneD,NekSingle> Elmt_dataSingle;
+
+            Array<OneD, DNekMatSharedPtr>  mtxPerVar(nTotElmt);
+            Array<OneD, int > elmtpnts(nTotElmt);
+            Array<OneD, int > elmtcoef(nTotElmt);
+            for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
+            {
+                nElmtCoef           = (*pexp)[nelmt]->GetNcoeffs();
+                nElmtPnt            = (*pexp)[nelmt]->GetTotPoints();
+                elmtpnts[nelmt]     =   nElmtPnt;
+                elmtcoef[nelmt]     =   nElmtCoef;
+                mtxPerVar[nelmt]    =MemoryManager<DNekMat>
+                                    ::AllocateSharedPtr(nElmtCoef, nElmtPnt);
+            }
+
+            Array<OneD, DNekMatSharedPtr>  mtxPerVarCoeff(nTotElmt);
+            for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
+            {
+                nElmtCoef   =   elmtcoef[nelmt];
+                mtxPerVarCoeff[nelmt]    =MemoryManager<DNekMat>
+                                    ::AllocateSharedPtr(nElmtCoef, nElmtCoef);
+            }
+
+            for(int m = 0; m < nConvectiveFields; m++)
+            {
+                for(int n = 0; n < nConvectiveFields; n++)
+                {
+                    for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
+                    {
+                        (*mtxPerVarCoeff[nelmt])   =    0.0;
+                        (*mtxPerVar[nelmt])        =    0.0;
+                    }
+
+                    explist->GetMatIpwrtDeriveBase(ElmtJacArray[m][n], 
+                        mtxPerVar);
+                    // Memory can be saved by reusing mtxPerVar
+                    explist->AddRightIPTBaseMatrix(mtxPerVar,mtxPerVarCoeff);
+
+                    for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
+                    {
+                        nElmtCoef = elmtcoef[nelmt];
+                        nElmtPnt = elmtpnts[nelmt];
+                        int ntotDofs = nElmtCoef*nElmtCoef;
+
+                        if(Elmt_dataSingle.size()<ntotDofs)
+                        {
+                            Elmt_dataSingle = Array<OneD, NekSingle> (ntotDofs);
+                        }
+
+                        tmpGmtx = gmtxarray[m][n]->GetBlock(nelmt,nelmt);
+                        ElmtMat = mtxPerVarCoeff[nelmt];
+
+                        GMat_data = tmpGmtx->GetPtr();
+                        Elmt_data = ElmtMat->GetPtr();
+
+                        for(int i=0;i<ntotDofs;i++)
+                        {
+                            Elmt_dataSingle[i]  =   NekSingle( Elmt_data[i] );
+                        }
+
+                        Vmath::Vadd(ntotDofs,GMat_data,1,Elmt_dataSingle,1,GMat_data,1);
+                    }
+                }
+            }
+        }
+
     }//end of namespace SolverUtils
 }//end of namespace Nektar

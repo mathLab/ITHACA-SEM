@@ -229,6 +229,10 @@ namespace Nektar
                Array<OneD,          int> &signarray,
                Orientation                traceOrient = eForwards);
 
+            STD_REGIONS_EXPORT virtual void v_GenStdMatBwdDeriv(
+                  const int dir,
+                  DNekMatSharedPtr &mat);
+
         private:
 
             virtual int v_GetShapeDimension() const

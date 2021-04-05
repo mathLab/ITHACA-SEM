@@ -191,11 +191,8 @@ namespace Nektar
         unsigned int requiredStorageSize = GetRequiredStorageSize();
         
         DataType* lhs_array = m_data.data();
-        
-        for (unsigned int i = 0; i < requiredStorageSize; ++i)
-        {
-            lhs_array[i] = rhs;
-        }
+
+        Vmath::Fill(requiredStorageSize,rhs,lhs_array,1);
         
         return *this;
     }
@@ -687,14 +684,15 @@ namespace Nektar
     }
 
     template<typename DataType>
-    NekDouble NekMatrix<DataType, StandardMatrixTag>::AbsMaxtoMinEigenValueRatio(void)
+    DataType NekMatrix<DataType, StandardMatrixTag>::AbsMaxtoMinEigenValueRatio(void)
     {
-        NekDouble returnval;
+        DataType returnval;
         int nvals = this->GetColumns();
-        Array<OneD, NekDouble> EigValReal(nvals);
-        Array<OneD, NekDouble> EigValImag(nvals);
+        Array<OneD, DataType> EigValReal(nvals);
+        Array<OneD, DataType> EigValImag(nvals);
+        Array<OneD, DataType> Evecs;
 
-        EigenSolve(EigValReal,EigValImag);
+        EigenSolve(EigValReal,EigValImag,Evecs);
 
         Vmath::Vmul(nvals,EigValReal,1,EigValReal,1,EigValReal,1);
         Vmath::Vmul(nvals,EigValImag,1,EigValImag,1,EigValImag,1);
@@ -706,9 +704,9 @@ namespace Nektar
     }
 
     template<typename DataType>
-    void NekMatrix<DataType, StandardMatrixTag>::EigenSolve(Array<OneD, NekDouble> &EigValReal,
-                    Array<OneD, NekDouble> &EigValImag,
-                    Array<OneD, NekDouble> &EigVecs)
+    void NekMatrix<DataType, StandardMatrixTag>::EigenSolve(Array<OneD, DataType> &EigValReal,
+                    Array<OneD, DataType> &EigValImag,
+                    Array<OneD, DataType> &EigVecs)
     {
         ASSERTL0(this->GetRows()==this->GetColumns(), "Only square matrices can be called");
 
@@ -828,6 +826,10 @@ namespace Nektar
 
     template LIB_UTILITIES_EXPORT class NekMatrix<NekDouble, StandardMatrixTag>;
 
+    template LIB_UTILITIES_EXPORT NekMatrix<NekSingle, StandardMatrixTag> Transpose(NekMatrix<NekSingle, StandardMatrixTag>& rhs);
+
+    template LIB_UTILITIES_EXPORT class NekMatrix<NekSingle, StandardMatrixTag>;
+
     template<typename DataType>
     void NegateInPlace(NekMatrix<DataType, StandardMatrixTag>& m)
     {
@@ -841,6 +843,7 @@ namespace Nektar
     }
 
     template LIB_UTILITIES_EXPORT void NegateInPlace(NekMatrix<double, StandardMatrixTag>& v);
+    template LIB_UTILITIES_EXPORT void NegateInPlace(NekMatrix<NekSingle, StandardMatrixTag>& v);
 
 }
 

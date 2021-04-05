@@ -47,6 +47,7 @@ namespace Nektar
         const LibUtilities::SessionReaderSharedPtr& pSession,
         const SpatialDomains::MeshGraphSharedPtr& pGraph)
         : UnsteadySystem(pSession, pGraph),
+          CompressibleFlowSystem(pSession, pGraph),
           NavierStokesCFE(pSession, pGraph)
     {
     }
@@ -70,10 +71,10 @@ namespace Nektar
     }
 
     void NavierStokesCFEAxisym::v_DoDiffusion(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD,       Array<OneD, NekDouble>> &outarray,
+        const Array<OneD, const Array<OneD, NekDouble>> &pFwd,
+        const Array<OneD, const Array<OneD, NekDouble>> &pBwd)
     {
         int npoints    = GetNpoints();
         int nvariables = inarray.size();
@@ -94,9 +95,9 @@ namespace Nektar
      * \todo Complete the viscous flux vector
      */
     void NavierStokesCFEAxisym::v_GetViscousFluxVector(
-        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+              TensorOfArray3D<NekDouble>                &derivativesO1,
+              TensorOfArray3D<NekDouble>                &viscousTensor)
     {
         int i, j;
         int nVariables = m_fields.size();

@@ -219,6 +219,60 @@ namespace Nektar
             v_IProductWRTBase_SumFacKernel(base0, base1, inarray, outarray, wsp, doCheckCollDir0, doCheckCollDir1);
         }
 
+        void StdExpansion2D::v_GenStdMatBwdDeriv(
+            const int dir,
+                  DNekMatSharedPtr &mat)
+        {
+            ASSERTL1((dir==0) || (dir==1),
+                     "Invalid direction.");
+
+            int    nquad0  = m_base[0]->GetNumPoints();
+            int    nquad1  = m_base[1]->GetNumPoints();
+            int    nqtot   = nquad0*nquad1;
+            int    nmodes0 = m_base[0]->GetNumModes();
+
+            Array<OneD, NekDouble> tmp1(2*nqtot+m_ncoeffs+nmodes0*nquad1,0.0);
+            Array<OneD, NekDouble> tmp3(tmp1 + 2*nqtot);
+            Array<OneD, NekDouble> tmp4(tmp1 + 2*nqtot+m_ncoeffs);
+
+            switch(dir)
+            {
+            case 0:
+                for(int i=0; i<nqtot;i++)
+                {
+                    tmp1[i] =   1.0;
+                    IProductWRTBase_SumFacKernel(
+                        m_base[0]->GetDbdata(), m_base[1]->GetBdata(),
+                        tmp1, tmp3, tmp4, false, true);
+                    tmp1[i] =   0.0;
+                    
+                    for(int j=0; j<m_ncoeffs;j++)
+                    {
+                        (*mat)(j,i) =   tmp3[j];
+                    }
+                }
+                break;
+            case 1:
+                for(int i=0; i<nqtot;i++)
+                {
+                    tmp1[i] =   1.0;
+                    IProductWRTBase_SumFacKernel(
+                        m_base[0]->GetBdata() , m_base[1]->GetDbdata(),
+                        tmp1, tmp3, tmp4, true, false);
+                    tmp1[i] =   0.0;
+                    
+                    for(int j=0; j<m_ncoeffs;j++)
+                    {
+                        (*mat)(j,i) =   tmp3[j];
+                    }
+                }
+                break;
+            default:
+                NEKERROR(ErrorUtil::efatal, "Not a 2D expansion.");
+                break;
+            }
+        }
+
         void StdExpansion2D::v_LaplacianMatrixOp_MatFree(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,NekDouble> &outarray,

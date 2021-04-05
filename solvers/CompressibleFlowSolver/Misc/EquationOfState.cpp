@@ -105,4 +105,5 @@ NekDouble EquationOfState::v_GetSoundSpeed(const NekDouble &rho,
 
     return sqrt(chi + kappa * enthalpy);
 }
+
 }

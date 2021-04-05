@@ -58,6 +58,11 @@ namespace Nektar
     {
     }
 
+    void EulerCFE::v_InitObject()
+    {
+        CompressibleFlowSystem::v_InitObject();
+    }
+
     /**
      * @brief Destructor for EulerCFE class.
      */

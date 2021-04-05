@@ -71,7 +71,7 @@ void Timer::AccumulateRegion(std::string region, int iolevel)
     {
         m_elapsedRegion.insert({region,
          std::make_tuple<Timer::Seconds, size_t>(this->Elapsed(),1, iolevel)});
-        // update width field width
+        // update field width
         m_maxStringWidth = std::max(
             static_cast<decltype(m_maxStringWidth)>(region.size()),
             m_maxStringWidth);
@@ -119,7 +119,7 @@ void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm,
         
         if (comm->GetRank() == 0)
         {
-            o << std::setw(m_maxStringWidth+2) << item->first  << '\t'
+            o << std::setw(m_maxStringWidth+2) << item->first << '\t'
               << std::setw(10) << elapsedAve << '\t'
               << std::setw(10) << elapsedMin << '\t'
               << std::setw(10) << elapsedMax << '\t'
@@ -148,7 +148,7 @@ void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm,
 
             if (comm->GetRank() == 0)
             {
-                o << std::setw(m_maxStringWidth+2) << item->first  << '\t'
+                o << std::setw(m_maxStringWidth+2) << item->first << '\t'
                   << std::setw(10) << elapsedAve << '\t'
                   << std::setw(10) << elapsedMin << '\t'
                   << std::setw(10) << elapsedMax << '\t'

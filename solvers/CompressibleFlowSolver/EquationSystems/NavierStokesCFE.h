@@ -36,6 +36,9 @@
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_NAVIERSTOKESCFE_H
 
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
+#include <CompressibleFlowSolver/Misc/EquationOfState.h>
+#include <LibUtilities/BasicUtils/Smath.hpp>
+#include <MultiRegions/ContField.h>
 
 namespace Nektar
 {
@@ -43,7 +46,7 @@ namespace Nektar
    *
    *
    **/
-  class NavierStokesCFE : public CompressibleFlowSystem
+  class NavierStokesCFE : virtual public CompressibleFlowSystem
   {
   public:
       friend class MemoryManager<NavierStokesCFE>;
@@ -75,13 +78,21 @@ namespace Nektar
     NekDouble                           m_Cp;
     NekDouble                           m_Cv;
     NekDouble                           m_Prandtl;
+    
+    NekDouble                           m_mu0;
+    std::string                         m_physicalSensorType;
+    std::string                         m_smoothing;
+    MultiRegions::ContFieldSharedPtr    m_C0ProjectExp;
+
+    /// Equation of system for computing temperature
+    EquationOfStateSharedPtr            m_eos;
 
     NekDouble                           m_Twall;
+
     NekDouble                           m_muRef;
     NekDouble                           m_thermalConductivityRef;
     Array<OneD, NekDouble>              m_mu;
     Array<OneD, NekDouble>              m_thermalConductivity;
-
 
     NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession,
                     const SpatialDomains::MeshGraphSharedPtr& pGraph);
@@ -91,12 +102,10 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >               &inarray,
         const TensorOfArray3D<NekDouble>                         &qfields,
         TensorOfArray3D<NekDouble>                               &outarray,
-        Array< OneD, int >
-            &nonZeroIndex       =   NullInt1DArray,
-        const Array<OneD, Array<OneD, NekDouble> >
-            &normal             =   NullNekDoubleArrayofArray,
-        const Array<OneD, NekDouble>
-            &ArtifDiffFactor    =   NullNekDouble1DArray);
+        Array< OneD, int > &nonZeroIndex = NullInt1DArray,
+        const Array<OneD, Array<OneD, NekDouble>>
+            &normal             =   NullNekDoubleArrayOfArray,
+        const Array<OneD, NekDouble> &ArtifDiffFactor = NullNekDouble1DArray);
     void GetViscousSymmtrFluxConservVar(
             const int                                           nSpaceDim,
             const Array<OneD, Array<OneD, NekDouble> >          &inaverg,
@@ -112,33 +121,45 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> >  &inarray,
               Array<OneD,             NekDouble  >  &muav);
 
+    void CalcViscosity(
+        const Array<OneD, const Array<OneD, NekDouble>> &inaverg,
+              Array<OneD, NekDouble>                    &mu);
 
+    void InitObject_Explicit();
+      
     virtual void v_InitObject();
 
+    virtual void v_ExtraFldOutput(
+        std::vector<Array<OneD, NekDouble>> &fieldcoeffs,
+        std::vector<std::string>            &variables);
+
     virtual void v_DoDiffusion(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >   &pBwd);
-    virtual void v_DoDiffusionCoeff(
-        const Array<OneD, const Array<OneD, NekDouble> >    &inarray,
-        Array<OneD, Array<OneD, NekDouble> >                &outarray,
-        const Array<OneD, Array<OneD, NekDouble> >          &pFwd,
-        const Array<OneD, Array<OneD, NekDouble> >          &pBwd);
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD,       Array<OneD, NekDouble>> &outarray,
+        const Array<OneD, const Array<OneD, NekDouble>> &pFwd,
+        const Array<OneD, const Array<OneD, NekDouble>> &pBwd);
 
     virtual void v_GetViscousFluxVector(
-        const Array<OneD, Array<OneD, NekDouble> >         &physfield,
-        TensorOfArray3D<NekDouble>                         &derivatives,
-        TensorOfArray3D<NekDouble>                         &viscousTensor);
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+              TensorOfArray3D<NekDouble>                &derivatives,
+              TensorOfArray3D<NekDouble>                &viscousTensor);
+
     virtual void v_GetViscousFluxVectorDeAlias(
-        const Array<OneD, Array<OneD, NekDouble> >         &physfield,
-        TensorOfArray3D<NekDouble>                         &derivatives,
-        TensorOfArray3D<NekDouble>                         &viscousTensor);
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+              TensorOfArray3D<NekDouble>                &derivatives,
+              TensorOfArray3D<NekDouble>                &viscousTensor);
+
+    void GetPhysicalAV(
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield);
+      
+    void Ducros( Array<OneD, NekDouble> &field );
+    void C0Smooth(Array<OneD, NekDouble> &field);
+  
 
     virtual void v_GetFluxPenalty(
-        const Array<OneD, Array<OneD, NekDouble> > &uFwd,
-        const Array<OneD, Array<OneD, NekDouble> > &uBwd,
-              Array<OneD, Array<OneD, NekDouble> > &penaltyCoeff);
+        const Array<OneD, const Array<OneD, NekDouble>> &uFwd,
+        const Array<OneD, const Array<OneD, NekDouble>> &uBwd,
+              Array<OneD,       Array<OneD, NekDouble>> &penaltyCoeff);
 
     void GetViscosityAndThermalCondFromTemp(
         const Array<OneD, NekDouble> &temperature,
@@ -580,9 +601,6 @@ namespace Nektar
             nonZeroIndex[n_nonZero - i] =   nConvectiveFields - i;
         }
     }
-
-
-
 
   };
 }

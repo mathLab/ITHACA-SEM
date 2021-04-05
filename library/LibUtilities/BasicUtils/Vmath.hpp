@@ -89,6 +89,10 @@ namespace Vmath
     /// \brief Subtract vector z = x-y
     template<class T>  LIB_UTILITIES_EXPORT void Vsub( int n, const T *x, const int incx, const T *y,
                                   const int incy,  T *z, const int incz);
+    
+    /// \brief Add vector y = alpha - x
+    template<class T>  LIB_UTILITIES_EXPORT void Ssub( int n, const T alpha, 
+        const T *x, const int incx, T *y, const int incy);
 
     /// \brief Zero vector
     template<class T>  LIB_UTILITIES_EXPORT void Zero(int n, T *x, const int incx);

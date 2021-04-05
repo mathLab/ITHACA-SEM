@@ -143,6 +143,15 @@ InitializeScheme(const NekDouble deltaT,
         for( unsigned int i=0; i<m_nvars; ++i )
         {
             m_u[m][i] = SingleArray( m_npoints, 0.0 );
+
+            for ( unsigned int j=0; j<m_npoints; ++j )
+            {
+                // Store the initial values as the first previous state.
+                if( m == 0 )
+                    m_u[m][i][j] = m_u0[i][j];
+                else
+                    m_u[m][i][j] = 0;
+            }
         }
     }
 

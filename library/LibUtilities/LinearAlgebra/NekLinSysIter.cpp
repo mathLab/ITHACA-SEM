@@ -55,8 +55,9 @@ NekLinSysIterFactory &GetNekLinSysIterFactory()
 
 NekLinSysIter::NekLinSysIter(
     const LibUtilities::SessionReaderSharedPtr &pSession,
-    const LibUtilities::CommSharedPtr &vComm, const int nDimen)
-    : NekSys(pSession, vComm, nDimen)
+    const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+    const NekSysKey &pKey)
+    : NekSys(pSession, vComm, nDimen, pKey)
 {
     std::vector<std::string> variables(1);
     variables[0]    = pSession->GetVariable(0);
@@ -71,18 +72,32 @@ NekLinSysIter::NekLinSysIter(
     else
     {
         pSession->LoadParameter("NekLinSysTolerance", m_tolerance,
-                                NekConstants::kNekIterativeTol);
+            pKey.m_NekLinSysTolerance);
     }
 
-    if (pSession->DefinesGlobalSysSolnInfo(variable, "MaxIterations"))
+    if (pSession->DefinesGlobalSysSolnInfo(variable, "NekLinSysMaxIterations"))
     {
         m_maxiter = boost::lexical_cast<int>(
-            pSession->GetGlobalSysSolnInfo(variable, "MaxIterations").c_str());
+            pSession->GetGlobalSysSolnInfo(variable, "NekLinSysMaxIterations").c_str());
     }
     else
     {
-        pSession->LoadParameter("MaxIterations", m_maxiter, 5000);
+        pSession->LoadParameter("NekLinSysMaxIterations", m_maxiter, 
+            pKey.m_NekLinSysMaxIterations);
     }
+
+    if (pSession->DefinesGlobalSysSolnInfo(variable, "LinSysMaxStorage"))
+    {
+        m_LinSysMaxStorage = boost::lexical_cast<int>(
+            pSession->GetGlobalSysSolnInfo(variable, "LinSysMaxStorage")
+                .c_str());
+    }
+    else
+    {
+        pSession->LoadParameter("LinSysMaxStorage", m_LinSysMaxStorage, 
+            pKey.m_LinSysMaxStorage);
+    }
+    
 }
 
 void NekLinSysIter::v_InitObject()

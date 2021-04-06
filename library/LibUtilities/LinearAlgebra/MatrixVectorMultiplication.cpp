@@ -92,10 +92,10 @@ namespace Nektar
         Vmath::Vmul(n, mat_ptr, 1, rhs, 1, result, 1);
     }
 
-    template<typename LhsDataType, typename MatrixType>
-    void NekMultiplyBandedMatrix(NekDouble* result,
+    template<typename DataType, typename LhsDataType, typename MatrixType>
+    void NekMultiplyBandedMatrix(DataType* result,
                     const NekMatrix<LhsDataType, MatrixType>& lhs,
-                    const NekDouble* rhs,
+                    const DataType* rhs,
                     typename std::enable_if<
                                  CanGetRawPtr<NekMatrix<LhsDataType, MatrixType> >::value >::type* p=0)
     {
@@ -105,15 +105,15 @@ namespace Nektar
         int n  = lhs.GetColumns();
         int kl = lhs.GetNumberOfSubDiagonals();
         int ku = lhs.GetNumberOfSuperDiagonals();
-        double alpha = lhs.Scale();
-        const double* a = lhs.GetRawPtr();
+        DataType alpha = lhs.Scale();
+        const DataType* a = lhs.GetRawPtr();
         int lda = kl + ku + 1;
-        const double* x = rhs;
+        const DataType* x = rhs;
         int incx = 1;
-        double beta = 0.0;
-        double* y = result;
+        DataType beta = 0.0;
+        DataType* y = result;
         int incy = 1;
-        Blas::Dgbmv('N', m, n, kl, ku, alpha, a, lda, x, incx, beta, y, incy);
+        Blas::Gbmv('N', m, n, kl, ku, alpha, a, lda, x, incx, beta, y, incy);
 
     }
 
@@ -194,14 +194,14 @@ namespace Nektar
         }
     }
 
-    template<typename LhsInnerMatrixType>
-    void DiagonalBlockMatrixMultiply(NekVector<double>& result,
+    template<typename DataType, typename LhsInnerMatrixType>
+    void DiagonalBlockMatrixMultiply(NekVector<DataType>& result,
                      const NekMatrix<LhsInnerMatrixType, BlockMatrixTag>& lhs,
-                     const NekVector<double>& rhs)
+                     const NekVector<DataType>& rhs)
     {
         unsigned int numberOfBlockRows = lhs.GetNumberOfBlockRows();
-        double* result_ptr = result.GetRawPtr();
-        const double* rhs_ptr = rhs.GetRawPtr();
+        DataType* result_ptr = result.GetRawPtr();
+        const DataType* rhs_ptr = rhs.GetRawPtr();
         
         Array<OneD, unsigned int> rowSizes;
         Array<OneD, unsigned int> colSizes;
@@ -243,8 +243,8 @@ namespace Nektar
                 continue;
             }
 
-            double* resultWrapper = result_ptr + curResultRow;            
-            const double* rhsWrapper = rhs_ptr + curWrapperRow;
+            DataType* resultWrapper = result_ptr + curResultRow;            
+            const DataType* rhsWrapper = rhs_ptr + curWrapperRow;
             Multiply(resultWrapper, *block, rhsWrapper);
             //resultWrapper = (*block)*rhsWrapper;
         }
@@ -308,7 +308,7 @@ namespace Nektar
 
             // Multiply
             const unsigned int* size = block->GetSize();
-            Blas::Dgemv('N', size[0], size[1], block->Scale(),
+            Blas::Gemv('N', size[0], size[1], block->Scale(),
                         block->GetRawPtr(), size[0], rhsWrapper, 1,
                         0.0, resultWrapper, 1);
         }
@@ -319,23 +319,89 @@ namespace Nektar
         }
     }
 
-    void NekMultiplyLowerTriangularMatrix(NekDouble* result,
-                     const NekMatrix<NekDouble, StandardMatrixTag>& lhs,
-                     const NekDouble* rhs)
+    void DiagonalBlockFullScalMatrixMultiply(NekVector<NekSingle>& result,
+                     const NekMatrix<NekMatrix<NekMatrix<NekSingle, StandardMatrixTag>, ScaledMatrixTag>, BlockMatrixTag>& lhs,
+                     const NekVector<NekSingle>& rhs)
+    {
+        unsigned int numberOfBlockRows = lhs.GetNumberOfBlockRows();
+        NekSingle* result_ptr = result.GetRawPtr();
+        const NekSingle* rhs_ptr = rhs.GetRawPtr();
+        
+        Array<OneD, unsigned int> rowSizes;
+        Array<OneD, unsigned int> colSizes;
+        lhs.GetBlockSizes(rowSizes, colSizes);
+
+        unsigned int curResultRow = 0;
+        unsigned int curWrapperRow = 0;
+        unsigned int rowsInBlock = 0;
+        unsigned int columnsInBlock = 0;
+        for(unsigned int blockRow = 0; blockRow < numberOfBlockRows; ++blockRow)
+        {
+            curResultRow  += rowsInBlock;
+            curWrapperRow += columnsInBlock;
+            if ( blockRow == 0)
+            {
+                rowsInBlock    = rowSizes[blockRow] + 1;
+                columnsInBlock = colSizes[blockRow] + 1;
+            }
+            else
+            {
+                rowsInBlock    = rowSizes[blockRow] - rowSizes[blockRow-1];
+                columnsInBlock = colSizes[blockRow] - colSizes[blockRow-1];
+            }
+
+            if( rowsInBlock == 0)
+            {
+                continue;
+            }
+            if( columnsInBlock == 0)
+            {
+                std::fill(result.begin()+curResultRow,
+                         result.begin()+curResultRow + rowsInBlock, 0.0);
+                continue;
+            }
+
+            const SNekScalMat* block = lhs.GetBlockPtr(blockRow, blockRow);
+            if( !block )
+            {
+                continue;
+            }
+
+            NekSingle* resultWrapper = result_ptr + curResultRow;
+            const NekSingle* rhsWrapper = rhs_ptr + curWrapperRow;
+
+            // Multiply
+            const unsigned int* size = block->GetSize();
+            Blas::Gemv('N', size[0], size[1], block->Scale(),
+                        block->GetRawPtr(), size[0], rhsWrapper, 1,
+                        0.0, resultWrapper, 1);
+        }
+        curResultRow  += rowsInBlock;
+        if (curResultRow < result.GetRows())
+        {
+            std::fill(result.begin()+curResultRow, result.end(), 0.0);
+        }
+    }
+
+    template<typename DataType>
+    void NekMultiplyLowerTriangularMatrix(DataType* result,
+                     const NekMatrix<DataType, StandardMatrixTag>& lhs,
+                     const DataType* rhs)
     {
         int vectorSize = lhs.GetColumns();
         std::copy(rhs, rhs+vectorSize, result);
         int n = lhs.GetRows();
-        const double* a = lhs.GetRawPtr();
-        double* x = result;
+        const DataType* a = lhs.GetRawPtr();
+        DataType* x = result;
         int incx = 1;
         
-        Blas::Dtpmv('L', lhs.GetTransposeFlag(), 'N', n, a, x, incx);
+        Blas::Tpmv('L', lhs.GetTransposeFlag(), 'N', n, a, x, incx);
     }
 
-    void NekMultiplyLowerTriangularMatrix(NekDouble* result,
-                     const NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>& lhs,
-                     const NekDouble* rhs)
+    template<typename DataType>
+    void NekMultiplyLowerTriangularMatrix(DataType* result,
+                     const NekMatrix<NekMatrix<DataType, StandardMatrixTag>, ScaledMatrixTag>& lhs,
+                     const DataType* rhs)
     {
         NekMultiplyLowerTriangularMatrix(result, *lhs.GetOwnedMatrix(), rhs);
         
@@ -361,23 +427,25 @@ namespace Nektar
        }
     }
 
-    void NekMultiplyUpperTriangularMatrix(NekDouble* result,
-                     const NekMatrix<NekDouble, StandardMatrixTag>& lhs,
-                     const NekDouble* rhs)
+    template<typename DataType>
+    void NekMultiplyUpperTriangularMatrix(DataType* result,
+                     const NekMatrix<DataType, StandardMatrixTag>& lhs,
+                     const DataType* rhs)
     {
         int vectorSize = lhs.GetColumns();
         std::copy(rhs, rhs+vectorSize, result);
         int n = lhs.GetRows();
-        const double* a = lhs.GetRawPtr();
-        double* x = result;
+        const DataType* a = lhs.GetRawPtr();
+        DataType* x = result;
         int incx = 1;
         
-        Blas::Dtpmv('U', lhs.GetTransposeFlag(), 'N', n, a, x, incx);
+        Blas::Tpmv('U', lhs.GetTransposeFlag(), 'N', n, a, x, incx);
     }
 
-    void NekMultiplyUpperTriangularMatrix(NekDouble* result,
-                     const NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>& lhs,
-                     const NekDouble* rhs)
+    template<typename DataType>
+    void NekMultiplyUpperTriangularMatrix(DataType* result,
+                     const NekMatrix<NekMatrix<DataType, StandardMatrixTag>, ScaledMatrixTag>& lhs,
+                     const DataType* rhs)
     {
         NekMultiplyUpperTriangularMatrix(result, *lhs.GetOwnedMatrix(), rhs);
         
@@ -403,27 +471,27 @@ namespace Nektar
        }
     }
 
-    template<typename InnerMatrixType, typename MatrixTag>
-    void NekMultiplySymmetricMatrix(NekDouble* result, const NekMatrix<InnerMatrixType, MatrixTag>& lhs, const NekDouble* rhs,
+    template<typename DataType, typename InnerMatrixType, typename MatrixTag>
+    void NekMultiplySymmetricMatrix(DataType* result, const NekMatrix<InnerMatrixType, MatrixTag>& lhs, const DataType* rhs,
                                     typename std::enable_if<CanGetRawPtr<NekMatrix<InnerMatrixType, MatrixTag> >::value >::type* p=0)
     {
         boost::ignore_unused(p);
 
         const unsigned int* size = lhs.GetSize();
 
-        double alpha = lhs.Scale();
-        const double* a = lhs.GetRawPtr();
-        const double* x = rhs;
+        DataType alpha = lhs.Scale();
+        const DataType* a = lhs.GetRawPtr();
+        const DataType* x = rhs;
         int incx = 1;
-        double beta = 0.0;
-        double* y = result;
+        DataType beta = 0.0;
+        DataType* y = result;
         int incy = 1;
 
-        Blas::Dspmv('U', size[0], alpha, a, x, incx, beta, y, incy);
+        Blas::Spmv('U', size[0], alpha, a, x, incx, beta, y, incy);
     }
 
-    template<typename InnerMatrixType, typename MatrixTag>
-    void NekMultiplySymmetricMatrix(NekDouble* result, const NekMatrix<InnerMatrixType, MatrixTag>& lhs, const NekDouble* rhs,
+    template<typename DataType, typename InnerMatrixType, typename MatrixTag>
+    void NekMultiplySymmetricMatrix(DataType* result, const NekMatrix<InnerMatrixType, MatrixTag>& lhs, const DataType* rhs,
                                     typename std::enable_if<!CanGetRawPtr<NekMatrix<InnerMatrixType, MatrixTag> >::value >::type* p = 0)
     {
         boost::ignore_unused(p);
@@ -431,8 +499,8 @@ namespace Nektar
         NekMultiplyUnspecializedMatrixType(result, lhs, rhs);
     }
 
-    template<typename InnerMatrixType, typename MatrixTag>
-    void NekMultiplyFullMatrix(NekDouble* result, const NekMatrix<InnerMatrixType, MatrixTag>& lhs, const NekDouble* rhs,
+    template<typename DataType, typename InnerMatrixType, typename MatrixTag>
+    void NekMultiplyFullMatrix(DataType* result, const NekMatrix<InnerMatrixType, MatrixTag>& lhs, const DataType* rhs,
                                typename std::enable_if<CanGetRawPtr<NekMatrix<InnerMatrixType, MatrixTag> >::value >::type* p=0)
     {
         boost::ignore_unused(p);
@@ -441,20 +509,20 @@ namespace Nektar
 
         char t = lhs.GetTransposeFlag();
 
-        double alpha = lhs.Scale();
-        const double* a = lhs.GetRawPtr();
+        DataType alpha = lhs.Scale();
+        const DataType* a = lhs.GetRawPtr();
         int lda = size[0];
-        const double* x = rhs;
+        const DataType* x = rhs;
         int incx = 1;
-        double beta = 0.0;
-        double* y = result;
+        DataType beta = 0.0;
+        DataType* y = result;
         int incy = 1;
         
-        Blas::Dgemv(t, size[0], size[1], alpha, a, lda, x, incx, beta, y, incy);
+        Blas::Gemv(t, size[0], size[1], alpha, a, lda, x, incx, beta, y, incy);
     }
 
-    template<typename InnerMatrixType, typename MatrixTag>
-    void NekMultiplyFullMatrix(NekDouble* result, const NekMatrix<InnerMatrixType, MatrixTag>& lhs, const NekDouble* rhs,
+    template<typename DataType, typename InnerMatrixType, typename MatrixTag>
+    void NekMultiplyFullMatrix(DataType* result, const NekMatrix<InnerMatrixType, MatrixTag>& lhs, const DataType* rhs,
         typename std::enable_if<!CanGetRawPtr<NekMatrix<InnerMatrixType, MatrixTag> >::value>::type* p = 0)
     {
         boost::ignore_unused(p);
@@ -509,6 +577,7 @@ namespace Nektar
     }
 
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_STANDARD_AND_SCALED_MATRICES, (1, (void)), (1, (NekVector<NekDouble>&)), (1,(const NekVector<NekDouble>&)))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_STANDARD_AND_SCALED_MATRICES_SINGLE, (1, (void)), (1, (NekVector<NekSingle>&)), (1,(const NekVector<NekSingle>&)))
 
     template<typename DataType, typename LhsInnerMatrixType>
     void Multiply(NekVector<DataType>& result,
@@ -526,6 +595,7 @@ namespace Nektar
     }
 
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_BLOCK_MATRIX_TYPES, (1, (void)), (1, (NekVector<NekDouble>&)), (1,(const NekVector<NekDouble>&)))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_BLOCK_MATRIX_TYPES_SINGLE, (1, (void)), (1, (NekVector<NekSingle>&)), (1,(const NekVector<NekSingle>&)))
 
     template<typename DataType, typename LhsDataType, typename MatrixType>
     NekVector<DataType> 
@@ -538,6 +608,6 @@ namespace Nektar
     }
 
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_ALL_MATRIX_TYPES, (1, (NekVector<NekDouble>)), (0, ()), (1,(const NekVector<NekDouble>&)))
-
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_ALL_MATRIX_TYPES_SINGLE, (1, (NekVector<NekSingle>)), (0, ()), (1,(const NekVector<NekSingle>&)))
 
 }

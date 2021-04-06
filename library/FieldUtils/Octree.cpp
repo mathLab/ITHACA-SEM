@@ -34,7 +34,7 @@
 
 #include "Octree.h"
 #include <stdexcept>
-#include <math.h>
+#include <cmath>
 
 namespace Nektar
 {

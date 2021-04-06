@@ -38,7 +38,6 @@
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/Preconditioner.h>
 #include <LibUtilities/LinearAlgebra/NekLinSysIterGMRES.h>
-#include <boost/circular_buffer.hpp>
 
 namespace Nektar
 {
@@ -87,11 +86,18 @@ namespace Nektar
             /// Root if parallel
             bool                                        m_root;
 
-            /// Storage for solutions to previous linear problems
-            boost::circular_buffer<Array<OneD, NekDouble> > m_prevLinSol;
+            /// Iterative solver: Conjugate Gradient, GMRES
+            std::string m_linSysIterSolver;
 
-            /// Total counter of previous solutions
-            int m_numPrevSols;
+            /// Storage for solutions to previous linear problems
+            std::vector<Array<OneD, NekDouble> > m_prevLinSol;
+            std::vector<Array<OneD, NekDouble> > m_prevBasis;
+            DNekMatSharedPtr                     m_coeffMatrix;
+            Array<OneD, NekDouble>               m_coeffMatrixFactor;
+            Array<OneD, int>                     m_ipivot;
+            int                                  m_numSuccessiveRHS;
+            bool                                 m_isAconjugate;
+            int                                  m_numPrevSols;
 
             LibUtilities::NekSysOperators                 m_NekSysOp;
 
@@ -100,11 +106,27 @@ namespace Nektar
             static std::string IteratSolverlookupIds[];
             static std::string IteratSolverdef;
 
+            /// projection technique
+            void DoProjection(
+                    const int pNumRows,
+                    const Array<OneD,const NekDouble> &pInput,
+                          Array<OneD,      NekDouble> &pOutput,
+                    const int pNumDir,
+                    const NekDouble tol,
+                    const bool isAconjugate);
+
             void Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn);
 
             virtual void v_UniqueMap() = 0;
             
         private:
+            void UpdateKnownSolutions(
+                    const int pGlobalBndDofs,
+                    const Array<OneD,const NekDouble> &pSolution,
+                    const int pNumDirBndDofs,
+                    const bool isAconjugate);
+
+            int ResetKnownSolutionsToLatestOne();
             
             void DoMatrixMultiplyFlag(
                 const Array<OneD, NekDouble> &pInput,

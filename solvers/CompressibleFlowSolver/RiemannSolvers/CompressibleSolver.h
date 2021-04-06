@@ -50,30 +50,36 @@ namespace Nektar
         bool m_pointSolve;
         EquationOfStateSharedPtr m_eos;
         bool m_idealGas;
-        
+
+        /// Session ctor
         CompressibleSolver(
                 const LibUtilities::SessionReaderSharedPtr& pSession);
 
-        virtual void v_Solve(
+        /// Programmatic ctor
+        CompressibleSolver();
+
+        using ND = NekDouble;
+
+        void v_Solve(
             const int                                         nDim,
-            const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
-            const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-                  Array<OneD,       Array<OneD, NekDouble> > &flux);
+            const Array<OneD, const Array<OneD, ND> > &Fwd,
+            const Array<OneD, const Array<OneD, ND> > &Bwd,
+                  Array<OneD,       Array<OneD, ND> > &flux) override;
 
         virtual void v_ArraySolve(
-            const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
-            const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-                  Array<OneD,       Array<OneD, NekDouble> > &flux)
+            const Array<OneD, const Array<OneD, ND> > &Fwd,
+            const Array<OneD, const Array<OneD, ND> > &Bwd,
+                  Array<OneD,       Array<OneD, ND> > &flux)
         {
             boost::ignore_unused(Fwd, Bwd, flux);
             NEKERROR(ErrorUtil::efatal,
                      "This function should be defined by subclasses.");
         }
-        
+
         virtual void v_PointSolve(
-            NekDouble  rhoL, NekDouble  rhouL, NekDouble  rhovL, NekDouble  rhowL, NekDouble  EL,
-            NekDouble  rhoR, NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR, NekDouble  ER,
-            NekDouble &rhof, NekDouble &rhouf, NekDouble &rhovf, NekDouble &rhowf, NekDouble &Ef)
+            ND  rhoL, ND  rhouL, ND  rhovL, ND  rhowL, ND  EL,
+            ND  rhoR, ND  rhouR, ND  rhovR, ND  rhowR, ND  ER,
+            ND &rhof, ND &rhouf, ND &rhovf, ND &rhowf, ND &Ef)
         {
             boost::ignore_unused(rhoL, rhouL, rhovL, rhowL, EL,
                                  rhoR, rhouR, rhovR, rhowR, ER,
@@ -81,23 +87,11 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal,
                      "This function should be defined by subclasses.");
         }
-        
-        virtual void v_PointSolveVisc(
-            NekDouble  rhoL, NekDouble  rhouL, NekDouble  rhovL, NekDouble  rhowL, NekDouble  EL, NekDouble EpsL,
-            NekDouble  rhoR, NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR, NekDouble  ER, NekDouble EpsR,
-            NekDouble &rhof, NekDouble &rhouf, NekDouble &rhovf, NekDouble &rhowf, NekDouble &Ef, NekDouble &Epsf)
-        {
-            boost::ignore_unused(rhoL, rhouL, rhovL, rhowL, EL, EpsL,
-                                 rhoR, rhouR, rhovR, rhowR, ER, EpsR,
-                                 rhof, rhouf, rhovf, rhowf, Ef, Epsf);
-            NEKERROR(ErrorUtil::efatal,
-                     "This function should be defined by subclasses.");
-        }
 
-        NekDouble GetRoeSoundSpeed(
-            NekDouble rhoL, NekDouble pL, NekDouble eL, NekDouble HL, NekDouble srL,
-            NekDouble rhoR, NekDouble pR, NekDouble eR, NekDouble HR, NekDouble srR,
-            NekDouble HRoe, NekDouble URoe2, NekDouble srLR);
+        ND GetRoeSoundSpeed(
+            ND rhoL, ND pL, ND eL, ND HL, ND srL,
+            ND rhoR, ND pR, ND eR, ND HR, ND srR,
+            ND HRoe, ND URoe2, ND srLR);
     };
 }
 

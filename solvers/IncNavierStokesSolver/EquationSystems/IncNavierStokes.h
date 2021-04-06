@@ -262,7 +262,8 @@ namespace Nektar
 
         virtual int v_GetForceDimension()=0;
 
-        virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
+        virtual Array<OneD, NekDouble> v_GetMaxStdVelocity(
+            const NekDouble SpeedSoundFactor);
 
         virtual bool v_PreIntegrate(int step);
 

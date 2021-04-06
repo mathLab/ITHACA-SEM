@@ -37,7 +37,6 @@
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_LINSYS_ITERAT_CG_H
 
 #include <LibUtilities/LinearAlgebra/NekLinSysIter.h>
-#include <boost/circular_buffer.hpp>
 namespace Nektar
 {
 namespace LibUtilities
@@ -55,11 +54,12 @@ public:
 
     LIB_UTILITIES_EXPORT static NekLinSysIterSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen)
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+        const NekSysKey &pKey)
     {
         NekLinSysIterCGSharedPtr p =
             MemoryManager<NekLinSysIterCG>::AllocateSharedPtr(pSession, vComm,
-                                                              nDimen);
+                nDimen, pKey);
         p->InitObject();
         return p;
     }
@@ -67,20 +67,11 @@ public:
     /// Constructor for full direct matrix solve.
     LIB_UTILITIES_EXPORT NekLinSysIterCG(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen);
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+        const NekSysKey &pKey);
     LIB_UTILITIES_EXPORT ~NekLinSysIterCG();
 
 protected:
-    int m_successiveRHS;
-    /// Whether to apply projection technique
-    bool m_useProjection = false;
-
-    /// Storage for solutions to previous linear problems
-    boost::circular_buffer<Array<OneD, NekDouble>> m_prevLinSol;
-
-    /// Total counter of previous solutions
-    int m_numPrevSols = 0;
-
     virtual void v_InitObject();
 
     virtual int v_SolveSystem(const int nGlobal,
@@ -89,25 +80,11 @@ protected:
                               const NekDouble tol, const NekDouble factor);
 
 private:
-    /// A-conjugate projection technique
-    void DoAconjugateProjection(const int pNumRows,
-                                const Array<OneD, const NekDouble> &pInput,
-                                Array<OneD, NekDouble> &pOutput,
-                                const int pNumDir);
-
     /// Actual iterative solve
     void DoConjugateGradient(const int pNumRows,
                              const Array<OneD, const NekDouble> &pInput,
                              Array<OneD, NekDouble> &pOutput,
                              const int pNumDir);
-
-    void UpdateKnownSolutions(const int pGlobalBndDofs,
-                              const Array<OneD, const NekDouble> &pSolution,
-                              const int pNumDirBndDofs);
-
-    NekDouble CalculateAnorm(const int nGlobal,
-                             const Array<OneD, const NekDouble> &in,
-                             const int nDir);
 };
 } // namespace LibUtilities
 } // namespace Nektar

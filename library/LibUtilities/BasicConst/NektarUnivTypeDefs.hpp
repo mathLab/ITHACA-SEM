@@ -41,6 +41,7 @@
 namespace Nektar
 {
     typedef double NekDouble;
+    typedef float  NekSingle;
 
     typedef std::int32_t  NekInt;
     typedef std::int32_t  NekInt32;

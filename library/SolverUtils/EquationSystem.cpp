@@ -146,6 +146,13 @@ namespace Nektar
             m_multipleModes         = false;
             m_HomogeneousType       = eNotHomogeneous;
 
+            m_verbose = m_session->DefinesCmdLineArgument("verbose");
+            m_root = false;
+            if (0 == m_comm->GetRank())
+            {
+                m_root =true;
+            }
+
             if (m_session->DefinesSolverInfo("HOMOGENEOUS"))
             {
                 std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
@@ -666,7 +673,9 @@ namespace Nektar
                      (m_checktime == 0.0 && m_checksteps >  0),
                      "Only one of IO_CheckTime and IO_CheckSteps "
                      "should be set!");
-                     
+            m_session->LoadParameter("TimeIncrementFactor",  
+                m_TimeIncrementFactor , 1.0);
+            
             m_nchk = 0;
 
             // Zero all physical fields initially

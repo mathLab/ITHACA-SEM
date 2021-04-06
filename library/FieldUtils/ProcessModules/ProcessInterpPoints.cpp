@@ -120,9 +120,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             LibUtilities::GetCommFactory().CreateInstance("Serial", 0, 0));
 
     // Set up range based on min and max of local parallel partition
-    SpatialDomains::DomainRangeShPtr rng =
-        MemoryManager<SpatialDomains::DomainRange>::AllocateSharedPtr();
-
+    LibUtilities::DomainRangeShPtr rng =
+        MemoryManager<LibUtilities::DomainRange>::AllocateSharedPtr();
+    
     int coordim = m_f->m_fieldPts->GetDim();
     int npts    = m_f->m_fieldPts->GetNpoints();
     std::vector<std::string> fieldNames = m_f->m_fieldPts->GetFieldNames();

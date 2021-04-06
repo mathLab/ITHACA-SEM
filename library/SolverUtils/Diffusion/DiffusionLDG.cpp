@@ -129,7 +129,7 @@ void DiffusionLDG::v_DiffuseCoeffs(
         traceflux[i] = Array<OneD, NekDouble>{nTracePts, 0.0};
     }
 
-    DiffuseCalculateDerivative(fields, inarray, qfield, pFwd, pBwd);
+    DiffuseCalcDerivative(fields, inarray, qfield, pFwd, pBwd);
 
     // Initialize viscous tensor
     Array<OneD, Array<OneD, Array<OneD, NekDouble>>> viscTensor{nDim};
@@ -161,7 +161,7 @@ void DiffusionLDG::v_DiffuseCoeffs(
     }
 }
 
-void DiffusionLDG::v_DiffuseCalculateDerivative(
+void DiffusionLDG::v_DiffuseCalcDerivative(
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
     TensorOfArray3D<NekDouble>                        &qfield,
@@ -245,8 +245,8 @@ void DiffusionLDG::NumFluxforScalar(
     for (std::size_t i = 0; i < nvariables; ++i)
     {
         // Compute Fwd and Bwd value of ufield of i direction
-        if (pFwd == NullNekDoubleArrayofArray ||
-            pBwd == NullNekDoubleArrayofArray)
+        if (pFwd == NullNekDoubleArrayOfArray ||
+            pBwd == NullNekDoubleArrayOfArray)
         {
             fields[i]->GetFwdBwdTracePhys(ufield[i], Fwd, Bwd);
         }

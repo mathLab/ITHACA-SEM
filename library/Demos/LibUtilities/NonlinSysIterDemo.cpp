@@ -47,7 +47,7 @@ using namespace Nektar::LibUtilities;
 
 class LinSysDemo
 {
-    typedef const Array<OneD, NekDouble> InArrayType;
+    typedef const Array<OneD, const NekDouble> InArrayType;
     typedef Array<OneD, NekDouble> OutArrayType;
 
 public:
@@ -57,16 +57,16 @@ public:
     {
         AllocateInitMatrix();
 
-        std::string SovlerType = "Newton";
+        std::string SolverType = "Newton";
         ASSERTL0(
-            LibUtilities::GetNekNonlinSysFactory().ModuleExists(SovlerType),
-            "NekNonlinSys '" + SovlerType + "' is not defined.\n");
+            LibUtilities::GetNekNonlinSysFactory().ModuleExists(SolverType),
+            "NekNonlinSys '" + SolverType + "' is not defined.\n");
         m_nonlinsol = LibUtilities::GetNekNonlinSysFactory().CreateInstance(
-            SovlerType, m_session, m_comm, m_matDim);
+            SolverType, m_session, m_comm, m_matDim, LibUtilities::NekSysKey());
 
-        m_NekSysOp.DefineNekSysRhsEval(&LinSysDemo::DoRhs, this);
+        m_NekSysOp.DefineNekSysResEval(&LinSysDemo::DoRhs, this);
         m_NekSysOp.DefineNekSysLhsEval(&LinSysDemo::DoLhs, this);
-        m_nonlinsol->setSysOperators(m_NekSysOp);
+        m_nonlinsol->SetSysOperators(m_NekSysOp);
     }
     ~LinSysDemo()
     {
@@ -79,7 +79,7 @@ public:
         int ntmpIts =
             m_nonlinsol->SolveSystem(m_matDim, pOutput, pOutput, 0, 1.0E-9);
 
-        int ndigits    = 9;
+        int ndigits    = 6;
         int nothers    = 10;
         int nwidthcolm = nothers + ndigits - 1;
         cout << "ntmpIts = " << ntmpIts << endl

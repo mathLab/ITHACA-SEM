@@ -54,33 +54,10 @@ string NekLinSysIterCG::className =
 
 NekLinSysIterCG::NekLinSysIterCG(
     const LibUtilities::SessionReaderSharedPtr &pSession,
-    const LibUtilities::CommSharedPtr &vComm, const int nDimen)
-    : NekLinSysIter(pSession, vComm, nDimen)
+    const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+    const NekSysKey &pKey)
+    : NekLinSysIter(pSession, vComm, nDimen, pKey)
 {
-    std::vector<std::string> variables(1);
-    variables[0]    = pSession->GetVariable(0);
-    string variable = variables[0];
-
-    if (pSession->DefinesGlobalSysSolnInfo(variable, "SuccessiveRHS"))
-    {
-        m_successiveRHS = boost::lexical_cast<int>(
-            pSession->GetGlobalSysSolnInfo(variable, "SuccessiveRHS").c_str());
-    }
-    else
-    {
-        pSession->LoadParameter("SuccessiveRHS", m_successiveRHS, 0);
-    }
-
-    int successiveRHS;
-    if ((successiveRHS = m_successiveRHS))
-    {
-        m_prevLinSol.set_capacity(successiveRHS);
-        m_useProjection = true;
-    }
-    else
-    {
-        m_useProjection = false;
-    }
 }
 
 void NekLinSysIterCG::v_InitObject()
@@ -105,210 +82,10 @@ int NekLinSysIterCG::v_SolveSystem(const int nGlobal,
 
     m_tolerance   = max(tol, 1.0E-16);
     m_prec_factor = factor;
-    if (m_useProjection)
-    {
-        DoAconjugateProjection(nGlobal, pInput, pOutput, nDir);
-    }
-    else
-    {
-        // applying plain Conjugate Gradient
-        DoConjugateGradient(nGlobal, pInput, pOutput, nDir);
-    }
 
-    return 0;
-}
+    DoConjugateGradient(nGlobal, pInput, pOutput, nDir);
 
-/**
- * This method implements A-conjugate projection technique
- * in order to speed up successive linear solves with
- * right-hand sides arising from time-dependent discretisations.
- * (P.F.Fischer, Comput. Methods Appl. Mech. Engrg. 163, 1998)
- */
-void NekLinSysIterCG::DoAconjugateProjection(
-    const int nGlobal, const Array<OneD, const NekDouble> &pInput,
-    Array<OneD, NekDouble> &pOutput, const int nDir)
-{
-
-    // Get vector sizes
-    int nNonDir = nGlobal - nDir;
-    Array<OneD, NekDouble> tmp;
-
-    if (0 == m_numPrevSols)
-    {
-        // no previous solutions found, call CG
-
-        DoConjugateGradient(nGlobal, pInput, pOutput, nDir);
-
-        UpdateKnownSolutions(nGlobal, pOutput, nDir);
-    }
-    else
-    {
-        // Create NekVector wrappers for linear algebra operations
-        NekVector<NekDouble> b(nNonDir, pInput + nDir, eWrapper);
-        NekVector<NekDouble> x(nNonDir, tmp = pOutput + nDir, eWrapper);
-
-        // check the input vector (rhs) is not zero
-        NekDouble rhsNorm =
-            Vmath::Dot2(nNonDir, pInput + nDir, pInput + nDir, m_map + nDir);
-
-        m_Comm->AllReduce(rhsNorm, Nektar::LibUtilities::ReduceSum);
-
-        if (rhsNorm < NekConstants::kNekZeroTol)
-        {
-            Array<OneD, NekDouble> tmp = pOutput + nDir;
-            Vmath::Zero(nNonDir, tmp, 1);
-            return;
-        }
-
-        // Allocate array storage
-        Array<OneD, NekDouble> px_s(nGlobal, 0.0);
-        Array<OneD, NekDouble> pb_s(nGlobal, 0.0);
-        Array<OneD, NekDouble> tmpAx_s(nGlobal, 0.0);
-        Array<OneD, NekDouble> tmpx_s(nGlobal, 0.0);
-
-        NekVector<NekDouble> pb(nNonDir, tmp = pb_s + nDir, eWrapper);
-        NekVector<NekDouble> px(nNonDir, tmp = px_s + nDir, eWrapper);
-        NekVector<NekDouble> tmpAx(nNonDir, tmp = tmpAx_s + nDir, eWrapper);
-        NekVector<NekDouble> tmpx(nNonDir, tmp = tmpx_s + nDir, eWrapper);
-
-        // notation follows the paper cited:
-        // \alpha_i = \tilda{x_i}^T b^n
-        // projected x, px = \sum \alpha_i \tilda{x_i}
-
-        Array<OneD, NekDouble> alpha(m_prevLinSol.size(), 0.0);
-        for (int i = 0; i < m_prevLinSol.size(); ++i)
-        {
-            alpha[i] = Vmath::Dot2(nNonDir, m_prevLinSol[i], pInput + nDir,
-                                   m_map + nDir);
-        }
-        m_Comm->AllReduce(alpha, Nektar::LibUtilities::ReduceSum);
-
-        for (int i = 0; i < m_prevLinSol.size(); ++i)
-        {
-            if (alpha[i] < NekConstants::kNekZeroTol)
-            {
-                continue;
-            }
-
-            NekVector<NekDouble> xi(nNonDir, m_prevLinSol[i], eWrapper);
-            px += alpha[i] * xi;
-        }
-
-        // pb = b^n - A px
-        Vmath::Vcopy(nNonDir, pInput.get() + nDir, 1, pb_s.get() + nDir, 1);
-
-        m_operator.DoNekSysLhsEval(px_s, tmpAx_s);
-
-        pb -= tmpAx;
-
-        // solve the system with projected rhs
-        DoConjugateGradient(nGlobal, pb_s, tmpx_s, nDir);
-
-        // remainder solution + projection of previous solutions
-        x = tmpx + px;
-
-        // save the auxiliary solution to prev. known solutions
-        UpdateKnownSolutions(nGlobal, tmpx_s, nDir);
-    }
-}
-
-/**
- * Calculating A-norm of an input vector,
- * A-norm(x) := sqrt( < x, Ax > )
- */
-NekDouble NekLinSysIterCG::CalculateAnorm(
-    const int nGlobal, const Array<OneD, const NekDouble> &in, const int nDir)
-{
-    // Get vector sizes
-    int nNonDir = nGlobal - nDir;
-
-    // Allocate array storage
-    Array<OneD, NekDouble> tmpAx_s(nGlobal, 0.0);
-
-    m_operator.DoNekSysLhsEval(in, tmpAx_s);
-
-    NekDouble anorm_sq =
-        Vmath::Dot2(nNonDir, in + nDir, tmpAx_s + nDir, m_map + nDir);
-    m_Comm->AllReduce(anorm_sq, Nektar::LibUtilities::ReduceSum);
-    return std::sqrt(anorm_sq);
-}
-
-/**
- * Updates the storage of previously known solutions.
- * Performs normalisation of input vector wrt A-norm.
- */
-void NekLinSysIterCG::UpdateKnownSolutions(
-    const int nGlobal, const Array<OneD, const NekDouble> &newX, const int nDir)
-{
-    // Get vector sizes
-    int nNonDir = nGlobal - nDir;
-
-    // Check the solution is non-zero
-    NekDouble solNorm =
-        Vmath::Dot2(nNonDir, newX + nDir, newX + nDir, m_map + nDir);
-    m_Comm->AllReduce(solNorm, Nektar::LibUtilities::ReduceSum);
-
-    if (solNorm < NekConstants::kNekZeroTol)
-    {
-        return;
-    }
-
-    // Allocate array storage
-    Array<OneD, NekDouble> tmpAx_s(nGlobal, 0.0);
-    Array<OneD, NekDouble> px_s(nGlobal, 0.0);
-    Array<OneD, NekDouble> tmp1, tmp2;
-
-    // Create NekVector wrappers for linear algebra operations
-    NekVector<NekDouble> px(nNonDir, tmp1 = px_s + nDir, eWrapper);
-    NekVector<NekDouble> tmpAx(nNonDir, tmp2 = tmpAx_s + nDir, eWrapper);
-
-    // calculating \tilda{x} - sum \alpha_i\tilda{x}_i
-
-    Vmath::Vcopy(nNonDir, tmp1 = newX + nDir, 1, tmp2 = px_s + nDir, 1);
-
-    if (m_prevLinSol.size() > 0)
-    {
-        m_operator.DoNekSysLhsEval(newX, tmpAx_s);
-    }
-
-    Array<OneD, NekDouble> alpha(m_prevLinSol.size(), 0.0);
-    for (int i = 0; i < m_prevLinSol.size(); i++)
-    {
-        alpha[i] =
-            Vmath::Dot2(nNonDir, m_prevLinSol[i], tmpAx_s + nDir, m_map + nDir);
-    }
-    m_Comm->AllReduce(alpha, Nektar::LibUtilities::ReduceSum);
-
-    for (int i = 0; i < m_prevLinSol.size(); i++)
-    {
-        if (alpha[i] < NekConstants::kNekZeroTol)
-        {
-            continue;
-        }
-
-        NekVector<NekDouble> xi(nNonDir, m_prevLinSol[i], eWrapper);
-        px -= alpha[i] * xi;
-    }
-
-    // Some solutions generated by CG are identical zeros, see
-    // solutions generated for
-    // Test_Tet_equitri.xml (IncNavierStokesSolver).
-    // Not going to store identically zero solutions.
-
-    NekDouble anorm = CalculateAnorm(nGlobal, px_s, nDir);
-    if (anorm < NekConstants::kNekZeroTol)
-    {
-        return;
-    }
-
-    // Normalisation of new solution
-    Vmath::Smul(nNonDir, 1.0 / anorm, px_s.get() + nDir, 1, px_s.get() + nDir,
-                1);
-
-    // Updating storage with non-Dirichlet-dof part of
-    // new solution vector
-    m_prevLinSol.push_back(px_s + nDir);
-    m_numPrevSols++;
+    return m_totalIterations;
 }
 
 /**  
@@ -393,7 +170,7 @@ void NekLinSysIterCG::DoConjugateGradient(
         return;
     }
 
-    m_operator.DoNekSysPrecond(r_A, tmp = w_A + nDir);
+    m_operator.DoNekSysPrecon(r_A, tmp = w_A + nDir);
 
     m_operator.DoNekSysLhsEval(w_A, s_A);
 
@@ -440,7 +217,7 @@ void NekLinSysIterCG::DoConjugateGradient(
         Vmath::Svtvp(nNonDir, -alpha, &q_A[0], 1, &r_A[0], 1, &r_A[0], 1);
 
         // Apply preconditioner
-        m_operator.DoNekSysPrecond(r_A, tmp = w_A + nDir);
+        m_operator.DoNekSysPrecon(r_A, tmp = w_A + nDir);
 
         // Perform the method-specific matrix-vector multiply operation.
         m_operator.DoNekSysLhsEval(w_A, s_A);

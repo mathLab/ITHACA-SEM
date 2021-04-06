@@ -609,6 +609,15 @@ namespace Nektar
             eta[2] = xi[2];
         }
 
+        void StdHexExp::v_LocCollapsedToLocCoord
+                          (const Array<OneD, const NekDouble>& eta,
+                           Array<OneD, NekDouble>& xi)
+        {
+            xi[0] = eta[0];
+            xi[1] = eta[1];
+            xi[2] = eta[2];
+        }
+
         /**
          * @note for hexahedral expansions _base[0] (i.e. p) modes run fastest.
          */
@@ -1044,7 +1053,6 @@ namespace Nektar
                         p = 1;
                     }
                 }
-
                 // Back face (vertices 2,3,6,7)
                 if( localVertexId % 4 > 1 )
                 {

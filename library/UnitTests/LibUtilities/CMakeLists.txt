@@ -5,6 +5,7 @@ SET(LibUtilitiesUnitTestSources
     TestSharedArray.cpp
     TestCheckedCast.cpp
     TestRealComparison.cpp
+    TestVmathSIMD.cpp
     main.cpp
     ../util.cpp
 )
@@ -12,8 +13,8 @@ SET(LibUtilitiesUnitTestSources
 SET(UnitTestSources ${PrecompiledHeaderSources} main.cpp)
 
 SET(UnitTestHeaders
-	LibUtilitiesUnitTestsPrecompiledHeader.h
-	../util.h
+    LibUtilitiesUnitTestsPrecompiledHeader.h
+    ../util.h
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS)
@@ -22,3 +23,4 @@ ADD_NEKTAR_EXECUTABLE(LibUtilitiesUnitTests
 ADD_TEST(NAME LibUtilitiesUnitTests COMMAND LibUtilitiesUnitTests --detect_memory_leaks=0)
 
 SUBDIRS(LinearAlgebra)
+SUBDIRS(VmathTimer)

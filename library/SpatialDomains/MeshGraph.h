@@ -39,6 +39,7 @@
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
+#include <LibUtilities/BasicUtils/DomainRange.h>
 
 #include <SpatialDomains/MeshEntities.hpp>
 #include <SpatialDomains/HexGeom.h>
@@ -109,24 +110,24 @@ typedef std::map<int, std::vector<unsigned int>> CompositeOrdering;
 typedef std::map<int, std::vector<unsigned int>> BndRegionOrdering;
 
 // set restriction on domain range for post-processing.
-struct DomainRange
-{
-    bool m_doXrange;
-    NekDouble m_xmin;
-    NekDouble m_xmax;
-    bool m_doYrange;
-    NekDouble m_ymin;
-    NekDouble m_ymax;
-    bool m_doZrange;
-    NekDouble m_zmin;
-    NekDouble m_zmax;
+// struct DomainRange
+// {
+//     bool m_doXrange;
+//     NekDouble m_xmin;
+//     NekDouble m_xmax;
+//     bool m_doYrange;
+//     NekDouble m_ymin;
+//     NekDouble m_ymax;
+//     bool m_doZrange;
+//     NekDouble m_zmin;
+//     NekDouble m_zmax;
 
-    bool m_checkShape;
-    LibUtilities::ShapeType m_shapeType;
-};
+//     bool m_checkShape;
+//     LibUtilities::ShapeType m_shapeType;
+// };
 
-typedef std::shared_ptr<DomainRange> DomainRangeShPtr;
-static DomainRangeShPtr NullDomainRangeShPtr;
+// typedef std::shared_ptr<DomainRange> DomainRangeShPtr;
+// static DomainRangeShPtr NullDomainRangeShPtr;
 
 struct Composite
 {
@@ -182,7 +183,7 @@ public:
 
     SPATIAL_DOMAINS_EXPORT static MeshGraphSharedPtr Read(
         const LibUtilities::SessionReaderSharedPtr pSession,
-        DomainRangeShPtr                           rng       = NullDomainRangeShPtr,
+        LibUtilities::DomainRangeShPtr             rng       = LibUtilities::NullDomainRangeShPtr,
         bool                                       fillGraph = true);
 
     SPATIAL_DOMAINS_EXPORT virtual void WriteGeometry(
@@ -431,7 +432,7 @@ public:
 
     /*an inital read which loads a very light weight data structure*/
     SPATIAL_DOMAINS_EXPORT virtual void ReadGeometry(
-        DomainRangeShPtr rng,
+        LibUtilities::DomainRangeShPtr rng,
         bool             fillGraph) = 0;
     SPATIAL_DOMAINS_EXPORT virtual void PartitionMesh(
         LibUtilities::SessionReaderSharedPtr session) = 0;
@@ -469,7 +470,7 @@ protected:
     CompositeMap m_meshComposites;
     std::map<int, std::string> m_compositesLabels;
     std::vector<CompositeMap> m_domain;
-    DomainRangeShPtr m_domainRange;
+    LibUtilities::DomainRangeShPtr m_domainRange;
 
     ExpansionInfoMapShPtrMap m_expansionMapShPtrMap;
 
@@ -543,7 +544,7 @@ inline const std::string MeshGraph::GetGeomInfo(std::string parameter)
              "Parameter " + parameter + " does not exist.");
     return m_geomInfo[parameter];
 }
-}
-}
 
+}
+}
 #endif

@@ -49,7 +49,8 @@ typedef std::shared_ptr<NekLinSysIter> NekLinSysIterSharedPtr;
 
 typedef LibUtilities::NekFactory<std::string, NekLinSysIter,
                                  const LibUtilities::SessionReaderSharedPtr &,
-                                 const LibUtilities::CommSharedPtr &, const int>
+                                 const LibUtilities::CommSharedPtr &, const int,
+                                 const NekSysKey &>
     NekLinSysIterFactory;
 LIB_UTILITIES_EXPORT NekLinSysIterFactory &GetNekLinSysIterFactory();
 
@@ -61,22 +62,38 @@ public:
 
     LIB_UTILITIES_EXPORT static NekLinSysIterSharedPtr CreateInstance(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen)
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+        const NekSysKey &pKey)
     {
         NekLinSysIterSharedPtr p =
             MemoryManager<NekLinSysIter>::AllocateSharedPtr(pSession, vComm,
-                                                            nDimen);
+                nDimen, pKey);
         return p;
     }
     LIB_UTILITIES_EXPORT NekLinSysIter(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen);
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen, 
+        const NekSysKey &pKey);
     LIB_UTILITIES_EXPORT virtual ~NekLinSysIter();
 
     LIB_UTILITIES_EXPORT void setUniversalUniqueMap(Array<OneD, int> &map);
     LIB_UTILITIES_EXPORT void setRhsMagnitude(const NekDouble mag)
     {
         m_rhs_magnitude = mag;
+    }
+    LIB_UTILITIES_EXPORT void SetNekLinSysTolerance(const NekDouble in)
+    {
+        m_tolerance = in;
+    }
+
+    LIB_UTILITIES_EXPORT void SetNekLinSysMaxIterations(const unsigned int in)
+    {
+        m_maxiter = in;
+    }
+
+    LIB_UTILITIES_EXPORT void SetLinSysMaxStorage(const unsigned int in)
+    {
+        m_LinSysMaxStorage = in;
     }
 
 protected:
@@ -90,6 +107,12 @@ protected:
     NekDouble m_rhs_mag_sm = 0.9;
 
     NekDouble m_prec_factor = 1.0;
+
+    // This is the maximum number of solution vectors that can be stored
+    // For example, in gmres, it is the max number of Krylov space 
+    // search directions can be stored
+    // It determines the max storage usage
+    int m_LinSysMaxStorage;
 
     void Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn);
     void setUniversalUniqueMap();

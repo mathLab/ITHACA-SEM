@@ -48,7 +48,7 @@ namespace SolverUtils
 {
 class Filter;
 class EquationSystem;
-
+    
 /// A shared pointer to a Driver object
 typedef std::shared_ptr<Filter> FilterSharedPtr;
 

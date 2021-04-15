@@ -43,6 +43,9 @@
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+#include <iomanip>
+
+using namespace std;
 
 namespace Nektar
 {
@@ -86,8 +89,8 @@ public:
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         Array<OneD, Array<OneD, NekDouble> >              &outarray,
         const NekDouble                                   &time,
-        const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-        const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+        const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayOfArray,
+        const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayOfArray);
 
     /// Interface function to advect the Volume field.
     SOLVER_UTILS_EXPORT void AdvectVolumeFlux(
@@ -111,9 +114,9 @@ public:
         Array<OneD, Array<OneD, NekDouble>>               &pTraceFlux,
         const NekDouble                                   &pTime,
         const Array<OneD, Array<OneD, NekDouble>>
-            &pFwd = NullNekDoubleArrayofArray,
+            &pFwd = NullNekDoubleArrayOfArray,
         const Array<OneD, Array<OneD, NekDouble>>
-            &pBwd = NullNekDoubleArrayofArray)
+            &pBwd = NullNekDoubleArrayOfArray)
     {
         v_AdvectTraceFlux(nConvectiveFields, pFields, pAdvVel, pInarray,
                   pTraceFlux, pTime, pFwd, pBwd);
@@ -133,9 +136,9 @@ public:
         Array<OneD, Array<OneD, NekDouble> >              &outarray,
         const NekDouble                                   &time,
         const Array<OneD, Array<OneD, NekDouble> >
-            &pFwd = NullNekDoubleArrayofArray,
+            &pFwd = NullNekDoubleArrayOfArray,
         const Array<OneD, Array<OneD, NekDouble> >
-            &pBwd = NullNekDoubleArrayofArray);
+            &pBwd = NullNekDoubleArrayOfArray);
 
     /**
      * @brief Set the flux vector callback function.
@@ -183,6 +186,35 @@ public:
         v_SetBaseFlow(inarray, fields);
     }
 
+    template<typename DataType, typename TypeNekBlkMatSharedPtr>
+    SOLVER_UTILS_EXPORT void AddTraceJacToMat(
+        const int                                           nConvectiveFields,
+        const int                                           nSpaceDim,
+        const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
+        const Array<OneD, TypeNekBlkMatSharedPtr>           &TracePntJacCons,
+        Array<OneD, Array<OneD, TypeNekBlkMatSharedPtr> >   &gmtxarray,
+        const Array<OneD, TypeNekBlkMatSharedPtr>           &TracePntJacGrad        ,
+        const Array<OneD, Array<OneD, DataType> >           &TracePntJacGradSign    );
+        
+    template<typename DataType, typename TypeNekBlkMatSharedPtr>
+    void CalcJacobTraceInteg(
+        const Array<OneD, MultiRegions::ExpListSharedPtr>   &pFields,
+        const int                                             m,
+        const int                                             n,
+        const Array<OneD, const TypeNekBlkMatSharedPtr>       & PntJac,
+        const Array<OneD, const Array<OneD, DataType> >       & PntJacSign,
+        Array<OneD, DNekMatSharedPtr>                         & TraceJacFwd,
+        Array<OneD, DNekMatSharedPtr>                         & TraceJacBwd);
+
+    SOLVER_UTILS_EXPORT void AddVolumJacToMat( 
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const int &nConvectiveFields,
+        const TensorOfArray5D<NekDouble> &ElmtJacArray,
+        Array<OneD, Array<OneD, SNekBlkMatSharedPtr>> &gmtxarray)
+    {
+        v_AddVolumJacToMat(pFields,nConvectiveFields,ElmtJacArray,gmtxarray);
+    }
+
 protected:
     /// Callback function to the flux vector (set when advection is in
     /// conservative form).
@@ -205,8 +237,8 @@ protected:
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
               Array<OneD, Array<OneD, NekDouble> >        &outarray,
         const NekDouble                                   &time,
-        const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-        const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray)=0;
+        const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayOfArray,
+        const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayOfArray)=0;
 
     /// Advects Volume Flux.
     SOLVER_UTILS_EXPORT virtual void v_AdvectVolumeFlux(
@@ -226,9 +258,9 @@ protected:
         Array<OneD, Array<OneD, NekDouble>>               &pTraceFlux,
         const NekDouble                                   &time,
         const Array<OneD, Array<OneD, NekDouble> >
-            &pFwd = NullNekDoubleArrayofArray,
+            &pFwd = NullNekDoubleArrayOfArray,
         const Array<OneD, Array<OneD, NekDouble> >
-            &pBwd = NullNekDoubleArrayofArray);
+            &pBwd = NullNekDoubleArrayOfArray);
 
     SOLVER_UTILS_EXPORT virtual void v_AdvectCoeffs(
         const int nConvectiveFields,
@@ -238,14 +270,21 @@ protected:
               Array<OneD, Array<OneD, NekDouble> >        &outarray,
         const NekDouble                                   &time,
         const Array<OneD, Array<OneD, NekDouble> >
-            &pFwd = NullNekDoubleArrayofArray,
+            &pFwd = NullNekDoubleArrayOfArray,
         const Array<OneD, Array<OneD, NekDouble> >
-            &pBwd = NullNekDoubleArrayofArray);
+            &pBwd = NullNekDoubleArrayOfArray);
 
     /// Overrides the base flow used during linearised advection
     SOLVER_UTILS_EXPORT virtual void v_SetBaseFlow(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
+ 
+    SOLVER_UTILS_EXPORT virtual void v_AddVolumJacToMat( 
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const int &nConvectiveFields,
+        const TensorOfArray5D<NekDouble> &ElmtJacArray,
+        Array<OneD, Array<OneD, SNekBlkMatSharedPtr>> &gmtxarray);
+
 };
 
 /// A shared pointer to an Advection object.

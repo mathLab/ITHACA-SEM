@@ -55,10 +55,12 @@ VariableConverter::VariableConverter(
     m_session->LoadParameter("rhoInf", m_rhoInf, 1.225);
     m_session->LoadParameter("GasConstant", m_gasConstant, 287.058);
     m_session->LoadParameter("mu", m_mu, 1.78e-05);
+    m_oneOverT_star  = (m_rhoInf * m_gasConstant) / m_pInf;
 
     // Parameters for sensor
     m_session->LoadParameter("Skappa", m_Skappa, -1.0);
     m_session->LoadParameter("Kappa", m_Kappa, 0.25);
+
 
 }
 
@@ -187,22 +189,42 @@ void VariableConverter::GetMach(Array<OneD, Array<OneD, NekDouble>> &physfield,
  * WARNING, if this routine is modified the same must be done in the
  * FieldConvert utility ProcessWSS.cpp (this class should be restructured).
  *
- * @param physfield    Input physical field.
+ * @param temperature  Input temperature field.
  * @param mu           The resulting dynamic viscosity.
  */
 void VariableConverter::GetDynamicViscosity(
     const Array<OneD, const NekDouble> &temperature, Array<OneD, NekDouble> &mu)
 {
     const int nPts    = temperature.size();
-    const NekDouble C = .38175;
-    NekDouble mu_star = m_mu;
-    NekDouble T_star  = m_pInf / (m_rhoInf * m_gasConstant);
-    NekDouble ratio;
 
     for (int i = 0; i < nPts; ++i)
     {
-        ratio = temperature[i] / T_star;
-        mu[i] = mu_star * ratio * sqrt(ratio) * (1 + C) / (ratio + C);
+        mu[i] = GetDynamicViscosity(temperature[i]);
+    }
+}
+
+/**
+ * @brief Compute the dynamic viscosity using the Sutherland's law
+ * \f$ \mu = \mu_star * (T / T_star)^3/2 * (T_star + 110) / (T + 110) \f$,
+ * where:   \mu_star = 1.7894 * 10^-5 Kg / (m * s)
+ *          T_star   = 288.15 K
+ *
+ * @param physfield    Input physical field.
+ * @param mu           The resulting dynamic viscosity.
+ */
+void VariableConverter::GetDmuDT(
+    const Array<OneD, const NekDouble>  &temperature,
+    const Array<OneD, const NekDouble>  &mu,
+          Array<OneD, NekDouble>        &DmuDT)
+{
+    const int nPts      = temperature.size();
+    NekDouble tmp       = 0.0;
+
+    for (int i = 0; i < nPts; ++i)
+    {
+        tmp = 0.5* (temperature[i]+3.0*110.0)/
+                        (temperature[i]*(temperature[i]+110.0));
+        DmuDT[i] = mu[i]*tmp;
     }
 }
 
@@ -446,4 +468,5 @@ void VariableConverter::GetRhoFromPT(const Array<OneD, NekDouble> &pressure,
         rho[i] = m_eos->GetRhoFromPT(pressure[i], temperature[i]);
     }
 }
+
 }

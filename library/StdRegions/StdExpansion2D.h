@@ -175,6 +175,9 @@ namespace StdRegions
                           Array<OneD,       NekDouble> &outarray,
                     const StdRegions::StdMatrixKey &mkey);
 
+            STD_REGIONS_EXPORT virtual void v_GenStdMatBwdDeriv(
+                  const int dir,
+                  DNekMatSharedPtr &mat);
         private:
 
             // Virtual Functions ----------------------------------------

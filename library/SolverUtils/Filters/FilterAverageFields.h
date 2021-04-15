@@ -79,6 +79,11 @@ protected:
     {
         return "_avg";
     }
+    virtual void v_FillVariablesName(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
+    {
+        FilterFieldConvert::v_FillVariablesName(pFields);
+    }
 };
 }
 }

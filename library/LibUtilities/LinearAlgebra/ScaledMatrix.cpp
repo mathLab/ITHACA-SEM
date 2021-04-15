@@ -241,5 +241,13 @@ namespace Nektar
     }
 
     template LIB_UTILITIES_EXPORT void NegateInPlace(NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>& v);
+
+    template LIB_UTILITIES_EXPORT class NekMatrix<NekMatrix< NekSingle, StandardMatrixTag>, ScaledMatrixTag>;
+
+    template
+    LIB_UTILITIES_EXPORT NekMatrix< NekMatrix<NekSingle, StandardMatrixTag>, ScaledMatrixTag>
+    Transpose(NekMatrix<NekMatrix<NekSingle, StandardMatrixTag>, ScaledMatrixTag>& rhs);
+
+    template LIB_UTILITIES_EXPORT void NegateInPlace(NekMatrix<NekMatrix<NekSingle, StandardMatrixTag>, ScaledMatrixTag>& v);
 }
 

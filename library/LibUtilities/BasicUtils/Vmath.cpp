@@ -52,6 +52,8 @@ namespace Vmath
     }
 
     template LIB_UTILITIES_EXPORT void Fill( int n, const Nektar::NekDouble alpha,  Nektar::NekDouble *x, const int incx );
+    template LIB_UTILITIES_EXPORT void Fill( int n, 
+        const Nektar::NekSingle alpha,  Nektar::NekSingle *x, const int incx );
 
     #define IM1   2147483563
     #define IM2   2147483399
@@ -134,9 +136,10 @@ namespace Vmath
     static boost::mutex mutex;
 #endif
     template LIB_UTILITIES_EXPORT Nektar::NekDouble ran2 (long* idum);
+    template LIB_UTILITIES_EXPORT Nektar::NekSingle ran2 (long* idum);
 
     /// \brief Fills a vector with white noise.
-    template<class T>  void FillWhiteNoise( int n, const T eps, T *x,
+    template<class T>  void FillWhiteNoise( int n, const T eps, T* x,
                                       const int incx, int outseed)
     {
 #ifdef NEKTAR_USE_THREAD_SAFETY
@@ -181,10 +184,13 @@ namespace Vmath
         }
     }
     template  LIB_UTILITIES_EXPORT void FillWhiteNoise( int n, const Nektar::NekDouble eps, Nektar::NekDouble *x, const int incx, int outseed);
+    template  LIB_UTILITIES_EXPORT void FillWhiteNoise( int n, 
+        const Nektar::NekSingle eps, Nektar::NekSingle *x, 
+        const int incx, int outseed);
 
     /// \brief Multiply vector z = x*y
     template<class T>  void Vmul( int n, const T *x, const int incx, const T *y,
-                                  const int incy,  T*z, const int incz)
+                                  const int incy, T *z, const int incz)
     {
         ++n;
         if (incx == 1 && incy == 1 && incz == 1)
@@ -210,6 +216,9 @@ namespace Vmath
     }
     template  LIB_UTILITIES_EXPORT void Vmul( int n, const Nektar::NekDouble *x, const int incx, const Nektar::NekDouble *y,
                               const int incy,  Nektar::NekDouble*z, const int incz);
+    template  LIB_UTILITIES_EXPORT void Vmul( int n, const Nektar::NekSingle *x, 
+        const int incx, const Nektar::NekSingle *y,
+        const int incy, Nektar::NekSingle *z, const int incz);
 
     /// \brief Scalar multiply  y = alpha*x
 
@@ -240,6 +249,10 @@ namespace Vmath
     template  LIB_UTILITIES_EXPORT void Smul( int n, const Nektar::NekDouble alpha, const Nektar::NekDouble *x, const int incx,
                               Nektar::NekDouble *y, const int incy);
 
+    template  LIB_UTILITIES_EXPORT void Smul( int n, 
+        const Nektar::NekSingle alpha, const Nektar::NekSingle *x, 
+        const int incx, Nektar::NekSingle *y, const int incy);
+
     /// \brief Multiply vector z = x/y
     template<class T>  void Vdiv( int n, const T *x, const int incx, const T *y,
                   const int incy,  T*z, const int incz)
@@ -268,7 +281,11 @@ namespace Vmath
     }
 
     template LIB_UTILITIES_EXPORT void Vdiv( int n, const Nektar::NekDouble *x, const int incx, const Nektar::NekDouble *y,
-              const int incy,  Nektar::NekDouble*z, const int incz);
+              const int incy, Nektar::NekDouble *z, const int incz);
+    
+    template LIB_UTILITIES_EXPORT void Vdiv( int n, const Nektar::NekSingle *x, 
+        const int incx, const Nektar::NekSingle *y,
+        const int incy, Nektar::NekSingle *z, const int incz);
 
     /// \brief Scalar multiply  y = alpha/y
     template<class T>  void Sdiv( int n, const T alpha, const T *x,
@@ -297,6 +314,9 @@ namespace Vmath
 
     template  LIB_UTILITIES_EXPORT void Sdiv( int n, const Nektar::NekDouble alpha, const Nektar::NekDouble *x,
                               const int incx, Nektar::NekDouble *y, const int incy);
+    template  LIB_UTILITIES_EXPORT void Sdiv( int n, 
+        const Nektar::NekSingle alpha, const Nektar::NekSingle *x,
+        const int incx, Nektar::NekSingle *y, const int incy);
 
     /// \brief Add vector z = x+y
     template<class T>  void Vadd( int n, const T *x, const int incx, const T *y,
@@ -313,8 +333,11 @@ namespace Vmath
 
     template  LIB_UTILITIES_EXPORT void Vadd( int n, const Nektar::NekDouble *x, const int incx, const Nektar::NekDouble *y,
                               const int incy,  Nektar::NekDouble *z, const int incz);
+    template  LIB_UTILITIES_EXPORT void Vadd( int n, 
+        const Nektar::NekSingle *x, const int incx, const Nektar::NekSingle *y,
+        const int incy, Nektar::NekSingle *z, const int incz);
 
-    /// \brief Add vector y = alpha + x
+    /// \brief Add vector y = alpha - x
     template<class T>  void Sadd( int n, const T alpha, const T *x,
                   const int incx, T *y, const int incy)
     {
@@ -341,6 +364,9 @@ namespace Vmath
 
     template LIB_UTILITIES_EXPORT void Sadd( int n, const Nektar::NekDouble alpha, const Nektar::NekDouble *x,
               const int incx, Nektar::NekDouble *y, const int incy);
+    template LIB_UTILITIES_EXPORT void Sadd( int n, 
+        const Nektar::NekSingle alpha, const Nektar::NekSingle *x,
+        const int incx, Nektar::NekSingle *y, const int incy);
 
     /// \brief Subtract vector z = x-y
     template<class T>  void Vsub( int n, const T *x, const int incx, const T *y,
@@ -371,6 +397,40 @@ namespace Vmath
 
     template  LIB_UTILITIES_EXPORT void Vsub( int n, const Nektar::NekDouble *x, const int incx, const Nektar::NekDouble *y,
                               const int incy,  Nektar::NekDouble *z, const int incz);
+    template  LIB_UTILITIES_EXPORT void Vsub( int n, 
+        const Nektar::NekSingle *x, const int incx, const Nektar::NekSingle *y,
+        const int incy, Nektar::NekSingle *z, const int incz);
+
+    /// \brief Add vector y = alpha - x
+    template<class T>  void Ssub( int n, const T alpha, const T *x,
+                  const int incx, T *y, const int incy)
+    {
+        ++n;
+        if (incx == 1 && incy == 1)
+        {
+            while( --n )
+            {
+                *y = alpha - (*x);
+                ++x;
+                ++y;
+            }
+        }
+        else
+        {
+            while( --n )
+            {
+                *y = alpha - (*x);
+                x += incx;
+                y += incy;
+            }
+        }
+    }
+
+    template LIB_UTILITIES_EXPORT void Ssub( int n, const Nektar::NekDouble alpha, const Nektar::NekDouble *x,
+              const int incx, Nektar::NekDouble *y, const int incy);
+    template LIB_UTILITIES_EXPORT void Ssub( int n, 
+        const Nektar::NekSingle alpha, const Nektar::NekSingle *x,
+        const int incx, Nektar::NekSingle *y, const int incy);
 
     /// \brief Zero vector
     template<class T>  void Zero(int n, T *x, const int incx)
@@ -392,6 +452,8 @@ namespace Vmath
     }
 
     template  LIB_UTILITIES_EXPORT void Zero(int n, Nektar::NekDouble *x, const int incx);
+    template  LIB_UTILITIES_EXPORT void Zero(int n, Nektar::NekSingle *x, 
+        const int incx);
     template  LIB_UTILITIES_EXPORT void Zero(int n, int *x, const int incx);
     template  LIB_UTILITIES_EXPORT void Zero(int n, long *x, const int incx);
 
@@ -406,6 +468,8 @@ namespace Vmath
     }
 
     template  LIB_UTILITIES_EXPORT void Neg( int n, Nektar::NekDouble *x, const int incx);
+    template  LIB_UTILITIES_EXPORT void Neg( int n, Nektar::NekSingle *x, 
+        const int incx);
 
     /// \brief sqrt y = sqrt(x)
     template<class T> void Vsqrt(int n, const T *x, const int incx,
@@ -421,6 +485,8 @@ namespace Vmath
 
     template LIB_UTILITIES_EXPORT void Vsqrt(int n, const Nektar::NekDouble *x, const int incx,
              Nektar::NekDouble *y, const int incy);
+    template LIB_UTILITIES_EXPORT void Vsqrt(int n, const Nektar::NekSingle *x, 
+        const int incx, Nektar::NekSingle *y, const int incy);
 
 
     /// \brief vabs: y = |x|
@@ -437,6 +503,8 @@ namespace Vmath
 
     template LIB_UTILITIES_EXPORT void Vabs(int n, const Nektar::NekDouble *x, const int incx,
             Nektar::NekDouble *y, const int incy);
+    template LIB_UTILITIES_EXPORT void Vabs(int n, const Nektar::NekSingle *x, 
+        const int incx, Nektar::NekSingle *y, const int incy);
 
 
     /********** Triad  routines  ***********************/
@@ -463,6 +531,11 @@ namespace Vmath
                              const Nektar::NekDouble *x, const int incx,
                              const Nektar::NekDouble *y, const int incy,
                                    Nektar::NekDouble *z, const int incz);
+    template LIB_UTILITIES_EXPORT void Vvtvp(int n,
+                             const Nektar::NekSingle *w, const int incw,
+                             const Nektar::NekSingle *x, const int incx,
+                             const Nektar::NekSingle *y, const int incy,
+                                   Nektar::NekSingle *z, const int incz);
 
     /// \brief vvtvm (vector times vector plus vector): z = w*x - y
     template<class T> void Vvtvm(int n, const T *w, const int incw, const T *x,
@@ -482,6 +555,10 @@ namespace Vmath
     template LIB_UTILITIES_EXPORT void Vvtvm(int n, const Nektar::NekDouble *w, const int incw, const Nektar::NekDouble *x,
              const int incx, const Nektar::NekDouble *y, const int incy,
              Nektar::NekDouble *z, const int incz);
+    template LIB_UTILITIES_EXPORT void Vvtvm(int n, const Nektar::NekSingle *w, 
+            const int incw, const Nektar::NekSingle *x,
+            const int incx, const Nektar::NekSingle *y, const int incy,
+            Nektar::NekSingle *z, const int incz);
 
 
     /// \brief  svtvp (scalar times vector plus vector): z = alpha*x + y
@@ -515,6 +592,10 @@ namespace Vmath
     template LIB_UTILITIES_EXPORT void Svtvp(int n, const Nektar::NekDouble alpha, const Nektar::NekDouble *x,
                  const int incx, const Nektar::NekDouble *y, const int incy,
                  Nektar::NekDouble *z, const int incz);
+    template LIB_UTILITIES_EXPORT void Svtvp(int n, 
+        const Nektar::NekSingle alpha, const Nektar::NekSingle *x,
+        const int incx, const Nektar::NekSingle *y, const int incy,
+        Nektar::NekSingle *z, const int incz);
 
 
     /// \brief  svtvp (scalar times vector plus vector): z = alpha*x - y
@@ -534,6 +615,10 @@ namespace Vmath
     template LIB_UTILITIES_EXPORT void Svtvm(int n, const Nektar::NekDouble alpha, const Nektar::NekDouble *x,
              const int incx, const Nektar::NekDouble *y, const int incy,
              Nektar::NekDouble *z, const int incz);
+    template LIB_UTILITIES_EXPORT void Svtvm(int n, 
+        const Nektar::NekSingle alpha, const Nektar::NekSingle *x,
+        const int incx, const Nektar::NekSingle *y, const int incy,
+        Nektar::NekSingle *z, const int incz);
 
     /// \brief  vvtvvtp (vector times vector plus vector times vector):
     // z = v*w + x*y
@@ -560,6 +645,12 @@ namespace Vmath
                                 const Nektar::NekDouble* x, int incx,
                                 const Nektar::NekDouble* y, int incy,
                                       Nektar::NekDouble* z, int incz);
+    template LIB_UTILITIES_EXPORT void Vvtvvtp (int n,
+                                const Nektar::NekSingle* v, int incv,
+                                const Nektar::NekSingle* w, int incw,
+                                const Nektar::NekSingle* x, int incx,
+                                const Nektar::NekSingle* y, int incy,
+                                      Nektar::NekSingle* z, int incz);
 
 
     /// \brief  vvtvvtm (vector times vector minus vector times vector):
@@ -588,6 +679,12 @@ namespace Vmath
                                 const Nektar::NekDouble* x, int incx,
                                 const Nektar::NekDouble* y, int incy,
                                       Nektar::NekDouble* z, int incz);
+    template LIB_UTILITIES_EXPORT void Vvtvvtm (int n,
+                                const Nektar::NekSingle* v, int incv,
+                                const Nektar::NekSingle* w, int incw,
+                                const Nektar::NekSingle* x, int incx,
+                                const Nektar::NekSingle* y, int incy,
+                                      Nektar::NekSingle* z, int incz);
 
     /// \brief  vvtvvtp (scalar times vector plus scalar times vector):
     // z = alpha*x + beta*y
@@ -613,6 +710,12 @@ namespace Vmath
                                 const Nektar::NekDouble beta,
                                 const Nektar::NekDouble* y, int incy,
                                       Nektar::NekDouble* z, int incz);
+    template LIB_UTILITIES_EXPORT void Svtsvtp (int n,
+                                const Nektar::NekSingle alpha,
+                                const Nektar::NekSingle* x, int incx,
+                                const Nektar::NekSingle beta,
+                                const Nektar::NekSingle* y, int incy,
+                                      Nektar::NekSingle* z, int incz);
 
 
     /// \brief  Vstvpp (scalar times vector plus vector plus vector):
@@ -640,23 +743,14 @@ namespace Vmath
                               const Nektar::NekDouble* w, int incw,
                               const Nektar::NekDouble* x, int incx,
                               Nektar::NekDouble* z, int incz);
+    template LIB_UTILITIES_EXPORT void Vstvpp(int n,
+                              const Nektar::NekSingle alpha,
+                              const Nektar::NekSingle* v, int incv,
+                              const Nektar::NekSingle* w, int incw,
+                              const Nektar::NekSingle* x, int incx,
+                              Nektar::NekSingle* z, int incz);
 
     /************ Misc routine from Veclib (and extras)  ************/
-
-    /// \brief Gather vector z[i] = x[y[i]]
-    template<class T>  void Gathr(int n, const T *x, const int *y,
-                  T *z)
-    {
-        while (n--)
-        {
-            *z++ = *(x + *y++);
-        }
-        return;
-    }
-
-    template LIB_UTILITIES_EXPORT  void Gathr(int n, const Nektar::NekDouble *x, const int *y,
-              Nektar::NekDouble *z);
-
 
     /// \brief Gather vector z[i] = sign[i]*x[y[i]]
     template<class T>  void Gathr(int n, const T *sign, const T *x, const int *y,
@@ -671,6 +765,8 @@ namespace Vmath
 
     template LIB_UTILITIES_EXPORT  void Gathr(int n, const Nektar::NekDouble *sign, const Nektar::NekDouble *x, const int *y,
               Nektar::NekDouble *z);
+    template LIB_UTILITIES_EXPORT  void Gathr(int n, const Nektar::NekSingle *sign, const Nektar::NekSingle *x, const int *y,
+              Nektar::NekSingle *z);
 
     /// \brief Scatter vector z[y[i]] = x[i]
     template<class T>  void Scatr(int n, const T *x, const int *y,
@@ -684,6 +780,8 @@ namespace Vmath
 
     template LIB_UTILITIES_EXPORT  void Scatr(int n, const Nektar::NekDouble *x, const int *y,
               Nektar::NekDouble *z);
+    template LIB_UTILITIES_EXPORT  void Scatr(int n, 
+        const Nektar::NekSingle *x, const int *y, Nektar::NekSingle *z);
 
     /// \brief Scatter vector z[y[i]] = sign[i]*x[i]
     template<class T>  void Scatr(int n, const T *sign, const T *x, const int *y,
@@ -706,6 +804,9 @@ namespace Vmath
 
     template LIB_UTILITIES_EXPORT  void Scatr(int n, const Nektar::NekDouble *sign, const Nektar::NekDouble *x, const int *y,
               Nektar::NekDouble *z);
+    template LIB_UTILITIES_EXPORT  void Scatr(int n, 
+        const Nektar::NekSingle *sign, const Nektar::NekSingle *x, const int *y,
+        Nektar::NekSingle *z);
 
 
     /// \brief Assemble z[y[i]] += x[i]; z should be zero'd first
@@ -720,6 +821,8 @@ namespace Vmath
 
     template LIB_UTILITIES_EXPORT  void Assmb(int n, const Nektar::NekDouble *x, const int *y,
               Nektar::NekDouble *z);
+    template LIB_UTILITIES_EXPORT  void Assmb(int n, const Nektar::NekSingle *x,
+        const int *y, Nektar::NekSingle *z);
 
     /// \brief Assemble z[y[i]] += sign[i]*x[i]; z should be zero'd first
     template<class T>  void Assmb(int n, const T *sign, const T *x, const int *y,
@@ -733,6 +836,9 @@ namespace Vmath
 
     template LIB_UTILITIES_EXPORT  void Assmb(int n, const Nektar::NekDouble *sign, const Nektar::NekDouble *x, const int *y,
               Nektar::NekDouble *z);
+    template LIB_UTILITIES_EXPORT  void Assmb(int n, 
+        const Nektar::NekSingle *sign, const Nektar::NekSingle *x, const int *y,
+        Nektar::NekSingle *z);
 
     /************* Reduction routines  *****************/
 
@@ -752,6 +858,8 @@ namespace Vmath
     }
 
     template LIB_UTILITIES_EXPORT  Nektar::NekDouble Vsum( int n, const Nektar::NekDouble *x, const int incx);
+    template LIB_UTILITIES_EXPORT  Nektar::NekSingle Vsum( int n, 
+        const Nektar::NekSingle *x, const int incx);
     template LIB_UTILITIES_EXPORT  int Vsum( int n, const int *x, const int incx);
 
     /// \brief Return the index of the maximum element in x
@@ -775,6 +883,8 @@ namespace Vmath
     }
 
     template LIB_UTILITIES_EXPORT  int Imax( int n, const Nektar::NekDouble *x, const int incx);
+    template LIB_UTILITIES_EXPORT  int Imax( int n, 
+        const Nektar::NekSingle *x, const int incx);
     template LIB_UTILITIES_EXPORT  int Imax( int n, const int *x, const int incx);
 
     /// \brief Return the maximum element in x -- called vmax to avoid
@@ -797,6 +907,8 @@ namespace Vmath
     }
 
     template LIB_UTILITIES_EXPORT  Nektar::NekDouble Vmax( int n, const Nektar::NekDouble *x, const int incx);
+    template LIB_UTILITIES_EXPORT  Nektar::NekSingle Vmax( int n, 
+        const Nektar::NekSingle *x, const int incx);
     template LIB_UTILITIES_EXPORT  int Vmax( int n, const int *x, const int incx);
 
     /// \brief Return the index of the maximum absolute element in x
@@ -822,6 +934,8 @@ namespace Vmath
     }
 
     template LIB_UTILITIES_EXPORT int Iamax( int n, const Nektar::NekDouble *x, const int incx);
+    template LIB_UTILITIES_EXPORT int Iamax( int n, const Nektar::NekSingle *x, 
+        const int incx);
 
     /// \brief Return the maximum absolute element in x
     /// called vamax to avoid conflict with max
@@ -844,6 +958,8 @@ namespace Vmath
     }
 
     template LIB_UTILITIES_EXPORT Nektar::NekDouble Vamax( int n, const Nektar::NekDouble *x, const int incx);
+    template LIB_UTILITIES_EXPORT Nektar::NekSingle Vamax( int n, 
+        const Nektar::NekSingle *x, const int incx);
 
 
     /// \brief Return the index of the minimum element in x
@@ -867,6 +983,8 @@ namespace Vmath
     }
 
     template LIB_UTILITIES_EXPORT int Imin( int n, const Nektar::NekDouble *x, const int incx);
+    template LIB_UTILITIES_EXPORT int Imin( int n, const Nektar::NekSingle *x, 
+        const int incx);
     template LIB_UTILITIES_EXPORT  int Imin( int n, const int *x, const int incx);
 
     /// \brief Return the minimum element in x - called vmin to avoid
@@ -889,6 +1007,8 @@ namespace Vmath
     }
 
     template LIB_UTILITIES_EXPORT Nektar::NekDouble Vmin( int n, const Nektar::NekDouble *x, const int incx);
+    template LIB_UTILITIES_EXPORT Nektar::NekSingle Vmin( int n, 
+        const Nektar::NekSingle *x, const int incx);
     template LIB_UTILITIES_EXPORT int Vmin( int n, const int *x, const int incx);
 
    /// \brief Return number of NaN elements of x
@@ -910,7 +1030,8 @@ namespace Vmath
     }
 
     template LIB_UTILITIES_EXPORT int Nnan(int n, const Nektar::NekDouble *x, const int incx);
-    template LIB_UTILITIES_EXPORT int Nnan(int n, const float *x, const int incx);
+    template LIB_UTILITIES_EXPORT int Nnan(int n, const Nektar::NekSingle *x, 
+        const int incx);
     template LIB_UTILITIES_EXPORT int Nnan(int n, const int *x, const int incx);
 
     /// \brief  vvtvp (vector times vector times vector): z = w*x*y
@@ -932,6 +1053,9 @@ namespace Vmath
     template LIB_UTILITIES_EXPORT Nektar::NekDouble Dot(     int n,
                              const Nektar::NekDouble   *w,
                              const Nektar::NekDouble   *x);
+    template LIB_UTILITIES_EXPORT Nektar::NekSingle Dot(     int n,
+                             const Nektar::NekSingle   *w,
+                             const Nektar::NekSingle   *x);
 
     /// \brief  vvtvp (vector times vector times vector): z = w*x*y
     template<class T> T Dot(     int n,
@@ -952,6 +1076,9 @@ namespace Vmath
     template LIB_UTILITIES_EXPORT Nektar::NekDouble Dot(     int n,
                              const Nektar::NekDouble   *w, const int incw,
                              const Nektar::NekDouble   *x, const int incx);
+    template LIB_UTILITIES_EXPORT Nektar::NekSingle Dot(     int n,
+                             const Nektar::NekSingle   *w, const int incw,
+                             const Nektar::NekSingle   *x, const int incx);
 
     /// \brief  vvtvp (vector times vector times vector): z = w*x*y
     template<class T> T Dot2(    int n,
@@ -974,6 +1101,10 @@ namespace Vmath
     template LIB_UTILITIES_EXPORT Nektar::NekDouble Dot2(    int n,
                              const Nektar::NekDouble   *w,
                              const Nektar::NekDouble   *x,
+                             const int *y);
+    template LIB_UTILITIES_EXPORT Nektar::NekSingle Dot2(    int n,
+                             const Nektar::NekSingle   *w,
+                             const Nektar::NekSingle   *x,
                              const int *y);
 
 
@@ -998,6 +1129,10 @@ namespace Vmath
     template LIB_UTILITIES_EXPORT Nektar::NekDouble Dot2(    int n,
                              const Nektar::NekDouble   *w, const int incw,
                              const Nektar::NekDouble   *x, const int incx,
+                             const int *y, const int incy);
+    template LIB_UTILITIES_EXPORT Nektar::NekSingle Dot2(    int n,
+                             const Nektar::NekSingle   *w, const int incw,
+                             const Nektar::NekSingle   *x, const int incx,
                              const int *y, const int incy);
 
 /*
@@ -1082,6 +1217,9 @@ namespace Vmath
     template  LIB_UTILITIES_EXPORT void  Vcopy( int n, const int *x, const int incx, int *y, const int incy);
     template  LIB_UTILITIES_EXPORT void  Vcopy( int n, const unsigned int *x, const int incx, unsigned int *y, const int incy);
     template  LIB_UTILITIES_EXPORT void  Vcopy( int n, const Nektar::NekDouble *x, const int incx, Nektar::NekDouble *y, const int incy);
+    template  LIB_UTILITIES_EXPORT void  Vcopy( int n, 
+        const Nektar::NekSingle *x, const int incx, Nektar::NekSingle *y, 
+        const int incy);
 
 
     // \brief reverse the ordering of  vector to another
@@ -1111,4 +1249,7 @@ namespace Vmath
     }
 
     template  LIB_UTILITIES_EXPORT void  Reverse( int n, const Nektar::NekDouble *x, const int incx, Nektar::NekDouble *y, const int incy);
+    template  LIB_UTILITIES_EXPORT void  Reverse( int n, 
+        const Nektar::NekSingle *x, const int incx, Nektar::NekSingle *y, 
+        const int incy);
 }

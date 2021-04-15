@@ -34,8 +34,12 @@
 
 #ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_MISC_REDLICHKWONGEOS
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_MISC_REDLICHKWONGEOS
-
+#include <cmath>
 #include "EquationOfState.h"
+
+#include <LibUtilities/SimdLib/io.hpp>
+
+using namespace std;
 
 namespace Nektar
 {
@@ -69,32 +73,116 @@ protected:
     NekDouble m_Tc;
     NekDouble m_Pc;
 
-    virtual NekDouble v_GetTemperature(const NekDouble &rho,
-                                       const NekDouble &e);
+    NekDouble GetTemperature(const NekDouble& rho, const NekDouble& e) final;
 
-    virtual NekDouble v_GetPressure(const NekDouble &rho, const NekDouble &e);
+    vec_t GetTemperature(const vec_t& rho, const vec_t& e) final;
 
-    virtual NekDouble v_GetEntropy(const NekDouble &rho, const NekDouble &e);
+    NekDouble GetPressure(const NekDouble& rho, const NekDouble& e) final;
 
-    virtual NekDouble v_GetDPDrho_e(const NekDouble &rho, const NekDouble &e);
+    vec_t GetPressure(const vec_t& rho, const vec_t& e) final;
 
-    virtual NekDouble v_GetDPDe_rho(const NekDouble &rho, const NekDouble &e);
+    NekDouble v_GetEntropy(const NekDouble &rho, const NekDouble &e) final;
 
-    virtual NekDouble v_GetEFromRhoP(const NekDouble &rho, const NekDouble &p);
+    NekDouble v_GetDPDrho_e(const NekDouble &rho, const NekDouble &e) final;
 
-    virtual NekDouble v_GetRhoFromPT(const NekDouble &rho, const NekDouble &p);
+    NekDouble v_GetDPDe_rho(const NekDouble &rho, const NekDouble &e) final;
+
+    NekDouble v_GetEFromRhoP(const NekDouble &rho, const NekDouble &p) final;
+
+    NekDouble v_GetRhoFromPT(const NekDouble &rho, const NekDouble &p) final;
 
 private:
     RedlichKwongEoS(const LibUtilities::SessionReaderSharedPtr &pSession);
 
-    virtual ~RedlichKwongEoS(void){};
+    ~RedlichKwongEoS(void){};
 
     // Alpha term of Redlich-Kwong EoS ( 1.0/sqrt(Tr))
-    NekDouble Alpha(const NekDouble &T);
+    template <class T, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    inline T Alpha(const T& temp)
+    {
+        return 1.0 / sqrt(temp / m_Tc);
+    }
 
     // Log term term of Peng-Robinson EoS
-    NekDouble LogTerm(const NekDouble &rho);
+    template <class T, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    inline T LogTerm(const T& rho)
+    {
+        return log(1.0 + m_b * rho);
+    }
+
+    template <class T, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    inline T GetTemperatureKernel(const T& rho, const T& e)
+    {
+        // First we need to evaluate the log term
+        //    ln[1 + b*rho]
+        T logTerm = LogTerm(rho);
+
+        // The temperature can be expressed as an equation in the form
+        //      (T^1/2)^3 + A* T^1/2 + B = 0, which we solve iteratively
+        T A = e * (1.0 - m_gamma) / m_gasConstant;
+        T B = -3.0 * m_a / (2.0 * m_b * m_gasConstant) * (m_gamma - 1) * sqrt(m_Tc)
+            * logTerm;
+
+        // Use ideal gas solution as starting guess for iteration
+        T sqrtT = sqrt(e * (m_gamma - 1) / m_gasConstant);
+        // Newton-Raphson iteration to find T^(1/2)
+        T tol      = 1e-6;
+        T residual = 1;
+        unsigned int maxIter  = 100;
+        unsigned int cnt = 0;
+        while (abs(residual) > tol && cnt < maxIter)
+        {
+            T f = sqrtT * sqrtT * sqrtT + A * sqrtT + B;
+            T df = 3 * sqrtT * sqrtT + A;
+            residual = f / df;
+            sqrtT -= residual;
+            ++cnt;
+        }
+        if (cnt == maxIter)
+        {
+            std::cout << "Newton-Raphson in RedlichKwongEoS::v_GetTemperature did not "
+                    "converge in "
+                 << maxIter << " iterations (residual = " << residual << ")"
+                 << std::endl;
+        }
+
+        // Calculate the temperature
+        return sqrtT * sqrtT;
+    }
+
+    template <class T, typename = typename std::enable_if
+        <
+            std::is_floating_point<T>::value ||
+            tinysimd::is_vector_floating_point<T>::value
+        >::type
+    >
+    inline T GetPressureKernel(const T& rho, const T& e)
+    {
+        T temp = GetTemperatureKernel(rho, e);
+        T oneOrho = 1.0 / rho;
+        T p = m_gasConstant * temp / (oneOrho - m_b) - m_a * Alpha(temp) /
+            (oneOrho * (oneOrho + m_b));
+        return p;
+    }
+
+
+
+
 };
 }
-
 #endif

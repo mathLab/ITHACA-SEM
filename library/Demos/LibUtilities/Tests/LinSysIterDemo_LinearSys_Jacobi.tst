@@ -9,10 +9,10 @@
 
     <metrics>
         <metric type="L2" id="1">
-            <value variable="u" tolerance="1e-12">9.88991302e-01</value>
-            <value variable="v" tolerance="1e-12">2.01141473e+00</value>
-            <value variable="w" tolerance="1e-12">-1.01028590e+00</value>
-            <value variable="x" tolerance="1e-12">1.02135051e+00</value>
+            <value variable="u" tolerance="1e-12">9.88991e-01</value>
+            <value variable="v" tolerance="1e-12">2.01141e+00</value>
+            <value variable="w" tolerance="1e-12">-1.01029e+00</value>
+            <value variable="x" tolerance="1e-12">1.02135e+00</value>
         </metric>
     </metrics>
 </test>

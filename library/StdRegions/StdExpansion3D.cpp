@@ -139,6 +139,87 @@ namespace Nektar
             v_IProductWRTBase_SumFacKernel(base0, base1, base2, inarray, outarray, wsp, doCheckCollDir0, doCheckCollDir1, doCheckCollDir2);
         }
 
+        void StdExpansion3D::v_GenStdMatBwdDeriv(
+            const int dir,
+                  DNekMatSharedPtr &mat)
+        {
+            ASSERTL1((dir==0)||(dir==1)||(dir==2),"Invalid direction.");
+
+            const int nq0 = m_base[0]->GetNumPoints();
+            const int nq1 = m_base[1]->GetNumPoints();
+            const int nq2 = m_base[2]->GetNumPoints();
+            const int nq  = nq0*nq1*nq2;
+            const int nm0 = m_base[0]->GetNumModes();
+            const int nm1 = m_base[1]->GetNumModes();
+ 
+            Array<OneD, NekDouble> alloc(4*nq + m_ncoeffs + nm0*nq2*(nq1+nm1),0.0);
+            Array<OneD, NekDouble> tmp1 (alloc);               // Quad metric
+            Array<OneD, NekDouble> tmp2 (alloc +   nq);        // Dir1 metric
+            Array<OneD, NekDouble> tmp3 (alloc + 2*nq);        // Dir2 metric
+            Array<OneD, NekDouble> tmp4 (alloc + 3*nq);        // Dir3 metric
+            Array<OneD, NekDouble> tmp5 (alloc + 4*nq);        // iprod tmp
+            Array<OneD, NekDouble> wsp  (tmp5  +   m_ncoeffs); // Wsp
+            switch(dir)
+            {
+            case 0:
+                for(int i=0; i<nq;i++)
+                {
+                    tmp2[i] =   1.0;
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                         m_base[1]->GetBdata(),
+                                         m_base[2]->GetBdata(),
+                                         tmp2,tmp5,wsp,
+                                         false,true,true);
+
+                    tmp2[i] =   0.0;
+                    
+                    for(int j=0; j<m_ncoeffs;j++)
+                    {
+                        (*mat)(j,i) =   tmp5[j];
+                    }
+                }
+                break;
+            case 1:
+                for(int i=0; i<nq;i++)
+                {
+                    tmp2[i] =   1.0;
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                         m_base[1]->GetDbdata(),
+                                         m_base[2]->GetBdata(),
+                                         tmp2,tmp5,wsp,
+                                         true,false,true);
+
+                    tmp2[i] =   0.0;
+                    
+                    for(int j=0; j<m_ncoeffs;j++)
+                    {
+                        (*mat)(j,i) =   tmp5[j];
+                    }
+                }
+                break;
+            case 2:
+                for(int i=0; i<nq;i++)
+                {
+                    tmp2[i] =   1.0;
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                         m_base[1]->GetBdata(),
+                                         m_base[2]->GetDbdata(),
+                                         tmp2,tmp5,wsp,
+                                         true,true,false);
+                    tmp2[i] =   0.0;
+                    
+                    for(int j=0; j<m_ncoeffs;j++)
+                    {
+                        (*mat)(j,i) =   tmp5[j];
+                    }
+                }
+                break;
+            default:
+                NEKERROR(ErrorUtil::efatal, "Not a 2D expansion.");
+                break;
+            }
+        }
+
         NekDouble StdExpansion3D::v_PhysEvaluate(
             const Array<OneD, const NekDouble> &coords,
             const Array<OneD, const NekDouble> &physvals)
@@ -336,14 +417,14 @@ namespace Nektar
 
         int StdExpansion3D::v_GetNedges(void) const
         {
-            ASSERTL0(false, "This function is not valid or not defined");
+            NEKERROR(ErrorUtil::efatal, "This function is not valid or not defined");
             return 0;
         }
 
         int StdExpansion3D::v_GetEdgeNcoeffs(const int i) const
         {
             boost::ignore_unused(i);
-            ASSERTL0(false, "This function is not valid or not defined");
+            NEKERROR(ErrorUtil::efatal, "This function is not valid or not defined");
             return 0;
         }
 
@@ -406,7 +487,7 @@ namespace Nektar
                 }
                 default:
                 {
-                    ASSERTL0(false, "expansion type unknown");
+                    NEKERROR(ErrorUtil::efatal, "expansion type unknown");
                     break;
                 }
             }
@@ -458,7 +539,7 @@ namespace Nektar
                         default:
                         {
 
-                            ASSERTL0(false,"invalid value to flag");
+                            NEKERROR(ErrorUtil::efatal,"invalid value to flag");
                             break;
                         }
                     }
@@ -487,7 +568,7 @@ namespace Nektar
                         }
                         default:
                         {
-                            ASSERTL0(false,"invalid value to flag");
+                            NEKERROR(ErrorUtil::efatal,"invalid value to flag");
                             break;
                         }
                     }
@@ -519,7 +600,7 @@ namespace Nektar
                         }
                         default:
                         {
-                            ASSERTL0(false,"invalid value to flag");
+                            NEKERROR(ErrorUtil::efatal,"invalid value to flag");
                             break;
                         }
                     }
@@ -527,7 +608,7 @@ namespace Nektar
                 }
                 default:
                 {
-                    ASSERTL0(false,"expansion type unknown");
+                    NEKERROR(ErrorUtil::efatal,"expansion type unknown");
                     break;
                 }
             }

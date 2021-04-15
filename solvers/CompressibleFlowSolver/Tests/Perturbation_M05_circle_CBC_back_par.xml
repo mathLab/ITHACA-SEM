@@ -11841,10 +11841,9 @@
     <CONDITIONS>
         <!-- Airbus Test Case -->
         <PARAMETERS>
-            <P> TimeStep            = 0.000003                         </P>
-            <P> FinTime             = 0.000003                               </P>
-            <P> NumSteps            = FinTime/TimeStep                  </P>
-            <P> IO_CheckSteps       = 10 <!--FinTime/(1000*TimeStep)--> </P>
+            <P> TimeStep            = 0.000003                          </P>
+            <P> NumSteps            = 1                                 </P>
+            <P> IO_CheckSteps       = 10                                </P>
             <P> IO_InfoSteps        = 10                                 </P>
             <P> GasConstant         = 287.058                           </P>
             <P> Gamma               = 1.4                               </P>
@@ -11869,9 +11868,8 @@
             <I PROPERTY="EQType"                VALUE="EulerCFE"            />
             <I PROPERTY="Projection"            VALUE="DisContinuous"       />
             <I PROPERTY="AdvectionType"         VALUE="FRHU"                />
-            <I PROPERTY="DiffusionType"         VALUE="LDGNS"               />
-            <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler"/>
-            <I PROPERTY="UpwindType"            VALUE="HLLC"           />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler"        />
+            <I PROPERTY="UpwindType"            VALUE="HLLC"                />
             <I PROPERTY="ProblemType"           VALUE="General"             />
             <I PROPERTY="ViscosityType"         VALUE="Constant"            />
         </SOLVERINFO>
@@ -11891,49 +11889,28 @@
         </BOUNDARYREGIONS>
         
         <BOUNDARYCONDITIONS>
-            <!--REGION REF="0">
-             <D VAR="rho"  VALUE="rhoInf" />
-             <D VAR="rhou" VALUE="rhoInf * uInf" />
-             <D VAR="rhov" VALUE="rhoInf * vInf" />
-             <D VAR="E"    VALUE="pInf / (Gamma - 1) + 0.5 * rhoInf * (uInf * uInf + vInf * vInf)" />
-             </REGION-->
+
             <REGION REF="0">
                 <D VAR="rho"  USERDEFINEDTYPE="RiemannInvariant" VALUE="0" />
                 <D VAR="rhou" USERDEFINEDTYPE="RiemannInvariant" VALUE="0" />
                 <D VAR="rhov" USERDEFINEDTYPE="RiemannInvariant" VALUE="0" />
                 <D VAR="E"    USERDEFINEDTYPE="RiemannInvariant" VALUE="0" />
             </REGION>
-            <!--REGION REF="1">
-             <D VAR="rho"  VALUE="rhoInf" />
-             <D VAR="rhou" VALUE="rhoInf * uInf" />
-             <D VAR="rhov" VALUE="rhoInf * vInf" />
-             <D VAR="E"    VALUE="pInf / (Gamma - 1) +
-             0.5 * rhoInf * (uInf * uInf + vInf * vInf)" />
-             </REGION-->
+
             <REGION REF="1">
                 <D VAR="rho"  USERDEFINEDTYPE="RiemannInvariant" VALUE="0" />
                 <D VAR="rhou" USERDEFINEDTYPE="RiemannInvariant" VALUE="0" />
                 <D VAR="rhov" USERDEFINEDTYPE="RiemannInvariant" VALUE="0" />
                 <D VAR="E"    USERDEFINEDTYPE="RiemannInvariant" VALUE="0" />
             </REGION>
-            <!--REGION REF="2">
-             <D VAR="rho"  VALUE="rhoInf" />
-             <D VAR="rhou" VALUE="rhoInf * uInf" />
-             <D VAR="rhov" VALUE="rhoInf * vInf" />
-             <D VAR="E"    VALUE="pInf / (Gamma - 1) + 0.5 * rhoInf * (uInf * uInf + vInf * vInf)" />
-             </REGION-->
+
             <REGION REF="2">
                 <D VAR="rho"  USERDEFINEDTYPE="RiemannInvariant" VALUE="0" />
                 <D VAR="rhou" USERDEFINEDTYPE="RiemannInvariant" VALUE="0" />
                 <D VAR="rhov" USERDEFINEDTYPE="RiemannInvariant" VALUE="0" />
                 <D VAR="E"    USERDEFINEDTYPE="RiemannInvariant" VALUE="0" />
             </REGION>
-            <!--REGION REF="3">
-             <D VAR="rho"  VALUE="rhoInf" />
-             <D VAR="rhou" VALUE="rhoInf * uInf" />
-             <D VAR="rhov" VALUE="rhoInf * vInf" />
-             <D VAR="E"    VALUE="pInf / (Gamma - 1) + 0.5 * rhoInf * (uInf * uInf + vInf * vInf)" />
-             </REGION-->
+
             <REGION REF="3">
                 <D VAR="rho"  USERDEFINEDTYPE="RiemannInvariant" VALUE="0" />
                 <D VAR="rhou" USERDEFINEDTYPE="RiemannInvariant" VALUE="0" />
@@ -11941,14 +11918,6 @@
                 <D VAR="E"    USERDEFINEDTYPE="RiemannInvariant" VALUE="0" />
             </REGION>
         </BOUNDARYCONDITIONS>
-        
-        <!--FUNCTION NAME="InitialConditions">
-            <E VAR="rho"    VALUE="rhoInf*(1+0.01*exp(-(x^2 + y^2)/(2*0.002^2)))"/>
-            <E VAR="rhou"   VALUE="rhoInf * uInf"   />
-            <E VAR="rhov"   VALUE="rhoInf * vInf"   />
-            <E VAR="E"      VALUE="(pInf / (Gamma - 1))*(1+0.01*exp(-(x^2 + y^2)/(2*0.002^2))) + 
-            0.5 * rhoInf * (uInf * uInf + vInf * vInf)"/>         
-        </FUNCTION-->
         
         <FUNCTION NAME="InitialConditions">
             <F VAR="rho,rhou,rhov,E"    FILE="Perturbation_M05_circle_CBC_back_par.rst"/>

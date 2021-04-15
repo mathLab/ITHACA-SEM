@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // For more information, please see: http://www.nektar.info
-//
+//`
 // The MIT License
 //
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
@@ -35,8 +35,6 @@
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
-
-#include <boost/test/auto_unit_test.hpp>
 
 namespace Nektar
 {

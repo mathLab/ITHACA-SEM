@@ -1053,7 +1053,6 @@ namespace Nektar
                         p = 1;
                     }
                 }
-
                 // Back face (vertices 2,3,6,7)
                 if( localVertexId % 4 > 1 )
                 {

@@ -36,7 +36,6 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_NONLINSYS_NEWTON_H
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_NONLINSYS_NEWTON_H
 
-#include <LibUtilities/LinearAlgebra/NekLinSysIter.h>
 #include <LibUtilities/LinearAlgebra/NekNonlinSys.h>
 
 namespace Nektar
@@ -54,11 +53,12 @@ public:
 
     LIB_UTILITIES_EXPORT static NekNonlinSysSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen)
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+        const NekSysKey &pKey)
     {
         NekNonlinSysSharedPtr p =
             MemoryManager<NekNonlinSysNewton>::AllocateSharedPtr(pSession,
-                                                                 vComm, nDimen);
+                vComm, nDimen, pKey);
         p->InitObject();
         return p;
     }
@@ -66,29 +66,41 @@ public:
     static std::string className;
     LIB_UTILITIES_EXPORT NekNonlinSysNewton(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nscale);
+        const LibUtilities::CommSharedPtr &vComm, const int nscale,
+        const NekSysKey &pKey);
     LIB_UTILITIES_EXPORT ~NekNonlinSysNewton();
 
 protected:
-    NekLinSysIterSharedPtr m_linsol;
 
-    NekDouble m_NewtonIterTolRelativeL2;
-    NekDouble m_LinSysRelativeTolInNewton;
     NekDouble m_SysResNorm0;
     NekDouble m_SysResNorm;
 
-    std::string m_LinSysIterSovlerType;
+    int m_InexactNewtonForcing = 0;
+    NekDouble   m_forcingGamma  = 1.0;
+    NekDouble   m_forcingAlpha = 0.5 * (1.0 + sqrt(5));
 
     virtual void v_InitObject();
 
-    virtual int v_SolveSystem(const int nGlobal,
-                              const Array<OneD, const NekDouble> &pInput,
-                              Array<OneD, NekDouble> &pOutput, const int nDir,
-                              const NekDouble tol, const NekDouble factor);
+    virtual int v_SolveSystem(
+        const int nGlobal,
+        const Array<OneD, const NekDouble> &pInput,
+        Array<OneD, NekDouble> &pOutput, const int nDir,
+        const NekDouble tol, const NekDouble factor);
 
     virtual bool v_ConvergenceCheck(
         const int nIteration, const Array<OneD, const NekDouble> &Residual,
         const NekDouble tol);
+    void CalcInexactNewtonForcing(
+        const int       &k,
+        NekDouble       &resnormOld,
+        const NekDouble &resnorm,
+        NekDouble       &forcing);
+
+    virtual void v_SetupNekNonlinSystem(
+        const int nGlobal, const Array<OneD, const NekDouble> &pInput,
+        const Array<OneD, const NekDouble> &pSource,
+        const int nDir);
+
 
 private:
 };

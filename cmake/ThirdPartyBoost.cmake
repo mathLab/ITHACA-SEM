@@ -201,7 +201,7 @@ IF (THIRDPARTY_BUILD_BOOST)
 
     # If building ThirdParty zlib, force zlib build before boost
     IF (THIRDPARTY_BUILD_ZLIB)
-        ADD_DEPENDENCIES(boost zlib-1.2.7)
+        ADD_DEPENDENCIES(boost zlib-1.2.9)
     ENDIF(THIRDPARTY_BUILD_ZLIB)
 
     # Set up CMake variables

@@ -17,6 +17,9 @@ v5.1.0
 - Fix compilation errors when CWIPI interface enabled (!1207)
 - Fix distance in ContainsPoint and GetLocCoords (!1200)
 - Fix compiler warning of maybe-uninitialized elType in InputStar (!1217)
+- Add vectorisation of most element on basix operations (!1158)
+- Limit MPI methods based on core count (!1208)
+- Split out IProduct.cpp and IProductWRTDerivBase.cpp in order to avoid long time compilations (!1228)
 
 **FieldConvert**
 - Refactored time integration code using factory pattern (!1034)
@@ -27,6 +30,7 @@ v5.1.0
   for parallel DG simulations (!1112)
   num_elements with size() (!1127, !1137, !1141)
 - Fix to interppointsdatatofld to allow for mpi processing of large files (!1191)
+- Fix the logic of C0Projection:helmsmoothing (!1220)
 
 **FieldConvert**:
 - Add phifile module to compute shape functions for the SPM solver (!1065)
@@ -43,6 +47,9 @@ v5.1.0
   (!1065)
 - Add new filter AeroForcesSPM to compute aerodynamic forces in immersed
   boundaries (!1065)
+
+**CompressibleFlowSolver**
+- Added vectorisation of the Interior Penalty method (!!223)
 
 **PulseWaveSolver**
 - Added viscoelasticity (!1138)
@@ -66,11 +73,16 @@ v5.1.0
 - Toggle build type (!1135)
 - Updated minimum required CMake version to 3.5.1 (!1152)
 - Updated third party Boost version 1.71 (!1152)
+- Updated third party OCE version to 0.18.3 (!1234)
 
 v5.0.2
 ------
 **CI**
 - Add Debian Bullseye to CI system (!1181)
+
+**BuildSystem**
+- Updated third party zlib version to 1.2.9 to resolve OCE source build issue (!1227)
+- Adding SolverUtils as a core library that is built by default (!1240)
 
 v5.0.1
 ------

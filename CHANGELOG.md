@@ -78,6 +78,7 @@ v5.0.2
 
 **BuildSystem**
 - Updated third party zlib version to 1.2.9 to resolve OCE source build issue (!1227)
+- Adding SolverUtils as a core library that is built by default (!1240)
 
 v5.0.1
 ------

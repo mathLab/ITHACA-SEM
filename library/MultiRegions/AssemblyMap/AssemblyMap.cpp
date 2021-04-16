@@ -88,6 +88,7 @@ namespace Nektar
             m_solnType(eNoSolnType),
             m_bndSystemBandWidth(0),
             m_successiveRHS(0),
+            m_linSysIterSolver("ConjugateGradient"),
             m_gsh(0),
             m_bndGsh(0)
         {
@@ -105,6 +106,7 @@ namespace Nektar
             m_numGlobalDirBndCoeffs(0),
             m_bndSystemBandWidth(0),
             m_successiveRHS(0),
+            m_linSysIterSolver("ConjugateGradient"),
             m_gsh(0),
             m_bndGsh(0)
         {
@@ -130,7 +132,7 @@ namespace Nektar
                 m_preconType = pSession->GetValueAsEnum<PreconditionerType>(
                                                     "Preconditioner", precon);
             }
-            
+
             if(pSession->DefinesGlobalSysSolnInfo(variable,
                                                   "IterativeSolverTolerance"))
             {
@@ -173,6 +175,19 @@ namespace Nektar
                                         m_successiveRHS,0);
             }
 
+            if (pSession->DefinesGlobalSysSolnInfo(variable, "LinSysIterSolver"))
+            {
+                m_linSysIterSolver = pSession->GetGlobalSysSolnInfo(
+                                          variable,"LinSysIterSolver");
+            }
+            else if (pSession->DefinesSolverInfo("LinSysIterSolver"))
+            {
+                m_linSysIterSolver = pSession->GetSolverInfo("LinSysIterSolver");
+            }
+            else
+            {
+                m_linSysIterSolver = "ConjugateGradient";
+            }
         }
 
         /**
@@ -190,6 +205,7 @@ namespace Nektar
             m_maxIterations(oldLevelMap->m_maxIterations),
             m_iterativeTolerance(oldLevelMap->m_iterativeTolerance),
             m_successiveRHS(oldLevelMap->m_successiveRHS),
+            m_linSysIterSolver(oldLevelMap->m_linSysIterSolver),
             m_gsh(oldLevelMap->m_gsh),
             m_bndGsh(oldLevelMap->m_bndGsh),
             m_lowestStaticCondLevel(oldLevelMap->m_lowestStaticCondLevel)
@@ -1402,6 +1418,11 @@ namespace Nektar
         int AssemblyMap::GetSuccessiveRHS() const
         {
             return m_successiveRHS;
+        }
+
+        std::string AssemblyMap::GetLinSysIterSolver() const
+        {
+            return m_linSysIterSolver;
         }
 
         void AssemblyMap::GlobalToLocalBndWithoutSign(

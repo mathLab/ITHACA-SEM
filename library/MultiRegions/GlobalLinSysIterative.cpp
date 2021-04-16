@@ -40,6 +40,19 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        std::string GlobalLinSysIterative::IteratSolverlookupIds[2] =
+        {
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "LinSysIterSolver", "ConjugateGradient", MultiRegions::
+                eConjugateGradient),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "LinSysIterSolver", "GMRES", MultiRegions::eGMRES),
+        };
+
+        std::string GlobalLinSysIterative::IteratSolverdef =
+            LibUtilities::SessionReader::RegisterDefaultSolverInfo(
+                "LinSysIterSolver", "ConjugateGradient");
+
         /**
          * @class GlobalLinSysIterative
          *
@@ -62,20 +75,19 @@ namespace Nektar
         {
             m_tolerance = pLocToGloMap->GetIterativeTolerance();
             m_maxiter   = pLocToGloMap->GetMaxIterations();
+            m_linSysIterSolver = pLocToGloMap->GetLinSysIterSolver();
 
             LibUtilities::CommSharedPtr vComm = m_expList.lock()->GetComm()->GetRowComm();
             m_root    = (vComm->GetRank())? false : true;
 
-            int successiveRHS;
+            m_numSuccessiveRHS = pLocToGloMap->GetSuccessiveRHS();
+            m_isAconjugate = m_numSuccessiveRHS > 0;
+            m_numSuccessiveRHS = std::abs(m_numSuccessiveRHS);
+            m_useProjection = m_numSuccessiveRHS > 0;
 
-            if((successiveRHS = pLocToGloMap->GetSuccessiveRHS()))
+            if(m_isAconjugate && 0 == m_linSysIterSolver.compare("GMRES"))
             {
-                m_prevLinSol.set_capacity(successiveRHS);
-                m_useProjection = true;
-            }
-            else
-            {
-                m_useProjection = false;
+                WARNINGL0(false, "To use A-conjugate projection, the matrix should be symmetric positive definite.");
             }
         }
 
@@ -93,54 +105,79 @@ namespace Nektar
                     const AssemblyMapSharedPtr &plocToGloMap,
                     const int nDir)
         {
+            if (!m_linsol)
+            {
+                LibUtilities::CommSharedPtr v_Comm = 
+                m_expList.lock()->GetComm()->GetRowComm();
+                LibUtilities::SessionReaderSharedPtr pSession =
+                m_expList.lock()->GetSession();
+                
+                // Check such a module exists for this equation.
+                ASSERTL0(LibUtilities::GetNekLinSysIterFactory().
+                ModuleExists(m_linSysIterSolver),
+                    "NekLinSysIter '" + m_linSysIterSolver +
+                    "' is not defined.\n");
+                m_linsol = LibUtilities::GetNekLinSysIterFactory().
+                           CreateInstance(m_linSysIterSolver, pSession,
+                            v_Comm, nGlobal - nDir, LibUtilities::NekSysKey());
+
+                m_NekSysOp.DefineNekSysLhsEval(
+                    &GlobalLinSysIterative::DoMatrixMultiplyFlag, this);
+                m_NekSysOp.DefineNekSysPrecon(
+                    &GlobalLinSysIterative::DoPreconditionerFlag, this);
+                m_linsol->SetSysOperators(m_NekSysOp);
+                    v_UniqueMap();
+                m_linsol->setUniversalUniqueMap(m_map);
+            }
+            
+            if (!m_precon)
+            {
+                m_precon = CreatePrecon(plocToGloMap);
+                m_precon->BuildPreconditioner();
+            }
+
+            m_linsol->setRhsMagnitude(m_rhs_magnitude);
             if (m_useProjection)
             {
-                DoAconjugateProjection(nGlobal, pInput, pOutput, plocToGloMap, nDir);
+                DoProjection(nGlobal, pInput, pOutput, nDir, m_tolerance, m_isAconjugate);
             }
             else
             {
-                // applying plain Conjugate Gradient
-                DoConjugateGradient(nGlobal, pInput, pOutput, plocToGloMap, nDir);
+                m_linsol->SolveSystem(nGlobal, pInput, pOutput, nDir, m_tolerance);
             }
         }
 
-
         /**
-         * This method implements A-conjugate projection technique
+         * This method implements projection techniques
          * in order to speed up successive linear solves with
          * right-hand sides arising from time-dependent discretisations.
          * (P.F.Fischer, Comput. Methods Appl. Mech. Engrg. 163, 1998)
          */
-        void GlobalLinSysIterative::DoAconjugateProjection(
+        void GlobalLinSysIterative::DoProjection(
                     const int nGlobal,
                     const Array<OneD,const NekDouble> &pInput,
                           Array<OneD,      NekDouble> &pOutput,
-                    const AssemblyMapSharedPtr &plocToGloMap,
-                    const int nDir)
+                    const int nDir,
+                    const NekDouble tol,
+                    const bool isAconjugate)
         {
-            // Get the communicator for performing data exchanges
-            LibUtilities::CommSharedPtr vComm
-                                = m_expList.lock()->GetComm()->GetRowComm();
-
-            // Get vector sizes
-            int nNonDir = nGlobal - nDir;
-            Array<OneD, NekDouble> tmp;
-
+            int numIterations = 0;
             if (0 == m_numPrevSols)
             {
-                // no previous solutions found, call CG
-
-                DoConjugateGradient(nGlobal, pInput, pOutput, plocToGloMap, nDir);
-
-                UpdateKnownSolutions(nGlobal, pOutput, nDir);
+                // no previous solutions found
+                numIterations = m_linsol->SolveSystem(nGlobal, pInput, pOutput, nDir, tol);
             }
             else
             {
-                // Create NekVector wrappers for linear algebra operations
-                NekVector<NekDouble> b     (nNonDir, pInput  + nDir, eWrapper);
-                NekVector<NekDouble> x     (nNonDir, tmp = pOutput + nDir, eWrapper);
+                // Get the communicator for performing data exchanges
+                LibUtilities::CommSharedPtr vComm
+                    = m_expList.lock()->GetComm()->GetRowComm();
+
+                // Get vector sizes
+                int nNonDir = nGlobal - nDir;
 
                 // check the input vector (rhs) is not zero
+                Array<OneD, NekDouble> tmp;
 
                 NekDouble rhsNorm = Vmath::Dot2(nNonDir,
                                                 pInput + nDir,
@@ -149,13 +186,22 @@ namespace Nektar
 
                 vComm->AllReduce(rhsNorm, Nektar::LibUtilities::ReduceSum);
 
-                if (rhsNorm < NekConstants::kNekZeroTol)
+                if (rhsNorm < tol * tol * m_rhs_magnitude)
                 {
-                    Array<OneD, NekDouble> tmp = pOutput+nDir;
-                    Vmath::Zero(nNonDir, tmp, 1);
+                    Vmath::Zero(nNonDir, tmp = pOutput+nDir, 1);
+                    if(m_verbose && m_root)
+                    {
+                        cout << "No iterations made"
+                        << " using tolerance of " << tol
+                        << " (error = " << sqrt(rhsNorm / m_rhs_magnitude)
+                        << ", rhs_mag = " << sqrt(m_rhs_magnitude) << ")" << endl;
+                    }
                     return;
                 }
 
+                // Create NekVector wrappers for linear algebra operations
+                NekVector<NekDouble> b     (nNonDir, pInput  + nDir, eWrapper);
+                NekVector<NekDouble> x     (nNonDir, tmp = pOutput + nDir, eWrapper);
                 // Allocate array storage
                 Array<OneD, NekDouble> px_s       (nGlobal, 0.0);
                 Array<OneD, NekDouble> pb_s       (nGlobal, 0.0);
@@ -167,28 +213,31 @@ namespace Nektar
                 NekVector<NekDouble> tmpAx (nNonDir, tmp = tmpAx_s + nDir, eWrapper);
                 NekVector<NekDouble> tmpx  (nNonDir, tmp = tmpx_s  + nDir, eWrapper);
 
-
                 // notation follows the paper cited:
                 // \alpha_i = \tilda{x_i}^T b^n
                 // projected x, px = \sum \alpha_i \tilda{x_i}
 
-                Array<OneD, NekDouble> alpha     (m_prevLinSol.size(), 0.0);
-                for (int i = 0; i < m_prevLinSol.size(); i++)
+                Array<OneD, NekDouble> alpha(m_prevBasis.size(), 0.0);
+                Array<OneD, NekDouble> alphaback(m_prevBasis.size(), 0.0);
+                for (int i = 0; i < m_prevBasis.size(); i++)
                 {
                     alpha[i] = Vmath::Dot2(nNonDir,
-                                           m_prevLinSol[i],
+                                           m_prevBasis[i],
                                            pInput + nDir,
                                            m_map + nDir);
                 }
                 vComm->AllReduce(alpha, Nektar::LibUtilities::ReduceSum);
-
-                for (int i = 0; i < m_prevLinSol.size(); i++)
+                int n = m_prevBasis.size(), info = -1;
+                Vmath::Vcopy(m_prevBasis.size(), alpha, 1, alphaback, 1);
+                Lapack::Dsptrs('U', n, 1, m_coeffMatrixFactor.get(), m_ipivot.get(), alpha.get(), n, info);
+                if(info!=0)
                 {
-                    if (alpha[i] < NekConstants::kNekZeroTol)
-                    {
-                        continue;
-                    }
-
+                    // Dsptrs fails, only keep the latest solution
+                    int latest = ResetKnownSolutionsToLatestOne();
+                    alpha[0] = alphaback[latest];
+                }
+                for (int i = 0; i < m_prevBasis.size(); ++i)
+                {
                     NekVector<NekDouble> xi (nNonDir, m_prevLinSol[i], eWrapper);
                     px += alpha[i] * xi;
                 }
@@ -198,51 +247,51 @@ namespace Nektar
                              pInput.get() + nDir, 1,
                              pb_s.get()   + nDir, 1);
 
-                v_DoMatrixMultiply(px_s, tmpAx_s);
+                DoMatrixMultiplyFlag(px_s, tmpAx_s, false);
 
                 pb -= tmpAx;
 
+                if (m_verbose)
+                {
+                    if(m_root)
+                        cout << "SuccessiveRHS: " << m_prevBasis.size() << "-bases projection reduces L2-norm of RHS from " << std::sqrt(rhsNorm) << " to ";
+                    NekDouble tmprhsNorm = Vmath::Dot2(nNonDir,
+                                                       pb_s + nDir,
+                                                       pb_s + nDir,
+                                                       m_map + nDir);
+                    vComm->AllReduce(tmprhsNorm, Nektar::LibUtilities::ReduceSum);
+                    if(m_root)
+                        cout << std::sqrt(tmprhsNorm) << endl;
+                }
 
                 // solve the system with projected rhs
-                DoConjugateGradient(nGlobal, pb_s, tmpx_s, plocToGloMap, nDir);
-
+                numIterations = m_linsol->SolveSystem(nGlobal, pb_s, tmpx_s, nDir, tol);
 
                 // remainder solution + projection of previous solutions
                 x = tmpx + px;
-
-                // save the auxiliary solution to prev. known solutions
-                UpdateKnownSolutions(nGlobal, tmpx_s, nDir);
+            }
+            // save the auxiliary solution to prev. known solutions
+            if(numIterations)
+            {
+                UpdateKnownSolutions(nGlobal, pOutput, nDir, isAconjugate);
             }
         }
 
-
-        /**
-         * Calculating A-norm of an input vector,
-         * A-norm(x) := sqrt( < x, Ax > )
-         */
-        NekDouble GlobalLinSysIterative::CalculateAnorm(
-                                                        const int nGlobal,
-                                                        const Array<OneD,const NekDouble> &in,
-                                                        const int nDir)
+        int GlobalLinSysIterative::ResetKnownSolutionsToLatestOne()
         {
-            // Get the communicator for performing data exchanges
-            LibUtilities::CommSharedPtr vComm
-                = m_expList.lock()->GetComm()->GetRowComm();
-
-            // Get vector sizes
-            int nNonDir = nGlobal - nDir;
-
-            // Allocate array storage
-            Array<OneD, NekDouble> tmpAx_s    (nGlobal, 0.0);
-
-            v_DoMatrixMultiply(in, tmpAx_s);
-
-            NekDouble anorm_sq = Vmath::Dot2(nNonDir,
-                                             in      + nDir,
-                                             tmpAx_s + nDir,
-                                             m_map   + nDir);
-            vComm->AllReduce(anorm_sq, Nektar::LibUtilities::ReduceSum);
-            return std::sqrt(anorm_sq);
+            if(m_numPrevSols==0)
+            {
+                return -1;
+            }
+            int latest = (m_numPrevSols -1 + m_numSuccessiveRHS) % m_numSuccessiveRHS;
+            Array<OneD, NekDouble> b = m_prevBasis[latest];
+            Array<OneD, NekDouble> x = m_prevLinSol[latest];
+            m_prevBasis.clear();
+            m_prevLinSol.clear();
+            m_prevBasis.push_back(b);
+            m_prevLinSol.push_back(x);
+            m_numPrevSols = 1;
+            return latest;
         }
 
         /**
@@ -252,292 +301,184 @@ namespace Nektar
         void GlobalLinSysIterative::UpdateKnownSolutions(
                                                          const int nGlobal,
                                                          const Array<OneD,const NekDouble> &newX,
-                                                         const int nDir)
+                                                         const int nDir,
+                                                         const bool isAconjugate)
         {
             // Get vector sizes
             int nNonDir = nGlobal - nDir;
+            int insertLocation = m_numPrevSols % m_numSuccessiveRHS;
+            int fullbuffer = (m_prevBasis.size() == m_numSuccessiveRHS);
 
             // Get the communicator for performing data exchanges
             LibUtilities::CommSharedPtr vComm
                 = m_expList.lock()->GetComm()->GetRowComm();
+
+            Array<OneD, NekDouble> tmpAx_s (nGlobal, 0.0);
+            Array<OneD, NekDouble> y_s     (m_prevBasis.size() - fullbuffer, 0.0);
+            Array<OneD, NekDouble> invMy_s (y_s.size(), 0.0);
+            Array<OneD, int>       ipivot  (m_numSuccessiveRHS);
+            Array<OneD, NekDouble> tmp, newBasis;
+
+            DoMatrixMultiplyFlag(newX, tmpAx_s, false);
+
+            if(isAconjugate)
+            {
+                newBasis = newX + nDir;
+            }
+            else
+            {
+                newBasis = tmpAx_s + nDir;
+            }
 
             // Check the solution is non-zero
             NekDouble solNorm = Vmath::Dot2(nNonDir,
-                                            newX + nDir,
-                                            newX + nDir,
+                                            newBasis,
+                                            tmpAx_s + nDir,
                                             m_map + nDir);
             vComm->AllReduce(solNorm, Nektar::LibUtilities::ReduceSum);
 
-            if (solNorm < NekConstants::kNekZeroTol)
+            if (solNorm < 22.2 * NekConstants::kNekSparseNonZeroTol)
             {
                 return;
             }
 
+            // normalisation of A x
+            Vmath::Smul(nNonDir, 1.0/sqrt(solNorm),
+                        tmpAx_s + nDir, 1,
+                        tmp = tmpAx_s + nDir, 1);
 
-            // Allocate array storage
-            Array<OneD, NekDouble> tmpAx_s    (nGlobal, 0.0);
-            Array<OneD, NekDouble> px_s       (nGlobal, 0.0);
-            Array<OneD, NekDouble> tmp1, tmp2;
-
-            // Create NekVector wrappers for linear algebra operations
-            NekVector<NekDouble> px           (nNonDir, tmp1 = px_s    + nDir, eWrapper);
-            NekVector<NekDouble> tmpAx        (nNonDir, tmp2 = tmpAx_s + nDir, eWrapper);
-
-
-            // calculating \tilda{x} - sum \alpha_i\tilda{x}_i
-
-            Vmath::Vcopy(nNonDir,
-                         tmp1 = newX + nDir, 1,
-                         tmp2 = px_s + nDir, 1);
-
-            if (m_prevLinSol.size() > 0)
+            for (int i = 0; i < m_prevBasis.size(); ++i)
             {
-                v_DoMatrixMultiply(newX, tmpAx_s);
+                if(i == insertLocation) continue;
+                int skip = i > insertLocation;
+                y_s[i-skip] = Vmath::Dot2(nNonDir,
+                                         m_prevBasis[i],
+                                         tmpAx_s + nDir,
+                                         m_map + nDir);
             }
+            vComm->AllReduce(y_s, Nektar::LibUtilities::ReduceSum);
 
-            Array<OneD, NekDouble> alpha (m_prevLinSol.size(), 0.0);
-            for (int i = 0; i < m_prevLinSol.size(); i++)
+            //check if linearly dependent
+            DNekMatSharedPtr tilCoeffMatrix;
+            if(fullbuffer && m_numSuccessiveRHS>1)
             {
-                alpha[i] = Vmath::Dot2(nNonDir,
-                                       m_prevLinSol[i],
-                                       tmpAx_s + nDir,
-                                       m_map + nDir);
-            }
-            vComm->AllReduce(alpha, Nektar::LibUtilities::ReduceSum);
-
-            for (int i = 0; i < m_prevLinSol.size(); i++)
-            {
-                if (alpha[i] < NekConstants::kNekZeroTol)
+                tilCoeffMatrix = MemoryManager<DNekMat>::
+                            AllocateSharedPtr(m_numSuccessiveRHS-1,m_numSuccessiveRHS-1,0.0,eSYMMETRIC);
+                for(int i=0; i<m_numSuccessiveRHS; ++i)
                 {
-                    continue;
-                }
-
-                NekVector<NekDouble> xi (nNonDir, m_prevLinSol[i], eWrapper);
-                px -= alpha[i] * xi;
-            }
-
-
-            // Some solutions generated by CG are identical zeros, see
-            // solutions generated for Test_Tet_equitri.xml (IncNavierStokesSolver).
-            // Not going to store identically zero solutions.
-
-            NekDouble anorm = CalculateAnorm(nGlobal, px_s, nDir);
-            if (anorm < NekConstants::kNekZeroTol)
-            {
-                return;
-            }
-
-            // normalisation of new solution
-            Vmath::Smul(nNonDir, 1.0/anorm, px_s.get() + nDir, 1, px_s.get() + nDir, 1);
-
-            // updating storage with non-Dirichlet-dof part of new solution vector
-            m_prevLinSol.push_back(px_s + nDir);
-            m_numPrevSols++;
-        }
-
-
-
-        /**  
-         * Solve a global linear system using the conjugate gradient method.  
-         * We solve only for the non-Dirichlet modes. The operator is evaluated  
-         * using an auxiliary function v_DoMatrixMultiply defined by the  
-         * specific solver. Distributed math routines are used to support  
-         * parallel execution of the solver.  
-         *  
-         * The implemented algorithm uses a reduced-communication reordering of  
-         * the standard PCG method (Demmel, Heath and Vorst, 1993)  
-         *  
-         * @param       pInput      Input residual  of all DOFs.  
-         * @param       pOutput     Solution vector of all DOFs.  
-         */
-        void GlobalLinSysIterative::DoConjugateGradient(
-            const int                          nGlobal,
-            const Array<OneD,const NekDouble> &pInput,
-                  Array<OneD,      NekDouble> &pOutput,
-            const AssemblyMapSharedPtr        &plocToGloMap,
-            const int                          nDir)
-        {
-            if (!m_precon)
-            {
-                v_UniqueMap();
-                m_precon = CreatePrecon(plocToGloMap);
-                m_precon->BuildPreconditioner();
-            }
-
-            // Get the communicator for performing data exchanges
-            LibUtilities::CommSharedPtr vComm
-                = m_expList.lock()->GetComm()->GetRowComm();
-
-            // Get vector sizes
-            int nNonDir = nGlobal - nDir;
-
-            // Allocate array storage
-            Array<OneD, NekDouble> w_A    (nGlobal, 0.0);
-            Array<OneD, NekDouble> s_A    (nGlobal, 0.0);
-            Array<OneD, NekDouble> p_A    (nNonDir, 0.0);
-            Array<OneD, NekDouble> r_A    (nNonDir, 0.0);
-            Array<OneD, NekDouble> q_A    (nNonDir, 0.0);
-            Array<OneD, NekDouble> tmp;
-
-            // Create NekVector wrappers for linear algebra operations
-            NekVector<NekDouble> in (nNonDir,pInput  + nDir,      eWrapper);
-            NekVector<NekDouble> out(nNonDir,tmp = pOutput + nDir,eWrapper);
-            NekVector<NekDouble> w  (nNonDir,tmp = w_A + nDir,    eWrapper);
-            NekVector<NekDouble> s  (nNonDir,tmp = s_A + nDir,    eWrapper);
-            NekVector<NekDouble> p  (nNonDir,p_A,                 eWrapper);
-            NekVector<NekDouble> r  (nNonDir,r_A,                 eWrapper);
-            NekVector<NekDouble> q  (nNonDir,q_A,                 eWrapper);
-
-            int k;
-            NekDouble alpha, beta, rho, rho_new, mu, eps,  min_resid;
-            Array<OneD, NekDouble> vExchange(3,0.0);
-
-            // Copy initial residual from input
-            r = in;
-            // zero homogeneous out array ready for solution updates
-            // Should not be earlier in case input vector is same as
-            // output and above copy has been peformed
-            Vmath::Zero(nNonDir,tmp = pOutput + nDir,1);
-
-
-            // evaluate initial residual error for exit check
-            vExchange[2] = Vmath::Dot2(nNonDir,
-                                       r_A,
-                                       r_A,
-                                       m_map + nDir);
-
-            vComm->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
-
-            eps       = vExchange[2];
-
-            if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)
-            {
-                NekVector<NekDouble> inGlob (nGlobal, pInput, eWrapper);
-                Set_Rhs_Magnitude(inGlob);
-            }
-
-            m_totalIterations = 0;
-
-            // If input residual is less than tolerance skip solve.
-            if (eps < m_tolerance * m_tolerance * m_rhs_magnitude)
-            {
-                if (m_verbose && m_root)
-                {
-                    cout << "CG iterations made = " << m_totalIterations
-                         << " using tolerance of "  << m_tolerance
-                         << " (error = " << sqrt(eps/m_rhs_magnitude)
-                         << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")"
-                         << endl;
-                }
-                return;
-            }
-
-            m_precon->DoPreconditioner(r_A, tmp = w_A + nDir);
-
-            v_DoMatrixMultiply(w_A, s_A);
-
-            k = 0;
-
-            vExchange[0] = Vmath::Dot2(nNonDir,
-                                       r_A,
-                                       w_A + nDir,
-                                       m_map + nDir);
-
-            vExchange[1] = Vmath::Dot2(nNonDir,
-                                       s_A + nDir,
-                                       w_A + nDir,
-                                       m_map + nDir);
-
-            vComm->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
-
-            rho               = vExchange[0];
-            mu                = vExchange[1];
-            min_resid         = m_rhs_magnitude;
-            beta              = 0.0;
-            alpha             = rho/mu;
-            m_totalIterations = 1;
-
-            // Continue until convergence
-            while (true)
-            {
-
-                if(k >= m_maxiter)
-                {
-                    if (m_root)
+                    if(i == insertLocation) continue;
+                    int iskip = i >  insertLocation;
+                    for(int j=i; j<m_numSuccessiveRHS; ++j)
                     {
-                        cout << "CG iterations made = " << m_totalIterations
-                             << " using tolerance of "  << m_tolerance
-                             << " (error = " << sqrt(eps/m_rhs_magnitude)
-                             << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")"
-                             << endl;
+                        if(j == insertLocation) continue;
+                        int jskip = j >  insertLocation;
+                        tilCoeffMatrix->SetValue(i-iskip, j-jskip, m_coeffMatrix->GetValue(i, j));
                     }
-                    ROOTONLY_NEKERROR(ErrorUtil::efatal,
-                                      "Exceeded maximum number of iterations");
                 }
-
-                // Compute new search direction p_k, q_k
-                Vmath::Svtvp(nNonDir, beta, &p_A[0], 1, &w_A[nDir], 1, &p_A[0], 1);
-                Vmath::Svtvp(nNonDir, beta, &q_A[0], 1, &s_A[nDir], 1, &q_A[0], 1);
-
-                // Update solution x_{k+1}
-                Vmath::Svtvp(nNonDir, alpha, &p_A[0], 1, &pOutput[nDir], 1, &pOutput[nDir], 1);
-
-                // Update residual vector r_{k+1}
-                Vmath::Svtvp(nNonDir, -alpha, &q_A[0], 1, &r_A[0], 1, &r_A[0], 1);
-
-                // Apply preconditioner
-                m_precon->DoPreconditioner(r_A, tmp = w_A + nDir);
-
-                // Perform the method-specific matrix-vector multiply operation.
-                v_DoMatrixMultiply(w_A, s_A);
-
-                // <r_{k+1}, w_{k+1}>
-                vExchange[0] = Vmath::Dot2(nNonDir,
-                                           r_A,
-                                           w_A + nDir,
-                                           m_map + nDir);
-                // <s_{k+1}, w_{k+1}>
-                vExchange[1] = Vmath::Dot2(nNonDir,
-                                           s_A + nDir,
-                                           w_A + nDir,
-                                           m_map + nDir);
-
-                // <r_{k+1}, r_{k+1}>
-                vExchange[2] = Vmath::Dot2(nNonDir,
-                                           r_A,
-                                           r_A,
-                                           m_map + nDir);
-
-                // Perform inner-product exchanges
-                vComm->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
-
-                rho_new = vExchange[0];
-                mu      = vExchange[1];
-                eps     = vExchange[2];
-
-                m_totalIterations++;
-
-                // test if norm is within tolerance
-                if (eps < m_tolerance * m_tolerance * m_rhs_magnitude)
-                {
-                    if (m_verbose && m_root)
-                    {
-                        cout << "CG iterations made = " << m_totalIterations
-                             << " using tolerance of "  << m_tolerance
-                             << " (error = " << sqrt(eps/m_rhs_magnitude)
-                             << ", rhs_mag = " << sqrt(m_rhs_magnitude) <<  ")"
-                             << endl;
-                    }
-                    break;
-                }
-                min_resid = min(min_resid, eps);
-
-                // Compute search direction and solution coefficients
-                beta  = rho_new/rho;
-                alpha = rho_new/(mu - rho_new*beta/alpha);
-                rho   = rho_new;
-                k++;
             }
+            else if(!fullbuffer && m_prevBasis.size())
+            {
+                tilCoeffMatrix = MemoryManager<DNekMat>::AllocateSharedPtr(m_prevBasis.size(),m_prevBasis.size(),0.0,eSYMMETRIC);
+                Vmath::Vcopy(tilCoeffMatrix->GetStorageSize(), m_coeffMatrix->GetPtr(), 1, tilCoeffMatrix->GetPtr(), 1);
+            }
+
+            int n, info1 = 0, info2 = 0, info3 = 0;
+            if(y_s.size())
+            {
+                n = tilCoeffMatrix->GetRows();
+                Array<OneD, NekDouble> tilCoeffMatrixFactor(tilCoeffMatrix->GetStorageSize());
+                Vmath::Vcopy(tilCoeffMatrix->GetStorageSize(), tilCoeffMatrix->GetPtr(), 1, tilCoeffMatrixFactor, 1);
+                Lapack::Dsptrf('U', n, tilCoeffMatrixFactor.get(), ipivot.get(), info1);
+                if(info1==0)
+                {
+                    Vmath::Vcopy(n, y_s, 1, invMy_s, 1);
+                    Lapack::Dsptrs('U', n, 1, tilCoeffMatrixFactor.get(), ipivot.get(), invMy_s.get(), n, info2);
+                }
+            }
+            if(info1 || info2)
+            {
+                int latest = ResetKnownSolutionsToLatestOne();
+                y_s[0]    = y_s[latest - (latest > insertLocation)];
+                invMy_s[0]  = y_s[0];
+                insertLocation = m_numPrevSols % m_numSuccessiveRHS;
+                fullbuffer = (m_prevBasis.size() == m_numSuccessiveRHS);
+            }
+            NekDouble residual = 1.;
+            NekDouble epsilon = 10. * NekConstants::kNekZeroTol;
+            for (int i = 0; i < m_prevBasis.size()-fullbuffer; i++)
+            {
+                residual  -= y_s[i] * invMy_s[i];
+            }
+            if(m_verbose && m_root) cout << "SuccessiveRHS: residual " << residual;
+            if (residual < epsilon)
+            {
+                if(m_verbose && m_root) cout << " < " << epsilon << ", reject" << endl;
+                return;
+            }
+
+            //calculate new coefficient matrix and its factor
+            DNekMatSharedPtr newCoeffMatrix;
+            if(fullbuffer)
+            {
+                newCoeffMatrix = MemoryManager<DNekMat>::AllocateSharedPtr(m_numSuccessiveRHS,m_numSuccessiveRHS,0.0,eSYMMETRIC);
+                Vmath::Vcopy(m_coeffMatrix->GetStorageSize(), m_coeffMatrix->GetPtr(), 1, newCoeffMatrix->GetPtr(), 1);
+                newCoeffMatrix->SetValue(insertLocation, insertLocation, 1.);
+                for(int i=0; i<m_numSuccessiveRHS; ++i)
+                {
+                    if(i == insertLocation) continue;
+                    int iskip = i >  insertLocation;
+                    newCoeffMatrix->SetValue(insertLocation, i, y_s[i-iskip]);
+                }
+            }
+            else
+            {
+                newCoeffMatrix = MemoryManager<DNekMat>::AllocateSharedPtr(m_prevBasis.size()+1,m_prevBasis.size()+1,0.0,eSYMMETRIC);
+                newCoeffMatrix->SetValue(insertLocation, insertLocation, 1.);
+                for(int i=0; i<m_prevBasis.size(); ++i)
+                {
+                    newCoeffMatrix->SetValue(insertLocation, i, y_s[i]);
+                    for(int j=i; j<m_prevBasis.size(); ++j)
+                    {
+                        newCoeffMatrix->SetValue(i, j, m_coeffMatrix->GetValue(i, j));
+                    }
+                }
+            }
+            n = newCoeffMatrix->GetRows();
+            Array<OneD, NekDouble> coeffMatrixFactor(newCoeffMatrix->GetStorageSize());
+            Vmath::Vcopy(newCoeffMatrix->GetStorageSize(), newCoeffMatrix->GetPtr(), 1, coeffMatrixFactor, 1);
+            Lapack::Dsptrf('U', n, coeffMatrixFactor.get(), ipivot.get(), info3);
+            if(info3)
+            {
+                if(m_verbose && m_root) cout << " >= " << epsilon << ", reject (Dsptrf fails)" << endl;
+                return;
+            }
+            if(m_verbose && m_root) cout << " >= " << epsilon << ", accept" << endl;
+
+            //if success, update basis, rhs, coefficient matrix, and its factor
+            if(m_prevBasis.size() < m_numSuccessiveRHS)
+            {
+                m_prevBasis.push_back(tmp = tmpAx_s + nDir);
+                if(isAconjugate)
+                {
+                    m_prevLinSol.push_back(tmp);
+                }
+                else
+                {
+                    Array<OneD, NekDouble> solution(nNonDir, 0.0);
+                    m_prevLinSol.push_back(solution);
+                }
+            }
+            Vmath::Smul(nNonDir, 1./sqrt(solNorm),
+                        tmp = newX + nDir, 1,
+                        m_prevLinSol[insertLocation], 1);
+            if(!isAconjugate)
+            {
+                m_prevBasis[insertLocation] = tmpAx_s + nDir;
+            }
+            m_coeffMatrix = newCoeffMatrix;
+            m_coeffMatrixFactor = coeffMatrixFactor;
+            m_ipivot = ipivot;
+            ++m_numPrevSols;
         }
 
         void GlobalLinSysIterative::Set_Rhs_Magnitude(

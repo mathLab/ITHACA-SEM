@@ -469,8 +469,10 @@ void AcousticSystem::v_WhiteNoiseBC(
  *
  * @return       Standard velocity field.
  */
-Array<OneD, NekDouble> AcousticSystem::v_GetMaxStdVelocity(void)
+Array<OneD, NekDouble> AcousticSystem::v_GetMaxStdVelocity(
+    const NekDouble SpeedSoundFactor)
 {
+    boost::ignore_unused(SpeedSoundFactor);
     int nElm = m_fields[0]->GetExpSize();
 
     Array<OneD, NekDouble> stdV(nElm, 0.0);

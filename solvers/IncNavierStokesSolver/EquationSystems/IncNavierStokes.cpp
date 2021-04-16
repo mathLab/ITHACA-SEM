@@ -784,8 +784,10 @@ namespace Nektar
     /**
      *
      */
-    Array<OneD, NekDouble> IncNavierStokes::v_GetMaxStdVelocity(void)
+    Array<OneD, NekDouble> IncNavierStokes::v_GetMaxStdVelocity(
+        const NekDouble SpeedSoundFactor)
     {
+        boost::ignore_unused(SpeedSoundFactor);
         int nvel  = m_velocity.size();
         int nelmt = m_fields[0]->GetExpSize();
 
@@ -856,7 +858,7 @@ namespace Nektar
     bool IncNavierStokes::v_PreIntegrate(int step)
     {
         m_extrapolation->SubStepSaveFields(step);
-        m_extrapolation->SubStepAdvance(m_intSoln,step,m_time);
+        m_extrapolation->SubStepAdvance(step,m_time);
         SetBoundaryConditions(m_time+m_timestep);
         return false;
     }

@@ -100,7 +100,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >        &pBwd);
 
-        virtual void v_DiffuseCalculateDerivative(
+        virtual void v_DiffuseCalcDerivative(
             const Array<OneD, MultiRegions::ExpListSharedPtr>&fields,
             const Array<OneD, Array<OneD, NekDouble> >       &inarray,
             TensorOfArray3D<NekDouble>                       &qfields,
@@ -163,6 +163,11 @@ namespace Nektar
         {
             return m_viscTensor;
         }
+
+        virtual void v_GetPrimVar(
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const Array<OneD, Array<OneD, NekDouble>>         &inarray,
+              Array<OneD, Array<OneD, NekDouble>>         &primVar);
     };
 
     typedef std::shared_ptr<DiffusionLDGNS> DiffusionLDGNSSharedPtr;

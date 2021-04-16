@@ -92,13 +92,13 @@ bool AdvectionSystem::v_PostIntegrate(int step)
             }
             std::cout << cfl << " (in elmt " << elmtid << ")" << std::endl;
         }
-        
+
         // At each timestep, if cflWriteFld is set check if cfl is above treshold
         if(m_cflWriteFld>0 && cfl >= m_cflWriteFld && step >= m_cflWriteFldWaitSteps)
         {
             std::string outname =  m_sessionName +  "_CFLWriteFld";
             WriteFld(outname + ".fld");
-            m_cflWriteFld = 0;            
+            m_cflWriteFld = 0;
         }
     }
 
@@ -108,7 +108,7 @@ bool AdvectionSystem::v_PostIntegrate(int step)
 /**
  *
  */
-Array<OneD, NekDouble>  AdvectionSystem::GetElmtCFLVals(void)
+Array<OneD, NekDouble>  AdvectionSystem::GetElmtCFLVals(const bool FlagAcousticCFL)
 {
     int nelmt = m_fields[0]->GetExpSize();
 
@@ -117,7 +117,14 @@ Array<OneD, NekDouble>  AdvectionSystem::GetElmtCFLVals(void)
     const NekDouble cLambda = 0.2; // Spencer book pag. 317
 
     Array<OneD, NekDouble> stdVelocity(nelmt, 0.0);
-    stdVelocity = v_GetMaxStdVelocity();
+    if(FlagAcousticCFL)
+    {
+        stdVelocity = v_GetMaxStdVelocity();
+    }
+    else
+    {
+        stdVelocity = v_GetMaxStdVelocity(0.0);
+    }
 
     Array<OneD, NekDouble> cfl(nelmt, 0.0);
     NekDouble order;

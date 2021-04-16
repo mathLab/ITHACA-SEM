@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+
+    <CONDITIONS>
+        <SOLVERINFO>
+            <I PROPERTY="LinSysIterSolver"   VALUE="GMRES"/>
+        </SOLVERINFO>
+        <PARAMETERS>
+            <P> LinSysMaxStorage = 4 </P>
+        </PARAMETERS>
+        <VARIABLES>
+            <V ID="0"> u </V>
+        </VARIABLES>
+
+    </CONDITIONS>
+</NEKTAR>

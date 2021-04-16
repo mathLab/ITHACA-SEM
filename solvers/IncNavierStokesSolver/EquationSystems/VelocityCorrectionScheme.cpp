@@ -877,7 +877,7 @@ namespace Nektar
         //set up varcoeff kernel if PowerKernel or DG is specified
         if(m_useSpecVanVisc)
         {
-            Array<OneD, Array<OneD, NekDouble> > SVVVelFields = NullNekDoubleArrayofArray;
+            Array<OneD, Array<OneD, NekDouble> > SVVVelFields = NullNekDoubleArrayOfArray;
             if(m_session->DefinesFunction("SVVVelocityMagnitude"))
             {
                 if (m_comm->GetRank() == 0)
@@ -1001,7 +1001,7 @@ namespace Nektar
 
         Vmath::Fill(nel,velmag,diffcoeff,1);
 
-        if(vel != NullNekDoubleArrayofArray)
+        if(vel != NullNekDoubleArrayOfArray)
         {
             Array<OneD, NekDouble> Velmag(phystot);
             nvel = vel.size();

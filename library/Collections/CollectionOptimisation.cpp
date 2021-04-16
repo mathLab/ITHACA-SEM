@@ -53,7 +53,6 @@ CollectionOptimisation::CollectionOptimisation(
         LibUtilities::SessionReaderSharedPtr pSession,
         ImplementationType defaultType)
 {
-    int i;
     map<ElmtOrder, ImplementationType> defaults, defaultsPhysDeriv;
     bool verbose  = (pSession.get()) &&
                     (pSession->DefinesCmdLineArgument("verbose")) &&
@@ -102,7 +101,7 @@ CollectionOptimisation::CollectionOptimisation(
     }
 
     map<string, OperatorType> opTypes;
-    for (i = 0; i < SIZE_OperatorType; ++i)
+    for (int i = 0; i < SIZE_OperatorType; ++i)
     {
         opTypes[OperatorTypeMap[i]] = (OperatorType)i;
         switch ((OperatorType)i)
@@ -116,7 +115,7 @@ CollectionOptimisation::CollectionOptimisation(
     }
 
     map<string, ImplementationType> impTypes;
-    for (i = 0; i < SIZE_ImplementationType; ++i)
+    for (int i = 0; i < SIZE_ImplementationType; ++i)
     {
         impTypes[ImplementationTypeMap[i]] = (ImplementationType)i;
     }
@@ -149,18 +148,20 @@ CollectionOptimisation::CollectionOptimisation(
 
                 if (!m_autotune)
                 {
-                    for(i = 1; i < Collections::SIZE_ImplementationType; ++i)
+                    bool collectionFound{false};
+                    for(int i = 1; i < Collections::SIZE_ImplementationType; ++i)
                     {
                         if(boost::iequals(collinfo,
                                 Collections::ImplementationTypeMap[i]))
                         {
                             m_defaultType = (Collections::ImplementationType) i;
+                            collectionFound = true;
                             break;
                         }
                     }
 
-                    ASSERTL0(i != Collections::SIZE_ImplementationType,
-                         "Unknown default collection scheme: "+collinfo);
+                    ASSERTL0(collectionFound,
+                        "Unknown default collection scheme: "+collinfo);
 
                     defaults.clear();
                     // Override default types
@@ -169,7 +170,7 @@ CollectionOptimisation::CollectionOptimisation(
                         defaults[ElmtOrder(it2.second, -1)] = m_defaultType;
                     }
 
-                    for (i = 0; i < SIZE_OperatorType; ++i)
+                    for (int i = 0; i < SIZE_OperatorType; ++i)
                     {
                         m_global[(OperatorType)i] = defaults;
                     }

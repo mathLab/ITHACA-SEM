@@ -79,7 +79,7 @@ ProcessInterpPointDataToFld::~ProcessInterpPointDataToFld()
 
 void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
 {
-    boost::ignore_unused(vm);
+    m_f->SetUpExp(vm);
 
     int i, j;
     LibUtilities::PtsFieldSharedPtr fieldPts;
@@ -87,6 +87,16 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     ASSERTL0( m_config["frompts"].as<string>().compare("NotSet") != 0,
             "ProcessInterpPointDataToFld requires frompts parameter");
     string inFile = m_config["frompts"].as<string>().c_str();
+
+    int totpoints = m_f->m_exp[0]->GetTotPoints();
+
+
+    Array<OneD, Array<OneD, NekDouble> > intFields(3);
+    for (int i = 0; i < 3; ++i)
+    {
+        intFields[i] = Array<OneD, NekDouble>(totpoints, 0.);
+    }
+    m_f->m_exp[0]->GetCoords(intFields[0], intFields[1], intFields[2]);
 
     if (boost::filesystem::path(inFile).extension() == ".pts")
     {
@@ -100,7 +110,26 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
         LibUtilities::CsvIOSharedPtr csvIO =
             MemoryManager<LibUtilities::CsvIO>::AllocateSharedPtr(m_f->m_comm);
 
-        csvIO->Import(inFile, fieldPts);
+        LibUtilities::DomainRangeShPtr Range = MemoryManager<LibUtilities::DomainRange>::
+            AllocateSharedPtr();
+        
+        NekDouble vmax, vmin, margin = 0.1;
+        vmax = intFields[0][Vmath::Imax(totpoints, intFields[0],1)];
+        vmin = intFields[0][Vmath::Imin(totpoints, intFields[0],1)];
+        Range->m_xmax = (vmax - vmin)*margin + vmax;
+        Range->m_xmin =-(vmax - vmin)*margin + vmin;
+
+        vmax = intFields[1][Vmath::Imax(totpoints, intFields[1],1)];
+        vmin = intFields[1][Vmath::Imin(totpoints, intFields[1],1)];
+        Range->m_ymax = (vmax - vmin)*margin + vmax;
+        Range->m_ymin =-(vmax - vmin)*margin + vmin;
+
+        vmax = intFields[2][Vmath::Imax(totpoints, intFields[2],1)];
+        vmin = intFields[2][Vmath::Imin(totpoints, intFields[2],1)];
+        Range->m_zmax = (vmax - vmin)*margin + vmax;
+        Range->m_zmin =-(vmax - vmin)*margin + vmin;
+        
+        csvIO->Import(inFile, fieldPts, LibUtilities::NullFieldMetaDataMap, Range);
     }
     else
     {
@@ -120,19 +149,23 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
         m_f->m_exp[i] = m_f->AppendExpList(m_f->m_numHomogeneousDir);
     }
 
-    int totpoints = m_f->m_exp[0]->GetTotPoints();
-    Array<OneD, Array<OneD, NekDouble> > intFields(3 + nFields);
-    for (int i = 0; i < 3 + nFields; ++i)
+    Array<OneD, Array<OneD, NekDouble> > intFields1(3+nFields);
+
+    for (int i = 0; i < 3; ++i)
     {
-        intFields[i] = Array<OneD, NekDouble>(totpoints);
+        intFields1[i] = intFields[i];
     }
-    m_f->m_exp[0]->GetCoords(intFields[0], intFields[1], intFields[2]);
+
+    // Declare space for interpolated fields
+    for (int i = 3; i < 3 + nFields; ++i)
+    {
+        intFields1[i] = Array<OneD, NekDouble>(totpoints);
+    }
+
     LibUtilities::PtsFieldSharedPtr outPts =
-        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, intFields);
+        MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(3, intFields1);
 
     int coord_id = m_config["interpcoord"].as<int>();
-    cout << coord_id << endl;
-    cout << outPts->GetDim() << endl;
     ASSERTL0(coord_id <= static_cast<int>(outPts->GetDim()) - 1,
              "interpcoord is bigger than the Pts files dimension");
 

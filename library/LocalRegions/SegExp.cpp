@@ -297,7 +297,7 @@ namespace Nektar
                     {
 cout<<"nx= "<<normals[0][i]<<"  ny="<<normals[1][i]<<endl;
                     }
-                    ASSERTL0(normals!=NullNekDoubleArrayofArray,
+                    ASSERTL0(normals!=NullNekDoubleArrayOfArray,
                         "normal vectors do not exist: check if a"
                         "boundary region is defined as I ");
                     // \nabla u \cdot normal

@@ -69,9 +69,9 @@ protected:
               Array<OneD, Array<OneD, NekDouble> >        &outarray,
         const NekDouble                                   &time,
         const Array<OneD, Array<OneD, NekDouble> > &pFwd =
-                                            NullNekDoubleArrayofArray,
+                                            NullNekDoubleArrayOfArray,
         const Array<OneD, Array<OneD, NekDouble> > &pBwd =
-                                            NullNekDoubleArrayofArray);
+                                            NullNekDoubleArrayOfArray);
 };
 
 }

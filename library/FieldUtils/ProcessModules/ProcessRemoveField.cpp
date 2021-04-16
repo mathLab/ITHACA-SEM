@@ -73,6 +73,7 @@ void ProcessRemoveField::Process(po::variables_map &vm)
 
     ASSERTL0(ParseUtils::GenerateVector(fieldNames, fieldName),
              "Failed to interpret fields string");
+    m_f->SetUpExp(vm);
 
     // Remove fields specified
     for (int i = 0; i < fieldName.size(); ++i)

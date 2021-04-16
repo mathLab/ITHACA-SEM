@@ -234,10 +234,41 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> > &outarray,
             const NekDouble &time)
     {
-        boost::ignore_unused(fields);
-
         int nq = m_Forcing[0].size();
+        CalculateForcing(fields, inarray, time);
+        for (int i = 0; i < m_NumVariable; ++i)
+        {
+            Vmath::Vadd(nq, m_Forcing[i], 1,
+                        outarray[i], 1, outarray[i], 1);
+        }
+    }
 
+    void ForcingAbsorption::v_ApplyCoeff(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray,
+            const NekDouble                                   &time)
+    {
+        int ncoeff = outarray[m_NumVariable - 1].size();
+        Array<OneD, NekDouble> tmp(ncoeff, 0.0);
+        CalculateForcing(fields, inarray, time);
+
+        for (int i = 0; i < m_NumVariable; ++i)
+        {
+            fields[i]->FwdTrans(m_Forcing[i], tmp);
+            Vmath::Vadd(ncoeff, tmp, 1,
+                        outarray[i], 1, outarray[i], 1);
+        }
+    }
+
+    void ForcingAbsorption::CalculateForcing(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            const NekDouble                                   &time)
+    {
+        boost::ignore_unused(fields);
+        int nq = m_Forcing[0].size();
+       
         std::string s_FieldStr;
         Array<OneD, NekDouble> TimeScale(1);
         Array<OneD, Array<OneD, NekDouble> > RefflowScaled(m_NumVariable);
@@ -257,14 +288,12 @@ namespace SolverUtils
                 {
                     Vmath::Vcopy(nq, m_Refflow[i],1, RefflowScaled[i],1);
                 }
-
+                
 
                 Vmath::Vsub(nq, inarray[i], 1,
                             RefflowScaled[i], 1, m_Forcing[i], 1);
                 Vmath::Vmul(nq, m_Absorption[i], 1,
                             m_Forcing[i], 1, m_Forcing[i], 1);
-                Vmath::Vadd(nq, m_Forcing[i], 1,
-                            outarray[i], 1, outarray[i], 1);
             }
         }
         else
@@ -273,8 +302,6 @@ namespace SolverUtils
             {
                 Vmath::Vmul(nq, m_Absorption[i], 1,
                             inarray[i], 1, m_Forcing[i], 1);
-                Vmath::Vadd(nq, m_Forcing[i], 1,
-                            outarray[i], 1, outarray[i], 1);
             }
         }
     }

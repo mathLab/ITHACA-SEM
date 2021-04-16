@@ -985,6 +985,16 @@ namespace Nektar
                 v_LocCoordToLocCollapsed(xi,eta);
             }
 
+            /**
+             * \brief Convert local collapsed coordinates \a eta into local
+             * cartesian coordinate \a xi
+             **/
+            void LocCollapsedToLocCoord(const Array<OneD, const NekDouble>& eta,
+                                        Array<OneD, NekDouble>& xi)
+            {
+                v_LocCollapsedToLocCoord(eta,xi);
+            }
+
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients
               (const std::vector<unsigned int>  &nummodes, int &modes_offset);
 
@@ -1141,10 +1151,18 @@ namespace Nektar
                 v_IProductWRTBase_SumFac(inarray,outarray,multiplybyweights);
             }
 
+            STD_REGIONS_EXPORT void GenStdMatBwdDeriv(
+                const int dir,
+                DNekMatSharedPtr &mat)
+            {
+                v_GenStdMatBwdDeriv(dir,mat);
+            }
+
         protected:
             Array<OneD, LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
             int m_elmt_id;
             int m_ncoeffs;                                   /**< Total number of coefficients used in the expansion */
+
             LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess>
             m_stdMatrixManager;
             LibUtilities::NekManager<StdMatrixKey, DNekBlkMat, StdMatrixKey::opLess>
@@ -1291,6 +1309,14 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual NekDouble v_StdPhysEvaluate(
                                 const Array<OneD, const NekDouble> &Lcoord,
                                 const Array<OneD, const NekDouble> &physvals);
+
+            STD_REGIONS_EXPORT virtual void v_GenStdMatBwdDeriv(
+                  const int dir,
+                  DNekMatSharedPtr &mat)
+            {
+                boost::ignore_unused(dir,mat);
+                NEKERROR(ErrorUtil::efatal,"not defined");
+            }
 
             STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
@@ -1452,7 +1478,7 @@ namespace Nektar
              const int dir,
              const Array<OneD, const NekDouble>& inarray,
              Array<OneD, NekDouble> &outarray);
-            
+    
             STD_REGIONS_EXPORT virtual void  v_IProductWRTDirectionalDerivBase(
              const Array<OneD, const NekDouble>& direction,
              const Array<OneD, const NekDouble>& inarray,
@@ -1517,6 +1543,9 @@ namespace Nektar
                                         const Array<OneD, const NekDouble>& xi,
                                         Array<OneD, NekDouble>& eta);
 
+            STD_REGIONS_EXPORT virtual void v_LocCollapsedToLocCoord(
+                                        const Array<OneD, const NekDouble>& eta,
+                                        Array<OneD, NekDouble>& xi);
 
             STD_REGIONS_EXPORT virtual void v_FillMode(const int mode,
                                                   Array<OneD, NekDouble> &outarray);

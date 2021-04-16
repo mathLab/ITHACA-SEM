@@ -32,7 +32,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#ifndef NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_TIME_INTEGRATION_SCHEME_OPERATORS
+#define NEKTAR_LIB_UTILITIES_TIME_INTEGRATION_TIME_INTEGRATION_SCHEME_OPERATORS
 
 #include <string>
 
@@ -52,6 +53,13 @@ namespace Nektar
 {
 namespace LibUtilities
 {
+
+class TimeIntegrationSchemeOperators;
+
+typedef std::shared_ptr<TimeIntegrationSchemeOperators>
+    TimeIntegrationSchemeOperatorsSharedPtr;
+
+  
 /**
  * @brief Binds a set of functions for use by time integration schemes.
  */
@@ -169,3 +177,4 @@ private:
 }
 }
 
+#endif

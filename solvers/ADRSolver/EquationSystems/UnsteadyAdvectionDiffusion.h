@@ -130,8 +130,7 @@ namespace Nektar
         virtual bool v_PreIntegrate(int step);
 
         // SubsStepping methods -> Probably could be set up in separate class
-        void SubStepAdvance( const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln, 
-                             int nstep,  NekDouble time );
+        void SubStepAdvance( int nstep,  NekDouble time );
         NekDouble GetSubstepTimeStep();
         void SetUpSubSteppingTimeIntegration(
                          const LibUtilities::TimeIntegrationSchemeSharedPtr &IntegrationScheme);

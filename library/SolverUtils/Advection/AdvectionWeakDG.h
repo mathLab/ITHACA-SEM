@@ -69,9 +69,9 @@ namespace Nektar
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const NekDouble                                   &time,
                 const Array<OneD, Array<OneD, NekDouble> >
-                    &pFwd = NullNekDoubleArrayofArray,
+                    &pFwd = NullNekDoubleArrayOfArray,
                 const Array<OneD, Array<OneD, NekDouble> >
-                    &pBwd = NullNekDoubleArrayofArray);
+                    &pBwd = NullNekDoubleArrayOfArray);
 
             virtual void v_AdvectCoeffs(
                 const int                                          nConvective,
@@ -81,9 +81,9 @@ namespace Nektar
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const NekDouble                                   &time,
                 const Array<OneD, Array<OneD, NekDouble> >
-                    &pFwd = NullNekDoubleArrayofArray,
+                    &pFwd = NullNekDoubleArrayOfArray,
                 const Array<OneD, Array<OneD, NekDouble> >
-                    &pBwd = NullNekDoubleArrayofArray);
+                    &pBwd = NullNekDoubleArrayOfArray);
 
              virtual void v_AdvectVolumeFlux(
                 const int                                     nConvectiveFields,
@@ -106,9 +106,16 @@ namespace Nektar
                       Array<OneD, Array<OneD, NekDouble>>         &TraceFlux,
                 const NekDouble                                   &time,
                 const Array<OneD, Array<OneD, NekDouble>>
-                    &pFwd =NullNekDoubleArrayofArray,
+                    &pFwd =NullNekDoubleArrayOfArray,
                 const Array<OneD, Array<OneD, NekDouble>>
-                    &pBwd =NullNekDoubleArrayofArray);
+                    &pBwd =NullNekDoubleArrayOfArray);
+
+            virtual void v_AddVolumJacToMat( 
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                const int &nConvectiveFields,
+                const TensorOfArray5D<NekDouble> &ElmtJacArray,
+                Array<OneD, Array<OneD, SNekBlkMatSharedPtr>> &gmtxarray);
+
         };
     }
 }

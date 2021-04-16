@@ -83,7 +83,12 @@ namespace SolverUtils
                     const Array<OneD, Array<OneD, NekDouble> > &inarray,
                     Array<OneD, Array<OneD, NekDouble> > &outarray,
                     const NekDouble &time);
-
+                    
+            SOLVER_UTILS_EXPORT virtual void v_ApplyCoeff(
+                    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                    Array<OneD, Array<OneD, NekDouble> >              &outarray,
+                    const NekDouble                                   &time);
         private:
             std::string                     m_funcName;
             bool                            m_hasTimeFcnScaling;

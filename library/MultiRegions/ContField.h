@@ -137,7 +137,7 @@ namespace Nektar
                                const Array<OneD, const NekDouble> &dirForcing
                                = NullNekDouble1DArray,
                                const Array<OneD,       Array<OneD,NekDouble> >&
-                               variablecoeffs = NullNekDoubleArrayofArray,
+                               variablecoeffs = NullNekDoubleArrayOfArray,
                                NekDouble time = 0.0);
 
             /// Compute the eigenvalues of the linear advection operator.
@@ -194,7 +194,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr
                 GenGlobalLinSys(const GlobalLinSysKey &mkey);
 
-            /// Impose the Dirichlet Boundary Conditions on outarray 
+            /// Impose the Dirichlet Boundary Conditions on outarray
             MULTI_REGIONS_EXPORT virtual void
                 v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
 
@@ -212,7 +212,7 @@ namespace Nektar
                 bool useComm);
 
             MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(bool useComm);
-            
+
             /// Scatters from the global coefficients
             /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
             /// \f$\boldsymbol{\hat{u}}_l\f$.
@@ -222,10 +222,10 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT virtual void v_GlobalToLocal(void);
 
-            /// Template method virtual forwarder for FwdTrans().
-            MULTI_REGIONS_EXPORT virtual void v_BwdTrans(
-                                const Array<OneD, const NekDouble> &inarray,
-                                Array<OneD,       NekDouble> &outarray);
+            // /// Template method virtual forwarder for FwdTrans().
+            // MULTI_REGIONS_EXPORT virtual void v_BwdTrans(
+            //                     const Array<OneD, const NekDouble> &inarray,
+            //                     Array<OneD,       NekDouble> &outarray);
 
 
             /// Template method virtual forwarder for FwdTrans().

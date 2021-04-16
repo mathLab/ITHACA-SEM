@@ -37,8 +37,7 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/Preconditioner.h>
-
-#include <boost/circular_buffer.hpp>
+#include <LibUtilities/LinearAlgebra/NekLinSysIterGMRES.h>
 
 namespace Nektar
 {
@@ -87,28 +86,34 @@ namespace Nektar
             /// Root if parallel
             bool                                        m_root;
 
+            /// Iterative solver: Conjugate Gradient, GMRES
+            std::string m_linSysIterSolver;
+
             /// Storage for solutions to previous linear problems
-            boost::circular_buffer<Array<OneD, NekDouble> > m_prevLinSol;
+            std::vector<Array<OneD, NekDouble> > m_prevLinSol;
+            std::vector<Array<OneD, NekDouble> > m_prevBasis;
+            DNekMatSharedPtr                     m_coeffMatrix;
+            Array<OneD, NekDouble>               m_coeffMatrixFactor;
+            Array<OneD, int>                     m_ipivot;
+            int                                  m_numSuccessiveRHS;
+            bool                                 m_isAconjugate;
+            int                                  m_numPrevSols;
 
-            /// Total counter of previous solutions
-            int m_numPrevSols;
+            LibUtilities::NekSysOperators                 m_NekSysOp;
 
-            /// A-conjugate projection technique
-            void DoAconjugateProjection(
+            LibUtilities::NekLinSysIterSharedPtr      m_linsol;
+
+            static std::string IteratSolverlookupIds[];
+            static std::string IteratSolverdef;
+
+            /// projection technique
+            void DoProjection(
                     const int pNumRows,
                     const Array<OneD,const NekDouble> &pInput,
                           Array<OneD,      NekDouble> &pOutput,
-                    const AssemblyMapSharedPtr &locToGloMap,
-                    const int pNumDir);
-
-            /// Actual iterative solve
-            void DoConjugateGradient(
-                    const int pNumRows,
-                    const Array<OneD,const NekDouble> &pInput,
-                          Array<OneD,      NekDouble> &pOutput,
-                    const AssemblyMapSharedPtr &locToGloMap,
-                    const int pNumDir);
-
+                    const int pNumDir,
+                    const NekDouble tol,
+                    const bool isAconjugate);
 
             void Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn);
 
@@ -118,12 +123,30 @@ namespace Nektar
             void UpdateKnownSolutions(
                     const int pGlobalBndDofs,
                     const Array<OneD,const NekDouble> &pSolution,
-                    const int pNumDirBndDofs);
+                    const int pNumDirBndDofs,
+                    const bool isAconjugate);
 
-            NekDouble CalculateAnorm(
-                    const int nGlobal,
-                    const Array<OneD,const NekDouble> &in,
-                    const int nDir);
+            int ResetKnownSolutionsToLatestOne();
+            
+            void DoMatrixMultiplyFlag(
+                const Array<OneD, NekDouble> &pInput,
+                      Array<OneD, NekDouble> &pOutput,
+                const  bool                  &controlFlag)
+            {
+                boost::ignore_unused(controlFlag);
+                
+                v_DoMatrixMultiply(pInput,pOutput);
+            }
+
+            void DoPreconditionerFlag(
+                const Array<OneD, NekDouble> &pInput,
+                      Array<OneD, NekDouble> &pOutput,
+                const  bool                  &controlFlag)
+            {
+                boost::ignore_unused(controlFlag);
+                
+                m_precon->DoPreconditioner(pInput, pOutput);
+            }
 
 
             /// Solve the matrix system

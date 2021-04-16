@@ -560,7 +560,7 @@ namespace Nektar
                     for(i = 0; i < nfaces; ++i)
                     {
                         FaceExp = GetTraceExp(i);
-                        order_f = FaceExp->GetNcoeffs();  
+                        order_f = FaceExp->GetNcoeffs();
 
                         IndexMapKey ikey(eFaceToElement, DetShapeType(),
                             GetBasisNumModes(0), GetBasisNumModes(1),
@@ -885,10 +885,10 @@ namespace Nektar
 
                         for(f = 0; f < nfaces; ++f)
                         {
-                            order_f = FaceExp[f]->GetNcoeffs();  
-                            nquad_f = FaceExp[f]->GetNumPoints(0)*FaceExp[f]->GetNumPoints(1);    
+                            order_f = FaceExp[f]->GetNcoeffs();
+                            nquad_f = FaceExp[f]->GetNumPoints(0)*FaceExp[f]->GetNumPoints(1);
                             normals = GetTraceNormal(f);
-                            
+
                             work = Array<OneD,NekDouble>(nquad_f);
                             varcoeff_work = Array<OneD, NekDouble>(nquad_f);
 
@@ -2262,7 +2262,10 @@ namespace Nektar
 
             // Get local face pts and put into o_tmp
             GetTracePhysMap(face,faceids);
-            Vmath::Gathr(faceids.size(),inarray,faceids,o_tmp);
+            // The static cast is necessary because faceids should be
+            // Array<OneD, size_t> faceids ... or at leaste the same type as
+            // faceids.size() ...
+            Vmath::Gathr(static_cast<int>(faceids.size()),inarray,faceids,o_tmp);
 
             int to_id0,to_id1;
 
@@ -2295,12 +2298,12 @@ namespace Nektar
                         Array<OneD, int> &idmap,
                         const int nq0, const int nq1)
         {
-            
+
             if(idmap.size() != nq0*nq1)
             {
                 idmap = Array<OneD,int>(nq0*nq1);
             }
-            
+
             if(GetNverts() == 3) // Tri face
             {
                 switch(orient)
@@ -2327,7 +2330,7 @@ namespace Nektar
                 }
             }
             else
-            {                
+            {
                 switch(orient)
                 {
                 case StdRegions::eDir1FwdDir1_Dir2FwdDir2:

@@ -64,7 +64,7 @@ ProcessNumModes::~ProcessNumModes()
 
 void ProcessNumModes::Process(po::variables_map &vm)
 {
-    boost::ignore_unused(vm);
+    m_f->SetUpExp(vm);
 
     int i, s;
     int expdim    = m_f->m_graph->GetMeshDimension();

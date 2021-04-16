@@ -99,8 +99,7 @@ namespace Nektar
             NekDouble kinvis);
 
         inline void SubStepAdvance(
-            const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln, 
-            const int nstep, 
+            const int nstep,
             NekDouble time);
 
         inline void MountHOPBCs(
@@ -169,9 +168,8 @@ namespace Nektar
             NekDouble kinvis)=0;
 
         virtual void v_SubStepAdvance(
-            const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr & integrationSoln, 
-                  int                                                                     nstep, 
-                  NekDouble                                                               time ) = 0;
+            int nstep, 
+            NekDouble time ) = 0;
 
         virtual void v_MountHOPBCs(
             int HBCdata, 
@@ -374,11 +372,10 @@ namespace Nektar
      *
      */
     inline void Extrapolate::SubStepAdvance(
-        const LibUtilities::TimeIntegrationScheme::TimeIntegrationSolutionSharedPtr &integrationSoln, 
         int nstep, 
         NekDouble time)
     {
-        v_SubStepAdvance(integrationSoln,nstep, time);
+        v_SubStepAdvance(nstep, time);
     }
 
     /**

@@ -73,6 +73,9 @@ v5.1.0
 
 v5.0.2
 ------
+**Documentation**
+- Updated Documentation to include HDF5 Mesh Output (!1230)
+
 **CI**
 - Add Debian Bullseye to CI system (!1181)
 

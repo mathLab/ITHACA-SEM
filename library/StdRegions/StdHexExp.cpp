@@ -638,7 +638,7 @@ namespace Nektar
             int   mode1 = (mode-mode2*btmp0*btmp1)/btmp0;
             int   mode0 = (mode-mode2*btmp0*btmp1)%btmp0;
 
-            ASSERTL2(mode == mode2 * btmp0 * btmp1 + mode1 * btmp1 + mode0,
+            ASSERTL2(mode == mode2 * btmp0 * btmp1 + mode1 * btmp0 + mode0,
                      "Mode lookup failed.");
             ASSERTL2(mode < m_ncoeffs,
                      "Calling argument mode is larger than total expansion "

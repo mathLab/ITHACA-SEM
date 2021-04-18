@@ -452,7 +452,7 @@ int main(int argc, char *argv[])
     po::options_description desc("Usage:");
 
     desc.add_options()("help,h", "Produce this help message.")(
-        "test,test", "Run in regession test mode.")(
+        "test", "Run in regession test mode.")(
         "butcher,b", "Print the Butcher Tableau for each phase.")(
         "solution,s", "Print the solution values for each time step.")(
         "L2,l", "Print the L2 error for each time step.")(

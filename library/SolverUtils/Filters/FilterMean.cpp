@@ -91,19 +91,25 @@ void FilterMean::v_Initialise(
     const NekDouble &time)
 {
     MultiRegions::ExpListSharedPtr areaField;
+    int spacedim = 2;
 
     ASSERTL0(pFields[0]->GetExpType() != MultiRegions::e1D,
              "1D expansion not supported for mean filter");
 
-    ASSERTL0(pFields[0]->GetExpType() != MultiRegions::e2D,
-             "2D expansion not supported for mean filter");
-
     ASSERTL0(pFields[0]->GetExpType() != MultiRegions::e3DH2D,
              "Homogeneous 2D expansion not supported for mean filter");
+    
+    // Lock equation system pointer
+    auto equ = m_equ.lock();
+    ASSERTL0(equ, "Weak pointer expired");
 
+    auto fluidEqu = std::dynamic_pointer_cast<FluidInterface>(equ);
+    ASSERTL0(fluidEqu, "Mean filter is incompatible with this solver.");
+    
     if (pFields[0]->GetExpType() == MultiRegions::e3DH1D)
     {
         m_homogeneous = true;
+        spacedim = 3;
     }
 
     // Calculate area/volume of domain.
@@ -126,16 +132,17 @@ void FilterMean::v_Initialise(
     }
 
     // Open OutputFile
+    std::string volname[3] = {"length", "area", "volume"};
     LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
     if (vComm->GetRank() == 0)
     {
         m_outputStream.open(m_outputFile.c_str());
         ASSERTL0(m_outputStream.good(), "Unable to open: '" + m_outputFile + "'");
         m_outputStream.setf(ios::scientific, ios::floatfield);
-        m_outputStream << "# Time                Ua"
-                  << setw(22) << " Va"
-                  << setw(22) << " Wa"
-                  << setw(22) << " Area: " << m_area;
+        m_outputStream << "# Time";
+        for(int i=0; i<pFields.size(); ++i)
+            m_outputStream << setw(22) << equ->GetVariable(i);
+        m_outputStream << setw(22) << volname[spacedim - 1] << " " << m_area;
         m_outputStream << endl;
     }
 
@@ -154,55 +161,36 @@ void FilterMean::v_Update(
         return;
     }
     
+    int i;
     LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
-    int i, nPoints = pFields[0]->GetNpoints();
-    // Lock equation system pointer
-    auto equ = m_equ.lock();
-    ASSERTL0(equ, "Weak pointer expired");
-
-    auto fluidEqu = std::dynamic_pointer_cast<FluidInterface>(equ);
-    ASSERTL0(fluidEqu, "Mean filter is incompatible with this solver.");
-
-    // Store physical values in an array
-    Array<OneD, Array<OneD, NekDouble> > physfields(pFields.size());
-    for(i = 0; i < pFields.size(); ++i)
-    {
-        physfields[i] = pFields[i]->GetPhys();
-    }
 
     // Calculate average values.
-    NekDouble ua, va, wa;
-    ua = va = wa = 0.0;
-    Array<OneD, Array<OneD, NekDouble> > u(3);
-    for (i = 0; i < 3; ++i)
+    Array<OneD, NekDouble> avg(pFields.size());
+    for (i = 0; i < pFields.size(); ++i)
     {
-        u[i] = Array<OneD, NekDouble>(nPoints);
+        avg[i] = 0.0;
     }
-    fluidEqu->GetVelocity(physfields, u);
-
+    
     if (m_homogeneous)
     {
-        ua = pFields[0]->GetPlane(0)->Integral(u[0]) * m_homogeneousLength;
-        va = pFields[0]->GetPlane(0)->Integral(u[1]) * m_homogeneousLength;
-        wa = pFields[0]->GetPlane(0)->Integral(u[2]) * m_homogeneousLength;
+        for (i = 0; i < pFields.size(); ++i)
+            avg[i] = pFields[0]->GetPlane(0)->Integral(pFields[i]->GetPhys()) * m_homogeneousLength;
     }
     else
     {
-        ua = pFields[0]->Integral(u[0]);
-        va = pFields[0]->Integral(u[1]);
-        wa = pFields[0]->Integral(u[2]);
+        for (i = 0; i < pFields.size(); ++i)
+            avg[i] = pFields[0]->Integral(pFields[i]->GetPhys());
     }
     
-    ua /= m_area;
-    va /= m_area;
-    wa /= m_area;
+    for (i = 0; i < pFields.size(); ++i)
+        avg[i] /= m_area;
 
     if (vComm->GetRank() == 0)
     {
-        m_outputStream << setw(17) << setprecision(8) << time
-                  << setw(22) << setprecision(11) << ua
-                  << setw(22) << setprecision(11) << va
-                  << setw(22) << setprecision(11) << wa << endl;
+        m_outputStream << setw(17) << setprecision(8) << time;
+        for(int i=0; i<pFields.size(); ++i)
+            m_outputStream << setw(22) << setprecision(11) << avg[i];
+        m_outputStream << endl;
     }
 }
 

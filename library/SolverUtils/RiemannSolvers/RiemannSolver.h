@@ -57,7 +57,7 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> >& ()> RSVecFuncType;
         typedef std::function<
             NekDouble ()> RSParamFuncType;
-
+            
         class RiemannSolver
         {
         public:
@@ -144,6 +144,13 @@ namespace Nektar
 
             int m_spacedim;
 
+            SOLVER_UTILS_EXPORT void CalcFluxJacobian(
+            const int                                         nDim,
+            const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+            const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+                  DNekBlkMatSharedPtr                        &FJac,
+                  DNekBlkMatSharedPtr                        &BJac);
+
         protected:
             /// Indicates whether the Riemann solver requires a rotation to be
             /// applied to the velocity fields.
@@ -197,6 +204,15 @@ namespace Nektar
             SOLVER_UTILS_EXPORT bool CheckParams  (std::string name);
             SOLVER_UTILS_EXPORT bool CheckAuxScal (std::string name);
             SOLVER_UTILS_EXPORT bool CheckAuxVec  (std::string name);
+
+            SOLVER_UTILS_EXPORT virtual void v_CalcFluxJacobian(
+                const int                                         nDim,
+                const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+                const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+                const Array<OneD, const Array<OneD, NekDouble> > &normals,
+                    DNekBlkMatSharedPtr                        &FJac,
+                    DNekBlkMatSharedPtr                        &BJac);
+
         };
 
         /// A shared pointer to an EquationSystem object

@@ -43,15 +43,15 @@ namespace Nektar
         std::string GlobalLinSysIterative::IteratSolverlookupIds[2] =
         {
             LibUtilities::SessionReader::RegisterEnumValue(
-                "LinSysIterSovler", "ConjugateGradient", MultiRegions::
+                "LinSysIterSolver", "ConjugateGradient", MultiRegions::
                 eConjugateGradient),
             LibUtilities::SessionReader::RegisterEnumValue(
-                "LinSysIterSovler", "GMRES", MultiRegions::eGMRES),
+                "LinSysIterSolver", "GMRES", MultiRegions::eGMRES),
         };
 
         std::string GlobalLinSysIterative::IteratSolverdef =
             LibUtilities::SessionReader::RegisterDefaultSolverInfo(
-                "LinSysIterSovler", "ConjugateGradient");
+                "LinSysIterSolver", "ConjugateGradient");
 
         /**
          * @class GlobalLinSysIterative
@@ -75,7 +75,7 @@ namespace Nektar
         {
             m_tolerance = pLocToGloMap->GetIterativeTolerance();
             m_maxiter   = pLocToGloMap->GetMaxIterations();
-            m_linSysIterSovler = pLocToGloMap->GetLinSysIterSovler();
+            m_linSysIterSolver = pLocToGloMap->GetLinSysIterSolver();
 
             LibUtilities::CommSharedPtr vComm = m_expList.lock()->GetComm()->GetRowComm();
             m_root    = (vComm->GetRank())? false : true;
@@ -85,7 +85,7 @@ namespace Nektar
             m_numSuccessiveRHS = std::abs(m_numSuccessiveRHS);
             m_useProjection = m_numSuccessiveRHS > 0;
 
-            if(m_isAconjugate && 0 == m_linSysIterSovler.compare("GMRES"))
+            if(m_isAconjugate && 0 == m_linSysIterSolver.compare("GMRES"))
             {
                 WARNINGL0(false, "To use A-conjugate projection, the matrix should be symmetric positive definite.");
             }
@@ -114,18 +114,18 @@ namespace Nektar
                 
                 // Check such a module exists for this equation.
                 ASSERTL0(LibUtilities::GetNekLinSysIterFactory().
-                ModuleExists(m_linSysIterSovler),
-                    "NekLinSysIter '" + m_linSysIterSovler +
+                ModuleExists(m_linSysIterSolver),
+                    "NekLinSysIter '" + m_linSysIterSolver +
                     "' is not defined.\n");
                 m_linsol = LibUtilities::GetNekLinSysIterFactory().
-                           CreateInstance(m_linSysIterSovler, pSession,
-                                          v_Comm, nGlobal - nDir);
+                           CreateInstance(m_linSysIterSolver, pSession,
+                            v_Comm, nGlobal - nDir, LibUtilities::NekSysKey());
 
                 m_NekSysOp.DefineNekSysLhsEval(
                     &GlobalLinSysIterative::DoMatrixMultiplyFlag, this);
-                m_NekSysOp.DefineNekSysPrecond(
+                m_NekSysOp.DefineNekSysPrecon(
                     &GlobalLinSysIterative::DoPreconditionerFlag, this);
-                m_linsol->setSysOperators(m_NekSysOp);
+                m_linsol->SetSysOperators(m_NekSysOp);
                     v_UniqueMap();
                 m_linsol->setUniversalUniqueMap(m_map);
             }

@@ -234,7 +234,6 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> > &outarray,
             const NekDouble &time)
     {
-        boost::ignore_unused(fields);
         int nq = m_Forcing[0].size();
         CalculateForcing(fields, inarray, time);
         for (int i = 0; i < m_NumVariable; ++i)
@@ -289,7 +288,7 @@ namespace SolverUtils
                 {
                     Vmath::Vcopy(nq, m_Refflow[i],1, RefflowScaled[i],1);
                 }
-
+                
 
                 Vmath::Vsub(nq, inarray[i], 1,
                             RefflowScaled[i], 1, m_Forcing[i], 1);

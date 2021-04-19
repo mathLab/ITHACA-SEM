@@ -48,12 +48,15 @@ namespace LibUtilities
  */
 
 NekSys::NekSys(const LibUtilities::SessionReaderSharedPtr &pSession,
-               const LibUtilities::CommSharedPtr &vComm, const int nDimen)
+               const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+               const NekSysKey &pKey)
 {
-    m_tolerance = NekConstants::kNekIterativeTol;
+    m_tolerance = pKey.m_Tolerance;
     m_verbose   = false;
     m_root      = false;
     m_Comm      = vComm;
+
+    m_FlagWarnings = true;
 
     if (0 == m_Comm->GetRank())
     {
@@ -87,5 +90,22 @@ bool NekSys::v_ConvergenceCheck(const int nIteration,
     }
     return converged;
 }
+
+/**
+ * Natural guess
+**/
+void NekSys::v_NekSysInitialGuess(
+        const Array<OneD, const NekDouble> &pInput,
+        Array<OneD, NekDouble> &pguess)
+{
+    size_t ndim = pInput.size();
+    if(pguess.size() != ndim)
+    {
+        pguess = Array<OneD, NekDouble> {ndim};
+    }
+
+    Vmath::Vcopy(ndim, pInput, 1, pguess, 1);
+}
+
 } // namespace LibUtilities
 } // namespace Nektar

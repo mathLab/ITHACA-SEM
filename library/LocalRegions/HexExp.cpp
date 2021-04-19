@@ -478,9 +478,6 @@ namespace Nektar
             const int nm0 = m_base[0]->GetNumModes();
             const int nm1 = m_base[1]->GetNumModes();
 
-            const Array<TwoD, const NekDouble>& df =
-                                m_metricinfo->GetDerivFactors(GetPointsKeys());
-
             Array<OneD, NekDouble> alloc(4*nq + m_ncoeffs + nm0*nq2*(nq1+nm1));
             Array<OneD, NekDouble> tmp1 (alloc);               // Quad metric
             Array<OneD, NekDouble> tmp2 (alloc +   nq);        // Dir1 metric
@@ -491,18 +488,12 @@ namespace Nektar
 
             MultiplyByQuadratureMetric(inarray, tmp1);
 
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-            {
-                Vmath::Vmul(nq,&df[3*dir][0],  1,tmp1.get(),1,tmp2.get(),1);
-                Vmath::Vmul(nq,&df[3*dir+1][0],1,tmp1.get(),1,tmp3.get(),1);
-                Vmath::Vmul(nq,&df[3*dir+2][0],1,tmp1.get(),1,tmp4.get(),1);
-            }
-            else
-            {
-                Vmath::Smul(nq, df[3*dir][0],  tmp1.get(),1,tmp2.get(), 1);
-                Vmath::Smul(nq, df[3*dir+1][0],tmp1.get(),1,tmp3.get(), 1);
-                Vmath::Smul(nq, df[3*dir+2][0],tmp1.get(),1,tmp4.get(), 1);
-            }
+            Array<OneD, Array<OneD, NekDouble>> tmp2D{3};
+            tmp2D[0] = tmp2;
+            tmp2D[1] = tmp3;
+            tmp2D[2] = tmp4;
+
+            HexExp::v_AlignVectorToCollapsedDir(dir, tmp1, tmp2D);
 
             IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
                                          m_base[1]->GetBdata(),
@@ -523,6 +514,43 @@ namespace Nektar
                                          tmp4,tmp5,wsp,
                                          true,true,false);
             Vmath::Vadd(m_ncoeffs, tmp5, 1, outarray, 1, outarray, 1);
+        }
+
+        void HexExp::v_AlignVectorToCollapsedDir(
+                const int dir, 
+                const Array<OneD, const NekDouble>      &inarray, 
+                Array<OneD, Array<OneD, NekDouble> >    &outarray)
+        {   
+            ASSERTL1((dir==0)||(dir==1)||(dir==2),"Invalid direction.");
+
+            const int nq0 = m_base[0]->GetNumPoints();
+            const int nq1 = m_base[1]->GetNumPoints();
+            const int nq2 = m_base[2]->GetNumPoints();
+            const int nq  = nq0*nq1*nq2;
+ 
+            const Array<TwoD, const NekDouble>& df =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
+
+            Array<OneD, NekDouble> tmp1 (nq);               // Quad metric
+
+            Array<OneD, NekDouble> tmp2 = outarray[0];        // Dir1 metric
+            Array<OneD, NekDouble> tmp3 = outarray[1];        // Dir2 metric
+            Array<OneD, NekDouble> tmp4 = outarray[2];   
+            
+            Vmath::Vcopy(nq,inarray,1,tmp1,1);     // Dir3 metric
+
+            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                Vmath::Vmul(nq,&df[3*dir][0],  1,tmp1.get(),1,tmp2.get(),1);
+                Vmath::Vmul(nq,&df[3*dir+1][0],1,tmp1.get(),1,tmp3.get(),1);
+                Vmath::Vmul(nq,&df[3*dir+2][0],1,tmp1.get(),1,tmp4.get(),1);
+            }
+            else
+            {
+                Vmath::Smul(nq, df[3*dir][0],  tmp1.get(),1,tmp2.get(), 1);
+                Vmath::Smul(nq, df[3*dir+1][0],tmp1.get(),1,tmp3.get(), 1);
+                Vmath::Smul(nq, df[3*dir+2][0],tmp1.get(),1,tmp4.get(), 1);
+            }  
         }
 
 

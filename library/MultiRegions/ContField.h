@@ -137,7 +137,7 @@ namespace Nektar
                                const Array<OneD, const NekDouble> &dirForcing
                                = NullNekDouble1DArray,
                                const Array<OneD,       Array<OneD,NekDouble> >&
-                               variablecoeffs = NullNekDoubleArrayofArray,
+                               variablecoeffs = NullNekDoubleArrayOfArray,
                                NekDouble time = 0.0);
 
             /// Compute the eigenvalues of the linear advection operator.

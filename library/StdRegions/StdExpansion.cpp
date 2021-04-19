@@ -279,6 +279,29 @@ namespace Nektar
                     returnval->Invert();
                 }
                 break;
+            case eBwdMat:
+                {
+                    int nq = GetTotPoints();
+                    Array<OneD, NekDouble> tmpin(m_ncoeffs);
+                    Array<OneD, NekDouble> tmpout(nq);
+
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,nq);
+                    Array<OneD, NekDouble> Bwd_data = returnval->GetPtr();
+
+                    StdRegions::StdMatrixKey  matkey(StdRegions::eBwdTrans,
+                                        this->DetShapeType(), *this);
+                    DNekMatSharedPtr MatBwdTrans    =   GetStdMatrix(matkey);
+                    Array<OneD, NekDouble> BwdTrans_data = MatBwdTrans->GetPtr();
+
+                    for(int i=0; i<m_ncoeffs; ++i)
+                    {
+                        Array<OneD, NekDouble> tmpinn = BwdTrans_data + nq*i;
+                        Array<OneD, NekDouble> tmpout = Bwd_data + i;
+
+                        Vmath::Vcopy(nq,tmpinn,1,tmpout,m_ncoeffs);
+                    }
+                }
+                break;
             case eBwdTrans:
                 {
                     int nq = GetTotPoints();
@@ -377,6 +400,27 @@ namespace Nektar
                         Vmath::Vcopy(m_ncoeffs,tmpout.get(),1,
                                      returnval->GetRawPtr()+i*m_ncoeffs,1);
                     }
+                }
+                break;
+            case eDerivBase0:
+                {
+                    int nq = GetTotPoints();
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,nq);
+                    GenStdMatBwdDeriv(0,returnval);
+                }
+                break;
+            case eDerivBase1:
+                {
+                    int nq = GetTotPoints();
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,nq);
+                    GenStdMatBwdDeriv(1,returnval);
+                }
+                break;
+            case eDerivBase2:
+                {
+                    int nq = GetTotPoints();
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,nq);
+                    GenStdMatBwdDeriv(2,returnval);
                 }
                 break;
             case eEquiSpacedToCoeffs:

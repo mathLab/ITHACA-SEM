@@ -462,10 +462,44 @@ namespace Nektar
                                                    const Array<OneD, const NekDouble>& inarray,
                                                    Array<OneD, NekDouble> & outarray)
         {
-            ASSERTL1((dir==0)||(dir==1)||(dir==2),"Invalid direction.");
-            ASSERTL1((dir==2)?(m_geom->GetCoordim()==3):true,"Invalid direction.");
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nqtot  = nquad0*nquad1;
+            int    nmodes0 = m_base[0]->GetNumModes();
+            int    wspsize = max(max(nqtot,m_ncoeffs),nquad1*nmodes0);
 
-            int    i;
+            Array<OneD, NekDouble> tmp0 (4*wspsize);
+            Array<OneD, NekDouble> tmp1 (tmp0 +   wspsize);
+            Array<OneD, NekDouble> tmp2 (tmp0 + 2*wspsize);
+            Array<OneD, NekDouble> tmp3 (tmp0 + 3*wspsize);
+
+            Array<OneD, Array<OneD, NekDouble>> tmp2D{2};
+            tmp2D[0] = tmp1;
+            tmp2D[1] = tmp2;
+
+            TriExp::v_AlignVectorToCollapsedDir(dir, inarray, tmp2D);
+
+            MultiplyByQuadratureMetric(tmp1,tmp1);
+            MultiplyByQuadratureMetric(tmp2,tmp2);
+
+            IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                         m_base[1]->GetBdata() ,
+                                         tmp1,tmp3,tmp0);
+            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata() ,
+                                         m_base[1]->GetDbdata(),
+                                         tmp2,outarray,tmp0);
+            Vmath::Vadd(m_ncoeffs, tmp3, 1, outarray, 1, outarray, 1);
+        }
+
+        void TriExp::v_AlignVectorToCollapsedDir(
+            const int dir,
+            const Array<OneD, const NekDouble>      &inarray,
+            Array<OneD, Array<OneD, NekDouble> >    &outarray)
+        {
+            ASSERTL1((dir==0)||(dir==1)||(dir==2),"Invalid direction.");
+            ASSERTL1((dir==2)?(m_geom->GetCoordim()==3):true,
+                    "Invalid direction.");
+
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nqtot  = nquad0*nquad1;
@@ -475,34 +509,37 @@ namespace Nektar
             const Array<TwoD, const NekDouble>& df =
                                 m_metricinfo->GetDerivFactors(GetPointsKeys());
 
-            Array<OneD, NekDouble> tmp0 (6*wspsize);
-            Array<OneD, NekDouble> tmp1 (tmp0 +   wspsize);
-            Array<OneD, NekDouble> tmp2 (tmp0 + 2*wspsize);
-            Array<OneD, NekDouble> tmp3 (tmp0 + 3*wspsize);
-            Array<OneD, NekDouble> gfac0(tmp0 + 4*wspsize);
-            Array<OneD, NekDouble> gfac1(tmp0 + 5*wspsize);
+            Array<OneD, NekDouble> tmp0 (wspsize);
+            Array<OneD, NekDouble> tmp3 (wspsize);
+            Array<OneD, NekDouble> gfac0(wspsize);
+            Array<OneD, NekDouble> gfac1(wspsize);
+
+            Array<OneD, NekDouble> tmp1 =   outarray[0];
+            Array<OneD, NekDouble> tmp2 =   outarray[1];
 
             const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
             const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
 
             // set up geometric factor: 2/(1-z1)
-            for(i = 0; i < nquad1; ++i)
+            for (int i = 0; i < nquad1; ++i)
             {
                 gfac0[i] = 2.0/(1-z1[i]);
             }
-            for(i = 0; i < nquad0; ++i)
+            for (int i = 0; i < nquad0; ++i)
             {
                 gfac1[i] = 0.5*(1+z0[i]);
             }
 
-            for(i = 0; i < nquad1; ++i)
+            for (int i = 0; i < nquad1; ++i)
             {
-                Vmath::Smul(nquad0,gfac0[i],&inarray[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
+                Vmath::Smul(nquad0, gfac0[i], &inarray[0]+i*nquad0, 1, 
+                            &tmp0[0]+i*nquad0, 1);
             }
 
-            for(i = 0; i < nquad1; ++i)
+            for (int i = 0; i < nquad1; ++i)
             {
-                Vmath::Vmul(nquad0,&gfac1[0],1,&tmp0[0]+i*nquad0,1,&tmp1[0]+i*nquad0,1);
+                Vmath::Vmul(nquad0, &gfac1[0], 1, &tmp0[0]+i*nquad0, 1,
+                            &tmp1[0]+i*nquad0, 1);
             }
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
@@ -518,15 +555,7 @@ namespace Nektar
                 Vmath::Smul(nqtot, df[2*dir+1][0], inarray, 1, tmp2, 1);
             }
             Vmath::Vadd(nqtot, tmp0, 1, tmp1, 1, tmp1, 1);
-
-            MultiplyByQuadratureMetric(tmp1,tmp1);
-            MultiplyByQuadratureMetric(tmp2,tmp2);
-
-            IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),m_base[1]->GetBdata() ,tmp1,tmp3    ,tmp0);
-            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata() ,m_base[1]->GetDbdata(),tmp2,outarray,tmp0);
-            Vmath::Vadd(m_ncoeffs, tmp3, 1, outarray, 1, outarray, 1);
         }
-
 
         void TriExp::v_IProductWRTDerivBase_MatOp(const int dir,
                                                 const Array<OneD, const NekDouble>& inarray,

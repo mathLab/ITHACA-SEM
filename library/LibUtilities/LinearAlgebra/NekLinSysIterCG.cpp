@@ -54,8 +54,9 @@ string NekLinSysIterCG::className =
 
 NekLinSysIterCG::NekLinSysIterCG(
     const LibUtilities::SessionReaderSharedPtr &pSession,
-    const LibUtilities::CommSharedPtr &vComm, const int nDimen)
-    : NekLinSysIter(pSession, vComm, nDimen)
+    const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+    const NekSysKey &pKey)
+    : NekLinSysIter(pSession, vComm, nDimen, pKey)
 {
 }
 
@@ -81,6 +82,7 @@ int NekLinSysIterCG::v_SolveSystem(const int nGlobal,
 
     m_tolerance   = max(tol, 1.0E-16);
     m_prec_factor = factor;
+
     DoConjugateGradient(nGlobal, pInput, pOutput, nDir);
 
     return m_totalIterations;
@@ -168,7 +170,7 @@ void NekLinSysIterCG::DoConjugateGradient(
         return;
     }
 
-    m_operator.DoNekSysPrecond(r_A, tmp = w_A + nDir);
+    m_operator.DoNekSysPrecon(r_A, tmp = w_A + nDir);
 
     m_operator.DoNekSysLhsEval(w_A, s_A);
 
@@ -215,7 +217,7 @@ void NekLinSysIterCG::DoConjugateGradient(
         Vmath::Svtvp(nNonDir, -alpha, &q_A[0], 1, &r_A[0], 1, &r_A[0], 1);
 
         // Apply preconditioner
-        m_operator.DoNekSysPrecond(r_A, tmp = w_A + nDir);
+        m_operator.DoNekSysPrecon(r_A, tmp = w_A + nDir);
 
         // Perform the method-specific matrix-vector multiply operation.
         m_operator.DoNekSysLhsEval(w_A, s_A);

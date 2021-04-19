@@ -40,17 +40,18 @@
 #include <CompressibleFlowSolver/ArtificialDiffusion/ArtificialDiffusion.h>
 #include <CompressibleFlowSolver/Misc/VariableConverter.h>
 #include <CompressibleFlowSolver/BoundaryConditions/CFSBndCond.h>
+#include <CompressibleFlowSolver/Preconditioner/PreconCfsOp.h>
 #include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 #include <SolverUtils/Forcing/Forcing.h>
+#include <MultiRegions/GlobalMatrixKey.h>
 #include <SolverUtils/Filters/FilterInterfaces.hpp>
 #include <LocalRegions/Expansion3D.h>
 #include <LocalRegions/Expansion2D.h>
 #include <LibUtilities/LinearAlgebra/NekNonlinSys.h>
-
 
 namespace Nektar
 {
@@ -77,48 +78,13 @@ namespace Nektar
         /// Function to get estimate of min h/p factor per element
         Array<OneD, NekDouble>  GetElmtMinHP(void);
 
-        void InitialiseNonlinSysSolver();
-
-        void NonlinSysEvaluator1D(
-            const TensorOfArray1D<NekDouble>    &inarray,
-            TensorOfArray1D<NekDouble>          &out,
-            const bool                          &flag);
-
-        void NonlinSysEvaluatorCoeff(
-            TensorOfArray2D<NekDouble>  &inarray,
-            TensorOfArray2D<NekDouble>  &out);
-        void DoOdeRhsCoeff(
-            const TensorOfArray2D<NekDouble>    &inarray,
-            TensorOfArray2D<NekDouble>          &outarray,
-            const NekDouble                     time);
-        
-        void DoAdvectionCoeff(
-            const TensorOfArray2D<NekDouble>    &inarray,
-            TensorOfArray2D<NekDouble>          &outarray,
-            const NekDouble                     time,
-            const TensorOfArray2D<NekDouble>    &pFwd,
-            const TensorOfArray2D<NekDouble>    &pBwd);
-        void DoImplicitSolvePhysToCoeff(
-            const TensorOfArray2D<NekDouble>    &inpnts,
-            TensorOfArray2D<NekDouble>          &outpnt,
-            const NekDouble                     time,
-            const NekDouble                     lambda);
-        void DoImplicitSolveCoeff(
-            const TensorOfArray2D<NekDouble>    &inpnts,
-            const TensorOfArray1D<NekDouble>    &inarray,
-            TensorOfArray1D<NekDouble>          &out,
-            const NekDouble                     time,
-            const NekDouble                     lambda);
-         void CalcRefValues(
-            const TensorOfArray1D<NekDouble>    &inarray);
-    
         virtual void GetPressure(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD, NekDouble>                     &pressure);
+            const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+                  Array<OneD, NekDouble>                    &pressure);
 
         virtual void GetDensity(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD, NekDouble>                     &density);
+            const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+                  Array<OneD, NekDouble>                    &density);
 
         virtual bool HasConstantDensity()
         {
@@ -126,13 +92,13 @@ namespace Nektar
         }
 
         virtual void GetVelocity(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD, Array<OneD, NekDouble> >       &velocity);
+            const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+                  Array<OneD,       Array<OneD, NekDouble>> &velocity);
 
     protected:
         SolverUtils::DiffusionSharedPtr     m_diffusion;
         ArtificialDiffusionSharedPtr        m_artificialDiffusion;
-        Array<OneD, Array<OneD, NekDouble> >m_vecLocs;
+        Array<OneD, Array<OneD, NekDouble>> m_vecLocs;
         NekDouble                           m_gamma;
         std::string                         m_shockCaptureType;
 
@@ -145,28 +111,23 @@ namespace Nektar
         // Parameters for local time-stepping
         bool                                m_useLocalTimeStep;
 
+        // Store physical artificial viscosity
+        Array<OneD, NekDouble>              m_muav;
+
+        // Store physical artificial viscosity
+        Array<OneD, NekDouble>              m_muavTrace;
+
         // Auxiliary object to convert variables
         VariableConverterSharedPtr          m_varConv;
 
         // User defined boundary conditions
         std::vector<CFSBndCondSharedPtr>    m_bndConds;
 
+        NekDouble                           m_bndEvaluateTime;
+
         // Forcing term
         std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
 
-        NekDouble                           m_BndEvaluateTime;
-        NekDouble                           m_TimeIntegLambda;
-        NekDouble                           m_JacobiFreeEps;
-        NekDouble                           m_inArrayNorm = -1.0;
-        NekDouble                           m_NewtonAbsoluteIteTol;
-        int                                 m_TotNewtonIts = 0;
-        int                                 m_TotImpStages = 0;
-        int                                 m_StagesPerStep = 0;
-        Array<OneD, NekDouble>              m_magnitdEstimat;
-
-        LibUtilities::NekNonlinSysSharedPtr         m_nonlinsol;
-        LibUtilities::NekSysOperators         m_NekSysOp;
-        
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession,
             const SpatialDomains::MeshGraphSharedPtr& pGraph);
@@ -178,52 +139,43 @@ namespace Nektar
         void InitAdvection();
 
         void DoOdeRhs(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const NekDouble                                   time);
+            const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+                  Array<OneD,       Array<OneD, NekDouble>> &outarray,
+            const NekDouble                                 time);
         void DoOdeProjection(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const NekDouble                                   time);
+            const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+                  Array<OneD,       Array<OneD, NekDouble>> &outarray,
+            const NekDouble                                 time);
 
         void DoAdvection(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const NekDouble                                   time,
-            const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
+            const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+                  Array<OneD,       Array<OneD, NekDouble>> &outarray,
+            const NekDouble                                 time,
+            const Array<OneD, const Array<OneD, NekDouble>> &pFwd,
+            const Array<OneD, const Array<OneD, NekDouble>> &pBwd);
 
         void DoDiffusion(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
-        void DoDiffusionCoeff(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-            Array<OneD, Array<OneD, NekDouble> >             &outarray,
-            const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
-        void MatrixMultiply_MatrixFreeCoeff(
-            const  TensorOfArray1D<NekDouble>   &inarray,
-            TensorOfArray1D<NekDouble>          &out,
-            const bool                          &flag = false);
+            const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+                  Array<OneD,       Array<OneD, NekDouble>> &outarray,
+            const Array<OneD, const Array<OneD, NekDouble>> &pFwd,
+            const Array<OneD, const Array<OneD, NekDouble>> &pBwd);
 
         void GetFluxVector(
-            const Array<OneD, Array<OneD, NekDouble> >       &physfield,
-            TensorOfArray3D<NekDouble>                       &flux);
+            const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+                  TensorOfArray3D<NekDouble>                &flux);
         void GetFluxVectorDeAlias(
-            const Array<OneD, Array<OneD, NekDouble> >       &physfield,
-            TensorOfArray3D<NekDouble>                       &flux);
+            const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+                  TensorOfArray3D<NekDouble>                &flux);
 
         void SetBoundaryConditions(
-            Array<OneD, Array<OneD, NekDouble> >             &physarray,
-            NekDouble                                         time);
-        
+            Array<OneD, Array<OneD, NekDouble>> &physarray,
+            NekDouble                           time);
+
         void SetBoundaryConditionsBwdWeight();
 
         void GetElmtTimeStep(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD, NekDouble> &tstep);
+            const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+                  Array<OneD, NekDouble>                    &tstep);
 
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
@@ -252,19 +204,21 @@ namespace Nektar
             std::vector<std::string>             &variables);
 
         virtual void v_DoDiffusion(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
+            const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+                  Array<OneD,       Array<OneD, NekDouble>> &outarray,
+            const Array<OneD, const Array<OneD, NekDouble>> &pFwd,
+            const Array<OneD, const Array<OneD, NekDouble>> &pBwd)
+        {
+            boost::ignore_unused(inarray, outarray, pFwd, pBwd);
+            // Do nothing by default
+        }
+        
+        virtual Array<OneD, NekDouble> v_GetMaxStdVelocity(
+            const NekDouble SpeedSoundFactor);
 
-        virtual void v_DoDiffusionCoeff(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >       &pBwd);
-
-        virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
-
+        virtual void v_SteadyStateResidual(
+            int                     step, 
+            Array<OneD, NekDouble>  &L2);
     };
 }
 #endif

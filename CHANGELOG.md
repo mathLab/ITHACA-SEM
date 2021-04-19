@@ -26,6 +26,7 @@ v5.1.0
   num_elements with size() (!1127, !1137, !1141)
 - Use base MPI functions instead of the GS library in the trace exchange
   for parallel DG simulations (!1112)
+- Change the way periodic boundary conditions in parallel is setup to reduce excessive memory usage (!1235)
 
 **FieldConvert**:
 - Add phifile module to compute shape functions for the SPM solver (!1065)

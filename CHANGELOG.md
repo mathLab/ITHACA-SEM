@@ -73,6 +73,9 @@ v5.1.0
 
 v5.0.2
 ------
+**Library**
+- Change the way periodic boundary conditions in parallel is setup to reduce excessive memory usage (!1235)
+
 **CI**
 - Add Debian Bullseye to CI system (!1181)
 

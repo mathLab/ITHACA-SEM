@@ -80,11 +80,15 @@ protected:
     std::vector<StdRegions::Orientation> m_eorient;
     CurveSharedPtr                       m_curve;
 
+    SPATIAL_DOMAINS_EXPORT virtual NekDouble v_GetLocCoords(
+        const Array<OneD, const NekDouble> &coords,
+        Array<OneD, NekDouble> &Lcoords);
+
     void NewtonIterationForLocCoord(const Array<OneD, const NekDouble> &coords,
                                     const Array<OneD, const NekDouble> &ptsx,
                                     const Array<OneD, const NekDouble> &ptsy,
                                     Array<OneD, NekDouble> &Lcoords,
-                                    NekDouble &resid);
+                                    NekDouble &dist);
 
 private:
     //---------------------------------------

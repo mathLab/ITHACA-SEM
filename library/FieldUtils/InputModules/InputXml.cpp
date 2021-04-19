@@ -109,7 +109,7 @@ void InputXml::Process(po::variables_map &vm)
         files.push_back(m_f->m_inputfiles[xml_gz_ending][j]);
     }
 
-    SpatialDomains::DomainRangeShPtr rng = SpatialDomains::NullDomainRangeShPtr;
+    LibUtilities::DomainRangeShPtr rng = LibUtilities::NullDomainRangeShPtr;
 
     // define range to process output
     if (vm.count("range"))
@@ -123,7 +123,7 @@ void InputXml::Process(po::variables_map &vm)
                  "Do not have an even number of range values");
 
         int nvalues = values.size() / 2;
-        rng = MemoryManager<SpatialDomains::DomainRange>::AllocateSharedPtr();
+        rng = MemoryManager<LibUtilities::DomainRange>::AllocateSharedPtr();
 
         rng->m_doZrange   = false;
         rng->m_doYrange   = false;
@@ -154,10 +154,10 @@ void InputXml::Process(po::variables_map &vm)
     // define range to only take a single shape.
     if (vm.count("onlyshape"))
     {
-        if (rng == SpatialDomains::NullDomainRangeShPtr)
+        if (rng == LibUtilities::NullDomainRangeShPtr)
         {
             rng =
-                MemoryManager<SpatialDomains::DomainRange>::AllocateSharedPtr();
+                MemoryManager<LibUtilities::DomainRange>::AllocateSharedPtr();
             rng->m_doXrange = false;
             rng->m_doYrange = false;
             rng->m_doZrange = false;

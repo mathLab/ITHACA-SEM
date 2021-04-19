@@ -129,7 +129,7 @@ void MeshGraphXml::PartitionMesh(
                      "The 'part-only' option should be used in serial.");
 
             // Read 'lite' geometry information
-            ReadGeometry(NullDomainRangeShPtr, false);
+            ReadGeometry(LibUtilities::NullDomainRangeShPtr, false);
 
             // Number of partitions is specified by the parameter.
             int nParts;
@@ -186,7 +186,7 @@ void MeshGraphXml::PartitionMesh(
                 if (isRoot)
                 {
                     // Read 'lite' geometry information
-                    ReadGeometry(NullDomainRangeShPtr, false);
+                    ReadGeometry(LibUtilities::NullDomainRangeShPtr, false);
 
                     // Store composite ordering and boundary information.
                     m_compOrder = CreateCompositeOrdering();
@@ -318,7 +318,7 @@ void MeshGraphXml::PartitionMesh(
             else
             {
                 m_session->InitSession();
-                ReadGeometry(NullDomainRangeShPtr, false);
+                ReadGeometry(LibUtilities::NullDomainRangeShPtr, false);
 
                 m_compOrder = CreateCompositeOrdering();
                 auto comp = CreateCompositeDescriptor();
@@ -371,7 +371,7 @@ void MeshGraphXml::PartitionMesh(
 }
 
 void MeshGraphXml::ReadGeometry(
-    DomainRangeShPtr rng,
+    LibUtilities::DomainRangeShPtr rng,
     bool             fillGraph)
 {
     // Reset member variables.

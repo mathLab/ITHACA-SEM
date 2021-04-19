@@ -86,6 +86,7 @@ enum ImplementationType
     eIterPerExp,
     eStdMat,
     eSumFac,
+    eMatrixFree,
     SIZE_ImplementationType
 };
 
@@ -95,7 +96,8 @@ const char* const ImplementationTypeMap[] =
     "NoCollection",
     "IterPerExp",
     "StdMat",
-    "SumFac"
+    "SumFac",
+    "MatrixFree"
 };
 
 typedef bool ExpansionIsNodal;
@@ -112,13 +114,7 @@ class Operator
         /// Constructor
         Operator(
                 std::vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                std::shared_ptr<CoalescedGeomData> GeomData)
-            : m_stdExp(pCollExp[0]->GetStdExp()),
-              m_numElmt(pCollExp.size()),
-              m_wspSize(0)
-        {
-            boost::ignore_unused(GeomData);
-        }
+                std::shared_ptr<CoalescedGeomData> GeomData);
 
         /// Perform operation
         COLLECTIONS_EXPORT virtual void operator()(
@@ -139,16 +135,30 @@ class Operator
         COLLECTIONS_EXPORT virtual ~Operator();
 
         /// Get the size of the required workspace
-        int GetWspSize()
+        unsigned int GetWspSize()
         {
             return m_wspSize;
         }
 
+        /// Get expansion pointer
+        unsigned int GetNumElmt()
+        {
+            return m_numElmt;
+        }
+
+        /// Get expansion pointer
+        StdRegions::StdExpansionSharedPtr GetExpSharedPtr()
+        {
+            return m_stdExp;
+        }
+
     protected:
+        bool m_isDeformed; 
         StdRegions::StdExpansionSharedPtr m_stdExp;
         unsigned int m_numElmt;
+        unsigned int m_nqe;
         unsigned int m_wspSize;
-};
+    };
 
 /// Shared pointer to an Operator object
 typedef std::shared_ptr<Operator> OperatorSharedPtr;

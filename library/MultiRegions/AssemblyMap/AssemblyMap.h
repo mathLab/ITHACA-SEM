@@ -306,6 +306,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT NekDouble GetIterativeTolerance() const;
             MULTI_REGIONS_EXPORT int GetMaxIterations() const;
             MULTI_REGIONS_EXPORT int GetSuccessiveRHS() const;
+            MULTI_REGIONS_EXPORT std::string GetLinSysIterSovler() const;
 
             MULTI_REGIONS_EXPORT int GetLowestStaticCondLevel() const
             {
@@ -406,6 +407,9 @@ namespace Nektar
 
             /// sucessive RHS  for iterative solver
             int  m_successiveRHS;
+
+            /// Iterative solver: Conjugate Gradient, GMRES
+            std::string m_linSysIterSovler;
 
             Gs::gs_data * m_gsh;
             Gs::gs_data * m_bndGsh;

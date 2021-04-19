@@ -308,6 +308,21 @@ namespace Nektar
             }
 
             template<typename FuncPointerT, typename ObjectPointerT>
+            void SetDiffusionFluxConsTrace(FuncPointerT func, ObjectPointerT obj)
+            {
+                m_FunctorDiffusionfluxConsTrace = std::bind(
+                    func, obj, std::placeholders::_1, std::placeholders::_2,
+                               std::placeholders::_3, std::placeholders::_4,
+                               std::placeholders::_5, std::placeholders::_6,
+                               std::placeholders::_7);
+            }
+
+            void SetDiffusionFluxConsTrace(DiffusionFluxCons flux)
+            {
+                m_FunctorDiffusionfluxConsTrace =   flux;
+            }
+
+            template<typename FuncPointerT, typename ObjectPointerT>
             void SetArtificialDiffusionVector(
                 FuncPointerT func, ObjectPointerT obj)
             {
@@ -373,6 +388,7 @@ namespace Nektar
             DiffusionFluxPenaltyNS          m_fluxPenaltyNS;
             DiffusionArtificialDiffusion    m_ArtificialDiffusionVector;
             DiffusionFluxCons               m_FunctorDiffusionfluxCons;
+            DiffusionFluxCons               m_FunctorDiffusionfluxConsTrace;
             SpecialBndTreat                 m_SpecialBndTreat;
             DiffusionSymmFluxCons           m_FunctorSymmetricfluxCons;
 

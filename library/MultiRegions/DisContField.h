@@ -247,6 +247,11 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray, 
                       Array<OneD,       NekDouble> &outarray);
 
+            virtual void v_GetLocTraceFromTracePts(
+                const Array<OneD, const NekDouble>  &Fwd,
+                const Array<OneD, const NekDouble>  &Bwd,
+                Array<OneD,       NekDouble>        &locTraceFwd,
+                Array<OneD,       NekDouble>        &locTraceBwd);
 
 #if 0
             /// Populates the list of boundary condition expansions in multidomain case.
@@ -334,6 +339,10 @@ namespace Nektar
                 bool FillBnd           = true,
                 bool PutFwdInBwdOnBCs  = false, 
                 bool DoExchange        = true); 
+            virtual void v_FillBwdWithBoundCond(
+                const Array<OneD, NekDouble> &Fwd,
+                Array<OneD, NekDouble> &Bwd,
+                bool PutFwdInBwdOnBCs);
 
             inline virtual const Array<OneD,const NekDouble>
                 &v_GetBndCondBwdWeight();
@@ -367,6 +376,10 @@ namespace Nektar
                 GetDomainBCs(const SpatialDomains::CompositeMap &domain,
                              const SpatialDomains::BoundaryConditions &Allbcs,
                              const std::string &variable);
+            virtual void v_AddTraceIntegralToOffDiag(
+                const Array<OneD, const NekDouble> &FwdFlux, 
+                const Array<OneD, const NekDouble> &BwdFlux, 
+                      Array<OneD,       NekDouble> &outarray);
         };
 
         typedef std::shared_ptr<DisContField>   DisContFieldSharedPtr;
@@ -404,7 +417,7 @@ namespace Nektar
                 Bwd[m_periodicBwdCopy[n]] = Fwd[m_periodicFwdCopy[n]];
             }
         }
-
+        
     } //end of namespace
 } //end of namespace
 

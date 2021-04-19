@@ -87,7 +87,7 @@ namespace Nektar
             bool                                        m_root;
 
             /// Iterative solver: Conjugate Gradient, GMRES
-            std::string m_linSysIterSovler;
+            std::string m_linSysIterSolver;
 
             /// Storage for solutions to previous linear problems
             std::vector<Array<OneD, NekDouble> > m_prevLinSol;

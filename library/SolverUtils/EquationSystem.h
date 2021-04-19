@@ -48,16 +48,18 @@
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Core/Misc.h>
+#include <SolverUtils/Filters/Filter.h>
 
 namespace Nektar
 {
-namespace FieldUtils {
-class Interpolator;
-}
+    namespace FieldUtils {
+        class Interpolator;
+    }
     namespace SolverUtils
     {
         class EquationSystem;
-
+        class FilterOperators;
+        
         /// A shared pointer to an EquationSystem object
         typedef std::shared_ptr<EquationSystem> EquationSystemSharedPtr;
         /// Datatype of the NekFactory used to instantiate classes derived from
@@ -309,13 +311,13 @@ class Interpolator;
             }
 
             SOLVER_UTILS_EXPORT void SetTime(
-                const NekDouble time)
+                                             const NekDouble time)
             {
                 m_time = time;
             }
 
             SOLVER_UTILS_EXPORT void SetInitialStep(
-                const int step)
+                                                    const int step)
             {
                 m_initialStep = step;
             }
@@ -329,6 +331,8 @@ class Interpolator;
         protected:
             /// Communicator
             LibUtilities::CommSharedPtr                 m_comm;
+            bool                                        m_verbose;
+            bool                                        m_root;
             /// The session reader
             LibUtilities::SessionReaderSharedPtr        m_session;
             /// Map of known SessionFunctions
@@ -358,6 +362,10 @@ class Interpolator;
             NekDouble                                   m_lambda;
             /// Time between checkpoints.
             NekDouble                                   m_checktime;
+            NekDouble                                   m_lastCheckTime;
+
+            NekDouble                                   m_TimeIncrementFactor;
+
             /// Number of checkpoints written so far
             int                                         m_nchk;
             /// Number of steps to take.
@@ -589,7 +597,7 @@ class Interpolator;
         {
             v_ExtraFldOutput(fieldcoeffs, variables);
         }
-
+        
         /**
          * Prints a summary of variables and problem parameters.
          *

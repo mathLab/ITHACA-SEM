@@ -120,7 +120,7 @@ namespace Nektar
         {
             return m_varFactors;
         }
-    }
-}
+    } //end of namespace
+} //end of namespace
 
 #endif

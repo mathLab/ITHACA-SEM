@@ -252,16 +252,6 @@ namespace Nektar
             /// not.
             inline bool GetPhysState(void) const;
 
-            /// This function integrates a function \f$f(\boldsymbol{x})\f$
-            /// over the domain consisting of all the elements of the expansion.
-            MULTI_REGIONS_EXPORT NekDouble PhysIntegral (void);
-
-            /// This function integrates a function \f$f(\boldsymbol{x})\f$
-            /// over the domain consisting of all the elements of the expansion.
-            MULTI_REGIONS_EXPORT NekDouble PhysIntegral(
-                const Array<OneD,
-                const NekDouble> &inarray);
-
             /// multiply the metric jacobi and quadrature weights
             MULTI_REGIONS_EXPORT void MultiplyByQuadratureMetric(
                 const Array<OneD, const NekDouble>  &inarray,

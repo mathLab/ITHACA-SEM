@@ -434,8 +434,14 @@ NEKMESH_EXPORT std::ostream &operator<<(std::ostream &os,
                                              const NodeSharedPtr &n);
 
 /// Define node equality based on coordinate with optional custom tolerance factor.
+/// This routine checks the relative distance between the coordinates
 NEKMESH_EXPORT bool IsNodeEqual(const Node &n1, const Node &n2,
     const unsigned int fact = NekConstants::kNekFloatCompFact);
+
+/// Define node equality based on coordinate with optional custom tolerance factor.
+/// This routine checks the absolute distance between the coordinates
+NEKMESH_EXPORT bool IsNodeClose(const Node &n1, const Node &n2,
+    const NekDouble tol = NekConstants::kNekMachineEpsilon);
 
 /**
  * @brief Defines a hash function for nodes.

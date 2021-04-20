@@ -57,11 +57,15 @@ v5.1.0
 **Documentation**:
 - Updated Windows source build instructions in user guide (!1152)
 
+**Tester**
+- Added test metric to check if warnings appear in output and error stream (!1225)
+
 **NekMesh**
 - Improved boundary layer splitting and output to CADfix (!938)
 - Improve .geo reader and support 3D geometries with voids (!1031)
 - Added r-adaptation code (!1109)
 - Added Python bindings, change NekMeshUtils to NekMesh (!1149)
+- Added option to use absolute tolerance in peralign (!1225)
 
 **BuildSystem**
 - Toggle build type (!1135)

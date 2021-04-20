@@ -286,14 +286,6 @@ bionic-full-build-env:
   <<: *build-env-ubuntu-template-full
   needs: ["bionic-default-build-env"]
 
-xenial-default-build-env:
-  <<: *build-env-ubuntu-template-default
-
-xenial-full-build-env:
-  <<: *build-env-ubuntu-template-full
-  needs: ["xenial-default-build-env"]
-
-
 focal-default-build-and-test:
   <<: *build-and-test-template
   needs: ["focal-default-build-env"]
@@ -309,14 +301,6 @@ bionic-default-build-and-test:
 bionic-full-build-and-test:
   <<: *build-and-test-template
   needs: ["bionic-full-build-env"]
-
-xenial-default-build-and-test:
-  <<: *build-and-test-template
-  needs: ["xenial-default-build-env"]
-
-xenial-full-build-and-test:
-  <<: *build-and-test-template
-  needs: ["xenial-full-build-env"]
 
 
 # COMPILER WARNINGS
@@ -335,14 +319,6 @@ bionic-default-warnings:
 bionic-full-warnings:
   <<: *compiler-warning-template
   needs: ["bionic-full-build-and-test"]
-
-xenial-default-warnings:
-  <<: *compiler-warning-template
-  needs: ["xenial-default-build-and-test"]
-
-xenial-full-warnings:
-  <<: *compiler-warning-template
-  needs: ["xenial-full-build-and-test"]
 
 
 ################################################

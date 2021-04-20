@@ -80,6 +80,7 @@ v5.0.2
 
 **Documentation**
 - Updated Documentation to include HDF5 Mesh Output (!1230)
+- Removed Ubuntu Trusty (14.04) from CI and added Focal (20.04) (!1238)
 
 **CI**
 - Add Debian Bullseye to CI system (!1181)

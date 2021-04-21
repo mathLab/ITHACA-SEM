@@ -606,6 +606,22 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                 const Array<OneD, const NekDouble> &soln = NullNekDouble1DArray);
 
+            /**
+	     * The integration is evaluated locally, that is
+	     * \f[\int
+	     *    f(\boldsymbol{x})d\boldsymbol{x}=\sum_{e=1}^{{N_{\mathrm{el}}}}
+	     * \left\{\int_{\Omega_e}f(\boldsymbol{x})d\boldsymbol{x}\right\},  \f]
+	     * where the integration over the separate elements is done by the
+	     * function StdRegions#StdExpansion#Integral, which discretely
+	     * evaluates the integral using Gaussian quadrature.
+	     *
+	     * @param   inarray         An array of size \f$Q_{\mathrm{tot}}\f$
+	     *                          containing the values of the function
+	     *                          \f$f(\boldsymbol{x})\f$ at the quadrature
+	     *                          points \f$\boldsymbol{x}_i\f$.
+	     * @return  The value of the discretely evaluated integral
+	     *          \f$\int f(\boldsymbol{x})d\boldsymbol{x}\f$.
+	     */
             NekDouble Integral (const Array<OneD, const NekDouble> &inarray)
             {
                 return v_Integral(inarray);

@@ -3010,18 +3010,34 @@ namespace Nektar
             return sqrt(err);
         }
 
+        /**
+	 * The integration is evaluated locally, that is
+	 * \f[\int
+	 *    f(\boldsymbol{x})d\boldsymbol{x}=\sum_{e=1}^{{N_{\mathrm{el}}}}
+	 * \left\{\int_{\Omega_e}f(\boldsymbol{x})d\boldsymbol{x}\right\},  \f]
+	 * where the integration over the separate elements is done by the
+	 * function StdRegions#StdExpansion#Integral, which discretely
+	 * evaluates the integral using Gaussian quadrature.
+	 *
+	 * @param   inarray         An array of size \f$Q_{\mathrm{tot}}\f$
+	 *                          containing the values of the function
+	 *                          \f$f(\boldsymbol{x})\f$ at the quadrature
+	 *                          points \f$\boldsymbol{x}_i\f$.
+	 * @return  The value of the discretely evaluated integral
+	 *          \f$\int f(\boldsymbol{x})d\boldsymbol{x}\f$.
+	 */
         NekDouble ExpList::v_Integral(const Array<OneD, const NekDouble> &inarray)
         {
-            NekDouble err = 0.0;
+            NekDouble sum = 0.0;
             int       i   = 0;
 
             for (i = 0; i < (*m_exp).size(); ++i)
             {
-                err += (*m_exp)[i]->Integral(inarray + m_phys_offset[i]);
+                sum += (*m_exp)[i]->Integral(inarray + m_phys_offset[i]);
             }
-            m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceSum);
+            m_comm->GetRowComm()->AllReduce(sum, LibUtilities::ReduceSum);
 
-            return err;
+            return sum;
         }
 
         NekDouble ExpList::v_VectorFlux(const Array<OneD, Array<OneD, NekDouble> > &inarray)

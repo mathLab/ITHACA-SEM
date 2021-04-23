@@ -377,15 +377,15 @@ OperatorImpMap CollectionOptimisation::SetWithTimings(
             }
         }
 
-        Collection collloc(pCollExp,impTypes);
+        Collection collLoc(pCollExp,impTypes);
         for (int i = 0; i < SIZE_OperatorType; ++i)
         {
-            collloc.Initialise((OperatorType)i);
+            collLoc.Initialise((OperatorType)i);
         }
-        coll.push_back(collloc);
+        coll.push_back(collLoc);
     }
 
-    StdRegions::ConstFactorMap factors; // requried for helmholtz operator
+    StdRegions::ConstFactorMap factors; // required for helmholtz operator
     factors[StdRegions::eFactorLambda] = 1.5; 
 
     // Determine the number of tests to do in one second

@@ -62,17 +62,16 @@ class IProductWRTDerivBase_StdMat : public Operator
     public:
         OPERATOR_CREATE(IProductWRTDerivBase_StdMat)
 
-        virtual ~IProductWRTDerivBase_StdMat()
+        ~IProductWRTDerivBase_StdMat() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD,       NekDouble> &entry1,
-                      Array<OneD,       NekDouble> &entry2,
-                      Array<OneD,       NekDouble> &entry3,
-                      Array<OneD,       NekDouble> &wsp,
-                const StdRegions::ConstFactorMap   &factors) final
+        void operator()(const Array<OneD, const NekDouble> &entry0,
+                        Array<OneD, NekDouble> &entry1,
+                        Array<OneD, NekDouble> &entry2,
+                        Array<OneD, NekDouble> &entry3,
+                        Array<OneD, NekDouble> &wsp,
+                        const StdRegions::ConstFactorMap   &factors) final
         {
             boost::ignore_unused(factors);
 
@@ -169,11 +168,10 @@ class IProductWRTDerivBase_StdMat : public Operator
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+       void operator()(int dir,
+                       const Array<OneD, const NekDouble> &input,
+                       Array<OneD, NekDouble> &output,
+                       Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -278,16 +276,15 @@ class IProductWRTDerivBase_MatrixFree : public Operator, MatrixFreeMultiInOneOut
     public:
         OPERATOR_CREATE(IProductWRTDerivBase_MatrixFree)
 
-        virtual ~IProductWRTDerivBase_MatrixFree()
+        ~IProductWRTDerivBase_MatrixFree() final
         {
         }
 
-        virtual void operator()(
-               const Array<OneD, const NekDouble> &entry0,
-                           Array<OneD, NekDouble> &entry1,
-                           Array<OneD, NekDouble> &entry2,
-                           Array<OneD, NekDouble> &entry3,
-                           Array<OneD, NekDouble> &wsp,
+        void operator()(const Array<OneD, const NekDouble> &entry0,
+                        Array<OneD, NekDouble> &entry1,
+                        Array<OneD, NekDouble> &entry2,
+                        Array<OneD, NekDouble> &entry3,
+                        Array<OneD, NekDouble> &wsp,
                 const StdRegions::ConstFactorMap  &factors) final
         {
             boost::ignore_unused(wsp,factors);
@@ -355,11 +352,10 @@ class IProductWRTDerivBase_MatrixFree : public Operator, MatrixFreeMultiInOneOut
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+         void operator()(int dir,
+                         const Array<OneD, const NekDouble> &input,
+                         Array<OneD, NekDouble> &output,
+                         Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -443,17 +439,16 @@ class IProductWRTDerivBase_IterPerExp : public Operator
     public:
         OPERATOR_CREATE(IProductWRTDerivBase_IterPerExp)
 
-        virtual ~IProductWRTDerivBase_IterPerExp()
+        ~IProductWRTDerivBase_IterPerExp() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD, NekDouble> &entry1,
-                      Array<OneD, NekDouble> &entry2,
-                      Array<OneD, NekDouble> &entry3,
-                      Array<OneD, NekDouble> &wsp,
-                const StdRegions::ConstFactorMap   &factors) final
+        void operator()(const Array<OneD, const NekDouble> &entry0,
+                        Array<OneD, NekDouble> &entry1,
+                        Array<OneD, NekDouble> &entry2,
+                        Array<OneD, NekDouble> &entry3,
+                        Array<OneD, NekDouble> &wsp,
+                        const StdRegions::ConstFactorMap   &factors) final
         {
             boost::ignore_unused(factors);
 
@@ -551,11 +546,10 @@ class IProductWRTDerivBase_IterPerExp : public Operator
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -639,17 +633,16 @@ class IProductWRTDerivBase_NoCollection : public Operator
     public:
         OPERATOR_CREATE(IProductWRTDerivBase_NoCollection)
 
-        virtual ~IProductWRTDerivBase_NoCollection()
+        ~IProductWRTDerivBase_NoCollection() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD, NekDouble> &entry1,
-                      Array<OneD, NekDouble> &entry2,
-                      Array<OneD, NekDouble> &entry3,
-                      Array<OneD, NekDouble> &wsp,
-                const StdRegions::ConstFactorMap   &factors) final
+        void operator()(const Array<OneD, const NekDouble> &entry0,
+                        Array<OneD, NekDouble> &entry1,
+                        Array<OneD, NekDouble> &entry2,
+                        Array<OneD, NekDouble> &entry3,
+                        Array<OneD, NekDouble> &wsp,
+                        const StdRegions::ConstFactorMap   &factors) final
         {
             boost::ignore_unused(wsp,factors);
 
@@ -683,11 +676,10 @@ class IProductWRTDerivBase_NoCollection : public Operator
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -764,17 +756,16 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
     public:
         OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Seg)
 
-        virtual ~IProductWRTDerivBase_SumFac_Seg()
+        ~IProductWRTDerivBase_SumFac_Seg() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD,       NekDouble> &entry1,
-                      Array<OneD,       NekDouble> &entry2,
-                      Array<OneD,       NekDouble> &entry3,
-                      Array<OneD,       NekDouble> &wsp,
-                const StdRegions::ConstFactorMap   &factors) final
+        void operator()(const Array<OneD, const NekDouble> &entry0,
+                        Array<OneD,       NekDouble> &entry1,
+                        Array<OneD,       NekDouble> &entry2,
+                        Array<OneD,       NekDouble> &entry3,
+                        Array<OneD,       NekDouble> &wsp,
+                        const StdRegions::ConstFactorMap   &factors) final
         {
             boost::ignore_unused(factors);
             Array<OneD, Array<OneD, const NekDouble> > in(3);
@@ -826,11 +817,10 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
                         &output[0], m_nmodes0);
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -876,17 +866,16 @@ class IProductWRTDerivBase_SumFac_Quad : public Operator
 public:
     OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Quad)
 
-    virtual ~IProductWRTDerivBase_SumFac_Quad()
+    ~IProductWRTDerivBase_SumFac_Quad() final
     {
     }
 
-    virtual void operator()(
-                            const Array<OneD, const NekDouble> &entry0,
-                            Array<OneD, NekDouble> &entry1,
-                            Array<OneD, NekDouble> &entry2,
-                            Array<OneD, NekDouble> &entry3,
-                            Array<OneD, NekDouble> &wsp,
-                            const StdRegions::ConstFactorMap   &factors) final
+    void operator()(const Array<OneD, const NekDouble> &entry0,
+                    Array<OneD, NekDouble> &entry1,
+                    Array<OneD, NekDouble> &entry2,
+                    Array<OneD, NekDouble> &entry3,
+                    Array<OneD, NekDouble> &wsp,
+                    const StdRegions::ConstFactorMap   &factors) final
     {
         boost::ignore_unused(factors);
 
@@ -956,11 +945,10 @@ public:
         Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
     }
 
-    virtual void operator()(
-                            int                           dir,
-                            const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output,
-                            Array<OneD,       NekDouble> &wsp)
+    void operator()(int dir,
+                    const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &wsp) final
     {
         boost::ignore_unused(dir, input, output, wsp);
         NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -1023,7 +1011,7 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
 public:
         OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Tri)
 
-        virtual ~IProductWRTDerivBase_SumFac_Tri()
+        ~IProductWRTDerivBase_SumFac_Tri() final
         {
         }
 
@@ -1058,13 +1046,12 @@ public:
      *    + (d\phi/d\eta_1, (d\xi_1/dx in[0] + d\xi_1/dy in[1])) \f]
      *
      */
-    virtual void operator()(
-                const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD, NekDouble>       &entry1,
-                      Array<OneD, NekDouble>       &entry2,
-                      Array<OneD, NekDouble>       &entry3,
-                      Array<OneD, NekDouble>       &wsp,
-                const StdRegions::ConstFactorMap   &factors) final
+     void operator()(const Array<OneD, const NekDouble> &entry0,
+                     Array<OneD, NekDouble> &entry1,
+                     Array<OneD, NekDouble> &entry2,
+                     Array<OneD, NekDouble> &entry3,
+                     Array<OneD, NekDouble> &wsp,
+                     const StdRegions::ConstFactorMap   &factors) final
         {
             boost::ignore_unused(factors);
 
@@ -1142,11 +1129,10 @@ public:
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -1247,18 +1233,17 @@ class IProductWRTDerivBase_SumFac_Hex : public Operator
     public:
         OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Hex)
 
-        virtual ~IProductWRTDerivBase_SumFac_Hex()
+        ~IProductWRTDerivBase_SumFac_Hex() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD, NekDouble>       &entry1,
-                      Array<OneD, NekDouble>       &entry2,
-                      Array<OneD, NekDouble>       &entry3,
-                      Array<OneD, NekDouble>       &wsp,
-                const StdRegions::ConstFactorMap   &factors) final
-        {
+         void operator()(const Array<OneD, const NekDouble> &entry0,
+                         Array<OneD, NekDouble> &entry1,
+                         Array<OneD, NekDouble> &entry2,
+                         Array<OneD, NekDouble> &entry3,
+                         Array<OneD, NekDouble> &wsp,
+                         const StdRegions::ConstFactorMap   &factors) final
+    {
             boost::ignore_unused(factors);
 
             unsigned int nPhys  = m_stdExp->GetTotPoints();
@@ -1339,11 +1324,10 @@ class IProductWRTDerivBase_SumFac_Hex : public Operator
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -1467,13 +1451,12 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
          *    fac3 &= & (1+\eta_1)/2  \end{array} \f]
          *
          */
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD, NekDouble>       &entry1,
-                      Array<OneD, NekDouble>       &entry2,
-                      Array<OneD, NekDouble>       &entry3,
-                      Array<OneD, NekDouble>       &wsp,
-                const StdRegions::ConstFactorMap   &factors) final
+         void operator()(const Array<OneD, const NekDouble> &entry0,
+                         Array<OneD, NekDouble> &entry1,
+                         Array<OneD, NekDouble> &entry2,
+                         Array<OneD, NekDouble> &entry3,
+                         Array<OneD, NekDouble> &wsp,
+                         const StdRegions::ConstFactorMap   &factors) final
         {
             boost::ignore_unused(factors);
 
@@ -1581,11 +1564,10 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+         void operator()(int dir,
+                         const Array<OneD, const NekDouble> &input,
+                         Array<OneD, NekDouble> &output,
+                         Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -1697,7 +1679,7 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
     public:
         OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Prism)
 
-        virtual ~IProductWRTDerivBase_SumFac_Prism()
+        ~IProductWRTDerivBase_SumFac_Prism() final
         {
         }
 
@@ -1747,13 +1729,13 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
      *               + d\xi_2/dz in[2])) \f]
      *
      */
-        virtual void operator()(
+       void operator()(
                 const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD, NekDouble>       &entry1,
-                      Array<OneD, NekDouble>       &entry2,
-                      Array<OneD, NekDouble>       &entry3,
-                      Array<OneD, NekDouble>       &wsp,
-                const StdRegions::ConstFactorMap   &factors) final
+                      Array<OneD, NekDouble> &entry1,
+                      Array<OneD, NekDouble> &entry2,
+                      Array<OneD, NekDouble> &entry3,
+                      Array<OneD, NekDouble> &wsp,
+                const StdRegions::ConstFactorMap &factors) final
         {
             boost::ignore_unused(factors);
 
@@ -1847,11 +1829,10 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+         void operator()(int dir,
+                         const Array<OneD, const NekDouble> &input,
+                         Array<OneD, NekDouble> &output,
+                         Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -1955,7 +1936,7 @@ class IProductWRTDerivBase_SumFac_Pyr : public Operator
     public:
         OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Pyr)
 
-        virtual ~IProductWRTDerivBase_SumFac_Pyr()
+        ~IProductWRTDerivBase_SumFac_Pyr() final
         {
         }
 
@@ -2013,13 +1994,12 @@ class IProductWRTDerivBase_SumFac_Pyr : public Operator
      * \f[ (d\phi/d\eta_2, (d\xi_2/dx in[0] + d\xi_2/dy in[1] +
      *      d\xi_2/dz in[2])) \f]
      */
-     virtual void operator()(
-                const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD, NekDouble>       &entry1,
-                      Array<OneD, NekDouble>       &entry2,
-                      Array<OneD, NekDouble>       &entry3,
-                      Array<OneD, NekDouble>       &wsp,
-                const StdRegions::ConstFactorMap   &factors) final
+     void operator()(const Array<OneD, const NekDouble> &entry0,
+                     Array<OneD, NekDouble> &entry1,
+                     Array<OneD, NekDouble> &entry2,
+                     Array<OneD, NekDouble> &entry3,
+                     Array<OneD, NekDouble> &wsp,
+                     const StdRegions::ConstFactorMap   &factors) final
         {
             boost::ignore_unused(factors);
 
@@ -2121,11 +2101,10 @@ class IProductWRTDerivBase_SumFac_Pyr : public Operator
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+         void operator()(int dir,
+                         const Array<OneD, const NekDouble> &input,
+                         Array<OneD, NekDouble> &output,
+                         Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");

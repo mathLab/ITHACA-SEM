@@ -61,17 +61,16 @@ class PhysDeriv_StdMat : public Operator
     public:
         OPERATOR_CREATE(PhysDeriv_StdMat)
 
-        virtual ~PhysDeriv_StdMat()
+        ~PhysDeriv_StdMat() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output0,
-                      Array<OneD,       NekDouble> &output1,
-                      Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp,
-                const StdRegions::ConstFactorMap   &factors) final
+       void operator()(const Array<OneD, const NekDouble> &input,
+                       Array<OneD, NekDouble> &output0,
+                       Array<OneD, NekDouble> &output1,
+                       Array<OneD, NekDouble> &output2,
+                       Array<OneD, NekDouble> &wsp,
+                       const StdRegions::ConstFactorMap   &factors) final
         {
             boost::ignore_unused(factors);
 
@@ -132,11 +131,10 @@ class PhysDeriv_StdMat : public Operator
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp) final
         {
             int nPhys = m_stdExp->GetTotPoints();
             int ntot = m_numElmt*nPhys;
@@ -274,17 +272,16 @@ class PhysDeriv_MatrixFree : public Operator, MatrixFreeOneInMultiOut
     public:
     OPERATOR_CREATE(PhysDeriv_MatrixFree)
 
-    virtual ~PhysDeriv_MatrixFree()
+    ~PhysDeriv_MatrixFree() final
     {
     }
 
-    virtual void operator()(
-                            const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output0,
-                            Array<OneD,       NekDouble> &output1,
-                            Array<OneD,       NekDouble> &output2,
-                            Array<OneD,       NekDouble> &wsp,
-                            const StdRegions::ConstFactorMap   &factors) final
+    void operator()(const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output0,
+                    Array<OneD, NekDouble> &output1,
+                    Array<OneD, NekDouble> &output2,
+                    Array<OneD,NekDouble> &wsp,
+                    const StdRegions::ConstFactorMap   &factors) final
     {
         boost::ignore_unused(wsp,factors);
         if (m_isPadded)
@@ -319,11 +316,10 @@ class PhysDeriv_MatrixFree : public Operator, MatrixFreeOneInMultiOut
         }
     }
 
-    virtual void operator()(
-                            int                           dir,
-                            const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output,
-                            Array<OneD,       NekDouble> &wsp)
+    void operator()(int dir,
+                    const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &wsp) final
     {
         boost::ignore_unused(wsp);
         if (m_isPadded)
@@ -401,26 +397,26 @@ private:
 OperatorKey PhysDeriv_MatrixFree::m_typeArr[] =
     {
      GetOperatorFactory().RegisterCreatorFunction(
-                                                  OperatorKey(eSegment, ePhysDeriv, eMatrixFree, false),
-                                                  PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Seg"),
+                    OperatorKey(eSegment, ePhysDeriv, eMatrixFree, false),
+                    PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Seg"),
      GetOperatorFactory().RegisterCreatorFunction(
-                                                  OperatorKey(eTriangle, ePhysDeriv, eMatrixFree, false),
-                                                  PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Tri"),
+                    OperatorKey(eTriangle, ePhysDeriv, eMatrixFree, false),
+                    PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Tri"),
      GetOperatorFactory().RegisterCreatorFunction(
-                                                  OperatorKey(eQuadrilateral, ePhysDeriv, eMatrixFree, false),
-                                                  PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Quad"),
+                    OperatorKey(eQuadrilateral, ePhysDeriv, eMatrixFree, false),
+                    PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Quad"),
      GetOperatorFactory().RegisterCreatorFunction(
-                                                  OperatorKey(eHexahedron, ePhysDeriv, eMatrixFree, false),
-                                                  PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Hex"),
+                    OperatorKey(eHexahedron, ePhysDeriv, eMatrixFree, false),
+                    PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Hex"),
      GetOperatorFactory().RegisterCreatorFunction(
-                                                  OperatorKey(ePrism, ePhysDeriv, eMatrixFree, false),
-                                                  PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Prism"),
+                    OperatorKey(ePrism, ePhysDeriv, eMatrixFree, false),
+                    PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Prism"),
      GetOperatorFactory().RegisterCreatorFunction(
-                                                  OperatorKey(ePyramid, ePhysDeriv, eMatrixFree, false),
-                                                  PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Pyr"),
+                    OperatorKey(ePyramid, ePhysDeriv, eMatrixFree, false),
+                    PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Pyr"),
      GetOperatorFactory().RegisterCreatorFunction(
-                                                  OperatorKey(eTetrahedron, ePhysDeriv, eMatrixFree, false),
-                                                  PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Tet")
+                     OperatorKey(eTetrahedron, ePhysDeriv, eMatrixFree, false),
+                     PhysDeriv_MatrixFree::create, "PhysDeriv_MatrixFree_Tet")
 
     };
 
@@ -432,16 +428,16 @@ class PhysDeriv_IterPerExp : public Operator
 public:
     OPERATOR_CREATE(PhysDeriv_IterPerExp)
 
-    virtual ~PhysDeriv_IterPerExp()
+    ~PhysDeriv_IterPerExp() final
     {
     }
 
-    virtual void operator()( const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output0,
-                            Array<OneD,       NekDouble> &output1,
-                            Array<OneD,       NekDouble> &output2,
-                            Array<OneD,       NekDouble> &wsp,
-                            const StdRegions::ConstFactorMap   &factors)
+    void operator()( const Array<OneD, const NekDouble> &input,
+                     Array<OneD, NekDouble> &output0,
+                     Array<OneD, NekDouble> &output1,
+                     Array<OneD, NekDouble> &output2,
+                     Array<OneD, NekDouble> &wsp,
+                     const StdRegions::ConstFactorMap   &factors) final
         {
             boost::ignore_unused(factors);            
 
@@ -503,11 +499,10 @@ public:
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD,NekDouble> &wsp) final
         {
             int nPhys = m_stdExp->GetTotPoints();
             int ntot = m_numElmt*nPhys;
@@ -624,17 +619,16 @@ class PhysDeriv_NoCollection : public Operator
     public:
         OPERATOR_CREATE(PhysDeriv_NoCollection)
 
-        virtual ~PhysDeriv_NoCollection()
+        ~PhysDeriv_NoCollection() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output0,
-                      Array<OneD,       NekDouble> &output1,
-                      Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp,
-                const StdRegions::ConstFactorMap   &factors)
+        void operator()(const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output0,
+                        Array<OneD, NekDouble> &output1,
+                        Array<OneD, NekDouble> &output2,
+                        Array<OneD, NekDouble> &wsp,
+                        const StdRegions::ConstFactorMap   &factors) final
         {
             boost::ignore_unused(wsp,factors);
 
@@ -679,11 +673,10 @@ class PhysDeriv_NoCollection : public Operator
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                       const Array<OneD, const NekDouble> &input,
+                       Array<OneD, NekDouble> &output,
+                       Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(wsp);
 
@@ -755,17 +748,16 @@ class PhysDeriv_SumFac_Seg : public Operator
     public:
         OPERATOR_CREATE(PhysDeriv_SumFac_Seg)
 
-        virtual ~PhysDeriv_SumFac_Seg()
+        ~PhysDeriv_SumFac_Seg() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output0,
-                      Array<OneD,       NekDouble> &output1,
-                      Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp,
-                const StdRegions::ConstFactorMap   &factors)
+        void operator()(const Array<OneD, const NekDouble> &input,
+                        Array<OneD,       NekDouble> &output0,
+                        Array<OneD,       NekDouble> &output1,
+                        Array<OneD,       NekDouble> &output2,
+                        Array<OneD,       NekDouble> &wsp,
+                        const StdRegions::ConstFactorMap   &factors) final
         {
             boost::ignore_unused(factors);
 
@@ -827,11 +819,10 @@ class PhysDeriv_SumFac_Seg : public Operator
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp) final
         {
             const int nqcol   = m_nquad0*m_numElmt;
 
@@ -902,17 +893,16 @@ class PhysDeriv_SumFac_Quad : public Operator
     public:
         OPERATOR_CREATE(PhysDeriv_SumFac_Quad)
 
-        virtual ~PhysDeriv_SumFac_Quad()
+        ~PhysDeriv_SumFac_Quad() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output0,
-                      Array<OneD,       NekDouble> &output1,
-                      Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp,
-                const StdRegions::ConstFactorMap   &factors)
+        void operator()(const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output0,
+                        Array<OneD, NekDouble> &output1,
+                        Array<OneD, NekDouble> &output2,
+                        Array<OneD, NekDouble> &wsp,
+                        const StdRegions::ConstFactorMap &factors) final
         {
             boost::ignore_unused(factors);
 
@@ -986,11 +976,10 @@ class PhysDeriv_SumFac_Quad : public Operator
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp) final
         {
             const int nqtot   = m_nquad0 * m_nquad1;
             const int nqcol   = nqtot*m_numElmt;
@@ -1079,17 +1068,16 @@ class PhysDeriv_SumFac_Tri : public Operator
     public:
         OPERATOR_CREATE(PhysDeriv_SumFac_Tri)
 
-        virtual ~PhysDeriv_SumFac_Tri()
+        ~PhysDeriv_SumFac_Tri() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output0,
-                      Array<OneD,       NekDouble> &output1,
-                      Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp,
-                const StdRegions::ConstFactorMap   &factors)
+        void operator()(const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output0,
+                        Array<OneD, NekDouble> &output1,
+                        Array<OneD, NekDouble> &output2,
+                        Array<OneD, NekDouble> &wsp,
+                        const StdRegions::ConstFactorMap   &factors) final
         {
             boost::ignore_unused(factors);
 
@@ -1172,11 +1160,10 @@ class PhysDeriv_SumFac_Tri : public Operator
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp) final
         {
             const int nqtot   = m_nquad0 * m_nquad1;
             const int nqcol   = nqtot*m_numElmt;
@@ -1305,17 +1292,16 @@ class PhysDeriv_SumFac_Hex : public Operator
     public:
         OPERATOR_CREATE(PhysDeriv_SumFac_Hex)
 
-        virtual ~PhysDeriv_SumFac_Hex()
+        ~PhysDeriv_SumFac_Hex() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output0,
-                      Array<OneD,       NekDouble> &output1,
-                      Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp,
-                const StdRegions::ConstFactorMap   &factors)
+        void operator()(const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output0,
+                        Array<OneD, NekDouble> &output1,
+                        Array<OneD, NekDouble> &output2,
+                        Array<OneD, NekDouble> &wsp,
+                        const StdRegions::ConstFactorMap   &factors) final
         {
             boost::ignore_unused(factors);
 
@@ -1391,11 +1377,10 @@ class PhysDeriv_SumFac_Hex : public Operator
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp) final
         {
             int nPhys = m_stdExp->GetTotPoints();
             int ntot = m_numElmt*nPhys;
@@ -1511,17 +1496,16 @@ class PhysDeriv_SumFac_Tet : public Operator
     public:
         OPERATOR_CREATE(PhysDeriv_SumFac_Tet)
 
-        virtual ~PhysDeriv_SumFac_Tet()
+        ~PhysDeriv_SumFac_Tet() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output0,
-                      Array<OneD,       NekDouble> &output1,
-                      Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp,
-                const StdRegions::ConstFactorMap   &factors)
+        void operator()(const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output0,
+                        Array<OneD, NekDouble> &output1,
+                        Array<OneD, NekDouble> &output2,
+                        Array<OneD, NekDouble> &wsp,
+                        const StdRegions::ConstFactorMap   &factors) final
         {
             boost::ignore_unused(factors);
 
@@ -1632,11 +1616,10 @@ class PhysDeriv_SumFac_Tet : public Operator
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp) final
         {
             int nPhys = m_stdExp->GetTotPoints();
             int ntot = m_numElmt*nPhys;
@@ -1824,17 +1807,16 @@ class PhysDeriv_SumFac_Prism : public Operator
     public:
         OPERATOR_CREATE(PhysDeriv_SumFac_Prism)
 
-        virtual ~PhysDeriv_SumFac_Prism()
+        ~PhysDeriv_SumFac_Prism() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output0,
-                      Array<OneD,       NekDouble> &output1,
-                      Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp,
-                const StdRegions::ConstFactorMap   &factors)
+        void operator()(const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output0,
+                        Array<OneD, NekDouble> &output1,
+                        Array<OneD, NekDouble> &output2,
+                        Array<OneD, NekDouble> &wsp,
+                        const StdRegions::ConstFactorMap   &factors) final
         {
             boost::ignore_unused(factors);
 
@@ -1923,11 +1905,10 @@ class PhysDeriv_SumFac_Prism : public Operator
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp) final
         {
             int nPhys = m_stdExp->GetTotPoints();
             int ntot = m_numElmt*nPhys;
@@ -2080,17 +2061,16 @@ class PhysDeriv_SumFac_Pyr : public Operator
     public:
         OPERATOR_CREATE(PhysDeriv_SumFac_Pyr)
 
-        virtual ~PhysDeriv_SumFac_Pyr()
+        ~PhysDeriv_SumFac_Pyr() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output0,
-                      Array<OneD,       NekDouble> &output1,
-                      Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp,
-                const StdRegions::ConstFactorMap   &factors)
+         void operator()(const Array<OneD, const NekDouble> &input,
+                         Array<OneD,       NekDouble> &output0,
+                         Array<OneD,       NekDouble> &output1,
+                         Array<OneD,       NekDouble> &output2,
+                         Array<OneD,       NekDouble> &wsp,
+                         const StdRegions::ConstFactorMap   &factors) final
         {
             boost::ignore_unused(factors);
 
@@ -2187,11 +2167,10 @@ class PhysDeriv_SumFac_Pyr : public Operator
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp) final
         {
             int nPhys = m_stdExp->GetTotPoints();
             int ntot = m_numElmt*nPhys;

@@ -36,7 +36,7 @@ struct HelmholtzQuad : public Helmholtz, public Helper<2, DEFORMED>
     }
 
     virtual void operator()(const Array<OneD, const NekDouble> &in,
-                                  Array<OneD,       NekDouble> &out) override
+                                  Array<OneD,       NekDouble> &out) final
     {
         // Check preconditions
         ASSERTL0(m_basis[0]->GetNumModes() == m_basis[1]->GetNumModes() &&
@@ -323,7 +323,7 @@ struct HelmholtzTri : public Helmholtz, public Helper<2, DEFORMED>
     }
 
     virtual void operator()(const Array<OneD, const NekDouble> &in,
-                                  Array<OneD,       NekDouble> &out) override
+                                  Array<OneD,       NekDouble> &out) final
     {
         // Check preconditions
         ASSERTL0(m_basis[0]->GetNumModes() == m_basis[1]->GetNumModes() &&
@@ -667,7 +667,7 @@ struct HelmholtzHex : public Helmholtz, public Helper<3, DEFORMED>
     }
 
     virtual void operator()(const Array<OneD, const NekDouble> &in,
-                                  Array<OneD,       NekDouble> &out) override
+                                  Array<OneD,       NekDouble> &out) final
     {
         switch(m_basis[0]->GetNumModes())
         {
@@ -1036,7 +1036,7 @@ struct HelmholtzPrism : public Helmholtz, public Helper<3, DEFORMED>
     }
 
     virtual void operator()(const Array<OneD, const NekDouble> &in,
-                                  Array<OneD,       NekDouble> &out) override
+                                  Array<OneD,       NekDouble> &out) final
     {
         // Check preconditions
         ASSERTL0(m_basis[0]->GetNumModes() == m_basis[1]->GetNumModes() &&
@@ -1515,7 +1515,7 @@ struct HelmholtzPyr : public Helmholtz, public Helper<3, DEFORMED>
     }
 
     virtual void operator()(const Array<OneD, const NekDouble> &in,
-                                  Array<OneD,       NekDouble> &out) override
+                                  Array<OneD,       NekDouble> &out) final
     {
         // Check preconditions
         ASSERTL0(m_basis[0]->GetNumModes() == m_basis[1]->GetNumModes() &&
@@ -2011,7 +2011,7 @@ struct HelmholtzTet : public Helmholtz, public Helper<3, DEFORMED>
     }
 
     virtual void operator()(const Array<OneD, const NekDouble> &in,
-                                  Array<OneD,       NekDouble> &out) override
+                                  Array<OneD,       NekDouble> &out) final
     {
         // Check preconditions
         ASSERTL0(m_basis[0]->GetNumModes() == m_basis[1]->GetNumModes() &&

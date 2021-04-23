@@ -60,16 +60,16 @@ class BwdTrans_StdMat : public Operator
 {
 public:
     OPERATOR_CREATE(BwdTrans_StdMat)
-    virtual ~BwdTrans_StdMat()
+    ~BwdTrans_StdMat() final
     {
     }
     
-    virtual void operator()(const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output,
-                            Array<OneD,       NekDouble> &output1,
-                            Array<OneD,       NekDouble> &output2,
-                            Array<OneD,       NekDouble> &wsp,
-                            const StdRegions::ConstFactorMap   &factors)
+    void operator()(const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &output1,
+                    Array<OneD, NekDouble> &output2,
+                    Array<OneD, NekDouble> &wsp,
+                    const StdRegions::ConstFactorMap   &factors) final
     {
         boost::ignore_unused(output1, output2, wsp, factors);
         Blas::Dgemm('N', 'N', m_mat->GetRows(), m_numElmt,
@@ -78,11 +78,10 @@ public:
                     0.0, output.get(), m_stdExp->GetTotPoints());
     }
     
-    virtual void operator()(
-                            int                           dir,
-                            const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output,
-                            Array<OneD,       NekDouble> &wsp)
+    void operator()(int dir,
+                    const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &wsp) final
     {
         boost::ignore_unused(dir, input, output, wsp);
         ASSERTL0(false, "Not valid for this operator.");
@@ -92,8 +91,7 @@ protected:
     DNekMatSharedPtr m_mat;
     
 private:
-    BwdTrans_StdMat(
-                    vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+    BwdTrans_StdMat(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                     CoalescedGeomDataSharedPtr                pGeomData)
         : Operator(pCollExp, pGeomData)
     {
@@ -147,15 +145,15 @@ class BwdTrans_MatrixFree final : public Operator, MatrixFreeOneInOneOut
 public:
     OPERATOR_CREATE(BwdTrans_MatrixFree)
 
-    ~BwdTrans_MatrixFree()
+    ~BwdTrans_MatrixFree() final
     {
     }
 
     void operator()(const Array<OneD, const NekDouble> &input,
-                    Array<OneD,       NekDouble> &output0,
-                    Array<OneD,       NekDouble> &output1,
-                    Array<OneD,       NekDouble> &output2,
-                    Array<OneD,       NekDouble> &wsp,
+                    Array<OneD, NekDouble> &output0,
+                    Array<OneD, NekDouble> &output1,
+                    Array<OneD, NekDouble> &output2,
+                    Array<OneD, NekDouble> &wsp,
                     const StdRegions::ConstFactorMap   &factors) final
     {
         boost::ignore_unused(output1, output2, wsp, factors);
@@ -249,16 +247,16 @@ class BwdTrans_IterPerExp : public Operator
 public:
     OPERATOR_CREATE(BwdTrans_IterPerExp)
     
-    virtual ~BwdTrans_IterPerExp()
+    ~BwdTrans_IterPerExp() final
     {
     }
     
-    virtual void operator()(const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output,
-                            Array<OneD,       NekDouble> &output1,
-                            Array<OneD,       NekDouble> &output2,
-                            Array<OneD,       NekDouble> &wsp,
-                            const StdRegions::ConstFactorMap   &factors)
+    void operator()(const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &output1,
+                    Array<OneD, NekDouble> &output2,
+                    Array<OneD, NekDouble> &wsp,
+                    const StdRegions::ConstFactorMap   &factors) final
     {
         boost::ignore_unused(output1, output2, wsp, factors);
         
@@ -272,10 +270,10 @@ public:
         }
     }
     
-    virtual void operator()(int                           dir,
-                            const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output,
-                            Array<OneD,       NekDouble> &wsp)
+    void operator()(int dir,
+                    const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &wsp) final
     {
         boost::ignore_unused(dir, input, output, wsp);
         ASSERTL0(false, "Not valid for this operator.");
@@ -331,16 +329,16 @@ class BwdTrans_NoCollection : public Operator
 public:
     OPERATOR_CREATE(BwdTrans_NoCollection)
 
-    virtual ~BwdTrans_NoCollection()
+    ~BwdTrans_NoCollection() final
     {
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output,
-                            Array<OneD,       NekDouble> &output1,
-                            Array<OneD,       NekDouble> &output2,
-                            Array<OneD,       NekDouble> &wsp,
-                            const StdRegions::ConstFactorMap   &factors)
+    void operator()(const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &output1,
+                    Array<OneD, NekDouble> &output2,
+                    Array<OneD, NekDouble> &wsp,
+                    const StdRegions::ConstFactorMap   &factors) final
     {
         boost::ignore_unused(output1, output2, wsp, factors);
         
@@ -355,10 +353,10 @@ public:
         }
     }
     
-    virtual void operator()(int                           dir,
-                            const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output,
-                            Array<OneD,       NekDouble> &wsp)
+    void operator()(int dir,
+                    const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &wsp) final
     {
         boost::ignore_unused(dir, input, output, wsp);
         ASSERTL0(false, "Not valid for this operator.");
@@ -368,8 +366,7 @@ protected:
     vector<StdRegions::StdExpansionSharedPtr> m_expList;
     
 private:
-    BwdTrans_NoCollection(
-                          vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+    BwdTrans_NoCollection(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                           CoalescedGeomDataSharedPtr                pGeomData)
         : Operator(pCollExp, pGeomData)
     {
@@ -419,16 +416,16 @@ class BwdTrans_SumFac_Seg : public Operator
 public:
     OPERATOR_CREATE(BwdTrans_SumFac_Seg)
 
-    virtual ~BwdTrans_SumFac_Seg()
+    ~BwdTrans_SumFac_Seg() final
     {
     }
     
-    virtual void operator()(const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output,
-                            Array<OneD,       NekDouble> &output1,
-                            Array<OneD,       NekDouble> &output2,
-                            Array<OneD,       NekDouble> &wsp,
-                            const StdRegions::ConstFactorMap   &factors)
+    void operator()(const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &output1,
+                    Array<OneD, NekDouble> &output2,
+                    Array<OneD, NekDouble> &wsp,
+                    const StdRegions::ConstFactorMap   &factors) final
     {
         boost::ignore_unused(output1, output2, wsp, factors);
         if(m_colldir0)
@@ -445,11 +442,10 @@ public:
         }
     }
     
-    virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+    void operator()(int dir,
+                    const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &wsp) final
     {
         boost::ignore_unused(dir, input, output, wsp);
         ASSERTL0(false, "Not valid for this operator.");
@@ -487,16 +483,16 @@ class BwdTrans_SumFac_Quad : public Operator
 public:
     OPERATOR_CREATE(BwdTrans_SumFac_Quad)
 
-    virtual ~BwdTrans_SumFac_Quad()
+    ~BwdTrans_SumFac_Quad() final
     {
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &input,
-                            Array<OneD, NekDouble> &output,
-                            Array<OneD, NekDouble> &output1,
-                            Array<OneD, NekDouble> &output2,
-                            Array<OneD, NekDouble> &wsp,
-                            const StdRegions::ConstFactorMap   &factors)
+    void operator()(const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &output1,
+                    Array<OneD, NekDouble> &output2,
+                    Array<OneD, NekDouble> &wsp,
+                    const StdRegions::ConstFactorMap   &factors) final
     {
         boost::ignore_unused(output1, output2,factors);
 
@@ -545,9 +541,9 @@ public:
         }
     }
 
-    virtual void operator()(int dir, const Array<OneD, const NekDouble> &input,
-                            Array<OneD, NekDouble> &output,
-                            Array<OneD, NekDouble> &wsp)
+    void operator()(int dir, const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &wsp) final
     {
         boost::ignore_unused(dir, input, output, wsp);
         ASSERTL0(false, "Not valid for this operator.");
@@ -593,16 +589,16 @@ class BwdTrans_SumFac_Tri : public Operator
 public:
     OPERATOR_CREATE(BwdTrans_SumFac_Tri)
 
-    virtual ~BwdTrans_SumFac_Tri()
+    ~BwdTrans_SumFac_Tri() final
     {
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output,
-                            Array<OneD,       NekDouble> &output1,
-                            Array<OneD,       NekDouble> &output2,
-                            Array<OneD,       NekDouble> &wsp,
-                            const StdRegions::ConstFactorMap   &factors)
+    void operator()(const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &output1,
+                    Array<OneD, NekDouble> &output2,
+                    Array<OneD, NekDouble> &wsp,
+                    const StdRegions::ConstFactorMap   &factors) final
     {
         boost::ignore_unused(output1, output2, factors);
         
@@ -637,9 +633,9 @@ public:
                     &output[0], m_nquad0);
     }
 
-    virtual void operator()(int dir, const Array<OneD, const NekDouble> &input,
-                            Array<OneD, NekDouble> &output,
-                            Array<OneD, NekDouble> &wsp)
+    void operator()(int dir, const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &wsp) final
     {
         boost::ignore_unused(dir, input, output, wsp);
         ASSERTL0(false, "Not valid for this operator.");
@@ -688,16 +684,16 @@ class BwdTrans_SumFac_Hex : public Operator
 public:
     OPERATOR_CREATE(BwdTrans_SumFac_Hex)
 
-    virtual ~BwdTrans_SumFac_Hex()
+    ~BwdTrans_SumFac_Hex() final
     {
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &input,
-                            Array<OneD, NekDouble> &output,
-                            Array<OneD, NekDouble> &output1,
-                            Array<OneD, NekDouble> &output2,
-                            Array<OneD, NekDouble> &wsp,
-                            const StdRegions::ConstFactorMap   &factors)
+    void operator()(const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &output1,
+                    Array<OneD, NekDouble> &output2,
+                    Array<OneD, NekDouble> &wsp,
+                    const StdRegions::ConstFactorMap   &factors) final
  {
      boost::ignore_unused(output1, output2,factors);
      
@@ -740,9 +736,9 @@ public:
      }
  }
 
-virtual void operator()(int dir, const Array<OneD, const NekDouble> &input,
-                        Array<OneD, NekDouble> &output,
-                        Array<OneD, NekDouble> &wsp)
+void operator()(int dir, const Array<OneD, const NekDouble> &input,
+                Array<OneD, NekDouble> &output,
+                Array<OneD, NekDouble> &wsp) final
 {
     boost::ignore_unused(dir, input, output, wsp);
     ASSERTL0(false, "Not valid for this operator.");
@@ -797,16 +793,16 @@ class BwdTrans_SumFac_Tet : public Operator
 public:
     OPERATOR_CREATE(BwdTrans_SumFac_Tet)
 
-    virtual ~BwdTrans_SumFac_Tet()
+    ~BwdTrans_SumFac_Tet() final
     {
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &input,
-                            Array<OneD, NekDouble> &output,
-                            Array<OneD, NekDouble> &output1,
-                            Array<OneD, NekDouble> &output2,
-                            Array<OneD, NekDouble> &wsp,
-                            const StdRegions::ConstFactorMap   &factors)
+    void operator()(const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &output1,
+                    Array<OneD, NekDouble> &output2,
+                    Array<OneD, NekDouble> &wsp,
+                    const StdRegions::ConstFactorMap   &factors) final
     {
         boost::ignore_unused(output1, output2, factors);
         
@@ -904,9 +900,9 @@ public:
                     m_nquad0);
     }
 
-    virtual void operator()(int dir, const Array<OneD, const NekDouble> &input,
-                            Array<OneD, NekDouble> &output,
-                            Array<OneD, NekDouble> &wsp)
+    void operator()(int dir, const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &wsp) final
     {
         boost::ignore_unused(dir, input, output, wsp);
         ASSERTL0(false, "Not valid for this operator.");
@@ -966,16 +962,16 @@ class BwdTrans_SumFac_Prism : public Operator
 public:
     OPERATOR_CREATE(BwdTrans_SumFac_Prism)
 
-    virtual ~BwdTrans_SumFac_Prism()
+    ~BwdTrans_SumFac_Prism() final
     {
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &input,
-                            Array<OneD, NekDouble> &output,
-                            Array<OneD, NekDouble> &output1,
-                            Array<OneD, NekDouble> &output2,
-                            Array<OneD, NekDouble> &wsp,
-                            const StdRegions::ConstFactorMap   &factors)
+    void operator()(const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &output1,
+                    Array<OneD, NekDouble> &output2,
+                    Array<OneD, NekDouble> &wsp,
+                    const StdRegions::ConstFactorMap &factors) final
     {
         boost::ignore_unused(output1, output2, factors);
 
@@ -1043,9 +1039,9 @@ public:
                     m_nquad0);
     }
 
-    virtual void operator()(int dir, const Array<OneD, const NekDouble> &input,
-                            Array<OneD, NekDouble> &output,
-                            Array<OneD, NekDouble> &wsp)
+    void operator()(int dir, const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &wsp) final
     {
         boost::ignore_unused(dir, input, output, wsp);
         ASSERTL0(false, "Not valid for this operator.");
@@ -1104,16 +1100,16 @@ class BwdTrans_SumFac_Pyr : public Operator
 public:
     OPERATOR_CREATE(BwdTrans_SumFac_Pyr)
 
-    virtual ~BwdTrans_SumFac_Pyr()
+    ~BwdTrans_SumFac_Pyr() final
     {
     }
 
-    virtual void operator()(const Array<OneD, const NekDouble> &input,
-                            Array<OneD, NekDouble> &output,
-                            Array<OneD, NekDouble> &output1,
-                            Array<OneD, NekDouble> &output2,
-                            Array<OneD, NekDouble> &wsp,
-                            const StdRegions::ConstFactorMap   &factors)
+    void operator()(const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &output1,
+                    Array<OneD, NekDouble> &output2,
+                    Array<OneD, NekDouble> &wsp,
+                    const StdRegions::ConstFactorMap   &factors) final
     {
         boost::ignore_unused(output1, output2, factors);
 
@@ -1201,9 +1197,9 @@ public:
                     m_nquad0);
     }
 
-    virtual void operator()(int dir, const Array<OneD, const NekDouble> &input,
-                            Array<OneD, NekDouble> &output,
-                            Array<OneD, NekDouble> &wsp)
+    void operator()(int dir, const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &wsp) final
     {
         boost::ignore_unused(dir, input, output, wsp);
         ASSERTL0(false, "Not valid for this operator.");

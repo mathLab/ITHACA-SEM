@@ -62,18 +62,17 @@ class Helmholtz_NoCollection : public Operator
     public:
         OPERATOR_CREATE(Helmholtz_NoCollection)
 
-        virtual ~Helmholtz_NoCollection()
+        ~Helmholtz_NoCollection() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD, NekDouble> &entry1,
-                      Array<OneD, NekDouble> &entry2,
-                      Array<OneD, NekDouble> &entry3,
-                      Array<OneD, NekDouble> &wsp,
-                const StdRegions::ConstFactorMap  &factors) final
-        {
+        void operator()(const Array<OneD, const NekDouble> &entry0,
+                        Array<OneD, NekDouble> &entry1,
+                        Array<OneD, NekDouble> &entry2,
+                        Array<OneD, NekDouble> &entry3,
+                        Array<OneD, NekDouble> &wsp,
+                        const StdRegions::ConstFactorMap  &factors) final
+    {
             boost::ignore_unused(entry2,entry3,wsp);
 
             unsigned int nmodes = m_expList[0]->GetNcoeffs();
@@ -90,11 +89,10 @@ class Helmholtz_NoCollection : public Operator
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+         void operator()(int dir,
+                         const Array<OneD, const NekDouble> &input,
+                         Array<OneD, NekDouble> &output,
+                         Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -170,17 +168,16 @@ class Helmholtz_IterPerExp : public Operator
     public:
         OPERATOR_CREATE(Helmholtz_IterPerExp)
 
-        virtual ~Helmholtz_IterPerExp()
+        ~Helmholtz_IterPerExp() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD, NekDouble> &output,
-                      Array<OneD, NekDouble> &output1,
-                      Array<OneD, NekDouble> &output2,
-                      Array<OneD, NekDouble> &wsp,
-                const StdRegions::ConstFactorMap   &factors) final
+        void operator()(const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &output1,
+                        Array<OneD, NekDouble> &output2,
+                        Array<OneD, NekDouble> &wsp,
+                        const StdRegions::ConstFactorMap   &factors) final
         {
             boost::ignore_unused(output1,output2);
 
@@ -312,12 +309,11 @@ class Helmholtz_IterPerExp : public Operator
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
-        {
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp) final
+        { 
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
         }
@@ -397,17 +393,16 @@ class Helmholtz_MatrixFree : public Operator, MatrixFreeOneInOneOut
 public:
     OPERATOR_CREATE(Helmholtz_MatrixFree)
     
-    virtual ~Helmholtz_MatrixFree()
+    ~Helmholtz_MatrixFree() final
     {
     }
     
-    virtual void operator()(
-            const Array<OneD, const NekDouble> &input,
-                  Array<OneD,       NekDouble> &output0,
-                  Array<OneD,       NekDouble> &output1,
-                  Array<OneD,       NekDouble> &output2,
-                  Array<OneD,       NekDouble> &wsp,
-                const StdRegions::ConstFactorMap   &factors) final
+    void operator()(const Array<OneD, const NekDouble> &input,
+                    Array<OneD,       NekDouble> &output0,
+                    Array<OneD,       NekDouble> &output1,
+                    Array<OneD,       NekDouble> &output2,
+                    Array<OneD,       NekDouble> &wsp,
+                    const StdRegions::ConstFactorMap   &factors) final
     {
         boost::ignore_unused(output1,output2,wsp);
 
@@ -431,10 +426,10 @@ public:
         }
     }
     
-    virtual void operator()(int                           dir,
-                            const Array<OneD, const NekDouble> &input,
-                            Array<OneD,       NekDouble> &output,
-                            Array<OneD,       NekDouble> &wsp)
+    void operator()(int dir,
+                    const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &wsp) final
     {
         boost::ignore_unused(dir,input,output,wsp);
         NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");

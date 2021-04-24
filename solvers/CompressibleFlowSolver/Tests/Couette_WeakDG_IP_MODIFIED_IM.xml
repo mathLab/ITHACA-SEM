@@ -32,7 +32,7 @@
 <CONDITIONS>
     <PARAMETERS> 
       <P> TimeStep              = 0.05                          </P>
-      <P> FinTime               = 2.0                           </P>
+      <P> FinTime               = 20                           </P>
       <P> IO_CheckSteps         = 500000                        </P>
       <P> IO_InfoSteps          = 1                             </P>
       <P> GasConstant           = 287.058                       </P>
@@ -53,13 +53,19 @@
       <P> Cv                    = GasConstant/(Gamma-1)         </P> 
       <P> Cp                    = (Gamma*GasConstant)/(Gamma-1) </P>
 
-      <P> NonlinIteTolRelativeL2  = 1.0E-14                     </P>
-      <P> NewtonAbsoluteIteTol    = 1.0E-14                     </P>
+      <P> NonlinIterTolRelativeL2   = 1.0E-3                     </P>
+      <P> NewtonAbsoluteIteTol      = 1.0E-13                     </P>
+      <P> LinSysRelativeTolInNonlin = 1.0E-2                     </P>
+      <P> NekNonlinSysMaxIterations = 10                     </P>
+      <P> NekLinSysMaxIterations    = 30                     </P>
       
+      <P> PreconItsStep       = 7                          </P>
+
+      <P> SteadyStateTol    = 3.0E-7                     </P> 
     </PARAMETERS>
 
         <SOLVERINFO>
-        <I PROPERTY="EQType"                VALUE="NavierStokesCFE"     />
+        <I PROPERTY="EQType"                VALUE="NavierStokesImplicitCFE" />
         <I PROPERTY="Projection"            VALUE="DisContinuous"       />
         <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
         <I PROPERTY="DiffusionType"         VALUE="InteriorPenalty"     />
@@ -69,7 +75,7 @@
         <I PROPERTY="UpwindType"            VALUE="Roe"                 />
         <I PROPERTY="ProblemType"           VALUE="General"             />
         <I PROPERTY="ViscosityType"         VALUE="Constant"            />
-        <I PROPERTY="LinSysIterSovler"      VALUE="GMRES"               />
+        <I PROPERTY="LinSysIterSolverTypeInNonlin" VALUE="GMRES"        />
     </SOLVERINFO>
 
     <VARIABLES>

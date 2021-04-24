@@ -86,6 +86,9 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
+            LibUtilities::Timer timer1;
+            timer1.Start();
+            
             boost::ignore_unused(advVel, time);
             size_t nCoeffs         = fields[0]->GetNcoeffs();
 
@@ -108,7 +111,9 @@ namespace Nektar
                 fields[i]->BwdTrans(tmp[i], outarray[i]);
             }
             timer.Stop();
-            timer.AccumulateRegion("BwdTrans");
+            timer.AccumulateRegion("AdvWeakDG:_BwdTrans",1);
+            timer1.Stop();
+            timer1.AccumulateRegion("AdvWeakDG:All");
         }
 
         void AdvectionWeakDG::v_AdvectCoeffs(
@@ -121,6 +126,8 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &pFwd,
             const Array<OneD, Array<OneD, NekDouble> >        &pBwd)
         {
+            LibUtilities::Timer timer1;
+            timer1.Start();
             size_t nPointsTot      = fields[0]->GetTotPoints();
             size_t nCoeffs         = fields[0]->GetNcoeffs();
             size_t nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
@@ -134,7 +141,7 @@ namespace Nektar
                     Array<OneD, Array<OneD, NekDouble> > {size_t(m_spaceDim)};
                 for (int j = 0; j < m_spaceDim; ++j)
                 {
-                    fluxvector[i][j] = Array<OneD, NekDouble> {nPointsTot};
+                    fluxvector[i][j] = Array<OneD, NekDouble>(nPointsTot,0.0);
                 }
             }
 
@@ -143,7 +150,7 @@ namespace Nektar
             v_AdvectVolumeFlux(nConvectiveFields, fields, advVel, inarray,
                                 fluxvector, time);
             timer.Stop();
-            timer.AccumulateRegion("m_fluxVector");
+            timer.AccumulateRegion("AdvWeakDG:_fluxVector",1);
 
 
             timer.Start();
@@ -154,7 +161,7 @@ namespace Nektar
                 fields[i]->IProductWRTDerivBase(fluxvector[i], outarray[i]);
             }
             timer.Stop();
-            timer.AccumulateRegion("IProductWRTDerivBase");
+            timer.AccumulateRegion("AdvWeakDG:_IProductWRTDerivBase",1);
 
             Array<OneD, Array<OneD, NekDouble> >
                 numflux{size_t(nConvectiveFields)};
@@ -167,23 +174,25 @@ namespace Nektar
             v_AdvectTraceFlux(nConvectiveFields, fields, advVel, inarray,
                 numflux, time, pFwd, pBwd);
 
-            for (int i = 0; i < nConvectiveFields; ++i)
+            // Evaulate <\phi, \hat{F}\cdot n> - OutField[i]
+            for(int i = 0; i < nConvectiveFields; ++i)
             {
                 Vmath::Neg                      (nCoeffs, outarray[i], 1);
 
                 timer.Start();
                 fields[i]->AddTraceIntegral     (numflux[i], outarray[i]);
                 timer.Stop();
-                timer.AccumulateRegion("AddTraceIntegral");
+                timer.AccumulateRegion("AdvWeakDG:_AddTraceIntegral",1);
 
                 timer.Start();
                 fields[i]->MultiplyByElmtInvMass(outarray[i], outarray[i]);
                 timer.Stop();
-                timer.AccumulateRegion("MultiplyByElmtInvMass");
+                timer.AccumulateRegion("AdvWeakDG:_MultiplyByElmtInvMass",1);
             }
-
+            timer1.Stop();
+            timer1.AccumulateRegion("AdvWeakDG: Coeff All");
         }
-
+        
         void AdvectionWeakDG::v_AdvectTraceFlux(
             const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -204,8 +213,8 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble>> Fwd(nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble>> Bwd(nConvectiveFields);
 
-            if (pFwd == NullNekDoubleArrayofArray ||
-                pBwd == NullNekDoubleArrayofArray)
+            if (pFwd == NullNekDoubleArrayOfArray ||
+                pBwd == NullNekDoubleArrayOfArray)
             {
                 for (int i = 0; i < nConvectiveFields; ++i)
                 {
@@ -227,8 +236,91 @@ namespace Nektar
             timer.Start();
             m_riemann->Solve(m_spaceDim, Fwd, Bwd, TraceFlux);
             timer.Stop();
-            timer.AccumulateRegion("m_riemann");
+            timer.AccumulateRegion("AdvWeakDG:_Riemann",1);
 
         }
+
+        void AdvectionWeakDG::v_AddVolumJacToMat( 
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+            const int &nConvectiveFields,
+            const TensorOfArray5D<NekDouble> &ElmtJacArray,
+            Array<OneD, Array<OneD, SNekBlkMatSharedPtr>> &gmtxarray)
+        {
+            MultiRegions::ExpListSharedPtr explist = pFields[0];
+                std::shared_ptr<LocalRegions::ExpansionVector> pexp = explist->GetExp();
+            int nTotElmt            = (*pexp).size();
+            int nElmtPnt,nElmtCoef;
+
+            SNekMatSharedPtr        tmpGmtx;
+            DNekMatSharedPtr        ElmtMat;
+
+            Array<OneD,NekSingle> GMat_data;
+            Array<OneD,NekDouble> Elmt_data;
+            Array<OneD,NekSingle> Elmt_dataSingle;
+
+            Array<OneD, DNekMatSharedPtr>  mtxPerVar(nTotElmt);
+            Array<OneD, int > elmtpnts(nTotElmt);
+            Array<OneD, int > elmtcoef(nTotElmt);
+            for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
+            {
+                nElmtCoef           = (*pexp)[nelmt]->GetNcoeffs();
+                nElmtPnt            = (*pexp)[nelmt]->GetTotPoints();
+                elmtpnts[nelmt]     =   nElmtPnt;
+                elmtcoef[nelmt]     =   nElmtCoef;
+                mtxPerVar[nelmt]    =MemoryManager<DNekMat>
+                                    ::AllocateSharedPtr(nElmtCoef, nElmtPnt);
+            }
+
+            Array<OneD, DNekMatSharedPtr>  mtxPerVarCoeff(nTotElmt);
+            for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
+            {
+                nElmtCoef   =   elmtcoef[nelmt];
+                mtxPerVarCoeff[nelmt]    =MemoryManager<DNekMat>
+                                    ::AllocateSharedPtr(nElmtCoef, nElmtCoef);
+            }
+
+            for(int m = 0; m < nConvectiveFields; m++)
+            {
+                for(int n = 0; n < nConvectiveFields; n++)
+                {
+                    for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
+                    {
+                        (*mtxPerVarCoeff[nelmt])   =    0.0;
+                        (*mtxPerVar[nelmt])        =    0.0;
+                    }
+
+                    explist->GetMatIpwrtDeriveBase(ElmtJacArray[m][n], 
+                        mtxPerVar);
+                    // Memory can be saved by reusing mtxPerVar
+                    explist->AddRightIPTBaseMatrix(mtxPerVar,mtxPerVarCoeff);
+
+                    for(int nelmt = 0; nelmt < nTotElmt; nelmt++)
+                    {
+                        nElmtCoef = elmtcoef[nelmt];
+                        nElmtPnt = elmtpnts[nelmt];
+                        int ntotDofs = nElmtCoef*nElmtCoef;
+
+                        if(Elmt_dataSingle.size()<ntotDofs)
+                        {
+                            Elmt_dataSingle = Array<OneD, NekSingle> (ntotDofs);
+                        }
+
+                        tmpGmtx = gmtxarray[m][n]->GetBlock(nelmt,nelmt);
+                        ElmtMat = mtxPerVarCoeff[nelmt];
+
+                        GMat_data = tmpGmtx->GetPtr();
+                        Elmt_data = ElmtMat->GetPtr();
+
+                        for(int i=0;i<ntotDofs;i++)
+                        {
+                            Elmt_dataSingle[i]  =   NekSingle( Elmt_data[i] );
+                        }
+
+                        Vmath::Vadd(ntotDofs,GMat_data,1,Elmt_dataSingle,1,GMat_data,1);
+                    }
+                }
+            }
+        }
+
     }//end of namespace SolverUtils
 }//end of namespace Nektar

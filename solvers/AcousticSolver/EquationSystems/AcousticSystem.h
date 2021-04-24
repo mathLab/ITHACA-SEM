@@ -108,7 +108,8 @@ protected:
 
     virtual void v_Output();
 
-    virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
+    virtual Array<OneD, NekDouble> v_GetMaxStdVelocity(
+        const NekDouble SpeedSoundFactor);
 
     virtual void v_ExtraFldOutput(
         std::vector<Array<OneD, NekDouble>> &fieldcoeffs,

@@ -22,6 +22,14 @@ IF(NOT DEFINED OCE_DIR)
     ENDIF()
 ENDIF()
 
+# The version of OCE now being used as the third party version that can be built from
+# source as part of the Nektar++ build is 0.18.3. However the FIND_PACKAGE command below
+# is looking for a version of OCE that is pre-installed on the system (e.g. from packages)
+# The packaged version on Centos 7 is 0.17.1 so this needs to remain at 0.17 to discover
+# OCE on Centos 7 (as used in the CI builds). The CMake config scripts installed with the
+# packaged version of OCE on Ubuntu will find the version specified here, or a more recent
+# version, so this FIND_PACKAGE command successfully results in OCE 0.18.3 installed from
+# packages on Ubuntu being discovered.
 FIND_PACKAGE(OCE 0.17 QUIET)
 
 SET(OCC_FOUND FALSE)

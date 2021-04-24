@@ -47,7 +47,7 @@ using namespace Nektar::LibUtilities;
 
 class LinSysDemo
 {
-    typedef const Array<OneD, NekDouble> InArrayType;
+    typedef const Array<OneD, const NekDouble> InArrayType;
     typedef Array<OneD, NekDouble> OutArrayType;
 
 public:
@@ -57,22 +57,23 @@ public:
     {
         AllocateInitMatrix();
 
-        std::string LinSysIterSovlerType = "FixedpointJacobi";
-        if (pSession->DefinesSolverInfo("LinSysIterSovler"))
+        std::string LinSysIterSolverType = "FixedpointJacobi";
+        if (pSession->DefinesSolverInfo("LinSysIterSolver"))
         {
-            LinSysIterSovlerType = pSession->GetSolverInfo("LinSysIterSovler");
+            LinSysIterSolverType = pSession->GetSolverInfo("LinSysIterSolver");
         }
 
         ASSERTL0(LibUtilities::GetNekLinSysIterFactory().ModuleExists(
-                     LinSysIterSovlerType),
-                 "NekLinSysIter '" + LinSysIterSovlerType +
+                     LinSysIterSolverType),
+                 "NekLinSysIter '" + LinSysIterSolverType +
                      "' is not defined.\n");
         m_linsol = LibUtilities::GetNekLinSysIterFactory().CreateInstance(
-            LinSysIterSovlerType, m_session, m_comm, m_matDim);
+            LinSysIterSolverType, m_session, m_comm, m_matDim,
+            LibUtilities::NekSysKey());
 
         m_NekSysOp.DefineNekSysLhsEval(&LinSysDemo::DoLhs, this);
         m_NekSysOp.DefineNekSysFixPointIte(&LinSysDemo::DoFixedPoint, this);
-        m_linsol->setSysOperators(m_NekSysOp);
+        m_linsol->SetSysOperators(m_NekSysOp);
         UniqueMap();
         m_linsol->setUniversalUniqueMap(m_map);
     }
@@ -88,7 +89,7 @@ public:
             m_linsol->SolveSystem(m_matDim, m_SysRhs, pOutput, 0, 1.0E-9);
         boost::ignore_unused(ntmpIts);
         // The number of sigificant digits
-        int ndigits = 9;
+        int ndigits = 6;
         // Extra width to place -, E, and power
         int nothers = 10;
         // The second value determines the number of sigificant digits

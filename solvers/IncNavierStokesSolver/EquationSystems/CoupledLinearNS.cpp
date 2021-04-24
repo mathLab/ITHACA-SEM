@@ -382,7 +382,7 @@ namespace Nektar
         int  nvel   = m_velocity.size();
 
         // if Advfield is defined can assume it is an Oseen or LinearNS equation
-        bool AddAdvectionTerms = (Advfield ==  NullNekDoubleArrayofArray)? false: true;
+        bool AddAdvectionTerms = (Advfield ==  NullNekDoubleArrayOfArray)? false: true;
         //bool AddAdvectionTerms = true; // Temporary debugging trip
 
         // call velocity space Static condensation and fill block

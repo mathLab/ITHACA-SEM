@@ -296,8 +296,6 @@ IF (APPLE)
   SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
 ENDIF (APPLE)
 
-INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
-
 # Build active components. Add utilities and solvers directories first, because
 # that allows us to detect library dependencies automatically.
 IF (NEKTAR_BUILD_LIBRARY)

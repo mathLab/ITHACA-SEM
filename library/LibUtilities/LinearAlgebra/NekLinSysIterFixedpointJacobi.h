@@ -55,11 +55,12 @@ public:
 
     LIB_UTILITIES_EXPORT static NekLinSysIterSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen)
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+        const NekSysKey &pKey)
     {
         NekLinSysIterFixedpointJacobiSharedPtr p =
             MemoryManager<NekLinSysIterFixedpointJacobi>::AllocateSharedPtr(
-                pSession, vComm, nDimen);
+                pSession, vComm, nDimen, pKey);
         p->InitObject();
         return p;
     }
@@ -67,7 +68,8 @@ public:
 
     LIB_UTILITIES_EXPORT NekLinSysIterFixedpointJacobi(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen);
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+        const NekSysKey &pKey);
     LIB_UTILITIES_EXPORT ~NekLinSysIterFixedpointJacobi();
 
 protected:

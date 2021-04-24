@@ -57,38 +57,28 @@ PengRobinsonEoS::PengRobinsonEoS(
     m_fw = 0.37464 + 1.54226 * m_omega - 0.2699 * m_omega * m_omega;
 }
 
-NekDouble PengRobinsonEoS::v_GetTemperature(const NekDouble &rho,
-                                            const NekDouble &e)
+NekDouble PengRobinsonEoS::GetTemperature(
+    const NekDouble& rho, const NekDouble& e)
 {
-    // First we need to evaluate the log term
-    //    ln[(1/rho + b - b*sqrt(2)) / (1/rho + b + b*sqrt(2))]
-    NekDouble sqrt2   = sqrt(2.0);
-    NekDouble logTerm = LogTerm(rho);
-
-    // The temperature can be expressed as an equation in the form
-    //      A * (T^1/2)^2 + B * T^1/2 + C = 0
-    NekDouble A, B, C;
-
-    A = m_gasConstant / (m_gamma - 1);
-    B = -m_a / (m_b * 2 * sqrt2) * logTerm / sqrt(m_Tc) * m_fw * (1 + m_fw);
-    C = m_a / (m_b * 2 * sqrt2) * logTerm * (1 + m_fw) * (1 + m_fw) - e;
-
-    // Solve for T^1/2 (positive root)
-    NekDouble sqrtT = (-B + sqrt(B * B - 4 * A * C)) / (2 * A);
-    // Calculate the temperature
-    return sqrtT * sqrtT;
+    return GetTemperatureKernel(rho, e);
 }
 
-NekDouble PengRobinsonEoS::v_GetPressure(const NekDouble &rho,
-                                         const NekDouble &e)
+vec_t PengRobinsonEoS::GetTemperature(
+    const vec_t& rho, const vec_t& e)
 {
-    NekDouble T = GetTemperature(rho, e);
+    return GetTemperatureKernel(rho, e);
+}
 
-    NekDouble p =
-        m_gasConstant * T / (1.0 / rho - m_b) -
-        m_a * Alpha(T) / (1.0 / (rho * rho) + 2.0 * m_b / rho - m_b * m_b);
+NekDouble PengRobinsonEoS::GetPressure(
+    const NekDouble &rho, const NekDouble &e)
+{
+    return GetPressureKernel(rho, e);
+}
 
-    return p;
+vec_t PengRobinsonEoS::GetPressure(
+    const vec_t &rho, const vec_t &e)
+{
+    return GetPressureKernel(rho, e);
 }
 
 NekDouble PengRobinsonEoS::v_GetEntropy(const NekDouble &rho,
@@ -210,7 +200,7 @@ NekDouble PengRobinsonEoS::v_GetRhoFromPT(const NekDouble &p,
     NekDouble residual = 1;
     NekDouble f, df;
     unsigned int cnt = 0;
-    while (abs(residual) > tol && cnt < maxIter)
+    while ((fabs(residual) > tol) && cnt < maxIter)
     {
         f        = Z * Z * Z + k1 * Z * Z + k2 * Z + k3;
         df       = 3 * Z * Z + 2 * k1 * Z + k2;
@@ -230,15 +220,4 @@ NekDouble PengRobinsonEoS::v_GetRhoFromPT(const NekDouble &p,
     return p / (Z * m_gasConstant * T);
 }
 
-NekDouble PengRobinsonEoS::Alpha(const NekDouble &T)
-{
-    NekDouble sqrtAlpha = 1.0 + m_fw * (1.0 - sqrt(T / m_Tc));
-    return sqrtAlpha * sqrtAlpha;
-}
-
-NekDouble PengRobinsonEoS::LogTerm(const NekDouble &rho)
-{
-    return log((1.0 / rho + m_b - m_b * sqrt(2)) /
-               (1.0 / rho + m_b + m_b * sqrt(2)));
-}
 }

@@ -127,7 +127,15 @@
             ASSERTL1(static_cast<unsigned int>(n*incy) <= y.size()+y.GetOffset(),"Array out of bounds");
             ASSERTL1(static_cast<unsigned int>(n*incz) <= z.size()+z.GetOffset(),"Array out of bounds");
 
+#ifdef NEKTAR_ENABLE_SIMD_VMATH
+            boost::ignore_unused(incx, incy, incz);
+            ASSERTL1(incx == 1, "Simd vmath requires inc = 1");
+            ASSERTL1(incy == 1, "Simd vmath requires inc = 1");
+            ASSERTL1(incz == 1, "Simd vmath requires inc = 1");
+            SIMD::Vadd(n,&x[0],&y[0],&z[0]);
+#else
             Vadd(n,&x[0],incx,&y[0],incy,&z[0],incz);
+#endif
         }
 
         /// \brief Add vector y = alpha + x
@@ -151,6 +159,18 @@
 
         }
 
+        /// \brief Add vector y = alpha - x
+        template<class T>  void Ssub( int n, const T alpha, 
+            const Array<OneD,const T> &x,const int incx, Array<OneD,T> &y, 
+            const int incy)
+        {
+
+            ASSERTL1(n*incx <= x.size()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.size()+y.GetOffset(),"Array out of bounds");
+
+            Ssub(n,alpha,&x[0],incx,&y[0],incy);
+        }
+    
         /// \brief Zero vector
         template<class T>  void Zero(int n, Array<OneD,T> &x, const int incx)
         {
@@ -332,13 +352,23 @@
         /************ Misc routine from Veclib (and extras)  ************/
 
         /// \brief Gather vector z[i] = x[y[i]]
-        template<class T>  void Gathr(int n, const Array<OneD, const T> &x, const Array<OneD, const int> &y,  Array<OneD,T> &z)
+        template<class T, class I, typename = typename std::enable_if
+            <
+                std::is_floating_point<T>::value &&
+                std::is_integral<I>::value
+            >::type
+        >
+        void Gathr(I n, const Array<OneD, const T> &x, const Array<OneD, I> &y,
+            Array<OneD,T> &z)
         {
             ASSERTL1(n <= y.size()+y.GetOffset(),"Array out of bounds");
             ASSERTL1(n <= z.size()+z.GetOffset(),"Array out of bounds");
 
+#ifdef NEKTAR_ENABLE_SIMD_VMATH
+            SIMD::Gathr(n,&x[0],&y[0],&z[0]);
+#else
             Gathr(n,&x[0],&y[0],&z[0]);
-
+#endif
         }
 
         /// \brief Scatter vector z[y[i]] = x[i]

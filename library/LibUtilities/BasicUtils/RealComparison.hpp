@@ -39,7 +39,7 @@
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 #include <limits>
 #include <type_traits>
-#include <cmath>
+#include <boost/math/special_functions/relative_difference.hpp>
 
 namespace Nektar
 {
@@ -70,15 +70,37 @@ inline bool IsRealEqual(T1&& lhs, T2&& rhs,
 {
     // Check precondition in debug mode
     ASSERTL1(factor >= 1, "real comparison factor needs to be >= 1");
-    // Get base type
-    typedef typename std::remove_reference<T1>::type Tbase;
-    // Tolerance
-    Tbase tol = factor * std::numeric_limits<Tbase>::epsilon();
-    // Distance
-    Tbase dist = std::abs(lhs-rhs);
-    // Reference
-    Tbase ref = std::max(std::abs(lhs), std::abs(rhs));
-    return dist < ref * tol || dist == 0;
+    // Relative distance normalized by machine epsilon
+    return boost::math::epsilon_difference(lhs, rhs) < factor;
+}
+
+/// compare reals of same type with absolute tolerance
+template
+<
+    class T1, class T2,
+    class = typename std::enable_if
+    <
+        std::is_floating_point
+        <
+            typename std::remove_cv<
+                typename std::remove_reference<T1>::type>::type
+        >::value &&
+        std::is_same
+        <
+            typename std::remove_cv<
+                typename std::remove_reference<T1>::type>::type,
+            typename std::remove_cv<
+                typename std::remove_reference<T2>::type>::type
+        >::value
+    >::type
+>
+inline bool IsRealClose(T1&& lhs, T2&& rhs, 
+    const NekDouble tol = NekConstants::kNekMachineEpsilon)
+{
+    // Check if tolerance is positive
+    ASSERTL1(tol >= 0, "real comparison tolerance needs to be >= 0");
+    // Check if distance is within tolerance
+    return std::abs(lhs-rhs) < tol;
 }
 
 }

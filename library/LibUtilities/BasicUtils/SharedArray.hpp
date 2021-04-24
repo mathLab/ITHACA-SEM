@@ -818,16 +818,55 @@ namespace Nektar
 
     static Array<OneD, int> NullInt1DArray;
     static Array<OneD, NekDouble> NullNekDouble1DArray;
-    static Array<OneD, Array<OneD, NekDouble> > NullNekDoubleArrayofArray;
-    static Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-            NullNekDoubleArrayofArrayofArray;
+    static Array<OneD, Array<OneD, NekDouble> > NullNekDoubleArrayOfArray;
+    
+    // TODO: Consider removing this declaration
+    static Array<OneD, 
+        Array<OneD, 
+            Array<OneD, NekDouble> 
+        > 
+    > NullNekDoubleTensorOfArray3D;
 
-    template<class T>
-    using TensorOfArray1D = Array<OneD, T>;
+    // TODO: This declaration will be removed
     template<class T>
     using TensorOfArray2D = Array<OneD, Array<OneD, T>>;
+
+    // Temporary alias for 3D nested array. Please note that the inner arrays
+    // are not const declared. It is therefore suggested to use this alias with
+    // caution.
     template<class T>
-    using TensorOfArray3D = Array<OneD, Array<OneD, Array<OneD, T>>>;
+    using TensorOfArray3D = 
+        Array<OneD, 
+            Array<OneD, 
+                Array<OneD, T> 
+            >
+        >;
+    // Temporary alias for 4D nested array. Please note that the inner arrays
+    // are not const declared. It is therefore suggested to use this alias with
+    // caution.
+    template<class T>
+    using TensorOfArray4D = 
+        Array<OneD, 
+            Array<OneD, 
+                Array<OneD, 
+                    Array<OneD, T>
+                >
+            >
+        >;
+    // Temporary alias for 5D nested array. Please note that the inner arrays
+    // are not const declared. It is therefore suggested to use this alias with
+    // caution.
+    template<class T>
+    using TensorOfArray5D = 
+        Array<OneD, 
+            Array<OneD, 
+                Array<OneD, 
+                    Array<OneD, 
+                        Array<OneD, T>
+                    >
+                >
+            >
+        >;
 
     template<typename T1, typename T2>
     bool operator==(const Array<TwoD, T1>& lhs,

@@ -34,6 +34,7 @@ v5.1.0
 - Add Python interface (!1081)
 - Fix wss module with nparts option and reading of parallel xml files when the root partition is missing(!1197)
 - Fix a segment error in the gradient module when the number of fields is smaller than space dimension(!1216)
+- Add output of wall normal data from a single point (!1237)
 - Add QCriterion for 2D flow (!1243)
 - Fix to interppointsdatatofld to allow for mpi processing of large files (!1191)
 - Fix the logic of C0Projection:helmsmoothing (!1220)

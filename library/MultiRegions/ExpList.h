@@ -615,6 +615,30 @@ namespace Nektar
 	     * function StdRegions#StdExpansion#Integral, which discretely
 	     * evaluates the integral using Gaussian quadrature.
 	     *
+	     * Note that the array #m_phys should be filled with the values of the
+	     * function \f$f(\boldsymbol{x})\f$ at the quadrature points
+	     * \f$\boldsymbol{x}_i\f$.
+	     *
+	     * @return  The value of the discretely evaluated integral
+	     *          \f$\int f(\boldsymbol{x})d\boldsymbol{x}\f$.
+	     */
+            NekDouble Integral()
+            {
+                ASSERTL1(m_physState == true,
+	                 "local physical space is not true ");
+
+		return Integral(m_phys);
+	    }
+
+            /**
+	     * The integration is evaluated locally, that is
+	     * \f[\int
+	     *    f(\boldsymbol{x})d\boldsymbol{x}=\sum_{e=1}^{{N_{\mathrm{el}}}}
+	     * \left\{\int_{\Omega_e}f(\boldsymbol{x})d\boldsymbol{x}\right\},  \f]
+	     * where the integration over the separate elements is done by the
+	     * function StdRegions#StdExpansion#Integral, which discretely
+	     * evaluates the integral using Gaussian quadrature.
+	     *
 	     * @param   inarray         An array of size \f$Q_{\mathrm{tot}}\f$
 	     *                          containing the values of the function
 	     *                          \f$f(\boldsymbol{x})\f$ at the quadrature

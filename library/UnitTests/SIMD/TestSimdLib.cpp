@@ -696,6 +696,7 @@ namespace SimdLibTests
         }
 
     }
+
     BOOST_AUTO_TEST_CASE(SimdLib_io)
     {
         vec_t avec(3.14);

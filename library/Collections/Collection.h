@@ -58,7 +58,7 @@ class Collection
                 std::vector<StdRegions::StdExpansionSharedPtr>  pCollExp,
                 OperatorImpMap                                 &impTypes);
 
-        void Initialise(const OperatorType opType);
+        COLLECTIONS_EXPORT void Initialise(const OperatorType opType);
 
         inline void ApplyOperator(
                 const OperatorType                           &op,

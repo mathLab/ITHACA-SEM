@@ -51,31 +51,6 @@ Collection::Collection(
 {
     // Initialise geometry data.
     m_geomData = MemoryManager<CoalescedGeomData>::AllocateSharedPtr();
-
-#if 0 
-    // Loop over all operator types.
-    for (int i = 0; i < SIZE_OperatorType; ++i)
-    {
-        OperatorType opType = (OperatorType)i;
-        ImplementationType impType;
-
-        auto it = impTypes.find(opType);
-        if (it != impTypes.end())
-        {
-            impType = it->second;
-            OperatorKey opKey(pCollExp[0]->DetShapeType(), opType, impType,
-                              pCollExp[0]->IsNodalNonTensorialExp());
-
-            stringstream ss;
-            ss << opKey;
-            ASSERTL0(GetOperatorFactory().ModuleExists(opKey),
-                 "Requested unknown operator "+ss.str());
-
-            m_ops[opType] = GetOperatorFactory().CreateInstance(
-                                                opKey, pCollExp, m_geomData);
-        }
-    }
-#endif    
 }
 
 void Collection::Initialise(const OperatorType opType)

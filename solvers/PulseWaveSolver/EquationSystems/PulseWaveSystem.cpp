@@ -1201,7 +1201,7 @@ NekDouble PulseWaveSystem::v_L2Error(unsigned int field,
                 Array<OneD, NekDouble> one(m_vessels[vesselid]->GetNpoints(),
                                                                            1.0);
 
-                Vol += m_vessels[vesselid]->PhysIntegral(one);
+                Vol += m_vessels[vesselid]->Integral(one);
             }
         }
     }

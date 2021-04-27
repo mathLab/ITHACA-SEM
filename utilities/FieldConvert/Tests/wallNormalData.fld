@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <Metadata>
+        <Provenance>
+            <GitBranch>refs/heads/master</GitBranch>
+            <GitSHA1>9b0ff1304a7a6f79db93c89b135f04ec52bc661e</GitSHA1>
+            <Hostname>LAPTOP-FIIC1OQ2</Hostname>
+            <NektarVersion>5.0.0</NektarVersion>
+            <Timestamp>30-Mar-2021 23:14:52</Timestamp>
+        </Provenance>
+        <ChkFileNum>0</ChkFileNum>
+        <SessionName0>mesh1.xml</SessionName0>
+        <SessionName1>session.xml</SessionName1>
+        <Time>0</Time>
+    </Metadata>
+    <ELEMENTS FIELDS="u,v,p" SHAPE="Triangle" BASIS="Modified_A,Modified_B" NUMMODESPERDIR="UNIORDER:4,4" ID="75" COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxL+Q8C7+2nQOnQqbfqTvOa2157bLjmgxOnbQ5U3OuSF1PmE13bp3Lngvn38tma/wOJG9s++Qui/fcWxJ6XCGzj2JtCZfMYqAwALl1jXwAA</ELEMENTS>
+    <ELEMENTS FIELDS="u,v,p" SHAPE="Quadrilateral" BASIS="Modified_A,Modified_A" NUMMODESPERDIR="UNIORDER:4,4" ID="30-32" COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJy7+MH37+NHy+3ZJr6YnLL3g/3LG9Fma4X+299pvzkt68ub/fkONmB5lZ8Q+XcHY8DyKj73wPIHFKpt7uld3c/w3als+c8r+x8sT27RD1uw/8BFzjV7qpgdGLasDH86q8uWwet29Pu52/ZeWbvaVW//gb0OZie1rnQ+tk3+DwLv7bkZQOCDPcMSc10pBgFbBgav6YueK+5tg8oLwOQdNjJMkL5lw8DgERMbobx37hzTo3/kLWzT7ijqa9Vz2R6LifssKqFpK9Xh/eJ/vB3QnB9HrAuUgXSCArPKCxuGC1PMH64y38vAcG+/nrKn7Sao+X1QmoFhos26Qy/3MDAULA514dy7FioeCJNneVYZMlsHaN6B32EsjLb3U09paP3ntZ3hzTet0t/AVmDrEdNb/w33rtB4xcPKwAS0Z4Zp+xMDEH324GJJW4aGyn0rD9oA+QtijQ+a7mWF+qsIZv7+Xt43Uy2B5p8tN92tsRfmvr8weZH7fXxCH4Huqzi9+uZXm7f96xkZTmjbFl7e2/PzuYJt8ZmWVjcfx70VM0I+//8vBTSn55/YTg6gfVt1rler7mX4z5+exmIKFHfo2fjebsSHv5Lqv4nrvE7b/2o+0rrjbZf9GolqwTTVu/s/3v6796zjOnumwL9g+TauW2B5/q4asHw//3OwfMMZxta7B9bYM7zrf5Rms8Y+9E/Spg8XTtgfYOTnXsH6cH+DFjffhLLOvQcmmL+s5J9kW1N02v2u11bbhsRzfqyXD+1lGOEAACPur2sA</ELEMENTS>
+</NEKTAR>

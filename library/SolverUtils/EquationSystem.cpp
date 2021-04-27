@@ -789,10 +789,8 @@ namespace Nektar
                     Array<OneD, NekDouble> one(m_fields[field]->GetNpoints(),
                                                1.0);
 
-                    NekDouble Vol = m_fields[field]->PhysIntegral(one);
-                    m_comm->AllReduce(Vol, LibUtilities::ReduceSum);
-
-                    L2error = sqrt(L2error*L2error/Vol);
+		    NekDouble Vol = m_fields[field]->Integral(one);
+		    L2error = sqrt(L2error*L2error/Vol);
                 }
             }
             else

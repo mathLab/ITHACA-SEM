@@ -48,8 +48,8 @@ def main():
     exp.SetPhysState(True)
 
     print("Attempting to calculate the integral...")
-    print("Integral calculated to be: %r" % exp.PhysIntegral())
-    actual_test_outcome.append(exp.PhysIntegral())
+    print("Integral calculated to be: %r" % exp.Integral())
+    actual_test_outcome.append(exp.Integral())
 
     if np.allclose(actual_test_outcome, expected_test_outcome):
         print("Test successful!")

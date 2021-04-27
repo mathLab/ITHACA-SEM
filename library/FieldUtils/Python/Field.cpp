@@ -196,9 +196,31 @@ FieldSharedPtr Field_Init(py::list &py_argv, int nparts = 0,
     return f;
 }
 
+
+// Get the i-th Pts field
+const Array<OneD, const NekDouble> Field_GetPts(FieldSharedPtr f, const int i)
+{
+    return f->m_fieldPts->GetPts(i);
+}
+
+// Set the i-th Pts field
+// TODO: The reference for inarray is unavailable in Python if it's not a const
+// [work] Array<OneD, NekDouble> inarray
+// [fail] Array<OneD, NekDouble> &inarray
+// [work] const Array<OneD, const NekDouble> &inarray
+void Field_SetPts(FieldSharedPtr f, 
+                  const int i,
+                  const Array<OneD, const NekDouble> &inarray)
+{
+    f->m_fieldPts->SetPts(i,inarray);
+}
+
+
 void export_Field()
 {
     py::class_<Field, std::shared_ptr<Field>>("Field", py::no_init)
+        .def("GetPts", &Field_GetPts)
+        .def("SetPts", &Field_SetPts)
         .def("ClearField", &Field::ClearField)
         .def("NewPartition", &NewPartition)
         .def("__init__",

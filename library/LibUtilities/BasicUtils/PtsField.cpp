@@ -213,6 +213,14 @@ void PtsField::SetPts(Array< OneD, Array< OneD, NekDouble > > &pts)
     m_pts = pts;
 }
 
+void PtsField::SetPts(const int fldId, const Array< OneD, const NekDouble > &pts)
+{
+    ASSERTL1(fldId <  m_pts.size(),
+             "Pts field count mismatch");
+
+    m_pts[fldId] = pts;
+}
+
 vector<size_t> PtsField::GetPointsPerEdge() const
 {
     return m_nPtsPerEdge;

@@ -26,6 +26,8 @@ v5.1.0
   num_elements with size() (!1127, !1137, !1141)
 - Use base MPI functions instead of the GS library in the trace exchange
   for parallel DG simulations (!1112)
+- Replace PhysIntegral with Integral (!1246)
+- Change the way periodic boundary conditions in parallel is setup to reduce excessive memory usage (!1235)
 
 **FieldConvert**:
 - Add phifile module to compute shape functions for the SPM solver (!1065)
@@ -33,6 +35,8 @@ v5.1.0
 - Add Python interface (!1081)
 - Fix wss module with nparts option and reading of parallel xml files when the root partition is missing(!1197)
 - Fix a segment error in the gradient module when the number of fields is smaller than space dimension(!1216)
+- Add output of wall normal data from a single point (!1237)
+- Add QCriterion for 2D flow (!1243)
 - Fix to interppointsdatatofld to allow for mpi processing of large files (!1191)
 - Fix the logic of C0Projection:helmsmoothing (!1220)
 
@@ -56,11 +60,15 @@ v5.1.0
 **Documentation**:
 - Updated Windows source build instructions in user guide (!1152)
 
+**Tester**
+- Added test metric to check if warnings appear in output and error stream (!1225)
+
 **NekMesh**
 - Improved boundary layer splitting and output to CADfix (!938)
 - Improve .geo reader and support 3D geometries with voids (!1031)
 - Added r-adaptation code (!1109)
 - Added Python bindings, change NekMeshUtils to NekMesh (!1149)
+- Added option to use absolute tolerance in peralign (!1225)
 
 **BuildSystem**
 - Toggle build type (!1135)
@@ -75,6 +83,7 @@ v5.0.2
 
 **Documentation**
 - Updated Documentation to include HDF5 Mesh Output (!1230)
+- Removed Ubuntu Trusty (14.04) from CI and added Focal (20.04) (!1238)
 
 **CI**
 - Add Debian Bullseye to CI system (!1181)

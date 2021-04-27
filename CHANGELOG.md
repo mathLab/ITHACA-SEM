@@ -20,7 +20,7 @@ v5.1.0
 - Add vectorisation of most element on basix operations (!1158)
 - Limit MPI methods based on core count (!1208)
 - Split out IProduct.cpp and IProductWRTDerivBase.cpp in order to avoid long time compilations (!1228)
-- Refactored time integration code using factory pattern (!1034)
+- Refactored time integration code using factory pattern (!1034, !1103)
 - Fix to preprocessor logic for boost with Visual Studio >= 2015 (!1115)
 - Fix type consistency and real comparison in SharedArray.hpp, replaced
   num_elements with size() (!1127, !1137, !1141)
@@ -28,6 +28,7 @@ v5.1.0
   for parallel DG simulations (!1112)
 - Replace PhysIntegral with Integral (!1246)
 - Change the way periodic boundary conditions in parallel is setup to reduce excessive memory usage (!1235)
+- Add exponential and fractional-in-time integration schemes (!1106, !1111, !1210)
 
 **FieldConvert**:
 - Add phifile module to compute shape functions for the SPM solver (!1065)

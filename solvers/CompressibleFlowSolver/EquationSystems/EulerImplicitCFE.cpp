@@ -55,7 +55,7 @@ namespace Nektar
 
     void EulerImplicitCFE::v_InitObject()
     {
-        CompressibleFlowSystem::v_InitObject();
+        CFSImplicit::v_InitObject();
         m_viscousJacFlag = false;
     }
 

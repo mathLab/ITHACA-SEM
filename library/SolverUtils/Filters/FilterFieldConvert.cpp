@@ -187,7 +187,6 @@ FilterFieldConvert::FilterFieldConvert(
 
     m_numSamples  = 0;
     m_index       = 0;
-    m_outputIndex = 0;
 
     //
     // FieldConvert modules
@@ -301,6 +300,16 @@ void FilterFieldConvert::v_Initialise(
             m_fieldMetaData["InitialTime"] = fieldMetaData["InitialTime"];
         }
 
+	// Load information for outputIndex
+	if (fieldMetaData.count("FilterFileNum"))
+        {
+            m_outputIndex = atoi(fieldMetaData["FilterFileNum"].c_str());
+        }
+        else
+        {
+            m_outputIndex = 0;
+        }
+
         // Divide by scale
         NekDouble scale = v_GetScale();
         for (int n = 0; n < m_outFields.size(); ++n)
@@ -397,8 +406,10 @@ void FilterFieldConvert::v_Update(
     if (m_index % m_outputFrequency == 0)
     {
         m_fieldMetaData["FinalTime"] = boost::lexical_cast<std::string>(time);
-        v_PrepareOutput(pFields, time);
-        OutputField(pFields, ++m_outputIndex);
+	v_PrepareOutput(pFields, time);
+        m_fieldMetaData["FilterFileNum"] =
+		boost::lexical_cast<std::string>(++m_outputIndex);
+        OutputField(pFields, m_outputIndex);
     }
 }
 

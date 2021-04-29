@@ -69,6 +69,9 @@ class Timer
 
         /// \brief Accumulate elapsed time for a region
         LIB_UTILITIES_EXPORT void AccumulateRegion(std::string, int iolevel = 0);
+        /// \brief Print elapsed time and call count for each region
+        /// with default serial communicator
+        LIB_UTILITIES_EXPORT static void PrintElapsedRegions();
 
         /// \brief Print elapsed time and call count for each region
         LIB_UTILITIES_EXPORT static void PrintElapsedRegions

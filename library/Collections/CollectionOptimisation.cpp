@@ -377,9 +377,16 @@ OperatorImpMap CollectionOptimisation::SetWithTimings(
             }
         }
 
-        Collection collloc(pCollExp,impTypes);
-        coll.push_back(collloc);
+        Collection collLoc(pCollExp,impTypes);
+        for (int i = 0; i < SIZE_OperatorType; ++i)
+        {
+            collLoc.Initialise((OperatorType)i);
+        }
+        coll.push_back(collLoc);
     }
+
+    StdRegions::ConstFactorMap factors; // required for helmholtz operator
+    factors[StdRegions::eFactorLambda] = 1.5; 
 
     // Determine the number of tests to do in one second
     Array<OneD, int> Ntest(SIZE_OperatorType);
@@ -388,11 +395,10 @@ OperatorImpMap CollectionOptimisation::SetWithTimings(
         OperatorType OpType = (OperatorType)i;
 
         t.Start();
-        coll[0].ApplyOperator(OpType,
-                           inarray,
-                           outarray1,
-                           outarray2,
-                           outarray3);
+
+        coll[0].ApplyOperator(OpType,    inarray,
+                              outarray1, outarray2,
+                              outarray3, factors);
         t.Stop();
 
         NekDouble oneTest = t.TimePerTest(1);
@@ -414,11 +420,9 @@ OperatorImpMap CollectionOptimisation::SetWithTimings(
                 t.Start();
                 for(int n = 0; n < Ntest[i]; ++n)
                 {
-                    coll[imp].ApplyOperator(OpType,
-                                      inarray,
-                                      outarray1,
-                                      outarray2,
-                                      outarray3);
+                    coll[imp].ApplyOperator(OpType,    inarray,
+                                            outarray1, outarray2,
+                                            outarray3, factors);
                 }
                 t.Stop();
                 timing[imp] = t.TimePerTest(Ntest[i]);

@@ -17,6 +17,7 @@ v5.1.0
 - Fix compilation errors when CWIPI interface enabled (!1207)
 - Fix distance in ContainsPoint and GetLocCoords (!1200)
 - Fix compiler warning of maybe-uninitialized elType in InputStar (!1217)
+- Extend vectoisation to include all elements and initialise collections on first call (!1162)
 - Add vectorisation of most element on basix operations (!1158)
 - Limit MPI methods based on core count (!1208)
 - Split out IProduct.cpp and IProductWRTDerivBase.cpp in order to avoid long time compilations (!1228)

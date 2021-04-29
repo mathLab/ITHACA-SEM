@@ -288,9 +288,9 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray);
 
-            /// This function calculates the inner product of a function
-            /// \f$f(\boldsymbol{x})\f$ with respect to the derivative (in
-            /// direction \param dir) of all \em local expansion modes
+            /// This function calculates the inner product of a
+            /// function \f$f(\boldsymbol{x})\f$ with respect to the
+            /// derivative of all \em local expansion modes
             /// \f$\phi_n^e(\boldsymbol{x})\f$.
             MULTI_REGIONS_EXPORT void   IProductWRTDerivBase
                 (const Array<OneD, const Array<OneD, NekDouble> > &inarray,
@@ -1291,6 +1291,9 @@ namespace Nektar
 
             Collections::CollectionVector m_collections;
 
+            /// Vector of bools to act as an initialise on first call flag
+            std::vector<bool> m_collectionsDoInit;
+            
             /// Offset of elemental data into the array #m_coeffs
             std::vector<int>  m_coll_coeff_offset;
 
@@ -1307,9 +1310,10 @@ namespace Nektar
             Array<OneD, std::pair<int, int> >  m_coeffsToElmt;
 
             BlockMatrixMapShPtr  m_blockMat;
-
-            //@todo should this be in ExpList or ExpListHomogeneous1D.cpp
-            // it's a bool which determine if the expansion is in the wave space (coefficient space)
+            
+            //@todo should this be in ExpList or
+            // ExpListHomogeneous1D.cpp it's a bool which determine if
+            // the expansion is in the wave space (coefficient space)
             // or not
             bool m_WaveSpace;
 

@@ -28,6 +28,8 @@ v5.1.0
   for parallel DG simulations (!1112)
 - Replace PhysIntegral with Integral (!1246)
 - Change the way periodic boundary conditions in parallel is setup to reduce excessive memory usage (!1235)
+- Add nonlinear and linear system solvers (!1196)
+- Add ESDIRK3 and ESDIRK4 time integration schemes (!1196)
 
 **FieldConvert**:
 - Add phifile module to compute shape functions for the SPM solver (!1065)
@@ -51,6 +53,9 @@ v5.1.0
 
 **CompressibleFlowSolver**
 - Added vectorisation of the Interior Penalty method (!!223)
+- Added a simplified implicit solver with naive preconditioner (!!1196)
+- Add BRJ preconditioner to the implicit solver (!!1212)
+- Fix implicit solver for Euler system (!!1252)
 
 **PulseWaveSolver**
 - Added viscoelasticity (!1138)

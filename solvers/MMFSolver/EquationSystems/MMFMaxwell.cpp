@@ -556,7 +556,7 @@ void MMFMaxwell::v_DoSolve()
             }
 
             std::cout << "*** Area of Planar Source = "
-                      << m_fields[0]->PhysIntegral(m_SourceVector) << std::endl;
+                      << m_fields[0]->Integral(m_SourceVector) << std::endl;
         }
         break;
 
@@ -2191,7 +2191,7 @@ NekDouble MMFMaxwell::ComputeEnergyDensity(
                      &tmp[0], 1);
     }
 
-    energy = 0.5 * (m_fields[0]->PhysIntegral(tmp));
+    energy = 0.5 * (m_fields[0]->Integral(tmp));
     return energy;
 }
 
@@ -2329,7 +2329,7 @@ void MMFMaxwell::ComputeMaterialOpticalCloak(
 
     m_fields[0]->GenerateElementVector(m_ElemtGroup1, 1.0, 0.0, Cloakregion);
 
-    ExactCloakArea = ExactCloakArea - (m_fields[0]->PhysIntegral(Cloakregion));
+    ExactCloakArea = ExactCloakArea - (m_fields[0]->Integral(Cloakregion));
     std::cout << "*** Error of Cloakregion area = " << ExactCloakArea
               << std::endl;
 
@@ -2388,7 +2388,7 @@ void MMFMaxwell::ComputeMaterialMicroWaveCloak(
         Vmath::Vsub(nq, Cloakregion, 1, Vacregion, 1, Cloakregion, 1);
     }
 
-    ExactCloakArea = ExactCloakArea - (m_fields[0]->PhysIntegral(Cloakregion));
+    ExactCloakArea = ExactCloakArea - (m_fields[0]->Integral(Cloakregion));
     std::cout << "*** Error of Cloakregion area = " << ExactCloakArea
               << std::endl;
 

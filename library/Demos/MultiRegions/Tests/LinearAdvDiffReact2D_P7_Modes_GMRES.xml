@@ -246,7 +246,7 @@
             <P> Advection_x = 1 </P>
             <P> Advection_y = 1 </P>
             <P> IterativeSolverTolerance = 1e-9 </P>
-            <P> GMRESMaxStorage = 100 </P>
+            <P> LinSysMaxStorage = 100 </P>
             
         </PARAMETERS>
 
@@ -254,7 +254,7 @@
             <V VAR="u">
                 <I PROPERTY="GlobalSysSoln"    VALUE="IterativeStaticCond" />
                 <I PROPERTY="Preconditioner"   VALUE="Diagonal"/>
-                <I PROPERTY="LinSysIterSovler" VALUE="GMRES"/>
+                <I PROPERTY="LinSysIterSolver" VALUE="GMRES"/>
             </V>
         </GLOBALSYSSOLNINFO>
 

@@ -414,6 +414,7 @@ The following output formats are supported:
     triangles are supported up to arbitrary order. Prisms supported up to order
     4, pyramids up to order 1.\\
     Nektar++ & \texttt{xml} & \cmark & Most functionality supported. \\
+    HDF5 & \texttt{nekg} & \cmark & Most functionality supported. \\
     VTK & \texttt{vtk} & \xmark & Experimental. Only ASCII triangular data is supported. \\
     \bottomrule
   \end{tabularx}
@@ -441,6 +442,23 @@ NekMesh Mesh.msh output.msh:msh:order=7
 %
 will generate an order 7 Gmsh mesh. In the rest of these subsections, we discuss
 the various processing modules available within \nm.
+
+\subsubsection{HDF5 format}
+
+NekMesh and all solvers within Nektar++ - along with subsequent FieldConvert modules - also support the HDF5 format. This allows for faster loading of geometries and meshes within each solver - and is a significant improvement over the XML format. HDF5 is recommended input format for any larger cases.
+
+Converting from XML to HDF5 is a simple task that only requires the one NekMesh command:
+\begin{lstlisting}[style=BashInputStyle]
+    NekMesh XMLMesh.xml HDF5Mesh.nekg
+\end{lstlisting}
+
+This will create two files \inltt{HDF5Mesh.xml} and \inltt{HDF5Mesh.nekg} which are both needed in the same directory to run the simulation. An additional flag in the session file is required, ensuring it is placed before the expansion list being:
+
+\begin{lstlisting}[style=XmlStyle]
+    <GEOMETRY DIM="3" SPACE="3" HDF5FILE="HDF5Mesh.nekg" />
+\end{lstlisting}
+
+HDF5 also has the additional advantage of ensuring the mesh and session file are split - which allows for easy ammending of the session file - whilst allowing for use of FieldCovnert modules that require only 1 XML input file - rather than having to concatenate the session and mesh XML files. Solvers and any FieldConvert modules can be run by referencing only the session file after the \inltt{GEOMETRY} tag is included. 
 
 \subsection{Extract surfaces from a mesh}
 \label{s:utilities:nekmesh:extract}
@@ -1194,8 +1212,6 @@ GEO files should be a straightforward succession of entity creations (see list
 above). This should however allow for the creation of quite a wide range of 2D
 and 3D geometries by transformation of arbitrary curves into generic splines and
 arcs.
-
-
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "../user-guide"

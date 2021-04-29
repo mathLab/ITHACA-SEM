@@ -21,17 +21,17 @@ v5.1.0
 - Add vectorisation of most element on basix operations (!1158)
 - Limit MPI methods based on core count (!1208)
 - Split out IProduct.cpp and IProductWRTDerivBase.cpp in order to avoid long time compilations (!1228)
-
-**FieldConvert**
-- Refactored time integration code using factory pattern (!1034)
+- Refactored time integration code using factory pattern (!1034, !1103)
 - Fix to preprocessor logic for boost with Visual Studio >= 2015 (!1115)
 - Fix type consistency and real comparison in SharedArray.hpp, replaced
   num_elements with size() (!1127, !1137, !1141)
 - Use base MPI functions instead of the GS library in the trace exchange
   for parallel DG simulations (!1112)
-  num_elements with size() (!1127, !1137, !1141)
-- Fix to interppointsdatatofld to allow for mpi processing of large files (!1191)
-- Fix the logic of C0Projection:helmsmoothing (!1220)
+- Replace PhysIntegral with Integral (!1246)
+- Change the way periodic boundary conditions in parallel is setup to reduce excessive memory usage (!1235)
+- Add exponential and fractional-in-time integration schemes (!1106, !1111, !1210)
+- Add nonlinear and linear system solvers (!1196)
+- Add ESDIRK3 and ESDIRK4 time integration schemes (!1196)
 
 **FieldConvert**:
 - Add phifile module to compute shape functions for the SPM solver (!1065)
@@ -39,6 +39,10 @@ v5.1.0
 - Add Python interface (!1081)
 - Fix wss module with nparts option and reading of parallel xml files when the root partition is missing(!1197)
 - Fix a segment error in the gradient module when the number of fields is smaller than space dimension(!1216)
+- Add output of wall normal data from a single point (!1237)
+- Add QCriterion for 2D flow (!1243)
+- Fix to interppointsdatatofld to allow for mpi processing of large files (!1191)
+- Fix the logic of C0Projection:helmsmoothing (!1220)
 
 **CardiacEPSolver**
 - Added additional parameter sets to Fenton-Karma model (!1119)
@@ -51,6 +55,9 @@ v5.1.0
 
 **CompressibleFlowSolver**
 - Added vectorisation of the Interior Penalty method (!!223)
+- Added a simplified implicit solver with naive preconditioner (!!1196)
+- Add BRJ preconditioner to the implicit solver (!!1212)
+- Fix implicit solver for Euler system (!!1252)
 
 **PulseWaveSolver**
 - Added viscoelasticity (!1138)
@@ -60,11 +67,15 @@ v5.1.0
 **Documentation**:
 - Updated Windows source build instructions in user guide (!1152)
 
+**Tester**
+- Added test metric to check if warnings appear in output and error stream (!1225)
+
 **NekMesh**
 - Improved boundary layer splitting and output to CADfix (!938)
 - Improve .geo reader and support 3D geometries with voids (!1031)
 - Added r-adaptation code (!1109)
 - Added Python bindings, change NekMeshUtils to NekMesh (!1149)
+- Added option to use absolute tolerance in peralign (!1225)
 
 **BuildSystem**
 - Toggle build type (!1135)
@@ -74,11 +85,19 @@ v5.1.0
 
 v5.0.2
 ------
+**Library**
+- Fix bug in StdHexExp FillMode (!1192)
+
+**Documentation**
+- Updated Documentation to include HDF5 Mesh Output (!1230)
+- Removed Ubuntu Trusty (14.04) from CI and added Focal (20.04) (!1238)
+
 **CI**
 - Add Debian Bullseye to CI system (!1181)
 
 **BuildSystem**
 - Updated third party zlib version to 1.2.9 to resolve OCE source build issue (!1227)
+- Adding SolverUtils as a core library that is built by default (!1240)
 
 v5.0.1
 ------

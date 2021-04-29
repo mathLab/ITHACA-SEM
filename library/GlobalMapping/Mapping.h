@@ -385,9 +385,9 @@ class Mapping
         /// @brief Update the Mapping with new coordinates
         GLOBAL_MAPPING_EXPORT void UpdateMapping(const NekDouble time,
             const Array<OneD, Array<OneD, NekDouble> > &coords    
-                                                    = NullNekDoubleArrayofArray,
+                                                    = NullNekDoubleArrayOfArray,
             const Array<OneD, Array<OneD, NekDouble> > &coordsVel 
-                                                    = NullNekDoubleArrayofArray)
+                                                    = NullNekDoubleArrayOfArray)
         {
             v_UpdateMapping( time, coords, coordsVel);
         }
@@ -539,9 +539,9 @@ class Mapping
         GLOBAL_MAPPING_EXPORT virtual void v_UpdateMapping(
             const NekDouble time,
             const Array<OneD, Array<OneD, NekDouble> > &coords    
-                                                = NullNekDoubleArrayofArray,
+                                                = NullNekDoubleArrayOfArray,
             const Array<OneD, Array<OneD, NekDouble> > &coordsVel 
-                                                = NullNekDoubleArrayofArray);
+                                                = NullNekDoubleArrayOfArray);
 
         GLOBAL_MAPPING_EXPORT virtual void v_UpdateGeomInfo() =0;
 

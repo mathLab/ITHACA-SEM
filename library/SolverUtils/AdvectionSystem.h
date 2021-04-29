@@ -59,8 +59,9 @@ public:
         return m_advObject;
     }
 
-    SOLVER_UTILS_EXPORT Array<OneD, NekDouble>  GetElmtCFLVals(void);
-    SOLVER_UTILS_EXPORT NekDouble               GetCFLEstimate(int &elmtid);
+    SOLVER_UTILS_EXPORT Array<OneD, NekDouble>  GetElmtCFLVals(
+        const bool FlagAcousticCFL = true);
+    SOLVER_UTILS_EXPORT NekDouble GetCFLEstimate(int &elmtid);
 
 protected:
     /// Advection term
@@ -68,8 +69,10 @@ protected:
 
     SOLVER_UTILS_EXPORT virtual bool v_PostIntegrate(int step);
 
-    SOLVER_UTILS_EXPORT virtual Array<OneD, NekDouble> v_GetMaxStdVelocity()
+    SOLVER_UTILS_EXPORT virtual Array<OneD, NekDouble>
+          v_GetMaxStdVelocity(const NekDouble SpeedSoundFactor=1.0)
     {
+        boost::ignore_unused(SpeedSoundFactor);
         ASSERTL0(false,
             "v_GetMaxStdVelocity is not implemented by the base class.");
         Array<OneD, NekDouble> dummy(1);

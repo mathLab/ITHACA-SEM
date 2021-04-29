@@ -284,13 +284,17 @@ class PhysDeriv_MatrixFree : public Operator, MatrixFreeOneInMultiOut
                     const StdRegions::ConstFactorMap   &factors) final
     {
         boost::ignore_unused(wsp,factors);
+
         if (m_isPadded)
         {
             // copy into padded vector
             Vmath::Vcopy(m_nIn, input, 1, m_input, 1);
+            (*m_oper)(m_input, m_output);
         }
-           
-        (*m_oper)(input, m_output);
+        else
+        {
+            (*m_oper)(input, m_output);
+        }
 
         // currently using temporary local temporary space for output
         // to allow for other operator call below which is

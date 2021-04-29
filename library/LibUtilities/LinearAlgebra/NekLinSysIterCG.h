@@ -54,11 +54,12 @@ public:
 
     LIB_UTILITIES_EXPORT static NekLinSysIterSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen)
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+        const NekSysKey &pKey)
     {
         NekLinSysIterCGSharedPtr p =
             MemoryManager<NekLinSysIterCG>::AllocateSharedPtr(pSession, vComm,
-                                                              nDimen);
+                nDimen, pKey);
         p->InitObject();
         return p;
     }
@@ -66,7 +67,8 @@ public:
     /// Constructor for full direct matrix solve.
     LIB_UTILITIES_EXPORT NekLinSysIterCG(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen);
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+        const NekSysKey &pKey);
     LIB_UTILITIES_EXPORT ~NekLinSysIterCG();
 
 protected:

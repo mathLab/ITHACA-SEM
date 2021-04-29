@@ -584,6 +584,191 @@ void LocTraceToTraceMap::Setup(
             }
         }
     }
+
+    TraceLocToElmtLocCoeffMap(locExp,trace);
+    FindElmtNeighbors(locExp,trace);
+}
+
+void LocTraceToTraceMap::CalcLocTracePhysToTraceIDMap(
+    const ExpListSharedPtr &tracelist,
+    const int               ndim)
+{
+    switch (ndim)
+    {
+        case 2:
+            CalcLocTracePhysToTraceIDMap_2D(tracelist);
+            break;
+        case 3:
+            CalcLocTracePhysToTraceIDMap_3D(tracelist);
+            break;
+        default:
+            NEKERROR(ErrorUtil::efatal, 
+                "CalcLocTracePhysToTraceIDMap not coded");
+    }
+}
+
+void LocTraceToTraceMap::CalcLocTracePhysToTraceIDMap_2D(
+    const ExpListSharedPtr &tracelist)
+{
+    std::shared_ptr<LocalRegions::ExpansionVector> traceExp= tracelist->GetExp();
+    int ntotTrace            = (*traceExp).size();
+    int ntPnts,noffset;
+
+    m_LocTracephysToTraceIDMap      = Array<OneD, Array<OneD, int> > (2);
+    m_LocTracephysToTraceIDMap[0]   = Array<OneD, int> (m_nFwdLocTracePts,-1);
+    m_LocTracephysToTraceIDMap[1]   = Array<OneD, int> (
+            m_nLocTracePts-m_nFwdLocTracePts,-1);
+
+    Array<OneD, NekDouble> tracePnts(m_nTracePts,0.0);
+    for(int nt=0; nt<ntotTrace;nt++)
+    {
+        ntPnts  =   tracelist->GetTotPoints(nt);
+        noffset =   tracelist->GetPhys_Offset(nt);
+        for(int i=0;i<ntPnts;i++)
+        {
+            tracePnts[noffset+i]    =   NekDouble(nt);
+        }
+    }
+       
+    Array<OneD, Array<OneD, NekDouble> > loctracePntsLR(2);
+    loctracePntsLR[0]   =   Array<OneD, NekDouble> (m_nFwdLocTracePts,0.0);
+    loctracePntsLR[1]   =   Array<OneD, NekDouble> (
+        m_nLocTracePts-m_nFwdLocTracePts,0.0);
+
+    for(int dir = 0; dir<2;dir++)
+    {
+        int cnt  = 0;
+        int cnt1 = 0;
+
+        Array<OneD, NekDouble> tmp(m_nTracePts,0.0);
+        Vmath::Gathr((int)m_LocTraceToTraceMap[dir].size(),
+                    tracePnts.get(),
+                    m_LocTraceToTraceMap[dir].get(),
+                    tmp.get());
+
+        for (int i = 0; i < m_interpTrace[dir].size(); ++i)
+        {
+            if (m_interpNfaces[dir][i])
+            {
+                LibUtilities::PointsKey fromPointsKey0 =
+                    std::get<0>(m_interpPoints[dir][i]);
+                LibUtilities::PointsKey toPointsKey0 =
+                    std::get<2>(m_interpPoints[dir][i]);
+
+                int fnp    = fromPointsKey0.GetNumPoints();
+                int tnp    = toPointsKey0.GetNumPoints();
+                int nedges = m_interpNfaces[dir][i];
+
+                for(int ne=0;ne<nedges;ne++)
+                {
+                    Vmath::Fill(fnp,tmp[cnt1],&loctracePntsLR[dir][cnt],1);
+                    cnt += fnp;
+                    cnt1 += tnp;
+                }
+            }
+        }    
+    }
+    
+    NekDouble error = 0.0;
+    for(int nlr = 0; nlr<2;nlr++)
+    {
+        for(int i=0;i<loctracePntsLR[nlr].size();i++)
+        {
+            m_LocTracephysToTraceIDMap[nlr][i] =   
+                std::round(loctracePntsLR[nlr][i]);
+            error   +=   abs(loctracePntsLR[nlr][i] - NekDouble(
+                m_LocTracephysToTraceIDMap[nlr][i]));
+        }
+    }
+    error = error/NekDouble(m_nLocTracePts);
+    ASSERTL0(error<NekConstants::kNekZeroTol,
+        "m_LocTracephysToTraceIDMap may not be integer !!");
+}
+
+void LocTraceToTraceMap::CalcLocTracePhysToTraceIDMap_3D(
+    const ExpListSharedPtr &tracelist)
+{
+    std::shared_ptr<LocalRegions::ExpansionVector> traceExp= tracelist->GetExp();
+    int ntotTrace            = (*traceExp).size();
+    int ntPnts,noffset;
+
+    m_LocTracephysToTraceIDMap      = Array<OneD, Array<OneD, int> > (2);
+    m_LocTracephysToTraceIDMap[0]   = Array<OneD, int> (m_nFwdLocTracePts,-1);
+    m_LocTracephysToTraceIDMap[1]   = Array<OneD, int> (
+            m_nLocTracePts-m_nFwdLocTracePts,-1);
+
+    Array<OneD, NekDouble> tracePnts(m_nTracePts,0.0);
+    for(int nt=0; nt<ntotTrace;nt++)
+    {
+        ntPnts  =   tracelist->GetTotPoints(nt);
+        noffset =   tracelist->GetPhys_Offset(nt);
+        for(int i=0;i<ntPnts;i++)
+        {
+            tracePnts[noffset+i]    =   NekDouble(nt);
+        }
+    }
+       
+    Array<OneD, Array<OneD, NekDouble> > loctracePntsLR(2);
+    loctracePntsLR[0]   =   Array<OneD, NekDouble> (m_nFwdLocTracePts,0.0);
+    loctracePntsLR[1]   =   Array<OneD, NekDouble> (
+        m_nLocTracePts-m_nFwdLocTracePts,0.0);
+
+    for(int dir = 0; dir<2;dir++)
+    {
+        int cnt  = 0;
+        int cnt1 = 0;
+
+        // tmp space assuming forward map is of size of trace
+        Array<OneD, NekDouble> tmp(m_nTracePts,0.0);
+        Vmath::Gathr((int)m_LocTraceToTraceMap[dir].size(),
+                    tracePnts.get(),
+                    m_LocTraceToTraceMap[dir].get(),
+                    tmp.get());
+
+        for (int i = 0; i < m_interpTrace[dir].size(); ++i)
+        {
+            if (m_interpNfaces[dir][i])
+            {
+                LibUtilities::PointsKey fromPointsKey0 =
+                    std::get<0>(m_interpPoints[dir][i]);
+                LibUtilities::PointsKey fromPointsKey1 =
+                    std::get<1>(m_interpPoints[dir][i]);
+                LibUtilities::PointsKey toPointsKey0 =
+                    std::get<2>(m_interpPoints[dir][i]);
+                LibUtilities::PointsKey toPointsKey1 =
+                    std::get<3>(m_interpPoints[dir][i]);
+
+                int fnp0         = fromPointsKey0.GetNumPoints();
+                int fnp1         = fromPointsKey1.GetNumPoints();
+                int tnp0         = toPointsKey0.GetNumPoints();
+                int tnp1         = toPointsKey1.GetNumPoints();
+
+                int nfttl        = fnp0 * fnp1;
+                
+                for(int ne=0;ne<m_interpNfaces[dir][i];ne++)
+                {
+                    Vmath::Fill(nfttl,tmp[cnt1],&loctracePntsLR[dir][cnt],1);
+                    cnt += nfttl;
+                    cnt1 += tnp0 * tnp1;
+                }
+            }
+        }    
+    }
+    
+    NekDouble error = 0.0;
+    for(int nlr = 0; nlr<2;nlr++)
+    {
+        for(int i=0;i<loctracePntsLR[nlr].size();i++)
+        {
+            m_LocTracephysToTraceIDMap[nlr][i] =   
+                std::round(loctracePntsLR[nlr][i]);
+            error   +=   abs(loctracePntsLR[nlr][i] - NekDouble(
+                m_LocTracephysToTraceIDMap[nlr][i]));
+        }
+    }
+    error = error/NekDouble(m_nLocTracePts);
+    ASSERTL0(error<NekConstants::kNekZeroTol,
+        "m_LocTracephysToTraceIDMap may not be integer !!");
 }
 
 /**
@@ -651,6 +836,119 @@ void LocTraceToTraceMap::TraceLocToElmtLocCoeffMap(
     m_leftRightAdjacentExpFlag              = LRAdjflag;
     m_traceCoeffToLeftRightExpCoeffMap      = elmtLRMap;
     m_traceCoeffToLeftRightExpCoeffSign     = elmtLRSign;
+}
+
+void LocTraceToTraceMap::FindElmtNeighbors(
+    const ExpList &locExp,
+    const ExpListSharedPtr &trace)
+{
+    const std::shared_ptr<LocalRegions::ExpansionVector> exptrac =
+        trace->GetExp();
+    int ntrace    = exptrac->size();
+
+    const std::shared_ptr<LocalRegions::ExpansionVector> exp =
+        locExp.GetExp();
+    int nexp    = exp->size();
+
+    Array<OneD, Array<OneD, int >> LRAdjExpid(2);
+    Array<OneD, Array<OneD, bool>> LRAdjflag(2);
+    LRAdjExpid  =   m_leftRightAdjacentExpId  ;
+    LRAdjflag   =   m_leftRightAdjacentExpFlag;
+
+    std::set< std::pair<int, int> > neighborSet;
+    int ntmp0,ntmp1;
+    for(int  nt = 0; nt < ntrace; nt++)
+    {
+        if(LRAdjflag[0][nt]&&LRAdjflag[1][nt])
+        {
+            ntmp0   =   LRAdjExpid[0][nt];
+            ntmp1   =   LRAdjExpid[1][nt];
+            
+            ASSERTL0(ntmp0!=ntmp1, " ntmp0==ntmp1, trace inside a element?? ");
+
+            std::set< std::pair<int, int> >::iterator it = neighborSet.begin();
+            neighborSet.insert(it, std::make_pair(ntmp0,ntmp1)); 
+            neighborSet.insert(it, std::make_pair(ntmp1,ntmp0));
+        }
+    }
+
+    Array<OneD, int > ElemIndex(nexp,0);
+    for (std::set< std::pair<int, int> >::iterator it=neighborSet.begin(); 
+        it!=neighborSet.end(); ++it)
+    {
+        int ncurrent   =  it->first;
+        ElemIndex[ncurrent]++;
+    }
+
+    Array<OneD, Array<OneD, int > > ElemNeighbsId(nexp);
+    Array<OneD, Array<OneD, int > > tmpId(nexp);
+    Array<OneD, int > ElemNeighbsNumb(nexp,-1);
+    Vmath::Vcopy(nexp,ElemIndex,1,ElemNeighbsNumb,1);
+    for(int  ne = 0; ne < nexp; ne++)
+    {
+        int neighb  =   ElemNeighbsNumb[ne];
+        ElemNeighbsId[ne]   =   Array<OneD, int >(neighb,-1);
+        tmpId[ne]           =   Array<OneD, int >(neighb,-1);
+    }
+
+    for(int  ne = 0; ne < nexp; ne++)
+    {
+        ElemIndex[ne]   =   0;
+    }
+    for (std::set< std::pair<int, int> >::iterator it=neighborSet.begin(); 
+        it!=neighborSet.end(); ++it)
+    {
+        int ncurrent   =  it->first;
+        int neighbor   =  it->second;
+        ElemNeighbsId[ncurrent][ ElemIndex[ncurrent] ]    = neighbor;
+        ElemIndex[ncurrent]++;
+    }
+
+    // pickout repeated indexes
+    for(int  ne = 0; ne < nexp; ne++)
+    {
+        ElemIndex[ne]   =   0;
+        for(int nb =0; nb<ElemNeighbsNumb[ne]; nb++)
+        {
+            int neighbId =  ElemNeighbsId[ne][nb];
+            bool found = false;
+            for(int nc =0; nc<ElemIndex[ne]; nc++)
+            {
+                if(ElemNeighbsId[ne][nb]==tmpId[ne][nc])
+                {
+                    found = true;
+                }
+            }
+            if(!found)
+            {
+                tmpId[ne][ ElemIndex[ne] ] = neighbId;
+                ElemIndex[ne]++;
+            }
+        }
+    }
+    ElemNeighbsNumb = ElemIndex;
+    for(int  ne = 0; ne < nexp; ne++)
+    {
+        int neighb = ElemNeighbsNumb[ne];
+        if(neighb>0)
+        {
+            ElemNeighbsId[ne]   =   Array<OneD, int >(neighb,-1);
+            Vmath::Vcopy(neighb,tmpId[ne],1,ElemNeighbsId[ne],1);
+        }
+    }
+    
+    // check errors
+    for(int  ne = 0; ne < nexp; ne++)
+    {
+        for(int nb =0; nb<ElemNeighbsNumb[ne]; nb++)
+        {
+            ASSERTL0( (ElemNeighbsId[ne][nb]>=0)&&(ElemNeighbsId[ne][nb]<=nexp),
+                "Element id <0 or >number of total elements")
+        }
+    }
+
+    m_ElemNeighbsNumb = ElemNeighbsNumb;
+    m_ElemNeighbsId   = ElemNeighbsId;
 }
 
 /**
@@ -727,7 +1025,7 @@ void LocTraceToTraceMap::InterpLocTracesToTrace(
         InterpLocFacesToTrace(dir,loctraces,traces);
         break;
     default:
-        ASSERTL0(false,"Not set up");
+        NEKERROR(ErrorUtil::efatal, "Not set up");
         break;
     }
 }
@@ -810,7 +1108,7 @@ void LocTraceToTraceMap::InterpLocEdgesToTrace(
                 }
                 break;
                 default:
-                    ASSERTL0(false,
+                    NEKERROR(ErrorUtil::efatal,
                              "Invalid interpolation type for 2D elements");
                     break;
             }
@@ -919,7 +1217,7 @@ void LocTraceToTraceMap::RightIPTWLocEdgesToTraceInterpMat(
                 }
                 break;
                 default:
-                    ASSERTL0(false,
+                    NEKERROR(ErrorUtil::efatal,
                              "Invalid interpolation type for 2D elements");
                     break;
             }
@@ -1204,7 +1502,8 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
                 std::get<2>(m_interpPoints[dir][i]);
             LibUtilities::PointsKey toPointsKey1 =
                 std::get<3>(m_interpPoints[dir][i]);
-
+            // Here the f(from) and t(to) are chosen to be consistent with 
+            // InterpLocFacesToTrace
             int fnp0         = fromPointsKey0.GetNumPoints();
             int fnp1         = fromPointsKey1.GetNumPoints();
             int tnp0         = toPointsKey0.GetNumPoints();
@@ -1294,7 +1593,7 @@ void LocTraceToTraceMap::RightIPTWLocFacesToTraceInterpMat(
                                      loctraces.get() + cnt + j * fnp0 * fnp1,
                                      1);
 
-                        for(int k = 0; k< tnp1; k++)
+                        for(int k = 0; k< fnp1; k++)
                         {
                             Vmath::Svtvp(fnp0,I1[k],
                                 &tmp[cnt1 + (j + 1) * tnp0 * tnp1 - tnp0],1,

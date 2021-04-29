@@ -329,12 +329,16 @@ IMEX           & dirk & IMEX DIRK variant with free parameters (s, sigma),
 EulerExponential & Lawson  & Exponential Euler scheme using the
                              Lawson variant of order 1 \\
 
-                  & N{\o}rsett & Exponential Euler scheme using the
-                              N{\o}rsett variant of order 1-4
-                              (Higher order not yet properly seeded) \\
+                 & N{\o}rsett & Exponential Euler scheme using the
+                                N{\o}rsett variant of order 1-4
+                                (Higher order not yet properly seeded) \\
 
-FractionalInTime  &         & Fractional-in-time scheme of order 1-4
-                              (Higher order not yet properly seeded) \\
+FractionalInTime &            & Fractional-in-time scheme of order 1-4
+                              (Higher order not yet properly seeded),
+                              free parameters, none,
+                              one (alpha),
+                              two (alpha, base), or
+                              six (alpha, base, nQuadPts, sigma, mu0, nu) \\
                     
 \bottomrule
 \end{tabular}

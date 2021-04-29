@@ -312,7 +312,7 @@ class IProductWRTDerivBase_MatrixFree : public Operator, MatrixFreeMultiInOneOut
                     Vmath::Vcopy(m_nIn, entry2, 1, m_input[2], 1);
                     break;
                 default:
-                    NEKERROR(ErrorUtil::efatal, "coordim not valid");
+                    NEKERROR(ErrorUtil::efatal, "m_coordim value not valid");
                     break;
                 }
 

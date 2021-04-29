@@ -57,6 +57,13 @@ namespace Nektar
     {
         AdvectionSystem::v_InitObject();
 
+        for (int i = 0; i < m_fields.size(); i++)
+        {
+            // Use BwdTrans to make sure initial condition is in solution space
+            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
+                                  m_fields[i]->UpdatePhys());
+        }
+
         m_varConv = MemoryManager<VariableConverter>::AllocateSharedPtr(
                     m_session, m_spacedim);
 
@@ -67,7 +74,7 @@ namespace Nektar
         m_homoInitialFwd = false;
 
         // Set up locations of velocity vector.
-        m_vecLocs = Array<OneD, Array<OneD, NekDouble> >(1);
+        m_vecLocs = Array<OneD, Array<OneD, NekDouble>>(1);
         m_vecLocs[0] = Array<OneD, NekDouble>(m_spacedim);
         for (int i = 0; i < m_spacedim; ++i)
         {
@@ -83,11 +90,22 @@ namespace Nektar
         // Create artificial diffusion
         if (m_shockCaptureType != "Off")
         {
-            m_artificialDiffusion = GetArtificialDiffusionFactory()
-                                    .CreateInstance(m_shockCaptureType,
-                                                    m_session,
-                                                    m_fields,
-                                                    m_spacedim);
+            if (m_shockCaptureType == "Physical")
+            {
+                int nPts = m_fields[0]->GetTotPoints();
+                m_muav = Array<OneD, NekDouble>(nPts, 0.0);
+
+                int nTracePts = m_fields[0]->GetTrace()->GetTotPoints();
+                m_muavTrace = Array<OneD, NekDouble> (nTracePts,0.0);
+            }
+            else
+            {
+                m_artificialDiffusion = GetArtificialDiffusionFactory()
+                                        .CreateInstance(m_shockCaptureType,
+                                                        m_session,
+                                                        m_fields,
+                                                        m_spacedim);
+            }
         }
 
         // Forcing terms for the sponge region
@@ -121,50 +139,13 @@ namespace Nektar
             cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
         }
 
-        if (m_explicitAdvection)
-        {
-            m_ode.DefineOdeRhs    (&CompressibleFlowSystem::DoOdeRhs, this);
-            m_ode.DefineProjection(&CompressibleFlowSystem::DoOdeProjection, this);
-        }
-        else
-        {   
-            m_ode.DefineOdeRhs    (&CompressibleFlowSystem::DoOdeRhs, this);
-            m_ode.DefineProjection(&CompressibleFlowSystem::
-                                   DoOdeProjection, this);
-            m_ode.DefineImplicitSolve(&CompressibleFlowSystem::
-                                      DoImplicitSolvePhysToCoeff, this);
-
-            InitialiseNonlinSysSolver();
-        }
+        m_ode.DefineOdeRhs    (&CompressibleFlowSystem::DoOdeRhs, this);
+        m_ode.DefineProjection(
+                               &CompressibleFlowSystem::DoOdeProjection, this);
 
         SetBoundaryConditionsBwdWeight();
-
-        string advName;
-        m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
     }
 
-    void CompressibleFlowSystem::InitialiseNonlinSysSolver()
-    {
-        std::string SovlerType = "Newton";
-        if (m_session->DefinesSolverInfo("NonlinSysIterSovler"))
-        {
-            SovlerType = m_session->GetSolverInfo("NonlinSysIterSovler");
-        }
-        ASSERTL0(LibUtilities::GetNekNonlinSysFactory().
-                 ModuleExists(SovlerType),
-                "NekNonlinSys '" + SovlerType + "' is not defined.\n");
-        LibUtilities::CommSharedPtr v_Comm  = 
-                                    m_fields[0]->GetComm()->GetRowComm();
-        int ntotal = m_fields[0]->GetNcoeffs() * m_fields.size();
-        m_nonlinsol = LibUtilities::GetNekNonlinSysFactory().CreateInstance(
-                            SovlerType, m_session, v_Comm,ntotal);
-
-        m_NekSysOp.DefineNekSysRhsEval(&CompressibleFlowSystem
-                                                  ::NonlinSysEvaluator1D, this);
-        m_NekSysOp.DefineNekSysLhsEval(&CompressibleFlowSystem::
-                                         MatrixMultiply_MatrixFreeCoeff, this);
-        m_nonlinsol->setSysOperators(m_NekSysOp);
-    }
 
     /**
      * @brief Destructor for CompressibleFlowSystem class.
@@ -202,11 +183,9 @@ namespace Nektar
         if (m_useLocalTimeStep)
         {
             ASSERTL0(m_cflSafetyFactor != 0,
-                    "Local time stepping requires CFL parameter.");
+                "Local time stepping requires CFL parameter.");
         }
-        m_session->LoadParameter ("JacobiFreeEps", m_JacobiFreeEps, 5.0E-8);
-        m_session->LoadParameter("NewtonAbsoluteIteTol", 
-                                 m_NewtonAbsoluteIteTol, 1.0E-12);
+
     }
 
     /**
@@ -216,7 +195,7 @@ namespace Nektar
     {
         // Check if projection type is correct
         ASSERTL0(m_projectionType == MultiRegions::eDiscontinuous,
-                "Unsupported projection type.");
+            "Unsupported projection type.");
 
         string advName, riemName;
         m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
@@ -231,8 +210,8 @@ namespace Nektar
         }
         else
         {
-            m_advObject->SetFluxVector  (&CompressibleFlowSystem::
-                                          GetFluxVector, this);
+            m_advObject->SetFluxVector(&CompressibleFlowSystem::
+                                       GetFluxVector, this);
         }
 
         // Setting up Riemann solver for advection operator
@@ -251,49 +230,49 @@ namespace Nektar
             "N",       &CompressibleFlowSystem::GetNormals, this);
 
         // Concluding initialisation of advection / diffusion operators
-        m_advObject->SetRiemannSolver   (riemannSolver);
-        m_advObject->InitObject         (m_session, m_fields);
+        m_advObject->SetRiemannSolver(riemannSolver);
+        m_advObject->InitObject      (m_session, m_fields);
     }
 
     /**
      * @brief Compute the right-hand side.
      */
     void CompressibleFlowSystem::DoOdeRhs(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const NekDouble                                   time)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD,       Array<OneD, NekDouble>> &outarray,
+        const NekDouble                                 time)
     {
         int nvariables = inarray.size();
         int npoints    = GetNpoints();
         int nTracePts  = GetTraceTotPoints();
 
-        m_BndEvaluateTime   = time;
+        m_bndEvaluateTime = time;
 
         // Store forwards/backwards space along trace space
-        Array<OneD, Array<OneD, NekDouble> > Fwd    (nvariables);
-        Array<OneD, Array<OneD, NekDouble> > Bwd    (nvariables);
+        Array<OneD, Array<OneD, NekDouble>> Fwd(nvariables);
+        Array<OneD, Array<OneD, NekDouble>> Bwd(nvariables);
 
         if (m_HomogeneousType == eHomogeneous1D)
         {
-            Fwd = NullNekDoubleArrayofArray;
-            Bwd = NullNekDoubleArrayofArray;
+            Fwd = NullNekDoubleArrayOfArray;
+            Bwd = NullNekDoubleArrayOfArray;
         }
         else
         {
             for (int i = 0; i < nvariables; ++i)
             {
-                Fwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
-                Bwd[i]     = Array<OneD, NekDouble>(nTracePts, 0.0);
+                Fwd[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
+                Bwd[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
                 m_fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
             }
         }
 
         // Calculate advection
-LibUtilities::Timer timer;
-timer.Start();
+        LibUtilities::Timer timer;
+        timer.Start();
         DoAdvection(inarray, outarray, time, Fwd, Bwd);
-timer.Stop();
-timer.AccumulateRegion("DoAdvection");
+        timer.Stop();
+        timer.AccumulateRegion("DoAdvection");
 
         // Negate results
         for (int i = 0; i < nvariables; ++i)
@@ -302,10 +281,10 @@ timer.AccumulateRegion("DoAdvection");
         }
 
         // Add diffusion terms
-timer.Start();
+        timer.Start();
         DoDiffusion(inarray, outarray, Fwd, Bwd);
-timer.Stop();
-timer.AccumulateRegion("DoDiffusion");
+        timer.Stop();
+        timer.AccumulateRegion("DoDiffusion");
 
         // Add forcing terms
         for (auto &x : m_forcing)
@@ -343,9 +322,9 @@ timer.AccumulateRegion("DoDiffusion");
      * boundary conditions in case of discontinuous projection.
      */
     void CompressibleFlowSystem::DoOdeProjection(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const NekDouble                                   time)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD,       Array<OneD, NekDouble>> &outarray,
+        const NekDouble                                 time)
     {
         int nvariables = inarray.size();
 
@@ -371,28 +350,29 @@ timer.AccumulateRegion("DoDiffusion");
             case MultiRegions::eGalerkin:
             case MultiRegions::eMixed_CG_Discontinuous:
             {
-                ASSERTL0(false, "No Continuous Galerkin for full compressible "
-                                "Navier-Stokes equations");
+                NEKERROR(ErrorUtil::efatal, "No Continuous Galerkin for full "
+                    "compressible Navier-Stokes equations");
                 break;
             }
             default:
-                ASSERTL0(false, "Unknown projection scheme");
+                NEKERROR(ErrorUtil::efatal, "Unknown projection scheme");
                 break;
         }
     }
+
 
     /**
      * @brief Compute the advection terms for the right-hand side
      */
     void CompressibleFlowSystem::DoAdvection(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const NekDouble                                   time,
-        const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
-        const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD,       Array<OneD, NekDouble>> &outarray,
+        const NekDouble                                 time,
+        const Array<OneD, const Array<OneD, NekDouble>> &pFwd,
+        const Array<OneD, const Array<OneD, NekDouble>> &pBwd)
     {
         int nvariables = inarray.size();
-        Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
+        Array<OneD, Array<OneD, NekDouble>> advVel(m_spacedim);
 
         m_advObject->Advect(nvariables, m_fields, advVel, inarray,
                             outarray, time, pFwd, pBwd);
@@ -402,338 +382,28 @@ timer.AccumulateRegion("DoDiffusion");
      * @brief Add the diffusions terms to the right-hand side
      */
     void CompressibleFlowSystem::DoDiffusion(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD,       Array<OneD, NekDouble>> &outarray,
+        const Array<OneD, const Array<OneD, NekDouble>> &pFwd,
+        const Array<OneD, const Array<OneD, NekDouble>> &pBwd)
     {
         v_DoDiffusion(inarray, outarray, pFwd, pBwd);
 
-    }
-
-    void CompressibleFlowSystem::NonlinSysEvaluator1D(
-        const TensorOfArray1D<NekDouble>    &inarray,
-        TensorOfArray1D<NekDouble>          &out,
-        const bool                          &flag)
-    {
-        boost::ignore_unused(flag);
-        unsigned int nvariables     = m_fields.size();
-        unsigned int npoints        = m_fields[0]->GetNcoeffs();
-        TensorOfArray2D<NekDouble> in2D(nvariables);
-        TensorOfArray2D<NekDouble> out2D(nvariables);
-        for (int i = 0; i < nvariables; ++i)
+        if (m_shockCaptureType != "Off" && m_shockCaptureType != "Physical")
         {
-            int offset = i * npoints;
-            in2D[i]    = inarray + offset;
-            out2D[i]   = out + offset;
-        }
-        NonlinSysEvaluatorCoeff(in2D, out2D);
-    }
-
-    void CompressibleFlowSystem::NonlinSysEvaluatorCoeff(
-        TensorOfArray2D<NekDouble>  &inarray,
-        TensorOfArray2D<NekDouble>  &out)
-    {
-        const Array<OneD, const NekDouble> refsol 
-                                = m_nonlinsol->GetRefSolution();
-        unsigned int nvariable  = inarray.size();
-        unsigned int ncoeffs    = inarray[nvariable - 1].size();
-        unsigned int npoints    = m_fields[0]->GetNpoints();
-
-        TensorOfArray2D<NekDouble> inpnts(nvariable);
-
-        for (int i = 0; i < nvariable; ++i)
-        {
-            inpnts[i] = TensorOfArray1D<NekDouble>(npoints, 0.0);
-            m_fields[i]->BwdTrans(inarray[i], inpnts[i]);
-        }
-        
-        DoOdeProjection(inpnts, inpnts, m_BndEvaluateTime);
-        DoOdeRhsCoeff(inpnts, out, m_BndEvaluateTime);
-
-        for (int i = 0; i < nvariable; ++i)
-        {
-            int noffset = i * ncoeffs;
-            Vmath::Svtvp(ncoeffs, m_TimeIntegLambda, out[i], 1,
-                         refsol + noffset, 1, out[i], 1);
-            Vmath::Vsub(ncoeffs, inarray[i], 1,
-                        out[i], 1, out[i], 1);
-        }
-        return;
-    }
-
-    /**
-     * @brief Compute the right-hand side.
-     */
-    void CompressibleFlowSystem::DoOdeRhsCoeff(
-        const TensorOfArray2D<NekDouble>    &inarray,
-        TensorOfArray2D<NekDouble>          &outarray,
-        const NekDouble                     time)
-    {
-        int nvariables = inarray.size();
-        int nTracePts  = GetTraceTotPoints();
-        int ncoeffs    = GetNcoeffs();
-        // Store forwards/backwards space along trace space
-        TensorOfArray2D<NekDouble> Fwd    (nvariables);
-        TensorOfArray2D<NekDouble> Bwd    (nvariables);
-
-        if (m_HomogeneousType == eHomogeneous1D)
-        {
-            Fwd = NullNekDoubleArrayofArray;
-            Bwd = NullNekDoubleArrayofArray;
-        }
-        else
-        {
-            for (int i = 0; i < nvariables; ++i)
-            {
-                Fwd[i]     = TensorOfArray1D<NekDouble> (nTracePts, 0.0);
-                Bwd[i]     = TensorOfArray1D<NekDouble> (nTracePts, 0.0);
-                m_fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
-            }
-        }
- 
-         // Calculate advection
-        DoAdvectionCoeff(inarray, outarray, time, Fwd, Bwd);
-
-        // Negate results
-        for (int i = 0; i < nvariables; ++i)
-        {
-            Vmath::Neg(ncoeffs, outarray[i], 1);
-        }
-
-        DoDiffusionCoeff(inarray, outarray, Fwd, Bwd);
-
-        // Add forcing terms
-        for (auto &x : m_forcing)
-        {
-            x->ApplyCoeff(m_fields, inarray, outarray, time);
-        }
-
-        if (m_useLocalTimeStep)
-        {
-            int nElements = m_fields[0]->GetExpSize();
-            int nq, offset;
-            NekDouble fac;
-            TensorOfArray1D<NekDouble> tmp;
-
-            TensorOfArray1D<NekDouble> tstep(nElements, 0.0);
-            GetElmtTimeStep(inarray, tstep);
-
-            // Loop over elements
-            for (int n = 0; n < nElements; ++n)
-            {
-                nq     = m_fields[0]->GetExp(n)->GetNcoeffs();
-                offset = m_fields[0]->GetCoeff_Offset(n);
-                fac    = tstep[n] / m_timestep;
-                for (int i = 0; i < nvariables; ++i)
-                {
-                    Vmath::Smul(nq, fac, outarray[i] + offset, 1,
-                                tmp = outarray[i] + offset, 1);
-                }
-            }
+            m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
         }
     }
 
-    /**
-     * @brief Compute the advection terms for the right-hand side
-     */
-    void CompressibleFlowSystem::DoAdvectionCoeff(
-        const TensorOfArray2D<NekDouble>    &inarray,
-        TensorOfArray2D<NekDouble>          &outarray,
-        const NekDouble                     time,
-        const TensorOfArray2D<NekDouble>    &pFwd,
-        const TensorOfArray2D<NekDouble>    &pBwd)
-    {
-        int nvariables = inarray.size();
-        TensorOfArray2D<NekDouble> advVel(m_spacedim);
-
-        m_advObject->AdvectCoeffs(nvariables, m_fields, advVel, inarray,
-                                  outarray, time, pFwd, pBwd);
-    }
-
-    /**
-     * @brief Add the diffusions terms to the right-hand side
-     * Similar to DoDiffusion() but with outarray in coefficient space
-     */
-    void CompressibleFlowSystem::DoDiffusionCoeff(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-            const Array<OneD, Array<OneD, NekDouble> >   &pFwd,
-            const Array<OneD, Array<OneD, NekDouble> >   &pBwd)
-    {
-        v_DoDiffusionCoeff(inarray, outarray, pFwd, pBwd);
-    }
-
-    void CompressibleFlowSystem::DoImplicitSolvePhysToCoeff(
-        const TensorOfArray2D<NekDouble>    &inpnts,
-        TensorOfArray2D<NekDouble>          &outpnt,
-        const NekDouble                     time,
-        const NekDouble                     lambda)
-    {
-        unsigned int nvariables  = inpnts.size();
-        unsigned int ncoeffs     = m_fields[0]->GetNcoeffs();
-        unsigned int ntotal      = nvariables * ncoeffs;
-
-        TensorOfArray1D<NekDouble>  inarray(ntotal);
-        TensorOfArray1D<NekDouble>  out(ntotal);
-        TensorOfArray1D<NekDouble>  tmpArray;
-
-        for (int i = 0; i < nvariables; ++i)
-        {
-            int noffset = i * ncoeffs;
-            tmpArray = inarray + noffset;
-            m_fields[i]->FwdTrans(inpnts[i], tmpArray);
-        }
-
-        DoImplicitSolveCoeff(inpnts, inarray, out, time, lambda);
-
-        for (int i = 0; i < nvariables; ++i)
-        {
-            int noffset = i * ncoeffs;
-            tmpArray = out + noffset;
-            m_fields[i]->BwdTrans(tmpArray, outpnt[i]);
-        }
-    }
-
-    void CompressibleFlowSystem::DoImplicitSolveCoeff(
-            const TensorOfArray2D<NekDouble>    &inpnts,
-            const TensorOfArray1D<NekDouble>    &inarray,
-            TensorOfArray1D<NekDouble>          &out,
-            const NekDouble                     time,
-            const NekDouble                     lambda)
-    {
-        boost::ignore_unused(inpnts);
-        m_TimeIntegLambda               = lambda;
-        m_BndEvaluateTime               = time;
-        unsigned int ntotal             = inarray.size();
-
-        if (m_inArrayNorm < 0.0)
-        {
-            CalcRefValues(inarray);
-        }
-        
-        NekDouble tol2 = m_inArrayNorm
-                        *m_NewtonAbsoluteIteTol * m_NewtonAbsoluteIteTol;
-        m_TotNewtonIts +=  m_nonlinsol->SolveSystem(ntotal,inarray,
-                                                    out, 0, tol2);
-        
-        m_TotImpStages++;
-        m_StagesPerStep++;
-    }
-
-    void CompressibleFlowSystem::CalcRefValues(
-            const TensorOfArray1D<NekDouble>    &inarray)
-    {
-        unsigned int nvariables         = m_fields.size();
-        unsigned int ntotal             = inarray.size();
-        unsigned int npoints            = ntotal/nvariables;
-
-        unsigned int ntotalGlobal       = ntotal;
-        m_comm->AllReduce(ntotalGlobal, Nektar::LibUtilities::ReduceSum);
-        unsigned int ntotalDOF          = ntotalGlobal / nvariables;
-        NekDouble ototalDOF             = 1.0 / ntotalDOF;
-
-        m_inArrayNorm = 0.0;
-        m_magnitdEstimat = Array<OneD, NekDouble>  (nvariables, 0.0);
-
-        for (int i = 0; i < nvariables; ++i)
-        {
-            int offset = i * npoints;
-            m_magnitdEstimat[i] = Vmath::Dot(npoints, inarray + offset,
-                                            inarray + offset);
-        }
-        m_comm->AllReduce(m_magnitdEstimat, Nektar::LibUtilities::ReduceSum);
-
-        for (int i = 0; i < nvariables; ++i)
-        {
-            m_inArrayNorm += m_magnitdEstimat[i];
-        }
-
-        for (int i = 2; i < nvariables - 1; ++i)
-        {
-            m_magnitdEstimat[1]   +=   m_magnitdEstimat[i] ;
-        }
-        for (int i = 2; i < nvariables - 1; ++i)
-        {
-            m_magnitdEstimat[i]   =   m_magnitdEstimat[1] ;
-        }
-
-        for (int i = 0; i < nvariables; ++i)
-        {
-            m_magnitdEstimat[i] = sqrt(m_magnitdEstimat[i] * ototalDOF);
-        }
-        bool l_verbose      = m_session->DefinesCmdLineArgument("verbose");
-        if (0 == m_session->GetComm()->GetRank() && l_verbose)
-        {
-            for (int i = 0; i < nvariables; ++i)
-            {
-                cout << "m_magnitdEstimat[" << i << "]    = "
-                     << m_magnitdEstimat[i] << endl;
-            }
-            cout << "m_inArrayNorm    = " << m_inArrayNorm << endl;
-        }
-    }
-
-    void CompressibleFlowSystem::MatrixMultiply_MatrixFreeCoeff(
-            const TensorOfArray1D<NekDouble>    &inarray,
-            TensorOfArray1D<NekDouble>          &out,
-            const bool                          &flag)
-    {
-        boost::ignore_unused(flag);
-        const Array<OneD, const NekDouble> refsol 
-                                         = m_nonlinsol->GetRefSolution();
-        const Array<OneD, const NekDouble> refres 
-                                         = m_nonlinsol->GetRefResidual();
-        NekDouble eps = m_JacobiFreeEps;
-        NekDouble magnitdEstimatMax = 0.0;
-        for (int i = 0; i < m_magnitdEstimat.size(); ++i)
-        {
-            magnitdEstimatMax = max(magnitdEstimatMax, m_magnitdEstimat[i]);
-        }
-        eps *= magnitdEstimatMax;
-        NekDouble oeps = 1.0 / eps;
-        unsigned int nvariables = m_fields.size();
-        unsigned int ntotal     = inarray.size();
-        unsigned int npoints    = ntotal / nvariables;
-        Array<OneD, NekDouble > tmp;
-        TensorOfArray2D<NekDouble> solplus(nvariables);
-        TensorOfArray2D<NekDouble> resplus(nvariables);
-        for (int i = 0; i < nvariables; ++i)
-        {
-            solplus[i] = TensorOfArray1D<NekDouble> (npoints, 0.0);
-            resplus[i] = TensorOfArray1D<NekDouble> (npoints, 0.0);
-        }
-
-        for (int i = 0; i < nvariables; ++i)
-        {
-            int noffset = i*npoints;
-            tmp = inarray + noffset;
-            Vmath::Svtvp(npoints, eps, tmp, 1, 
-                         refsol + noffset,1, solplus[i], 1);
-        }
-        
-        NonlinSysEvaluatorCoeff(solplus,resplus);
-
-        for (int i = 0; i < nvariables; ++i)
-        {
-            int noffset = i * npoints;
-            tmp = out + noffset;
-            Vmath::Vsub(npoints, &resplus[i][0], 1, 
-                       &refres[0] + noffset, 1, &tmp[0],1);
-            Vmath::Smul(npoints, oeps, &tmp[0], 1, &tmp[0], 1);
-        }
-       
-        return;
-    }
 
     void CompressibleFlowSystem::SetBoundaryConditions(
-            Array<OneD, Array<OneD, NekDouble> >             &physarray,
-            NekDouble                                         time)
+        Array<OneD, Array<OneD, NekDouble>> &physarray,
+        NekDouble                           time)
     {
         int nTracePts  = GetTraceTotPoints();
         int nvariables = physarray.size();
 
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+        Array<OneD, Array<OneD, NekDouble>> Fwd(nvariables);
         for (int i = 0; i < nvariables; ++i)
         {
             Fwd[i] = Array<OneD, NekDouble>(nTracePts);
@@ -772,8 +442,8 @@ timer.AccumulateRegion("DoDiffusion");
      * @param flux        Resulting flux.
      */
     void CompressibleFlowSystem::GetFluxVector(
-        const Array<OneD, Array<OneD, NekDouble> >  &physfield,
-        TensorOfArray3D<NekDouble>                  &flux)
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+              TensorOfArray3D<NekDouble>                &flux)
     {
         auto nVariables = physfield.size();
         auto nPts = physfield[0].size();
@@ -835,8 +505,8 @@ timer.AccumulateRegion("DoDiffusion");
      * @param flux        Resulting flux.
      */
     void CompressibleFlowSystem::GetFluxVectorDeAlias(
-        const Array<OneD, Array<OneD, NekDouble> >      &physfield,
-        TensorOfArray3D<NekDouble>                      &flux)
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+              TensorOfArray3D<NekDouble>                &flux)
     {
         int i, j;
         int nq = physfield[0].size();
@@ -847,15 +517,15 @@ timer.AccumulateRegion("DoDiffusion");
         nq = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
 
         Array<OneD, NekDouble> pressure(nq);
-        Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
+        Array<OneD, Array<OneD, NekDouble>> velocity(m_spacedim);
 
-        Array<OneD, Array<OneD, NekDouble> > physfield_interp(nVariables);
+        Array<OneD, Array<OneD, NekDouble>> physfield_interp(nVariables);
         TensorOfArray3D<NekDouble> flux_interp(nVariables);
 
         for (i = 0; i < nVariables; ++ i)
         {
             physfield_interp[i] = Array<OneD, NekDouble>(nq);
-            flux_interp[i] = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+            flux_interp[i] = Array<OneD, Array<OneD, NekDouble>>(m_spacedim);
             m_fields[0]->PhysInterp1DScaled(
                 OneDptscale, physfield[i], physfield_interp[i]);
 
@@ -924,8 +594,8 @@ timer.AccumulateRegion("DoDiffusion");
      *        subject to CFL restrictions.
      */
     void CompressibleFlowSystem::GetElmtTimeStep(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD, NekDouble> &tstep)
+        const Array<OneD, const Array<OneD, NekDouble>> &inarray,
+              Array<OneD, NekDouble>                    &tstep)
     {
         boost::ignore_unused(inarray);
 
@@ -965,6 +635,20 @@ timer.AccumulateRegion("DoDiffusion");
         // Get the minimum time-step limit and return the time-step
         NekDouble TimeStep = Vmath::Vmin(nElements, tstep, 1);
         m_comm->AllReduce(TimeStep, LibUtilities::ReduceMin);
+
+        NekDouble tmp = m_timestep;
+        m_timestep    = TimeStep;
+
+        Array<OneD, NekDouble> cflNonAcoustic(nElements,0.0);
+        cflNonAcoustic = GetElmtCFLVals(false);
+
+        // Get the minimum time-step limit and return the time-step
+        NekDouble MaxcflNonAcoustic = Vmath::Vmax(nElements, cflNonAcoustic, 1);
+        m_comm->AllReduce(MaxcflNonAcoustic, LibUtilities::ReduceMax);
+
+        m_cflNonAcoustic = MaxcflNonAcoustic;
+        m_timestep = tmp;
+
         return TimeStep;
     }
 
@@ -1014,7 +698,8 @@ timer.AccumulateRegion("DoDiffusion");
      * @brief Compute the advection velocity in the standard space
      * for each element of the expansion.
      */
-    Array<OneD, NekDouble> CompressibleFlowSystem::v_GetMaxStdVelocity()
+    Array<OneD, NekDouble> CompressibleFlowSystem::v_GetMaxStdVelocity(
+        const NekDouble SpeedSoundFactor)
     {
         int nTotQuadPoints = GetTotPoints();
         int n_element      = m_fields[0]->GetExpSize();
@@ -1023,7 +708,7 @@ timer.AccumulateRegion("DoDiffusion");
         int offset;
         Array<OneD, NekDouble> tmp;
 
-        Array<OneD, Array<OneD, NekDouble> > physfields(nfields);
+        Array<OneD, Array<OneD, NekDouble>> physfields(nfields);
         for (int i = 0; i < nfields; ++i)
         {
             physfields[i] = m_fields[i]->GetPhys();
@@ -1032,9 +717,9 @@ timer.AccumulateRegion("DoDiffusion");
         Array<OneD, NekDouble> stdV(n_element, 0.0);
 
         // Getting the velocity vector on the 2D normal space
-        Array<OneD, Array<OneD, NekDouble> > velocity   (m_spacedim);
-        Array<OneD, Array<OneD, NekDouble> > stdVelocity(m_spacedim);
-        Array<OneD, Array<OneD, NekDouble> > stdSoundSpeed(m_spacedim);
+        Array<OneD, Array<OneD, NekDouble>> velocity   (m_spacedim);
+        Array<OneD, Array<OneD, NekDouble>> stdVelocity(m_spacedim);
+        Array<OneD, Array<OneD, NekDouble>> stdSoundSpeed(m_spacedim);
         Array<OneD, NekDouble>               soundspeed (nTotQuadPoints);
         LibUtilities::PointsKeyVector        ptsKeys;
 
@@ -1119,6 +804,7 @@ timer.AccumulateRegion("DoDiffusion");
                 {
                     // Add sound speed
                     vel = std::abs(stdVelocity[j][offset + i]) +
+                          SpeedSoundFactor * 
                           std::abs(stdSoundSpeed[j][offset + i]);
                     pntVelocity += vel * vel;
                 }
@@ -1159,8 +845,8 @@ timer.AccumulateRegion("DoDiffusion");
         }
         else
         {
-            ASSERTL0(false, "Continuous Galerkin stability coefficients "
-                            "not introduced yet.");
+            NEKERROR(ErrorUtil::efatal, "Continuous Galerkin stability "
+                "coefficients not introduced yet.");
         }
 
         return CFL;
@@ -1196,15 +882,15 @@ timer.AccumulateRegion("DoDiffusion");
         {
             const int nPhys   = m_fields[0]->GetNpoints();
             const int nCoeffs = m_fields[0]->GetNcoeffs();
-            Array<OneD, Array<OneD, NekDouble> > tmp(m_fields.size());
+            Array<OneD, Array<OneD, NekDouble>> tmp(m_fields.size());
 
             for (int i = 0; i < m_fields.size(); ++i)
             {
                 tmp[i] = m_fields[i]->GetPhys();
             }
 
-            Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
-            Array<OneD, Array<OneD, NekDouble> > velFwd  (m_spacedim);
+            Array<OneD, Array<OneD, NekDouble>> velocity(m_spacedim);
+            Array<OneD, Array<OneD, NekDouble>> velFwd  (m_spacedim);
             for (int i = 0; i < m_spacedim; ++i)
             {
                 velocity[i] = Array<OneD, NekDouble> (nPhys);
@@ -1222,6 +908,13 @@ timer.AccumulateRegion("DoDiffusion");
             m_varConv->GetEntropy   (tmp, entropy);
             m_varConv->GetSoundSpeed(tmp, soundspeed);
             m_varConv->GetMach      (tmp, soundspeed, mach);
+
+            Array<OneD, Array<OneD, NekDouble>> velocities(m_spacedim);
+            for (int i=0;i<m_spacedim;i++)
+            {
+                velocities[i] = Array<OneD, NekDouble> (nPhys);
+            }
+            m_varConv->GetVelocityVector(tmp,velocities);
 
             int sensorOffset;
             m_session->LoadParameter ("SensorOffset", sensorOffset, 1);
@@ -1261,6 +954,26 @@ timer.AccumulateRegion("DoDiffusion");
             fieldcoeffs.push_back(mFwd);
             fieldcoeffs.push_back(sensFwd);
 
+            Array<OneD, NekDouble> uFwd(nCoeffs);
+            m_fields[0]->FwdTrans_IterPerExp(velocities[0],uFwd);
+            variables.push_back  ("u");
+            fieldcoeffs.push_back(uFwd);
+
+            if(m_spacedim>1)
+            {
+                Array<OneD, NekDouble> vFwd(nCoeffs);
+                variables.push_back  ("v");
+                m_fields[0]->FwdTrans_IterPerExp(velocities[1],vFwd);
+                fieldcoeffs.push_back(vFwd);
+            }
+            if(m_spacedim>2)
+            {
+                Array<OneD, NekDouble> wFwd(nCoeffs);
+                variables.push_back  ("w");
+                m_fields[0]->FwdTrans_IterPerExp(velocities[2],wFwd);
+                fieldcoeffs.push_back(wFwd);
+            }
+
             if (m_artificialDiffusion)
             {
                 // Get min h/p
@@ -1280,8 +993,8 @@ timer.AccumulateRegion("DoDiffusion");
      *
      */
     void CompressibleFlowSystem::GetPressure(
-        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-              Array<OneD, NekDouble>                     &pressure)
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+              Array<OneD, NekDouble>                    &pressure)
     {
         m_varConv->GetPressure(physfield, pressure);
     }
@@ -1290,8 +1003,8 @@ timer.AccumulateRegion("DoDiffusion");
      *
      */
     void CompressibleFlowSystem::GetDensity(
-        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-              Array<OneD, NekDouble>                     &density)
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+              Array<OneD, NekDouble>                    &density)
     {
         density = physfield[0];
     }
@@ -1300,34 +1013,51 @@ timer.AccumulateRegion("DoDiffusion");
      *
      */
     void CompressibleFlowSystem::GetVelocity(
-        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-              Array<OneD, Array<OneD, NekDouble> >       &velocity)
+        const Array<OneD, const Array<OneD, NekDouble>> &physfield,
+              Array<OneD, Array<OneD, NekDouble>>       &velocity)
     {
         m_varConv->GetVelocityVector(physfield, velocity);
     }
 
-    void CompressibleFlowSystem::v_DoDiffusion(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
-        const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
+    void CompressibleFlowSystem::v_SteadyStateResidual(
+        int                     step, 
+        Array<OneD, NekDouble>  &L2)
     {
-        boost::ignore_unused(inarray, outarray, pFwd, pBwd);
-        if (m_shockCaptureType != "Off")
+        boost::ignore_unused(step);
+        const int nPoints = GetTotPoints();
+        const int nFields = m_fields.size();
+        Array<OneD, Array<OneD, NekDouble>> rhs (nFields);
+        Array<OneD, Array<OneD, NekDouble>> inarray (nFields);
+        for (int i = 0; i < nFields; ++i)
         {
-            m_artificialDiffusion->DoArtificialDiffusion(inarray, outarray);
+            rhs[i] =   Array<OneD, NekDouble> (nPoints,0.0);
+            inarray[i] =   m_fields[i]->UpdatePhys();
+        }
+        
+        DoOdeRhs(inarray,rhs,m_time);
+
+        // Holds L2 errors.
+        Array<OneD, NekDouble> tmp;
+        Array<OneD, NekDouble> RHSL2    (nFields);
+        Array<OneD, NekDouble> residual(nFields);
+
+        for (int i = 0; i < nFields; ++i)
+        {
+            tmp = rhs[i];
+
+            Vmath::Vmul(nPoints, tmp, 1, tmp, 1, tmp, 1);
+            residual[i] = Vmath::Vsum(nPoints, tmp, 1);
+        }
+
+        m_comm->AllReduce(residual , LibUtilities::ReduceSum);
+
+        NekDouble onPoints = 1.0/NekDouble(nPoints);
+        for (int i = 0; i < nFields; ++i)
+        {
+            L2[i] = sqrt(residual[i]*onPoints);
         }
     }
 
-    void CompressibleFlowSystem::v_DoDiffusionCoeff(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const Array<OneD, Array<OneD, NekDouble> >       &pFwd,
-        const Array<OneD, Array<OneD, NekDouble> >       &pBwd)
-    {
-        boost::ignore_unused(inarray, outarray, pFwd, pBwd);
-        // Do nothing by default
-    }
 
 /**
  * @brief Compute an estimate of minimum h/p
@@ -1380,7 +1110,7 @@ Array<OneD, NekDouble>  CompressibleFlowSystem::GetElmtMinHP(void)
             }
             default:
             {
-                ASSERTL0(false,"Dimension out of bound.")
+                NEKERROR(ErrorUtil::efatal,"Dimension out of bound.")
             }
         }
 
@@ -1390,4 +1120,5 @@ Array<OneD, NekDouble>  CompressibleFlowSystem::GetElmtMinHP(void)
     }
     return hOverP;
 }
+
 }

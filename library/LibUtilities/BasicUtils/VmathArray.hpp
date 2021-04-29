@@ -159,6 +159,18 @@
 
         }
 
+        /// \brief Add vector y = alpha - x
+        template<class T>  void Ssub( int n, const T alpha, 
+            const Array<OneD,const T> &x,const int incx, Array<OneD,T> &y, 
+            const int incy)
+        {
+
+            ASSERTL1(n*incx <= x.size()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(n*incy <= y.size()+y.GetOffset(),"Array out of bounds");
+
+            Ssub(n,alpha,&x[0],incx,&y[0],incy);
+        }
+    
         /// \brief Zero vector
         template<class T>  void Zero(int n, Array<OneD,T> &x, const int incx)
         {

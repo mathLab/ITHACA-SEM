@@ -340,6 +340,11 @@ namespace Nektar
                 IProductWRTDerivBase_SumFac(dir,inarray,outarray);
             }    
 
+            virtual void v_AlignVectorToCollapsedDir(
+                const int dir, 
+                const Array<OneD, const NekDouble>      &inarray, 
+                Array<OneD, Array<OneD, NekDouble> >    &outarray);
+
             virtual void v_MassMatrixOp(const Array<OneD, const NekDouble> &inarray, 
                                         Array<OneD,NekDouble> &outarray,
                                         const StdRegions::StdMatrixKey &mkey)

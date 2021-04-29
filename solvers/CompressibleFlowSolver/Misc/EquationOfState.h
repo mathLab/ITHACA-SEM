@@ -127,6 +127,7 @@ protected:
 
     virtual NekDouble v_GetRhoFromPT(const NekDouble &rho,
                                      const NekDouble &p) = 0;
+
 };
 }
 

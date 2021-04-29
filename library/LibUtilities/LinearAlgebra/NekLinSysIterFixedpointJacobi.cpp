@@ -54,8 +54,9 @@ string NekLinSysIterFixedpointJacobi::className =
 
 NekLinSysIterFixedpointJacobi::NekLinSysIterFixedpointJacobi(
     const LibUtilities::SessionReaderSharedPtr &pSession,
-    const LibUtilities::CommSharedPtr &vComm, const int nDimen)
-    : NekLinSysIter(pSession, vComm, nDimen)
+    const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+    const NekSysKey &pKey)
+    : NekLinSysIter(pSession, vComm, nDimen, pKey)
 {
 }
 
@@ -88,9 +89,13 @@ int NekLinSysIterFixedpointJacobi::v_SolveSystem(
     {
         m_operator.DoNekSysFixPointIte(pRhs, pSol0, pSolution);
         Vmath::Vsub(nGlobal, pSolution, 1, pSol0, 1, pSol0, 1);
-        m_converged = ConvergenceCheck(i, pSol0, m_tolerance);
         Vmath::Vcopy(nGlobal, pSolution, 1, pSol0, 1);
         niterations++;
+        m_converged = ConvergenceCheck(i, pSol0, m_tolerance);
+        if (m_converged)
+        {
+            break;
+        }
     }
 
     return niterations;

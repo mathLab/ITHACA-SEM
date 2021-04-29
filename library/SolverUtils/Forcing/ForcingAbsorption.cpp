@@ -290,12 +290,11 @@ namespace SolverUtils
                 if (m_hasRefFlowTime)
                 {
                     s_FieldStr = m_session->GetVariable(i);
-                    // EvaluateTimeFunction(m_session, s_FieldStr, TimeScale, m_funcNameTime, time);
-                    // Vmath::Smul(nq, TimeScale[0], m_Refflow[i],1,RefflowScaled[i],1);
 
                     std::string s_FieldStr = m_session->GetVariable(i);
-                    GetFunction(fields, m_session, m_funcNameTime)->Evaluate(s_FieldStr, m_Refflow[i],time);
-                    Vmath::Vcopy(nq, m_Refflow[i],1, RefflowScaled[i],1);
+                    GetFunction(fields, m_session, m_funcNameTime)->
+                        Evaluate(s_FieldStr, m_Refflow[i], time);
+                    Vmath::Vcopy(nq, m_Refflow[i], 1, RefflowScaled[i], 1);
                 }
                 else
                 {

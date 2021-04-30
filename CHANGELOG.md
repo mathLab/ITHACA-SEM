@@ -31,6 +31,7 @@ v5.1.0
 - Add exponential and fractional-in-time integration schemes (!1106, !1111, !1210)
 - Add nonlinear and linear system solvers (!1196)
 - Add ESDIRK3 and ESDIRK4 time integration schemes (!1196)
+- Fix the time dependent absorption forcing (!1254)
 
 **FieldConvert**:
 - Add phifile module to compute shape functions for the SPM solver (!1065)

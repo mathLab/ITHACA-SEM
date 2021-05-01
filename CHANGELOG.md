@@ -52,6 +52,7 @@ v5.1.0
 
 **CompressibleFlowSolver**
 - Added vectorisation of the Interior Penalty method (!!223)
+- Updated WallAdiabatic/WallViscous BC to accept time-dependent perturbations on the ghost state (!1248)
 
 **PulseWaveSolver**
 - Added viscoelasticity (!1138)

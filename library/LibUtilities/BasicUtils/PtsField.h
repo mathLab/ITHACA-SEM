@@ -135,6 +135,9 @@ public:
 
     LIB_UTILITIES_EXPORT void SetPts(Array<OneD, Array<OneD, NekDouble> > &pts);
 
+    LIB_UTILITIES_EXPORT void SetPts(const int fldId, 
+                                     const Array< OneD, const NekDouble > &pts);
+
     LIB_UTILITIES_EXPORT std::vector<size_t> GetPointsPerEdge() const;
 
     LIB_UTILITIES_EXPORT size_t GetPointsPerEdge(const size_t i) const;

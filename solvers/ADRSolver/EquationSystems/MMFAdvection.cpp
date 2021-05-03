@@ -295,7 +295,7 @@ void MMFAdvection::v_DoSolve()
             // Masss = h^*
             indx = (step + 1) / m_checksteps;
             dMass[indx] =
-                (m_fields[0]->PhysIntegral(fields[0]) - m_Mass0) / m_Mass0;
+                (m_fields[0]->Integral(fields[0]) - m_Mass0) / m_Mass0;
 
             std::cout << "dMass = " << std::setw(8) << std::left << dMass[indx]
                      << std::endl;
@@ -1016,7 +1016,7 @@ void MMFAdvection::v_SetInitialConditions(const NekDouble initialtime,
             AdvectionBellSphere(u);
             m_fields[0]->SetPhys(u);
 
-            m_Mass0 = m_fields[0]->PhysIntegral(u);
+            m_Mass0 = m_fields[0]->Integral(u);
 
             // forward transform to fill the modal coeffs
             for (int i = 0; i < m_fields.size(); ++i)
@@ -1033,7 +1033,7 @@ void MMFAdvection::v_SetInitialConditions(const NekDouble initialtime,
             Test2Dproblem(initialtime, u);
             m_fields[0]->SetPhys(u);
 
-            m_Mass0 = m_fields[0]->PhysIntegral(u);
+            m_Mass0 = m_fields[0]->Integral(u);
 
             // forward transform to fill the modal coeffs
             for (int i = 0; i < m_fields.size(); ++i)
@@ -1050,7 +1050,7 @@ void MMFAdvection::v_SetInitialConditions(const NekDouble initialtime,
             AdvectionBellPlane(u);
             m_fields[0]->SetPhys(u);
 
-            m_Mass0 = m_fields[0]->PhysIntegral(u);
+            m_Mass0 = m_fields[0]->Integral(u);
             std::cout << "m_Mass0 = " << m_Mass0 << std::endl;
 
             // forward transform to fill the modal coeffs

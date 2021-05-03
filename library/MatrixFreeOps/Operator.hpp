@@ -121,15 +121,9 @@ public:
         return true;
     }
 
-    MATRIXFREE_EXPORT virtual void operator()(const Array<OneD, const NekDouble> &in,
-                                Array<OneD,       NekDouble> &out_d0,
-                                Array<OneD,       NekDouble> &out_d1) = 0;
 
-    MATRIXFREE_EXPORT virtual void operator()(
-        const Array<OneD, const NekDouble> &input,
-        Array<OneD, NekDouble> &output0,
-        Array<OneD, NekDouble> &output1,
-        Array<OneD, NekDouble> &output2) = 0;
+    MATRIXFREE_EXPORT virtual void operator()(const Array<OneD, const NekDouble> &in,
+                            Array<OneD, Array<OneD,   NekDouble> > &out) = 0;
 
 protected:
     std::vector<LibUtilities::BasisSharedPtr> m_basis;
@@ -173,7 +167,8 @@ class Helmholtz : virtual public Operator
 public:
     Helmholtz(std::vector<LibUtilities::BasisSharedPtr> basis,
               int nElmt) :
-        m_basis(basis), m_nElmt(nElmt)
+        m_basis(basis), m_nElmt(nElmt),
+        m_lambda(1.0)
     {
     }
 
@@ -195,9 +190,15 @@ public:
         const Array<OneD, const NekDouble> &input,
         Array<OneD, NekDouble> &output) = 0;
 
+    inline void SetLambda(NekDouble lambda)
+    {
+        m_lambda = lambda;
+    }
+
 protected:
     std::vector<LibUtilities::BasisSharedPtr> m_basis;
     int m_nElmt;
+    NekDouble m_lambda;
 };
 
 

@@ -14,19 +14,32 @@ std::string GetOpstring(LibUtilities::ShapeType shape, bool deformed)
 
     std::string op_string = "_";
 
-    if(shape == LibUtilities::eTriangle){
+    if(shape == LibUtilities::eSegment)
+    {
+        op_string += "Seg";
+    }
+    else if(shape == LibUtilities::eTriangle)
+    {
         op_string += "Tri";
     }
-    else if(shape == LibUtilities::eQuadrilateral){
+    else if(shape == LibUtilities::eQuadrilateral)
+    {
         op_string += "Quad";
     }
-    else if(shape == LibUtilities::eTetrahedron){
+    else if(shape == LibUtilities::eTetrahedron)
+    {
         op_string += "Tet";
     }
-    else if(shape == LibUtilities::ePrism){
+    else if(shape == LibUtilities::ePyramid)
+    {
+        op_string += "Pyr";
+    }
+    else if(shape == LibUtilities::ePrism)
+    {
         op_string += "Prism";
     }
-    else if(shape == LibUtilities::eHexahedron){
+    else if(shape == LibUtilities::eHexahedron)
+    {
         op_string += "Hex";
     }
 

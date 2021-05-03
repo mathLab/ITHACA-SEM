@@ -5,6 +5,12 @@ namespace Nektar
 namespace MatrixFree
 {
 
+std::string __register_PhysDeriv_Seg = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("PhysDeriv_Seg_Regular"), &PhysDerivSeg<>::Create);
+
+std::string __register_PhysDeriv_Seg_Deformed = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("PhysDeriv_Seg_Deformed"), &PhysDerivSeg<true>::Create);
+
 std::string __register_PhysDeriv_Quad = GetOperatorFactory().RegisterCreatorFunction(
     std::string("PhysDeriv_Quad_Regular"), &PhysDerivQuad<>::Create);
 
@@ -34,6 +40,12 @@ std::string __register_PhysDeriv_Prism = GetOperatorFactory().RegisterCreatorFun
 
 std::string __register_PhysDeriv_Prism_Deformed = GetOperatorFactory().RegisterCreatorFunction(
     std::string("PhysDeriv_Prism_Deformed"), &PhysDerivPrism<true>::Create);
+
+std::string __register_PhysDeriv_Pyr = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("PhysDeriv_Pyr_Regular"), &PhysDerivPyr<>::Create);
+
+std::string __register_PhysDeriv_Pyr_Deformed = GetOperatorFactory().RegisterCreatorFunction(
+    std::string("PhysDeriv_Pyr_Deformed"), &PhysDerivPyr<true>::Create);
 
 } // namespace MatrixFree
 } // namespace Nektar

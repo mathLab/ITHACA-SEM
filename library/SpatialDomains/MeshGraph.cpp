@@ -2555,14 +2555,31 @@ ExpansionInfoMapShPtr MeshGraph::SetUpExpansionInfoMap(void)
         for (auto compIter = m_domain[d].begin(); compIter != m_domain[d].end();
              ++compIter)
         {
+            // regular elements first
             for (auto x = compIter->second->m_geomVec.begin();
                  x != compIter->second->m_geomVec.end(); ++x)
             {
-                LibUtilities::BasisKeyVector def;
-                ExpansionInfoShPtr expansionElementShPtr =
-                    MemoryManager<ExpansionInfo>::AllocateSharedPtr(*x, def);
-                int id           = (*x)->GetGlobalID();
-                (*returnval)[id] = expansionElementShPtr;
+                if((*x)->GetGeomFactors()->GetGtype() != SpatialDomains::eDeformed)
+                {
+                    LibUtilities::BasisKeyVector def;
+                    ExpansionInfoShPtr expansionElementShPtr =
+                        MemoryManager<ExpansionInfo>::AllocateSharedPtr(*x, def);
+                    int id           = (*x)->GetGlobalID();
+                    (*returnval)[id] = expansionElementShPtr;
+                }
+            }
+            // deformed elements
+            for (auto x = compIter->second->m_geomVec.begin();
+                 x != compIter->second->m_geomVec.end(); ++x)
+            {
+                if((*x)->GetGeomFactors()->GetGtype() == SpatialDomains::eDeformed)
+                {
+                    LibUtilities::BasisKeyVector def;
+                    ExpansionInfoShPtr expansionElementShPtr =
+                        MemoryManager<ExpansionInfo>::AllocateSharedPtr(*x, def);
+                    int id           = (*x)->GetGlobalID();
+                    (*returnval)[id] = expansionElementShPtr;
+                }
             }
         }
     }

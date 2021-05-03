@@ -14,6 +14,168 @@ namespace MatrixFree
 {
 
 template<bool DEFORMED = false>
+struct IProductSeg : public IProduct, public Helper<1, DEFORMED>
+{
+    IProductSeg(std::vector<LibUtilities::BasisSharedPtr> basis,
+                   int nElmt)
+        : IProduct(basis, nElmt),
+          Helper<1, DEFORMED>(basis, nElmt),
+          m_nmTot(LibUtilities::StdSegData::getNumberOfCoefficients(
+                                                 this->m_nm[0]))
+    {
+    }
+
+    static std::shared_ptr<Operator> Create(
+        std::vector<LibUtilities::BasisSharedPtr> basis,
+        int nElmt)
+    {
+        return std::make_shared<IProductSeg<DEFORMED>>(basis, nElmt);
+    }
+
+    void operator()(const Array<OneD, const NekDouble> &in,
+                          Array<OneD,       NekDouble> &out) final
+    {
+        switch(m_basis[0]->GetNumModes())
+        {
+        case 2:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 2: IProductSegImpl<2 ,2 >(in, out); break;
+                    case 3: IProductSegImpl<2 ,3 >(in, out); break;
+                    case 4: IProductSegImpl<2 ,4 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductSeg: # of modes / points combo not implemented.");
+                } break;
+            case 3:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 3: IProductSegImpl<3 ,3 >(in, out); break;
+                    case 4: IProductSegImpl<3 ,4 >(in, out); break;
+                    case 5: IProductSegImpl<3 ,5 >(in, out); break;
+                    case 6: IProductSegImpl<3 ,6 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductSeg: # of modes / points combo not implemented.");
+                } break;
+            case 4:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 4: IProductSegImpl<4 ,4 >(in, out); break;
+                    case 5: IProductSegImpl<4 ,5 >(in, out); break;
+                    case 6: IProductSegImpl<4 ,6 >(in, out); break;
+                    case 7: IProductSegImpl<4 ,7 >(in, out); break;
+                    case 8: IProductSegImpl<4 ,8 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductSeg: # of modes / points combo not implemented.");
+                } break;
+            case 5:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 5: IProductSegImpl<5 ,5 >(in, out); break;
+                    case 6: IProductSegImpl<5 ,6 >(in, out); break;
+                    case 7: IProductSegImpl<5 ,7 >(in, out); break;
+                    case 8: IProductSegImpl<5 ,8 >(in, out); break;
+                    case 9: IProductSegImpl<5 ,9 >(in, out); break;
+                    case 10: IProductSegImpl<5 ,10 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductSeg: # of modes / points combo not implemented.");
+                } break;
+            case 6:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 6: IProductSegImpl<6 ,6 >(in, out); break;
+                    case 7: IProductSegImpl<6 ,7 >(in, out); break;
+                    case 8: IProductSegImpl<6 ,8 >(in, out); break;
+                    case 9: IProductSegImpl<6 ,9 >(in, out); break;
+                    case 10: IProductSegImpl<6 ,10 >(in, out); break;
+                    case 11: IProductSegImpl<6 ,11 >(in, out); break;
+                    case 12: IProductSegImpl<6 ,12 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductSeg: # of modes / points combo not implemented.");
+                } break;
+            case 7:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 7: IProductSegImpl<7 ,7 >(in, out); break;
+                    case 8: IProductSegImpl<7 ,8 >(in, out); break;
+                    case 9: IProductSegImpl<7 ,9 >(in, out); break;
+                    case 10: IProductSegImpl<7 ,10 >(in, out); break;
+                    case 11: IProductSegImpl<7 ,11 >(in, out); break;
+                    case 12: IProductSegImpl<7 ,12 >(in, out); break;
+                    case 13: IProductSegImpl<7 ,13 >(in, out); break;
+                    case 14: IProductSegImpl<7 ,14 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductSeg: # of modes / points combo not implemented.");
+                } break;
+            case 8:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 8: IProductSegImpl<8 ,8 >(in, out); break;
+                    case 9: IProductSegImpl<8 ,9 >(in, out); break;
+                    case 10: IProductSegImpl<8 ,10 >(in, out); break;
+                    case 11: IProductSegImpl<8 ,11 >(in, out); break;
+                    case 12: IProductSegImpl<8 ,12 >(in, out); break;
+                    case 13: IProductSegImpl<8 ,13 >(in, out); break;
+                    case 14: IProductSegImpl<8 ,14 >(in, out); break;
+                    case 15: IProductSegImpl<8 ,15 >(in, out); break;
+                    case 16: IProductSegImpl<8 ,16 >(in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductSeg: # of modes / points combo not implemented.");
+                } break;;
+            default: NEKERROR(ErrorUtil::efatal,
+                "IProductSeg: # of modes / points combo not implemented.");
+        }
+    }
+
+ template<int NM0, int NQ0>
+    void IProductSegImpl(
+        const Array<OneD, const NekDouble> &input,
+              Array<OneD,       NekDouble> &output)
+    {
+        auto *inptr = &input[0];
+        auto *outptr = &output[0];
+
+        constexpr auto nqTot = NQ0;
+        constexpr auto nqBlocks = nqTot * vec_t::width;
+        const auto nmBlocks = m_nmTot * vec_t::width;
+
+        std::vector<vec_t, allocator<vec_t>> tmpIn(nqTot), tmpOut(m_nmTot);
+        vec_t* jac_ptr;
+        for (int e = 0; e < this->m_nBlocks; ++e)
+        {
+            if (DEFORMED)
+            {
+                jac_ptr = &((*this->m_jac)[e*nqTot]);
+            }
+            else
+            {
+                jac_ptr = &((*this->m_jac)[e]);
+            }
+
+            // Load and transpose data
+            load_interleave(inptr, nqTot, tmpIn);
+
+            IProductSegKernel<NM0, NQ0, false, false, DEFORMED>(
+                tmpIn, this->m_bdata[0], this->m_w[0], jac_ptr, tmpOut);
+
+            // de-interleave and store data
+            deinterleave_store(tmpOut, m_nmTot, outptr);
+
+            inptr += nqBlocks;
+            outptr += nmBlocks;
+        }
+    }
+public:
+
+    NekDouble Ndof() final
+    {
+        return m_nmTot * this->m_nElmt;
+    }
+                  
+private:
+    int m_nmTot;
+};
+
+template<bool DEFORMED = false>
 struct IProductQuad : public IProduct, public Helper<2, DEFORMED>
 {
     IProductQuad(std::vector<LibUtilities::BasisSharedPtr> basis,
@@ -953,6 +1115,337 @@ private:
     /// Padded basis
     int m_nmTot;
 };
+
+template<bool DEFORMED = false>
+struct IProductPyr : public IProduct, public Helper<3, DEFORMED>
+{
+    IProductPyr(std::vector<LibUtilities::BasisSharedPtr> basis,
+                     int nElmt)
+        : IProduct(basis, nElmt),
+          Helper<3, DEFORMED>(basis, nElmt),
+          m_nmTot(LibUtilities::StdPyrData::getNumberOfCoefficients(
+                      this->m_nm[0], this->m_nm[1], this->m_nm[2]))
+    {
+    }
+
+    static std::shared_ptr<Operator> Create(
+        std::vector<LibUtilities::BasisSharedPtr> basis,
+        int nElmt)
+    {
+        return std::make_shared<IProductPyr<DEFORMED>>(basis, nElmt);
+    }
+
+    void operator()(const Array<OneD, const NekDouble> &in,
+        Array<OneD,       NekDouble> &out) final
+    {
+        // Check preconditions
+        ASSERTL0(m_basis[0]->GetNumModes() == m_basis[1]->GetNumModes() &&
+            m_basis[0]->GetNumModes() == m_basis[2]->GetNumModes() &&
+            m_basis[0]->GetNumPoints() == m_basis[1]->GetNumPoints() &&
+            m_basis[0]->GetNumPoints() == m_basis[2]->GetNumPoints()+1,
+            "MatrixFree requires homogenous modes/points");
+
+        if (m_basis[0]->GetBasisType() == LibUtilities::eModified_A)
+        {
+            switch(m_basis[0]->GetNumModes())
+            {
+                case 2: switch(m_basis[0]->GetNumPoints())
+                {
+                    case 3: IProductPyrImpl<2, 2, 2, 3, 3, 2, true>
+                        (in, out); break;
+                    case 4: IProductPyrImpl<2, 2, 2, 4, 4, 3, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductPyr: # of modes / points combo not implemented.");
+                } break;
+            case 3:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 4: IProductPyrImpl<3, 3, 3, 4, 4, 3, true>
+                        (in, out); break;
+                    case 5: IProductPyrImpl<3, 3, 3, 5, 5, 4, true>
+                        (in, out); break;
+                    case 6: IProductPyrImpl<3, 3, 3, 6, 6, 5, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductPyr: # of modes / points combo not implemented.");
+                } break;
+            case 4:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 5: IProductPyrImpl<4, 4, 4, 5, 5, 4, true>
+                        (in, out); break;
+                    case 6: IProductPyrImpl<4, 4, 4, 6, 6, 5, true>
+                        (in, out); break;
+                    case 7: IProductPyrImpl<4, 4, 4, 7, 7, 6, true>
+                        (in, out); break;
+                    case 8: IProductPyrImpl<4, 4, 4, 8, 8, 7, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductPyr: # of modes / points combo not implemented.");
+                } break;
+            case 5:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 6: IProductPyrImpl<5, 5, 5, 6, 6, 5, true>
+                        (in, out); break;
+                    case 7: IProductPyrImpl<5, 5, 5, 7, 7, 6, true>
+                        (in, out); break;
+                    case 8: IProductPyrImpl<5, 5, 5, 8, 8, 7, true>
+                        (in, out); break;
+                    case 9: IProductPyrImpl<5, 5, 5, 9, 9, 8, true>
+                        (in, out); break;
+                    case 10: IProductPyrImpl<5, 5, 5, 10, 10, 9, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductPyr: # of modes / points combo not implemented.");
+                } break;
+            case 6:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 7: IProductPyrImpl<6, 6, 6, 7, 7, 6, true>
+                        (in, out); break;
+                    case 8: IProductPyrImpl<6, 6, 6, 8, 8, 7, true>
+                        (in, out); break;
+                    case 9: IProductPyrImpl<6, 6, 6, 9, 9, 8, true>
+                        (in, out); break;
+                    case 10: IProductPyrImpl<6, 6, 6, 10, 10, 9, true>
+                        (in, out); break;
+                    case 11: IProductPyrImpl<6, 6, 6, 11, 11, 10, true>
+                        (in, out); break;
+                    case 12: IProductPyrImpl<6, 6, 6, 12, 12, 11, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductPyr: # of modes / points combo not implemented.");
+                } break;
+            case 7:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 8: IProductPyrImpl<7, 7, 7, 8, 8, 7, true>
+                        (in, out); break;
+                    case 9: IProductPyrImpl<7, 7, 7, 9, 9, 8, true>
+                        (in, out); break;
+                    case 10: IProductPyrImpl<7, 7, 7, 10, 10, 9, true>
+                        (in, out); break;
+                    case 11: IProductPyrImpl<7, 7, 7, 11, 11, 10, true>
+                        (in, out); break;
+                    case 12: IProductPyrImpl<7, 7, 7, 12, 12, 11, true>
+                        (in, out); break;
+                    case 13: IProductPyrImpl<7, 7, 7, 13, 13, 12, true>
+                        (in, out); break;
+                    case 14: IProductPyrImpl<7, 7, 7, 14, 14, 13, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductPyr: # of modes / points combo not implemented.");
+                } break;
+            case 8:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 9: IProductPyrImpl<8, 8, 8, 9, 9, 8, true>
+                        (in, out); break;
+                    case 10: IProductPyrImpl<8, 8, 8, 10, 10, 9, true>
+                        (in, out); break;
+                    case 11: IProductPyrImpl<8, 8, 8, 11, 11, 10, true>
+                        (in, out); break;
+                    case 12: IProductPyrImpl<8, 8, 8, 12, 12, 11, true>
+                        (in, out); break;
+                    case 13: IProductPyrImpl<8, 8, 8, 13, 13, 12, true>
+                        (in, out); break;
+                    case 14: IProductPyrImpl<8, 8, 8, 14, 14, 13, true>
+                        (in, out); break;
+                    case 15: IProductPyrImpl<8, 8, 8, 15, 15, 14, true>
+                        (in, out); break;
+                    case 16: IProductPyrImpl<8, 8, 8, 16, 16, 15, true>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductPyr: # of modes / points combo not implemented.");
+                } break;
+            default: NEKERROR(ErrorUtil::efatal,
+                "IProductPyr: # of modes / points combo not implemented.");
+
+            }
+        }
+        else
+        {
+            switch(m_basis[0]->GetNumModes())
+            {
+                case 2: switch(m_basis[0]->GetNumPoints())
+                {
+                    case 3: IProductPyrImpl<2, 2, 2, 3, 3, 2, false>
+                        (in, out); break;
+                    case 4: IProductPyrImpl<2, 2, 2, 4, 4, 3, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductPyr: # of modes / points combo not implemented.");
+                } break;
+            case 3:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 4: IProductPyrImpl<3, 3, 3, 4, 4, 3, false>
+                        (in, out); break;
+                    case 5: IProductPyrImpl<3, 3, 3, 5, 5, 4, false>
+                        (in, out); break;
+                    case 6: IProductPyrImpl<3, 3, 3, 6, 6, 5, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductPyr: # of modes / points combo not implemented.");
+                } break;
+            case 4:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 5: IProductPyrImpl<4, 4, 4, 5, 5, 4, false>
+                        (in, out); break;
+                    case 6: IProductPyrImpl<4, 4, 4, 6, 6, 5, false>
+                        (in, out); break;
+                    case 7: IProductPyrImpl<4, 4, 4, 7, 7, 6, false>
+                        (in, out); break;
+                    case 8: IProductPyrImpl<4, 4, 4, 8, 8, 7, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductPyr: # of modes / points combo not implemented.");
+                } break;
+            case 5:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 6: IProductPyrImpl<5, 5, 5, 6, 6, 5, false>
+                        (in, out); break;
+                    case 7: IProductPyrImpl<5, 5, 5, 7, 7, 6, false>
+                        (in, out); break;
+                    case 8: IProductPyrImpl<5, 5, 5, 8, 8, 7, false>
+                        (in, out); break;
+                    case 9: IProductPyrImpl<5, 5, 5, 9, 9, 8, false>
+                        (in, out); break;
+                    case 10: IProductPyrImpl<5, 5, 5, 10, 10, 9, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductPyr: # of modes / points combo not implemented.");
+                } break;
+            case 6:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 7: IProductPyrImpl<6, 6, 6, 7, 7, 6, false>
+                        (in, out); break;
+                    case 8: IProductPyrImpl<6, 6, 6, 8, 8, 7, false>
+                        (in, out); break;
+                    case 9: IProductPyrImpl<6, 6, 6, 9, 9, 8, false>
+                        (in, out); break;
+                    case 10: IProductPyrImpl<6, 6, 6, 10, 10, 9, false>
+                        (in, out); break;
+                    case 11: IProductPyrImpl<6, 6, 6, 11, 11, 10, false>
+                        (in, out); break;
+                    case 12: IProductPyrImpl<6, 6, 6, 12, 12, 11, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductPyr: # of modes / points combo not implemented.");
+                } break;
+            case 7:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 8: IProductPyrImpl<7, 7, 7, 8, 8, 7, false>
+                        (in, out); break;
+                    case 9: IProductPyrImpl<7, 7, 7, 9, 9, 8, false>
+                        (in, out); break;
+                    case 10: IProductPyrImpl<7, 7, 7, 10, 10, 9, false>
+                        (in, out); break;
+                    case 11: IProductPyrImpl<7, 7, 7, 11, 11, 10, false>
+                        (in, out); break;
+                    case 12: IProductPyrImpl<7, 7, 7, 12, 12, 11, false>
+                        (in, out); break;
+                    case 13: IProductPyrImpl<7, 7, 7, 13, 13, 12, false>
+                        (in, out); break;
+                    case 14: IProductPyrImpl<7, 7, 7, 14, 14, 13, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductPyr: # of modes / points combo not implemented.");
+                } break;
+            case 8:
+                switch(m_basis[0]->GetNumPoints())
+                {
+                    case 9: IProductPyrImpl<8, 8, 8, 9, 9, 8, false>
+                        (in, out); break;
+                    case 10: IProductPyrImpl<8, 8, 8, 10, 10, 9, false>
+                        (in, out); break;
+                    case 11: IProductPyrImpl<8, 8, 8, 11, 11, 10, false>
+                        (in, out); break;
+                    case 12: IProductPyrImpl<8, 8, 8, 12, 12, 11, false>
+                        (in, out); break;
+                    case 13: IProductPyrImpl<8, 8, 8, 13, 13, 12, false>
+                        (in, out); break;
+                    case 14: IProductPyrImpl<8, 8, 8, 14, 14, 13, false>
+                        (in, out); break;
+                    case 15: IProductPyrImpl<8, 8, 8, 15, 15, 14, false>
+                        (in, out); break;
+                    case 16: IProductPyrImpl<8, 8, 8, 16, 16, 15, false>
+                        (in, out); break;
+                    default: NEKERROR(ErrorUtil::efatal,
+                "IProductPyr: # of modes / points combo not implemented.");
+                } break;
+            default: NEKERROR(ErrorUtil::efatal,
+                "IProductPyr: # of modes / points combo not implemented.");
+
+            }
+
+        }
+    }
+
+    template<int NM0, int NM1, int NM2, int NQ0, int NQ1, int NQ2, bool CORRECT>
+    void IProductPyrImpl(
+        const Array<OneD, const NekDouble> &input,
+              Array<OneD,       NekDouble> &output)
+    {
+        auto* inptr  = &input[0];
+        auto* outptr = &output[0];
+
+        constexpr auto nqTot = NQ0 * NQ1 * NQ2;
+        constexpr auto nqBlocks = NQ0 * NQ1 * NQ2 * vec_t::width;
+        const auto nmBlocks = m_nmTot * vec_t::width;
+
+        vec_t sums_kj[NQ1 * NQ2];
+        vec_t sums_k[NQ2];
+
+        std::vector<vec_t, allocator<vec_t>> tmpIn(nqTot), tmpOut(m_nmTot);
+        vec_t* jac_ptr;
+        for (int e = 0; e < this->m_nBlocks; ++e)
+        {
+            if (DEFORMED)
+            {
+                jac_ptr = &((*this->m_jac)[nqTot*e]);
+            }
+            else
+            {
+                jac_ptr = &((*this->m_jac)[e]);
+            }
+
+            // Load and transpose data
+            load_interleave(inptr, nqTot, tmpIn);
+
+            IProductPyrKernel<NM0, NM1, NM2, NQ0, NQ1, NQ2, CORRECT, false,
+                false, DEFORMED>(
+                tmpIn, this->m_bdata[0], this->m_bdata[1], this->m_bdata[2],
+                this->m_w[0], this->m_w[1], this->m_w[2], jac_ptr,
+                sums_kj, sums_k, tmpOut);
+
+            // de-interleave and store data
+            deinterleave_store(tmpOut, m_nmTot, outptr);
+
+            inptr += nqBlocks;
+            outptr += nmBlocks;
+        }
+
+    }
+public:
+
+    NekDouble Ndof() final
+    {
+        return m_nmTot * this->m_nElmt;
+    }
+
+private:
+    /// Padded basis
+    int m_nmTot;
+};
+
+
 
 template<bool DEFORMED = false>
 struct IProductTet : public IProduct, public Helper<3, DEFORMED>

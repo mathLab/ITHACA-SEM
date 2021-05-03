@@ -62,17 +62,19 @@ class IProductWRTDerivBase_StdMat : public Operator
     public:
         OPERATOR_CREATE(IProductWRTDerivBase_StdMat)
 
-        virtual ~IProductWRTDerivBase_StdMat()
+        ~IProductWRTDerivBase_StdMat() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD,       NekDouble> &entry1,
-                      Array<OneD,       NekDouble> &entry2,
-                      Array<OneD,       NekDouble> &entry3,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(const Array<OneD, const NekDouble> &entry0,
+                        Array<OneD, NekDouble> &entry1,
+                        Array<OneD, NekDouble> &entry2,
+                        Array<OneD, NekDouble> &entry3,
+                        Array<OneD, NekDouble> &wsp,
+                        const StdRegions::ConstFactorMap   &factors) final
         {
+            boost::ignore_unused(factors);
+
             int nPhys = m_stdExp->GetTotPoints();
             int ntot = m_numElmt*nPhys;
             int nmodes = m_stdExp->GetNcoeffs();
@@ -166,11 +168,10 @@ class IProductWRTDerivBase_StdMat : public Operator
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+       void operator()(int dir,
+                       const Array<OneD, const NekDouble> &input,
+                       Array<OneD, NekDouble> &output,
+                       Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -275,30 +276,44 @@ class IProductWRTDerivBase_MatrixFree : public Operator, MatrixFreeMultiInOneOut
     public:
         OPERATOR_CREATE(IProductWRTDerivBase_MatrixFree)
 
-        virtual ~IProductWRTDerivBase_MatrixFree()
+        ~IProductWRTDerivBase_MatrixFree() final
         {
         }
 
-        virtual void operator()(
-               const Array<OneD, const NekDouble> &entry0,
-                           Array<OneD, NekDouble> &entry1,
-                           Array<OneD, NekDouble> &entry2,
-                           Array<OneD, NekDouble> &entry3,
-                           Array<OneD, NekDouble> &wsp)
+        void operator()(const Array<OneD, const NekDouble> &entry0,
+                        Array<OneD, NekDouble> &entry1,
+                        Array<OneD, NekDouble> &entry2,
+                        Array<OneD, NekDouble> &entry3,
+                        Array<OneD, NekDouble> &wsp,
+                const StdRegions::ConstFactorMap  &factors) final
         {
-            boost::ignore_unused(wsp);
+            boost::ignore_unused(wsp,factors);
 
             Array<OneD, NekDouble> output;
-            output = (m_coordim == 2)? entry2: entry3;
 
             if (m_isPadded)
             {
                 // copy into padded vector
-                Vmath::Vcopy(m_nIn, entry0, 1, m_input[0], 1);
-                Vmath::Vcopy(m_nIn, entry1, 1, m_input[1], 1);
-                if (m_coordim == 3)
+                switch(m_coordim)
                 {
+                case 1:
+                    output = entry1;
+                    Vmath::Vcopy(m_nIn, entry0, 1, m_input[0], 1);
+                    break;
+                case 2:
+                    output = entry2;
+                    Vmath::Vcopy(m_nIn, entry0, 1, m_input[0], 1);
+                    Vmath::Vcopy(m_nIn, entry1, 1, m_input[1], 1);
+                    break;
+                case 3:
+                    output = entry3;
+                    Vmath::Vcopy(m_nIn, entry0, 1, m_input[0], 1);
+                    Vmath::Vcopy(m_nIn, entry1, 1, m_input[1], 1);
                     Vmath::Vcopy(m_nIn, entry2, 1, m_input[2], 1);
+                    break;
+                default:
+                    NEKERROR(ErrorUtil::efatal, "m_coordim value not valid");
+                    break;
                 }
 
                 // call op
@@ -309,21 +324,38 @@ class IProductWRTDerivBase_MatrixFree : public Operator, MatrixFreeMultiInOneOut
             else
             {
                 Array<OneD, Array<OneD, NekDouble>> input{m_coordim};
-                input[0] = entry0;
-                input[1] = entry1;
-                if (m_coordim == 3)
+
+                // copy into padded vector
+                switch(m_coordim)
                 {
+                case 1:
+                    output = entry1;
+                    input[0] = entry0;
+                    break;
+                case 2:
+                    output = entry2;
+                    input[0] = entry0;
+                    input[1] = entry1;
+                    break;
+                case 3:
+                    output = entry3;
+                    input[0] = entry0;
+                    input[1] = entry1;
                     input[2] = entry2;
+                    break;
+                default:
+                    NEKERROR(ErrorUtil::efatal, "coordim not valid");
+                    break;
                 }
+                
                 (*m_oper)(input, output);
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+         void operator()(int dir,
+                         const Array<OneD, const NekDouble> &input,
+                         Array<OneD, NekDouble> &output,
+                         Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -377,6 +409,9 @@ class IProductWRTDerivBase_MatrixFree : public Operator, MatrixFreeMultiInOneOut
 /// Factory initialisation for the IProductWRTDerivBase_MatrixFree operators
 OperatorKey IProductWRTDerivBase_MatrixFree::m_typeArr[] = {
     GetOperatorFactory().RegisterCreatorFunction(
+        OperatorKey(eSegment, eIProductWRTDerivBase, eMatrixFree, false),
+        IProductWRTDerivBase_MatrixFree::create, "IProductWRTDerivBase_MatrixFree_Seg"),
+    GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eQuadrilateral, eIProductWRTDerivBase, eMatrixFree, false),
         IProductWRTDerivBase_MatrixFree::create, "IProductWRTDerivBase_MatrixFree_Quad"),
     GetOperatorFactory().RegisterCreatorFunction(
@@ -388,6 +423,9 @@ OperatorKey IProductWRTDerivBase_MatrixFree::m_typeArr[] = {
     GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(ePrism, eIProductWRTDerivBase, eMatrixFree, false),
         IProductWRTDerivBase_MatrixFree::create, "IProductWRTDerivBase_MatrixFree_Prism"),
+    GetOperatorFactory().RegisterCreatorFunction(
+       OperatorKey(ePyramid, eIProductWRTDerivBase, eMatrixFree, false),
+       IProductWRTDerivBase_MatrixFree::create, "IProductWRTDerivBase_MatrixFree_Pyr"),
     GetOperatorFactory().RegisterCreatorFunction(
         OperatorKey(eTetrahedron, eIProductWRTDerivBase, eMatrixFree, false),
         IProductWRTDerivBase_MatrixFree::create, "IProductWRTDerivBase_MatrixFree_Tet")
@@ -401,17 +439,19 @@ class IProductWRTDerivBase_IterPerExp : public Operator
     public:
         OPERATOR_CREATE(IProductWRTDerivBase_IterPerExp)
 
-        virtual ~IProductWRTDerivBase_IterPerExp()
+        ~IProductWRTDerivBase_IterPerExp() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD, NekDouble> &entry1,
-                      Array<OneD, NekDouble> &entry2,
-                      Array<OneD, NekDouble> &entry3,
-                      Array<OneD, NekDouble> &wsp)
+        void operator()(const Array<OneD, const NekDouble> &entry0,
+                        Array<OneD, NekDouble> &entry1,
+                        Array<OneD, NekDouble> &entry2,
+                        Array<OneD, NekDouble> &entry3,
+                        Array<OneD, NekDouble> &wsp,
+                        const StdRegions::ConstFactorMap   &factors) final
         {
+            boost::ignore_unused(factors);
+
             unsigned int nPhys  = m_stdExp->GetTotPoints();
             unsigned int ntot   = m_numElmt*nPhys;
             unsigned int nmodes = m_stdExp->GetNcoeffs();
@@ -506,11 +546,10 @@ class IProductWRTDerivBase_IterPerExp : public Operator
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -594,18 +633,18 @@ class IProductWRTDerivBase_NoCollection : public Operator
     public:
         OPERATOR_CREATE(IProductWRTDerivBase_NoCollection)
 
-        virtual ~IProductWRTDerivBase_NoCollection()
+        ~IProductWRTDerivBase_NoCollection() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD, NekDouble> &entry1,
-                      Array<OneD, NekDouble> &entry2,
-                      Array<OneD, NekDouble> &entry3,
-                      Array<OneD, NekDouble> &wsp)
+        void operator()(const Array<OneD, const NekDouble> &entry0,
+                        Array<OneD, NekDouble> &entry1,
+                        Array<OneD, NekDouble> &entry2,
+                        Array<OneD, NekDouble> &entry3,
+                        Array<OneD, NekDouble> &wsp,
+                        const StdRegions::ConstFactorMap   &factors) final
         {
-            boost::ignore_unused(wsp);
+            boost::ignore_unused(wsp,factors);
 
             unsigned int nmodes = m_expList[0]->GetNcoeffs();
             unsigned int nPhys  = m_expList[0]->GetTotPoints();
@@ -637,11 +676,10 @@ class IProductWRTDerivBase_NoCollection : public Operator
             }
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -718,26 +756,35 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
     public:
         OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Seg)
 
-        virtual ~IProductWRTDerivBase_SumFac_Seg()
+        ~IProductWRTDerivBase_SumFac_Seg() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &output1,
-                      Array<OneD,       NekDouble> &output2,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(const Array<OneD, const NekDouble> &entry0,
+                        Array<OneD,       NekDouble> &entry1,
+                        Array<OneD,       NekDouble> &entry2,
+                        Array<OneD,       NekDouble> &entry3,
+                        Array<OneD,       NekDouble> &wsp,
+                        const StdRegions::ConstFactorMap   &factors) final
         {
-            boost::ignore_unused(output1, output2);
+            boost::ignore_unused(factors);
+            Array<OneD, Array<OneD, const NekDouble> > in(3);
+            Array<OneD, NekDouble> output;
 
-            Vmath::Vmul(m_numElmt*m_nquad0, m_jacWStdW, 1, input, 1, wsp, 1);
+            output = (m_coordim == 3)? entry3: (m_coordim == 2)?
+                entry2: entry1;
 
+            in[0] = entry0; in[1] = entry1;
+            in[2] = entry2;
+
+            // calculate dx/dxi in[0] + dy/dxi in[1] + dz/dxi in[2]
             if(m_isDeformed)
             {
-                Vmath::Vmul(m_numElmt*m_nquad0, &m_derivFac[0][0], 1,
-                            &wsp[0],           1,
-                            &wsp[0],           1);
+                Vmath::Vmul (m_wspSize,m_derivFac[0], 1, in[0], 1, wsp, 1);
+                for(int i = 1; i < m_coordim; ++i)
+                {
+                    Vmath::Vvtvp (m_wspSize,m_derivFac[i],1,in[i],1,wsp,1,wsp,1);
+                }
             }
             else
             {
@@ -745,10 +792,23 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
                 for(int e = 0; e < m_numElmt; ++e)
                 {
                     Vmath::Smul(m_nquad0, m_derivFac[0][e],
-                                &wsp[0] + e*m_nquad0,   1,
-                                &wsp[0] + e*m_nquad0,   1);
+                                in[0] + e*m_nquad0,   1,
+                                t = wsp + e*m_nquad0,   1);
+                }
+                
+                for(int i = 1; i < m_coordim; ++i)
+                {
+                    for(int e = 0; e < m_numElmt; ++e)
+                    {
+                        Vmath::Svtvp (m_nquad0, m_derivFac[i][e],
+                                      in[i] + e*m_nquad0,1,
+                                      wsp   + e*m_nquad0,1,
+                                      t = wsp + e*m_nquad0,1);
+                    }
                 }
             }
+
+            Vmath::Vmul(m_wspSize, m_jacWStdW, 1, wsp, 1, wsp, 1);
 
             // out = B0*in;
             Blas::Dgemm('T', 'N', m_nmodes0, m_numElmt, m_nquad0,
@@ -757,11 +817,10 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
                         &output[0], m_nmodes0);
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -773,6 +832,7 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
         Array<OneD, const NekDouble>    m_jacWStdW;
         Array<OneD, const NekDouble>    m_derbase0;
         Array<TwoD, const NekDouble>    m_derivFac;
+        int                             m_coordim;
 
     private:
         IProductWRTDerivBase_SumFac_Seg(
@@ -783,6 +843,7 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
               m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
               m_derbase0(m_stdExp->GetBasis(0)->GetDbdata())
         {
+            m_coordim  = pCollExp[0]->GetCoordim();
             m_wspSize = m_numElmt*m_nquad0;
             m_derivFac = pGeomData->GetDerivFactors(pCollExp);
             m_jacWStdW = pGeomData->GetJacWithStdWeights(pCollExp);
@@ -792,9 +853,9 @@ class IProductWRTDerivBase_SumFac_Seg : public Operator
 /// Factory initialisation for the IProductWRTDerivBase_SumFac_Seg operator
 OperatorKey IProductWRTDerivBase_SumFac_Seg::m_type = GetOperatorFactory().
     RegisterCreatorFunction(
-        OperatorKey(eSegment, eIProductWRTDerivBase, eSumFac, false),
-        IProductWRTDerivBase_SumFac_Seg::create,
-        "IProductWRTDerivBase_SumFac_Seg");
+                            OperatorKey(eSegment, eIProductWRTDerivBase, eSumFac, false),
+                            IProductWRTDerivBase_SumFac_Seg::create,
+                            "IProductWRTDerivBase_SumFac_Seg");
 
 
 /**
@@ -802,138 +863,144 @@ OperatorKey IProductWRTDerivBase_SumFac_Seg::m_type = GetOperatorFactory().
  */
 class IProductWRTDerivBase_SumFac_Quad : public Operator
 {
-    public:
-        OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Quad)
+public:
+    OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Quad)
 
-        virtual ~IProductWRTDerivBase_SumFac_Quad()
+    ~IProductWRTDerivBase_SumFac_Quad() final
+    {
+    }
+
+    void operator()(const Array<OneD, const NekDouble> &entry0,
+                    Array<OneD, NekDouble> &entry1,
+                    Array<OneD, NekDouble> &entry2,
+                    Array<OneD, NekDouble> &entry3,
+                    Array<OneD, NekDouble> &wsp,
+                    const StdRegions::ConstFactorMap   &factors) final
+    {
+        boost::ignore_unused(factors);
+
+        unsigned int nPhys  = m_stdExp->GetTotPoints();
+        unsigned int ntot   = m_numElmt*nPhys;
+        unsigned int nmodes = m_stdExp->GetNcoeffs();
+        unsigned int nmax   = max(ntot,m_numElmt*nmodes);
+        Array<OneD, Array<OneD, const NekDouble> > in(3);
+        Array<OneD, NekDouble> output, wsp1;
+        Array<OneD, Array<OneD, NekDouble> > tmp(2);
+
+        in[0] = entry0; in[1] = entry1; in[2] = entry2;
+
+        output = (m_coordim == 2)? entry2: entry3;
+
+        tmp[0] = wsp; tmp[1] = wsp + nmax;
+        wsp1   = wsp + 2*nmax;
+
+        if(m_isDeformed)
         {
+            // calculate dx/dxi in[0] + dy/dxi in[1]
+            for(int i = 0; i < 2; ++i)
+            {
+                Vmath::Vmul(ntot, m_derivFac[i], 1, in[0], 1, tmp[i], 1);
+                for(int j = 1; j < m_coordim; ++j)
+                {
+                    Vmath::Vvtvp(ntot, m_derivFac[i + 2*j], 1, in[j], 1,
+                                 tmp[i], 1, tmp[i], 1);
+                }
+            }
         }
-
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD, NekDouble> &entry1,
-                      Array<OneD, NekDouble> &entry2,
-                      Array<OneD, NekDouble> &entry3,
-                      Array<OneD, NekDouble> &wsp)
+        else
         {
-            unsigned int nPhys  = m_stdExp->GetTotPoints();
-            unsigned int ntot   = m_numElmt*nPhys;
-            unsigned int nmodes = m_stdExp->GetNcoeffs();
-            unsigned int nmax   = max(ntot,m_numElmt*nmodes);
-            Array<OneD, Array<OneD, const NekDouble> > in(3);
-            Array<OneD, NekDouble> output, wsp1;
-            Array<OneD, Array<OneD, NekDouble> > tmp(2);
-
-            in[0] = entry0; in[1] = entry1; in[2] = entry2;
-
-            output = (m_coordim == 2)? entry2: entry3;
-
-            tmp[0] = wsp; tmp[1] = wsp + nmax;
-            wsp1   = wsp + 2*nmax;
-
-            if(m_isDeformed)
+            Array<OneD,NekDouble> t;
+            for(int e = 0; e < m_numElmt; ++e)
             {
                 // calculate dx/dxi in[0] + dy/dxi in[1]
                 for(int i = 0; i < 2; ++i)
                 {
-                    Vmath::Vmul(ntot, m_derivFac[i], 1, in[0], 1, tmp[i], 1);
-                    Vmath::Vvtvp(ntot, m_derivFac[i + 2], 1, in[1], 1, tmp[i],
-                                 1, tmp[i], 1);
-                }
-            }
-            else
-            {
-                Array<OneD,NekDouble> t;
-                for(int e = 0; e < m_numElmt; ++e)
-                {
-                    // calculate dx/dxi in[0] + dy/dxi in[1]
-                    for(int i = 0; i < 2; ++i)
-                    {
-                        Vmath::Smul (m_nqe,m_derivFac[i][e],
+                    Vmath::Smul (m_nqe,m_derivFac[i][e],
                                      in[0] + e*m_nqe,1,
                                      t = tmp[i] + e*m_nqe,1);
-                        Vmath::Svtvp (m_nqe,m_derivFac[i+2][e],
-                                      in[1] + e*m_nqe,1,
+                    for(int j = 1; j < m_coordim; ++j)
+                    {
+                        Vmath::Svtvp (m_nqe,m_derivFac[i+2*j][e],
+                                      in[j] + e*m_nqe,1,
                                       tmp[i] + e*m_nqe, 1,
                                       t = tmp[i] + e*m_nqe,1);
                     }
                 }                
             }
-
-            // Iproduct wrt derivative of base 0
-            QuadIProduct(false, m_colldir1, m_numElmt,
-                         m_nquad0,   m_nquad1,
-                         m_nmodes0,  m_nmodes1,
-                         m_derbase0, m_base1,
-                         m_jacWStdW, tmp[0], output, wsp1);
-
-            // Iproduct wrt derivative of base 1
-            QuadIProduct(m_colldir0, false, m_numElmt,
-                         m_nquad0,   m_nquad1,
-                         m_nmodes0,  m_nmodes1,
-                         m_base0, m_derbase1,
-                         m_jacWStdW, tmp[1],  tmp[0], wsp1);
-
-            Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
+        // Iproduct wrt derivative of base 1
+        QuadIProduct(false, m_colldir1, m_numElmt,
+                     m_nquad0,   m_nquad1,
+                     m_nmodes0,  m_nmodes1,
+                     m_derbase0, m_base1,
+                     m_jacWStdW, tmp[0], output, wsp1);
+        
+        // Iproduct wrt derivative of base 1
+        QuadIProduct(m_colldir0, false, m_numElmt,
+                     m_nquad0,   m_nquad1,
+                     m_nmodes0,  m_nmodes1,
+                     m_base0, m_derbase1,
+                     m_jacWStdW, tmp[1],  tmp[0], wsp1);
+        
+        Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
+    }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
-        {
-            boost::ignore_unused(dir, input, output, wsp);
-            NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
-        }
+    void operator()(int dir,
+                    const Array<OneD, const NekDouble> &input,
+                    Array<OneD, NekDouble> &output,
+                    Array<OneD, NekDouble> &wsp) final
+    {
+        boost::ignore_unused(dir, input, output, wsp);
+        NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
+    }
 
-    protected:
-        const int                       m_nquad0;
-        const int                       m_nquad1;
-        const int                       m_nmodes0;
-        const int                       m_nmodes1;
-        const bool                      m_colldir0;
-        const bool                      m_colldir1;
-        int                             m_coordim;
-        Array<TwoD, const NekDouble>    m_derivFac;
-        Array<OneD, const NekDouble>    m_jacWStdW;
-        Array<OneD, const NekDouble>    m_base0;
-        Array<OneD, const NekDouble>    m_base1;
-        Array<OneD, const NekDouble>    m_derbase0;
-        Array<OneD, const NekDouble>    m_derbase1;
+protected:
+    const int                       m_nquad0;
+    const int                       m_nquad1;
+    const int                       m_nmodes0;
+    const int                       m_nmodes1;
+    const bool                      m_colldir0;
+    const bool                      m_colldir1;
+    int                             m_coordim;
+    Array<TwoD, const NekDouble>    m_derivFac;
+    Array<OneD, const NekDouble>    m_jacWStdW;
+    Array<OneD, const NekDouble>    m_base0;
+    Array<OneD, const NekDouble>    m_base1;
+    Array<OneD, const NekDouble>    m_derbase0;
+    Array<OneD, const NekDouble>    m_derbase1;
 
-    private:
-        IProductWRTDerivBase_SumFac_Quad(
-                vector<StdRegions::StdExpansionSharedPtr> pCollExp,
-                CoalescedGeomDataSharedPtr                pGeomData)
-            : Operator(pCollExp, pGeomData),
-              m_nquad0  (m_stdExp->GetNumPoints(0)),
-              m_nquad1  (m_stdExp->GetNumPoints(1)),
-              m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
-              m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
-              m_colldir0(m_stdExp->GetBasis(0)->Collocation()),
-              m_colldir1(m_stdExp->GetBasis(1)->Collocation()),
-              m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
-              m_base1   (m_stdExp->GetBasis(1)->GetBdata()),
-              m_derbase0(m_stdExp->GetBasis(0)->GetDbdata()),
-              m_derbase1(m_stdExp->GetBasis(1)->GetDbdata())
-        {
-            LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
-            m_coordim  = pCollExp[0]->GetCoordim();
+private:
+    IProductWRTDerivBase_SumFac_Quad(
+                                     vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                                     CoalescedGeomDataSharedPtr                pGeomData)
+        : Operator(pCollExp, pGeomData),
+          m_nquad0  (m_stdExp->GetNumPoints(0)),
+          m_nquad1  (m_stdExp->GetNumPoints(1)),
+          m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+          m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+          m_colldir0(m_stdExp->GetBasis(0)->Collocation()),
+          m_colldir1(m_stdExp->GetBasis(1)->Collocation()),
+          m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
+          m_base1   (m_stdExp->GetBasis(1)->GetBdata()),
+          m_derbase0(m_stdExp->GetBasis(0)->GetDbdata()),
+          m_derbase1(m_stdExp->GetBasis(1)->GetDbdata())
+    {
+        LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
+        m_coordim  = pCollExp[0]->GetCoordim();
 
-            m_derivFac = pGeomData->GetDerivFactors(pCollExp);
-            m_jacWStdW      = pGeomData->GetJacWithStdWeights(pCollExp);
-            m_wspSize  = 4 * m_numElmt * (max(m_nquad0*m_nquad1,
-                                              m_nmodes0*m_nmodes1));
-        }
+        m_derivFac = pGeomData->GetDerivFactors(pCollExp);
+        m_jacWStdW = pGeomData->GetJacWithStdWeights(pCollExp);
+        m_wspSize  = 4 * m_numElmt * (max(m_nquad0*m_nquad1,
+                                          m_nmodes0*m_nmodes1));
+    }
 };
 
 /// Factory initialisation for the IProductWRTDerivBase_SumFac_Quad operator
 OperatorKey IProductWRTDerivBase_SumFac_Quad::m_type =
     GetOperatorFactory().RegisterCreatorFunction(
-        OperatorKey(eQuadrilateral, eIProductWRTDerivBase, eSumFac, false),
-        IProductWRTDerivBase_SumFac_Quad::create,
-        "IProductWRTDerivBase_IterPerExp_Quad");
+                                                 OperatorKey(eQuadrilateral, eIProductWRTDerivBase, eSumFac, false),
+                                                 IProductWRTDerivBase_SumFac_Quad::create,
+                                                 "IProductWRTDerivBase_IterPerExp_Quad");
 
 
 /**
@@ -941,10 +1008,10 @@ OperatorKey IProductWRTDerivBase_SumFac_Quad::m_type =
  */
 class IProductWRTDerivBase_SumFac_Tri : public Operator
 {
-    public:
+public:
         OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Tri)
 
-        virtual ~IProductWRTDerivBase_SumFac_Tri()
+        ~IProductWRTDerivBase_SumFac_Tri() final
         {
         }
 
@@ -979,13 +1046,15 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
      *    + (d\phi/d\eta_1, (d\xi_1/dx in[0] + d\xi_1/dy in[1])) \f]
      *
      */
-    virtual void operator()(
-                const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD, NekDouble>       &entry1,
-                      Array<OneD, NekDouble>       &entry2,
-                      Array<OneD, NekDouble>       &entry3,
-                      Array<OneD, NekDouble>       &wsp)
+     void operator()(const Array<OneD, const NekDouble> &entry0,
+                     Array<OneD, NekDouble> &entry1,
+                     Array<OneD, NekDouble> &entry2,
+                     Array<OneD, NekDouble> &entry3,
+                     Array<OneD, NekDouble> &wsp,
+                     const StdRegions::ConstFactorMap   &factors) final
         {
+            boost::ignore_unused(factors);
+
             unsigned int nPhys  = m_stdExp->GetTotPoints();
             unsigned int ntot   = m_numElmt*nPhys;
             unsigned int nmodes = m_stdExp->GetNcoeffs();
@@ -1003,12 +1072,14 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
 
             if(m_isDeformed)
             {
-                // calculate dx/dxi in[0] + dy/dxi in[1]
                 for (int i = 0; i < 2; ++i)
                 {
                     Vmath::Vmul(ntot, m_derivFac[i], 1, in[0], 1, tmp[i], 1);
-                    Vmath::Vvtvp(ntot, m_derivFac[i+2], 1, in[1], 1, tmp[i], 1,
-                                 tmp[i], 1);
+                    for(int j = 1; j < m_coordim; ++j)
+                    {
+                        Vmath::Vvtvp(ntot, m_derivFac[i+2*j], 1, in[j], 1,
+                                     tmp[i], 1, tmp[i], 1);
+                    }
                 }
             }
             else
@@ -1022,12 +1093,15 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
                         Vmath::Smul (m_nqe,m_derivFac[i][e],
                                      in[0] + e*m_nqe,1,
                                      t = tmp[i] + e*m_nqe,1);
-                        Vmath::Svtvp (m_nqe,m_derivFac[i+2][e],
-                                      in[1] + e*m_nqe,1,
-                                      tmp[i] + e*m_nqe, 1,
-                                      t = tmp[i] + e*m_nqe,1);
-                    }
-                }                
+                        for(int j = 1; j < m_coordim; ++j)
+                        {
+                            Vmath::Svtvp (m_nqe,m_derivFac[i+2*j][e],
+                                          in[j] + e*m_nqe,1,
+                                          tmp[i] + e*m_nqe, 1,
+                                          t = tmp[i] + e*m_nqe,1);
+                        }
+                    }                
+                }
             }
             
             // Multiply by factor: 2/(1-z1)
@@ -1055,11 +1129,10 @@ class IProductWRTDerivBase_SumFac_Tri : public Operator
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -1160,17 +1233,19 @@ class IProductWRTDerivBase_SumFac_Hex : public Operator
     public:
         OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Hex)
 
-        virtual ~IProductWRTDerivBase_SumFac_Hex()
+        ~IProductWRTDerivBase_SumFac_Hex() final
         {
         }
 
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD, NekDouble>       &entry1,
-                      Array<OneD, NekDouble>       &entry2,
-                      Array<OneD, NekDouble>       &entry3,
-                      Array<OneD, NekDouble>       &wsp)
-        {
+         void operator()(const Array<OneD, const NekDouble> &entry0,
+                         Array<OneD, NekDouble> &entry1,
+                         Array<OneD, NekDouble> &entry2,
+                         Array<OneD, NekDouble> &entry3,
+                         Array<OneD, NekDouble> &wsp,
+                         const StdRegions::ConstFactorMap   &factors) final
+    {
+            boost::ignore_unused(factors);
+
             unsigned int nPhys  = m_stdExp->GetTotPoints();
             unsigned int ntot   = m_numElmt*nPhys;
             unsigned int nmodes = m_stdExp->GetNcoeffs();
@@ -1249,11 +1324,10 @@ class IProductWRTDerivBase_SumFac_Hex : public Operator
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+        void operator()(int dir,
+                        const Array<OneD, const NekDouble> &input,
+                        Array<OneD, NekDouble> &output,
+                        Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -1377,13 +1451,15 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
          *    fac3 &= & (1+\eta_1)/2  \end{array} \f]
          *
          */
-        virtual void operator()(
-                const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD, NekDouble>       &entry1,
-                      Array<OneD, NekDouble>       &entry2,
-                      Array<OneD, NekDouble>       &entry3,
-                      Array<OneD, NekDouble>       &wsp)
+         void operator()(const Array<OneD, const NekDouble> &entry0,
+                         Array<OneD, NekDouble> &entry1,
+                         Array<OneD, NekDouble> &entry2,
+                         Array<OneD, NekDouble> &entry3,
+                         Array<OneD, NekDouble> &wsp,
+                         const StdRegions::ConstFactorMap   &factors) final
         {
+            boost::ignore_unused(factors);
+
             unsigned int nPhys  = m_stdExp->GetTotPoints();
             unsigned int ntot   = m_numElmt*nPhys;
             unsigned int nmodes = m_stdExp->GetNcoeffs();
@@ -1488,11 +1564,10 @@ class IProductWRTDerivBase_SumFac_Tet : public Operator
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+         void operator()(int dir,
+                         const Array<OneD, const NekDouble> &input,
+                         Array<OneD, NekDouble> &output,
+                         Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -1604,7 +1679,7 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
     public:
         OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Prism)
 
-        virtual ~IProductWRTDerivBase_SumFac_Prism()
+        ~IProductWRTDerivBase_SumFac_Prism() final
         {
         }
 
@@ -1654,13 +1729,16 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
      *               + d\xi_2/dz in[2])) \f]
      *
      */
-        virtual void operator()(
+       void operator()(
                 const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD, NekDouble>       &entry1,
-                      Array<OneD, NekDouble>       &entry2,
-                      Array<OneD, NekDouble>       &entry3,
-                      Array<OneD, NekDouble>       &wsp)
+                      Array<OneD, NekDouble> &entry1,
+                      Array<OneD, NekDouble> &entry2,
+                      Array<OneD, NekDouble> &entry3,
+                      Array<OneD, NekDouble> &wsp,
+                const StdRegions::ConstFactorMap &factors) final
         {
+            boost::ignore_unused(factors);
+
             unsigned int nPhys  = m_stdExp->GetTotPoints();
             unsigned int ntot   = m_numElmt*nPhys;
             unsigned int nmodes = m_stdExp->GetNcoeffs();
@@ -1751,11 +1829,10 @@ class IProductWRTDerivBase_SumFac_Prism : public Operator
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+         void operator()(int dir,
+                         const Array<OneD, const NekDouble> &input,
+                         Array<OneD, NekDouble> &output,
+                         Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");
@@ -1859,7 +1936,7 @@ class IProductWRTDerivBase_SumFac_Pyr : public Operator
     public:
         OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Pyr)
 
-        virtual ~IProductWRTDerivBase_SumFac_Pyr()
+        ~IProductWRTDerivBase_SumFac_Pyr() final
         {
         }
 
@@ -1917,13 +1994,15 @@ class IProductWRTDerivBase_SumFac_Pyr : public Operator
      * \f[ (d\phi/d\eta_2, (d\xi_2/dx in[0] + d\xi_2/dy in[1] +
      *      d\xi_2/dz in[2])) \f]
      */
-     virtual void operator()(
-                const Array<OneD, const NekDouble> &entry0,
-                      Array<OneD, NekDouble>       &entry1,
-                      Array<OneD, NekDouble>       &entry2,
-                      Array<OneD, NekDouble>       &entry3,
-                      Array<OneD, NekDouble>       &wsp)
+     void operator()(const Array<OneD, const NekDouble> &entry0,
+                     Array<OneD, NekDouble> &entry1,
+                     Array<OneD, NekDouble> &entry2,
+                     Array<OneD, NekDouble> &entry3,
+                     Array<OneD, NekDouble> &wsp,
+                     const StdRegions::ConstFactorMap   &factors) final
         {
+            boost::ignore_unused(factors);
+
             unsigned int nPhys  = m_stdExp->GetTotPoints();
             unsigned int ntot   = m_numElmt*nPhys;
             unsigned int nmodes = m_stdExp->GetNcoeffs();
@@ -2022,11 +2101,10 @@ class IProductWRTDerivBase_SumFac_Pyr : public Operator
             Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
         }
 
-        virtual void operator()(
-                      int                           dir,
-                const Array<OneD, const NekDouble> &input,
-                      Array<OneD,       NekDouble> &output,
-                      Array<OneD,       NekDouble> &wsp)
+         void operator()(int dir,
+                         const Array<OneD, const NekDouble> &input,
+                         Array<OneD, NekDouble> &output,
+                         Array<OneD, NekDouble> &wsp) final
         {
             boost::ignore_unused(dir, input, output, wsp);
             NEKERROR(ErrorUtil::efatal, "Not valid for this operator.");

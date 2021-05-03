@@ -1,14 +1,19 @@
 SET(MATRIXFREEOPS_SOURCES
     BwdTrans.cpp
+    Helmholtz.cpp
     IProductQuad.cpp
     IProductTri.cpp
     IProductTet.cpp
+    IProductSeg.cpp
     IProductPrism.cpp
+    IProductPyr.cpp
     IProductHex.cpp
     IProductWRTDerivBaseQuad.cpp
     IProductWRTDerivBaseTri.cpp
     IProductWRTDerivBaseTet.cpp
+    IProductWRTDerivBaseSeg.cpp
     IProductWRTDerivBasePrism.cpp
+    IProductWRTDerivBasePyr.cpp
     IProductWRTDerivBaseHex.cpp
     PhysDeriv.cpp
     Operator.cpp
@@ -17,6 +22,7 @@ SET(MATRIXFREEOPS_SOURCES
 SET(MATRIXFREEOPS_HEADERS
     BwdTrans.h
     BwdTransKernels.hpp
+    Helmholtz.h
     IProduct.h
     IProductKernels.hpp
     IProductWRTDerivBase.h

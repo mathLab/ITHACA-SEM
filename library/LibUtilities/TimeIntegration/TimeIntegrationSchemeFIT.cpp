@@ -54,18 +54,46 @@ namespace LibUtilities
  */
 FractionalInTimeIntegrationScheme::
 FractionalInTimeIntegrationScheme(std::string variant, unsigned int order,
-				  std::vector<NekDouble> freeParams) :
+                                  std::vector<NekDouble> freeParams) :
   TimeIntegrationScheme(variant, order, freeParams),
   m_name("FractionalInTime")
 {
     m_variant    = variant;
     m_order      = order;
     m_freeParams = freeParams;
-    
+
     // Currently up to 4th order is implemented.
     ASSERTL1(0 < order && order <= 4,
-	     "FractionalInTime Time integration scheme bad order: " +
-	     std::to_string(order));
+             "FractionalInTime Time integration scheme bad order: " +
+             std::to_string(order));
+
+    ASSERTL1(freeParams.size() == 0 ||  // Use defaults
+             freeParams.size() == 1 ||  // Alpha
+             freeParams.size() == 2 ||  // Base
+             freeParams.size() == 6,    // Talbot quadrature rule
+             "FractionalInTime Time integration scheme invalid number "
+             "of free parameters, expected zero, one <alpha>, "
+	     "two <alpha, base>, or "
+	     "six <alpha, base, nQuadPts, sigma, mu0, nu> received  " +
+             std::to_string(freeParams.size()));
+
+    if( freeParams.size() >= 1 )
+    {
+      m_alpha = freeParams[0];    // Value for exp integration.
+    }
+
+    if( freeParams.size() >= 2 )
+    {
+      m_base  = freeParams[1];    // "Base" of the algorithm.
+    }
+
+    if( freeParams.size() == 6 )
+    {
+      m_nQuadPts = freeParams[2];  // Number of Talbot quadrature rule points
+      m_sigma    = freeParams[3];
+      m_mu0      = freeParams[4];
+      m_nu       = freeParams[5];
+    }
 }
 
 
@@ -115,6 +143,15 @@ InitializeScheme(const NekDouble deltaT,
         for( unsigned int i=0; i<m_nvars; ++i )
         {
             m_u[m][i] = SingleArray( m_npoints, 0.0 );
+
+            for ( unsigned int j=0; j<m_npoints; ++j )
+            {
+                // Store the initial values as the first previous state.
+                if( m == 0 )
+                    m_u[m][i][j] = m_u0[i][j];
+                else
+                    m_u[m][i][j] = 0;
+            }
         }
     }
 
@@ -354,7 +391,7 @@ computeL( const unsigned int base,
 
 /**
  * @brief Method to compute the demarcation integers q_{m, ell}.
- *  
+ *
  *  Returns a length-(L-1) vector qml such that h*taus are interval
  *  boundaries for a partition of [0, m h]. The value of h is not
  *  needed to compute this vector.
@@ -468,7 +505,7 @@ integralClassInitialize(const unsigned int index,
                               Instance &instance) const
 {
     /**
-     * /brief 
+     * /brief
      *
      * This object stores information for performing integration over
      * an interval [a, b]. (Defined by taus in the parent calling
@@ -493,12 +530,12 @@ integralClassInitialize(const unsigned int index,
      * updated at the current time for future stashing. Only items in
      * the sandbox are time-stepped. the stage and stash locations are
      * for storage only.
-     *   
+     *
      * This is the same for all integral classes, so there's probably
      * a better way to engineer this. And technically, all that's
      * needed is the array K(instance.z) anyway.
      */
-  
+
     instance.base = m_base;
     instance.index = index;           // Index of this instance
     instance.active = false;          // Used to determine if active
@@ -577,7 +614,7 @@ integralClassInitialize(const unsigned int index,
     talbotQuadrature(m_nQuadPts, mu, m_nu, m_sigma, instance.z, instance.w);
 
     /**
-     * /brief 
+     * /brief
      *
      * With sigma == 0, the dependence of z and w on index is just a
      * multiplicative scaling factor (mu). So technically we'll only
@@ -585,7 +622,7 @@ integralClassInitialize(const unsigned int index,
      * accordingly inside each integral_class instance. Not sure if
      * this optimization is worth it. Cumulative memory savings would
      * only be about 4*N*Lmax floats.
-     
+
      * Below: precomputation for time integration of auxiliary
      * variables.  Everything below here is independent of the
      * instance index index. Therefore, we could actually just
@@ -1008,25 +1045,25 @@ advanceSandbox(const unsigned int timeStep,
 void FractionalInTimeIntegrationScheme::print(std::ostream &os) const
 {
     os << "Time Integration Scheme: " << GetFullName() << std::endl
+       << "       Alpha " << m_alpha << std::endl
        << "       Base " << m_base << std::endl
        << "       Number of instances " << m_Lmax << std::endl
        << "       Number of quadature points " << m_nQuadPts << std::endl
        << "             Talbot Parameter: sigma " << m_sigma << std::endl
        << "             Talbot Parameter: mu0 " << m_mu0 << std::endl
-       << "             Talbot Parameter: nu " << m_nu << std::endl
-       << "       Alpha " << m_alpha << std::endl;
+       << "             Talbot Parameter: nu " << m_nu << std::endl;
 }
 
 void FractionalInTimeIntegrationScheme::printFull(std::ostream &os) const
 {
     os << "Time Integration Scheme: " << GetFullName() << std::endl
+       << "       Alpha " << m_alpha << std::endl
        << "       Base " << m_base << std::endl
        << "       Number of instances " << m_Lmax << std::endl
        << "       Number of quadature points " << m_nQuadPts << std::endl
        << "             Talbot Parameter: sigma " << m_sigma << std::endl
        << "             Talbot Parameter: mu0 " << m_mu0 << std::endl
-       << "             Talbot Parameter: nu " << m_nu << std::endl
-       << "       Alpha " << m_alpha << std::endl;
+       << "             Talbot Parameter: nu " << m_nu << std::endl;
 }
 
 // Friend Operators

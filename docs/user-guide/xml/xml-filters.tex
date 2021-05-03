@@ -493,6 +493,37 @@ To enable the filter, add the following to the \inltt{FILTERS} tag:
   </FILTER>
 \end{lstlisting}
 
+\subsection{Mean values}\label{filters:MeanValue}
+
+This filter calculates time-evolution of the averaged velocity components
+over the flow domain and can be used to track flow rates.
+
+The following parameters are supported:
+
+\begin{center}
+  \begin{tabularx}{0.99\textwidth}{lllX}
+    \toprule
+    \textbf{Option name} & \textbf{Required} & \textbf{Default} & 
+    \textbf{Description} \\
+    \midrule
+    \inltt{OutputFile}      & \xmark   & \inltt{session} &
+    Prefix of the output filename to which averaged values are written.\\
+    \inltt{OutputFrequency} & \xmark   & 1 &
+    Number of timesteps after which output is written.\\
+    \bottomrule
+  \end{tabularx}
+\end{center}
+
+An example syntax is given below:
+
+\begin{lstlisting}[style=XMLStyle,gobble=2]
+  <FILTER TYPE="Mean">
+      <PARAM NAME="OutputFile">mean</PARAM>
+      <PARAM NAME="OutputFrequency">10</PARAM>
+  </FILTER>
+\end{lstlisting}
+
+
 \subsection{Modal energy}\label{filters:ModalEnergy}
 
 \begin{notebox}

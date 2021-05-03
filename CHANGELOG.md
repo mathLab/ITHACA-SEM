@@ -32,6 +32,7 @@ v5.1.0
 - Add exponential and fractional-in-time integration schemes (!1106, !1111, !1210)
 - Add nonlinear and linear system solvers (!1196)
 - Add ESDIRK3 and ESDIRK4 time integration schemes (!1196)
+- Add a filter to calculate mean value of solution fields (!1211)
 
 **FieldConvert**:
 - Add phifile module to compute shape functions for the SPM solver (!1065)
@@ -52,7 +53,6 @@ v5.1.0
   (!1065)
 - Add new filter AeroForcesSPM to compute aerodynamic forces in immersed
   boundaries (!1065)
-- Add a filter to calcualte averaged values (!1211)
 
 **CompressibleFlowSolver**
 - Added vectorisation of the Interior Penalty method (!!223)

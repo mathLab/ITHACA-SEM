@@ -84,6 +84,11 @@ v5.1.0
 - Updated third party Boost version 1.71 (!1152)
 - Updated third party OCE version to 0.18.3 (!1234)
 
+v5.0.3
+------
+**Library**
+- Fix the time dependent absorption forcing (!1254)
+
 v5.0.2
 ------
 **Library**

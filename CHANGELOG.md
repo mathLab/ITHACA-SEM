@@ -33,6 +33,7 @@ v5.1.0
 - Add nonlinear and linear system solvers (!1196)
 - Add ESDIRK3 and ESDIRK4 time integration schemes (!1196)
 - Add a filter to calculate mean value of solution fields (!1211)
+- Fix the time dependent absorption forcing (!1254)
 
 **FieldConvert**:
 - Add phifile module to compute shape functions for the SPM solver (!1065)
@@ -83,11 +84,6 @@ v5.1.0
 - Updated minimum required CMake version to 3.5.1 (!1152)
 - Updated third party Boost version 1.71 (!1152)
 - Updated third party OCE version to 0.18.3 (!1234)
-
-v5.0.3
-------
-**Library**
-- Fix the time dependent absorption forcing (!1254)
 
 v5.0.2
 ------

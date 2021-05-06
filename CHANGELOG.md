@@ -84,6 +84,11 @@ v5.1.0
 - Updated minimum required CMake version to 3.5.1 (!1152)
 - Updated third party Boost version 1.71 (!1152)
 - Updated third party OCE version to 0.18.3 (!1234)
+v5.0.3
+------
+
+**CompressibleFlowSolver**
+- Fix repeated output of u,v,w for Euler system
 
 v5.0.2
 ------

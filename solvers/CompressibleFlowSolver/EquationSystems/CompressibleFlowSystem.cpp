@@ -954,26 +954,6 @@ namespace Nektar
             fieldcoeffs.push_back(mFwd);
             fieldcoeffs.push_back(sensFwd);
 
-            Array<OneD, NekDouble> uFwd(nCoeffs);
-            m_fields[0]->FwdTrans_IterPerExp(velocities[0],uFwd);
-            variables.push_back  ("u");
-            fieldcoeffs.push_back(uFwd);
-
-            if(m_spacedim>1)
-            {
-                Array<OneD, NekDouble> vFwd(nCoeffs);
-                variables.push_back  ("v");
-                m_fields[0]->FwdTrans_IterPerExp(velocities[1],vFwd);
-                fieldcoeffs.push_back(vFwd);
-            }
-            if(m_spacedim>2)
-            {
-                Array<OneD, NekDouble> wFwd(nCoeffs);
-                variables.push_back  ("w");
-                m_fields[0]->FwdTrans_IterPerExp(velocities[2],wFwd);
-                fieldcoeffs.push_back(wFwd);
-            }
-
             if (m_artificialDiffusion)
             {
                 // Get min h/p

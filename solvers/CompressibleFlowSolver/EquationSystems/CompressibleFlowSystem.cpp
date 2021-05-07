@@ -909,13 +909,6 @@ namespace Nektar
             m_varConv->GetSoundSpeed(tmp, soundspeed);
             m_varConv->GetMach      (tmp, soundspeed, mach);
 
-            Array<OneD, Array<OneD, NekDouble>> velocities(m_spacedim);
-            for (int i=0;i<m_spacedim;i++)
-            {
-                velocities[i] = Array<OneD, NekDouble> (nPhys);
-            }
-            m_varConv->GetVelocityVector(tmp,velocities);
-
             int sensorOffset;
             m_session->LoadParameter ("SensorOffset", sensorOffset, 1);
             m_varConv->GetSensor (m_fields[0], tmp, sensor, SensorKappa,
@@ -953,26 +946,6 @@ namespace Nektar
             fieldcoeffs.push_back(aFwd);
             fieldcoeffs.push_back(mFwd);
             fieldcoeffs.push_back(sensFwd);
-
-            Array<OneD, NekDouble> uFwd(nCoeffs);
-            m_fields[0]->FwdTrans_IterPerExp(velocities[0],uFwd);
-            variables.push_back  ("u");
-            fieldcoeffs.push_back(uFwd);
-
-            if(m_spacedim>1)
-            {
-                Array<OneD, NekDouble> vFwd(nCoeffs);
-                variables.push_back  ("v");
-                m_fields[0]->FwdTrans_IterPerExp(velocities[1],vFwd);
-                fieldcoeffs.push_back(vFwd);
-            }
-            if(m_spacedim>2)
-            {
-                Array<OneD, NekDouble> wFwd(nCoeffs);
-                variables.push_back  ("w");
-                m_fields[0]->FwdTrans_IterPerExp(velocities[2],wFwd);
-                fieldcoeffs.push_back(wFwd);
-            }
 
             if (m_artificialDiffusion)
             {

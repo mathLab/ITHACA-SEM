@@ -909,13 +909,6 @@ namespace Nektar
             m_varConv->GetSoundSpeed(tmp, soundspeed);
             m_varConv->GetMach      (tmp, soundspeed, mach);
 
-            Array<OneD, Array<OneD, NekDouble>> velocities(m_spacedim);
-            for (int i=0;i<m_spacedim;i++)
-            {
-                velocities[i] = Array<OneD, NekDouble> (nPhys);
-            }
-            m_varConv->GetVelocityVector(tmp,velocities);
-
             int sensorOffset;
             m_session->LoadParameter ("SensorOffset", sensorOffset, 1);
             m_varConv->GetSensor (m_fields[0], tmp, sensor, SensorKappa,

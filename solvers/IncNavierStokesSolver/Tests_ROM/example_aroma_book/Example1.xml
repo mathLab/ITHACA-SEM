@@ -27,7 +27,7 @@
         </SOLVERINFO>
 
         <PARAMETERS>
-            <P> Kinvis = 10    </P>
+            <P> Kinvis = 1    </P>
             <P> load_snapshot_data_from_files = 0       </P>
             <P> number_of_snapshots = 7       </P>
             <P> param0 = 0.1       </P>
@@ -39,8 +39,8 @@
             <P> param6 = 0.05       </P>
             <P> type_para1 = 0       </P>    <!-- 0=kin_visc, 1=geo   -->
             <P> POD_tolerance = .9999       </P>
-	    <P> compute_smaller_model_errs = 1      </P>
-	    <P> debug_mode = 0      </P>
+		    <P> compute_smaller_model_errs = 1      </P>
+		    <P> debug_mode = 0      </P>
         </PARAMETERS>
 
         <VARIABLES>

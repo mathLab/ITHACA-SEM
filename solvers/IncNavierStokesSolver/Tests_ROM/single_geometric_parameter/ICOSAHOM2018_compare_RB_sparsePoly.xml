@@ -104,7 +104,7 @@
             <P> VV_param37_dir0 = 1.8214950665362943      </P> 
             <P> VV_param38_dir0 = 2.0786276397266854      </P> 
             <P> VV_param39_dir0 = 2.1466605463029826      </P> 
-	    <P> use_fine_grid_VV = 1       </P>
+		    <P> use_fine_grid_VV = 1       </P>
      	    <P> use_fine_grid_VV_and_load_ref = 1       </P>
      	    <P> use_fine_grid_VV_random = 1       </P>
             <P> fine_grid_dir0 = 40       </P>

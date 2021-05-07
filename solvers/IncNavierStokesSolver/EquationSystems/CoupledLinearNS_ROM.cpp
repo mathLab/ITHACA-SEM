@@ -4029,12 +4029,15 @@ namespace Nektar
 		Eigen::VectorXd diff_y_proj = curr_xy_reproj.col(1) - snap_y;
 		cout << "relative euclidean projection error norm in x coords: " << diff_x_proj.norm() / snap_x.norm() << " of snapshot number " << iter_index << endl;
 		cout << "relative euclidean projection error norm in y coords: " << diff_y_proj.norm() / snap_y.norm() << " of snapshot number " << iter_index << endl;
+
+		cout << "relative euclidean error norm total " << sqrt( diff_x_RB_solve.norm() / snap_x.norm() * diff_x_RB_solve.norm() / snap_x.norm() + diff_y_RB_solve.norm() / snap_y.norm() * diff_y_RB_solve.norm() / snap_y.norm() ) << endl;
+
 	}
 
 	if (compute_smaller_model_errs)
 	{
 		// repeat the parameter sweep with decreasing RB sizes up to 1, but in a separate function for readability
-		for (int i=1; i < RBsize; ++i)
+		for (int i=0; i < RBsize; ++i)
 		{
 			online_snapshot_check_with_smaller_basis(i);
 		}
@@ -4217,6 +4220,8 @@ namespace Nektar
 
 	Eigen::MatrixXd mat_compare = Eigen::MatrixXd::Zero(f_bnd_dbc_full_size.rows(), 3);  // is of size M_truth_size
 	Eigen::VectorXd collected_relative_euclidean_errors = Eigen::VectorXd::Zero(Nmax);
+	Eigen::VectorXd collected_relative_L2_errors = Eigen::VectorXd::Zero(Nmax);
+	Eigen::VectorXd collected_relative_Linf_errors = Eigen::VectorXd::Zero(Nmax);
 	// start sweeping 
 	for (int iter_index = 0; iter_index < Nmax; ++iter_index)
 	{
@@ -4440,6 +4445,12 @@ namespace Nektar
 		cout << "relative euclidean projection error norm in x coords: " << diff_x_proj.norm() / snap_x.norm() << " of snapshot number " << iter_index << endl;
 		cout << "relative euclidean projection error norm in y coords: " << diff_y_proj.norm() / snap_y.norm() << " of snapshot number " << iter_index << endl;
 
+		double relative_L2_error = L2norm_abs_error_ITHACA(curr_PhysBaseVec_x, curr_PhysBaseVec_y, snapshot_x_collection[current_index], snapshot_y_collection[current_index]) / L2norm_ITHACA(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
+		double relative_Linf_error = Linfnorm_abs_error_ITHACA(curr_PhysBaseVec_x, curr_PhysBaseVec_y, snapshot_x_collection[current_index], snapshot_y_collection[current_index]) / Linfnorm_ITHACA(snapshot_x_collection[current_index], snapshot_y_collection[current_index]);
+
+		collected_relative_L2_errors(iter_index) = relative_L2_error;
+		collected_relative_Linf_errors(iter_index) = relative_Linf_error;
+
 	} //for (int iter_index = 0; iter_index < Nmax; ++iter_index)
 
 	std::stringstream sstm;
@@ -4456,6 +4467,42 @@ namespace Nektar
 		myfile.close();
 	}
 	else cout << "Unable to open file"; 
+
+
+	std::stringstream sstmL2;
+	sstmL2 << "ROM_cluster_L2reduc" << reduction_int << ".txt";
+	std::string ROM_txtL2 = sstmL2.str();
+	const char* outnameL2 = ROM_txtL2.c_str();
+	ofstream myfileL2 (outnameL2);
+	if (myfileL2.is_open())
+	{
+		for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+		{
+			myfileL2 << std::setprecision(17) << collected_relative_L2_errors(iter_index) << "\n";
+		}
+		myfileL2.close();
+	}
+	else cout << "Unable to open file"; 
+
+
+
+	std::stringstream sstmLinf;
+	sstmLinf << "ROM_cluster_Linfreduc" << reduction_int << ".txt";
+	std::string ROM_txtLinf = sstmLinf.str();
+	const char* outnameLinf = ROM_txtLinf.c_str();
+	ofstream myfileLinf (outnameLinf);
+	if (myfileLinf.is_open())
+	{
+		for (int iter_index = 0; iter_index < Nmax; ++iter_index)
+		{
+			myfileLinf << std::setprecision(17) << collected_relative_Linf_errors(iter_index) << "\n";
+		}
+		myfileLinf.close();
+	}
+	else cout << "Unable to open file"; 
+
+
+
 
 	}
 

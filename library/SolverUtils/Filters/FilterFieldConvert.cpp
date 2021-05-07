@@ -300,8 +300,8 @@ void FilterFieldConvert::v_Initialise(
             m_fieldMetaData["InitialTime"] = fieldMetaData["InitialTime"];
         }
 
-	// Load information for outputIndex
-	if (fieldMetaData.count("FilterFileNum"))
+        // Load information for outputIndex
+        if (fieldMetaData.count("FilterFileNum"))
         {
             m_outputIndex = atoi(fieldMetaData["FilterFileNum"].c_str());
         }
@@ -406,9 +406,9 @@ void FilterFieldConvert::v_Update(
     if (m_index % m_outputFrequency == 0)
     {
         m_fieldMetaData["FinalTime"] = boost::lexical_cast<std::string>(time);
-	v_PrepareOutput(pFields, time);
+        v_PrepareOutput(pFields, time);
         m_fieldMetaData["FilterFileNum"] =
-		boost::lexical_cast<std::string>(++m_outputIndex);
+               boost::lexical_cast<std::string>(++m_outputIndex);
         OutputField(pFields, m_outputIndex);
     }
 }

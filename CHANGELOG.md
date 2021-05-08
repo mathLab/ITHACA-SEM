@@ -33,6 +33,7 @@ v5.1.0
 - Add nonlinear and linear system solvers (!1196)
 - Add ESDIRK3 and ESDIRK4 time integration schemes (!1196)
 - Add a filter to calculate mean value of solution fields (!1211)
+- Fix the time dependent absorption forcing (!1254)
 
 **FieldConvert**:
 - Add phifile module to compute shape functions for the SPM solver (!1065)
@@ -86,11 +87,9 @@ v5.1.0
 
 v5.0.3
 ------
-**Library**
-- Fix the time dependent absorption forcing (!1254)
-
 **CompressibleFlowSolver**
 - Fix repeated output of u,v,w for Euler system
+
 **FieldConvert**
 - Fix the Filters output files numbering (!1251)
 

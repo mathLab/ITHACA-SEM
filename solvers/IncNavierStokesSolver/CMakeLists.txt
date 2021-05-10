@@ -10,6 +10,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_SOLVER_EXECUTABLE(IncNavierStokesSolver
         SOURCES ./IncNavierStokesSolver.cpp
         LIBRARY_SOURCES
+        ./EquationSystems/VelocityCorrectionScheme_iROM.cpp
         ./EquationSystems/CoupledLinearNS_ROM.cpp
         ./EquationSystems/CoupledLinearNS.cpp
         ./EquationSystems/CoupledLocalToGlobalC0ContMap.cpp

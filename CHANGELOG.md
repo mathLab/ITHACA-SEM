@@ -60,6 +60,7 @@ v5.1.0
 - Added a simplified implicit solver with naive preconditioner (!!1196)
 - Add BRJ preconditioner to the implicit solver (!!1212)
 - Fix implicit solver for Euler system (!!1252)
+- Updated WallAdiabatic/WallViscous BC to accept time-dependent perturbations on the ghost state (!1248)
 
 **PulseWaveSolver**
 - Added viscoelasticity (!1138)

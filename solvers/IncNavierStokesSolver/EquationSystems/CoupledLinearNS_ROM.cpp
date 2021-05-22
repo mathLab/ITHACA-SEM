@@ -1845,7 +1845,7 @@ namespace Nektar
 		{
 //			cout << "current j: " << j << " current i: " << i << endl;
 			double lith = lagrange_interp_tensorised_hierarchical(general_param_vector[index_all], index_set[j]);
-			cout << "lith " << lith << endl;
+//			cout << "lith " << lith << endl;
 			for(int k=0; k<snapshot_x_collection[0].size(); ++k)
 			{
 				sparse_poly_coefficients_x[i][k] -= sparse_poly_coefficients_x[j][k] * lith;

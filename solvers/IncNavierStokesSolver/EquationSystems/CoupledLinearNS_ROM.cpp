@@ -1581,7 +1581,7 @@ namespace Nektar
 	bool snapshot_computation_plot_rel_errors = 1;
 	double rel_err = 1.0;
 	ongoing_snapshot_computation = 1;
-	while (rel_err > 1e-11)
+	while (rel_err > 1e-10)
 	{
 		Set_m_kinvis( parameter );
 		DoInitialiseAdv(init_snapshot_x, init_snapshot_y); // replaces .DoInitialise();
@@ -2363,6 +2363,17 @@ namespace Nektar
 		collect_f_bnd.col(i) = trafo_f_bnd;
 		collect_f_p.col(i) = trafo_f_p;
 		collect_f_int.col(i) = trafo_f_int;
+		
+		
+               // generate the correct string
+               std::stringstream sstm;
+               sstm << "Conv_Oseen_param" << i << ".fld";
+               std::string filename = sstm.str();
+               write_curr_field(filename);
+
+
+
+		
 	}    	
     	
     	Eigen::MatrixXd transformed_snapshots( curr_f_bnd.size()+curr_f_p.size()+curr_f_int.size() , Nmax );

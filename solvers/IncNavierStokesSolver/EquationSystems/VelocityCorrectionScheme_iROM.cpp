@@ -588,6 +588,212 @@ namespace Nektar
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
                                   m_fields[i]->UpdatePhys());
         }
+
+        
+
+	if (m_session->DefinesParameter("ROM_stage")) 
+	{
+		ROM_stage = m_session->GetParameter("ROM_stage");	
+	}
+	else
+	{
+		ROM_stage = 0;
+	}
+	cout << "current ROM_stage " << ROM_stage << endl;        
+        
+
+
+	if (ROM_stage)
+	{
+	    // Set up wrapper to all fields data storage.
+            // should limit here a bit: fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps + 1);
+            fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps + 1);  
+            global_fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps + 1);  
+	
+	    //      Array<OneD, Array<OneD, NekDouble> > last_added_field(m_nConvectiveFields); 
+            last_added_field = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields); 
+                     
+            cout << "sizeof(fields_time_trajectory) " << sizeof(fields_time_trajectory) << endl;
+            cout << "sizeof(NekDouble) " << sizeof(NekDouble) << endl; // this is in bytes
+            // estimate how much memory this takes
+            long mem_req_all = (m_steps + 1) * m_nConvectiveFields * m_fields[m_intVariables[0]]->GetNpoints() * sizeof(NekDouble);
+            cout << "mem_req_all in bytes: " << mem_req_all << endl;
+            long mem_req_all_kB = mem_req_all / 1024;
+            int mem_req_all_MB = mem_req_all_kB / 1024;
+            int mem_req_all_GB = mem_req_all_MB / 1024;
+            cout << "mem_req_all_kB in bytes: " << mem_req_all_kB << endl;
+            cout << "mem_req_all_MB in bytes: " << mem_req_all_MB << endl;
+            cout << "mem_req_all_GB in bytes: " << mem_req_all_GB << endl;
+            
+            
+            cout << "m_fields[m_intVariables[0]]->GetNpoints() " << m_fields[m_intVariables[0]]->GetNpoints() << endl;
+            cout << "m_fields[m_intVariables[0]]->GetNcoeffs() " << m_fields[m_intVariables[0]]->GetNcoeffs() << endl;
+            // find the no. of global dofs
+            Array<OneD, NekDouble> global_field(m_fields[m_intVariables[0]]->GetNcoeffs());
+            for (int i = 0; i < m_fields[m_intVariables[0]]->GetNcoeffs(); ++i)
+            {
+                global_field[i] = 1234.5678;
+            }
+            m_fields[m_intVariables[0]]->LocalToGlobal(m_fields[0]->GetCoeffs(), global_field);
+            globalNcoeff = 0;
+            for (int i = 0; i < m_fields[m_intVariables[0]]->GetNcoeffs(); ++i)
+            {
+                if (global_field[i] == 1234.5678)
+                {
+                    globalNcoeff = i-1;
+                    break;
+                }
+            }
+            cout << "globalNcoeff at VelocityCorrectionSchemeROM::v_DoInitialise " << globalNcoeff << endl;
+            
+//            for (int i = 0; i < m_steps + 1; ++i)
+            for (int i = 0; i < m_steps + 1; ++i)
+            {
+            	fields_time_trajectory[i] = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields);
+ //           	global_fields_time_trajectory[i] = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields);
+            	for (int j = 0; j < m_nConvectiveFields; ++j)
+            	{
+            	    fields_time_trajectory[i][j] = Array<OneD, NekDouble> (m_fields[m_intVariables[j]]->GetNpoints());
+            	    last_added_field[j] = Array<OneD, NekDouble> (m_fields[m_intVariables[j]]->GetNpoints());
+            	    for (int k = 0; k < m_fields[m_intVariables[j]]->GetNpoints(); ++k)
+            	    {
+            	        fields_time_trajectory[i][j][k] = 0.0;
+            	        last_added_field[j][k] = 0.0;
+            	    }
+//            	    global_fields_time_trajectory[i][j] = Array<OneD, NekDouble> (globalNcoeff);
+            	    for (int k = 0; k < globalNcoeff; ++k)
+            	    {
+//            	        global_fields_time_trajectory[i][j][k] = 0.0;
+            	       
+            	    }
+            	    
+            	    
+            	}
+            }
+            cout << "sizeof(fields_time_trajectory) " << sizeof(fields_time_trajectory) << endl;
+            no_of_added_ones = 0;
+	    step = 0;
+	}
+		if (ROM_stage == 2) // load the POD basis and collect reduced trajectory
+		{
+
+		//		    std::string RBsize_x = "RBsize_x.txt";
+		    std::string RBsize_x = "../dim_x.txt";
+			const char* RBsize_x_t = RBsize_x.c_str();
+			ifstream myfile_RBsize_x_t (RBsize_x_t);
+			if (myfile_RBsize_x_t.is_open())
+			{
+				std::string line;
+				while ( getline( myfile_RBsize_x_t, line ) ) 
+				{
+					std::istringstream is( line );
+					std::vector<int> nn = std::vector<int>( std::istream_iterator<int>(is), std::istream_iterator<int>() );
+					ROM_size_x = nn[0];
+				}
+			}
+			else cout << "Unable to open file"; 
+
+			cout << "ROM_size_x loaded as " << ROM_size_x << endl;
+
+			POD_modes_x = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_x);
+
+
+//		    std::string VCS_fields_TT_pod_x_txt = "VCS_fields_TT_pod_x.txt";
+		    std::string VCS_fields_TT_pod_x_txt = "../all_x.txt";
+			const char* VCS_fields_TT_pod_x_txt_t = VCS_fields_TT_pod_x_txt.c_str();
+			ifstream myfile_VCS_fields_TT_pod_x_txt_t (VCS_fields_TT_pod_x_txt_t);
+//			std::vector< std::vector<int> > all_integers;
+			if (myfile_VCS_fields_TT_pod_x_txt_t.is_open())
+			{
+
+				std::string line;
+				int counter = 0;
+				while ( getline( myfile_VCS_fields_TT_pod_x_txt_t, line ) ) 
+				{
+//				      cout << line << endl;
+			        std::istringstream is( line );
+					std::vector<double> nn = std::vector<double>( std::istream_iterator<double>(is), std::istream_iterator<double>() );
+					cout << "nn.size() "  << nn.size() << endl;
+					for (int i = 0; i < nn.size(); ++i)
+					{
+						POD_modes_x(i, counter) = nn[i];
+					}
+					++counter;
+				}
+			}
+			else cout << "Unable to open file"; 
+
+//		    std::string RBsize_y = "RBsize_y.txt";
+		    std::string RBsize_y = "../dim_y.txt";
+			const char* RBsize_y_t = RBsize_y.c_str();
+			ifstream myfile_RBsize_y_t (RBsize_y_t);
+			if (myfile_RBsize_y_t.is_open())
+			{
+				std::string line;
+				while ( getline( myfile_RBsize_y_t, line ) ) 
+				{
+					std::istringstream is( line );
+					std::vector<int> nn = std::vector<int>( std::istream_iterator<int>(is), std::istream_iterator<int>() );
+					ROM_size_y = nn[0];
+				}
+			}
+			else cout << "Unable to open file"; 
+
+			cout << "ROM_size_y loaded as " << ROM_size_y << endl;
+
+			POD_modes_y = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_y);
+
+//		    std::string VCS_fields_TT_pod_y_txt = "VCS_fields_TT_pod_y.txt";
+		    std::string VCS_fields_TT_pod_y_txt = "../all_y.txt";
+			const char* VCS_fields_TT_pod_y_txt_t = VCS_fields_TT_pod_y_txt.c_str();
+			ifstream myfile_VCS_fields_TT_pod_y_txt_t (VCS_fields_TT_pod_y_txt_t);
+//			std::vector< std::vector<int> > all_integers;
+			if (myfile_VCS_fields_TT_pod_y_txt_t.is_open())
+			{
+
+				std::string line;
+				int counter = 0;
+				while ( getline( myfile_VCS_fields_TT_pod_y_txt_t, line ) ) 
+				{
+//				      cout << line << endl;
+			        std::istringstream is( line );
+					std::vector<double> nn = std::vector<double>( std::istream_iterator<double>(is), std::istream_iterator<double>() );
+			//		cout << "nn.size() "  << nn.size() << endl;
+					for (int i = 0; i < nn.size(); ++i)
+					{
+						POD_modes_y(i, counter) = nn[i];
+					}
+					++counter;
+				}
+			}
+			else cout << "Unable to open file"; 
+
+            ROM_fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps + 1);  
+            for (int i = 0; i < m_steps + 1; ++i)
+            {
+            	ROM_fields_time_trajectory[i] = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields);
+           	    ROM_fields_time_trajectory[i][0] = Array<OneD, NekDouble> (ROM_size_x);
+           	    for (int k = 0; k < ROM_size_x; ++k)
+           	    {
+           	        ROM_fields_time_trajectory[i][0][k] = 0.0;
+				}
+           	    ROM_fields_time_trajectory[i][1] = Array<OneD, NekDouble> (ROM_size_y);
+           	    for (int k = 0; k < ROM_size_y; ++k)
+           	    {
+           	        ROM_fields_time_trajectory[i][1][k] = 0.0;
+				}
+			}
+
+
+		}
+
+	// would do also here an offline-online splitting
+	if (!ROM_started)
+	{
+		ROM_started = 1;
+		// do offline
+		// do online
+	}	        
     }
 
 
@@ -647,6 +853,12 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &outarray,
         const NekDouble time)
     {
+    
+        LibUtilities::Timer         my_timer_explicit;
+        my_timer_explicit.Start();
+
+
+
         EvaluateAdvectionTerms(inarray, outarray);
 
         // Smooth advection
@@ -666,6 +878,12 @@ namespace Nektar
 
         // Calculate High-Order pressure boundary conditions
         m_extrapolation->EvaluatePressureBCs(inarray,outarray,m_kinvis);
+
+        my_timer_explicit.Stop();
+	cout << "my_timer_explicit Elapsed()  " << my_timer_explicit.Elapsed().count() << endl;
+
+
+
     }
 
     /**
@@ -692,14 +910,23 @@ namespace Nektar
         // Set up forcing term for pressure Poisson equation
         SetUpPressureForcing(inarray, m_F, aii_Dt);
 
+        LibUtilities::Timer         my_timer_solve_press;
+        my_timer_solve_press.Start();
         // Solve Pressure System
         SolvePressure (m_F[0]);
+        my_timer_solve_press.Stop();
+	cout << "my_timer_solve_press Elapsed() in implicit part " << my_timer_solve_press.Elapsed().count() << endl;
 
         // Set up forcing term for Helmholtz problems
         SetUpViscousForcing(inarray, m_F, aii_Dt);
 
+        LibUtilities::Timer         my_timer_solve_velocity;
+        my_timer_solve_velocity.Start();
         // Solve velocity system
         SolveViscous( m_F, outarray, aii_Dt);
+        my_timer_solve_velocity.Stop();
+	cout << "my_timer_solve_velocity Elapsed() in implicit part " << my_timer_solve_velocity.Elapsed().count() << endl;
+
 
         // Apply flowrate correction
         if (m_flowrate > 0.0 && m_greenFlux != numeric_limits<NekDouble>::max())

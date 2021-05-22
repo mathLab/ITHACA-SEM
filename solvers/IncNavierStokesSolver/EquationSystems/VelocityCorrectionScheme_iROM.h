@@ -36,6 +36,7 @@
 #define NEKTAR_SOLVERS_VelocityCorrectionScheme_iROM_H
 
 #include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
+#include "ThirdParty/Eigen/Dense"
 
 namespace Nektar
 {
@@ -228,6 +229,23 @@ namespace Nektar
                               MultiRegions::VarFactorsMap &varFactorsMap);
     private:
         
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fields_time_trajectory;  
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > global_fields_time_trajectory;  
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > ROM_fields_time_trajectory;  
+    Array<OneD, Array<OneD, NekDouble> > last_added_field; 
+	Eigen::MatrixXd POD_modes_x;
+	Eigen::MatrixXd POD_modes_y;
+    int globalNcoeff;
+    int step;
+    int no_of_added_ones;
+    bool ROM_started;
+    int ROM_stage;
+    int ROM_size_x;
+    int ROM_size_y;
+
+
+
+
     };
 
     typedef std::shared_ptr<VelocityCorrectionScheme_iROM>

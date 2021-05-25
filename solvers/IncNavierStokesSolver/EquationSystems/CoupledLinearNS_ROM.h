@@ -462,6 +462,8 @@ namespace Nektar
     
     void compute_sparse_poly_approx();
     void compute_sparse_poly_approx_2D();
+	void compute_sparse_poly_approx_2D_lower_dim(int approx_dim, double &max_rel_L2, double &mean_rel_L2);
+
             
 //	int get_curr_elem_pos(int curr_elem);
 

@@ -100,6 +100,8 @@ ConstDoubleArray &TimeIntegrationSchemeGLM::TimeIntegrate(
 {
     int nPhases = m_integration_phases.size();
 
+	std::cout << "at ConstDoubleArray &TimeIntegrationSchemeGLM::TimeIntegrate(" << std::endl;
+
     TimeIntegrationAlgorithmGLMSharedPtr &algorithm =
         m_integration_phases[std::min(timestep, nPhases - 1)];
 

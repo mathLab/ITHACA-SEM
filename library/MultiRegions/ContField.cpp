@@ -522,6 +522,8 @@ namespace Nektar
             int NumDirBcs   = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
 
+	    cout << " at ContField::GlobalSolve " << endl;
+
             // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE
             //         IN THE SOLUTION ARRAY
             v_ImposeDirichletConditions(inout);

@@ -111,11 +111,6 @@ TimeIntegrate(const NekDouble deltaT,
     // ASSERTL1( !(m_parent->GetIntegrationSchemeType() == eImplicit), "Fully
     // Implicit integration scheme cannot be handled by this routine." );
 
-	std::cout << "at ConstDoubleArray &TimeIntegrationAlgorithmGLM::TimeIntegrate(const NekDouble deltaT, TimeIntegrationSolutionGLMSharedPtr &solvector, const TimeIntegrationSchemeOperators &op) " << std::endl;
-
-
-
-
     int nvar    = solvector->GetFirstDim();
     int npoints = solvector->GetSecondDim();
 

@@ -123,7 +123,7 @@ void DriverArnoldi::v_InitObject(ostream &out)
             NEKERROR(ErrorUtil::efatal, "Imaginary shift only supported with HOMOGENEOUS expansion and ModeType set to SingleMode");
         }
     }
-
+    MaskInit();
 }
 
 void DriverArnoldi::ArnoldiSummary(std::ostream &out)
@@ -328,6 +328,92 @@ void DriverArnoldi::WriteEvs(
             evlout << setw(12) << resid;
         }
         evlout << endl;
+    }
+}
+
+void DriverArnoldi::GetUnmaskFunction(std::vector<std::vector<LibUtilities::EquationSharedPtr> > & unmaskfun)
+{
+    string Unmask0("Unmask0");
+    string C0("C0");
+    for(size_t i=0; 1; ++i)
+    {
+        Unmask0[Unmask0.size()-1] = '0' + i;
+        if(!m_session->DefinesFunction(Unmask0))
+        {
+            break;
+        }
+        for(size_t j=0; 1; ++j)
+        {
+            C0[C0.size()-1] = '0' + j;
+            if(!m_session->DefinesFunction(Unmask0, C0))
+            {
+                break;
+            }
+            if(j==0)
+            {
+                unmaskfun.push_back(std::vector<LibUtilities::EquationSharedPtr>());
+            }
+            unmaskfun[unmaskfun.size()-1].push_back(m_session->GetFunction(Unmask0, C0));
+        }
+    }
+}
+
+void DriverArnoldi::MaskInit()
+{
+    std::vector<std::vector<LibUtilities::EquationSharedPtr> > unmaskfun;
+    GetUnmaskFunction(unmaskfun);
+    if(unmaskfun.size()==0)
+    {
+        m_useMask = false;
+        return;
+    }
+    m_useMask = true;
+    MultiRegions::ExpListSharedPtr field = m_equ[0]->UpdateFields()[0];
+    int ncoef   = field->GetNcoeffs();
+    int nphys   = field->GetNpoints();
+    m_maskCoeffs = Array<OneD, double>(ncoef*m_nfields, 1.);
+    m_maskPhys   = Array<OneD, double>(nphys*m_nfields, 1.);
+    for(size_t i=0; i<field->GetExpSize(); ++i)
+    {
+        LocalRegions::ExpansionSharedPtr exp  = field->GetExp(i);
+        SpatialDomains::GeometrySharedPtr geom = exp->GetGeom();
+        int nv = geom->GetNumVerts();
+        NekDouble gc[3] = {0.,0.,0.};
+        NekDouble gct[3] = {0.,0.,0.};
+        for(size_t j=0; j<nv; ++j)
+        {
+            SpatialDomains::PointGeomSharedPtr vertex = geom->GetVertex(j);
+            vertex->GetCoords(gct[0],gct[1],gct[2]);
+            gc[0] += gct[0]/NekDouble(nv);
+            gc[1] += gct[1]/NekDouble(nv);
+            gc[2] += gct[2]/NekDouble(nv);
+        }
+        int unmask = 1;
+        for(size_t m=0; m<unmaskfun.size(); ++m)
+        {
+            unmask = 0;
+            for(size_t n=0; n<unmaskfun[m].size(); ++n)
+            {
+                if(unmaskfun[m][n]->Evaluate(gc[0], gc[1], gc[2])<=0.)
+                {
+                    unmask = 0;
+                    break;
+                }
+                else
+                {
+                    unmask = 1;
+                }
+            }
+            if(unmask==1) break;
+        }
+        if(unmask==0)
+        {
+            for(int j=0; j<m_nfields; ++j)
+            {
+                Vmath::Fill(exp->GetNcoeffs()  , 0., &m_maskCoeffs[field->GetCoeff_Offset(i) + j*ncoef], 1);
+                Vmath::Fill(exp->GetTotPoints(), 0., &m_maskPhys[field->GetPhys_Offset(i)  + j*nphys], 1);
+            }
+        }
     }
 }
 

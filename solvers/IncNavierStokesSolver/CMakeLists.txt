@@ -40,6 +40,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
 
     ADD_NEKTAR_TEST(Kovasznay_Flow_3modes)
     ADD_NEKTAR_TEST(ChanStability)
+    ADD_NEKTAR_TEST(ChanStabilityMaskFunc)
     #ADD_NEKTAR_TEST(ChanStability_adj)
     #ADD_NEKTAR_TEST(ChanStability_Coupled_3D)
     ADD_NEKTAR_TEST(2DFlow_lineforcing_bcfromfile)

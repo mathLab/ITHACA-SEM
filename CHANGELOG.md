@@ -54,6 +54,7 @@ v5.1.0
   (!1065)
 - Add new filter AeroForcesSPM to compute aerodynamic forces in immersed
   boundaries (!1065)
+- Add mask function and more baseflow parameters for the linear stability problem (!1201)
 
 **CompressibleFlowSolver**
 - Added vectorisation of the Interior Penalty method (!!223)

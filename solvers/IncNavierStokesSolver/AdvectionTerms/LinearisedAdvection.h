@@ -78,9 +78,13 @@ protected:
     Array<OneD, Array<OneD, NekDouble> >            m_gradBase;
 
     /// number of slices
+    int                                             m_start;
+    int                                             m_skip;
     int                                             m_slices;
     /// period length
     NekDouble                                       m_period;
+    int                                             m_isperiodic;
+    int                                             m_interporder;
     /// interpolation vector
     Array<OneD, Array<OneD, NekDouble> >            m_interp;
     /// auxiliary variables

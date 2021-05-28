@@ -172,14 +172,20 @@ void LinearisedAdvection::v_InitObject(
 
 
     //Periodic base flows
-    if(m_session->DefinesParameter("N_slices"))
+    if (m_session->DefinesParameter("N_slices"))
     {
         m_session->LoadParameter("N_slices",m_slices);
-        if(m_slices>1)
+        if (m_slices > 1)
         {
             ASSERTL0(m_session->GetFunctionType("BaseFlow", 0)
                 == LibUtilities::eFunctionTypeFile,
                 "Base flow should be a sequence of files.");
+            m_session->LoadParameter("BaseFlow_interporder", m_interporder, 0);
+            ASSERTL0(m_interporder <= m_slices,
+                "BaseFlow_interporder should be smaller than or equal to N_slices.");
+            m_isperiodic = m_interporder < 2;
+            m_session->LoadParameter("N_start", m_start, 0);
+            m_session->LoadParameter("N_skip", m_skip, 1);
             DFT(file,pFields,m_slices);
         }
         else
@@ -227,7 +233,7 @@ void LinearisedAdvection::v_InitObject(
         UpdateGradBase(i, pFields[i]);
     }
 
-    if(m_session->DefinesParameter("period"))
+    if (m_session->DefinesParameter("period"))
     {
         m_period=m_session->GetParameter("period");
     }
@@ -235,7 +241,23 @@ void LinearisedAdvection::v_InitObject(
     {
         m_period=(m_session->GetParameter("TimeStep")*m_slices)/(m_slices-1.);
     }
-
+    if (m_session->GetComm()->GetRank() == 0)
+    {
+        cout << "baseflow info : interpolation order " << m_interporder
+             << ", period " << m_period << ", periodicity ";
+        if (m_isperiodic)
+        {
+            cout << "yes\n";
+        }
+        else
+        {
+            cout << "no\n";
+        }
+        cout << "baseflow info : files from " << m_start << " to "
+             << (m_start + (m_slices-1)*m_skip)
+             << " (skip " << m_skip  << ") with " << (m_slices -  (m_interporder > 1))
+             << " time intervals" << endl;
+    }
 }
 
 LinearisedAdvection::~LinearisedAdvection()
@@ -476,7 +498,7 @@ void LinearisedAdvection::ImportFldBase(
     }
 
     // If time-periodic, put loaded data into the slice storage.
-    if(m_session->DefinesParameter("N_slices"))
+    if (m_slices > 1)
     {
         for(int i = 0; i < nSessionConvVar; ++i)
         {
@@ -494,21 +516,66 @@ void LinearisedAdvection::UpdateBase(
         const NekDouble                     m_period)
 {
     int npoints     = m_baseflow[0].size();
-    NekDouble BetaT = 2*M_PI*fmod (m_time, m_period) / m_period;
-    NekDouble phase;
-    Array<OneD, NekDouble> auxiliary(npoints);
-
-    Vmath::Vcopy(npoints,&inarray[0],1,&outarray[0],1);
-    Vmath::Svtvp(npoints, cos(0.5*m_slices*BetaT),&inarray[npoints],1,&outarray[0],1,&outarray[0],1);
-
-    for (int i = 2; i < m_slices; i += 2)
+    if (m_isperiodic)
     {
-        phase = (i>>1) * BetaT;
+        NekDouble BetaT = 2*M_PI*fmod (m_time, m_period) / m_period;
+        NekDouble phase;
+        Array<OneD, NekDouble> auxiliary(npoints);
 
-        Vmath::Svtvp(npoints, cos(phase),&inarray[i*npoints],1,&outarray[0],1,&outarray[0],1);
-        Vmath::Svtvp(npoints, -sin(phase), &inarray[(i+1)*npoints], 1, &outarray[0], 1,&outarray[0],1);
+        Vmath::Vcopy(npoints,&inarray[0],1,&outarray[0],1);
+        Vmath::Svtvp(npoints, cos(0.5*m_slices*BetaT),&inarray[npoints],1,&outarray[0],1,&outarray[0],1);
+
+        for (int i = 2; i < m_slices; i += 2)
+        {
+            phase = (i>>1) * BetaT;
+
+            Vmath::Svtvp(npoints, cos(phase),&inarray[i*npoints],1,&outarray[0],1,&outarray[0],1);
+            Vmath::Svtvp(npoints, -sin(phase), &inarray[(i+1)*npoints], 1, &outarray[0], 1,&outarray[0],1);
+        }
     }
-
+    else
+    {
+        NekDouble x = m_time;
+        x = x/m_period*(m_slices-1);
+        int ix = x;
+        if (ix < 0)
+        {
+            ix = 0;
+        }
+        if (ix > m_slices-2)
+        {
+            ix = m_slices-2;
+        }
+        int padleft = m_interporder/2 - 1;
+        if (padleft > ix)
+        {
+            padleft = ix;
+        }
+        int padright = m_interporder - 1 - padleft;
+        if (padright > m_slices-1-ix)
+        {
+            padright = m_slices-1-ix;
+        }
+        padleft = m_interporder - 1 - padright;
+        Array<OneD, NekDouble> coeff(m_interporder, 1.);
+        for (int i=0; i<m_interporder; ++i)
+        {
+            for (int j=0; j<m_interporder; ++j)
+            {
+                if (i!=j)
+                {
+                    coeff[i] *= (x - ix + padleft - (NekDouble)j) /
+                                ((NekDouble)i - (NekDouble)j);
+                }
+            }
+        }
+        Vmath::Zero(npoints, &outarray[0], 1);
+        for (int i = ix-padleft; i < ix+padright+1; ++i)
+        {
+            Vmath::Svtvp(npoints, coeff[i-ix+padleft], &inarray[i*npoints], 1,
+                        &outarray[0], 1, &outarray[0], 1);
+        }
+    }
 }
 
 void LinearisedAdvection::UpdateGradBase(
@@ -621,13 +688,21 @@ void LinearisedAdvection::DFT(const string file,
              "'BaseFlow' must include exactly one instance of the format "
              "specifier '%d', to index the time-slices.");
     char* buffer = new char[file.length() + 8];
-    for (int i = 0; i < m_slices; ++i)
+    int nstart = m_start;
+    for (int i = nstart; i < nstart+m_slices*m_skip; i+=m_skip)
     {
         sprintf(buffer, file.c_str(), i);
-        ImportFldBase(buffer,pFields,i);
+        ImportFldBase(buffer,pFields,(i-nstart)/m_skip);
+        if(m_session->GetComm()->GetRank() == 0)
+        {
+            cout << "read base flow file " << buffer << endl;
+        }
     }
     delete[] buffer;
-
+    if(!m_isperiodic)
+    {
+        return;
+    }
 
     // Discrete Fourier Transform of the fields
     for(int k=0; k< ConvectedFields;++k)

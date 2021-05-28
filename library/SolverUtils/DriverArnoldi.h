@@ -50,6 +50,10 @@ public:
 
     SOLVER_UTILS_EXPORT void ArnoldiSummary(std::ostream &out);
 
+    SOLVER_UTILS_EXPORT inline const Array<OneD, const NekDouble> &GetMaskCoeff() const;
+
+    SOLVER_UTILS_EXPORT inline const Array<OneD, const NekDouble> &GetMaskPhys() const;
+
 protected:
     int       m_kdim;  /// Dimension of Krylov subspace
     int       m_nvec;  /// Number of vectors to test
@@ -68,6 +72,9 @@ protected:
     Array<OneD, NekDouble> m_real_evl;
     Array<OneD, NekDouble> m_imag_evl;
 
+    bool m_useMask;
+    Array<OneD, NekDouble> m_maskCoeffs;
+    Array<OneD, NekDouble> m_maskPhys;
 
     /// Constructor
     DriverArnoldi(const LibUtilities::SessionReaderSharedPtr pSession,
@@ -97,6 +104,11 @@ protected:
                   NekDouble resid = NekConstants::kNekUnsetDouble,
                   bool DumpInverse = true);
 
+    /// init mask
+    void MaskInit();
+
+    void GetUnmaskFunction(std::vector<std::vector<LibUtilities::EquationSharedPtr> > & unmaskfun);
+
     virtual void v_InitObject(std::ostream &out = std::cout);
 
     virtual  Array<OneD, NekDouble> v_GetRealEvl(void)
@@ -111,6 +123,15 @@ protected:
 
 };
 
+inline const Array<OneD, const NekDouble> & DriverArnoldi::GetMaskCoeff() const
+{
+    return m_maskCoeffs;
+}
+
+inline const Array<OneD, const NekDouble> & DriverArnoldi::GetMaskPhys() const
+{
+    return m_maskPhys;
+}
 }
 } //end of namespace
 

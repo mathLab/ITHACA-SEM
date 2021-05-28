@@ -85,6 +85,7 @@ class DriverModifiedArnoldi: public DriverArnoldi
 
         /// Generates the upper Hessenberg matrix H and computes its eigenvalues.
         void EV_small(  Array<OneD, Array<OneD, NekDouble> > &Kseq,
+                        Array<OneD, Array<OneD, NekDouble> > &Kseqcopy,
                         const int ntot,
                         const Array<OneD, NekDouble> &alpha,
                         const int kdim,
@@ -100,7 +101,7 @@ class DriverModifiedArnoldi: public DriverArnoldi
                         Array<OneD, NekDouble> &wr,
                         Array<OneD, NekDouble> &wi,
                         const NekDouble resnorm,
-                        const int nvec,
+                        int nvec,
                         std::ofstream &evlout,
                         NekDouble &resid0);
 

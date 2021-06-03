@@ -857,9 +857,48 @@ namespace Nektar
         LibUtilities::Timer         my_timer_explicit;
         my_timer_explicit.Start();
 
+        LibUtilities::Timer         my_timer_explicit2;
+        my_timer_explicit2.Start();
 
 
         EvaluateAdvectionTerms(inarray, outarray);
+
+	int physTot = m_fields[0]->GetTotPoints();
+//        for(int i = 0; i < physTot; ++i)
+//		cout << "outarray[i] " << outarray[0][i] << " inarray[i] " << inarray[0][i] << endl; 
+
+	// compute my outarray
+        int nPointsTot = m_fields[0]->GetNpoints();
+        Array<OneD, NekDouble> grad0,grad1,grad2,wkSp;
+         Array<OneD, Array<OneD, NekDouble> > my_outarray(m_nConvectiveFields);
+            grad0 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+            grad1 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+            for(int n = 0; n < m_nConvectiveFields; ++n)
+            {
+	            my_outarray[n] = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+	    }
+            for(int n = 0; n < m_nConvectiveFields; ++n)
+            {
+                m_fields[0]->PhysDeriv(inarray[n],grad0,grad1);	
+                Vmath::Vmul (nPointsTot,grad0,1,inarray[0],1,my_outarray[n],1);
+                Vmath::Vvtvp(nPointsTot,grad1,1,inarray[1],1,my_outarray[n],1,my_outarray[n],1);
+
+	    }
+        for(int n = 0; n < m_nConvectiveFields; ++n)
+        {
+            Vmath::Neg(nPointsTot, my_outarray[n], 1);
+        }
+
+        for(int i = 0; i < physTot; ++i)
+        {
+		cout << "outarray[i] " << outarray[0][i] << "my_outarray[i] " << my_outarray[0][i] << endl; 
+		cout << "outarray[i] " << outarray[1][i] << "my_outarray[i] " << my_outarray[1][i] << endl; 
+	}
+
+
+        my_timer_explicit2.Stop();
+	cout << "my_timer_explicit only EvaluateAdvectionTerms Elapsed()  " << my_timer_explicit2.Elapsed().count() << endl;
+
 
         // Smooth advection
         if(m_SmoothAdvection)
@@ -926,6 +965,211 @@ namespace Nektar
         SolveViscous( m_F, outarray, aii_Dt);
         my_timer_solve_velocity.Stop();
 	cout << "my_timer_solve_velocity Elapsed() in implicit part " << my_timer_solve_velocity.Elapsed().count() << endl;
+
+
+	if (ROM_stage)
+	{
+		double norm_last_added = 0.0;
+		double norm_current = 0.0;
+		double dot_product = 0.0;
+		Array<OneD, Array<OneD, NekDouble> > current_phys_field(2);
+		Eigen::MatrixXd current_phys_field_eigen = Eigen::MatrixXd::Zero(2, m_fields[m_intVariables[0]]->GetNpoints());
+		current_phys_field[0] = Array<OneD, NekDouble>(m_fields[m_intVariables[0]]->GetNpoints());
+		current_phys_field[1] = Array<OneD, NekDouble>(m_fields[m_intVariables[1]]->GetNpoints());
+		for (int k = 0; k < m_fields[m_intVariables[0]]->GetNpoints(); ++k)
+        {
+      	        current_phys_field[0][k] = 0.0;
+       	        current_phys_field[1][k] = 0.0;
+        }
+		current_phys_field[0] = m_fields[0]->GetPhys();
+		current_phys_field[1] = m_fields[1]->GetPhys();
+		for (int k = 0; k < m_fields[m_intVariables[0]]->GetNpoints(); ++k)
+        {
+      	        current_phys_field_eigen(0,k) = current_phys_field[0][k];
+       	        current_phys_field_eigen(1,k) = current_phys_field[1][k];
+        }
+
+
+		    cout << "adding at step no. at VCS " << step << " out of a macimum of " << m_steps << " steps " << endl;
+		    cout << "current no_of_added_ones " << no_of_added_ones << endl;
+		    last_added_field[0] = current_phys_field[0];
+		    last_added_field[1] = current_phys_field[1];
+		    for (int k = 0; k < m_fields[m_intVariables[0]]->GetNpoints(); ++k)
+		    {
+		        fields_time_trajectory[no_of_added_ones][0][k] = last_added_field[0][k];
+		        fields_time_trajectory[no_of_added_ones][1][k] = last_added_field[1][k];
+		    }
+                    no_of_added_ones++;
+
+		step++;
+
+	if (step == m_steps)
+	{
+
+		cout << "number of added ones: " << no_of_added_ones << endl;
+		Eigen::MatrixXd time_traj_eigen_x = Eigen::MatrixXd::Zero( m_fields[m_intVariables[0]]->GetNpoints() , no_of_added_ones );
+		Eigen::MatrixXd time_traj_eigen_y = Eigen::MatrixXd::Zero( m_fields[m_intVariables[0]]->GetNpoints() , no_of_added_ones );
+		for (int index0 = 0; index0 < m_fields[m_intVariables[0]]->GetNpoints(); ++index0)
+		{
+			for (int index1 = 0; index1 < no_of_added_ones; ++index1)
+			{
+				time_traj_eigen_x(index0, index1) = fields_time_trajectory[index1][0][index0];	
+				time_traj_eigen_y(index0, index1) = fields_time_trajectory[index1][1][index0];
+			}
+		}		
+		Eigen::BDCSVD<Eigen::MatrixXd> 	svd_time_traj_eigen_x(time_traj_eigen_x, Eigen::ComputeThinU);
+		Eigen::BDCSVD<Eigen::MatrixXd> 	svd_time_traj_eigen_y(time_traj_eigen_y, Eigen::ComputeThinU);		
+		Eigen::VectorXd singular_vals_tt_x = svd_time_traj_eigen_x.singularValues();
+		Eigen::VectorXd singular_vals_tt_y = svd_time_traj_eigen_y.singularValues();
+//		cout << "singular_vals_tt_x: " << singular_vals_tt_x << endl;
+//		cout << "singular_vals_tt_y: " << singular_vals_tt_y << endl;
+		
+		int RBsize = 1; 
+		double POD_tolerance = 0.99;
+		Eigen::VectorXd cum_rel_singular_values = Eigen::VectorXd::Zero(singular_vals_tt_x.rows());
+		for (int i = 0; i < singular_vals_tt_x.rows(); ++i)
+		{
+			cum_rel_singular_values(i) = singular_vals_tt_x.head(i+1).sum() / singular_vals_tt_x.sum();
+			if (cum_rel_singular_values(i) < POD_tolerance)
+			{
+				RBsize = i+2;
+			}		
+		}	
+		cout << "RBsize in x " << RBsize << endl;
+		Eigen::MatrixXd collect_f_all_PODmodes = svd_time_traj_eigen_x.matrixU(); // this is a local variable...
+		Eigen::MatrixXd PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), RBsize);  
+		PODmodes = collect_f_all_PODmodes.leftCols(RBsize);
+	        std::ofstream myfile_RBsize_x ("RBsize_x.txt");
+	        if (myfile_RBsize_x.is_open())
+	        {
+	        	myfile_RBsize_x << RBsize;
+	        	myfile_RBsize_x.close();
+	        }
+		else std::cout << "Unable to open file";
+	        
+	        
+	        std::ofstream myfile_fields_TT_pod_x ("VCS_fields_TT_pod_x.txt");
+                if (myfile_fields_TT_pod_x.is_open())
+		{
+			for(int n = 0; n < RBsize; ++n)
+			{
+			    for(int counter_nphys = 0; counter_nphys < m_fields[m_intVariables[0]]->GetNpoints(); ++counter_nphys)
+			    {
+	                        myfile_fields_TT_pod_x << std::setprecision(17) << PODmodes(counter_nphys,n) << " ";
+			    }
+			    myfile_fields_TT_pod_x << endl;
+	                }
+		        myfile_fields_TT_pod_x.close();
+		}
+		else std::cout << "Unable to open file";
+		
+		cum_rel_singular_values = Eigen::VectorXd::Zero(singular_vals_tt_y.rows());
+		for (int i = 0; i < singular_vals_tt_y.rows(); ++i)
+		{
+			cum_rel_singular_values(i) = singular_vals_tt_y.head(i+1).sum() / singular_vals_tt_y.sum();
+			if (cum_rel_singular_values(i) < POD_tolerance)
+			{
+				RBsize = i+2;
+			}		
+		}	
+		cout << "RBsize in y " << RBsize << endl;
+		collect_f_all_PODmodes = svd_time_traj_eigen_y.matrixU(); // this is a local variable...
+		PODmodes = Eigen::MatrixXd::Zero(collect_f_all_PODmodes.rows(), RBsize);  
+		PODmodes = collect_f_all_PODmodes.leftCols(RBsize);
+	        std::ofstream myfile_RBsize_y ("RBsize_y.txt");
+	        if (myfile_RBsize_y.is_open())
+	        {
+	        	myfile_RBsize_y << RBsize;
+	        	myfile_RBsize_y.close();
+	        }
+		else std::cout << "Unable to open file";
+		
+		
+	        std::ofstream myfile_fields_TT_pod_y ("VCS_fields_TT_pod_y.txt");
+                if (myfile_fields_TT_pod_y.is_open())
+		{
+			for(int n = 0; n < RBsize; ++n)
+			{
+			    for(int counter_nphys = 0; counter_nphys < m_fields[m_intVariables[0]]->GetNpoints(); ++counter_nphys)
+			    {
+	                        myfile_fields_TT_pod_y << std::setprecision(17) << PODmodes(counter_nphys,n) << " ";
+			    }
+			    myfile_fields_TT_pod_y << endl;
+	                }
+		        myfile_fields_TT_pod_y.close();
+		}
+		else std::cout << "Unable to open file";		
+		
+            std::ofstream myfile_fields_TT_x ("VCS_fields_TT_x.txt");
+            std::ofstream myfile_fields_TT_y ("VCS_fields_TT_y.txt");
+            
+            if (myfile_fields_TT_x.is_open())
+	    {
+		for(int n = 0; n < m_steps; ++n)
+		{
+		    for(int counter_nphys = 0; counter_nphys < m_fields[m_intVariables[0]]->GetNpoints(); ++counter_nphys)
+		    {
+                        myfile_fields_TT_x << std::setprecision(17) << fields_time_trajectory[n][0][counter_nphys] << " ";
+		    }
+		    myfile_fields_TT_x << endl;
+                }
+	        myfile_fields_TT_x.close();
+            }
+	    else std::cout << "Unable to open file";
+	    
+            if (myfile_fields_TT_y.is_open())
+	    {
+		for(int n = 0; n < m_steps; ++n)
+		{
+		    for(int counter_nphys = 0; counter_nphys < m_fields[m_intVariables[1]]->GetNpoints(); ++counter_nphys)
+		    {
+                        myfile_fields_TT_y << std::setprecision(17) << fields_time_trajectory[n][1][counter_nphys] << " ";
+		    }
+		    myfile_fields_TT_y << endl;
+                }
+	        myfile_fields_TT_y.close();
+            }
+	    else std::cout << "Unable to open file";
+	    
+	    if (ROM_stage == 2)
+	    {
+	            std::ofstream myfile_fields_TT_x_ROM ("VCS_fields_TT_x_ROM.txt");
+	            std::ofstream myfile_fields_TT_y_ROM ("VCS_fields_TT_y_ROM.txt");
+            
+	            if (myfile_fields_TT_x_ROM.is_open())
+		    {
+			for(int n = 0; n < m_steps; ++n)
+			{
+			    for(int counter_nphys = 0; counter_nphys < ROM_size_x; ++counter_nphys)
+			    {
+	                        myfile_fields_TT_x_ROM << std::setprecision(17) << ROM_fields_time_trajectory[n][0][counter_nphys] << " ";
+			    }
+			    myfile_fields_TT_x_ROM << endl;
+	                }
+		        myfile_fields_TT_x_ROM.close();
+	            }
+		    else std::cout << "Unable to open file";
+	    
+	            if (myfile_fields_TT_y_ROM.is_open())
+		    {
+			for(int n = 0; n < m_steps; ++n)
+			{
+			    for(int counter_nphys = 0; counter_nphys < ROM_size_y; ++counter_nphys)
+			    {
+	                        myfile_fields_TT_y_ROM << std::setprecision(17) << ROM_fields_time_trajectory[n][1][counter_nphys] << " ";
+			    }
+			    myfile_fields_TT_y_ROM << endl;
+	                }
+		        myfile_fields_TT_y_ROM.close();
+	            }
+		    else std::cout << "Unable to open file";
+	    
+	    
+	    }
+	    
+	    
+	}	
+	}
 
 
         // Apply flowrate correction

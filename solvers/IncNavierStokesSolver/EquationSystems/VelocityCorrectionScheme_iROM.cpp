@@ -867,6 +867,70 @@ namespace Nektar
 //        for(int i = 0; i < physTot; ++i)
 //		cout << "outarray[i] " << outarray[0][i] << " inarray[i] " << inarray[0][i] << endl; 
 
+
+	if (ROM_stage >= 2)
+	{
+		// compute the projection error of inarray onto the pod basis
+		Eigen::VectorXd eigen_inarray_x = Eigen::VectorXd::Zero(physTot);
+		Eigen::VectorXd eigen_inarray_y = Eigen::VectorXd::Zero(physTot);
+		for (int i = 0; i < physTot; ++i)
+		{
+			eigen_inarray_x(i) = inarray[0][i];
+			eigen_inarray_y(i) = inarray[1][i];
+		}
+
+		Eigen::VectorXd	proj_inarray_x = POD_modes_x.transpose() * eigen_inarray_x;
+		Eigen::VectorXd	proj_inarray_y = POD_modes_y.transpose() * eigen_inarray_y;
+
+		Eigen::VectorXd	reproj_inarray_x = POD_modes_x * proj_inarray_x;
+		Eigen::VectorXd	reproj_inarray_y = POD_modes_y * proj_inarray_y;
+	
+		double rel_err_x = (reproj_inarray_x - eigen_inarray_x).norm() / eigen_inarray_x.norm();
+	
+		cout << " rel_error_x " << rel_err_x << endl;
+
+	}
+
+	if (ROM_stage >= 2)
+	{
+		// dry run the projection approach
+		// for all POD modes get the phys deriv
+		Eigen::MatrixXd POD_modes_x_grad0  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_x);
+		Eigen::MatrixXd POD_modes_x_grad1  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_x);
+		Array<OneD, NekDouble> grad0,grad1,conversion_mode;
+	        grad0 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+	        grad1 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+	        conversion_mode = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+
+		// this part belongs to the init phase
+	        for (int i_x = 0; i_x < ROM_size_x; ++i_x)
+	        {
+	        	for (int j = 0; j < m_fields[0]->GetNpoints(); ++j)
+	        	{
+	        		conversion_mode[j] = POD_modes_x(j,i_x);
+	        	}
+			m_fields[0]->PhysDeriv(conversion_mode, grad0, grad1);
+	        	for (int j = 0; j < m_fields[0]->GetNpoints(); ++j)
+	        	{
+	        		POD_modes_x_grad0(j, i_x) = grad0[j];
+	        		POD_modes_x_grad1(j, i_x) = grad1[j];
+	        	}
+		}
+		Eigen::MatrixXd proj_POD_modes_x_grad0  = Eigen::MatrixXd::Zero(ROM_size_x, ROM_size_x);
+		Eigen::MatrixXd proj_POD_modes_x_grad1  = Eigen::MatrixXd::Zero(ROM_size_x, ROM_size_x);
+	        for (int i1_x = 0; i1_x < ROM_size_x; ++i1_x)
+		{
+			for (int i2_x = 0; i2_x < ROM_size_x; ++i2_x)
+			{
+					
+			
+			}
+		}
+				
+		
+		
+	}
+
 	// compute my outarray
         int nPointsTot = m_fields[0]->GetNpoints();
         Array<OneD, NekDouble> grad0,grad1,grad2,wkSp;
@@ -889,12 +953,16 @@ namespace Nektar
             Vmath::Neg(nPointsTot, my_outarray[n], 1);
         }
 
+	double maxi = 0;
         for(int i = 0; i < physTot; ++i)
         {
-		cout << "outarray[i] " << outarray[0][i] << "my_outarray[i] " << my_outarray[0][i] << endl; 
-		cout << "outarray[i] " << outarray[1][i] << "my_outarray[i] " << my_outarray[1][i] << endl; 
+//		cout << "outarray[i] " << outarray[0][i] << "my_outarray[i] " << my_outarray[0][i] << endl; 
+//		cout << "outarray[i] " << outarray[1][i] << "my_outarray[i] " << my_outarray[1][i] << endl; 
+//		cout << "abs(outarray[i] - my_outarray[i]) " << abs(outarray[0][i] - my_outarray[0][i]) << endl; 
+		if ((maxi < abs(outarray[0][i] - my_outarray[0][i])) || (maxi < abs(outarray[1][i] - my_outarray[1][i])))
+			maxi = (abs(outarray[0][i] - my_outarray[0][i]) < abs(outarray[1][i] - my_outarray[1][i])) ? abs(outarray[1][i] - my_outarray[1][i]) : abs(outarray[0][i] - my_outarray[0][i]);
 	}
-
+	cout << "maximum difference " << maxi << endl;
 
         my_timer_explicit2.Stop();
 	cout << "my_timer_explicit only EvaluateAdvectionTerms Elapsed()  " << my_timer_explicit2.Elapsed().count() << endl;
@@ -1025,7 +1093,7 @@ namespace Nektar
 //		cout << "singular_vals_tt_y: " << singular_vals_tt_y << endl;
 		
 		int RBsize = 1; 
-		double POD_tolerance = 0.99;
+		double POD_tolerance = 0.99999;
 		Eigen::VectorXd cum_rel_singular_values = Eigen::VectorXd::Zero(singular_vals_tt_x.rows());
 		for (int i = 0; i < singular_vals_tt_x.rows(); ++i)
 		{

@@ -868,31 +868,34 @@ namespace Nektar
 //		cout << "outarray[i] " << outarray[0][i] << " inarray[i] " << inarray[0][i] << endl; 
 
 
+
 	if (ROM_stage >= 2)
 	{
-		// compute the projection error of inarray onto the pod basis
+
 		Eigen::VectorXd eigen_inarray_x = Eigen::VectorXd::Zero(physTot);
 		Eigen::VectorXd eigen_inarray_y = Eigen::VectorXd::Zero(physTot);
+	
+		Eigen::VectorXd proj_inarray_x = Eigen::VectorXd::Zero(ROM_size_x);
+		Eigen::VectorXd proj_inarray_y = Eigen::VectorXd::Zero(ROM_size_y);
+
+
+		// compute the projection error of inarray onto the pod basis
 		for (int i = 0; i < physTot; ++i)
 		{
 			eigen_inarray_x(i) = inarray[0][i];
 			eigen_inarray_y(i) = inarray[1][i];
 		}
 
-		Eigen::VectorXd	proj_inarray_x = POD_modes_x.transpose() * eigen_inarray_x;
-		Eigen::VectorXd	proj_inarray_y = POD_modes_y.transpose() * eigen_inarray_y;
+		proj_inarray_x = POD_modes_x.transpose() * eigen_inarray_x;
+		proj_inarray_y = POD_modes_y.transpose() * eigen_inarray_y;
 
 		Eigen::VectorXd	reproj_inarray_x = POD_modes_x * proj_inarray_x;
 		Eigen::VectorXd	reproj_inarray_y = POD_modes_y * proj_inarray_y;
 	
 		double rel_err_x = (reproj_inarray_x - eigen_inarray_x).norm() / eigen_inarray_x.norm();
 	
-		cout << " rel_error_x " << rel_err_x << endl;
+		cout << " rel_error_x of reproj inarray " << rel_err_x << endl;
 
-	}
-
-	if (ROM_stage >= 2)
-	{
 		// dry run the projection approach
 		// for all POD modes get the phys deriv
 		Eigen::MatrixXd POD_modes_x_grad0  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_x);
@@ -916,17 +919,43 @@ namespace Nektar
 	        		POD_modes_x_grad1(j, i_x) = grad1[j];
 	        	}
 		}
-		Eigen::MatrixXd proj_POD_modes_x_grad0  = Eigen::MatrixXd::Zero(ROM_size_x, ROM_size_x);
-		Eigen::MatrixXd proj_POD_modes_x_grad1  = Eigen::MatrixXd::Zero(ROM_size_x, ROM_size_x);
+		Array<OneD, Eigen::MatrixXd> proj_POD_modes_x_grad0  = Array<OneD, Eigen::MatrixXd> (ROM_size_x);
+		Array<OneD, Eigen::MatrixXd> proj_POD_modes_x_grad1  = Array<OneD, Eigen::MatrixXd> (ROM_size_x);
+		for (int j = 0; j < ROM_size_x; ++j)
+		{
+			proj_POD_modes_x_grad0[j] = Eigen::MatrixXd::Zero(ROM_size_x, ROM_size_x);
+			proj_POD_modes_x_grad1[j] = Eigen::MatrixXd::Zero(ROM_size_x, ROM_size_x);
+		}	
+		Eigen::VectorXd tmp_interaction = Eigen::VectorXd::Zero(m_fields[0]->GetNpoints());
+		Eigen::VectorXd proj_tmp_interaction = Eigen::VectorXd::Zero(ROM_size_x);
 	        for (int i1_x = 0; i1_x < ROM_size_x; ++i1_x)
 		{
 			for (int i2_x = 0; i2_x < ROM_size_x; ++i2_x)
 			{
-					
-			
+				// 1. compute all interactions of POD_modes_x_grad0 and POD_modes
+				// 2. compute the corrsponding ROM representation
+				// 3. save in trilinear form proj_POD_modes_x_grad0
+				tmp_interaction = POD_modes_x_grad0.col(i1_x) * POD_modes_x.col(i2_x);
+				proj_tmp_interaction = 	POD_modes_x.transpose() * tmp_interaction;			
+				for (int i3_x = 0; i3_x < ROM_size_x; ++i3_x)
+				{
+					proj_POD_modes_x_grad0[i3_x](i1_x,i2_x) = proj_tmp_interaction(i3_x);
+				}
 			}
 		}
-				
+		// reconstruct grad0 using proj_inarray_x
+		Array<OneD, double>  reproj_POD_modes_x_grad0(ROM_size_x);
+		Eigen::VectorXd eigen_reproj_POD_modes_x_grad0 = Eigen::VectorXd::Zero(ROM_size_x);
+		Array<OneD, double>  reconst_outarray;
+	        reconst_outarray = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+		Eigen::VectorXd eigen_reconst_outarray = Eigen::VectorXd::Zero(m_fields[0]->GetNpoints());
+
+		for (int i1_x = 0; i1_x < ROM_size_x; ++i1_x)
+		{
+			reproj_POD_modes_x_grad0[i1_x] = ( proj_POD_modes_x_grad0[i1_x] * proj_inarray_x).dot(proj_inarray_x); 	
+			eigen_reproj_POD_modes_x_grad0(i1_x) = 	reproj_POD_modes_x_grad0[i1_x];
+		}
+		eigen_reconst_outarray =  POD_modes_x * eigen_reproj_POD_modes_x_grad0;
 		
 		
 	}

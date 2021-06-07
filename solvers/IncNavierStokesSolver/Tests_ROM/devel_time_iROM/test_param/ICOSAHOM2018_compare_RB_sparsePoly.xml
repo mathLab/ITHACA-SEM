@@ -11,11 +11,11 @@
 	    <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme_iROM" /> 
             <I PROPERTY="EvolutionOperator" VALUE="Nonlinear" />  
             <I PROPERTY="Projection" VALUE="Galerkin" />
-            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
        </SOLVERINFO>
 
         <PARAMETERS>
-            <P> TimeStep = 1e-5    </P>
+            <P> TimeStep = 1e-2    </P>
             <P> NumSteps = 5       </P>
             <P> IO_CheckSteps = 1       </P>
             <P> IO_InfoSteps = 1       </P>

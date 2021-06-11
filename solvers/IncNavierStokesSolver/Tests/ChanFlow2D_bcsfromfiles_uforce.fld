@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <Metadata>
+        <Provenance>
+            <GitBranch>refs/heads/fix/FileForcingBody</GitBranch>
+            <GitSHA1>40a2e21afaafe8725f366a38a4699d13f8ab63cd</GitSHA1>
+            <Hostname>ubuntu-NUC8i7HVK</Hostname>
+            <NektarVersion>5.0.0</NektarVersion>
+            <Timestamp>10-May-2021 12:53:57</Timestamp>
+        </Provenance>
+        <ChkFileNum>0</ChkFileNum>
+        <Kinvis>1</Kinvis>
+        <SessionName0>ChanFlow2D_bcsfromfiles.xml</SessionName0>
+        <Time>0</Time>
+        <TimeStep>0.001</TimeStep>
+    </Metadata>
+    <ELEMENTS FIELDS="u,v,p" SHAPE="Quadrilateral" BASIS="Modified_A,Modified_A" NUMMODESPERDIR="UNIORDER:6,6" ID="0-3" COMPRESSED="B64Z-LittleEndian" BITSIZE="64">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</ELEMENTS>
+</NEKTAR>

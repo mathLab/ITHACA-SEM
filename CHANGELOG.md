@@ -34,6 +34,7 @@ v5.1.0
 - Add ESDIRK3 and ESDIRK4 time integration schemes (!1196)
 - Add a filter to calculate mean value of solution fields (!1211)
 - Fix the time dependent absorption forcing (!1254)
+- Fix BODYFORCE defined by a file (!1215)
 
 **FieldConvert**:
 - Add phifile module to compute shape functions for the SPM solver (!1065)

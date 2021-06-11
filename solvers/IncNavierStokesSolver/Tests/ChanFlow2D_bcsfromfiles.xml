@@ -64,7 +64,7 @@
         </BOUNDARYCONDITIONS>
 
         <FUNCTION NAME="BodyForce">
-            <E VAR="u" VALUE="0" />
+            <F VAR="u" FILE="ChanFlow2D_bcsfromfiles_uforce.fld" />
             <E VAR="v" VALUE="0" />
         </FUNCTION>
 
@@ -81,6 +81,12 @@
         </FUNCTION>
 a
     </CONDITIONS>
+
+     <FORCING>
+        <FORCE TYPE="Body">
+            <BODYFORCE> BodyForce </BODYFORCE>
+        </FORCE>
+    </FORCING>
 
     <GEOMETRY DIM="2" SPACE="2">
 

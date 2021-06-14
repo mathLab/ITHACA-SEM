@@ -867,6 +867,7 @@ namespace Nektar
 //        for(int i = 0; i < physTot; ++i)
 //		cout << "outarray[i] " << outarray[0][i] << " inarray[i] " << inarray[0][i] << endl; 
 
+	Eigen::VectorXd my_outarray_2 = Eigen::VectorXd::Zero(physTot);
 
 
 	if (ROM_stage >= 2)
@@ -896,6 +897,10 @@ namespace Nektar
 	
 		cout << " rel_error_x of reproj inarray " << rel_err_x << endl;
 
+		double rel_err_y = (reproj_inarray_y - eigen_inarray_y).norm() / eigen_inarray_y.norm();
+	
+		cout << " rel_error_y of reproj inarray " << rel_err_y << endl;
+
 		// dry run the projection approach
 		// for all POD modes get the phys deriv
 		Eigen::MatrixXd POD_modes_x_grad0  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_x);
@@ -919,6 +924,13 @@ namespace Nektar
 	        		POD_modes_x_grad1(j, i_x) = grad1[j];
 	        	}
 		}
+		
+		// intermediate accuracy test
+		cout << "prev int acc test" << endl;
+//		my_outarray_2 = -eigen_inarray_x * (proj_inarray_x * POD_modes_x_grad0.transpose()) - eigen_inarray_y *  (proj_inarray_x * POD_modes_x_grad1.transpose()) ;
+		my_outarray_2 = POD_modes_x_grad0 * proj_inarray_x ;
+		cout << "dopo int acc test" << endl;
+		
 		Array<OneD, Eigen::MatrixXd> proj_POD_modes_x_grad0  = Array<OneD, Eigen::MatrixXd> (ROM_size_x);
 		Array<OneD, Eigen::MatrixXd> proj_POD_modes_x_grad1  = Array<OneD, Eigen::MatrixXd> (ROM_size_x);
 		for (int j = 0; j < ROM_size_x; ++j)
@@ -957,23 +969,28 @@ namespace Nektar
 		}
 		eigen_reconst_outarray =  POD_modes_x * eigen_reproj_POD_modes_x_grad0;
 		
-		
+	cout << "inarray[0][100] " << inarray[0][100] << "  reproj_inarray_x(100) " << reproj_inarray_x(100) << endl;
+
+
 	}
 
 	// compute my outarray
         int nPointsTot = m_fields[0]->GetNpoints();
         Array<OneD, NekDouble> grad0,grad1,grad2,wkSp;
          Array<OneD, Array<OneD, NekDouble> > my_outarray(m_nConvectiveFields);
+         Array<OneD, Array<OneD, NekDouble> > my_outarray_part1(m_nConvectiveFields);
             grad0 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
             grad1 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
             for(int n = 0; n < m_nConvectiveFields; ++n)
             {
 	            my_outarray[n] = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+	            my_outarray_part1[n] = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
 	    }
             for(int n = 0; n < m_nConvectiveFields; ++n)
             {
                 m_fields[0]->PhysDeriv(inarray[n],grad0,grad1);	
                 Vmath::Vmul (nPointsTot,grad0,1,inarray[0],1,my_outarray[n],1);
+                my_outarray_part1[n] = grad0;
                 Vmath::Vvtvp(nPointsTot,grad1,1,inarray[1],1,my_outarray[n],1,my_outarray[n],1);
 
 	    }
@@ -982,10 +999,15 @@ namespace Nektar
             Vmath::Neg(nPointsTot, my_outarray[n], 1);
         }
 
+	cout << "outarray_part1[i] " << my_outarray_part1[0][100] << "  my_outarray[i] " << my_outarray_2(100) << endl;
+
+	cout << "outarray[i] " << outarray[0][100] << "  my_outarray[i] " << my_outarray_2(100) << endl;
+
+
 	double maxi = 0;
         for(int i = 0; i < physTot; ++i)
         {
-//		cout << "outarray[i] " << outarray[0][i] << "my_outarray[i] " << my_outarray[0][i] << endl; 
+//		cout << "outarray[i] " << outarray[0][i] << "my_outarray[i] " << my_outarray_2(i) << endl; 
 //		cout << "outarray[i] " << outarray[1][i] << "my_outarray[i] " << my_outarray[1][i] << endl; 
 //		cout << "abs(outarray[i] - my_outarray[i]) " << abs(outarray[0][i] - my_outarray[0][i]) << endl; 
 		if ((maxi < abs(outarray[0][i] - my_outarray[0][i])) || (maxi < abs(outarray[1][i] - my_outarray[1][i])))

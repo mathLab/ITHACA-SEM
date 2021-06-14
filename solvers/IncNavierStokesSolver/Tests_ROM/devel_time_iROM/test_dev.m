@@ -33,7 +33,7 @@ all_y = [y_pod'];
 dim_y = size(all_y, 2);
 
 sing_vals = diag(S(1:dim_y,1:dim_y))';
-modes_taken_y = sum(cumsum(sing_vals) ./ sum(sing_vals) < 0.99999);
+modes_taken_y = sum(cumsum(sing_vals) ./ sum(sing_vals) < 1.1);
 
 Ut = U';
 

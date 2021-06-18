@@ -143,6 +143,7 @@ namespace Nektar
                 m_velocity,
                 m_advObject);
 
+            m_extrapolation->SetForcing(m_forcing);
             m_extrapolation->SubSteppingTimeIntegration(m_intScheme);
             m_extrapolation->GenerateHOPBCMap(m_session);
         }
@@ -649,7 +650,7 @@ namespace Nektar
     {
 LibUtilities::Timer timer;
 timer.Start();
-        EvaluateAdvectionTerms(inarray, outarray);
+        EvaluateAdvectionTerms(inarray, outarray, time);
 timer.Stop();
 timer.AccumulateRegion("Advection Terms");
 

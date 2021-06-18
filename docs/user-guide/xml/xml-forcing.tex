@@ -41,6 +41,8 @@ This force type specifies the name of a body forcing function expressed in the \
 \end{lstlisting}
 
 \subsection{MovingReferenceFrame}
+This force type allows the user to solve the incompressible flow around a moving rigid body. In this method, the flow velocity and pressure are defined in an inertial reference frame, but the coordinates and basis vectors are in the reference frame fixed on the rigid body (body frame).
+
 This force type specifies the name of a moving frame function expressed in the \inltt{CONDITIONS} section.
 
 \begin{lstlisting}[style=XMLStyle]
@@ -49,14 +51,26 @@ This force type specifies the name of a moving frame function expressed in the \
 </FORCE>
 \end{lstlisting}
 
-The frame velocity functions defines the constant velocity of the reference frame.
+The moving frame function defines the velocity of the body frame observed in the inertial reference frame $$\mathbf{u}_{frame} = \mathbf{u}_0 + \mathbf{\Omega}\times (\mathbf{x}-\mathbf{x}_0)$$.
 
 \begin{lstlisting}[style=XMLStyle]
 <FUNCTION NAME="MovingReferenceFrame">
     <E VAR="u" VALUE="1" />
     <E VAR="v" VALUE="0" />
+    <E VAR="w" VALUE="0" />
+    <E VAR="Omega_x" VALUE="0" />
+    <E VAR="Omega_y" VALUE="0" />
+    <E VAR="Omega_z" VALUE="1" />
+    <E VAR="x0" VALUE="0" />
+    <E VAR="y0" VALUE="0" />
+    <E VAR="z0" VALUE="0" />
 </FUNCTION>
 \end{lstlisting}
+Here, $\mathbf{u}_0 = (\text{u, v, w})$ is the translational velocity, $\mathbf{\Omega}=(\text{Omega\_x, Omega\_y, Omega\_z})$ is the angular velocity.
+$\mathbf{x}_0=(\text{x0, y0, z0})$ is the rotation pivot and it is fixed in the body frame.
+Translational motion is allowed for all dimensions while rotational motion is restricted to z (omega\_z) for 2D and 3DH1D and supported for all directions in full 3D.
+
+When using \inltt{MovingReferenceFrame} force, variables $x, y ,z$ are the coordinates of the body frame and all vectors use the basis of the body frame. This situation includes body forces, boundary conditions, initial conditions, aerodynamic force and simulation results.
 
 \subsection{Programmatic}
 This force type allows a forcing function to be applied directly within the code, thus it has no associated function. 

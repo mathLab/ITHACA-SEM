@@ -230,7 +230,8 @@ namespace Nektar
     private:
         
     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fields_time_trajectory;  
-    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > global_fields_time_trajectory;  
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > global_fields_time_trajectory;
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > local_fields_time_trajectory;    
     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > ROM_fields_time_trajectory;  
     Array<OneD, Array<OneD, NekDouble> > last_added_field; 
 	Eigen::MatrixXd POD_modes_x;

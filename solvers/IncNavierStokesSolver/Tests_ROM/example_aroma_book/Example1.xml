@@ -41,7 +41,7 @@
             <P> POD_tolerance = 1       </P>
 	    <P> compute_smaller_model_errs = 1      </P>
 	    <P> debug_mode = 1      </P>
-	    <P> use_fine_grid_VV = 1      </P>
+	    <P> use_fine_grid_VV = 0      </P>
         </PARAMETERS>
 
         <VARIABLES>

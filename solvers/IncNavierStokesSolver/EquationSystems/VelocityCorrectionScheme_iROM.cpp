@@ -608,6 +608,7 @@ namespace Nektar
 	    // Set up wrapper to all fields data storage.
             // should limit here a bit: fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps + 1);
             fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps + 1);  
+            local_fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps + 1);  
             global_fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps + 1);  
 	
 	    //      Array<OneD, Array<OneD, NekDouble> > last_added_field(m_nConvectiveFields); 
@@ -650,10 +651,12 @@ namespace Nektar
             for (int i = 0; i < m_steps + 1; ++i)
             {
             	fields_time_trajectory[i] = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields);
+            	local_fields_time_trajectory[i] = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields);
  //           	global_fields_time_trajectory[i] = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields);
             	for (int j = 0; j < m_nConvectiveFields; ++j)
             	{
             	    fields_time_trajectory[i][j] = Array<OneD, NekDouble> (m_fields[m_intVariables[j]]->GetNpoints());
+            	    local_fields_time_trajectory[i][j] = Array<OneD, NekDouble> (m_fields[m_intVariables[j]]->GetNcoeffs());
             	    last_added_field[j] = Array<OneD, NekDouble> (m_fields[m_intVariables[j]]->GetNpoints());
             	    for (int k = 0; k < m_fields[m_intVariables[j]]->GetNpoints(); ++k)
             	    {
@@ -664,6 +667,11 @@ namespace Nektar
             	    for (int k = 0; k < globalNcoeff; ++k)
             	    {
 //            	        global_fields_time_trajectory[i][j][k] = 0.0;
+            	       
+            	    }
+            	    for (int k = 0; k < m_fields[m_intVariables[j]]->GetNcoeffs(); ++k)
+            	    {
+            	        local_fields_time_trajectory[i][j][k] = 0.0;
             	       
             	    }
             	    
@@ -870,6 +878,44 @@ namespace Nektar
 	Eigen::VectorXd my_outarray_2 = Eigen::VectorXd::Zero(physTot);
 
 
+//   double check grad0 linearity computation
+
+	Array<OneD, NekDouble>	test_inarray, test_inarray_grad0, test_inarray_grad1, ina_x_grad0, ina_x_grad1, ina_y_grad0, ina_y_grad1, ina_x_local, ina_y_local, test_inarray_local, test2, test2_local;
+    test_inarray = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+    test_inarray_grad0 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+    test_inarray_grad1 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+    ina_x_grad0 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+    ina_x_grad1 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+    ina_y_grad0 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+    ina_y_grad1 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+    test2 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+    ina_x_local = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
+    ina_y_local = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
+    test_inarray_local = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
+    test2_local = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
+	m_fields[0]->FwdTrans_IterPerExp(inarray[0], ina_x_local);
+	m_fields[0]->FwdTrans_IterPerExp(inarray[1], ina_y_local);
+	for (int i = 0; i < m_fields[0]->GetNcoeffs(); ++i)
+	{
+		test_inarray_local[i] = 3*ina_x_local[i] - 7*ina_y_local[i];		
+	}
+	cout << "test_inarray_local[100] " << test_inarray_local[100] << " 3*ina_x_local[100] - 7*ina_y_local[100] " << 3*ina_x_local[100] - 7*ina_y_local[100] << endl;
+	m_fields[0]->BwdTrans_IterPerExp(test_inarray_local, test_inarray);
+	m_fields[0]->PhysDeriv(test_inarray, test_inarray_grad0, test_inarray_grad1);
+	m_fields[0]->PhysDeriv(inarray[0], ina_x_grad0, ina_x_grad1);
+	m_fields[0]->PhysDeriv(inarray[1], ina_y_grad0, ina_y_grad1);
+	cout << "test_inarray_grad0[100] " << test_inarray_grad0[100] << " 3*ina_x_grad0[100] - 7*ina_y_grad0[100] " << 3*ina_x_grad0[100] - 7*ina_y_grad0[100] << endl;
+	m_fields[0]->FwdTrans_IterPerExp(test_inarray_grad0, test_inarray_local);
+	for (int i = 0; i < m_fields[0]->GetNpoints(); ++i)
+	{
+		test2[i] = 3*ina_x_grad0[i] - 7*ina_y_grad0[i];		
+	}
+	m_fields[0]->FwdTrans_IterPerExp(test2, test2_local);
+	cout << "test_inarray_local[100] " << test_inarray_local[100] << " test2_local[100] " << test2_local[100] << endl;
+
+
+
+
 	if (ROM_stage >= 2)
 	{
 
@@ -929,7 +975,14 @@ namespace Nektar
 		cout << "prev int acc test" << endl;
 //		my_outarray_2 = -eigen_inarray_x * (proj_inarray_x * POD_modes_x_grad0.transpose()) - eigen_inarray_y *  (proj_inarray_x * POD_modes_x_grad1.transpose()) ;
 		my_outarray_2 = POD_modes_x_grad0 * proj_inarray_x ;
+		cout << " proj_inarray_x.size() " << proj_inarray_x.size() << endl;
+		cout << " proj_inarray_x.cols() " << proj_inarray_x.cols() << endl;
+		cout << " proj_inarray_x.rows() " << proj_inarray_x.rows() << endl;
+		cout << " POD_modes_x_grad0.cols() " << POD_modes_x_grad0.cols() << endl;
+		cout << " POD_modes_x_grad0.rows() " << POD_modes_x_grad0.rows() << endl;
 		cout << "dopo int acc test" << endl;
+		cout << " my_outarray_2.cols() " << my_outarray_2.cols() << endl;
+		cout << " my_outarray_2.rows() " << my_outarray_2.rows() << endl;
 		
 		Array<OneD, Eigen::MatrixXd> proj_POD_modes_x_grad0  = Array<OneD, Eigen::MatrixXd> (ROM_size_x);
 		Array<OneD, Eigen::MatrixXd> proj_POD_modes_x_grad1  = Array<OneD, Eigen::MatrixXd> (ROM_size_x);
@@ -1118,7 +1171,13 @@ namespace Nektar
 		        fields_time_trajectory[no_of_added_ones][0][k] = last_added_field[0][k];
 		        fields_time_trajectory[no_of_added_ones][1][k] = last_added_field[1][k];
 		    }
-                    no_of_added_ones++;
+
+			// also collect local fields
+			m_fields[0]->FwdTrans_IterPerExp(fields_time_trajectory[no_of_added_ones][0], local_fields_time_trajectory[no_of_added_ones][0]);
+			m_fields[0]->FwdTrans_IterPerExp(fields_time_trajectory[no_of_added_ones][1], local_fields_time_trajectory[no_of_added_ones][1]);
+
+
+            no_of_added_ones++;
 
 		step++;
 

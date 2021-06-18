@@ -93,7 +93,7 @@ v5.0.3
 - Fix repeated output of u,v,w for Euler system
 
 **FieldConvert**
-- Fix the Filters output files numbering (!1251)
+- Fix the Filters output files numbering (!1251, !1261)
 
 v5.0.2
 ------

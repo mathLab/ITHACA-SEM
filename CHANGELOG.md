@@ -95,6 +95,8 @@ v5.0.3
 
 **FieldConvert**
 - Fix the Filters output files numbering (!1251)
+**NekMesh**
+- Fix VTK Output for 3D meshes and support XML format (!1258)
 
 v5.0.2
 ------

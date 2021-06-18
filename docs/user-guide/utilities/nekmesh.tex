@@ -415,21 +415,33 @@ The following output formats are supported:
     4, pyramids up to order 1.\\
     Nektar++ & \texttt{xml} & \cmark & Most functionality supported. \\
     HDF5 & \texttt{nekg} & \cmark & Most functionality supported. \\
-    VTK & \texttt{vtk} & \xmark & Experimental. Only ASCII triangular data is supported. \\
+    VTK & \texttt{vtk} & \xmark & Outputs mesh only, supports line segments in 1D, 
+    triangles and quadrilaterals in 2D and tetrahedra, hexahedra, prisms and 
+    pyramids in 3D. The VTK legacy format and XML format, both compressed and 
+    uncompressed, are supported. Requires NEKTAR\_USE\_VTK option to be activated 
+    in cmake. \\
     \bottomrule
   \end{tabularx}
 \end{center}
 
-Note that for both \gmsh and \texttt{VTK}, it is highly likely that you will
+Note that for \gmsh, it is highly likely that you will
 need to experiment with the source code in order to successfully generate
 meshes since robustness is not guaranteed.
 
-The default for \texttt{xml} is into binary data which has been
+The default for \texttt{xml} and \texttt{vtk} is into binary data which has been
 converted into base64. If you wish to see an ascii output you need to
-specify the output module option \inltt{uncompress} by executing:
+specify the output module option \inltt{uncompress}. For the uncompressed 
+\texttt{xml} the user can execute:
 %
 \begin{lstlisting}[style=BashInputStyle]
 NekMesh Mesh.msh output.xml:xml:uncompress
+\end{lstlisting}
+%
+If the user wishes to obtain the \texttt{vtk} output in the legacy format,
+the output module option \inltt{legacy} should be specified by executing:
+%
+\begin{lstlisting}[style=BashInputStyle]
+NekMesh Mesh.xml output.vtk:vtk:legacy
 \end{lstlisting}
 %
 Finally, both the Gmsh and Nektar++ output modules support an \inltt{order}

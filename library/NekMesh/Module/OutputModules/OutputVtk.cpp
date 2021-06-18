@@ -35,10 +35,11 @@
 #include <NekMesh/MeshElements/Element.h>
 #include <LibUtilities/BasicUtils/VtkUtil.hpp>
 
-#include <vtkPolyDataWriter.h>
-#include <vtkPolyData.h>
+#include <vtkXMLUnstructuredGridWriter.h>
+#include <vtkUnstructuredGridWriter.h>
+#include <vtkUnstructuredGrid.h>
 #include <vtkPoints.h>
-#include <vtkCellArray.h>
+#include <vtkCellType.h>
 
 #include "OutputVtk.h"
 
@@ -55,10 +56,49 @@ ModuleKey OutputVtk::className = GetModuleFactory().RegisterCreatorFunction(
 
 OutputVtk::OutputVtk(MeshSharedPtr m) : OutputModule(m)
 {
+    m_config["uncompress"] = ConfigOption(true, "0", "Uncompress xml sections");
+    m_config["legacy"]        = ConfigOption(true, "0", "Output in legacy format");
 }
 
 OutputVtk::~OutputVtk()
 {
+}
+
+int OutputVtk::GetVtkCellType(std::string pType)
+{
+    if (pType == "S")
+    {
+        return VTK_LINE;
+    }
+    else if (pType == "T")
+    {
+        return VTK_TRIANGLE;
+    }
+    else if (pType == "Q")
+    {
+        return VTK_QUAD;
+    }
+    else if (pType == "A")
+    {
+        return VTK_TETRA;
+    }
+    else if (pType == "P")
+    {
+        return VTK_PYRAMID;
+    }
+    else if (pType == "R")
+    {
+        return VTK_WEDGE;
+    }
+    else if (pType == "H")
+    {
+        return VTK_HEXAHEDRON;
+    }
+    else
+    {
+        ASSERTL0(false, "Element type not supported.");
+        return 0;
+    }
 }
 
 void OutputVtk::Process()
@@ -66,9 +106,8 @@ void OutputVtk::Process()
     m_log(VERBOSE) << "Writing VTK file '"
                    << m_config["outfile"].as<string>() << "'." << endl;
 
-    vtkPolyData *vtkMesh   = vtkPolyData::New();
-    vtkPoints *vtkPoints   = vtkPoints::New();
-    vtkCellArray *vtkPolys = vtkCellArray::New();
+    vtkUnstructuredGrid *vtkMesh   = vtkUnstructuredGrid::New();
+    vtkPoints           *vtkPoints = vtkPoints::New();
 
     std::set<NodeSharedPtr> tmp(m_mesh->m_vertexSet.begin(),
                                 m_mesh->m_vertexSet.end());
@@ -87,21 +126,46 @@ void OutputVtk::Process()
         {
             p[j] = elmt[i]->GetVertex(j)->m_id;
         }
-        vtkPolys->InsertNextCell(vertexCount, &p[0]);
+        // Adjust vertex order to the vtk convention
+        if (elmt[i]->GetTag() == "R")
+        {
+            std::swap(p[2], p[4]);
+        }
+        vtkMesh->InsertNextCell(GetVtkCellType(elmt[i]->GetTag()),
+                                vertexCount, &p[0]);
     }
 
     vtkMesh->SetPoints(vtkPoints);
-    vtkMesh->SetPolys(vtkPolys);
 
-    // Write out the new mesh
-    vtkPolyDataWriter *vtkMeshWriter = vtkPolyDataWriter::New();
-    vtkMeshWriter->SetFileName(m_config["outfile"].as<string>().c_str());
+    // Write out the new mesh in XML or legacy format
+    if (m_config["legacy"].beenSet)
+    {
+        vtkUnstructuredGridWriter *vtkMeshWriter = vtkUnstructuredGridWriter::New();
+        vtkMeshWriter->SetFileName(m_config["outfile"].as<string>().c_str());
+
 #if VTK_MAJOR_VERSION <= 5
-    vtkMeshWriter->SetInput(vtkMesh);
+        vtkMeshWriter->SetInput(vtkMesh);
 #else
-    vtkMeshWriter->SetInputData(vtkMesh);
+        vtkMeshWriter->SetInputData(vtkMesh);
 #endif
-    vtkMeshWriter->Update();
+        vtkMeshWriter->Update();
+    }
+    else // XML format
+    {
+        vtkXMLUnstructuredGridWriter *vtkMeshWriter = vtkXMLUnstructuredGridWriter::New();
+        vtkMeshWriter->SetFileName(m_config["outfile"].as<string>().c_str());
+
+#if VTK_MAJOR_VERSION <= 5
+        vtkMeshWriter->SetInput(vtkMesh);
+#else
+        vtkMeshWriter->SetInputData(vtkMesh);
+#endif
+        if (m_config["uncompress"].beenSet)
+        {
+            vtkMeshWriter->SetDataModeToAscii();
+        }
+        vtkMeshWriter->Update();
+    }
 }
 }
 }

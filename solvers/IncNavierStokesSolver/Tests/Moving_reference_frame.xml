@@ -60,8 +60,7 @@
         </BOUNDARYCONDITIONS>
         
         <FUNCTION NAME="MovingReferenceFrame">
-            <E VAR="u" VALUE="1" />
-            <E VAR="v" VALUE="0" />
+            <E VAR="u" VALUE="-1" />
         </FUNCTION>
         <FUNCTION NAME="BodyForce">
           <E VAR="u" VALUE="0" />

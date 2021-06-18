@@ -1343,7 +1343,7 @@ namespace Nektar
                                             const NekDouble time)
     {
         // evaluate convection terms
-        EvaluateAdvectionTerms(inarray,outarray);
+        EvaluateAdvectionTerms(inarray,outarray,time);
 
         for (auto &x : m_forcing)
         {
@@ -1744,7 +1744,7 @@ namespace Nektar
             Vmath::Smul(tmp_DerVel[i].size(), m_kinvis, tmp_DerVel[i], 1, tmp_DerVel[i], 1);
         }
 
-        EvaluateAdvectionTerms(Velocity, Eval_Adv);
+        EvaluateAdvectionTerms(Velocity, Eval_Adv, m_time);
 
         for(int i = 0; i < m_velocity.size(); ++i)
         {

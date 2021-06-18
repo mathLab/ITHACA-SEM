@@ -43,6 +43,7 @@
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Forcing/Forcing.h>
+#include <LibUtilities/BasicUtils/Equation.h>
 
 
 namespace Nektar {
@@ -83,15 +84,22 @@ protected:
             Array<OneD, Array<OneD, NekDouble> > &outarray,
             const NekDouble &time);
 
+    SOLVER_UTILS_EXPORT virtual void v_PreApply(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> > &inarray,
+            Array<OneD, Array<OneD, NekDouble> > &outarray,
+            const NekDouble &time);
+
 private:
     std::string m_funcName;
-    Array<OneD, NekDouble> m_frameVelocity;
-    Array<OneD, Array<OneD, NekDouble>> m_grad;
+    std::map<int, LibUtilities::EquationSharedPtr> m_frameFunction;
+    std::map<int, NekDouble> m_frameVelocity;
+    Array<OneD, Array<OneD, NekDouble>> m_coords;
+    bool m_hasRotation;
+    bool m_isH1d;
+    bool m_hasPlane0;
+    bool m_isH2d;
     NekInt m_spacedim;
-    bool m_transform;
-    bool m_homogen_dealiasing;
-    bool m_SingleMode;
-    bool m_HalfMode;
 
 
     ForcingMovingReferenceFrame(
@@ -100,13 +108,14 @@ private:
 
     virtual ~ForcingMovingReferenceFrame(void) {};
 
-    void CalculateGradient(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields
-    );
+    void Update(const NekDouble &time);
 
-    void Update(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time);
+    void addRotation(
+            int npoints,
+            const Array<OneD, Array<OneD, NekDouble> > &inarray0,
+            NekDouble angVelScale,
+            const Array<OneD, Array<OneD, NekDouble> > &inarray1,
+            Array<OneD, Array<OneD, NekDouble> > &outarray);
 };
 
 }

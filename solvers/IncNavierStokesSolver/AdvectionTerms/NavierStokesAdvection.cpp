@@ -277,21 +277,14 @@ timer.AccumulateRegion("GalerinProject");
                 grad0 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
                 grad1 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
                 grad2 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
+                Array<OneD, NekDouble> tmp = grad2;
                 for(int n = 0; n < nConvectiveFields; ++n)
                 {
                     if (fields[0]->GetWaveSpace() == true &&
                         fields[0]->GetExpType() == MultiRegions::e3DH1D)
                     {
-                        if (n < ndim)
-                        {
-                            // take d/dx, d/dy  gradients in physical Fourier space
-                            fields[0]->PhysDeriv(velocity[n],grad0,grad1);
-                        }
-                        else
-                        {
-                            fields[0]->HomogeneousBwdTrans(inarray[n],wkSp);
-                            fields[0]->PhysDeriv(wkSp,grad0,grad1);
-                        }
+                        fields[0]->HomogeneousBwdTrans(inarray[n],tmp);
+                        fields[0]->PhysDeriv(tmp,grad0,grad1);
                         // Take d/dz derivative using wave space field
                         fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                                               inarray[n],
@@ -301,16 +294,8 @@ timer.AccumulateRegion("GalerinProject");
                     else if (fields[0]->GetWaveSpace() == true &&
                              fields[0]->GetExpType() == MultiRegions::e3DH2D)
                     {
-                        if (n < ndim)
-                        {
-                            // take d/dx,  gradients in physical Fourier space
-                            fields[0]->PhysDeriv(velocity[n],grad0);
-                        }
-                        else
-                        {
-                            fields[0]->HomogeneousBwdTrans(inarray[n],wkSp);
-                            fields[0]->PhysDeriv(wkSp,grad0);
-                        }
+                        fields[0]->HomogeneousBwdTrans(inarray[n],tmp);
+                        fields[0]->PhysDeriv(tmp,grad0);
                         // Take d/dy derivative using wave space field
                         fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],inarray[n],
                                               outarray[n]);

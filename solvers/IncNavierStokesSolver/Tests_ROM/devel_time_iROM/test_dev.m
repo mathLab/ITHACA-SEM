@@ -4,6 +4,7 @@
 
 x_pod = load('test_param/VCS_fields_TT_pod_x.txt');
 x_fom = load('test_param/VCS_fields_TT_x.txt');
+x_fom_local = load('test_param/VCS_fields_TT_x_local.txt');
 
 % measure the difference
 
@@ -13,8 +14,9 @@ diff45 = norm(x_fom(4,:) - x_fom(5,:)) / norm(x_fom(4,:))
 
 y_pod = load('test_param/VCS_fields_TT_pod_y.txt');
 y_fom = load('test_param/VCS_fields_TT_y.txt');
+y_fom_local = load('test_param/VCS_fields_TT_y_local.txt');
 
-all_x = [x_pod'];
+all_x = [x_fom_local'];
 
 [U,S,V] = svd(all_x);
 dim_x = size(all_x, 2);
@@ -27,7 +29,7 @@ Ut = U';
 writematrix(Ut(1:modes_taken_x,:), 'all_x.txt', 'Delimiter', ' ')
 writematrix(modes_taken_x,  'dim_x.txt');
 
-all_y = [y_pod'];
+all_y = [y_fom_local'];
 
 [U,S,V] = svd(all_y);
 dim_y = size(all_y, 2);

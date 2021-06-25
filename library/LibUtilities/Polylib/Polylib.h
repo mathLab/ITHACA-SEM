@@ -163,6 +163,9 @@ namespace Polylib {
     LIB_UTILITIES_EXPORT std::complex<Nektar::NekDouble> ImagBesselComp(const int,
                   std::complex<Nektar::NekDouble> );
 
+    /* Gamma function routines */
+    LIB_UTILITIES_EXPORT double gammaF (const double);
+    LIB_UTILITIES_EXPORT double gammaFracGammaF(const int, const double, const int, const double);
 
 } // end of namespace
 

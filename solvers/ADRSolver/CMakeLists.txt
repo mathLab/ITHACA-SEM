@@ -163,6 +163,7 @@ IF( NEKTAR_SOLVER_ADR )
 
     ADD_NEKTAR_TEST(Helmholtz1D_8modes_DG)
     ADD_NEKTAR_TEST(Helmholtz1D_8modes)
+    ADD_NEKTAR_TEST(Helmholtz1D_800modes LENGTHY)
     ADD_NEKTAR_TEST(Helmholtz1D_8nodes)
 
     ADD_NEKTAR_TEST(SteadyAdvDiffReact2D_modal)

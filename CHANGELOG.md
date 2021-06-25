@@ -34,6 +34,7 @@ v5.1.0
 - Add ESDIRK3 and ESDIRK4 time integration schemes (!1196)
 - Add a filter to calculate mean value of solution fields (!1211)
 - Fix the time dependent absorption forcing (!1254)
+- Enable very high order (>100) quadrature use (!1262)
 - Add rotation and improve performance of MovingReferenceFrame forcing (!1185)
 - Fix BODYFORCE defined by a file (!1215)
 

@@ -7,8 +7,8 @@ using namespace Polylib;
 
 /* --------------------------------------------------------------------
    To compile:
-   g++ -g -c Polylib.cpp -I ./
-   g++ -g -c Polylib_test.cpp -I ./
+   g++ -g -c Polylib.cpp -I ./ -I ../../
+   g++ -g -c Polylib_test.cpp -I ./ -I ../../
    g++ -g -o polytest Polylib_test.o Polylib.o -lm
  * --------------------------------------------------------------------*/
 
@@ -111,8 +111,9 @@ using namespace Polylib;
 /* local routines */
 double    ddot (int, double *, int, double *, int);
 double   *dvector (int, int);
+int      test_gamma_fraction();
 
-main(){
+int main(){
   int np,n,i;
   double *z,*w,*p,sum=0,alpha,beta,*d,*dt;
 
@@ -240,7 +241,7 @@ main(){
       for(np = NPLOWER; np <= NPUPPER; ++np){
     zwgj(z,w,np,alpha,beta);
     for(n = 2; n < np-1; ++n){
-      Dgj(d,dt,z,np,alpha,beta);
+      Dgj(d,z,np,alpha,beta);
 
       for(i = 0; i < np; ++i) p[i] = pow(z[i],n);
       sum = 0;
@@ -270,7 +271,7 @@ main(){
       for(np = NPLOWER; np <= NPUPPER; ++np){
     zwgrjm(z,w,np,alpha,beta);
     for(n = 2; n < np-1; ++n){
-      Dgrjm(d,dt,z,np,alpha,beta);
+      Dgrjm(d,z,np,alpha,beta);
       for(i = 0; i < np; ++i) p[i] = pow(z[i],n);
       sum = 0;
       for(i = 0; i < np; ++i)
@@ -299,7 +300,7 @@ main(){
       for(np = NPLOWER; np <= NPUPPER; ++np){
     zwgrjp(z,w,np,alpha,beta);
     for(n = 2; n < np-1; ++n){
-      Dgrjp(d,dt,z,np,alpha,beta);
+      Dgrjp(d,z,np,alpha,beta);
       for(i = 0; i < np; ++i) p[i] = pow(z[i],n);
       sum = 0;
       for(i = 0; i < np; ++i)
@@ -328,7 +329,7 @@ main(){
       for(np = NPLOWER; np <= NPUPPER; ++np){
     zwglj(z,w,np,alpha,beta);
     for(n = 2; n < np-1; ++n){
-      Dglj(d,dt,z,np,alpha,beta);
+      Dglj(d,z,np,alpha,beta);
       for(i = 0; i < np; ++i) p[i] = pow(z[i],n);
       sum = 0;
       for(i = 0; i < np; ++i)
@@ -474,9 +475,11 @@ main(){
   }
   printf("Finished checking Gauss Lobatto interploation\n");
 #endif
+  test_gamma_fraction();
 
 
   free(z); free(w); free(p); free(d); free(dt);
+  return 0;
 }
 
 double ddot (int n, double *x, int incx, double *y, int incy)
@@ -498,4 +501,76 @@ double *dvector(int nl,int nh)
 
   v = (double *)malloc((unsigned) (nh-nl+1)*sizeof(double));
   return v-nl;
+}
+
+int test_gamma_fraction(){
+  double a = 362880.;
+  double c = Polylib::gammaFracGammaF(10, 0., 0, 1.);
+  printf("alpha = %7.2lf, beta = %7.2lf, difference %9.2e\n", 10.,1., c/a-1.);
+  c = Polylib::gammaFracGammaF(1, 0., 12, -2.);
+  printf("alpha = %7.2lf, beta = %7.2lf, difference %9.2e\n", 1.,10., c*a-1.);
+
+  a = 30.;
+  c = Polylib::gammaFracGammaF(4, 3., 5, 0.);
+  printf("alpha = %7.2lf, beta = %7.2lf, difference %9.2e\n", 5.,7., c/a-1.);
+  c = Polylib::gammaFracGammaF(5, 0., 7, 0.);
+  printf("alpha = %7.2lf, beta = %7.2lf, difference %9.2e\n", 7.,5., c*a-1.);
+
+  a = 21651.09375;
+  c = Polylib::gammaFracGammaF(7, 3.5, 5, 0.5);
+  printf("alpha = %7.2lf, beta = %7.2lf, difference %9.2e\n", 10.5,5.5, c/a-1.);
+  c = Polylib::gammaFracGammaF(5, 0.5, 10, 0.5);
+  printf("alpha = %7.2lf, beta = %7.2lf, difference %9.2e\n", 5.5,10.5, c*a-1.);
+
+  a = 97429.921875;
+  c = Polylib::gammaFracGammaF(10, 0.5, 5, -0.5);
+  printf("alpha = %7.2lf, beta = %7.2lf, difference %9.2e\n", 10.5,4.5, c/a-1.);
+  c = Polylib::gammaFracGammaF(5, -0.5, 11, -0.5);
+  printf("alpha = %7.2lf, beta = %7.2lf, difference %9.2e\n", 4.5,10.5, c*a-1.);
+
+  a = 2279.0625;
+  c = Polylib::gammaFracGammaF(10, -0.5, 5, 0.5);
+  printf("alpha = %7.2lf, beta = %7.2lf, difference %9.2e\n", 9.5,5.5, c/a-1.);
+  c = Polylib::gammaFracGammaF(5, 0.5, 10, -0.5);
+  printf("alpha = %7.2lf, beta = %7.2lf, difference %9.2e\n", 5.5,9.5, c*a-1.);
+
+  a = 639383.8623046875;
+  c = Polylib::gammaFracGammaF(10, 0.5, 0, 0.5);
+  printf("alpha = %7.2lf, beta = %7.2lf, difference %9.2e\n", 10.5,0.5, c/a-1.);
+  c = Polylib::gammaFracGammaF(0, 0.5, 10, 0.5);
+  printf("alpha = %7.2lf, beta = %7.2lf, difference %9.2e\n", 0.5,10.5, c*a-1.);
+
+  a = 5967498288235982848.;
+  c = Polylib::gammaFracGammaF(100, 0., 90, 0.5);
+  printf("alpha = %7.2lf, beta = %7.2lf, difference %9.2e\n", 100.,90.5, c/a-1.);
+  c = Polylib::gammaFracGammaF(90, 0.5, 100, 0.);
+  printf("alpha = %7.2lf, beta = %7.2lf, difference %9.2e\n", 90.5,100., c*a-1.);
+
+  a = 5618641603777298169856.;
+  c = Polylib::gammaFracGammaF(200, 0., 191, -0.5);
+  printf("alpha = %7.2lf, beta = %7.2lf, difference %9.2e\n", 200.,190.5, c/a-1.);
+  c = Polylib::gammaFracGammaF(190, 0.5, 200, 0.);
+  printf("alpha = %7.2lf, beta = %7.2lf, difference %9.2e\n", 190.5,200., c*a-1.);
+
+  a = 77396694214720029196288.;
+  c = Polylib::gammaFracGammaF(200, 0., 190, 0.);
+  printf("alpha = %7.2lf, beta = %7.2lf, difference %9.2e\n", 200.,190., c/a-1.);
+  c = Polylib::gammaFracGammaF(190, 0., 200, 0.);
+  printf("alpha = %7.2lf, beta = %7.2lf, difference %9.2e\n", 190.,200., c*a-1.);
+
+  int Q=2;
+  for(double alpha=-0.5; alpha<=150.; alpha+=0.5)
+  {
+      for(double beta=-0.5; beta<=150.; beta+=0.5)
+      {
+          a = Polylib::gammaF(Q+alpha)/Polylib::gammaF(Q+beta);
+          c = Polylib::gammaFracGammaF(Q, alpha, Q, beta) / a - 1.;
+          if(fabs(c)>5.e-15)
+          {
+              printf("alpha = %7.2lf, beta = %7.2lf, difference %9.2e\n", Q+alpha,Q+beta, c);
+          }
+      }
+  }
+
+  return 0;
 }

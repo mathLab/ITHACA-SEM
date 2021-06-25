@@ -72,6 +72,7 @@ namespace Polylib {
     //static void   TriQL    (const int n, double *d, double *e);
 	static void TriQL(const int, double *,double *, double **);
     double gammaF (const double);
+    double gammaFracGammaF(const int, const double, const int, const double);
 	static void RecCoeff(const int, double *, double *,const double,
 				  const double);
 	void JKMatrix(int, double *, double *);
@@ -96,9 +97,9 @@ namespace Polylib {
         jacobz (np,z,alpha,beta);
         jacobd (np,z,w,np,alpha,beta);
 
-        fac  = pow(two,apb + one)*gammaF(alpha + np + one)*gammaF(beta + np + one);
-        fac /= gammaF(np + one)*gammaF(apb + np + one);
-
+        fac  = pow(two,apb + one) * gammaFracGammaF(np + 1, alpha, np + 1, 0.0)
+                                  * gammaFracGammaF(np + 1, beta , np + 1, apb);
+        
         for(i = 0; i < np; ++i) w[i] = fac/(w[i]*w[i]*(one-z[i]*z[i]));
 
         return;
@@ -131,8 +132,9 @@ namespace Polylib {
             jacobz  (np-1,z+1,alpha,beta+1);
             jacobfd (np,z,w,NULL,np-1,alpha,beta);
 
-            fac  = pow(two,apb)*gammaF(alpha + np)*gammaF(beta + np);
-            fac /= gammaF(np)*(beta + np)*gammaF(apb + np + 1);
+            fac  = pow(two,apb) * gammaFracGammaF(np, alpha, np, 0.0)
+                                * gammaFracGammaF(np, beta , np + 1, apb);
+            fac /= (beta + np);
 
             for(i = 0; i < np; ++i) w[i] = fac*(1-z[i])/(w[i]*w[i]);
             w[0] *= (beta + one);
@@ -169,8 +171,9 @@ namespace Polylib {
             z[np-1] = one;
             jacobfd (np,z,w,NULL,np-1,alpha,beta);
 
-            fac  = pow(two,apb)*gammaF(alpha + np)*gammaF(beta + np);
-            fac /= gammaF(np)*(alpha + np)*gammaF(apb + np + 1);
+            fac  = pow(two,apb) * gammaFracGammaF(np, alpha, np, 0.0)
+                                * gammaFracGammaF(np, beta , np + 1, apb);
+            fac /= (alpha + np);
 
             for(i = 0; i < np; ++i) w[i] = fac*(1+z[i])/(w[i]*w[i]);
             w[np-1] *= (alpha + one);
@@ -213,8 +216,9 @@ namespace Polylib {
             jacobz  (np-2,z + 1,alpha + one,beta + one);
             jacobfd (np,z,w,NULL,np-1,alpha,beta);
 
-            fac  = pow(two,apb + 1)*gammaF(alpha + np)*gammaF(beta + np);
-            fac /= (np-1)*gammaF(np)*gammaF(alpha + beta + np + one);
+            fac  = pow(two,apb + 1) * gammaFracGammaF(np, alpha, np, 0.0)
+                                    * gammaFracGammaF(np, beta , np + 1, apb);
+            fac /= (np-1);
 
             for(i = 0; i < np; ++i) w[i] = fac/(w[i]*w[i]);
             w[0]    *= (beta  + one);
@@ -596,8 +600,8 @@ namespace Polylib {
 
             pd  = (double *)malloc(np*sizeof(double));
 
-            pd[0] = pow(-one,np-1)*gammaF(np+beta+one);
-            pd[0] /= gammaF(np)*gammaF(beta+two);
+            pd[0] = pow(-one,np-1) * gammaFracGammaF(np + 1, beta, np, 0.0);
+            pd[0] /= gammaF(beta+two);
             jacobd(np-1,z+1,pd+1,np-1,alpha,beta+1);
             for(i = 1; i < np; ++i) pd[i] *= (1+z[i]);
 
@@ -649,8 +653,8 @@ namespace Polylib {
 
             jacobd(np-1,z,pd,np-1,alpha+1,beta);
             for(i = 0; i < np-1; ++i) pd[i] *= (1-z[i]);
-            pd[np-1] = -gammaF(np+alpha+one);
-            pd[np-1] /= gammaF(np)*gammaF(alpha+two);
+            pd[np-1] = -gammaFracGammaF(np + 1, alpha, np, 0.0);
+            pd[np-1] /= gammaF(alpha+two);
 
             for (i = 0; i < np; i++) {
                 for (j = 0; j < np; j++){
@@ -696,12 +700,12 @@ namespace Polylib {
 
             pd  = (double *)malloc(np*sizeof(double));
 
-            pd[0]  = two*pow(-one,np)*gammaF(np + beta);
-            pd[0] /= gammaF(np - one)*gammaF(beta + two);
+            pd[0]  = two*pow(-one,np) * gammaFracGammaF(np, beta, np - 1, 0.0);
+            pd[0] /= gammaF(beta + two);
             jacobd(np-2,z+1,pd+1,np-2,alpha+1,beta+1);
             for(i = 1; i < np-1; ++i) pd[i] *= (one-z[i]*z[i]);
-            pd[np-1]  = -two*gammaF(np + alpha);
-            pd[np-1] /= gammaF(np - one)*gammaF(alpha + two);
+            pd[np-1]  = -two * gammaFracGammaF(np, alpha, np - 1, 0.0);
+            pd[np-1] /= gammaF(alpha + two);
 
             for (i = 0; i < np; i++) {
                 for (j = 0; j < np; j++){
@@ -1180,6 +1184,89 @@ namespace Polylib {
         }
         else
             fprintf(stderr,"%lf is not of integer or half order\n",x);
+        return gamma;
+    }
+
+    /**
+    \brief Calculate fraction of two Gamma functions, \f$ \Gamma(x+\alpha)/\Gamma(y+\beta) \f$,
+    for integer values and halves.
+
+    Determine the value of \f$\Gamma(n)\f$ using:
+
+    \f$ \Gamma(n) = (n-1)!  \mbox{ or  }  \Gamma(n+1/2) = (n-1/2)\Gamma(n-1/2)\f$
+
+    where \f$ \Gamma(1/2) = \sqrt(\pi)\f$
+
+    Attempts simplification in cases like \f$ \Gamma(x+1)/\Gamma(x-1) = x*(x-1) \f$
+    */
+
+    double gammaFracGammaF(const int x, const double alpha, const int y, const double beta){
+        double gamma = 1.0;
+        double halfa = fabs(alpha - int(alpha));
+        double halfb = fabs(beta  - int(beta ));
+        if (halfa == 0.0 && halfb == 0.0)// integer value
+        {
+            int X = x+alpha;
+            int Y = y+beta;
+            if (X > Y)
+            {
+                for(int tmp=X-1; tmp > Y-1; tmp-=1)
+                    gamma *= tmp;
+            }
+            else if (Y > X)
+            {
+                for(int tmp=Y-1; tmp > X-1; tmp-=1)
+                    gamma *= tmp;
+                gamma = 1. / gamma;
+            }
+        }
+        else if (halfa == 0.5 && halfb == 0.5)// both are halves
+        {
+            double X = x + alpha;
+            double Y = y + beta;
+            if( X > Y )
+            {
+                for(int tmp=int(X); tmp > int(Y); tmp-=1)
+                    gamma *= tmp-0.5;
+            }
+            else if( Y > X)
+            {
+                for(int tmp=int(Y); tmp > int(X); tmp-=1)
+                    gamma *= tmp-0.5;
+                gamma = 1. / gamma;
+            }
+        }
+        else
+        {
+            double X = x + alpha;
+            double Y = y + beta;
+            while (X>1 || Y>1)
+            {
+                if (X>1)
+                {
+                    gamma *= X-1.;
+                    X -= 1.;
+                }
+                if (Y>1)
+                {
+                    gamma /= Y-1.;
+                    Y -= 1.;
+                }
+            }
+            if (X==0.5)
+            {
+                gamma *= sqrt(M_PI);
+            }
+            else if (Y==0.5)
+            {
+                gamma /= sqrt(M_PI);
+            }
+            else
+            {
+                fprintf(stderr,"%lf or %lf is not of integer or half order\n",X, Y);
+            }
+        }
+
         return gamma;
     }
 

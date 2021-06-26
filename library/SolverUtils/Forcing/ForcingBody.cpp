@@ -146,10 +146,10 @@ namespace SolverUtils
                     std::vector<Array<OneD, const NekDouble>> fielddata = {
                         xc, yc, zc, t};
 
-                    for (int i = 0; i < m_NumVariable; ++i)
+                    for (int j = 0; j < m_NumVariable; ++j)
                     {
-                        varstr += " " + m_session->GetVariable(i);
-                        fielddata.push_back(inarray[i]);
+                        varstr += " " + m_session->GetVariable(j);
+                        fielddata.push_back(inarray[j]);
                     }
 
                     // Evaluate function

@@ -36,7 +36,7 @@ v5.1.0
 - Fix the time dependent absorption forcing (!1254)
 - Enable very high order (>100) quadrature use (!1262)
 - Add rotation and improve performance of MovingReferenceFrame forcing (!1185)
-- Fix BODYFORCE defined by a file (!1215)
+- Fix BODYFORCE defined by a file (!1215, !1264)
 
 **FieldConvert**:
 - Add phifile module to compute shape functions for the SPM solver (!1065)

@@ -951,16 +951,27 @@ namespace Nektar
 		m_fields[0]->BwdTrans_IterPerExp(inarray_y_local, inarray_y_phys);
 		double max_x = 0;
 		double max_y = 0;
-		for (int i = 0; i < m_fields[0]->GetNcoeffs(); ++i)
+		for (int i = 0; i < m_fields[0]->GetNpoints(); ++i)
 		{
 			if (abs(inarray[0][i] - inarray_x_phys[i]) > max_x)
 				max_x = abs(inarray[0][i] - inarray_x_phys[i]);
 			if (abs(inarray[1][i] - inarray_y_phys[i]) > max_y)
 				max_y = abs(inarray[1][i] - inarray_y_phys[i]);
 		}
+		double rel_max_x = 0;
+		double rel_max_y = 0;
+		for (int i = 0; i < m_fields[0]->GetNpoints(); ++i)
+		{
+			if ((abs(inarray[0][i] - inarray_x_phys[i]) / abs(inarray[0][i]) > rel_max_x) && (abs(inarray[0][i]) > 1e-10))
+				rel_max_x = abs(inarray[0][i] - inarray_x_phys[i]) / abs(inarray[0][i]);
+			if ((abs(inarray[1][i] - inarray_y_phys[i]) / abs(inarray[1][i]) > rel_max_y) && (abs(inarray[1][i]) > 1e-10))
+				rel_max_y = abs(inarray[1][i] - inarray_y_phys[i]) / abs(inarray[1][i]);
+		}
 
 //		cout << " max_x diff " << max_x << endl;
 //		cout << " max_y diff " << max_y << endl;
+//		cout << " rel_max_x diff " << rel_max_x << endl; 
+//		cout << " rel_max_y diff " << rel_max_y << endl; 
 
 		for (int i = 0; i < m_fields[0]->GetNcoeffs(); ++i)
 		{

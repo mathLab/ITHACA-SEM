@@ -704,7 +704,7 @@ namespace Nektar
 			cout << "ROM_size_x loaded as " << ROM_size_x << endl;
 
 			POD_modes_x = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNcoeffs(), ROM_size_x);
-
+			POD_modes_x_phys = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_x);
 
 //		    std::string VCS_fields_TT_pod_x_txt = "VCS_fields_TT_pod_x.txt";
 		    std::string VCS_fields_TT_pod_x_txt = "../all_x.txt";
@@ -750,6 +750,7 @@ namespace Nektar
 			cout << "ROM_size_y loaded as " << ROM_size_y << endl;
 
 			POD_modes_y = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNcoeffs(), ROM_size_y);
+			POD_modes_y_phys = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_y);
 
 //		    std::string VCS_fields_TT_pod_y_txt = "VCS_fields_TT_pod_y.txt";
 		    std::string VCS_fields_TT_pod_y_txt = "../all_y.txt";
@@ -979,6 +980,39 @@ namespace Nektar
 			eigen_inarray_y_local(i) = inarray_y_local[i];
 		}
 
+		// compute the phys POD modes
+		for (int i = 0; i < ROM_size_x; ++i)
+		{
+			Array<OneD, NekDouble> conversion_mode, conversion_mode_local;
+	        conversion_mode = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+	        conversion_mode_local = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
+			for (int j = 0; j < m_fields[0]->GetNcoeffs(); ++j)
+			{
+				conversion_mode_local[j] = POD_modes_x(j,i);
+			}
+     		m_fields[0]->BwdTrans_IterPerExp(conversion_mode_local, conversion_mode);
+			for (int j = 0; j < m_fields[0]->GetNpoints(); ++j)
+			{
+				POD_modes_x_phys(j,i) = conversion_mode[j];
+			}
+		}
+		for (int i = 0; i < ROM_size_y; ++i)
+		{
+			Array<OneD, NekDouble> conversion_mode, conversion_mode_local;
+	        conversion_mode = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+	        conversion_mode_local = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
+			for (int j = 0; j < m_fields[0]->GetNcoeffs(); ++j)
+			{
+				conversion_mode_local[j] = POD_modes_y(j,i);
+			}
+     		m_fields[0]->BwdTrans_IterPerExp(conversion_mode_local, conversion_mode);
+			for (int j = 0; j < m_fields[0]->GetNpoints(); ++j)
+			{
+				POD_modes_y_phys(j,i) = conversion_mode[j];
+			}
+		}
+
+
 
 		proj_inarray_x = POD_modes_x.transpose() * eigen_inarray_x_local;
 		proj_inarray_y = POD_modes_y.transpose() * eigen_inarray_y_local;
@@ -988,11 +1022,28 @@ namespace Nektar
 	
 		double rel_err_x = (reproj_inarray_x - eigen_inarray_x_local).norm() / eigen_inarray_x_local.norm();
 	
-//		cout << " rel_error_x of reproj inarray " << rel_err_x << endl;
+		cout << " rel_error_x of reproj inarray " << rel_err_x << endl;
 
 		double rel_err_y = (reproj_inarray_y - eigen_inarray_y_local).norm() / eigen_inarray_y_local.norm();
 	
-//		cout << " rel_error_y of reproj inarray " << rel_err_y << endl;
+		cout << " rel_error_y of reproj inarray " << rel_err_y << endl;
+
+		Eigen::VectorXd proj_inarray_x_phys = Eigen::VectorXd::Zero(ROM_size_x);
+		Eigen::VectorXd proj_inarray_y_phys = Eigen::VectorXd::Zero(ROM_size_y);
+		proj_inarray_x_phys = POD_modes_x_phys.transpose() * eigen_inarray_x;
+		proj_inarray_y_phys = POD_modes_y_phys.transpose() * eigen_inarray_y;
+
+		Eigen::VectorXd	reproj_inarray_x_phys = POD_modes_x_phys * proj_inarray_x_phys;
+		Eigen::VectorXd	reproj_inarray_y_phys = POD_modes_y_phys * proj_inarray_y_phys;
+	
+		double rel_err_x_phys = (reproj_inarray_x_phys - eigen_inarray_x).norm() / eigen_inarray_x.norm();
+	
+		cout << " rel_error_x_phys of reproj inarray " << rel_err_x_phys << endl;
+
+		double rel_err_y_phys = (reproj_inarray_y_phys - eigen_inarray_y).norm() / eigen_inarray_y.norm();
+	
+		cout << " rel_error_y_phys of reproj inarray " << rel_err_y_phys << endl;
+
 
 		// dry run the projection approach
 		// for all POD modes get the phys deriv

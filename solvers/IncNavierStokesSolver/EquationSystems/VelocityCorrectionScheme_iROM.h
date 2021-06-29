@@ -236,6 +236,8 @@ namespace Nektar
     Array<OneD, Array<OneD, NekDouble> > last_added_field; 
 	Eigen::MatrixXd POD_modes_x;
 	Eigen::MatrixXd POD_modes_y;
+	Eigen::MatrixXd POD_modes_x_phys;
+	Eigen::MatrixXd POD_modes_y_phys;
     int globalNcoeff;
     int step;
     int no_of_added_ones;

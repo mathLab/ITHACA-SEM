@@ -44,3 +44,34 @@ writematrix(modes_taken_y,  'dim_y.txt');
 
 modes_taken_x
 modes_taken_y
+
+
+
+all_x = [x_fom'];
+
+[U,S,V] = svd(all_x);
+dim_x = size(all_x, 2);
+
+sing_vals = diag(S(1:dim_x,1:dim_x))';
+modes_taken_x = sum(cumsum(sing_vals) ./ sum(sing_vals) < 1.1);
+
+Ut = U';
+
+writematrix(Ut(1:modes_taken_x,:), 'all_x_phys.txt', 'Delimiter', ' ')
+writematrix(modes_taken_x,  'dim_x_phys.txt');
+
+all_y = [y_fom_local'];
+
+[U,S,V] = svd(all_y);
+dim_y = size(all_y, 2);
+
+sing_vals = diag(S(1:dim_y,1:dim_y))';
+modes_taken_y = sum(cumsum(sing_vals) ./ sum(sing_vals) < 1.1);
+
+Ut = U';
+
+writematrix(Ut(1:modes_taken_y,:), 'all_y_phys.txt', 'Delimiter', ' ')
+writematrix(modes_taken_y,  'dim_y_phys.txt');
+
+modes_taken_x
+modes_taken_y

@@ -721,7 +721,7 @@ namespace Nektar
 //				      cout << line << endl;
 			        std::istringstream is( line );
 					std::vector<double> nn = std::vector<double>( std::istream_iterator<double>(is), std::istream_iterator<double>() );
-					cout << "nn.size() "  << nn.size() << endl;
+//					cout << "nn.size() "  << nn.size() << endl;
 					for (int i = 0; i < nn.size(); ++i)
 					{
 						POD_modes_x(i, counter) = nn[i];
@@ -1200,8 +1200,8 @@ namespace Nektar
 		cout << "outarray_part1_local[i] " << my_outarray_part1_local[0][100] << "  my_outarray[i] " << my_outarray_2(100) << endl;
 		cout << "outarray_part1[i] " << my_outarray_part1[0][100] << "  my_outarray_phys[i] " << my_outarray_2_phys(100) << endl;
 
-		// is outarray well projected?
-		Eigen::VectorXd eigen_outarray_x = Eigen::VectorXd::Zero(physTot);
+		// is outarray well projected? -- no and only works in ROM
+/*		Eigen::VectorXd eigen_outarray_x = Eigen::VectorXd::Zero(physTot);
 		Eigen::VectorXd eigen_outarray_y = Eigen::VectorXd::Zero(physTot);
 		Eigen::VectorXd eigen_outarray_x_local = Eigen::VectorXd::Zero(m_fields[0]->GetNcoeffs());
 		Eigen::VectorXd eigen_outarray_y_local = Eigen::VectorXd::Zero(m_fields[0]->GetNcoeffs());
@@ -1235,9 +1235,10 @@ namespace Nektar
 		cout << " rel_error_x_local of reproj outarray " << out_rel_err_x_local << endl;
 		double out_rel_err_y_local = (reproj_outarray_y_local - eigen_outarray_y_local).norm() / eigen_outarray_y_local.norm();
 		cout << " rel_error_y_local of reproj outarray " << out_rel_err_y_local << endl;		
-
+*/
 
 		cout << "outarray[i] " << outarray[0][100] << "  my_outarray[i] " << my_outarray[0][100] << endl;
+		outarray = my_outarray;
 
 
 		double maxi = 0;

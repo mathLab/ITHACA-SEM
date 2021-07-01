@@ -16,7 +16,7 @@
 
         <PARAMETERS>
             <P> TimeStep = 1e-2    </P>
-            <P> NumSteps = 5       </P>
+            <P> NumSteps = 25       </P>
             <P> IO_CheckSteps = 1       </P>
             <P> IO_InfoSteps = 1       </P>
             <P> Kinvis = 1       </P>

@@ -1074,6 +1074,8 @@ namespace Nektar
 		// for all POD modes get the phys deriv
 		Eigen::MatrixXd POD_modes_x_grad0  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_x);
 		Eigen::MatrixXd POD_modes_x_grad1  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_x);
+		Eigen::MatrixXd POD_modes_y_grad0  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_y);
+		Eigen::MatrixXd POD_modes_y_grad1  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_y);
 		Eigen::MatrixXd POD_modes_x_grad0_local  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNcoeffs(), ROM_size_x);
 		Eigen::MatrixXd POD_modes_x_grad1_local  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNcoeffs(), ROM_size_x);
 		Array<OneD, NekDouble> grad0,grad1,grad0_local,grad1_local,conversion_mode,conversion_mode_local;
@@ -1111,12 +1113,38 @@ namespace Nektar
 	       		POD_modes_x_grad1(j, i_x) = grad1[j];
 	       	}
 		}
+        for (int i_y = 0; i_y < ROM_size_y; ++i_y)
+        {
+//        	for (int j = 0; j < m_fields[0]->GetNcoeffs(); ++j)
+//        	{
+//        		conversion_mode_local[j] = POD_modes_x(j,i_x);
+//        	}
+//     		m_fields[0]->BwdTrans_IterPerExp(conversion_mode_local, conversion_mode);
+        	for (int j = 0; j < m_fields[0]->GetNpoints(); ++j)
+        	{
+        		conversion_mode[j] = POD_modes_y_phys(j,i_x);
+        	}
+
+			m_fields[0]->PhysDeriv(conversion_mode, grad0, grad1);
+     		m_fields[0]->FwdTrans_IterPerExp(grad0, grad0_local);
+     		m_fields[0]->FwdTrans_IterPerExp(grad1, grad1_local);
+        	for (int j = 0; j < m_fields[0]->GetNcoeffs(); ++j)
+        	{
+//        		POD_modes_y_grad0_local(j, i_x) = grad0_local[j];
+//        		POD_modes_y_grad1_local(j, i_x) = grad1_local[j];
+        	}
+        	for (int j = 0; j < m_fields[0]->GetNpoints(); ++j)
+        	{
+	       		POD_modes_y_grad0(j, i_x) = grad0[j];
+	       		POD_modes_y_grad1(j, i_x) = grad1[j];
+	       	}
+		}
 		
 		// intermediate accuracy test
 //		cout << "prev int acc test" << endl;
 //		my_outarray_2 = -eigen_inarray_x * (proj_inarray_x * POD_modes_x_grad0.transpose()) - eigen_inarray_y *  (proj_inarray_x * POD_modes_x_grad1.transpose()) ;
 		my_outarray_2 = POD_modes_x_grad0_local * proj_inarray_x_phys ;
-		my_outarray_2_phys = POD_modes_x_grad0 * proj_inarray_x_phys ;
+		my_outarray_2_phys = POD_modes_x_grad0 * proj_inarray_x_phys;
 //		cout << " proj_inarray_x.size() " << proj_inarray_x.size() << endl;
 //		cout << " proj_inarray_x.cols() " << proj_inarray_x.cols() << endl;
 //		cout << " proj_inarray_x.rows() " << proj_inarray_x.rows() << endl;
@@ -1126,7 +1154,7 @@ namespace Nektar
 //		cout << " my_outarray_2.cols() " << my_outarray_2.cols() << endl;
 //		cout << " my_outarray_2.rows() " << my_outarray_2.rows() << endl;
 		
-		Array<OneD, Eigen::MatrixXd> proj_POD_modes_x_grad0  = Array<OneD, Eigen::MatrixXd> (ROM_size_x);
+/*		Array<OneD, Eigen::MatrixXd> proj_POD_modes_x_grad0  = Array<OneD, Eigen::MatrixXd> (ROM_size_x);
 		Array<OneD, Eigen::MatrixXd> proj_POD_modes_x_grad1  = Array<OneD, Eigen::MatrixXd> (ROM_size_x);
 		for (int j = 0; j < ROM_size_x; ++j)
 		{
@@ -1150,20 +1178,22 @@ namespace Nektar
 				}
 			}
 		}
-		// reconstruct grad0 using proj_inarray_x
-		Array<OneD, double>  reproj_POD_modes_x_grad0(ROM_size_x);
-		Eigen::VectorXd eigen_reproj_POD_modes_x_grad0 = Eigen::VectorXd::Zero(ROM_size_x);
-		Array<OneD, double>  reconst_outarray;
+			// reconstruct grad0 using proj_inarray_x
+			Array<OneD, double>  reproj_POD_modes_x_grad0(ROM_size_x);
+			Eigen::VectorXd eigen_reproj_POD_modes_x_grad0 = Eigen::VectorXd::Zero(ROM_size_x);
+			Array<OneD, double>  reconst_outarray;
 	        reconst_outarray = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
-		Eigen::VectorXd eigen_reconst_outarray = Eigen::VectorXd::Zero(m_fields[0]->GetNpoints());
+			Eigen::VectorXd eigen_reconst_outarray = Eigen::VectorXd::Zero(m_fields[0]->GetNpoints());
 
-		for (int i1_x = 0; i1_x < ROM_size_x; ++i1_x)
-		{
-			reproj_POD_modes_x_grad0[i1_x] = ( proj_POD_modes_x_grad0[i1_x] * proj_inarray_x).dot(proj_inarray_x); 	
-			eigen_reproj_POD_modes_x_grad0(i1_x) = 	reproj_POD_modes_x_grad0[i1_x];
-		}
-		eigen_reconst_outarray =  POD_modes_x * eigen_reproj_POD_modes_x_grad0;
-		}
+			for (int i1_x = 0; i1_x < ROM_size_x; ++i1_x)
+			{
+				reproj_POD_modes_x_grad0[i1_x] = ( proj_POD_modes_x_grad0[i1_x] * proj_inarray_x).dot(proj_inarray_x); 	
+				eigen_reproj_POD_modes_x_grad0(i1_x) = 	reproj_POD_modes_x_grad0[i1_x];
+			}
+			eigen_reconst_outarray =  POD_modes_x * eigen_reproj_POD_modes_x_grad0;
+*/
+	}    // 	if (ROM_stage >= 2)
+
 
 		// compute my outarray
         int nPointsTot = m_fields[0]->GetNpoints();

@@ -238,6 +238,10 @@ namespace Nektar
 	Eigen::MatrixXd POD_modes_y;
 	Eigen::MatrixXd POD_modes_x_phys;
 	Eigen::MatrixXd POD_modes_y_phys;
+	Eigen::MatrixXd POD_modes_x_grad0;
+	Eigen::MatrixXd POD_modes_x_grad1;
+	Eigen::MatrixXd POD_modes_y_grad0;
+	Eigen::MatrixXd POD_modes_y_grad1;
     int globalNcoeff;
     int step;
     int no_of_added_ones;

@@ -794,6 +794,138 @@ namespace Nektar
 			}
 
 
+
+		// compute the phys POD modes
+		for (int i = 0; i < ROM_size_x; ++i)
+		{
+			Array<OneD, NekDouble> conversion_mode, conversion_mode_local;
+	        conversion_mode = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+	        conversion_mode_local = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
+			for (int j = 0; j < m_fields[0]->GetNcoeffs(); ++j)
+			{
+				conversion_mode_local[j] = POD_modes_x(j,i);
+			}
+     		m_fields[0]->BwdTrans_IterPerExp(conversion_mode_local, conversion_mode);
+			for (int j = 0; j < m_fields[0]->GetNpoints(); ++j)
+			{
+				POD_modes_x_phys(j,i) = conversion_mode[j];
+			}
+		}
+		for (int i = 0; i < ROM_size_y; ++i)
+		{
+			Array<OneD, NekDouble> conversion_mode, conversion_mode_local;
+	        conversion_mode = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+	        conversion_mode_local = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
+			for (int j = 0; j < m_fields[0]->GetNcoeffs(); ++j)
+			{
+				conversion_mode_local[j] = POD_modes_y(j,i);
+			}
+     		m_fields[0]->BwdTrans_IterPerExp(conversion_mode_local, conversion_mode);
+			for (int j = 0; j < m_fields[0]->GetNpoints(); ++j)
+			{
+				POD_modes_y_phys(j,i) = conversion_mode[j];
+			}
+		}
+
+		Eigen::VectorXd curr_col = POD_modes_x_phys.col(0);
+		double norm_curr_col = curr_col.norm();
+		POD_modes_x_phys.col(0) = curr_col / norm_curr_col;
+		curr_col = POD_modes_y_phys.col(0);
+		norm_curr_col = curr_col.norm();
+		POD_modes_y_phys.col(0) = curr_col / norm_curr_col;
+		Eigen::VectorXd orthogonal_complement;
+	
+		for (int orth_iter=1; orth_iter<ROM_size_x; orth_iter++)
+		{
+			curr_col = POD_modes_x_phys.col(orth_iter);
+			Eigen::MatrixXd leftmostCols = POD_modes_x_phys.leftCols(orth_iter);
+			orthogonal_complement = curr_col - leftmostCols * leftmostCols.transpose() * curr_col;
+			norm_curr_col = orthogonal_complement.norm();
+			POD_modes_x_phys.col(orth_iter) = orthogonal_complement / norm_curr_col;
+		}
+		for (int orth_iter=1; orth_iter<ROM_size_y; orth_iter++)
+		{
+			curr_col = POD_modes_y_phys.col(orth_iter);
+			Eigen::MatrixXd leftmostCols = POD_modes_y_phys.leftCols(orth_iter);
+			orthogonal_complement = curr_col - leftmostCols * leftmostCols.transpose() * curr_col;
+			norm_curr_col = orthogonal_complement.norm();
+			POD_modes_y_phys.col(orth_iter) = orthogonal_complement / norm_curr_col;
+		}
+
+		// dry run the projection approach
+		// for all POD modes get the phys deriv
+		POD_modes_x_grad0  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_x);
+		POD_modes_x_grad1  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_x);
+		POD_modes_y_grad0  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_y);
+		POD_modes_y_grad1  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_y);
+//		Eigen::MatrixXd POD_modes_x_grad0_local  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNcoeffs(), ROM_size_x);
+//		Eigen::MatrixXd POD_modes_x_grad1_local  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNcoeffs(), ROM_size_x);
+		Array<OneD, NekDouble> grad0,grad1,grad0_local,grad1_local,conversion_mode,conversion_mode_local;
+        grad0 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+        grad1 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+        grad0_local = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
+        grad1_local = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
+        conversion_mode = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+        conversion_mode_local = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
+
+		// this part belongs to the init phase
+        for (int i_x = 0; i_x < ROM_size_x; ++i_x)
+        {
+//        	for (int j = 0; j < m_fields[0]->GetNcoeffs(); ++j)
+//        	{
+//        		conversion_mode_local[j] = POD_modes_x(j,i_x);
+//        	}
+//     		m_fields[0]->BwdTrans_IterPerExp(conversion_mode_local, conversion_mode);
+        	for (int j = 0; j < m_fields[0]->GetNpoints(); ++j)
+        	{
+        		conversion_mode[j] = POD_modes_x_phys(j,i_x);
+        	}
+
+			m_fields[0]->PhysDeriv(conversion_mode, grad0, grad1);
+     		m_fields[0]->FwdTrans_IterPerExp(grad0, grad0_local);
+     		m_fields[0]->FwdTrans_IterPerExp(grad1, grad1_local);
+        	for (int j = 0; j < m_fields[0]->GetNcoeffs(); ++j)
+        	{
+//        		POD_modes_x_grad0_local(j, i_x) = grad0_local[j];
+//        		POD_modes_x_grad1_local(j, i_x) = grad1_local[j];
+        	}
+        	for (int j = 0; j < m_fields[0]->GetNpoints(); ++j)
+        	{
+	       		POD_modes_x_grad0(j, i_x) = grad0[j];
+	       		POD_modes_x_grad1(j, i_x) = grad1[j];
+	       	}
+		}
+        for (int i_y = 0; i_y < ROM_size_y; ++i_y)
+        {
+//        	for (int j = 0; j < m_fields[0]->GetNcoeffs(); ++j)
+//        	{
+//        		conversion_mode_local[j] = POD_modes_x(j,i_x);
+//        	}
+//     		m_fields[0]->BwdTrans_IterPerExp(conversion_mode_local, conversion_mode);
+        	for (int j = 0; j < m_fields[0]->GetNpoints(); ++j)
+        	{
+        		conversion_mode[j] = POD_modes_y_phys(j,i_y);
+        	}
+
+			m_fields[0]->PhysDeriv(conversion_mode, grad0, grad1);
+     		m_fields[0]->FwdTrans_IterPerExp(grad0, grad0_local);
+     		m_fields[0]->FwdTrans_IterPerExp(grad1, grad1_local);
+        	for (int j = 0; j < m_fields[0]->GetNcoeffs(); ++j)
+        	{
+//        		POD_modes_y_grad0_local(j, i_x) = grad0_local[j];
+//        		POD_modes_y_grad1_local(j, i_x) = grad1_local[j];
+        	}
+        	for (int j = 0; j < m_fields[0]->GetNpoints(); ++j)
+        	{
+	       		POD_modes_y_grad0(j, i_y) = grad0[j];
+	       		POD_modes_y_grad1(j, i_y) = grad1[j];
+	       	}
+		}
+		
+
+
+
+
 		}
 
 	// would do also here an offline-online splitting
@@ -869,8 +1001,10 @@ namespace Nektar
         LibUtilities::Timer         my_timer_explicit2;
         my_timer_explicit2.Start();
 
-
-        EvaluateAdvectionTerms(inarray, outarray);
+		if (ROM_stage < 2)
+		{
+	        EvaluateAdvectionTerms(inarray, outarray);
+		}
 
 	int physTot = m_fields[0]->GetTotPoints();
 //        for(int i = 0; i < physTot; ++i)
@@ -916,7 +1050,8 @@ namespace Nektar
 	cout << "test_inarray_local[100] " << test_inarray_local[100] << " test2_local[100] " << test2_local[100] << endl;
 */
 
-
+    Array<OneD, Array<OneD, NekDouble> > my_outarray_proj_x(m_nConvectiveFields);
+    Array<OneD, Array<OneD, NekDouble> > my_outarray_proj_y(m_nConvectiveFields);
 
 	if (ROM_stage >= 2)
 	{
@@ -941,7 +1076,7 @@ namespace Nektar
 
 		// POD_modes now changed to local coordinates
 		// check if the inarray remains the same when going through local
-		Array<OneD, NekDouble>	inarray_x_local, inarray_y_local, inarray_x_phys, inarray_y_phys;
+/*		Array<OneD, NekDouble>	inarray_x_local, inarray_y_local, inarray_x_phys, inarray_y_phys;
     	inarray_x_local = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
     	inarray_y_local = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());		
 		m_fields[0]->FwdTrans_IterPerExp(inarray[0], inarray_x_local);
@@ -968,78 +1103,21 @@ namespace Nektar
 			if ((abs(inarray[1][i] - inarray_y_phys[i]) / abs(inarray[1][i]) > rel_max_y) && (abs(inarray[1][i]) > 1e-10))
 				rel_max_y = abs(inarray[1][i] - inarray_y_phys[i]) / abs(inarray[1][i]);
 		}
-
+*/
 //		cout << " max_x diff " << max_x << endl;
 //		cout << " max_y diff " << max_y << endl;
 //		cout << " rel_max_x diff " << rel_max_x << endl; 
 //		cout << " rel_max_y diff " << rel_max_y << endl; 
 
-		for (int i = 0; i < m_fields[0]->GetNcoeffs(); ++i)
+/*		for (int i = 0; i < m_fields[0]->GetNcoeffs(); ++i)
 		{
 			eigen_inarray_x_local(i) = inarray_x_local[i];
 			eigen_inarray_y_local(i) = inarray_y_local[i];
 		}
-
-		// compute the phys POD modes
-		for (int i = 0; i < ROM_size_x; ++i)
-		{
-			Array<OneD, NekDouble> conversion_mode, conversion_mode_local;
-	        conversion_mode = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
-	        conversion_mode_local = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
-			for (int j = 0; j < m_fields[0]->GetNcoeffs(); ++j)
-			{
-				conversion_mode_local[j] = POD_modes_x(j,i);
-			}
-     		m_fields[0]->BwdTrans_IterPerExp(conversion_mode_local, conversion_mode);
-			for (int j = 0; j < m_fields[0]->GetNpoints(); ++j)
-			{
-				POD_modes_x_phys(j,i) = conversion_mode[j];
-			}
-		}
-		for (int i = 0; i < ROM_size_y; ++i)
-		{
-			Array<OneD, NekDouble> conversion_mode, conversion_mode_local;
-	        conversion_mode = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
-	        conversion_mode_local = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
-			for (int j = 0; j < m_fields[0]->GetNcoeffs(); ++j)
-			{
-				conversion_mode_local[j] = POD_modes_y(j,i);
-			}
-     		m_fields[0]->BwdTrans_IterPerExp(conversion_mode_local, conversion_mode);
-			for (int j = 0; j < m_fields[0]->GetNpoints(); ++j)
-			{
-				POD_modes_y_phys(j,i) = conversion_mode[j];
-			}
-		}
-
-		Eigen::VectorXd curr_col = POD_modes_x_phys.col(0);
-		double norm_curr_col = curr_col.norm();
-		POD_modes_x_phys.col(0) = curr_col / norm_curr_col;
-		curr_col = POD_modes_y_phys.col(0);
-		norm_curr_col = curr_col.norm();
-		POD_modes_y_phys.col(0) = curr_col / norm_curr_col;
-		Eigen::VectorXd orthogonal_complement;
-	
-		for (int orth_iter=1; orth_iter<ROM_size_x; orth_iter++)
-		{
-			curr_col = POD_modes_x_phys.col(orth_iter);
-			Eigen::MatrixXd leftmostCols = POD_modes_x_phys.leftCols(orth_iter);
-			orthogonal_complement = curr_col - leftmostCols * leftmostCols.transpose() * curr_col;
-			norm_curr_col = orthogonal_complement.norm();
-			POD_modes_x_phys.col(orth_iter) = orthogonal_complement / norm_curr_col;
-		}
-		for (int orth_iter=1; orth_iter<ROM_size_y; orth_iter++)
-		{
-			curr_col = POD_modes_y_phys.col(orth_iter);
-			Eigen::MatrixXd leftmostCols = POD_modes_y_phys.leftCols(orth_iter);
-			orthogonal_complement = curr_col - leftmostCols * leftmostCols.transpose() * curr_col;
-			norm_curr_col = orthogonal_complement.norm();
-			POD_modes_y_phys.col(orth_iter) = orthogonal_complement / norm_curr_col;
-		}
+*/
 
 
-
-		proj_inarray_x = POD_modes_x.transpose() * eigen_inarray_x_local;
+/*		proj_inarray_x = POD_modes_x.transpose() * eigen_inarray_x_local;
 		proj_inarray_y = POD_modes_y.transpose() * eigen_inarray_y_local;
 
 		Eigen::VectorXd	reproj_inarray_x = POD_modes_x * proj_inarray_x;
@@ -1052,13 +1130,13 @@ namespace Nektar
 		double rel_err_y = (reproj_inarray_y - eigen_inarray_y_local).norm() / eigen_inarray_y_local.norm();
 	
 		cout << " rel_error_y of reproj inarray " << rel_err_y << endl;
-
+*/
 		Eigen::VectorXd proj_inarray_x_phys = Eigen::VectorXd::Zero(ROM_size_x);
 		Eigen::VectorXd proj_inarray_y_phys = Eigen::VectorXd::Zero(ROM_size_y);
 		proj_inarray_x_phys = POD_modes_x_phys.transpose() * eigen_inarray_x;
 		proj_inarray_y_phys = POD_modes_y_phys.transpose() * eigen_inarray_y;
 
-		Eigen::VectorXd	reproj_inarray_x_phys = POD_modes_x_phys * proj_inarray_x_phys;
+/*		Eigen::VectorXd	reproj_inarray_x_phys = POD_modes_x_phys * proj_inarray_x_phys;
 		Eigen::VectorXd	reproj_inarray_y_phys = POD_modes_y_phys * proj_inarray_y_phys;
 	
 		double rel_err_x_phys = (reproj_inarray_x_phys - eigen_inarray_x).norm() / eigen_inarray_x.norm();
@@ -1068,83 +1146,40 @@ namespace Nektar
 		double rel_err_y_phys = (reproj_inarray_y_phys - eigen_inarray_y).norm() / eigen_inarray_y.norm();
 	
 		cout << " rel_error_y_phys of reproj inarray " << rel_err_y_phys << endl;
+*/
 
 
-		// dry run the projection approach
-		// for all POD modes get the phys deriv
-		Eigen::MatrixXd POD_modes_x_grad0  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_x);
-		Eigen::MatrixXd POD_modes_x_grad1  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_x);
-		Eigen::MatrixXd POD_modes_y_grad0  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_y);
-		Eigen::MatrixXd POD_modes_y_grad1  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNpoints(), ROM_size_y);
-		Eigen::MatrixXd POD_modes_x_grad0_local  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNcoeffs(), ROM_size_x);
-		Eigen::MatrixXd POD_modes_x_grad1_local  = Eigen::MatrixXd::Zero(m_fields[m_intVariables[0]]->GetNcoeffs(), ROM_size_x);
-		Array<OneD, NekDouble> grad0,grad1,grad0_local,grad1_local,conversion_mode,conversion_mode_local;
-        grad0 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
-        grad1 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
-        grad0_local = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
-        grad1_local = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
-        conversion_mode = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
-        conversion_mode_local = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
 
-		// this part belongs to the init phase
-        for (int i_x = 0; i_x < ROM_size_x; ++i_x)
-        {
-//        	for (int j = 0; j < m_fields[0]->GetNcoeffs(); ++j)
-//        	{
-//        		conversion_mode_local[j] = POD_modes_x(j,i_x);
-//        	}
-//     		m_fields[0]->BwdTrans_IterPerExp(conversion_mode_local, conversion_mode);
-        	for (int j = 0; j < m_fields[0]->GetNpoints(); ++j)
-        	{
-        		conversion_mode[j] = POD_modes_x_phys(j,i_x);
-        	}
 
-			m_fields[0]->PhysDeriv(conversion_mode, grad0, grad1);
-     		m_fields[0]->FwdTrans_IterPerExp(grad0, grad0_local);
-     		m_fields[0]->FwdTrans_IterPerExp(grad1, grad1_local);
-        	for (int j = 0; j < m_fields[0]->GetNcoeffs(); ++j)
-        	{
-        		POD_modes_x_grad0_local(j, i_x) = grad0_local[j];
-        		POD_modes_x_grad1_local(j, i_x) = grad1_local[j];
-        	}
-        	for (int j = 0; j < m_fields[0]->GetNpoints(); ++j)
-        	{
-	       		POD_modes_x_grad0(j, i_x) = grad0[j];
-	       		POD_modes_x_grad1(j, i_x) = grad1[j];
-	       	}
-		}
-        for (int i_y = 0; i_y < ROM_size_y; ++i_y)
-        {
-//        	for (int j = 0; j < m_fields[0]->GetNcoeffs(); ++j)
-//        	{
-//        		conversion_mode_local[j] = POD_modes_x(j,i_x);
-//        	}
-//     		m_fields[0]->BwdTrans_IterPerExp(conversion_mode_local, conversion_mode);
-        	for (int j = 0; j < m_fields[0]->GetNpoints(); ++j)
-        	{
-        		conversion_mode[j] = POD_modes_y_phys(j,i_x);
-        	}
-
-			m_fields[0]->PhysDeriv(conversion_mode, grad0, grad1);
-     		m_fields[0]->FwdTrans_IterPerExp(grad0, grad0_local);
-     		m_fields[0]->FwdTrans_IterPerExp(grad1, grad1_local);
-        	for (int j = 0; j < m_fields[0]->GetNcoeffs(); ++j)
-        	{
-//        		POD_modes_y_grad0_local(j, i_x) = grad0_local[j];
-//        		POD_modes_y_grad1_local(j, i_x) = grad1_local[j];
-        	}
-        	for (int j = 0; j < m_fields[0]->GetNpoints(); ++j)
-        	{
-	       		POD_modes_y_grad0(j, i_x) = grad0[j];
-	       		POD_modes_y_grad1(j, i_x) = grad1[j];
-	       	}
-		}
-		
 		// intermediate accuracy test
 //		cout << "prev int acc test" << endl;
 //		my_outarray_2 = -eigen_inarray_x * (proj_inarray_x * POD_modes_x_grad0.transpose()) - eigen_inarray_y *  (proj_inarray_x * POD_modes_x_grad1.transpose()) ;
-		my_outarray_2 = POD_modes_x_grad0_local * proj_inarray_x_phys ;
-		my_outarray_2_phys = POD_modes_x_grad0 * proj_inarray_x_phys;
+		//my_outarray_2 = POD_modes_x_grad0_local * proj_inarray_x_phys ;
+//		my_outarray_2_phys = POD_modes_x_grad0 * proj_inarray_x_phys;
+
+		Eigen::VectorXd proj_out_pt_1_1 = Eigen::VectorXd::Zero(m_fields[0]->GetNpoints());
+		Eigen::VectorXd proj_out_pt_1_2 = Eigen::VectorXd::Zero(m_fields[0]->GetNpoints());
+		Eigen::VectorXd proj_out_pt_2_1 = Eigen::VectorXd::Zero(m_fields[0]->GetNpoints());
+		Eigen::VectorXd proj_out_pt_2_2 = Eigen::VectorXd::Zero(m_fields[0]->GetNpoints());
+		proj_out_pt_1_1 = POD_modes_x_grad0 * proj_inarray_x_phys;
+		proj_out_pt_1_2 = POD_modes_x_grad1 * proj_inarray_x_phys;
+		proj_out_pt_2_1 = POD_modes_y_grad0 * proj_inarray_y_phys;
+		proj_out_pt_2_2 = POD_modes_y_grad1 * proj_inarray_y_phys;
+
+        for(int n = 0; n < m_nConvectiveFields; ++n)
+        {
+		    my_outarray_proj_x[n] = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+			my_outarray_proj_y[n] = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+	    }
+       	for (int j = 0; j < m_fields[0]->GetNpoints(); ++j)
+       	{
+			my_outarray_proj_x[0][j] = proj_out_pt_1_1(j);
+			my_outarray_proj_x[1][j] = proj_out_pt_1_2(j);
+			my_outarray_proj_y[0][j] = proj_out_pt_2_1(j);
+			my_outarray_proj_y[1][j] = proj_out_pt_2_2(j);
+		}
+
+
 //		cout << " proj_inarray_x.size() " << proj_inarray_x.size() << endl;
 //		cout << " proj_inarray_x.cols() " << proj_inarray_x.cols() << endl;
 //		cout << " proj_inarray_x.rows() " << proj_inarray_x.rows() << endl;
@@ -1198,37 +1233,46 @@ namespace Nektar
 		// compute my outarray
         int nPointsTot = m_fields[0]->GetNpoints();
         Array<OneD, NekDouble> grad0,grad1,grad2,wkSp;
-         Array<OneD, Array<OneD, NekDouble> > my_outarray(m_nConvectiveFields);
-         Array<OneD, Array<OneD, NekDouble> > my_outarray_part1(m_nConvectiveFields);
-         Array<OneD, Array<OneD, NekDouble> > my_outarray_part1_local(m_nConvectiveFields);
-         Array<OneD, Array<OneD, NekDouble> > my_outarray_local(m_nConvectiveFields);
-            grad0 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
-            grad1 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+  //       Array<OneD, Array<OneD, NekDouble> > my_outarray(m_nConvectiveFields);
+         Array<OneD, Array<OneD, NekDouble> > my_outarray_proj(m_nConvectiveFields);
+    //     Array<OneD, Array<OneD, NekDouble> > my_outarray_part1(m_nConvectiveFields);
+    //     Array<OneD, Array<OneD, NekDouble> > my_outarray_part1_local(m_nConvectiveFields);
+    //     Array<OneD, Array<OneD, NekDouble> > my_outarray_local(m_nConvectiveFields);
+//            grad0 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+//            grad1 = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
             for(int n = 0; n < m_nConvectiveFields; ++n)
             {
-	            my_outarray[n] = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
-	            my_outarray_part1[n] = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
-	            my_outarray_part1_local[n] = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
-	            my_outarray_local[n] = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
+//	            my_outarray[n] = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+	            my_outarray_proj[n] = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+//	            my_outarray_part1[n] = Array<OneD, NekDouble> (m_fields[0]->GetNpoints());
+//	            my_outarray_part1_local[n] = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
+//	            my_outarray_local[n] = Array<OneD, NekDouble> (m_fields[0]->GetNcoeffs());
 		    }
             for(int n = 0; n < m_nConvectiveFields; ++n)
             {
-                m_fields[0]->PhysDeriv(inarray[n],grad0,grad1);	
-                Vmath::Vmul (nPointsTot,grad0,1,inarray[0],1,my_outarray[n],1);
-                my_outarray_part1[n] = grad0;
-	     		m_fields[0]->FwdTrans_IterPerExp(my_outarray_part1[n], my_outarray_part1_local[n]);
-                Vmath::Vvtvp(nPointsTot,grad1,1,inarray[1],1,my_outarray[n],1,my_outarray[n],1);
-	     		m_fields[0]->FwdTrans_IterPerExp(my_outarray[n], my_outarray_local[n]);
+ //               m_fields[0]->PhysDeriv(inarray[n],grad0,grad1);	
+  //              Vmath::Vmul (nPointsTot,grad0,1,inarray[0],1,my_outarray[n],1);
+  //              my_outarray_part1[n] = grad0;
+//	     		m_fields[0]->FwdTrans_IterPerExp(my_outarray_part1[n], my_outarray_part1_local[n]);
+ //               Vmath::Vvtvp(nPointsTot,grad1,1,inarray[1],1,my_outarray[n],1,my_outarray[n],1);
+//	     		m_fields[0]->FwdTrans_IterPerExp(my_outarray[n], my_outarray_local[n]);
 
 	    }
 
+        Vmath::Vmul (nPointsTot,my_outarray_proj_x[0],1,inarray[0],1,my_outarray_proj[0],1);
+        Vmath::Vvtvp(nPointsTot,my_outarray_proj_x[1],1,inarray[1],1,my_outarray_proj[0],1,my_outarray_proj[0],1);
+        Vmath::Vmul (nPointsTot,my_outarray_proj_y[0],1,inarray[0],1,my_outarray_proj[1],1);
+        Vmath::Vvtvp(nPointsTot,my_outarray_proj_y[1],1,inarray[1],1,my_outarray_proj[1],1,my_outarray_proj[1],1);
+
+
         for(int n = 0; n < m_nConvectiveFields; ++n)
         {
-            Vmath::Neg(nPointsTot, my_outarray[n], 1);
+//            Vmath::Neg(nPointsTot, my_outarray[n], 1);
+            Vmath::Neg(nPointsTot, my_outarray_proj[n], 1);
         }
 
-		cout << "outarray_part1_local[i] " << my_outarray_part1_local[0][100] << "  my_outarray[i] " << my_outarray_2(100) << endl;
-		cout << "outarray_part1[i] " << my_outarray_part1[0][100] << "  my_outarray_phys[i] " << my_outarray_2_phys(100) << endl;
+//		cout << "outarray_part1_local[i] " << my_outarray_part1_local[0][100] << "  my_outarray[i] " << my_outarray_2(100) << endl;
+//		cout << "outarray_part1[i] " << my_outarray_part1[0][100] << "  my_outarray_phys[i] " << my_outarray_2_phys(100) << endl;
 
 		// is outarray well projected? -- no and only works in ROM
 /*		Eigen::VectorXd eigen_outarray_x = Eigen::VectorXd::Zero(physTot);
@@ -1267,8 +1311,11 @@ namespace Nektar
 		cout << " rel_error_y_local of reproj outarray " << out_rel_err_y_local << endl;		
 */
 
-		cout << "outarray[i] " << outarray[0][100] << "  my_outarray[i] " << my_outarray[0][100] << endl;
-		outarray = my_outarray;
+		if (ROM_stage >= 2)
+		{
+//			cout << "outarray[i] " << outarray[0][100] << "  my_outarray[i] " << my_outarray[0][100] << "  my_outarray_proj[i] " << my_outarray_proj[0][100]  << endl;
+			outarray = my_outarray_proj;
+		}
 
 
 		double maxi = 0;
@@ -1277,10 +1324,10 @@ namespace Nektar
 //		cout << "outarray[i] " << outarray[0][i] << "my_outarray[i] " << my_outarray_2(i) << endl; 
 //		cout << "outarray[i] " << outarray[1][i] << "my_outarray[i] " << my_outarray[1][i] << endl; 
 //		cout << "abs(outarray[i] - my_outarray[i]) " << abs(outarray[0][i] - my_outarray[0][i]) << endl; 
-		if ((maxi < abs(outarray[0][i] - my_outarray[0][i])) || (maxi < abs(outarray[1][i] - my_outarray[1][i])))
-			maxi = (abs(outarray[0][i] - my_outarray[0][i]) < abs(outarray[1][i] - my_outarray[1][i])) ? abs(outarray[1][i] - my_outarray[1][i]) : abs(outarray[0][i] - my_outarray[0][i]);
+//		if ((maxi < abs(outarray[0][i] - my_outarray[0][i])) || (maxi < abs(outarray[1][i] - my_outarray[1][i])))
+//			maxi = (abs(outarray[0][i] - my_outarray[0][i]) < abs(outarray[1][i] - my_outarray[1][i])) ? abs(outarray[1][i] - my_outarray[1][i]) : abs(outarray[0][i] - my_outarray[0][i]);
 		}
-		cout << "maximum difference " << maxi << endl;
+//		cout << "maximum difference " << maxi << endl;
 
         my_timer_explicit2.Stop();
 		cout << "my_timer_explicit only EvaluateAdvectionTerms Elapsed()  " << my_timer_explicit2.Elapsed().count() << endl;

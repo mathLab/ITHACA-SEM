@@ -29,7 +29,7 @@
         <PARAMETERS>
             <P> Kinvis = 1    </P>
             <P> load_snapshot_data_from_files = 0       </P>
-            <P> number_of_snapshots = 7       </P>
+            <P> number_of_snapshots = 13       </P>
             <P> param0 = 0.1       </P>
             <P> param1 = 0.5       </P>
             <P> param2 = 1       </P>
@@ -37,6 +37,12 @@
             <P> param4 = 0.2       </P>
             <P> param5 = 0.3       </P>
             <P> param6 = 2       </P>
+            <P> param7 = 0.4       </P>
+            <P> param8 = 0.6       </P>
+            <P> param9 = 0.7       </P>
+            <P> param10 = 0.8       </P>
+            <P> param11 = 0.03       </P>
+            <P> param12 = 0.05       </P>
             <P> type_para1 = 0       </P>    <!-- 0=kin_visc, 1=geo   -->
             <P> POD_tolerance = 1       </P>
 	    <P> compute_smaller_model_errs = 1      </P>

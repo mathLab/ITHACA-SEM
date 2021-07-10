@@ -176,7 +176,15 @@ namespace Nektar
 
         SubStepExtrapolateField(fmod(time,m_timestep), Velfields);
 
+        for (auto &x : m_forcing)
+        {
+            x->PreApply(m_fields, Velfields, Velfields, time);
+        }
         m_advObject->Advect(m_velocity.size(), m_fields, Velfields, inarray, outarray, time);
+        for (auto &x : m_forcing)
+        {
+            x->Apply(m_fields, outarray, outarray, time);
+        }
 
         for(i = 0; i < nVariables; ++i)
         {

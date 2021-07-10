@@ -52,11 +52,12 @@ public:
 
     LIB_UTILITIES_EXPORT static NekLinSysIterSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen)
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+        const NekSysKey &pKey)
     {
         NekLinSysIterSharedPtr p =
             MemoryManager<NekLinSysIterGMRES>::AllocateSharedPtr(pSession,
-                                                                 vComm, nDimen);
+                vComm, nDimen, pKey);
         p->InitObject();
         return p;
     }
@@ -64,26 +65,25 @@ public:
 
     LIB_UTILITIES_EXPORT NekLinSysIterGMRES(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen);
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+        const NekSysKey &pKey = NekSysKey());
     LIB_UTILITIES_EXPORT ~NekLinSysIterGMRES();
 
     LIB_UTILITIES_EXPORT int GetMaxLinIte()
     {
-        return (m_maxrestart * m_GMRESMaxStorage);
+        return (m_maxrestart * m_LinSysMaxStorage);
     }
 
 protected:
     // This is maximum gmres restart iteration
     int m_maxrestart;
-    // This is  maximum gmres search directions for one restart
-    // (determines the max storage usage)
-    int m_GMRESMaxStorage;
+    
     // This is maximum bandwidth of Hessenburg matrix
     // if use truncted Gmres(m)
-    int m_GMRESMaxHessMatBand;
+    int m_KrylovMaxHessMatBand;
 
-    bool m_GMRESLeftPrecond  = false;
-    bool m_GMRESRightPrecond = true;
+    bool m_NekLinSysLeftPrecon  = false;
+    bool m_NekLinSysRightPrecon = true;
 
     bool m_DifferenceFlag0 = false;
     bool m_DifferenceFlag1 = false;
@@ -96,7 +96,7 @@ protected:
                               const NekDouble tol, const NekDouble factor);
 
 private:
-    /// Actual iterative solve-GMRS
+    /// Actual iterative solve-GMRES
     int DoGMRES(const int pNumRows, const Array<OneD, const NekDouble> &pInput,
                 Array<OneD, NekDouble> &pOutput, const int pNumDir);
     /// Actual iterative gmres solver for one restart

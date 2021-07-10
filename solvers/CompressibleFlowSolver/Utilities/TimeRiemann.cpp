@@ -130,7 +130,8 @@ int main(int argc, char const *argv[])
     std::vector<double> events(nevents);
     double time;
     int count;
-    //
+    boost::ignore_unused(time,count);//
+
     LIKWID_MARKER_GET("Riemann", &nevents, events.data(), &time, &count);
     // print out CPE
     double cpeRiemann = events[CPU_CLK_UNHALTED_REF_id]/npts/experiments;

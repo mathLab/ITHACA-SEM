@@ -100,6 +100,15 @@ namespace SolverUtils
         {
             m_funcNameTime = funcNameElmt->GetText();
             m_hasRefFlowTime = true;
+            m_hasRefFlow = true;
+            m_Refflow = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
+            for (int i = 0; i < m_NumVariable; ++i)
+            {
+                std::string s_FieldStr = m_session->GetVariable(i);
+                ASSERTL0(m_session->DefinesFunction(m_funcNameTime, s_FieldStr),
+                            "Variable '" + s_FieldStr + "' not defined.");
+                m_Refflow[i] = Array<OneD, NekDouble> (npts, 0.0);
+            }
         }
     }
 
@@ -234,7 +243,6 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> > &outarray,
             const NekDouble &time)
     {
-        boost::ignore_unused(fields);
         int nq = m_Forcing[0].size();
         CalculateForcing(fields, inarray, time);
         for (int i = 0; i < m_NumVariable; ++i)
@@ -282,14 +290,17 @@ namespace SolverUtils
                 if (m_hasRefFlowTime)
                 {
                     s_FieldStr = m_session->GetVariable(i);
-                    EvaluateTimeFunction(m_session, s_FieldStr, TimeScale, m_funcNameTime, time);
-                    Vmath::Smul(nq, TimeScale[0], m_Refflow[i],1,RefflowScaled[i],1);
+
+                    std::string s_FieldStr = m_session->GetVariable(i);
+                    GetFunction(fields, m_session, m_funcNameTime)->
+                        Evaluate(s_FieldStr, m_Refflow[i], time);
+                    Vmath::Vcopy(nq, m_Refflow[i], 1, RefflowScaled[i], 1);
                 }
                 else
                 {
                     Vmath::Vcopy(nq, m_Refflow[i],1, RefflowScaled[i],1);
                 }
-
+                
 
                 Vmath::Vsub(nq, inarray[i], 1,
                             RefflowScaled[i], 1, m_Forcing[i], 1);

@@ -57,7 +57,8 @@ namespace NekMesh
 
 ModuleKey ProcessPerAlign::className =
     GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eProcessModule, "peralign"), ProcessPerAlign::create);
+        ModuleKey(eProcessModule, "peralign"), ProcessPerAlign::create,
+        "Align periodic boundaries");
 
 /**
  * @class ProcessPerAlign
@@ -72,17 +73,21 @@ ProcessPerAlign::ProcessPerAlign(MeshSharedPtr m) : ProcessModule(m)
         ConfigOption(false, "-1", "Tag identifying first surface.");
     m_config["surf2"] =
         ConfigOption(false, "-1", "Tag identifying first surface.");
-    m_config["dir"] = ConfigOption(
-        false, "", "Direction in which to align (either x, y, or z; "
-        "or vector with components separated by a comma). "
-        "If rot is specified this is interpreted as the axis or rotation");
+    m_config["dir"] = 
+        ConfigOption(false, "", 
+            "Direction in which to align (either x, y, or z, "
+            "or vector with components separated by a comma). "
+            "If rot is specified this is interpreted as the axis of rotation");
     m_config["rot"] = ConfigOption(
-        false, "", "Rotation to align composites in radians, i.e. PI/20");
+        false, "", "Rotation to align composites in radians, e.g. PI/20");
     m_config["orient"] =
         ConfigOption(true, "0", "Attempt to reorient tets and prisms");
     m_config["tolfac"] =
-        ConfigOption(false, "4", "Tolerance factor to which to check planes \
-            are the same after rotation/translation (default tolfac=4");
+        ConfigOption(false, "4", "Tolerance factor to which to check planes "
+            "are the same after rotation/translation (default tolfac=4)");
+    m_config["abstol"] =
+        ConfigOption(false, "0", "Absolute tolerance to check if planes "
+            "are the same after rotation/translation (default abstol=0)");
 }
 
 /**
@@ -100,15 +105,16 @@ void ProcessPerAlign::Process()
     string rot  = m_config["rot"].as<string>();
     bool orient = m_config["orient"].as<bool>();
     string toleranceFact = m_config["tolfac"].as<string>();
+    string absoluteTol   = m_config["abstol"].as<string>();
 
-    if (surf1 == -1)
+    if (surf1 <= -1)
     {
         m_log(WARNING) << "surf1 must be set to a positive integer. "
                        << "Skipping periodic alignment." << endl;
         return;
     }
 
-    if (surf2 == -1)
+    if (surf2 <= -1)
     {
         m_log(WARNING) << "surf2 must be set to a positive integer. "
                        << "Skipping periodic alignment." << endl;
@@ -116,60 +122,68 @@ void ProcessPerAlign::Process()
     }
 
     vector<string> tmp1;
-    boost::split(tmp1, dir, boost::is_any_of(","));
+    // boost::split() will return a vector of size 1 if input is an empty
+    // string and a delimiter is specified
+    if(dir.size())
+    {
+        boost::split(tmp1, dir, boost::is_any_of(","));
+    }
 
     vector<string> tmp2;
-    boost::split(tmp2, rot, boost::is_any_of(","));
+    if(rot.size())
+    {
+        boost::split(tmp2, rot, boost::is_any_of(","));
+    }
     bool rotalign = false;
 
     NekDouble alignDir[3] = {0.0, 0.0, 0.0};
     NekDouble rotangle = 0.0;
 
-    if (tmp2[0] != "")
+    if (rot.size())
     {
-        // set up for syntax
-        // -m peralign:dir=“x":rot="PI/11":surf1=3:surf2=4:tolfac=4
+        // Rotationally periodic boundary
         rotalign = true;
+
         // Evaluate expression since may be give as function of PI
         LibUtilities::Interpreter strEval;
         int ExprId = strEval.DefineFunction(" ", tmp2[0]);
         rotangle = strEval.Evaluate(ExprId);
 
-        // negate angle since we want to rotate second composite back
+        // Negate angle since we want to rotate second composite back
         // to this one.
         rotangle *= -1.0;
-
-        ASSERTL0(tmp1.size() == 1,"rot must also be accompanied "
-                 "with a dir=\"x\",dir=\"y\" or dir=\"z\" option "
-                 "to specify axes of rotation");
+        // Check that user specified axis of rotation
+        if(tmp1.size() != 1)
+        {
+            m_log(WARNING) << "dir must be specified to x, y, or z when "
+                "\"rot\" is used. Skipping periodic alignment" << endl;
+            return;
+        }
     }
-    else if (tmp1.size() == 1)
+    if (!dir.size() && m_mesh->m_spaceDim == 2 && m_mesh->m_cad)
     {
         //if the direction is not specified and its a 2D mesh and there is CAD
         //it can figure out the dir on its own
-        if (!dir.size() && m_mesh->m_spaceDim == 2 && m_mesh->m_cad)
-        {
-            Array<OneD, NekDouble> T =
-                m_mesh->m_cad->GetPeriodicTranslationVector(surf1, surf2);
-            NekDouble mag = sqrt(T[0] * T[0] + T[1] * T[1]);
+        Array<OneD, NekDouble> T =
+            m_mesh->m_cad->GetPeriodicTranslationVector(surf1, surf2);
+        NekDouble mag = sqrt(T[0] * T[0] + T[1] * T[1]);
 
-            alignDir[0] = T[0] / mag;
-            alignDir[1] = T[1] / mag;
-            alignDir[2] = T[2] / mag;
-        }
-        else
+        alignDir[0] = T[0] / mag;
+        alignDir[1] = T[1] / mag;
+        alignDir[2] = T[2] / mag;
+    }
+    else if (tmp1.size() == 1)
+    {
+        if (dir != "x" && dir != "y" && dir != "z")
         {
-            if (dir != "x" && dir != "y" && dir != "z")
-            {
-                m_log(WARNING) << "dir must be set to either x, y or z. "
-                               << "Skipping periodic alignment." << endl;
-                return;
-            }
-
-            alignDir[0] = (dir == "x") ? 1.0 : 0.0;
-            alignDir[1] = (dir == "y") ? 1.0 : 0.0;
-            alignDir[2] = (dir == "z") ? 1.0 : 0.0;
+            m_log(WARNING) << "dir must be set to either x, y or z. "
+                            << "Skipping periodic alignment." << endl;
+            return;
         }
+
+        alignDir[0] = (dir == "x") ? 1.0 : 0.0;
+        alignDir[1] = (dir == "y") ? 1.0 : 0.0;
+        alignDir[2] = (dir == "z") ? 1.0 : 0.0;
     }
     else if (tmp1.size() == 3)
     {
@@ -179,7 +193,9 @@ void ProcessPerAlign::Process()
     }
     else
     {
-        ASSERTL0(false,"expected three components or letter for direction");
+        m_log(WARNING) << "Expected three domponents or letter for option "
+            "\"dir\". Skipping periodic alignment," << endl;
+        return;
     }
 
     auto it1 = m_mesh->m_composite.find(surf1);
@@ -251,6 +267,7 @@ void ProcessPerAlign::Process()
         bool found = false;
         unsigned int tolFact = LibUtilities::checked_cast<unsigned int>(
             boost::lexical_cast<NekDouble>(toleranceFact));
+        NekDouble absTol = boost::lexical_cast<NekDouble>(absoluteTol);
         for (auto &it : centroidMap)
         {
             if (elmtDone.count(it.first) > 0)
@@ -263,7 +280,8 @@ void ProcessPerAlign::Process()
             if(rotalign)
             {
                 // match = it.second == centroid;
-                match = IsNodeEqual(it.second, centroid, tolFact);
+                match = IsNodeEqual(it.second, centroid, tolFact) ||
+                        IsNodeClose(it.second, centroid, absTol);
             }
             else
             {
@@ -271,7 +289,8 @@ void ProcessPerAlign::Process()
                 NekDouble normInnProd = fabs(dx.m_x * alignDir[0] +
                     dx.m_y * alignDir[1] + dx.m_z * alignDir[2]) /
                     sqrt(dx.abs2());
-                match = LibUtilities::IsRealEqual(normInnProd, 1.0, tolFact);
+                match = LibUtilities::IsRealEqual(normInnProd, 1.0, tolFact) ||
+                        LibUtilities::IsRealClose(normInnProd, 1.0, absTol);
             }
 
             if(match)
@@ -318,7 +337,8 @@ void ProcessPerAlign::Process()
                                 n2tmp.Rotate(dir,rotangle);
                                 // Check if same node
                                 // match = n2tmp == *n1;
-                                match = IsNodeEqual(n2tmp, *n1, tolFact);
+                                match = IsNodeEqual(n2tmp, *n1, tolFact) ||
+                                        IsNodeClose(n2tmp, *n1, absTol);
                                 // Compute distance
                                 Node dn = n2tmp - *n1;
                                 NekDouble dnabs = sqrt(dn.abs2());
@@ -333,7 +353,8 @@ void ProcessPerAlign::Process()
                                                        dn.m_y * alignDir[1] +
                                                        dn.m_z * alignDir[2]) /
                                                        sqrt(dn.abs2());
-                                match = LibUtilities::IsRealEqual(dnabs, 1.0, tolFact);
+                                match = LibUtilities::IsRealEqual(dnabs, 1.0, tolFact) ||
+                                        LibUtilities::IsRealClose(dnabs, 1.0, absTol);
                                 mindn  = (dnabs < mindn)? dnabs:mindn;
                             }
 

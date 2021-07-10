@@ -130,7 +130,6 @@ void DiffusionLDGNS::v_InitObject(
 
                 h = std::min(h, exp1D->GetGeom1D()->GetVertex(0)->
                     dist(*(exp1D->GetGeom1D()->GetVertex(1))));
-
             break;
             }
             default:
@@ -256,7 +255,7 @@ void DiffusionLDGNS::v_DiffuseCoeffs(
         }
     }
 
-    DiffuseCalculateDerivative(fields, inarray, derivativesO1, pFwd, pBwd);
+    DiffuseCalcDerivative(fields, inarray, derivativesO1, pFwd, pBwd);
 
     // Initialisation viscous tensor
     m_viscTensor = TensorOfArray3D<NekDouble> {m_spaceDim};
@@ -304,7 +303,7 @@ void DiffusionLDGNS::v_DiffuseCoeffs(
     }
 }
 
-void DiffusionLDGNS::v_DiffuseCalculateDerivative(
+void DiffusionLDGNS::v_DiffuseCalcDerivative(
     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
     TensorOfArray3D<NekDouble>                        &qfields,
@@ -815,5 +814,23 @@ void DiffusionLDGNS::ApplyBCsO2(
             }
         }
     }
+}
+
+/**
+ * @brief Compute primary variables
+ *
+ */
+void DiffusionLDGNS::v_GetPrimVar(
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+    const Array<OneD, Array<OneD, NekDouble>>         &inarray,
+            Array<OneD, Array<OneD, NekDouble>>         &primVar)
+{
+    int nDim = fields[0]->GetCoordim(0);
+    int nPts = fields[0]->GetTotPoints();
+    for(int i = 0; i < nDim; ++i)
+        {
+            primVar[i] = Array<OneD, NekDouble>(nPts, 0.0);
+            primVar[i] = inarray[i];
+        }
 }
 }//end of namespace Nektar

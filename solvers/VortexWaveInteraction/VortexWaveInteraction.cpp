@@ -510,7 +510,7 @@ namespace Nektar
         // Create driver
         std::string vDriverModule;
         m_sessionWave->LoadSolverInfo("Driver", vDriverModule, "ModifiedArnoldi");
-        cout << "Setting up linearised NS sovler" << endl;
+        cout << "Setting up linearised NS Solver" << endl;
         DriverSharedPtr solverWave = GetDriverFactory().CreateInstance(vDriverModule, m_sessionWave, m_graphWave);
 
         /// Do linearised NavierStokes Session  with Modified Arnoldi
@@ -699,7 +699,7 @@ namespace Nektar
                 l2    = m_wavePressure->GetPlane(1)->L2(m_wavePressure->GetPlane(1)->GetPhys());
                 invnorm += l2*l2;
                 Vmath::Fill(2*npts,1.0,der1,1);
-                NekDouble area = m_waveVelocities[0]->GetPlane(0)->PhysIntegral(der1);
+                NekDouble area = m_waveVelocities[0]->GetPlane(0)->Integral(der1);
                 cout << "Area: " << area << endl;
                 invnorm = sqrt(area/invnorm);
             }
@@ -951,7 +951,7 @@ namespace Nektar
                         m_wavePressure->GetPlane(0)->UpdatePhys(),1,val,1);
             Vmath::Vvtvp(npts,m_wavePressure->GetPlane(1)->UpdatePhys(),1,
                          m_wavePressure->GetPlane(1)->UpdatePhys(),1,val,1,val,1);
-            cout << "int P^2: " << m_wavePressure->GetPlane(0)->PhysIntegral(val) << endl;
+            cout << "int P^2: " << m_wavePressure->GetPlane(0)->Integral(val) << endl;
             Vmath::Vsqrt(npts,val,1,val,1);
             cout << "PLinf: " <<  Vmath::Vmax(npts,val,1) << endl;
 
@@ -981,7 +981,7 @@ namespace Nektar
 
         Vmath::Vmul(npts,m_wavePressure->GetPlane(0)->UpdatePhys(),1,m_wavePressure->GetPlane(0)->UpdatePhys(),1,val,1);
         Vmath::Vvtvp(npts,m_wavePressure->GetPlane(1)->UpdatePhys(),1,m_wavePressure->GetPlane(1)->UpdatePhys(),1,val,1,val,1);
-        cout << "int P^2 " << m_wavePressure->GetPlane(0)->PhysIntegral(val) << endl;
+        cout << "int P^2 " << m_wavePressure->GetPlane(0)->Integral(val) << endl;
         Vmath::Vsqrt(npts,val,1,val,1);
 
 
@@ -996,7 +996,7 @@ namespace Nektar
 
 
         Vmath::Fill(npts,1.0,val,1);
-        NekDouble area = m_waveVelocities[0]->GetPlane(0)->PhysIntegral(val);
+        NekDouble area = m_waveVelocities[0]->GetPlane(0)->Integral(val);
 
         l2 = sqrt(norm/area);
 

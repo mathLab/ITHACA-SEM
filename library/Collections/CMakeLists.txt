@@ -4,10 +4,11 @@ SET(COLLECTIONS_SOURCES
   CollectionOptimisation.cpp
   Operator.cpp
   BwdTrans.cpp
+  Helmholtz.cpp
   IProductWRTBase.cpp
-  PhysDeriv.cpp
   IProductWRTDerivBase.cpp
   IProduct.cpp
+  PhysDeriv.cpp
   )
 
 SET(COLLECTIONS_HEADERS

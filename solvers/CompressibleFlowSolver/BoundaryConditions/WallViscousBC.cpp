@@ -60,6 +60,8 @@ WallViscousBC::WallViscousBC(const LibUtilities::SessionReaderSharedPtr& pSessio
     : CFSBndCond(pSession, pFields, pTraceNormals, pSpaceDim, bcRegion, cnt)
 {
     m_diffusionAveWeight = 0.5;
+
+    m_bndPhys = Array<OneD, Array<OneD, NekDouble> > (m_fields.size());
 }
 
 void WallViscousBC::v_Apply(
@@ -71,6 +73,27 @@ void WallViscousBC::v_Apply(
 
     int i;
     int nVariables = physarray.size();
+
+    // Find the fields whose WallViscous/Adiabatic-BC is time-dependent
+    // Update variables on the boundaries of these fields
+    // Get the updated variables on the WallViscous/Adiabatic boundary
+    //
+    // Maybe the EvaluateBoundaryConditions() should be put upstream to
+    // CompressibleFlowSystem::NumCalRiemFluxJac(), So that the BCs will not
+    // be repeatedly updated when there are more than one time-dependent BC.
+    std::string varName;
+    for (i = 0; i < nVariables; ++i)
+    {
+        if (m_fields[i]->GetBndConditions()[m_bcRegion]->IsTimeDependent())
+        {
+            varName = m_session->GetVariable(i);
+            m_fields[i]->EvaluateBoundaryConditions(time, varName);
+
+            m_bndPhys[i] = m_fields[i]->GetBndCondExpansions()[m_bcRegion]
+                           ->UpdatePhys();
+        }
+    }
+
 
     const Array<OneD, const int> &traceBndMap
         = m_fields[0]->GetTraceBndMap();
@@ -100,6 +123,16 @@ void WallViscousBC::v_Apply(
         for (i = 0; i < m_spacedim; i++)
         {
             Vmath::Neg(nBCEdgePts, &Fwd[i+1][id2], 1);
+        }
+
+        // Superimpose the perturbation
+        for (i = 0; i < nVariables; ++i)
+        {
+            if (m_fields[i]->GetBndConditions()[m_bcRegion]->IsTimeDependent())
+            {
+                Vmath::Vadd(nBCEdgePts, &m_bndPhys[i][id1], 1,
+                            &Fwd[i][id2], 1,  &Fwd[i][id2], 1);
+            }
         }
 
         // Copy boundary adjusted values into the boundary expansion

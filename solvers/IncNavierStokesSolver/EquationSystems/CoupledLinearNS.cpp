@@ -382,7 +382,7 @@ namespace Nektar
         int  nvel   = m_velocity.size();
 
         // if Advfield is defined can assume it is an Oseen or LinearNS equation
-        bool AddAdvectionTerms = (Advfield ==  NullNekDoubleArrayofArray)? false: true;
+        bool AddAdvectionTerms = (Advfield ==  NullNekDoubleArrayOfArray)? false: true;
         //bool AddAdvectionTerms = true; // Temporary debugging trip
 
         // call velocity space Static condensation and fill block
@@ -1343,7 +1343,7 @@ namespace Nektar
                                             const NekDouble time)
     {
         // evaluate convection terms
-        EvaluateAdvectionTerms(inarray,outarray);
+        EvaluateAdvectionTerms(inarray,outarray,time);
 
         for (auto &x : m_forcing)
         {
@@ -1744,7 +1744,7 @@ namespace Nektar
             Vmath::Smul(tmp_DerVel[i].size(), m_kinvis, tmp_DerVel[i], 1, tmp_DerVel[i], 1);
         }
 
-        EvaluateAdvectionTerms(Velocity, Eval_Adv);
+        EvaluateAdvectionTerms(Velocity, Eval_Adv, m_time);
 
         for(int i = 0; i < m_velocity.size(); ++i)
         {

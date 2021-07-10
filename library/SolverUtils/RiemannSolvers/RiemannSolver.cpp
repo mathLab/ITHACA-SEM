@@ -514,5 +514,59 @@ namespace Nektar
                 mat[8] = e + hvz * v[2];
             }
         }
+
+        /**
+         * @brief Calculate the flux jacobian of Fwd and Bwd
+         * 
+         * @param Fwd   Forwards trace space.
+         * @param Bwd   Backwards trace space.
+         * @param flux  Resultant flux along trace space.
+         */
+        void RiemannSolver::CalcFluxJacobian(
+            const int                                         nDim,
+            const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+            const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+                  DNekBlkMatSharedPtr                        &FJac,
+                  DNekBlkMatSharedPtr                        &BJac)
+        {
+            int nPts    = Fwd[0].size();
+
+            if (m_requiresRotation)
+            {
+                ASSERTL1(CheckVectors("N"), "N not defined.");
+                ASSERTL1(CheckAuxVec("vecLocs"), "vecLocs not defined.");
+                const Array<OneD, const Array<OneD, NekDouble> > normals =
+                    m_vectors["N"]();
+                const Array<OneD, const Array<OneD, NekDouble> > vecLocs =
+                    m_auxVec["vecLocs"]();
+
+                v_CalcFluxJacobian(nDim, Fwd, Bwd,normals, FJac, BJac);
+            }
+            else
+            {
+                Array<OneD, Array<OneD, NekDouble> > normals(nDim);
+                for(int i=0;i< nDim;i++)
+                {
+                    normals[i] = Array<OneD, NekDouble> (nPts,0.0);
+                }
+                Vmath::Fill(nPts, 1.0, normals[0],1);
+
+                v_CalcFluxJacobian(nDim, Fwd, Bwd,normals, FJac, BJac);
+            }
+        }
+
+
+        void RiemannSolver::v_CalcFluxJacobian(
+            const int                                         nDim,
+            const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+            const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+            const Array<OneD, const Array<OneD, NekDouble> > &normals,
+                  DNekBlkMatSharedPtr                        &FJac,
+                  DNekBlkMatSharedPtr                        &BJac)
+        {
+            boost::ignore_unused(nDim,Fwd,Bwd,normals,FJac,BJac);
+            NEKERROR(ErrorUtil::efatal, "v_CalcFluxJacobian not specified.");
+        }
+
     }
 }

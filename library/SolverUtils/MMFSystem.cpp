@@ -2328,9 +2328,9 @@ NekDouble MMFSystem::AvgInt(const Array<OneD, const NekDouble> &inarray)
         ASSERTL0(false, "AvgInt Error: Vector size is not correct");
     }
 
-    NekDouble jac = m_fields[0]->PhysIntegral(Ones);
+    NekDouble jac = m_fields[0]->Integral(Ones);
 
-    return (m_fields[0]->PhysIntegral(inarray)) / jac;
+    return (m_fields[0]->Integral(inarray)) / jac;
 }
 
 NekDouble MMFSystem::AvgAbsInt(const Array<OneD, const NekDouble> &inarray)
@@ -2344,10 +2344,10 @@ NekDouble MMFSystem::AvgAbsInt(const Array<OneD, const NekDouble> &inarray)
         ASSERTL0(false, "AvgAbsInt Error: Vector size is not correct");
     }
 
-    NekDouble jac = m_fields[0]->PhysIntegral(Ones);
+    NekDouble jac = m_fields[0]->Integral(Ones);
 
     Vmath::Vabs(nq, inarray, 1, tmp, 1);
-    return (m_fields[0]->PhysIntegral(tmp)) / jac;
+    return (m_fields[0]->Integral(tmp)) / jac;
 }
 
 NekDouble MMFSystem::AbsIntegral(const Array<OneD, const NekDouble> &inarray)
@@ -2361,7 +2361,7 @@ NekDouble MMFSystem::AbsIntegral(const Array<OneD, const NekDouble> &inarray)
     }
 
     Vmath::Vabs(nq, inarray, 1, tmp, 1);
-    return m_fields[0]->PhysIntegral(tmp);
+    return m_fields[0]->Integral(tmp);
 }
 
 NekDouble MMFSystem::RootMeanSquare(const Array<OneD, const NekDouble> &inarray)
@@ -2516,7 +2516,7 @@ void MMFSystem::v_GenerateSummary(SummaryList &s)
         Vmath::Sadd(nq, -1.0, rad, 1, rad, 1);
         Vmath::Vabs(nq, rad, 1, rad, 1);
 
-        MeshError = m_fields[0]->PhysIntegral(rad);
+        MeshError = m_fields[0]->Integral(rad);
         SolverUtils::AddSummaryItem(s, "Mesh Error", MeshError);
     }
 

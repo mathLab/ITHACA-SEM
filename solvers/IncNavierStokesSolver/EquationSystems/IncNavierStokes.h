@@ -223,7 +223,8 @@ namespace Nektar
         }
 
         void EvaluateAdvectionTerms(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-									Array<OneD, Array<OneD, NekDouble> > &outarray);
+                                    Array<OneD, Array<OneD, NekDouble> > &outarray,
+                                    const NekDouble time);
 
         void WriteModalEnergy(void);
 
@@ -262,7 +263,8 @@ namespace Nektar
 
         virtual int v_GetForceDimension()=0;
 
-        virtual Array<OneD, NekDouble> v_GetMaxStdVelocity();
+        virtual Array<OneD, NekDouble> v_GetMaxStdVelocity(
+            const NekDouble SpeedSoundFactor);
 
         virtual bool v_PreIntegrate(int step);
 

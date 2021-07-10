@@ -33,6 +33,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 
 using namespace std;
 
@@ -99,6 +100,9 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > AdvVel   (advVel.size());
 
         Array<OneD, Array<OneD, NekDouble> > velocity(ndim);
+
+LibUtilities::Timer timer;
+
         for(int i = 0; i < ndim; ++i)
         {
             if(fields[i]->GetWaveSpace() && !m_SingleMode && !m_HalfMode &&
@@ -122,6 +126,7 @@ namespace Nektar
         {
             // Get number of points to dealias a quadratic non-linearity
             nPointsTot = fields[0]->Get1DScaledTotPoints(OneDptscale);
+
         }
 
         // interpolate Advection velocity
@@ -131,7 +136,10 @@ namespace Nektar
             {
                 AdvVel[i] = Array<OneD, NekDouble> (nPointsTot);
                 // interpolate infield to 3/2 dimension
+timer.Start();
                 fields[0]->PhysInterp1DScaled(OneDptscale,velocity[i],AdvVel[i]);
+timer.Stop();
+timer.AccumulateRegion("Interp1DScaled");
             }
         }
         else
@@ -158,7 +166,10 @@ namespace Nektar
                     fields[0]->PhysInterp1DScaled(OneDptscale,grad0,wkSp);
                     Vmath::Vmul (nPointsTot,wkSp,1,AdvVel[0],1,Outarray,1);
                     // Galerkin project solution back to origianl spac
+timer.Start();
                     fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,Outarray,outarray[n]);
+timer.Stop();
+timer.AccumulateRegion("GalerinProject");
                 }
                 else
                 {
@@ -178,10 +189,16 @@ namespace Nektar
                     Array<OneD, NekDouble> Outarray(nPointsTot);
                     fields[0]->PhysInterp1DScaled(OneDptscale,grad0,wkSp);
                     Vmath::Vmul (nPointsTot,wkSp,1,AdvVel[0],1,Outarray,1);
+timer.Start();
                     fields[0]->PhysInterp1DScaled(OneDptscale,grad1,wkSp);
+timer.Stop();
+timer.AccumulateRegion("Interp1DScaled");
                     Vmath::Vvtvp(nPointsTot,wkSp,1,AdvVel[1],1,Outarray,1,Outarray,1);
                     // Galerkin project solution back to original space
+timer.Start();
                     fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,Outarray,outarray[n]);
+timer.Stop();
+timer.AccumulateRegion("GalerinProject");
                 }
                 else
                 {
@@ -214,18 +231,24 @@ namespace Nektar
                     fields[0]->PhysDeriv(inarray[n],grad[0],grad[1],grad[2]);
                     for (int i = 0; i < ndim; i++)
                     {
+timer.Start();
                         fields[0]->PhysInterp1DScaled(OneDptscale,grad[i],
                                                       gradScaled[n*ndim+i]);
+timer.Stop();
+timer.AccumulateRegion("Interp1DScaled");
                     }
                 }
 
                 fields[0]->DealiasedDotProd(AdvVel,gradScaled,Outarray);
 
+timer.Start();
                 for (int n = 0; n < nConvectiveFields; n++)
                 {
                     fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,
                                     Outarray[n],outarray[n]);
                 }
+timer.Stop();
+timer.AccumulateRegion("GalerinProject");
             }
             else if(m_homogen_dealiasing == true && m_specHP_dealiasing == false)
             {
@@ -254,21 +277,14 @@ namespace Nektar
                 grad0 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
                 grad1 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
                 grad2 = Array<OneD, NekDouble> (fields[0]->GetNpoints());
+                Array<OneD, NekDouble> tmp = grad2;
                 for(int n = 0; n < nConvectiveFields; ++n)
                 {
                     if (fields[0]->GetWaveSpace() == true &&
                         fields[0]->GetExpType() == MultiRegions::e3DH1D)
                     {
-                        if (n < ndim)
-                        {
-                            // take d/dx, d/dy  gradients in physical Fourier space
-                            fields[0]->PhysDeriv(velocity[n],grad0,grad1);
-                        }
-                        else
-                        {
-                            fields[0]->HomogeneousBwdTrans(inarray[n],wkSp);
-                            fields[0]->PhysDeriv(wkSp,grad0,grad1);
-                        }
+                        fields[0]->HomogeneousBwdTrans(inarray[n],tmp);
+                        fields[0]->PhysDeriv(tmp,grad0,grad1);
                         // Take d/dz derivative using wave space field
                         fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],
                                               inarray[n],
@@ -278,16 +294,8 @@ namespace Nektar
                     else if (fields[0]->GetWaveSpace() == true &&
                              fields[0]->GetExpType() == MultiRegions::e3DH2D)
                     {
-                        if (n < ndim)
-                        {
-                            // take d/dx,  gradients in physical Fourier space
-                            fields[0]->PhysDeriv(velocity[n],grad0);
-                        }
-                        else
-                        {
-                            fields[0]->HomogeneousBwdTrans(inarray[n],wkSp);
-                            fields[0]->PhysDeriv(wkSp,grad0);
-                        }
+                        fields[0]->HomogeneousBwdTrans(inarray[n],tmp);
+                        fields[0]->PhysDeriv(tmp,grad0);
                         // Take d/dy derivative using wave space field
                         fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],inarray[n],
                                               outarray[n]);
@@ -304,18 +312,30 @@ namespace Nektar
                     if(m_specHP_dealiasing) //interpolate spectral/hp gradient field
                     {
                         Array<OneD, NekDouble> Outarray(nPointsTot);
+timer.Start();
                         fields[0]->PhysInterp1DScaled(OneDptscale,grad0,wkSp);
+timer.Stop();
+timer.AccumulateRegion("Interp1DScaled");
                         Vmath::Vmul(nPointsTot,wkSp,1,AdvVel[0],1,Outarray,1);
 
+timer.Start();
                         fields[0]->PhysInterp1DScaled(OneDptscale,grad1,wkSp);
+timer.Stop();
+timer.AccumulateRegion("Interp1DScaled");
                         Vmath::Vvtvp(nPointsTot,wkSp,1,AdvVel[1],1,Outarray,1,
                                      Outarray,1);
 
+timer.Start();
                         fields[0]->PhysInterp1DScaled(OneDptscale,grad2,wkSp);
+timer.Stop();
+timer.AccumulateRegion("Interp1DScaled");
                         Vmath::Vvtvp(nPointsTot,wkSp,1,AdvVel[2],1,Outarray,1,
                                      Outarray,1);
+timer.Start();
                         fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,
                                      Outarray,outarray[n]);
+timer.Stop();
+timer.AccumulateRegion("GalerinProject");
                     }
                     else
                     {

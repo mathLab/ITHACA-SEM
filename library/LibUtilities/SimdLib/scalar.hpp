@@ -70,6 +70,7 @@ namespace abi
 
     // mapping between abstract types and concrete types
     template <> struct scalar<double>{ using type = scalarT<double>; };
+    template <> struct scalar<float> { using type = scalarT<float>; };
     template <> struct scalar<std::int64_t>{ using type = scalarT<std::int64_t>; };
     template <> struct scalar<std::uint64_t>{ using type = scalarT<std::uint64_t>; };
     template <> struct scalar<std::int32_t>{ using type = scalarT<std::int32_t>; };

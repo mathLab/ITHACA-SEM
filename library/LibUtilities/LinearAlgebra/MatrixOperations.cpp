@@ -55,6 +55,9 @@ namespace Nektar
     }
 
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_ALL_MATRIX_TYPES, (1, (void)), (1, (DNekMat&)), (1, (const NekDouble&)))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, 
+        NEKTAR_ALL_MATRIX_TYPES_SINGLE, (1, (void)), (1, (SNekMat&)), (1, 
+        (const NekSingle&)))
 
     template<typename DataType, typename LhsDataType, typename LhsMatrixType>
     NekMatrix<typename NekMatrix<LhsDataType, LhsMatrixType>::NumberType, StandardMatrixTag>
@@ -68,6 +71,9 @@ namespace Nektar
     }
 
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_ALL_MATRIX_TYPES, (1, (DNekMat)), (0, ()), (1, (const NekDouble&)))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, 
+        NEKTAR_ALL_MATRIX_TYPES_SINGLE, (1, (SNekMat)), (0, ()), (1, 
+        (const NekSingle&)))
 
     template<typename RhsDataType, typename RhsMatrixType, typename ResultDataType>
     void Multiply(NekMatrix<ResultDataType, StandardMatrixTag>& result,
@@ -79,6 +85,9 @@ namespace Nektar
     }
 
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_ALL_MATRIX_TYPES, (1, (void)), (2, (DNekMat&, const NekDouble&)), (0, ()))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, 
+        NEKTAR_ALL_MATRIX_TYPES_SINGLE, (1, (void)), (2, (SNekMat&, 
+        const NekSingle&)), (0, ()))
 
     template<typename DataType, typename RhsDataType, typename RhsMatrixType>
     NekMatrix<typename NekMatrix<RhsDataType, RhsMatrixType>::NumberType, StandardMatrixTag>
@@ -90,6 +99,9 @@ namespace Nektar
     }
 
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, NEKTAR_ALL_MATRIX_TYPES, (1, (DNekMat)), (1, (const NekDouble&)), (0, ()))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(Multiply, 
+        NEKTAR_ALL_MATRIX_TYPES_SINGLE, (1, (SNekMat)), 
+        (1, (const NekSingle&)), (0, ()))
 
     template<typename LhsDataType>
     void MultiplyEqual(NekMatrix<LhsDataType, StandardMatrixTag>& lhs,
@@ -103,6 +115,8 @@ namespace Nektar
     }
 
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(MultiplyEqual, (1, (DNekMat&)), (1, (void)), (0, ()), (1, (const NekDouble&)))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(MultiplyEqual, 
+        (1, (SNekMat&)), (1, (void)), (0, ()), (1, (const NekSingle&)))
 
     template<typename ResultType, typename LhsDataType, typename RhsDataType,
              typename LhsMatrixType, typename RhsMatrixType>
@@ -163,6 +177,9 @@ namespace Nektar
     }
 
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_TWO_MATRICES(Multiply, NEKTAR_ALL_MATRIX_TYPES, NEKTAR_ALL_MATRIX_TYPES, (1, (void)), (1, (DNekMat&)), (0, ()))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_TWO_MATRICES(Multiply, 
+        NEKTAR_ALL_MATRIX_TYPES_SINGLE, NEKTAR_ALL_MATRIX_TYPES_SINGLE, 
+        (1, (void)), (1, (SNekMat&)), (0, ()))
 
     template<typename DataType, typename RhsDataType, typename RhsMatrixType>
     void AddEqual(NekMatrix<DataType, StandardMatrixTag>& result,
@@ -206,7 +223,12 @@ namespace Nektar
     }
 
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(AddEqual, NEKTAR_ALL_MATRIX_TYPES, (1, (void)), (1, (DNekMat&)), (0, ()))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(AddEqual, 
+        NEKTAR_ALL_MATRIX_TYPES_SINGLE, (1, (void)), (1, (SNekMat&)), (0, ()))
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(AddEqualNegatedLhs, NEKTAR_ALL_MATRIX_TYPES, (1, (void)), (1, (DNekMat&)), (0, ()))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(
+        AddEqualNegatedLhs, NEKTAR_ALL_MATRIX_TYPES_SINGLE, (1, (void)), 
+        (1, (SNekMat&)), (0, ()))
 
 
     template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
@@ -252,7 +274,13 @@ namespace Nektar
     }
 
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_TWO_MATRICES(Add, NEKTAR_ALL_MATRIX_TYPES, NEKTAR_ALL_MATRIX_TYPES, (1, (void)), (1, (DNekMat&)), (0, ()))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_TWO_MATRICES(Add, 
+        NEKTAR_ALL_MATRIX_TYPES_SINGLE, NEKTAR_ALL_MATRIX_TYPES_SINGLE, 
+        (1, (void)), (1, (SNekMat&)), (0, ()))
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_TWO_MATRICES(AddNegatedLhs, NEKTAR_ALL_MATRIX_TYPES, NEKTAR_ALL_MATRIX_TYPES, (1, (void)), (1, (DNekMat&)), (0, ()))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_TWO_MATRICES(AddNegatedLhs, 
+        NEKTAR_ALL_MATRIX_TYPES_SINGLE, NEKTAR_ALL_MATRIX_TYPES_SINGLE, 
+        (1, (void)), (1, (SNekMat&)), (0, ()))
     
             
     template<typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
@@ -267,6 +295,9 @@ namespace Nektar
     }
 
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_TWO_MATRICES(Add, NEKTAR_ALL_MATRIX_TYPES, NEKTAR_ALL_MATRIX_TYPES, (1, (DNekMat)), (0, ()), (0, ()))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_TWO_MATRICES(Add, 
+        NEKTAR_ALL_MATRIX_TYPES_SINGLE, NEKTAR_ALL_MATRIX_TYPES_SINGLE, 
+        (1, (SNekMat)), (0, ()), (0, ()))
 
     template<typename DataType, typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
     void Subtract(NekMatrix<DataType, StandardMatrixTag>& result,
@@ -311,7 +342,13 @@ namespace Nektar
     }
 
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_TWO_MATRICES(Subtract, NEKTAR_ALL_MATRIX_TYPES, NEKTAR_ALL_MATRIX_TYPES, (1, (void)), (1, (DNekMat&)), (0, ()))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_TWO_MATRICES(Subtract, 
+        NEKTAR_ALL_MATRIX_TYPES_SINGLE, NEKTAR_ALL_MATRIX_TYPES_SINGLE, 
+        (1, (void)), (1, (SNekMat&)), (0, ()))
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_TWO_MATRICES(SubtractNegatedLhs, NEKTAR_ALL_MATRIX_TYPES, NEKTAR_ALL_MATRIX_TYPES, (1, (void)), (1, (DNekMat&)), (0, ()))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_TWO_MATRICES(
+        SubtractNegatedLhs, NEKTAR_ALL_MATRIX_TYPES_SINGLE, 
+        NEKTAR_ALL_MATRIX_TYPES_SINGLE, (1, (void)), (1, (SNekMat&)), (0, ()))
 
     
 
@@ -356,7 +393,12 @@ namespace Nektar
     }
 
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(SubtractEqual, NEKTAR_ALL_MATRIX_TYPES, (1, (void)), (1, (DNekMat&)), (0, ()))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(SubtractEqual, 
+        NEKTAR_ALL_MATRIX_TYPES_SINGLE, (1, (void)), (1, (SNekMat&)), (0, ()))
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(SubtractEqualNegatedLhs, NEKTAR_ALL_MATRIX_TYPES, (1, (void)), (1, (DNekMat&)), (0, ()))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_SINGLE_MATRIX(
+        SubtractEqualNegatedLhs, NEKTAR_ALL_MATRIX_TYPES_SINGLE, 
+        (1, (void)), (1, (SNekMat&)), (0, ()))
     
     template<typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
     NekMatrix<typename NekMatrix<LhsDataType, LhsMatrixType>::NumberType, StandardMatrixTag> 
@@ -370,6 +412,9 @@ namespace Nektar
     }
 
     NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_TWO_MATRICES(Subtract, NEKTAR_ALL_MATRIX_TYPES, NEKTAR_ALL_MATRIX_TYPES, (1, (DNekMat)), (0, ()), (0, ()))
+    NEKTAR_GENERATE_EXPLICIT_FUNCTION_INSTANTIATION_TWO_MATRICES(Subtract, 
+        NEKTAR_ALL_MATRIX_TYPES_SINGLE, NEKTAR_ALL_MATRIX_TYPES_SINGLE, 
+        (1, (SNekMat)), (0, ()), (0, ()))
 }
 
 

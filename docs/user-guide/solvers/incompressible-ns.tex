@@ -1337,6 +1337,7 @@ available for this solver.
   \item \inltt{Aerodynamic forces} (section \ref{filters:AeroForces})
   \item \inltt{Aerodynamic forces SPM} (section \ref{filters:sub:ForcesSPM})
   \item \inltt{Kinetic energy and enstrophy} (section \ref{filters:Energy})
+  \item \inltt{Mean value} (section \ref{filters:MeanValue})
   \item \inltt{Modal energy} (section \ref{filters:ModalEnergy})
   \item \inltt{Moving body} (section \ref{filters:MovingBody})
   \item \inltt{Reynolds stresses} (section \ref{filters:ReynoldsStresses})
@@ -1425,8 +1426,11 @@ The following parameters can be specified in the \texttt{PARAMETERS} section of 
 \item \inltt{imagShift}: provide an imaginary shift to the direct solver eigenvalue problem by the specified value to improve convergence. Can be used with: \inltt{Arpack} only.
 \item \inltt{LZ}:  sets the length in the spanswise direction $L_z$. Can be used with \inltt{Homogeneous} set to \inltt{1D}. Default value: 1.
 \item \inltt{HomModesZ}: sets the number of planes in the homogeneous directions. Can be used with \inltt{Homogeneous} set to \inltt{1D} and \inltt{ModeType} set to \inltt{MultipleModes}.
-\item \inltt{N\_slices}: sets the number of temporal slices for Floquet stability analysis.
-\item \inltt{period}: sets the periodicity of the base flow.
+\item \inltt{N\_start}: sets the start number of temporal slices for Floquet stability analysis. Default value: 0.
+\item \inltt{N\_skip}: sets the number skip of temporal slices for Floquet stability analysis. Default value: 1.
+\item \inltt{N\_slices}: sets the number of temporal slices for Floquet stability analysis. Files sequence \inltt{N\_start, N\_start + N\_skip, ..., N\_start + N\_skip * (N\_slices-1)} will be loaded.
+\item \inltt{BaseFlow\_interporder}: sets the interpolation order of temporal slices for Floquet stability analysis. If \inltt{BaseFlow\_interporder} < 2, the baseflow is taken as periodic and trigonometric functions are used for interpolation. It should be noted that the file \inltt{N\_start + N\_skip * N\_slices} is at t = \inltt{period} and should not be loaded for the periodic case. If \inltt{BaseFlow\_interporder} >= 2, the flow is taken as aperiodic and Lagrange interpolation is used. In this case, the file \inltt{N\_start + N\_skip * (N\_slices-1)} is at  t = \inltt{period} and should be loaded. Default value: 0.
+\item \inltt{period}: sets the time span (if \inltt{BaseFlow\_interporder} >= 2) or period (if \inltt{BaseFlow\_interporder} < 2) of the base flow. Default value: 1.
 \end{itemize}
 
 \subsection{Functions}
@@ -2936,7 +2940,30 @@ We need to set up the base flow that can be specified as a function \texttt{Base
         </FUNCTION>
                          \end{lstlisting}
 
+\subsubsection{Mask region}
+If the \texttt{ModifiedArnoldi} driver is used, a subregion of the computational domain can be used to calculate the eigenvalues and eigenvectors by defining an unmask function. This can be used to improve the accuracy and to accelerate convergence if the computational domain is large and contains very coarse elements.
 
+\begin{lstlisting}[style=XMLStyle]
+<FUNCTION NAME="Unmask0">
+    <E VAR="C0" VALUE=" x" />
+    <E VAR="C1" VALUE="-x+1." />
+    <E VAR="C2" VALUE=" y+1.5" />
+    <E VAR="C3" VALUE="-y+1.5" />
+</FUNCTION>
+
+<FUNCTION NAME="Unmask1">
+    <E VAR="C0" VALUE=" x" />
+    <E VAR="C1" VALUE="-x+1." />
+    <E VAR="C2" VALUE=" y+1.5" />
+    <E VAR="C3" VALUE="-y+1.5" />
+</FUNCTION>
+
+...
+\end{lstlisting}
+
+Each function \texttt{Unmask0} selects elements whose center satisfies C0>0 and C1>0 and C2>0, and so on. More than one unmasked function can be defined, and the finally selected region is the union of all unmasked regions.
+
+If the unmask function is defined, both the unmasked eigenvector and masked eigenvector (with \_masked) will be output.
 
 \subsubsection{Usage}
 

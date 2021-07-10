@@ -7,7 +7,7 @@
         <SOLVERINFO>
         </SOLVERINFO>
         <PARAMETERS>
-            <P> MaxIterations = 5 </P>
+            <P> NekLinSysMaxIterations = 5 </P>
         </PARAMETERS>
         <VARIABLES>
             <V ID="0"> u </V>

@@ -143,6 +143,7 @@ namespace Nektar
                 m_velocity,
                 m_advObject);
 
+            m_extrapolation->SetForcing(m_forcing);
             m_extrapolation->SubSteppingTimeIntegration(m_intScheme);
             m_extrapolation->GenerateHOPBCMap(m_session);
         }
@@ -647,7 +648,11 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &outarray,
         const NekDouble time)
     {
-        EvaluateAdvectionTerms(inarray, outarray);
+LibUtilities::Timer timer;
+timer.Start();
+        EvaluateAdvectionTerms(inarray, outarray, time);
+timer.Stop();
+timer.AccumulateRegion("Advection Terms");
 
         // Smooth advection
         if(m_SmoothAdvection)
@@ -665,7 +670,10 @@ namespace Nektar
         }
 
         // Calculate High-Order pressure boundary conditions
+timer.Start();
         m_extrapolation->EvaluatePressureBCs(inarray,outarray,m_kinvis);
+timer.Stop();
+timer.AccumulateRegion("Pressure BCs");
     }
 
     /**
@@ -690,16 +698,29 @@ namespace Nektar
         m_extrapolation->SubStepSetPressureBCs(inarray,aii_Dt,m_kinvis);
 
         // Set up forcing term for pressure Poisson equation
+LibUtilities::Timer timer;
+timer.Start();
         SetUpPressureForcing(inarray, m_F, aii_Dt);
+timer.Stop();
+timer.AccumulateRegion("Pressure Forcing");
 
         // Solve Pressure System
+timer.Start();
         SolvePressure (m_F[0]);
+timer.Stop();
+timer.AccumulateRegion("Pressure Solve");
 
         // Set up forcing term for Helmholtz problems
+timer.Start();
         SetUpViscousForcing(inarray, m_F, aii_Dt);
+timer.Stop();
+timer.AccumulateRegion("Viscous Forcing");
 
         // Solve velocity system
+timer.Start();
         SolveViscous( m_F, outarray, aii_Dt);
+timer.Stop();
+timer.AccumulateRegion("Viscous Solve");
 
         // Apply flowrate correction
         if (m_flowrate > 0.0 && m_greenFlux != numeric_limits<NekDouble>::max())
@@ -877,7 +898,7 @@ namespace Nektar
         //set up varcoeff kernel if PowerKernel or DG is specified
         if(m_useSpecVanVisc)
         {
-            Array<OneD, Array<OneD, NekDouble> > SVVVelFields = NullNekDoubleArrayofArray;
+            Array<OneD, Array<OneD, NekDouble> > SVVVelFields = NullNekDoubleArrayOfArray;
             if(m_session->DefinesFunction("SVVVelocityMagnitude"))
             {
                 if (m_comm->GetRank() == 0)
@@ -1001,7 +1022,7 @@ namespace Nektar
 
         Vmath::Fill(nel,velmag,diffcoeff,1);
 
-        if(vel != NullNekDoubleArrayofArray)
+        if(vel != NullNekDoubleArrayOfArray)
         {
             Array<OneD, NekDouble> Velmag(phystot);
             nvel = vel.size();

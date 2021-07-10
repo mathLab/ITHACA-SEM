@@ -166,7 +166,7 @@ namespace Nektar
         {
             return m_varCoeffs;
         }
-    }
-}
+    } //end of namespace
+} //end of namespace
 
 #endif

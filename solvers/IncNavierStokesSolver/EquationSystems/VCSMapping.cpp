@@ -182,7 +182,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &outarray,
         const NekDouble time)
     {
-        EvaluateAdvectionTerms(inarray, outarray);
+        EvaluateAdvectionTerms(inarray, outarray, time);
 
         // Smooth advection
         if(m_SmoothAdvection)

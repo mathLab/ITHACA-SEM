@@ -10,7 +10,7 @@
 MESSAGE(STATUS "Searching for Boost:")
 
 # Minimum version and boost libraries required
-SET(MIN_VER "1.56.0")
+SET(MIN_VER "1.60.0")
 SET(NEEDED_BOOST_LIBS thread iostreams filesystem system program_options regex)
 
 SET(Boost_NO_BOOST_CMAKE ON)
@@ -201,7 +201,7 @@ IF (THIRDPARTY_BUILD_BOOST)
 
     # If building ThirdParty zlib, force zlib build before boost
     IF (THIRDPARTY_BUILD_ZLIB)
-        ADD_DEPENDENCIES(boost zlib-1.2.7)
+        ADD_DEPENDENCIES(boost zlib-1.2.9)
     ENDIF(THIRDPARTY_BUILD_ZLIB)
 
     # Set up CMake variables

@@ -202,9 +202,9 @@ const Array<OneD, const NekDouble> ExpList_GetPhys(ExpListSharedPtr exp)
     return exp->GetPhys();
 }
 
-NekDouble ExpList_PhysIntegral(ExpListSharedPtr exp)
+NekDouble ExpList_Integral(ExpListSharedPtr exp)
 {
-    return exp->PhysIntegral();
+    return exp->Integral();
 }
 
 std::string ExpList_GetPhysAddress(ExpListSharedPtr exp)
@@ -320,7 +320,7 @@ void export_ExpList()
         .def("GetPhys", &ExpList_GetPhys)
         .def("SetPhysState", &ExpList::SetPhysState)
         .def("GetPhysState", &ExpList::GetPhysState)
-        .def("PhysIntegral", &ExpList_PhysIntegral)
+        .def("Integral", &ExpList_Integral)
         .def("GetPhysAddress", &ExpList_GetPhysAddress)
 
         // Misc functions

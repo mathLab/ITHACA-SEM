@@ -69,6 +69,10 @@ class WallViscousBC : public CFSBndCond
 
     protected:
 
+        // Arrays of arrays pointing to the boundary condition physical
+        // space for the specified region.
+        Array<OneD, Array<OneD, NekDouble> > m_bndPhys;
+
         virtual void v_Apply(
             Array<OneD, Array<OneD, NekDouble> >               &Fwd,
             Array<OneD, Array<OneD, NekDouble> >               &physarray,

@@ -160,6 +160,15 @@ public:
     void GetRhoFromPT(const Array<OneD, NekDouble> &pressure,
                       const Array<OneD, NekDouble> &temperature,
                       Array<OneD, NekDouble> &rho);
+    void GetDmuDT(
+        const Array<OneD, const NekDouble>  &temperature, 
+        const Array<OneD, const NekDouble>  &mu, 
+              Array<OneD, NekDouble>        &DmuDT);
+
+    const EquationOfStateSharedPtr Geteos()
+    {
+        return m_eos;
+    }
 
 protected:
     LibUtilities::SessionReaderSharedPtr m_session;

@@ -156,6 +156,8 @@ int main(int argc, char const *argv[])
     std::vector<double> events(nevents);
     double time;
     int count;
+    boost::ignore_unused(time,count);
+
     LIKWID_MARKER_GET("scalar", &nevents, events.data(), &time, &count);
     // print out CPE
     double cpeScalar = events[CPU_CLK_UNHALTED_REF_id]/sizeScalar/experiments;

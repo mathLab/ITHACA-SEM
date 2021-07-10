@@ -410,6 +410,27 @@ In the following some examples for a 2D problem:
 </BOUNDARYCONDITIONS>
 \end{lstlisting}
 
+In some cases we need to excite perturbations indide the boundary layer.
+This can be achieved by setting part of the wall as a disturbance strip.
+In the no-slip/adiabatic wall boundary conditions, if the \inltt{VALUE} is not
+exact "0" but any expression, which can be time-dependent, the value of the
+expression will be added to the ghost state of what it should be in the input
+boundary conditions, and then generate a non-zero flus through the Riemann
+solver. The following is an example to set a disturbance strip of amplitude
+$A$, frequency $f$, and in the range of $[x_0, x_0+len]$ on a flat plate.
+\begin{lstlisting}[style=XmlStyle]
+  <BOUNDARYCONDITIONS>
+    <REGION REF="0">
+      <D VAR="rho"  USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
+      <D VAR="rhou" USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
+      <D VAR="rhov" USERDEFINEDTYPE="WallAdiabatic"
+                    VALUE="A*sin(2*PI*f*t)*sin(2*PI*(x-x0)/len)
+                            *(x>=x0)*(x<=(x0+len))"           />
+      <D VAR="E"    USERDEFINEDTYPE="WallAdiabatic" VALUE="0" />
+    </REGION>
+  </BOUNDARYCONDITIONS>
+\end{lstlisting}
+
 \item Farfield boundary conditions (including inviscid characteristic boundary conditions):
 \begin{lstlisting}[style=XmlStyle]
 <BOUNDARYCONDITIONS>

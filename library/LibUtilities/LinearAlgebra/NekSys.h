@@ -53,7 +53,7 @@ namespace LibUtilities
 class NekSysOperators
 {
 public:
-    typedef const Array<OneD, NekDouble> InArrayType;
+    typedef const Array<OneD, const NekDouble> InArrayType;
     typedef Array<OneD, NekDouble> OutArrayType;
 
     typedef std::function<void(InArrayType &, OutArrayType &, const bool &)>
@@ -97,7 +97,7 @@ public:
     }
 
     template <typename FuncPointerT, typename ObjectPointerT>
-    void DefineNekSysRhsEval(FuncPointerT func, ObjectPointerT obj)
+    void DefineNekSysResEval(FuncPointerT func, ObjectPointerT obj)
     {
         m_functors1[0] =
             std::bind(func, obj, std::placeholders::_1, std::placeholders::_2,
@@ -111,7 +111,7 @@ public:
                       std::placeholders::_3);
     }
     template <typename FuncPointerT, typename ObjectPointerT>
-    void DefineNekSysPrecond(FuncPointerT func, ObjectPointerT obj)
+    void DefineNekSysPrecon(FuncPointerT func, ObjectPointerT obj)
     {
         m_functors1[2] =
             std::bind(func, obj, std::placeholders::_1, std::placeholders::_2,
@@ -125,10 +125,10 @@ public:
                       std::placeholders::_3, std::placeholders::_4);
     }
 
-    inline void DoNekSysRhsEval(InArrayType &inarray, OutArrayType &outarray,
+    inline void DoNekSysResEval(InArrayType &inarray, OutArrayType &outarray,
                                 const bool &flag = false) const
     {
-        ASSERTL1(m_functors1[0], "DoNekSysRhsEval should be defined");
+        ASSERTL1(m_functors1[0], "DoNekSysResEval should be defined");
         m_functors1[0](inarray, outarray, flag);
     }
 
@@ -139,7 +139,7 @@ public:
         m_functors1[1](inarray, outarray, flag);
     }
 
-    inline void DoNekSysPrecond(InArrayType &inarray, OutArrayType &outarray,
+    inline void DoNekSysPrecon(InArrayType &inarray, OutArrayType &outarray,
                                 const bool &flag = false) const
     {
         if (m_functors1[2])
@@ -162,24 +162,55 @@ public:
 
 protected:
     /* Defines three operators
-        DoNekSysRhsEval   :
-            evaluations the RHS of the Nonlinear/Linear system.
+        DoNekSysResEval   :
+            evaluations the residual of the Nonlinear/Linear system 
+            ie. the residual b-Ax and N(x) for linear and 
+            nonlinear systems, respectively
             May not be used for linear system.
         DoNekSysLhsEval   :
             evaluations the LHS of the Nonlinear/Linear system (Ax),
-            where A is the matrix x is solution vector.
+            where A is the matrix and x is solution vector.
             For linear system A is the coefficient matrix;
             For nonlinear system A is the coefficient matrix in
             each nonlinear iterations, for example A is the
             Jacobian matrix for Newton method;
-        DoNekSysPrecond      :
+        DoNekSysPrecon      :
             Preconditioning operator of the system.
         DoNekSysFixPointIte  :
-            Operator to calculate RHS of fix point iterations
+            Operator to calculate RHS of fixed point iterations
             (x^{n+1}=M^{-1}(b-N*x^{n}), with M+N=A).
     */
     FunctorType1Array m_functors1;
     FunctorType2Array m_functors2;
+};
+
+class NekSysKey
+{
+public:
+    NekSysKey()
+    {
+    }
+
+    ~NekSysKey()
+    {}
+
+    NekDouble   m_Tolerance                    = 
+                                                NekConstants::kNekIterativeTol;
+    int         m_NekNonlinSysMaxIterations    = 100;
+    int         m_NekLinSysMaxIterations       = 5000;
+    NekDouble   m_NekNonlinSysTolerance        = m_Tolerance;
+    NekDouble   m_NekLinSysTolerance           = m_Tolerance;
+    NekDouble   m_NonlinIterTolRelativeL2      = 1.0E-6;
+    NekDouble   m_LinSysRelativeTolInNonlin    = 1.0E-2;
+    int         m_LinSysMaxStorage             = 100;
+    int         m_KrylovMaxHessMatBand         = 100;
+    bool        m_NekLinSysLeftPrecon         = false;
+    bool        m_NekLinSysRightPrecon        = true;
+    bool        m_DifferenceFlag0              = false;
+    bool        m_DifferenceFlag1              = false;
+    bool        m_useProjection                = false;
+    std::string m_LinSysIterSolverTypeInNonlin = "GMRES";
+    
 };
 
 class NekSys;
@@ -194,24 +225,31 @@ public:
 
     LIB_UTILITIES_EXPORT static NekSysSharedPtr CreateInstance(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen)
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen, 
+        const NekSysKey &pKey)
     {
-        NekSysSharedPtr p =
-            MemoryManager<NekSys>::AllocateSharedPtr(pSession, vComm, nDimen);
+        NekSysSharedPtr p = MemoryManager<NekSys>::
+            AllocateSharedPtr(pSession, vComm, nDimen, pKey);
         return p;
     }
     LIB_UTILITIES_EXPORT NekSys(
         const LibUtilities::SessionReaderSharedPtr &pSession,
-        const LibUtilities::CommSharedPtr &vComm, const int nDimen);
+        const LibUtilities::CommSharedPtr &vComm, const int nDimen,
+        const NekSysKey &pKey);
     LIB_UTILITIES_EXPORT void InitObject()
     {
         v_InitObject();
     }
     LIB_UTILITIES_EXPORT virtual ~NekSys();
 
-    LIB_UTILITIES_EXPORT inline void setSysOperators(const NekSysOperators &in)
+    LIB_UTILITIES_EXPORT inline void SetSysOperators(const NekSysOperators &in)
     {
         m_operator = in;
+    }
+
+    LIB_UTILITIES_EXPORT inline const NekSysOperators &GetSysOperators()
+    {
+        return m_operator;
     }
 
     LIB_UTILITIES_EXPORT int SolveSystem(
@@ -229,6 +267,15 @@ public:
         return v_ConvergenceCheck(nIteration, Residual, tol);
     }
 
+    LIB_UTILITIES_EXPORT virtual void v_NekSysInitialGuess(
+        const Array<OneD, const NekDouble> &pInput,
+        Array<OneD, NekDouble> &pguess);
+
+    LIB_UTILITIES_EXPORT void SetFlagWarnings( bool in)
+    {
+        m_FlagWarnings = in;
+    }
+
 protected:
     /// Maximum iterations
     int m_maxiter;
@@ -242,6 +289,7 @@ protected:
     bool m_root;
     /// Verbose
     bool m_verbose;
+    bool m_FlagWarnings;
     /// Operators
     NekSysOperators m_operator;
     /// The dimension of the system
@@ -257,7 +305,7 @@ protected:
                               const NekDouble tol, const NekDouble factor)
     {
         boost::ignore_unused(nGlobal, pInput, pOutput, nDir, tol, factor);
-        ASSERTL0(false, "LinSysIterSovler NOT CORRECT.");
+        ASSERTL0(false, "LinSysIterSolver NOT CORRECT.");
         return 0;
     }
 

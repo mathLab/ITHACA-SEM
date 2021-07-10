@@ -127,11 +127,21 @@ void DriverModifiedArnoldi::v_Execute(ostream &out)
 
     Array<OneD, Array<OneD, NekDouble> > Kseq
             = Array<OneD, Array<OneD, NekDouble> > (m_kdim + 1);
+    Array<OneD, Array<OneD, NekDouble> > Kseqcopy
+            = Array<OneD, Array<OneD, NekDouble> > (m_kdim + 1);
     Array<OneD, Array<OneD, NekDouble> > Tseq
             = Array<OneD, Array<OneD, NekDouble> > (m_kdim + 1);
     for (i = 0; i < m_kdim + 1; ++i)
     {
         Kseq[i] = Array<OneD, NekDouble>(ntot, 0.0);
+        if (m_useMask)
+        {
+            Kseqcopy[i] = Array<OneD, NekDouble>(ntot, 0.0);
+        }
+        else
+        {
+            Kseqcopy[i] = Kseq[i];
+        }
         Tseq[i] = Array<OneD, NekDouble>(ntot, 0.0);
     }
 
@@ -155,6 +165,10 @@ void DriverModifiedArnoldi::v_Execute(ostream &out)
 
         NekDouble eps=0.0001;
         Vmath::FillWhiteNoise(ntot, eps , &Kseq[1][0], 1);
+        if (m_useMask)
+        {
+            Vmath::Vmul(ntot, Kseq[1], 1, GetMaskCoeff(), 1, Kseq[1], 1);
+        }
     }
 
     // Perform one iteration to enforce boundary conditions.
@@ -166,7 +180,11 @@ void DriverModifiedArnoldi::v_Execute(ostream &out)
     }
 
     // Normalise first vector in sequence
-    alpha[0] = Blas::Ddot(ntot, &Kseq[0][0], 1, &Kseq[0][0], 1);
+    if (m_useMask)
+    {
+        Vmath::Vmul(ntot, Kseq[0], 1, GetMaskCoeff(), 1, Kseqcopy[0], 1);
+    }
+    alpha[0] = Blas::Ddot(ntot, &Kseqcopy[0][0], 1, &Kseqcopy[0][0], 1);
     m_comm->AllReduce(alpha[0], Nektar::LibUtilities::ReduceSum);
     alpha[0] = std::sqrt(alpha[0]);
     Vmath::Smul(ntot, 1.0/alpha[0], Kseq[0], 1, Kseq[0], 1);
@@ -179,7 +197,11 @@ void DriverModifiedArnoldi::v_Execute(ostream &out)
         EV_update(Kseq[i-1], Kseq[i]);
 
         // Normalise
-        alpha[i] = Blas::Ddot(ntot, &Kseq[i][0], 1, &Kseq[i][0], 1);
+        if (m_useMask)
+        {
+            Vmath::Vmul(ntot, Kseq[i], 1, GetMaskCoeff(), 1, Kseqcopy[i], 1);
+        }
+        alpha[i] = Blas::Ddot(ntot, &Kseqcopy[i][0], 1, &Kseqcopy[i][0], 1);
         m_comm->AllReduce(alpha[i], Nektar::LibUtilities::ReduceSum);
         alpha[i] = std::sqrt(alpha[i]);
 
@@ -189,11 +211,19 @@ void DriverModifiedArnoldi::v_Execute(ostream &out)
         // Copy Krylov sequence into temporary storage
         for (int k = 0; k < i + 1; ++k)
         {
-            Vmath::Vcopy(ntot, Kseq[k], 1, Tseq[k], 1);
+            if (m_useMask)
+            {
+                Vmath::Vmul(ntot, Kseq[k], 1, GetMaskCoeff(), 1, Tseq[k], 1);
+                Vmath::Vcopy(ntot, Kseq[k], 1, Kseqcopy[k], 1);
+            }
+            else
+            {
+                Vmath::Vcopy(ntot, Kseq[k], 1, Tseq[k], 1);;
+            }
         }
 
         // Generate Hessenberg matrix and compute eigenvalues of it.
-        EV_small(Tseq, ntot, alpha, i, zvec, wr, wi, resnorm);
+        EV_small(Tseq, Kseqcopy, ntot, alpha, i, zvec, wr, wi, resnorm);
 
         // Test for convergence.
         converged = EV_test(i, i, zvec, wr, wi, resnorm,
@@ -231,8 +261,13 @@ void DriverModifiedArnoldi::v_Execute(ostream &out)
             EV_update(Kseq[m_kdim - 1], Kseq[m_kdim]);
 
             // Compute new scale factor
-            alpha[m_kdim] = Blas::Ddot(ntot, &Kseq[m_kdim][0], 1,
-                                             &Kseq[m_kdim][0], 1);
+            if (m_useMask)
+            {
+                Vmath::Vmul(ntot, Kseq[m_kdim], 1, GetMaskCoeff(), 1,
+                                  Kseqcopy[m_kdim], 1);
+            }
+            alpha[m_kdim] = Blas::Ddot(ntot, &Kseqcopy[m_kdim][0], 1,
+                                             &Kseqcopy[m_kdim][0], 1);
             m_comm->AllReduce(alpha[m_kdim], Nektar::LibUtilities::ReduceSum);
             alpha[m_kdim] = std::sqrt(alpha[m_kdim]);
             Vmath::Smul(ntot, 1.0/alpha[m_kdim], Kseq[m_kdim], 1,
@@ -241,11 +276,19 @@ void DriverModifiedArnoldi::v_Execute(ostream &out)
             // Copy Krylov sequence into temporary storage
             for (int k = 0; k < m_kdim + 1; ++k)
             {
-                Vmath::Vcopy(ntot, Kseq[k], 1, Tseq[k], 1);
+                if (m_useMask)
+                {
+                    Vmath::Vmul(ntot, Kseq[k], 1, GetMaskCoeff(), 1, Tseq[k], 1);
+                    Vmath::Vcopy(ntot, Kseq[k], 1, Kseqcopy[k], 1);
+                }
+                else
+                {
+                    Vmath::Vcopy(ntot, Kseq[k], 1, Tseq[k], 1);;
+                }
             }
 
             // Generate Hessenberg matrix and compute eigenvalues of it
-            EV_small(Tseq, ntot, alpha, m_kdim, zvec, wr, wi, resnorm);
+            EV_small(Tseq, Kseqcopy, ntot, alpha, m_kdim, zvec, wr, wi, resnorm);
 
             // Test for convergence.
             converged = EV_test(i, m_kdim, zvec, wr, wi, resnorm,
@@ -279,7 +322,8 @@ void DriverModifiedArnoldi::v_Execute(ostream &out)
     }
 
     // Process eigenvectors and write out.
-    EV_post(Tseq, Kseq, ntot, min(--i, m_kdim), m_nvec, zvec, wr, wi,
+    m_nvec = converged;
+    EV_post(Tseq, Kseqcopy, ntot, min(--i, m_kdim), m_nvec, zvec, wr, wi,
             converged);
 
     WARNINGL0(m_imagShift == 0,"Complex Shift applied. "
@@ -337,6 +381,7 @@ void DriverModifiedArnoldi::EV_update(
  */
 void DriverModifiedArnoldi::EV_small(
     Array<OneD, Array<OneD, NekDouble> > &Kseq,
+    Array<OneD, Array<OneD, NekDouble> > &Kseqcopy,
     const int                             ntot,
     const Array<OneD, NekDouble>         &alpha,
     const int                             kdim,
@@ -362,12 +407,20 @@ void DriverModifiedArnoldi::EV_small(
 
         R[i*kdimp+i] = gsc;
         Vmath::Smul(ntot, 1.0/gsc, Kseq[i], 1, Kseq[i], 1);
+        if (m_useMask)
+        {
+            Vmath::Smul(ntot, 1.0/gsc, Kseqcopy[i], 1, Kseqcopy[i], 1);
+        }
 
         for (int j = i + 1; j < kdimp; ++j)
         {
             gsc = Blas::Ddot(ntot, &Kseq[i][0], 1, &Kseq[j][0], 1);
             m_comm->AllReduce(gsc, Nektar::LibUtilities::ReduceSum);
             Vmath::Svtvp(ntot, -gsc, Kseq[i], 1, Kseq[j], 1, Kseq[j], 1);
+            if (m_useMask)
+            {
+                Vmath::Svtvp(ntot, -gsc, Kseqcopy[i], 1, Kseqcopy[j], 1, Kseqcopy[j], 1);
+            }
             R[j*kdimp+i] = gsc;
         }
     }
@@ -405,7 +458,7 @@ int DriverModifiedArnoldi::EV_test(
     Array<OneD, NekDouble> &wr,
     Array<OneD, NekDouble> &wi,
     const NekDouble         resnorm,
-    const int               nvec,
+    int                     nvec,
     ofstream               &evlout,
     NekDouble              &resid0)
 {
@@ -426,10 +479,12 @@ int DriverModifiedArnoldi::EV_test(
 
     EV_sort(zvec, wr, wi, resid, kdim);
 
-    if (resid[nvec-1] < m_evtol)
+    while (nvec <= kdim && resid[nvec-1] < m_evtol)
     {
         idone = nvec;
+        ++nvec;
     }
+    nvec -= (idone > 0);
 
     if (m_comm->GetRank() == 0)
     {
@@ -539,6 +594,13 @@ void DriverModifiedArnoldi::EV_post(
                 WriteEvs(cout, j, wr[j], wi[j]);
             }
             WriteFld(file,Kseq[j]);
+            if (m_useMask)
+            {
+                std::string fileunmask = m_session->GetSessionName() + "_eig_masked_"
+                    + boost::lexical_cast<std::string>(j)
+                    + ".fld";
+                WriteFld(fileunmask,Tseq[j]);
+            }
         }
     }
     else
@@ -565,15 +627,37 @@ void DriverModifiedArnoldi::EV_big(
     boost::ignore_unused(wr);
 
     NekDouble wgt, norm;
+    Array<OneD, Array<OneD, NekDouble> > btmp(nvec);
+    Array<OneD, Array<OneD, NekDouble> > etmp(nvec);
+    for(int i=0; i<nvec; ++i)
+    {
+        if (m_useMask)
+        {
+            btmp[i] = Array<OneD, NekDouble>(ntot, 0.);
+            etmp[i] = Array<OneD, NekDouble>(ntot, 0.);
+        }
+        else
+        {
+            btmp[i] = evecs[i];
+        }
+    }
 
     // Generate big eigenvectors
     for (int j = 0; j < nvec; ++j)
     {
-        Vmath::Zero(ntot, evecs[j], 1);
+        Vmath::Zero(ntot, btmp[j], 1);
+        if (m_useMask)
+        {
+            Vmath::Zero(ntot, etmp[j], 1);
+        }
         for (int i = 0; i < kdim; ++i)
         {
             wgt = zvec[i + j*kdim];
-            Vmath::Svtvp(ntot, wgt, bvecs[i], 1, evecs[j], 1, evecs[j], 1);
+            Vmath::Svtvp(ntot, wgt, bvecs[i], 1, btmp[j], 1, btmp[j], 1);
+            if (m_useMask)
+            {
+                Vmath::Svtvp(ntot, wgt, evecs[i], 1, etmp[j], 1, etmp[j], 1);
+            }
         }
     }
 
@@ -582,20 +666,47 @@ void DriverModifiedArnoldi::EV_big(
     {
         if (wi[i] == 0.0)   // Real mode
         {
-            norm = Blas::Ddot(ntot, &evecs[i][0], 1, &evecs[i][0], 1);
+            if (m_session->GetComm()->GetRank() == 0)
+            {
+                cout << "eigenvalue " << i << ": real mode" << endl;
+            }
+            norm = Blas::Ddot(ntot, &btmp[i][0], 1, &btmp[i][0], 1);
             m_comm->AllReduce(norm, Nektar::LibUtilities::ReduceSum);
             norm = std::sqrt(norm);
-            Vmath::Smul(ntot, 1.0/norm, evecs[i], 1, evecs[i], 1);
+            if (m_useMask)
+            {
+                Vmath::Smul(ntot, 1.0/norm, btmp[i], 1, bvecs[i], 1);
+                Vmath::Smul(ntot, 1.0/norm, etmp[i], 1, evecs[i], 1);
+            }
+            else
+            {
+                Vmath::Smul(ntot, 1.0/norm, btmp[i], 1, evecs[i], 1);
+            }
         }
         else
         {
-            norm  = Blas::Ddot(ntot, &evecs[i][0],   1, &evecs[i][0],   1);
-            norm += Blas::Ddot(ntot, &evecs[i+1][0], 1, &evecs[i+1][0], 1);
+            if (m_session->GetComm()->GetRank() == 0)
+            {
+                cout << "eigenvalues " << i << ", " << i+1
+                     <<  ": complex modes" << endl;
+            }
+            norm  = Blas::Ddot(ntot, &btmp[i][0],   1, &btmp[i][0],   1);
+            norm += Blas::Ddot(ntot, &btmp[i+1][0], 1, &btmp[i+1][0], 1);
             m_comm->AllReduce(norm, Nektar::LibUtilities::ReduceSum);
             norm = std::sqrt(norm);
 
-            Vmath::Smul(ntot, 1.0/norm, evecs[i],   1, evecs[i],   1);
-            Vmath::Smul(ntot, 1.0/norm, evecs[i+1], 1, evecs[i+1], 1);
+            if (m_useMask)
+            {
+                Vmath::Smul(ntot, 1.0/norm, btmp[i],   1, bvecs[i],   1);
+                Vmath::Smul(ntot, 1.0/norm, btmp[i+1], 1, bvecs[i+1], 1);
+                Vmath::Smul(ntot, 1.0/norm, etmp[i],   1, evecs[i],   1);
+                Vmath::Smul(ntot, 1.0/norm, etmp[i+1], 1, evecs[i+1], 1);
+            }
+            else
+            {
+                Vmath::Smul(ntot, 1.0/norm, btmp[i],   1, evecs[i],   1);
+                Vmath::Smul(ntot, 1.0/norm, btmp[i+1], 1, evecs[i+1], 1);
+            }
 
             i++;
         }

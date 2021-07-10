@@ -33,6 +33,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <LibUtilities/Communication/CommSerial.h>
 #include <boost/algorithm/string.hpp>
 #include <iostream>
 #include <iomanip>
@@ -71,7 +72,7 @@ void Timer::AccumulateRegion(std::string region, int iolevel)
     {
         m_elapsedRegion.insert({region,
          std::make_tuple<Timer::Seconds, size_t>(this->Elapsed(),1, iolevel)});
-        // update width field width
+        // update field width
         m_maxStringWidth = std::max(
             static_cast<decltype(m_maxStringWidth)>(region.size()),
             m_maxStringWidth);
@@ -83,6 +84,17 @@ void Timer::AccumulateRegion(std::string region, int iolevel)
     }
 }
 
+void Timer::PrintElapsedRegions()
+{
+    std::string  def("default");
+    char *argv = new char [def.length()+1];
+    std::strcpy(argv,def.c_str());
+    LibUtilities::CommSharedPtr comm = 
+        MemoryManager<LibUtilities::CommSerial>:: AllocateSharedPtr(1,&argv);
+
+    PrintElapsedRegions(comm);
+}
+    
 void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm,
                                 std::ostream &o,
                                 int iolevel)
@@ -119,7 +131,7 @@ void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm,
         
         if (comm->GetRank() == 0)
         {
-            o << std::setw(m_maxStringWidth+2) << item->first  << '\t'
+            o << std::setw(m_maxStringWidth+2) << item->first << '\t'
               << std::setw(10) << elapsedAve << '\t'
               << std::setw(10) << elapsedMin << '\t'
               << std::setw(10) << elapsedMax << '\t'
@@ -148,7 +160,7 @@ void Timer::PrintElapsedRegions(LibUtilities::CommSharedPtr comm,
 
             if (comm->GetRank() == 0)
             {
-                o << std::setw(m_maxStringWidth+2) << item->first  << '\t'
+                o << std::setw(m_maxStringWidth+2) << item->first << '\t'
                   << std::setw(10) << elapsedAve << '\t'
                   << std::setw(10) << elapsedMin << '\t'
                   << std::setw(10) << elapsedMax << '\t'

@@ -53,6 +53,7 @@
 
 #include <tinyxml.h>
 #include <LibUtilities/BasicUtils/ParseUtils.h>
+#include <SolverUtils/Forcing/ForcingMovingReferenceFrame.h>
 
 using namespace std;
 
@@ -286,19 +287,26 @@ namespace Nektar
      */
     void IncNavierStokes::EvaluateAdvectionTerms(
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                Array<OneD, Array<OneD, NekDouble> > &outarray)
+                Array<OneD, Array<OneD, NekDouble> > &outarray,
+                const NekDouble time)
     {
         int i;
         int VelDim     = m_velocity.size();
         Array<OneD, Array<OneD, NekDouble> > velocity(VelDim);
 
-        for(i = 0; i < VelDim; ++i)
+        int  npoints = m_fields[0]->GetNpoints();
+        for (i = 0; i < VelDim; ++i)
         {
-            velocity[i] = inarray[m_velocity[i]];
+            velocity[i] = Array<OneD, NekDouble>(npoints);
+            Vmath::Vcopy(npoints, inarray[m_velocity[i]], 1, velocity[i], 1);
+        }
+        for (auto &x : m_forcing)
+        {
+            x->PreApply(m_fields, velocity, velocity, time);
         }
 
         m_advObject->Advect(m_nConvectiveFields, m_fields,
-                            velocity, inarray, outarray, m_time);
+                            velocity, inarray, outarray, time);
     }
 
     /**
@@ -784,8 +792,10 @@ namespace Nektar
     /**
      *
      */
-    Array<OneD, NekDouble> IncNavierStokes::v_GetMaxStdVelocity(void)
+    Array<OneD, NekDouble> IncNavierStokes::v_GetMaxStdVelocity(
+        const NekDouble SpeedSoundFactor)
     {
+        boost::ignore_unused(SpeedSoundFactor);
         int nvel  = m_velocity.size();
         int nelmt = m_fields[0]->GetExpSize();
 

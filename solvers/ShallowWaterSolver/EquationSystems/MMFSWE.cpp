@@ -332,7 +332,7 @@ void MMFSWE::v_DoSolve()
             // Vorticity zeta
             ComputeVorticity(fieldsprimitive[1], fieldsprimitive[2], zeta);
             Vorticity =
-                std::abs(m_fields[0]->PhysIntegral(zeta) - m_Vorticity0);
+                std::abs(m_fields[0]->Integral(zeta) - m_Vorticity0);
 
             // Masss = h^*
             Mass = (ComputeMass(fieldsprimitive[0]) - m_Mass0) / m_Mass0;
@@ -1833,7 +1833,7 @@ void MMFSWE::v_SetInitialConditions(const NekDouble initialtime,
             m_fields[2]->SetPhys(v0);
 
             // ComputeVorticity(u0, v0, zeta0);
-            m_Vorticity0 = m_fields[0]->PhysIntegral(zeta0);
+            m_Vorticity0 = m_fields[0]->Integral(zeta0);
 
             m_Mass0      = ComputeMass(eta0);
             m_Energy0    = ComputeEnergy(eta0, u0, v0);
@@ -2143,7 +2143,7 @@ NekDouble MMFSWE::ComputeMass(const Array<OneD, const NekDouble> &eta)
     Array<OneD, NekDouble> tmp(nq);
     Vmath::Vadd(nq, eta, 1, m_depth, 1, tmp, 1);
 
-    return m_fields[0]->PhysIntegral(tmp);
+    return m_fields[0]->Integral(tmp);
 }
 
 NekDouble MMFSWE::ComputeEnergy(const Array<OneD, const NekDouble> &eta,
@@ -2172,7 +2172,7 @@ NekDouble MMFSWE::ComputeEnergy(const Array<OneD, const NekDouble> &eta,
     Vmath::Vadd(nq, htmp, 1, tmp, 1, tmp, 1);
     Vmath::Smul(nq, 0.5, tmp, 1, tmp, 1);
 
-    return m_fields[0]->PhysIntegral(tmp);
+    return m_fields[0]->Integral(tmp);
 }
 
 NekDouble MMFSWE::ComputeEnstrophy(const Array<OneD, const NekDouble> &eta,
@@ -2201,7 +2201,7 @@ NekDouble MMFSWE::ComputeEnstrophy(const Array<OneD, const NekDouble> &eta,
     Vmath::Vdiv(nq, tmp, 1, hstartmp, 1, tmp, 1);
     Vmath::Smul(nq, 0.5, tmp, 1, tmp, 1);
 
-    return m_fields[0]->PhysIntegral(tmp);
+    return m_fields[0]->Integral(tmp);
 }
 
 // Vorticity = \nabla v \cdot e^1 + v \nabla \cdot e^1 - ( \nabla u \cdot e^2 +
@@ -3061,13 +3061,13 @@ NekDouble MMFSWE::v_L2Error(unsigned int field,
                 v_EvaluateExactSolution(0, exactsolution, m_time);
 
                 // exactsoln = u - u_T so that L2 compute u_T
-                NekDouble L2exact = m_fields[0]->PhysIntegral(exactsolution);
+                NekDouble L2exact = m_fields[0]->Integral(exactsolution);
 
                 Vmath::Vsub(nq, &(m_fields[0]->GetPhys())[0], 1,
                             &exactsolution[0], 1, &exactsolution[0], 1);
                 Vmath::Vabs(nq, exactsolution, 1, exactsolution, 1);
 
-                L2error = (m_fields[0]->PhysIntegral(exactsolution)) / L2exact;
+                L2error = (m_fields[0]->Integral(exactsolution)) / L2exact;
             }
             break;
 
@@ -3087,7 +3087,7 @@ NekDouble MMFSWE::v_L2Error(unsigned int field,
                 Vmath::Vvtvp(nq, exactv, 1, exactv, 1, tmp, 1, tmp, 1);
                 Vmath::Vsqrt(nq, tmp, 1, tmp, 1);
 
-                L2exact = m_fields[1]->PhysIntegral(tmp);
+                L2exact = m_fields[1]->Integral(tmp);
 
                 // L2exact = \int
                 // (\sqrt{(u-exactu)*(u-exactu)+(v-exactv)*(v-exactv)})
@@ -3099,7 +3099,7 @@ NekDouble MMFSWE::v_L2Error(unsigned int field,
                 Vmath::Vvtvp(nq, exactv, 1, exactv, 1, tmp, 1, tmp, 1);
                 Vmath::Vsqrt(nq, tmp, 1, tmp, 1);
 
-                L2error = (m_fields[1]->PhysIntegral(tmp)) / L2exact;
+                L2error = (m_fields[1]->Integral(tmp)) / L2exact;
             }
             break;
 
@@ -3117,7 +3117,7 @@ NekDouble MMFSWE::v_L2Error(unsigned int field,
         {
             Array<OneD, NekDouble> one(m_fields[field]->GetNpoints(), 1.0);
 
-            NekDouble Vol = m_fields[field]->PhysIntegral(one);
+            NekDouble Vol = m_fields[field]->Integral(one);
             m_comm->AllReduce(Vol, LibUtilities::ReduceSum);
 
             L2error = sqrt(L2error * L2error / Vol);

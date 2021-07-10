@@ -45,35 +45,43 @@ namespace Collections {
  */
 Collection::Collection(
         vector<StdRegions::StdExpansionSharedPtr>    pCollExp,
-        OperatorImpMap                              &impTypes)
+        OperatorImpMap                              &impTypes):
+    m_collExp(pCollExp), 
+    m_impTypes(impTypes)
 {
     // Initialise geometry data.
     m_geomData = MemoryManager<CoalescedGeomData>::AllocateSharedPtr();
+}
 
-    // Loop over all operator types.
-    for (int i = 0; i < SIZE_OperatorType; ++i)
+void Collection::Initialise(const OperatorType opType)
+{
+    if(!HasOperator(opType))
     {
-        OperatorType opType = (OperatorType)i;
-        ImplementationType impType;
-
-        auto it = impTypes.find(opType);
-        if (it != impTypes.end())
+        auto it = m_impTypes.find(opType);
+        
+        if (it != m_impTypes.end())
         {
-            impType = it->second;
-            OperatorKey opKey(pCollExp[0]->DetShapeType(), opType, impType,
-                              pCollExp[0]->IsNodalNonTensorialExp());
-
+            ImplementationType impType = it->second;
+            OperatorKey opKey(m_collExp[0]->DetShapeType(), opType, impType,
+                              m_collExp[0]->IsNodalNonTensorialExp());
+            
             stringstream ss;
             ss << opKey;
             ASSERTL0(GetOperatorFactory().ModuleExists(opKey),
-                 "Requested unknown operator "+ss.str());
-
+                     "Requested unknown operator "+ss.str());
+            
             m_ops[opType] = GetOperatorFactory().CreateInstance(
-                                                opKey, pCollExp, m_geomData);
+                                          opKey, m_collExp, m_geomData);
+        }
+        else
+        {
+            NEKERROR(ErrorUtil::ewarning,
+                     "Failed to determine implmentation to initialise "
+                     "collection operator: " +
+                     std::string(Collections::OperatorTypeMap[opType]));
         }
     }
 }
-
 }
 }
 

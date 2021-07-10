@@ -78,9 +78,13 @@ protected:
     Array<OneD, Array<OneD, NekDouble> >            m_gradBase;
 
     /// number of slices
+    int                                             m_start;
+    int                                             m_skip;
     int                                             m_slices;
     /// period length
     NekDouble                                       m_period;
+    int                                             m_isperiodic;
+    int                                             m_interporder;
     /// interpolation vector
     Array<OneD, Array<OneD, NekDouble> >            m_interp;
     /// auxiliary variables
@@ -119,8 +123,8 @@ protected:
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,
               Array<OneD, Array<OneD, NekDouble> >        &outarray,
         const NekDouble                                   &time,
-        const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayofArray,
-        const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayofArray);
+        const Array<OneD, Array<OneD, NekDouble> > &pFwd = NullNekDoubleArrayOfArray,
+        const Array<OneD, Array<OneD, NekDouble> > &pBwd = NullNekDoubleArrayOfArray);
 
     virtual void v_SetBaseFlow(
         const Array<OneD, Array<OneD, NekDouble> >        &inarray,

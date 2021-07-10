@@ -67,6 +67,10 @@ namespace Nektar
     typedef std::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > SharedNekMatrixPtr;
     typedef NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag> DNekScalMat;
     typedef std::shared_ptr<DNekScalMat> DNekScalMatSharedPtr;
+
+    typedef std::shared_ptr<NekMatrix<NekSingle, StandardMatrixTag> > SharedSNekMatrixPtr;
+    typedef NekMatrix<NekMatrix<NekSingle, StandardMatrixTag>, ScaledMatrixTag> SNekScalMat;
+    typedef std::shared_ptr<SNekScalMat> SNekScalMatSharedPtr;
     
 }
     

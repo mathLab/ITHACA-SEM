@@ -87,6 +87,15 @@ namespace SolverUtils
                 Array<OneD, Array<OneD, NekDouble> >              &outarray,
                 const NekDouble                                   &time);
 
+            /// Change the advection velocity before applying the forcing.
+            /// For example, subtracting the frame velocity from the
+            /// advection velocity in the MovingRefercenceFrame.
+            SOLVER_UTILS_EXPORT void PreApply(
+                const Array<OneD, MultiRegions::ExpListSharedPtr>& fields,
+                const Array<OneD, Array<OneD, NekDouble> >&        inarray,
+                Array<OneD, Array<OneD, NekDouble> >&              outarray,
+                const NekDouble&                                   time);
+
             /// Apply the forcing
             SOLVER_UTILS_EXPORT void ApplyCoeff(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -131,6 +140,12 @@ namespace SolverUtils
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const NekDouble &time)=0;
+
+            SOLVER_UTILS_EXPORT virtual void v_PreApply(
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                Array<OneD, Array<OneD, NekDouble> >        &outarray,
+                const NekDouble &time);
 
             SOLVER_UTILS_EXPORT virtual void v_ApplyCoeff(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,

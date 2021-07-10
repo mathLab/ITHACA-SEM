@@ -107,7 +107,7 @@ namespace Nektar
          *  pressure modes.
          */
         void SetUpCoupledMatrix(const NekDouble lambda = 0.0, 
-                                const Array< OneD, Array<OneD, NekDouble>  > &Advfield = NullNekDoubleArrayofArray, 
+                                const Array< OneD, Array<OneD, NekDouble>  > &Advfield = NullNekDoubleArrayOfArray, 
                                 bool IsLinearNSEquation = true);
         
         

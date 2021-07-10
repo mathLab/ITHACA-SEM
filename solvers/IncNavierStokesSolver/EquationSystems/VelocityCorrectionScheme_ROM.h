@@ -223,7 +223,7 @@ namespace Nektar
         void SVVVarDiffCoeff(const NekDouble velmag, 
                              Array<OneD, NekDouble> &diffcoeff,
                              const Array<OneD, Array<OneD, NekDouble> >
-                             &vel = NullNekDoubleArrayofArray);
+                             &vel = NullNekDoubleArrayOfArray);
         void AppendSVVFactors(
                               StdRegions::ConstFactorMap &factors,
                               MultiRegions::VarFactorsMap &varFactorsMap);

@@ -13,6 +13,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
         ./EquationSystems/VelocityCorrectionScheme_iROM.cpp
         ./EquationSystems/CoupledLinearNS_ROM.cpp
         ./EquationSystems/CoupledLinearNS.cpp
+        ./EquationSystems/CoupledLinearNS_sparse.cpp
         ./EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
         ./EquationSystems/IncNavierStokes.cpp
         ./EquationSystems/VelocityCorrectionScheme_ROM.cpp

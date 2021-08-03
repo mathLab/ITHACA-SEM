@@ -310,6 +310,7 @@ namespace Nektar
 
 	int max_sparse_poly_approx_dimension;
 	bool use_ANN;
+	bool replace_snapshot_with_transformed;
 	bool use_ANN_local;
 	Eigen::MatrixXd train_data_x;
 	Eigen::MatrixXd train_data_y;

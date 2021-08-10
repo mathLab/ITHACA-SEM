@@ -232,9 +232,12 @@ namespace Nektar
     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fields_time_trajectory;  
     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > global_fields_time_trajectory;  
     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > ROM_fields_time_trajectory;  
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > interp_traj;
     Array<OneD, Array<OneD, NekDouble> > last_added_field; 
 	Eigen::MatrixXd POD_modes_x;
 	Eigen::MatrixXd POD_modes_y;
+	Eigen::MatrixXd interp_traj_x;
+	Eigen::MatrixXd interp_traj_y;
     int globalNcoeff;
     int step;
     int no_of_added_ones;
@@ -242,6 +245,8 @@ namespace Nektar
     int ROM_stage;
     int ROM_size_x;
     int ROM_size_y;
+	int interp_traj_start;
+	int max_time_samples;
         
     };
 

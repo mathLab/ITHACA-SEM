@@ -591,7 +591,26 @@ namespace Nektar
 			ROM_stage = 1;
 		}
 
+		if (m_session->DefinesParameter("interp_traj_start")) 
+		{
+			interp_traj_start = m_session->GetParameter("interp_traj_start");	
+		}
+		else
+		{
+			interp_traj_start = 1;
+		}
+
+		if (m_session->DefinesParameter("max_time_samples")) 
+		{
+			max_time_samples = m_session->GetParameter("max_time_samples");	
+		}
+		else
+		{
+			max_time_samples = 5000;
+		}
+
 		cout << "current ROM_stage " << ROM_stage << endl;
+		cout << "current interp_traj_start " << interp_traj_start << endl;
 
 	// Ensure the initial conditions have correct BCs  
         for(int i = 0; i < m_fields.size(); ++i)
@@ -605,7 +624,7 @@ namespace Nektar
         
                     // Set up wrapper to all fields data storage.
             // should limit here a bit: fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps + 1);
-            fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(1500);  
+            fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(max_time_samples);  
             global_fields_time_trajectory = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(m_steps + 1);  
          
       //      Array<OneD, Array<OneD, NekDouble> > last_added_field(m_nConvectiveFields); 
@@ -645,7 +664,7 @@ namespace Nektar
             cout << "globalNcoeff at VelocityCorrectionSchemeROM::v_DoInitialise " << globalNcoeff << endl;
             
 //            for (int i = 0; i < m_steps + 1; ++i)
-            for (int i = 0; i < 1500; ++i)
+            for (int i = 0; i < max_time_samples; ++i)
             {
             	fields_time_trajectory[i] = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields);
  //           	global_fields_time_trajectory[i] = Array<OneD, Array<OneD, NekDouble> > (m_nConvectiveFields);
@@ -672,7 +691,7 @@ namespace Nektar
             no_of_added_ones = 0;
 	    step = 0;
 
-		if (ROM_stage == 2) // load the POD basis and collect reduced trajectory
+		if (ROM_stage >= 2) // load the POD basis and collect reduced trajectory
 		{
 
 //		    std::string RBsize_x = "RBsize_x.txt";
@@ -711,7 +730,7 @@ namespace Nektar
 //				      cout << line << endl;
 			        std::istringstream is( line );
 					std::vector<double> nn = std::vector<double>( std::istream_iterator<double>(is), std::istream_iterator<double>() );
-					cout << "nn.size() "  << nn.size() << endl;
+//					cout << "nn.size() "  << nn.size() << endl;
 					for (int i = 0; i < nn.size(); ++i)
 					{
 						POD_modes_x(i, counter) = nn[i];
@@ -782,8 +801,58 @@ namespace Nektar
 				}
 			}
 
+			if (ROM_stage == 3)
+			{
+				interp_traj_x = Eigen::MatrixXd::Zero(500, 5);
+			    std::string interp_traj_txt = "interp_traj_x.txt";
+				const char* interp_traj_txt_t = interp_traj_txt.c_str();
+				ifstream myfile_interp_traj_txt_t (interp_traj_txt_t);
+				if (myfile_interp_traj_txt_t.is_open())
+				{
+					std::string line;
+					int counter = 0;
+					while ( getline( myfile_interp_traj_txt_t, line ) ) 
+					{
+				        std::istringstream is( line );
+						std::vector<double> nn = std::vector<double>( std::istream_iterator<double>(is), std::istream_iterator<double>() );
+						cout << "nn.size() "  << nn.size() << endl;
+						for (int i = 0; i < nn.size(); ++i)
+						{
+							interp_traj_x(i, counter) = nn[i];
+						}
+						++counter;
+					}
+				}
+				else cout << "Unable to open file"; 
+			}
 
-		}
+			if (ROM_stage == 3)
+			{
+				interp_traj_y = Eigen::MatrixXd::Zero(500, 5);
+			    std::string interp_traj_txt = "interp_traj_y.txt";
+				const char* interp_traj_txt_t = interp_traj_txt.c_str();
+				ifstream myfile_interp_traj_txt_t (interp_traj_txt_t);
+				if (myfile_interp_traj_txt_t.is_open())
+				{
+					std::string line;
+					int counter = 0;
+					while ( getline( myfile_interp_traj_txt_t, line ) ) 
+					{
+				        std::istringstream is( line );
+						std::vector<double> nn = std::vector<double>( std::istream_iterator<double>(is), std::istream_iterator<double>() );
+						cout << "nn.size() "  << nn.size() << endl;
+						for (int i = 0; i < nn.size(); ++i)
+						{
+							interp_traj_y(i, counter) = nn[i];
+						}
+						++counter;
+					}
+				}
+				else cout << "Unable to open file"; 
+			}
+
+
+		}    //  if (ROM_stage >= 2)
 
         
         
@@ -879,6 +948,39 @@ namespace Nektar
 
         // Calculate High-Order pressure boundary conditions
         m_extrapolation->EvaluatePressureBCs(inarray,outarray,m_kinvis);
+
+
+
+		div_t step_by_100 = div(step, 100);
+		if ((ROM_stage == 3) && (step >= interp_traj_start) && (step_by_100.rem == 0)) // error analysis
+		{
+			int interp_index = step_by_100.quot - interp_traj_start / 100;
+			
+//			cout << "interp_index " << interp_index << endl;
+//			cout << "interp_traj_x.row(interp_index) " << interp_traj_x.row(interp_index) << endl;			
+//			cout << "POD_modes_x.rows() " << POD_modes_x.rows() << endl;
+//			cout << "POD_modes_x.cols() " << POD_modes_x.cols() << endl;	
+			
+			Eigen::VectorXd reproj_x = interp_traj_x.row(interp_index) * POD_modes_x.leftCols(5).transpose() ;
+			Eigen::VectorXd reproj_y = interp_traj_y.row(interp_index) * POD_modes_y.leftCols(5).transpose() ;
+
+					
+
+
+			// overwrite the field			
+			for (int k = 0; k < m_fields[m_intVariables[0]]->GetNpoints(); ++k)
+    	    {
+      	        m_fields[0]->SetPhys(k, reproj_x(k));
+       	        m_fields[1]->SetPhys(k, reproj_y(k));
+    	    }
+            m_fields[0]->FwdTrans_IterPerExp(m_fields[0]->GetPhys(), m_fields[0]->UpdateCoeffs());
+            m_fields[1]->FwdTrans_IterPerExp(m_fields[1]->GetPhys(), m_fields[1]->UpdateCoeffs());
+			cout << "overwriting field at step " << step << endl;
+		}
+
+
+
+
     }
 
     /**
@@ -959,6 +1061,16 @@ namespace Nektar
 
 		}
 
+/*		div_t step_by_100 = div(step, 100);
+		if ((ROM_stage == 3) && (step >= interp_traj_start) && (step_by_100.rem == 0)) // error analysis
+		{
+
+			Eigen::VectorXd reproj_x = interp_traj_x.col(1) * POD_modes_x.transpose().leftCols(5) ;
+			Eigen::VectorXd reproj_y = interp_traj_y.col(1) * POD_modes_y.transpose().leftCols(5) ;
+
+		}
+*/
+
 
 		for (int k = 0; k < m_fields[m_intVariables[0]]->GetNpoints(); ++k)
             	{
@@ -996,8 +1108,8 @@ namespace Nektar
             	
             			// collect the fields from here
 		// if (!(step % 100))
-                if (cos_angle < 0.99985)
-         //       if (1)                
+//                if (cos_angle < 0.99985)
+        if (cos_angle < 0.99)
 		{
 		    cout << "adding at step no. at VCS " << step << " out of a macimum of " << m_steps << " steps " << endl;
 		    cout << "current no_of_added_ones " << no_of_added_ones << endl;
@@ -1125,7 +1237,7 @@ namespace Nektar
             
             if (myfile_fields_TT_x.is_open())
 	    {
-		for(int n = 0; n < 1500; ++n)
+		for(int n = 0; n < max_time_samples; ++n)
 		{
 		    for(int counter_nphys = 0; counter_nphys < m_fields[m_intVariables[0]]->GetNpoints(); ++counter_nphys)
 		    {
@@ -1139,7 +1251,7 @@ namespace Nektar
 	    
             if (myfile_fields_TT_y.is_open())
 	    {
-		for(int n = 0; n < 1500; ++n)
+		for(int n = 0; n < max_time_samples; ++n)
 		{
 		    for(int counter_nphys = 0; counter_nphys < m_fields[m_intVariables[1]]->GetNpoints(); ++counter_nphys)
 		    {

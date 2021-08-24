@@ -1,0 +1,9 @@
+ADD_SOLVER_UTILITY(CFLStep IncNavierStokesSolver SOURCES CFLStep.cpp USELIBRARY)
+ADD_SOLVER_UTILITY(Aliasing IncNavierStokesSolver SOURCES Aliasing.cpp USELIBRARY)
+ADD_SOLVER_UTILITY(NonLinearEnergy IncNavierStokesSolver SOURCES NonLinearEnergy.cpp USELIBRARY)
+
+ADD_SOLVER_UTILITY(Fld2DTo2D5 IncNavierStokesSolver SOURCES Fld2DTo2D5.cpp)
+ADD_SOLVER_UTILITY(FldAddFalknerSkanBL IncNavierStokesSolver SOURCES FldAddFalknerSkanBL.cpp)
+ADD_SOLVER_UTILITY(AddModeTo2DFld IncNavierStokesSolver SOURCES AddModeTo2DFld.cpp)
+ADD_SOLVER_UTILITY(ExtractMeanModeFromHomo1DFld IncNavierStokesSolver
+    SOURCES ExtractMeanModeFromHomo1DFld.cpp)

@@ -1,0 +1,515 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File: Tester.cpp
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description: Tester executable.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+
+#include <TestData.h>
+#include <Metric.h>
+
+#include <boost/program_options.hpp>
+#include <boost/thread.hpp>
+
+#cmakedefine NEKTAR_TEST_FORCEMPIEXEC 1
+
+using namespace std;
+using namespace Nektar;
+
+// Define some namespace aliases
+namespace po = boost::program_options;
+
+std::string PortablePath(const boost::filesystem::path& path)
+{
+    boost::filesystem::path temp = path;
+    temp.make_preferred();
+    return temp.string();
+}
+
+int main(int argc, char *argv[])
+{
+    int status = 0;
+    string command;
+
+    // Set up command line options.
+    po::options_description desc("Available options");
+    desc.add_options()
+        ("help,h",                 "Produce this help message.")
+        ("verbose,v",              "Turn on verbosity.")
+        ("generate-metric,g",      po::value<vector<int> >(),
+                                   "Generate a single metric.")
+        ("generate-all-metrics,a", "Generate all metrics.")
+        ("executable,e",           po::value<string>(),
+                                   "Use specified executable.");
+
+    po::options_description hidden("Hidden options");
+    hidden.add_options()
+        ("input-file",   po::value<string>(), "Input filename");
+
+    po::options_description cmdline_options("Command-line options");
+    cmdline_options.add(hidden).add(desc);
+
+    po::options_description visible("Allowed options");
+    visible.add(desc);
+
+    po::positional_options_description p;
+    p.add("input-file", -1);
+
+    po::variables_map vm;
+
+    try
+    {
+        po::store(po::command_line_parser(argc, argv).
+                  options(cmdline_options).positional(p).run(), vm);
+        po::notify(vm);
+    }
+    catch (const exception& e)
+    {
+        cerr << e.what() << endl;
+        cerr << desc;
+        return 1;
+    }
+
+    if (vm.count("help") || vm.count("input-file") != 1) {
+        cerr << "Usage: Tester [options] input-file.tst" << endl;
+        cout << desc;
+        return 1;
+    }
+
+    bool verbose = vm.count("verbose");
+
+    // Set up set containing metrics to be generated.
+    vector<int> metricGenVec;
+    if (vm.count("generate-metric"))
+    {
+        metricGenVec = vm["generate-metric"].as<vector<int> >();
+    }
+    set<int> metricGen(metricGenVec.begin(), metricGenVec.end());
+
+    // Path to test definition file
+    const fs::path specFile(vm["input-file"].as<string>());
+
+    // Parent path of test definition file containing dependent files
+    fs::path specPath = specFile.parent_path();
+
+    if (specPath.empty())
+    {
+        specPath = fs::current_path();
+    }
+
+    string specFileStem = specFile.stem().string();
+
+    // Temporary directory to create and in which to conduct test
+    const fs::path tmpDir = fs::current_path()
+        / fs::path("tmp_" + specFileStem + "_" 
+                          + fs::unique_path("%%%%%%").string());
+
+    // The current directory
+    const fs::path startDir = fs::current_path();
+
+    try
+    {
+        if (verbose)
+        {
+            cerr << "Reading test file definition: " << specFile << endl;
+        }
+
+        // Parse the test file
+        TestData file(specFile, vm);
+
+        if (verbose && file.GetNumMetrics() > 0)
+        {
+            cerr << "Creating metrics:" << endl;
+        }
+
+        // Generate the metric objects
+        vector<MetricSharedPtr> metrics;
+        for (unsigned int i = 0; i < file.GetNumMetrics(); ++i)
+        {
+            set<int>::iterator it = metricGen.find(file.GetMetricId(i));
+            bool genMetric = it != metricGen.end() ||
+                             (vm.count("generate-all-metrics") > 0);
+
+            metrics.push_back( GetMetricFactory().CreateInstance(
+                                                    file.GetMetricType(i),
+                                                    file.GetMetric(i),
+                                                    genMetric
+                                                  ));
+
+            if (verbose)
+            {
+                cerr << "  - ID " << metrics.back()->GetID() << ": "
+                     << metrics.back()->GetType() << endl;
+            }
+
+            if (it != metricGen.end())
+            {
+                metricGen.erase(it);
+            }
+        }
+
+        if (metricGen.size() != 0)
+        {
+            string s = metricGen.size() == 1 ? "s" : "";
+            set<int>::iterator it;
+            cerr << "Unable to find metric"+s+" with ID"+s+" ";
+            for (it = metricGen.begin(); it != metricGen.end(); ++it)
+            {
+                cerr << *it << " ";
+            }
+            cerr << endl;
+            return 1;
+        }
+
+        // Remove the temporary directory if left from a previous test
+        if (fs::exists(tmpDir))
+        {
+            fs::remove_all(tmpDir);
+        }
+
+        if (verbose)
+        {
+            cerr << "Creating working directory: " << tmpDir << endl;
+        }
+
+        // Create temporary directory
+        fs::create_directory(tmpDir);
+
+        // Change working directory to the temporary directory
+        fs::current_path(tmpDir);
+
+        if (verbose && file.GetNumDependentFiles())
+        {
+            cerr << "Copying required files: " << endl;
+        }
+
+        // Copy required files for this test from the test definition directory
+        // to the temporary directory.
+        for (unsigned int i = 0; i < file.GetNumDependentFiles(); ++i)
+        {
+            fs::path source_file(file.GetDependentFile(i).m_filename);
+
+            fs::path source = specPath / source_file;
+            fs::path dest   = tmpDir   / source_file.filename();
+            if (verbose)
+            {
+                cerr << "  - " << source << " -> " << dest << endl;
+            }
+
+            if (fs::is_directory(source))
+            {
+                fs::copy_directory(source, dest);
+                // If source is a directory, then only directory name is
+                // created, so call copy again to copy files.
+                for (const auto& dirEnt :
+                         fs::recursive_directory_iterator{source})
+                {
+                    fs::path newdest = dest / dirEnt.path().filename();
+                    fs::copy_file(dirEnt.path(), newdest);
+                }
+            }
+	    else
+            {
+                fs::copy_file(source, dest);
+	    }
+        }
+
+        // If we're Python, copy script too.
+
+        // Construct test command to run. Output from stdout and stderr are
+        // directed to the files output.out and output.err, respectively.
+
+        bool pythonAdded = false, mpiAdded = false;
+        for (unsigned int i = 0; i < file.GetNumCommands(); ++i)
+        {
+            Command cmd = file.GetCommand(i);
+            if (cmd.m_pythonTest && !pythonAdded)
+            {
+                // Prepend Python to very start of command.
+                command = "PYTHONPATH=\"@CMAKE_BINARY_DIR@\" " + command;
+                pythonAdded = true;
+            }
+
+#ifdef NEKTAR_TEST_FORCEMPIEXEC
+#else
+            if (cmd.m_processes > 1 || file.GetNumCommands() > 1)
+#endif
+            {
+                if (mpiAdded)
+                {
+                    continue;
+                }
+
+                command += "\"@MPIEXEC@\" ";
+                if (std::string("@NEKTAR_TEST_USE_HOSTFILE@") == "ON")
+                {
+                    command += "-hostfile hostfile ";
+                    if (system("echo 'localhost slots=12' > hostfile"))
+                    {
+                        cerr << "Unable to write 'hostfile' in path '"
+                             << fs::current_path() << endl;
+                        status = 1;
+                    }
+                }
+
+                if (file.GetNumCommands() > 1)
+                {
+                    command += "--tag-output ";
+                }
+
+                mpiAdded = true;
+            }
+        }
+
+        // Parse commands.
+        for (unsigned int i = 0; i < file.GetNumCommands(); ++i)
+        {
+            Command cmd = file.GetCommand(i);
+
+            // If running with multiple commands simultaneously, separate with
+            // colon.
+            if (i > 0)
+            {
+                command += " : ";
+            }
+
+            // Add -n where appropriate.
+            if (file.GetNumCommands() > 1 || cmd.m_processes > 1)
+            {
+                command += "@MPIEXEC_NUMPROC_FLAG@ ";
+                command += std::to_string(cmd.m_processes) + " ";
+            }
+
+            // Look for executable or Python script.
+            fs::path execPath = startDir / cmd.m_executable;
+            if (!fs::exists(execPath))
+            {
+                ASSERTL0(!cmd.m_pythonTest, "Python script not found.");
+                execPath = cmd.m_executable;
+            }
+
+            // Prepend script name with Python executable path if this is a
+            // Python test.
+            if (cmd.m_pythonTest)
+            {
+                command += "@PYTHON_EXECUTABLE@ ";
+            }
+
+            command += PortablePath(execPath);
+            command += " ";
+            command += cmd.m_parameters;
+            command += " 1>output.out 2>output.err";
+        }
+
+        status = 0;
+        string line;
+
+        if (verbose)
+        {
+            cerr << "Running command: " << command << endl;
+        }
+
+        // Run executable to perform test.
+        if (system(command.c_str()))
+        {
+            cerr << "Error occurred running test:" << endl;
+            cerr << "Command: " << command << endl;
+            status = 1;
+        }
+
+        // Check output files exist
+        if (!(fs::exists("output.out") && fs::exists("output.err")))
+        {
+            cerr << "One or more test output files are missing." << endl;
+            throw 1;
+        }
+
+        // Open output files and check they are readable
+        ifstream vStdout("output.out");
+        ifstream vStderr("output.err");
+        if (vStdout.bad() || vStderr.bad())
+        {
+            cerr << "One or more test output files are unreadable." << endl;
+            throw 1;
+        }
+
+        // Test against all metrics
+        if (status == 0)
+        {
+            if (verbose && metrics.size())
+            {
+                cerr << "Checking metrics:" << endl;
+            }
+
+            for (int i = 0; i < metrics.size(); ++i)
+            {
+                bool gen = metricGen.find(metrics[i]->GetID()) != metricGen.end() ||
+                    (vm.count("generate-all-metrics") > 0);
+
+                vStdout.clear();
+                vStderr.clear();
+                vStdout.seekg(0, ios::beg);
+                vStderr.seekg(0, ios::beg);
+
+                if (verbose)
+                {
+                    cerr << "  - " << (gen ? "generating" : "checking")
+                         << " metric " << metrics[i]->GetID()
+                         << " (" << metrics[i]->GetType() << ")... ";
+                }
+
+                if (!metrics[i]->Test(vStdout, vStderr))
+                {
+                    status = 1;
+                    if (verbose)
+                    {
+                        cerr << "failed!" << endl;
+                    }
+                }
+                else if (verbose)
+                {
+                    cerr << "passed" << endl;
+                }
+            }
+        }
+
+        if (verbose)
+        {
+            cerr << endl << endl;
+        }
+
+        // Dump output files to terminal for debugging purposes on fail.
+        if (status == 1 || verbose)
+        {
+            vStdout.clear();
+            vStderr.clear();
+            vStdout.seekg(0, ios::beg);
+            vStderr.seekg(0, ios::beg);
+
+            cout << "=== Output ===" << endl;
+            while(vStdout.good())
+            {
+                getline(vStdout, line);
+                cout << line << endl;
+            }
+            cout << "=== Errors ===" << endl;
+            while(vStderr.good())
+            {
+                getline(vStderr, line);
+                cout << line << endl;
+            }
+        }
+
+        // Close output files.
+        vStdout.close();
+        vStderr.close();
+
+        // Change back to the original path and delete temporary directory.
+        fs::current_path(startDir);
+
+        if (verbose)
+        {
+            cerr << "Removing working directory" << endl;
+        }
+
+        // Repeatedly try deleting directory with sleep for filesystems which
+        // work asynchronously. This allows time for the filesystem to register
+        // the output files are closed so they can be deleted and not cause a
+        // filesystem failure. Attempts made for 1 second.
+        int i = 1000;
+        while (i > 0)
+        {
+            try
+            {
+                // If delete successful, stop trying.
+                fs::remove_all(tmpDir);
+                break;
+            }
+            catch (const fs::filesystem_error& e)
+            {
+                //usleep(1000);
+                boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+                i--;
+                if (i > 0)
+                {
+                    cout << "Locked files encountered. "
+                         << "Retring after 1ms..." << endl;
+                }
+                else
+                {
+                    // If still failing after 1sec, we consider it a permanent
+                    // filesystem error and abort.
+                    throw e;
+                }
+            }
+        }
+
+        // Save any changes.
+        if (vm.count("generate-metric")      > 0 ||
+            vm.count("generate-all-metrics") > 0)
+        {
+            file.SaveFile();
+        }
+
+        // Return status of test. 0 = PASS, 1 = FAIL
+        return status;
+    }
+    catch (const fs::filesystem_error& e)
+    {
+        cerr << "Filesystem operation error occurred:" << endl;
+        cerr << "  " << e.what() << endl;
+        cerr << "  Files left in " << tmpDir.string() << endl;
+    }
+    catch (const TesterException &e)
+    {
+        cerr << "Error occurred during test:" << endl;
+        cerr << "  " << e.what() << endl;
+        cerr << "  Files left in " << tmpDir.string() << endl;
+    }
+    catch (const std::exception &e)
+    {
+        cerr << "Unhandled exception during test:" << endl;
+        cerr << "  " << e.what() << endl;
+        cerr << "  Files left in " << tmpDir.string() << endl;
+    }
+    catch (...)
+    {
+        cerr << "Unknown error during test" << endl;
+        cerr << "  Files left in " << tmpDir.string() << endl;
+    }
+
+    // If a system error, return 2
+    return 2;
+}

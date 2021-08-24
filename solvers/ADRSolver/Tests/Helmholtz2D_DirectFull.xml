@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="2" SPACE="2">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAGH/aj0gwMjKjy9ujyTNjl7WEizNjNh8sDAOT2C38A</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAFjDhoJhw0Mw4aBgADMAAT</EDGE>
+        <ELEMENT>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAFjFCaCUozQ2kAAHgABwAA</Q>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> Q[0] </C>
+            <C ID="1"> E[0] </C>
+            <C ID="2"> E[1] </C>
+            <C ID="3"> E[2] </C>
+            <C ID="4"> E[3] </C>
+        </COMPOSITE>
+        <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="8" TYPE="MODIFIED" FIELDS="u" />
+    </EXPANSIONS>
+        <CONDITIONS>
+
+        <PARAMETERS>
+            <P> wavefreq       = PI               </P>
+            <P> Lambda         = 1.0              </P>
+        </PARAMETERS>
+
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE"                VALUE="Helmholtz"  />
+            <I PROPERTY="Projection"            VALUE="Continuous" />
+            <I PROPERTY="DiffusionAdvancement"  VALUE="Implicit"   />
+            <I PROPERTY="GlobalSysSoln"         VALUE="DirectFull" />
+            <!--
+            <I PROPERTY="GlobalSysSoln"         VALUE="DirectStaticCond"          />
+            -->
+        </SOLVERINFO>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+            <B ID="2"> C[3] </B>
+            <B ID="3"> C[4] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <N VAR="u" VALUE="-wavefreq * sin(wavefreq*x) * cos(wavefreq*y)" />
+            </REGION>
+            
+            <REGION REF="1">
+                <N VAR="u" VALUE="wavefreq * cos(wavefreq*x) * sin(wavefreq*y)" />
+            </REGION>
+            
+            <REGION REF="2">
+                <N VAR="u" VALUE="wavefreq * sin(wavefreq*x) * cos(wavefreq * y)" />
+            </REGION>
+            
+            <REGION REF="3">
+                <N VAR="u" VALUE="-wavefreq * cos(wavefreq*x) * sin(wavefreq*y)" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u"
+                VALUE="sin(wavefreq*x)*sin(wavefreq*y)" />
+        </FUNCTION>
+
+        <FUNCTION NAME="Forcing">
+            <E VAR="u" VALUE="- (2 * wavefreq * wavefreq + Lambda)  * sin(wavefreq*x)*sin(wavefreq*y)" />
+        </FUNCTION>
+
+    </CONDITIONS>
+</NEKTAR>

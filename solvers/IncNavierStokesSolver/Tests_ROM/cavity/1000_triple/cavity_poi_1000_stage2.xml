@@ -1,0 +1,286 @@
+
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<!--
+based on
+
+On the application of reduced basis methods to bifurcation
+problems in incompressible fluid dynamics
+
+Giuseppe Pitton · Gianluigi Rozza
+
+Aspect ratio fixed to 4        
+-->
+
+
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="17" FIELDS="u,v,p" TYPE="MODIFIED" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+        <SOLVERINFO>
+            <!-- <I PROPERTY="SolverType" VALUE="CoupledLinearisedNS" /> -->
+            <!-- <I PROPERTY="SolverType" VALUE="CoupledLinearisedNS" />  -->
+            <!-- <I PROPERTY="MappingImplicitPressure" VALUE="TRUE"/> -->
+            <!-- <I PROPERTY="EQTYPE" VALUE="SteadyStokes" /> -->
+            <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
+	    <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme_ROM" /> 
+<!-- 	    <I PROPERTY="GlobalSysSoln" VALUE="DirectFull" />  -->
+            <!--  <I PROPERTY="Driver" VALUE="SteadyState" />   doing some pseudo-time integration to compute steady state-->
+	    <!-- <I PROPERTY="MappingImplicitPressure" VALUE="TRUE"/>  Default = FALSE -->
+	    <!-- <I PROPERTY="MappingImplicitViscous" VALUE="TRUE"/> Default = FALSE -->
+            <!-- <I PROPERTY="AdvectionForm" VALUE="Convective" /> -->
+            <I PROPERTY="EvolutionOperator" VALUE="Nonlinear" />  
+            <I PROPERTY="Projection" VALUE="Galerkin" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
+        </SOLVERINFO>
+
+        <PARAMETERS>
+            <!--  The updated parameters are: X_tilde = 2.01704e+07 and Delta_tilde = 2.13066e+21   -->
+		    <!-- <P> ControlCoeff = 10 </P>  -->
+		    <!-- <P> FilterWidth = 2e+1 </P> -->
+		    <P> ControlCoeff = 1 </P>  
+		    <P> FilterWidth = 2 </P> 
+            <P> TimeStep = 5e-7    </P>
+            <P> TOL = .0075    </P>
+            <P> NumSteps = 3e5       </P>
+            <P> IO_CheckSteps = 1e2       </P>
+            <P> IO_InfoSteps = 1e2       </P>
+            <P> Kinvis = 1       </P>
+            <P> ROM_stage = 1       </P>
+        </PARAMETERS>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> v </V>
+            <V ID="2"> p </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">    <!-- Walls -->
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+<!--            <REGION REF="1">   
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <N VAR="p" VALUE="0" />
+            </REGION>
+            <REGION REF="2">
+                <N VAR="u" VALUE="0" />
+                <N VAR="v" VALUE="0" />
+                <D VAR="p" VALUE="0" />
+            </REGION> -->
+        </BOUNDARYCONDITIONS>
+
+         <FUNCTION NAME="BodyForce">
+            <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="1000e+3*x" />
+            <E VAR="p" VALUE="0" />
+        </FUNCTION>  
+
+        <!-- <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="0" />
+            <E VAR="p" VALUE="0" />
+        </FUNCTION>  -->
+
+	<!--  <FUNCTION NAME="InitialConditions">
+		<F FILE="Test1_13_eig_0.fld" />
+	</FUNCTION> -->
+
+        <FUNCTION NAME="InitialConditions">
+		<F FILE="cavity_poi_1000_stage1.fld" />
+	</FUNCTION>   
+
+
+
+
+    </CONDITIONS>
+
+    <FORCING>
+        <FORCE TYPE="Body">
+	  <BODYFORCE> BodyForce </BODYFORCE>
+	</FORCE>
+    </FORCING>
+
+
+    <GEOMETRY DIM="2" SPACE="2" >
+
+        <VERTEX>
+            <V ID="0">  0.0   0.0    0.0 </V>
+            <V ID="1">  0.0   0.3    0.0 </V>
+            <V ID="2">  0.0   0.7    0.0 </V>
+            <V ID="3">  0.0   1.0    0.0 </V>
+            <V ID="4">  0.7   0.0    0.0 </V>
+            <V ID="5">  0.7   0.3    0.0 </V>
+            <V ID="6">  0.7   0.7    0.0 </V>
+            <V ID="7">  0.7   1.0    0.0 </V>
+            <V ID="8">  1.0   0.0    0.0 </V>
+            <V ID="9">  1.0   0.3    0.0 </V>
+            <V ID="10">  1.0   0.7    0.0 </V>
+            <V ID="11">  1.0   1.0    0.0 </V>
+            <V ID="12">  1.5   0.0    0.0 </V>
+            <V ID="13">  1.5   0.3    0.0 </V>
+            <V ID="14">  1.5   0.7    0.0 </V>
+            <V ID="15">  1.5   1.0    0.0 </V>
+            <V ID="16">  2.0   0.0    0.0 </V>
+            <V ID="17">  2.0   0.3    0.0 </V>
+            <V ID="18">  2.0   0.7    0.0 </V>
+            <V ID="19">  2.0   1.0    0.0 </V>
+            <V ID="20">  2.5   0.0    0.0 </V>
+            <V ID="21">  2.5   0.3    0.0 </V>
+            <V ID="22">  2.5   0.7    0.0 </V>
+            <V ID="23">  2.5   1.0    0.0 </V>
+            <V ID="24">  3.0   0.0    0.0 </V>
+            <V ID="25">  3.0   0.3    0.0 </V>
+            <V ID="26">  3.0   0.7    0.0 </V>
+            <V ID="27">  3.0   1.0    0.0 </V>
+            <V ID="28">  3.3   0.0    0.0 </V>
+            <V ID="29">  3.3   0.3    0.0 </V>
+            <V ID="30">  3.3   0.7    0.0 </V>
+            <V ID="31">  3.3   1.0    0.0 </V>
+            <V ID="32">  4.0  0.0    0.0 </V>
+            <V ID="33">  4.0  0.3    0.0 </V>
+            <V ID="34">  4.0  0.7    0.0 </V>
+            <V ID="35">  4.0  1.0    0.0 </V>
+        </VERTEX>
+
+        <EDGE>
+            <E ID="0"> 0 1 </E>
+            <E ID="1"> 1 2 </E>
+            <E ID="2"> 2 3 </E>
+
+            <E ID="3"> 0 4 </E>
+            <E ID="4"> 1 5 </E>
+            <E ID="5"> 2 6 </E>
+            <E ID="6"> 3 7 </E>
+
+            <E ID="7"> 4 5 </E>
+            <E ID="8"> 5 6 </E>
+            <E ID="9"> 6 7 </E>
+
+            <E ID="10"> 4 8 </E>
+            <E ID="11"> 5 9 </E>
+            <E ID="12"> 6 10 </E>
+            <E ID="13"> 7 11 </E>
+
+            <E ID="14"> 8 9 </E>
+            <E ID="15"> 9 10 </E>
+            <E ID="16"> 10 11 </E>
+
+            <E ID="17"> 8 12 </E>
+            <E ID="18"> 9 13 </E>
+            <E ID="19"> 10 14 </E>
+            <E ID="20"> 11 15 </E>
+
+            <E ID="21"> 12 13 </E>
+            <E ID="22"> 13 14 </E>
+            <E ID="23"> 14 15 </E>
+
+            <E ID="24"> 12 16 </E>
+            <E ID="25"> 13 17 </E>
+            <E ID="26"> 14 18 </E>
+            <E ID="27"> 15 19 </E>
+
+            <E ID="28"> 16 17 </E>
+            <E ID="29"> 17 18 </E>
+            <E ID="30"> 18 19 </E>
+
+            <E ID="31"> 16 20 </E>
+            <E ID="32"> 17 21 </E>
+            <E ID="33"> 18 22 </E>
+            <E ID="34"> 19 23 </E>
+
+            <E ID="35"> 20 21 </E>
+            <E ID="36"> 21 22 </E>
+            <E ID="37"> 22 23 </E>
+
+            <E ID="38"> 20 24 </E>
+            <E ID="39"> 21 25 </E>
+            <E ID="40"> 22 26 </E>
+            <E ID="41"> 23 27 </E>
+
+            <E ID="42"> 24 25 </E>
+            <E ID="43"> 25 26 </E>
+            <E ID="44"> 26 27 </E>
+
+            <E ID="45"> 24 28 </E>
+            <E ID="46"> 25 29 </E>
+            <E ID="47"> 26 30 </E>
+            <E ID="48"> 27 31 </E>
+
+            <E ID="49"> 28 29 </E>
+            <E ID="50"> 29 30 </E>
+            <E ID="51"> 30 31 </E>
+
+            <E ID="52"> 28 32 </E>
+            <E ID="53"> 29 33 </E>
+            <E ID="54"> 30 34 </E>
+            <E ID="55"> 31 35 </E>
+
+            <E ID="56"> 32 33 </E>
+            <E ID="57"> 33 34 </E>
+            <E ID="58"> 34 35 </E>
+        </EDGE>
+
+        <ELEMENT>
+            <Q ID="0"> 0 3 7 4 </Q> 
+            <Q ID="1"> 1 4 8 5 </Q> 
+            <Q ID="2"> 2 5 9 6 </Q> 
+            <Q ID="3"> 7 10 14 11 </Q> 
+            <Q ID="4"> 8 11 15 12 </Q> 
+            <Q ID="5"> 9 12 16 13 </Q> 
+            <Q ID="6"> 14 17 21 18 </Q> 
+            <Q ID="7"> 15 18 22 19 </Q> 
+            <Q ID="8"> 16 19 23 20 </Q> 
+
+            <Q ID="9"> 21 24 28 25 </Q> 
+            <Q ID="10"> 22 25 29 26 </Q> 
+            <Q ID="11"> 23 26 30 27 </Q> 
+
+            <Q ID="12"> 28 31 35 32 </Q> 
+            <Q ID="13"> 29 32 36 33  </Q> 
+            <Q ID="14"> 30 33 37 34 </Q> 
+
+            <Q ID="15"> 35 38 42 39 </Q> 
+            <Q ID="16"> 36 39 43 40 </Q> 
+            <Q ID="17"> 37 40 44 41 </Q> 
+
+            <Q ID="18"> 42 45 49 46 </Q> 
+            <Q ID="19"> 43 46 50 47 </Q> 
+            <Q ID="20"> 44 47 51 48 </Q> 
+
+            <Q ID="21"> 49 52 56 53 </Q> 
+            <Q ID="22"> 50 53 57 54 </Q> 
+            <Q ID="23"> 51 54 58 55 </Q> 
+        </ELEMENT>
+
+        <COMPOSITE>
+            <C ID="0"> Q[0-23] </C>
+            <C ID="1"> E[0,1,2,3,6,10,13,17,20,24,27,31,34,38,41,45,48,52,55,56,57,58] </C>        <!-- Walls -->
+        </COMPOSITE>
+
+        <DOMAIN> C[0] </DOMAIN>
+
+    </GEOMETRY>
+
+ <!--
+   <FILTERS>   
+    <FILTER TYPE="Checkpoint">
+        <PARAM NAME="OutputFile">IntermediateFields_OPENUP</PARAM>
+        <PARAM NAME="OutputFrequency">1</PARAM>
+    </FILTER>
+   </FILTERS>    -->
+
+</NEKTAR>
+

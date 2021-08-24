@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NEKTAR>
+    <EXPANSIONS>
+        <E COMPOSITE="C[10]" NUMMODES="4" TYPE="MODIFIED" FIELDS="u0S,v0S,u0R,v0R" />
+    </EXPANSIONS>
+    <COUPLING NAME="coupling1" TYPE="File">
+        <I PROPERTY="ReceiveSteps" VALUE="1" />
+        <I PROPERTY="ReceiveVariables" VALUE="u0R,v0R" />
+        <I PROPERTY="ReceiveFunction" VALUE="CouplingIn" />
+        <I PROPERTY="SendSteps" VALUE="1" />
+        <I PROPERTY="SendVariables" VALUE="u0S,v0S" />
+        <I PROPERTY="SendFileName" VALUE="Dummy0out_%14.8E.pts" />
+    </COUPLING>
+    <CONDITIONS>
+        <SOLVERINFO>
+            <I PROPERTY="EQType"                VALUE="Dummy"                 />
+            <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler"/>
+        </SOLVERINFO>
+            <GLOBALSYSSOLNINFO>
+            <V VAR="DefaultVar">
+                <I PROPERTY="GlobalSysSoln"   VALUE="PETScStaticCond" />
+            </V>
+            </GLOBALSYSSOLNINFO>
+        <PARAMETERS>
+            <P> TimeStep      = 3E-6                </P>
+            <P> NumSteps      = 10                  </P>
+            <P> FinTime       = TimeStep*NumSteps   </P>
+            <P> IO_CheckSteps = 1                   </P>
+            <P> IO_InfoSteps  = 1                   </P>
+        </PARAMETERS>
+        <VARIABLES>
+            <V ID="0"> u0S </V>
+            <V ID="1"> v0S </V>
+            <V ID="2"> u0R </V>
+            <V ID="3"> v0R </V>
+        </VARIABLES>
+        <FUNCTION NAME="SendFields">
+            <E VAR="u0S" VALUE="10*x*y*z*t"/>
+            <E VAR="v0S" VALUE="-10*x*y*z*t"/>
+        </FUNCTION>
+        <FUNCTION NAME="CouplingIn">
+            <F VAR="u0R,v0R" TIMEDEPENDENT="1" FILE="Dummy1out_%14.8E.pts:u1S,v1S"/>
+        </FUNCTION>
+    </CONDITIONS>
+</NEKTAR>
+
+

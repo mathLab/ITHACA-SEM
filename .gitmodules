@@ -1,0 +1,5 @@
+[submodule "docs/tutorial"]
+    branch = master
+    path = docs/tutorial
+    url = https://gitlab.nektar.info/nektar/tutorial.git
+    ignore = all

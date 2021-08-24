@@ -1,0 +1,301 @@
+% Chapter 1
+
+\chapter{Numerical Scheme Models and Implementation} % Main chapter title
+
+\label{Chapter2} % For referencing the chapter elsewhere, use \ref{Chapter1} 
+
+%----------------------------------------------------------------------------------------
+These models contain floating point operation counts for the specified methods. In all cases we ignore start up costs of Nektar++ operations. 
+
+%----------------------------------------------------------------------------------------
+
+\section{\code{IterativeFull Model}}
+The \code{IterativeFull} method solves the advection term and elliptic term of the incompressible Navier Stokes equations. 
+
+First we examine the advection term which can be expanded as:
+
+\begin{eqnarray}
+N(u) & = & u \frac{\partial u}{\partial x} + v \frac{\partial u}{\partial y} + w \frac{\partial u}{\partial z} \\
+N(v) & = & u \frac{\partial v}{\partial x} + v \frac{\partial v}{\partial y} + w \frac{\partial v}{\partial z} \\\
+N(w) & = & u \frac{\partial w}{\partial x} + v \frac{\partial w}{\partial y} + w \frac{\partial w}{\partial z}
+\end{eqnarray}
+
+Operations here arise from the calculation of the Fourier transforms required for the spectral method, the derivatives and vector-vector operations. First a total of nine FFTs, each consisting of a group of 1D FFTs, is required. The number of these 1D FFTs is given by the the number of quadrature points associated with the spectral/hp elements used in the simulation. Thus the number of 1D FFTs can be quantified as \(N_{el}(P+1)^2\) where P is the degree of the basis polynomials of the elements concerned and \(N_{el}\) is the number of elements. Each 1D FFT costs \(O(N_z log_2(N_Z))\)\footnote{\(N_Z\) is the number of real and imaginary planes, the number of Fourier modes is half this number.} giving a cumulative cost of:
+
+\begin{equation}
+O^A_1 = 9 N_{el}(P+1)^2N_Z log_2(N_z)
+\end{equation}
+
+The derivatives in the z-direction can be modelled as a level 1 BLAS operation and thus have a total cost of:
+
+\begin{equation}
+O^A_2 =N_{el}N_Z (P+1)^2
+\end{equation}
+
+The in plane-derivatives are proportional to the cost of executing a matrix-vector multiplication and there is a total of 6 in-plane derivatives leading to a total cost of:
+
+\begin{equation}
+O^A_3 = 6 N_{el}N_Z(P+1)^4
+\end{equation}
+
+Finally for each component of \(N(u_i)\) there are five level 2 BLAS operations where the concerned vectors are of size \((P+1)^2\). Giving a total cost for the three equations of:
+
+\begin{equation}
+O^A_4 = 15N_{el}N_Z(P+1)^2
+\end{equation}
+
+Putting all these costs together we get a total operation count for the advection term:
+
+\begin{equation}
+O^A = \sum_i O^A_i
+\end{equation}
+
+For the elliptic term \code{IterativeFull} solves the linear systems in a block-diagonal matrix which is then solved using the sum-factorisation method. The operation counts are as follows:
+
+The necessary \code{daxpy} LAPACK operations required before the sum factorisation method is implemented to solve the matrix system can be modelled as, for quadratic elements, one scalar-vector multiplication followed by one vector-vector summation. There are four of these \code{daxpy} operations giving a cost of:
+
+\begin{equation}
+O^E_1 = 8N_{el}(P+1)^2
+\end{equation}
+
+The application of the diagonal pre-conditioner to the system can be considered a vector-vector multiplication which has a cost given by:
+
+\begin{equation}
+O^E_2 = N_{el}(P+1)^2
+\end{equation}
+
+Now applying the sum-factorisation method to solve the matrix system gives a cost of:
+
+\begin{equation}
+O^E_3 = N_{el} (4P^3 + 18 P^2 + 26P + 12)
+\end{equation}
+
+Finally the inner products necessary to evaluate the stopping criterion of the iterative CG algorithm can be modelled as vector-vector multiplications requiring \(N_{el}(P+1)^2\) operations per plane. While the required sum reduction can be modelled as \(N_{el}(P + 1)^2 - 1\) operations per plane. The paper neglects this \(-1\) term and takes a cost of \(N_{el}(P+1)^2\) for the sum reduction. All together this leads to a cost of:
+
+\begin{equation}
+O^E_4 = 6N_{el}(P+1)^2
+\end{equation}
+
+We can sum all of these contributions for the CG solver on one plane to get the total cost of one iteration:
+
+\begin{equation}
+O^E = \sum_i O^E_i
+\end{equation}
+
+Thus we have a total computational cost to solve the system given by:
+
+\begin{equation}
+O = O^A + \sum_{j=1}^{N_Z} (N_{P (j)} + N_{V_1 (j)} + N_{V_2 (j)} + N_{V_3 (j)}) O^E
+\end{equation}
+
+Where \(N_{P (j)}\) is the CG iteration counts for pressure for each plane with \(N_{V_1 (j)}\), \(N_{V_2 (j)}\) and \(N_{V_3 (j)}\) the respective counts for each velocity. The sum is over all the planes that the user has in their simulation.
+
+\section{\code{IterativeStaticCond Model}}
+The \code{IterativeFull} method solves the advection term and elliptic term of the incompressible Navier Stokes equations. 
+
+First we examine the advection term which can be expanded as:
+
+\begin{eqnarray}
+N(u) & = & u \frac{\partial u}{\partial x} + v \frac{\partial u}{\partial y} + w \frac{\partial u}{\partial z} \\
+N(v) & = & u \frac{\partial v}{\partial x} + v \frac{\partial v}{\partial y} + w \frac{\partial v}{\partial z} \\\
+N(w) & = & u \frac{\partial w}{\partial x} + v \frac{\partial w}{\partial y} + w \frac{\partial w}{\partial z}
+\end{eqnarray}
+
+Operations here arise from the calculation of the Fourier transforms required for the spectral method, the derivatives and vector-vector operations. First a total of nine FFTs, each consisting of a group of 1D FFTs, is required. The number of these 1D FFTs is given by the the number of quadrature points associated with the spectral/hp elements used in the simulation. Thus the number of 1D FFTs can be quantified as \(N_{el}(P+1)^2\) where P is the degree of the basis polynomials of the elements concerned and \(N_{el}\) is the number of elements. Each 1D FFT costs \(O(N_z log_2(N_Z))\)\footnote{\(N_Z\) is the number of real and imaginary planes, the number of Fourier modes is half this number.} giving a cumulative cost of:
+
+\begin{equation}
+O^A_1 = 9 N_{el}(P+1)^2N_Z log_2(N_z)
+\end{equation}
+
+The derivatives in the z-direction can be modelled as a level 1 BLAS operation and thus have a total cost of:
+
+\begin{equation}
+O^A_2 =N_{el}N_Z (P+1)^2
+\end{equation}
+
+The in plane-derivatives are proportional to the cost of executing a matrix-vector multiplication and there is a total of 6 in-plane derivatives leading to a total cost of:
+
+\begin{equation}
+O^A_3 = 6 N_{el}N_Z(P+1)^4
+\end{equation}
+
+Finally for each component of \(N(u_i)\) there are five level 2 BLAS operations where the concerned vectors are of size \((P+1)^2\). Giving a total cost for the three equations of:
+
+\begin{equation}
+O^A_4 = 15N_{el}N_Z(P+1)^2
+\end{equation}
+
+Putting all these costs together we get a total operation count for the advection term:
+
+\begin{equation}
+O^A = \sum_i O^A_i
+\end{equation}
+
+Here we present the mathematical background of the \code{IterativeStaticCond} method for solving the elliptic term, at the heart of which lies the iterative static condensation method for solving the matrix system \(Ax = b\). 
+
+To start with for we wish to solve a linear system of the form:
+
+\begin{equation}
+\bf{Hu} = \bf{f}
+\end{equation}
+
+Where \(\bf{u}\) is a vector of unknown global coefficients and \(\bf{H}\) is the global Helmholtz matrix. The static condensation technique relies on the partitioning of this Helmholtz matrix into a boundary-interior block form with coupling terms in the off diagonal blocks. Reordering \(\bf{u}\) and \(\bf{f}\) into their boundary and interior points we can rewrite them as:
+
+\begin{equation}
+{\bf{u}} = 
+\begin{bmatrix}
+{\bf{u_B}} \\
+{\bf{u_I}}
+  \end{bmatrix}
+,
+\qquad
+{\bf{f}} = 
+\begin{bmatrix}
+{\bf{f_B}} \\
+{\bf{f_I}}
+  \end{bmatrix}
+\end{equation}
+
+Where the indices B and I refer to boundary and interior respectively. Thus we can rewrite equation 3.1 as:
+
+\begin{equation}
+{\bf{u}} = 
+\begin{bmatrix}
+{\bf{u_B}} \\
+{\bf{u_I}}
+  \end{bmatrix}
+\begin{bmatrix}
+{\bf{H_{BB}}} &  {\bf{H_{BI}}}\\
+{\bf{H_{IB}}} &  {\bf{H_{II}}} 
+  \end{bmatrix}
+=
+\begin{bmatrix}
+{\bf{f_B}} \\
+{\bf{f_I}}
+  \end{bmatrix}
+\end{equation}
+
+Now we observe that \({\bf{H_{BB}}}\), the interior-interior matrix, is block diagonal. This is due to the fact that the elemental interior modes are non-overlapping and are therefore orthogonal at the elemental level. Thus \({\bf{H_{BB}}}\) can be inverted elementally, a very cheap computational operation. In order to apply the condensation technique we also require a pre-multiplication stage to perform block elimination, the matrix we premultiply by is:
+
+\begin{equation}
+\begin{bmatrix}
+{\bf{I}} &  {\bf{-H_{BI}H_{II}^{-1}}}\\
+0 &  {\bf{I}} 
+  \end{bmatrix}
+\end{equation}
+
+Which gives us the system:
+
+\begin{equation}
+{\bf{u}} = 
+\begin{bmatrix}
+{\bf{u_B}} \\
+{\bf{u_I}}
+  \end{bmatrix}
+\begin{bmatrix}
+{\bf{H_{BB} - H_{BI} H_{II}^{-1}H_{IB}}} &  0\\
+{\bf{H_{IB}}} &  {\bf{H_{II}}} 
+  \end{bmatrix}
+=
+\begin{bmatrix}
+{\bf{f_B - H_{II}^{-1}H_{IB}f_I}} \\
+{\bf{f_I}}
+  \end{bmatrix}
+\end{equation}
+
+Which can then be solved first by solving the boundary degrees of freedom followed by the interior degrees of form. We can summarise the static condensation in the following four steps:
+
+\begin{enumerate}
+\item Calculate the modified RHS vector for the boundary points, denoted \(\bf{g_B}\) 
+\begin{equation}
+{\bf{g_B}} = {\bf{f_B - H_{II}^{-1}H_{IB}f_I}}
+\end{equation}
+
+\item Solve the system
+\begin{equation}
+{\bf{Su_B}} = {\bf{g_B}}
+\end{equation}
+for the boundary degrees of freedom \(\bf{u_B}\) where \(\bf{S = H_{BB} - H_{BI} H_{II}^{-1}H_{IB}}\) is the Schur complement. This step will be solved iteratively.
+
+\item Calculate the modified RHS vector for the interior points, denoted \(\bf{g_I}\):
+
+\begin{equation}
+{\bf{g_I}} = {\bf{f_I - H_{IB}f_B}}
+\end{equation}
+
+\item Finally solve the system
+\begin{equation}
+\bf{H_{II}u_I} = \bf{g_I}
+\end{equation}
+by evaluating \(\bf{u_I} = \bf{H_{II}^{-1}g_I}\).
+\end{enumerate}
+
+Now we model the operation count based on the discussion presented above. The steps required to put the system into boundary-interior form are ignored. In addition to this, examining the four steps discussed in above we quickly see that the matrices \(\bf{H_{II}^{-1}}\), \(\bf{S}\)and \(\bf{S^{-1}}\) can be calculated upon startup and subsequently stored for later use, similarly the \(\bf{H_{II}^{-1}H_{IB}}\) term in step 1. 
+
+In order to get a picture of the matrix sizes being dealt with, per element, the blocks making up the modified Helmholtz matrix have corresponding sizes (row x column):
+
+\begin{equation}
+\begin{bmatrix}
+{\bf{H_{BB}}} &  {\bf{H_{BI}}}\\
+{\bf{H_{IB}}} &  {\bf{H_{II}}} 
+  \end{bmatrix}
+=
+\begin{bmatrix}
+(4P)(4P) & (4P)(P-1)^2 \\
+(P-1)^2(4P) & (P-1)^2(P-1)^2
+\end{bmatrix}
+\end{equation}
+
+Now counting the operations we have for step 1 a level 2 BLAS operation:
+
+\begin{equation}
+O_1^E = 8N_{el}N_Z(P-1)^2 4P 
+\end{equation}
+
+Step 2 is similar but we also require a series of CG iterations to converge to the solution so we have:
+
+\begin{equation}
+O_2^E = 8N_{el}(4P)^2 \sum_{j=1}^{N_Z} (N_{P (j)} + N_{V_1 (j)} + N_{V_2 (j)} + N_{V_3 (j)})
+\end{equation}
+
+While for step 3 we have:
+
+\begin{equation}
+O_3^E = 8N_{el}N_Z(4P)(P-1)^2 + 4(P-1)^2
+\end{equation}
+
+Where the extra term is for the vector addition. Finally for step 4 we have:
+
+\begin{equation}
+O_4^E = 8N_{el}N_Z(P-1)^2(P-1)^2
+\end{equation}
+
+Giving a total cost for the elliptic solver of:
+
+\begin{equation}
+O^E = \sum_i O^E_i
+\end{equation}
+
+Thus our model is given by:
+
+\begin{equation}
+O = O^A + O^E
+\end{equation}
+
+\section{Implementation}
+These models are implemented in \code{serial.py} in two forms. One where we know the calibration constants to be input and the other where we don't. The case where we don't is used for the calibration algorithm.
+
+\section{Calibration}
+In order for the user to use these models they must run their chosen mesh in serial on a core that makes up their full parallel hardware system. Then in order to calibrate the model the user uses the following function: 
+
+\begin{equation}
+\sum_i \Bigg|\Bigg| t_i - \left(\frac{O^A_i}{A} + \frac{\sum_{j=1}^{N_Z} (N_{P (j)} + N_{V_1 (j)} + N_{V_2 (j)} + N_{V_3 (j)}) O^E_i}{B}\right) \Bigg|\Bigg|^2
+\end{equation}
+
+Where \(t_i\) is the average length of a time step for a user's benchmark run of their simulation. The values for the CG iterations are also parsed from this benchmark simulation.
+
+
+
+
+
+

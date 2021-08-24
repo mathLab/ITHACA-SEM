@@ -1,0 +1,33 @@
+<NEKTAR>
+    <CONDITIONS>
+        <PARAMETERS>
+            <P> TimeStep = 0.02 </P>
+            <P> FinTime  = 100 </P>
+            <P> NumSteps = FinTime/TimeStep </P>
+            <P> SubSteps = 1 </P>
+        </PARAMETERS>
+
+        <SOLVERINFO>
+            <I PROPERTY="CellModel" VALUE="FentonKarma" />
+            <I PROPERTY="CellModelVariant" VALUE="BR" />
+        </SOLVERINFO>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="-85.0" />
+        </FUNCTION>
+    </CONDITIONS>
+
+    <STIMULI>
+        <STIMULUS ID="0" TYPE="StimulusPoint">
+            <p_strength> 20.0 </p_strength>
+
+            <PROTOCOL TYPE = "ProtocolS1S2">
+                <START> 2.0  </START>
+                <DURATION>  2.0 </DURATION>
+                <S1CYCLELENGTH> 700.0 </S1CYCLELENGTH>
+                <NUM_S1> 50 </NUM_S1>
+                <S2CYCLELENGTH>0.0 </S2CYCLELENGTH>
+            </PROTOCOL>
+        </STIMULUS>
+    </STIMULI>
+</NEKTAR> 

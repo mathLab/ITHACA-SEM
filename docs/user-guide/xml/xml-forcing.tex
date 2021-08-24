@@ -1,0 +1,96 @@
+\section{Forcing}
+\label{sec:xml:forcing}
+An optional section of the file allows forcing functions to be defined. These are enclosed in the
+\inltt{FORCING} tag. The forcing type is enclosed within the \inltt{FORCE} tag and expressed in the file as:
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="[NAME]">
+    ...
+</FORCE>
+\end{lstlisting}
+
+The force type can be any one of the following.
+
+\subsection{Absorption}
+This force type allows the user to apply an absorption layer (essentially a porous region) anywhere in the domain. The user may also specify a velocity profile to be imposed at the start of this layer, and in the event of a time-dependent simulation, this profile can be modulated with a time-dependent function. These velocity functions and the function defining the region in which to apply the absorption layer are expressed in the \inltt{CONDITIONS} section, however the name of these functions are defined here by the \inltt{COEFF} tag for the layer, the \inltt{REFFLOW} tag for the velocity profile, and the \inltt{REFFLOWTIME} for the time-dependent function.  
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="Absorption">
+    <COEFF> [FUNCTION NAME] <COEFF/>
+    <REFFLOW> [FUNCTION NAME] <REFFLOW/>
+    <REFFLOWTIME> [FUNCTION NAME] <REFFLOWTIME/>
+    <BOUNDARYREGIONS> 1,4 <BOUNDARYREGIONS/>
+</FORCE>
+\end{lstlisting}
+If a list of \inltt{BOUNDARYREGIONS} is specified, the distance to these regions is available as additional variable \inltt{r} in the definition of the \inltt{COEFF} function:
+\begin{lstlisting}[style=XMLStyle]
+<FUNCTION NAME="AbsorptionCoefficient">
+    <E VAR="p" EVARS="r" VALUE="-5000 * exp(-0.5 * (3*r / 0.4)^2)" />
+    <E VAR="u" EVARS="r" VALUE="-5000 * exp(-0.5 * (3*r / 0.4)^2)" />
+    <E VAR="v" EVARS="r" VALUE="-5000 * exp(-0.5 * (3*r / 0.4)^2)" />
+</FUNCTION>
+\end{lstlisting}
+
+\subsection{Body}
+This force type specifies the name of a body forcing function expressed in the \inltt{CONDITIONS} section.
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="Body">
+    <BODYFORCE> [FUNCTION NAME] <BODYFORCE/>
+</FORCE>
+\end{lstlisting}
+
+\subsection{MovingReferenceFrame}
+This force type allows the user to solve the incompressible flow around a moving rigid body. In this method, the flow velocity and pressure are defined in an inertial reference frame, but the coordinates and basis vectors are in the reference frame fixed on the rigid body (body frame).
+
+This force type specifies the name of a moving frame function expressed in the \inltt{CONDITIONS} section.
+
+\begin{lstlisting}[style=XMLStyle]
+<FORCE TYPE="MovingReferenceFrame">
+    <FRAMEVELOCITY> [FUNCTION NAME] <FRAMEVELOCITY/>
+</FORCE>
+\end{lstlisting}
+
+The moving frame function defines the velocity of the body frame observed in the inertial reference frame $$\mathbf{u}_{frame} = \mathbf{u}_0 + \mathbf{\Omega}\times (\mathbf{x}-\mathbf{x}_0)$$.
+
+\begin{lstlisting}[style=XMLStyle]
+<FUNCTION NAME="MovingReferenceFrame">
+    <E VAR="u" VALUE="1" />
+    <E VAR="v" VALUE="0" />
+    <E VAR="w" VALUE="0" />
+    <E VAR="Omega_x" VALUE="0" />
+    <E VAR="Omega_y" VALUE="0" />
+    <E VAR="Omega_z" VALUE="1" />
+    <E VAR="x0" VALUE="0" />
+    <E VAR="y0" VALUE="0" />
+    <E VAR="z0" VALUE="0" />
+</FUNCTION>
+\end{lstlisting}
+Here, $\mathbf{u}_0 = (\text{u, v, w})$ is the translational velocity, $\mathbf{\Omega}=(\text{Omega\_x, Omega\_y, Omega\_z})$ is the angular velocity.
+$\mathbf{x}_0=(\text{x0, y0, z0})$ is the rotation pivot and it is fixed in the body frame.
+Translational motion is allowed for all dimensions while rotational motion is restricted to z (omega\_z) for 2D and 3DH1D and supported for all directions in full 3D.
+
+When using \inltt{MovingReferenceFrame} force, variables $x, y ,z$ are the coordinates of the body frame and all vectors use the basis of the body frame. This situation includes body forces, boundary conditions, initial conditions, aerodynamic force and simulation results.
+
+\subsection{Programmatic}
+This force type allows a forcing function to be applied directly within the code, thus it has no associated function. 
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="Programmatic">
+</FORCE>
+\end{lstlisting}
+
+
+\subsection{Noise}
+This force type allows the user to specify the magnitude of a white noise force. 
+Optional arguments can also be used to define the frequency in time steps to recompute the noise (default is never)
+ and the number of time steps to apply the noise (default is the entire simulation).  
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="Noise">
+    <WHITENOISE> [VALUE] <WHITENOISE/>
+    <!-- Optional arguments -->
+    <UPDATEFREQ> [VALUE] <UPDATEFREQ/>
+    <NSTEPS> [VALUE] <NSTEPS/>
+</FORCE>
+\end{lstlisting}

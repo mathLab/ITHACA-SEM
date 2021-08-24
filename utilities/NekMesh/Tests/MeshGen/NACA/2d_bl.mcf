@@ -1,0 +1,33 @@
+<NEKTAR>
+    <MESHING>
+
+        <INFORMATION>
+            <I PROPERTY="CADFile" VALUE="0012"	/>
+            <I PROPERTY="MeshType" VALUE="2DBndLayer"	/>
+        </INFORMATION>
+
+        <PARAMETERS>
+            <P PARAM="MinDelta" VALUE="0.1"		/>
+            <P PARAM="MaxDelta" VALUE="5"		/>
+            <P PARAM="EPS"      VALUE="0.1"		/>
+
+            <P PARAM="Order"    VALUE="4"		/>
+
+            <P PARAM="BndLayerSurfaces"  VALUE="5-6"		/>
+            <P PARAM="BndLayerThickness"  VALUE="0.05"	/>
+
+			<P PARAM="BndLayerAdjustment"   VALUE="2.0" />
+
+            <P PARAM="Xmin"     VALUE="-1.0"    />
+            <P PARAM="Ymin"     VALUE="-2.0"    />
+            <P PARAM="Xmax"     VALUE="3.0"     />
+            <P PARAM="Ymax"     VALUE="2.0"     />
+            <P PARAM="AOA"      VALUE="15.0"    />
+        </PARAMETERS>
+
+        <BOOLPARAMETERS>
+            <P VALUE="BndLayerAdjustEverywhere" />
+        </BOOLPARAMETERS>
+
+    </MESHING>
+</NEKTAR>

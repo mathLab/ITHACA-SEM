@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+
+    <GEOMETRY DIM="3" SPACE="3">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx9kFkSgkAQQ1FUUEEWdy+T+9+CI+QIfFkpMGZ+prpfd5KZoshns6iINd/aLc2Vti++i+7EPvoTh6hPVDEfUS/608/7jpYrx8nqS+dsfcWb6E+0cZ+4xHxEF/MRveWaG6y/+Gi5cl6trvjN5tI/3C1X/fij+72fdl9zL5tP+++Yj/hEPmEGsKA/mgAA</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1lMdywkAQBcnGJBkkcrDJwWTs//81LtMHuoq9vGq9naDdkXK511UNzYuz0IK4FloUs0rK0w0ti79CK2LWh+qOlBcm36f6Gbxh4uqqi99QXrgp5j1bYvIlqjeUD5OvrT6I74iJS1UXP5NyLj4n7rUn5rz62g8PxH4/8qTyYeLGyoc/0T7Odyqm3kzxzM23mLif0ET+PNTfw0LM3CzFnPdK+7nXtZj72CgP97EVE7cLHcnfax/f20HMvP0qnvk+iok7hQ7ln9U//4WLmDm66jnzfRPT1z20L/8h5j/yJ6bP/9CW/CeLHwuz</EDGE>
+        <FACE>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1kslSQkEQBFEEBVGRRQSUByogm+z//2tcKg9khO+SEW+quqerp1S6/m7C27Cs/3x3YSWsyof+PnyQryx9LazLZz19HuWriPSrS1+VrhE+hc//3PslbMrnPq9hSz7uyT3o05aPOtyHfi3pqUN+nbAbvumenPfC95A56Ye/Hw7k497UZ66hfMzNPPQbSN/U+Uf4qTrkg38UFvKRE/XxjeVrS0+/Qnpym4Rf4XfIO+9K9xNOQ94xuVFnFs7lI2/6sKdf+ciNPnPpeJ996RbhMuSdkC91VuFaPvKlD3vayMde6LOWjv2TP/P+hduQPYx0vgv3IbmwR/zkeZBvrDn20pHvROfH8BQyL3vFz/xn+ZiTHE7SkccF+OAQvQAA</Q>
+        </FACE>
+        <ELEMENT>
+            <H COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxd0MsOgkAQRNEBHcAHKihvFMH//0c2txbWbE4q6VS6J4T/l2CKBzxitDnlDHMs8IRn671Y/xVLvOHd5pTV/8AKa3za3i9ssMXO9uoxWh5wxAl174z6h7f1f3BB3fu1HmX1r7ih7v3hDgCeA0EA</H>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> H[0-7] </C>
+            <C ID="1"> F[0,11,20,29] </C>
+            <C ID="2"> F[1,6,21,25] </C>
+            <C ID="3"> F[22,26,30,33] </C>
+            <C ID="4"> F[13,17,31,34] </C>
+            <C ID="5"> F[4,9,14,18] </C>
+            <C ID="6"> F[10,19,28,35] </C>
+        </COMPOSITE>
+        <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="u" TYPE="GLL_LAGRANGE_SEM" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+        <PARAMETERS>
+            <P> Lambda = 1 </P>
+        </PARAMETERS>
+
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE" VALUE="Helmholtz" />
+            <I PROPERTY="Projection" VALUE="Continuous"/>
+        </SOLVERINFO>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1-6] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(PI*z)" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="Forcing">
+            <E VAR="u" VALUE="-(Lambda + 3*PI*PI)*sin(PI*x)*sin(PI*y)*sin(PI*z)" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(PI*z)" />
+        </FUNCTION>
+    </CONDITIONS>
+</NEKTAR>

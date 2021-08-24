@@ -1,0 +1,196 @@
+%
+\section{The Fundamentals Behind GlobalMapping}
+
+Based upon the appendix in \cite{CantwellYKPS14}, we 
+outline a rigorous derivation of the Laplace-Beltrami operator.
+We use the convention that
+indices appearing once in the upper position and once in the lower position are
+considered dummy indices and are implicitly summed over their range, while
+non-repeated indices are considered free to take any value. Derivatives are also
+denoted using the lower-index comma notation, for example $g_{ij,k}$.
+{\em Covariant} vectors such as the gradient are those which, under a change of
+coordinate system, change under the same transformation in order to maintain
+coordinate system invariance. In contrast, {\em contravariant} vectors, such as
+velocity, should remain fixed under a coordinate transformation requiring that
+their components change under the inverse of the transformation to maintain
+invariance.
+With this in mind, we now construct the fundamental differential operators we
+require for a 2-dimensional manifold embedded in a 3-dimensional space.
+In order to express these operators in curvilinear coordinates we start by
+assuming that we have a smooth surface parametrization given by
+\begin{align*}
+	\mathbf{x}(\xi^1,\xi^2):=(x^1(\xi^1,\xi^2),x^2(\xi^1,\xi^2),x^3(\xi^1,\xi^2)).
+%    \label{A:parametrization}
+\end{align*}
+Next we will define the Jacobian of $\mathbf{x}$ as the tensor
+\begin{align*}
+        J_i^j = \frac{\partial x^j}{\partial \xi^i}
+%    \label{A:jacobian}
+\end{align*}
+where $J_i^j$ can be viewed as a covariant surface vector (by fixing the upper 
+index) or as a contravariant space vector (by fixing the lower index). The
+surface metric tensor $g_{ij}$ can be defined in terms of the $J_i^j$ as
+\begin{align}
+    g_{ij} = \sum_{k=1}^3 J_i^k J_j^k.
+    \label{A:metric_tensor}
+\end{align}
+which can be considered to transform a contravariant quantity to a covariant 
+quantity. Similarly the conjugate tensor $g^{ij}$, which does the reverse 
+transformation, is given by
+\begin{align}
+    g^{11} = g_{22}/g,\quad g^{12} = g^{21} = - g_{12}/g,\quad g^{22} = g_{11}/g,
+    \label{A:conj_tensor}
+\end{align}
+where $g$ is the determinant of $g_{ij}$. The metric tensor and its conjugate
+satisfy the condition
+\begin{align*}
+    \delta_i^j = g_{ik}g^{jk} = 
+    \begin{cases}
+        1,\; &\mbox{if } i = j,\\
+        0,\; &\mbox{if } i\ne j.
+    \end{cases}
+\end{align*}
+% %
+To construct the divergence operator we will also need the derivative of 
+$g$ with respect to components of the metric, $g_{ij}$. We know that $\mathbf{g}$ 
+is invertible and from linear algebra we have that the inverse of the metric 
+\eqref{A:conj_tensor} satisfies 
+$\mathbf{g}^{-1} = \frac{1}{g}\tilde{\mathbf{g}}^{\top}$, where $\mathbf{\tilde{g}}$ is the
+cofactor matrix of $\mathbf{g}$. Therefore $\mathbf{\tilde{g}}^{\top} = g\BM{g}^{-1}$, 
+or in components $\tilde{g}^{ij} = g(\BM{g}^{-1})_{ji}$. Using Jacobi's formula 
+for the derivative of a matrix determinant with respect its entries, and since 
+$\mathbf{g}$ is invertible, the derivative of the metric determinant is
+\begin{align}
+    \frac{\partial g}{\partial g_{ij}} = \mathrm{tr}\left(\tilde{\mathbf{g}}^{\top}\frac{\partial \mathbf{g}}{\partial g_{ij}}\right)
+        = \tilde{g}^{ij} = g(\BM{g}^{-1})_{ji} = gg^{ij}.
+\label{A:g_deriv}
+\end{align}
+
+
+\subsection{Divergence operator}
+The partial derivative of a tensor with respect to a manifold coordinate system
+is itself not a tensor. In order to obtain a tensor, one has to use 
+\emph{covariant} derivative, defined below.
+% %
+The covariant derivative of a contravariant vector is given by
+\begin{align}
+    \nabla_k a^i = a^i_{,k} + a^j \Gamma_{jk}^i.
+    \label{A:cov_diff}
+\end{align}
+where $\Gamma_{jk}^i$ are \emph{Christoffel Symbols of the second kind}.
+% %
+The \emph{Christoffel symbols of the first kind} are defined by
+\begin{align*}
+    \Gamma_{ijk} = \frac{1}{2}\left[g_{kj,i} + g_{ik,j} - g_{ij,k}\right].
+%    \label{A:CS1}
+\end{align*}
+Here we note that $\Gamma_{ijk}$ is symmetric in the first two indices. To 
+obtain the Christoffel symbols of the second kind we formally raise the 
+last index using the conjugate tensor,
+\begin{align}
+    \Gamma_{ij}^l = \Gamma_{ijk}g^{kl}
+    \label{A:CS2}
+\end{align}
+which retains the symmetry in the lower two indices. We can now express the
+derivatives of the metric tensor in terms of the Christoffel symbols as
+\begin{align*}
+    g_{ij,k} = \Gamma_{ikj} + \Gamma_{jki} 
+             = g_{lj}\Gamma_{ik}^l + g_{li}\Gamma_{jk}^l.
+%    \label{A:metric_through_CS}
+\end{align*}
+
+We now define the divergence operator on the manifold,
+$\nabla\cdot \mathbf{X} = \nabla_k X^k$. Consider first the derivative of the 
+determinant of the metric tensor $g$ with respect to 
+the components of some local coordinates system $\xi^1,\xi^2$. We apply the 
+chain rule, making use of the derivative of the metric tensor with respect to 
+components of the metric \eqref{A:g_deriv} and the relationship \eqref{A:CS2}, 
+to get
+\begin{align}
+    \frac{\partial g}{\partial \xi^k} = \frac{\partial g}{\partial g_{ij}}\frac{\partial g_{ij}}{\partial \xi^k} = 
+    gg^{ij}g_{ij,k} = gg^{ij}(\Gamma_{ikj} + \Gamma_{jki}) = g(\Gamma_{ik}^i + \Gamma_{jk}^j) = 2g\Gamma_{ik}^i.
+    \label{A:g_deriv2}
+\end{align}
+We can therefore express the Christoffel symbol $\Gamma_{ik}^i$ in terms of this
+derivative as
+\begin{align}
+    \Gamma_{ik}^i = \frac{1}{2g}\frac{\partial g}{\partial \xi^k} = \frac{1}{\sqrt{g}}\frac{\partial\sqrt{g}}{\partial \xi^k}.
+    \label{A:G_ik^i}
+\end{align}
+Finally, by substituting for $\Gamma_{ik}^i$ in the expression for the 
+divergence operator
+\begin{align*}
+ \nabla_k X^k &= X^k_{,k} + X^i\Gamma_{ki}^k \\ 
+              &= X^k_{,k} + X^k\Gamma_{ik}^i \\
+              &= X^k_{,k} + X^k\frac{1}{\sqrt{g}}(\sqrt{g})_{,k}
+\end{align*}
+we can deduce a formula for divergence of a contravariant vector as
+\begin{align}
+\nabla\cdot \mathbf{X} = \nabla_k X^k = \frac{\left(X^k\sqrt{g}\right)_{,k}}{\sqrt{g}}
+\label{A:div}
+\end{align}
+
+
+\subsection{Laplacian operator} 
+The covariant derivative (gradient) of a scalar on the manifold is identical to
+the partial derivative, $\nabla_k \phi = \phi_{,k}$.
+To derive the Laplacian operator we need the contravariant form of the covariant
+gradient above which can be found by raising the index using the metric tensor,
+giving
+\begin{align}
+    \nabla^k \phi = g^{kj}\phi_{,j},
+    \label{A:covar-div}
+\end{align}
+and substituting \eqref{A:covar-div} for $X^k$ in \eqref{A:div} to get the Laplacian operator
+on the manifold as
+\begin{align}
+    \Delta_M\phi = \frac{1}{\sqrt{g}}\left(\sqrt{g}g^{ij}\phi_{,j}\right)_{,i}.
+    \label{A:surf_lapl}
+\end{align}
+
+
+\subsection{Anisotropic diffusion}
+ We now extend the above operator to allow for anisotropic diffusion in the domain by deriving an expression for the surface conductivity from the ambient conductivity. The gradient of a surface function scaled by the ambient conductivity tensor $\tilde{\nabla}^p$ is given by
+ \begin{align}
+     \tilde{\nabla}^p f = g^{mp} J^l_m \sigma_{kl} J^k_j g^{ij} \frac{\partial f}{\partial x^i}.
+ \end{align}
+ The surface gradient is mapped to the ambient space through the Jacobian $J^k_j$, scaled by the ambient conductivity, and mapped back to the surface through $J^l_m$. The anisotropic Laplacian operator is given by
+ \begin{align}
+     \tilde{\nabla}^2 f = \nabla_k \tilde{\nabla}^k f = \nabla_k \tilde{\sigma}^{ij} \nabla_j f
+ \end{align}
+ Therefore the surface conductivity tensor can be computed using the Jacobian tensor and the inverse metric as
+ \begin{align}
+     \mathbf{\tilde{\sigma}} = \mathbf{g^{-1}J\sigma J^{\top} g^{-1}}.
+ \end{align}
+
+
+\subsection{Anisotropic Laplacian operator}
+\label{s:anisotropic}
+Anisotropic diffusion is important in many applications. In the ambient 
+Euclidean space, this can be represented by a diffusivity tensor $\mathbf{\sigma}$ 
+in the Laplacian operator as
+\begin{align*}
+\Delta_M = \nabla \cdot \mathbf{\sigma} \nabla.
+\end{align*}
+On our manifold, we seek the generalisation of \ref{A:surf_lapl}, in the form
+\begin{align*}
+\tilde{\Delta}_M \phi = \nabla_j \tilde{\sigma}_i^j \nabla^i \phi.
+\end{align*}
+where the $\tilde{\sigma}_i^j$ are entries in the surface diffusivity.
+% %
+For a contravariant surface vector $a^j$ we can find the associated
+space vector $A^i$ as $A^i = J^i_j a^j$. Similarly if $A_i$ is a covariant space vector, then $a_j=J^i_j A_i$ is a covariant surface vector. 
+% %
+Using these we can construct the anisotropic
+diffusivity tensor $\tilde{\mathbf{\sigma}}$ on the manifold by constraining the ambient diffusivity tensor $\mathbf{\sigma}$ to the surface. The contravariant surface gradient $\nabla^i \phi$ is mapped to the corresponding space vector, which lies in the tangent plane to the surface. This is scaled by the ambient diffusivity and then projected back to a covariant surface vector. Finally, we use the conjugate metric to convert back to a contravariant form. The resulting surface Laplacian is 
+\begin{align*}
+    \tilde{\Delta}_M \phi = \nabla_m g^{lm}J^k_l\sigma_{jk}J^j_i \nabla^i \phi.
+\end{align*}
+Following on from this we deduce that
+\begin{align*}
+    \tilde{\sigma}_i^j = g^{jm} J^l_m \sigma_{lk} J^k_i.
+\end{align*}
+It can be seen that in the case of isotropic diffusion that $\tilde{\sigma}_i^j = \delta^i_j \Leftrightarrow \mathbf{\sigma} = \mathbf{I}$,
+\begin{align*}
+    \tilde{\sigma}_i^j = g^{im} J^k_m \sigma_{lk} J^l_j = g^{im} J^k_m J^k_j = g^{im} g_{mj} = \delta^i_j.
+\end{align*}

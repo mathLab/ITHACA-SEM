@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="3" SPACE="3">
+        <VERTEX>
+            <V ID="0">0.00000000e+00 0.00000000e+00 5.00000000e-01</V>
+            <V ID="1">5.00000000e-01 0.00000000e+00 5.00000000e-01</V>
+            <V ID="2">5.00000000e-01 0.00000000e+00 0.00000000e+00</V>
+            <V ID="3">0.00000000e+00 0.00000000e+00 0.00000000e+00</V>
+            <V ID="4">5.00000000e-01 5.00000000e-01 5.00000000e-01</V>
+            <V ID="5">5.00000000e-01 5.00000000e-01 0.00000000e+00</V>
+            <V ID="6">0.00000000e+00 0.00000000e+00 1.00000000e+00</V>
+            <V ID="7">5.00000000e-01 0.00000000e+00 1.00000000e+00</V>
+            <V ID="8">5.00000000e-01 5.00000000e-01 1.00000000e+00</V>
+            <V ID="9">0.00000000e+00 5.00000000e-01 5.00000000e-01</V>
+            <V ID="10">0.00000000e+00 5.00000000e-01 0.00000000e+00</V>
+            <V ID="11">0.00000000e+00 5.00000000e-01 1.00000000e+00</V>
+            <V ID="12">5.00000000e-01 1.00000000e+00 5.00000000e-01</V>
+            <V ID="13">5.00000000e-01 1.00000000e+00 0.00000000e+00</V>
+            <V ID="14">5.00000000e-01 1.00000000e+00 1.00000000e+00</V>
+            <V ID="15">0.00000000e+00 1.00000000e+00 5.00000000e-01</V>
+            <V ID="16">0.00000000e+00 1.00000000e+00 0.00000000e+00</V>
+            <V ID="17">0.00000000e+00 1.00000000e+00 1.00000000e+00</V>
+            <V ID="18">1.00000000e+00 0.00000000e+00 5.00000000e-01</V>
+            <V ID="19">1.00000000e+00 0.00000000e+00 0.00000000e+00</V>
+            <V ID="20">1.00000000e+00 5.00000000e-01 5.00000000e-01</V>
+            <V ID="21">1.00000000e+00 5.00000000e-01 0.00000000e+00</V>
+            <V ID="22">1.00000000e+00 0.00000000e+00 1.00000000e+00</V>
+            <V ID="23">1.00000000e+00 5.00000000e-01 1.00000000e+00</V>
+            <V ID="24">1.00000000e+00 1.00000000e+00 5.00000000e-01</V>
+            <V ID="25">1.00000000e+00 1.00000000e+00 0.00000000e+00</V>
+            <V ID="26">1.00000000e+00 1.00000000e+00 1.00000000e+00</V>
+        </VERTEX>
+        <EDGE>
+            <E ID="0">    0  1   </E>
+            <E ID="1">    0  3   </E>
+            <E ID="2">    0  4   </E>
+            <E ID="3">    1  2   </E>
+            <E ID="4">    1  4   </E>
+            <E ID="5">    2  5   </E>
+            <E ID="6">    3  2   </E>
+            <E ID="7">    3  5   </E>
+            <E ID="8">    4  5   </E>
+            <E ID="9">    6  7   </E>
+            <E ID="10">    6  0   </E>
+            <E ID="11">    6  8   </E>
+            <E ID="12">    7  1   </E>
+            <E ID="13">    7  8   </E>
+            <E ID="14">    8  4   </E>
+            <E ID="15">    0  9   </E>
+            <E ID="16">    4  9   </E>
+            <E ID="17">    5  10   </E>
+            <E ID="18">    3  10   </E>
+            <E ID="19">    9  10   </E>
+            <E ID="20">    6  11   </E>
+            <E ID="21">    8  11   </E>
+            <E ID="22">   11  9   </E>
+            <E ID="23">    9  12   </E>
+            <E ID="24">    4  12   </E>
+            <E ID="25">    5  13   </E>
+            <E ID="26">   10  13   </E>
+            <E ID="27">   12  13   </E>
+            <E ID="28">   11  14   </E>
+            <E ID="29">    8  14   </E>
+            <E ID="30">   14  12   </E>
+            <E ID="31">    9  15   </E>
+            <E ID="32">   12  15   </E>
+            <E ID="33">   13  16   </E>
+            <E ID="34">   10  16   </E>
+            <E ID="35">   15  16   </E>
+            <E ID="36">   11  17   </E>
+            <E ID="37">   14  17   </E>
+            <E ID="38">   17  15   </E>
+            <E ID="39">    1  18   </E>
+            <E ID="40">    1  20   </E>
+            <E ID="41">   18  19   </E>
+            <E ID="42">   18  20   </E>
+            <E ID="43">   19  21   </E>
+            <E ID="44">    2  19   </E>
+            <E ID="45">    2  21   </E>
+            <E ID="46">   20  21   </E>
+            <E ID="47">    7  22   </E>
+            <E ID="48">    7  23   </E>
+            <E ID="49">   22  18   </E>
+            <E ID="50">   22  23   </E>
+            <E ID="51">   23  20   </E>
+            <E ID="52">   20  4   </E>
+            <E ID="53">   21  5   </E>
+            <E ID="54">   23  8   </E>
+            <E ID="55">    4  24   </E>
+            <E ID="56">   20  24   </E>
+            <E ID="57">   21  25   </E>
+            <E ID="58">    5  25   </E>
+            <E ID="59">   24  25   </E>
+            <E ID="60">    8  26   </E>
+            <E ID="61">   23  26   </E>
+            <E ID="62">   26  24   </E>
+            <E ID="63">   24  12   </E>
+            <E ID="64">   25  13   </E>
+            <E ID="65">   26  14   </E>
+        </EDGE>
+        <FACE>
+            <Q ID="0">         0         3         6         1</Q>
+            <T ID="1">         0         4         2</T>
+            <Q ID="2">         3         5         8         4</Q>
+            <T ID="3">         6         5         7</T>
+            <Q ID="4">         1         7         8         2</Q>
+            <Q ID="5">         9        12         0        10</Q>
+            <T ID="6">         9        13        11</T>
+            <Q ID="7">        12         4        14        13</Q>
+            <Q ID="8">        10         2        14        11</Q>
+            <Q ID="9">        15         1        18        19</Q>
+            <T ID="10">        15         2        16</T>
+            <T ID="11">        18         7        17</T>
+            <Q ID="12">        19        17         8        16</Q>
+            <Q ID="13">        20        10        15        22</Q>
+            <T ID="14">        20        11        21</T>
+            <Q ID="15">        22        16        14        21</Q>
+            <Q ID="16">        23        19        26        27</Q>
+            <T ID="17">        23        16        24</T>
+            <T ID="18">        26        17        25</T>
+            <Q ID="19">        27        25         8        24</Q>
+            <Q ID="20">        28        22        23        30</Q>
+            <T ID="21">        28        21        29</T>
+            <Q ID="22">        30        24        14        29</Q>
+            <Q ID="23">        32        35        33        27</Q>
+            <T ID="24">        32        31        23</T>
+            <Q ID="25">        35        34        19        31</Q>
+            <T ID="26">        33        34        26</T>
+            <Q ID="27">        37        38        32        30</Q>
+            <T ID="28">        37        36        28</T>
+            <Q ID="29">        38        31        22        36</Q>
+            <Q ID="30">        39        41        44         3</Q>
+            <T ID="31">        39        42        40</T>
+            <Q ID="32">        41        43        46        42</Q>
+            <T ID="33">        44        43        45</T>
+            <Q ID="34">         3        45        46        40</Q>
+            <Q ID="35">        47        49        39        12</Q>
+            <T ID="36">        47        50        48</T>
+            <Q ID="37">        49        42        51        50</Q>
+            <Q ID="38">        12        40        51        48</Q>
+            <T ID="39">        40        52         4</T>
+            <Q ID="40">        46        53         8        52</Q>
+            <T ID="41">        45        53         5</T>
+            <T ID="42">        48        54        13</T>
+            <Q ID="43">        51        52        14        54</Q>
+            <Q ID="44">        56        59        57        46</Q>
+            <T ID="45">        56        55        52</T>
+            <Q ID="46">        59        58         8        55</Q>
+            <T ID="47">        57        58        53</T>
+            <Q ID="48">        61        62        56        51</Q>
+            <T ID="49">        61        60        54</T>
+            <Q ID="50">        62        55        14        60</Q>
+            <Q ID="51">        63        27        64        59</Q>
+            <T ID="52">        63        24        55</T>
+            <T ID="53">        64        25        58</T>
+            <Q ID="54">        65        30        63        62</Q>
+            <T ID="55">        65        29        60</T>
+        </FACE>
+        <ELEMENT>
+            <R ID="0">    0     1     2     3     4 </R>
+            <R ID="1">    5     6     7     1     8 </R>
+            <R ID="2">    9    10     4    11    12 </R>
+            <R ID="3">   13    14     8    10    15 </R>
+            <R ID="4">   16    17    12    18    19 </R>
+            <R ID="5">   20    21    15    17    22 </R>
+            <R ID="6">   23    24    25    26    16 </R>
+            <R ID="7">   27    28    29    24    20 </R>
+            <R ID="8">   30    31    32    33    34 </R>
+            <R ID="9">   35    36    37    31    38 </R>
+            <R ID="10">   34    39    40    41     2 </R>
+            <R ID="11">   38    42    43    39     7 </R>
+            <R ID="12">   44    45    46    47    40 </R>
+            <R ID="13">   48    49    50    45    43 </R>
+            <R ID="14">   51    52    19    53    46 </R>
+            <R ID="15">   54    55    22    52    50 </R>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="10"> R[0-5] </C>
+            <C ID="11"> R[6-10] </C>
+            <C ID="12"> R[11-15] </C>
+            <C ID="1"> F[3,11,18,26,33,41,47,53] </C>
+            <C ID="2"> F[0,5,30,35] </C>
+            <C ID="3"> F[32,37,44,48] </C>
+            <C ID="4"> F[23,27,51,54] </C>
+            <C ID="5"> F[9,13,25,29] </C>
+            <C ID="6"> F[6,14,21,28,36,42,49,55] </C>
+        </COMPOSITE>
+        <DOMAIN> C[10-12] </DOMAIN>
+    </GEOMETRY>
+    <EXPANSIONS>
+        <E COMPOSITE="C[10]" NUMMODES="4" FIELDS="u,v,w,p" TYPE="MODIFIED" />
+        <E COMPOSITE="C[11]" NUMMODES="6" FIELDS="u,v,w,p" TYPE="MODIFIED" />
+        <E COMPOSITE="C[12]" NUMMODES="5" FIELDS="u,v,w,p" TYPE="MODIFIED" />
+    </EXPANSIONS>
+    <CONDITIONS>
+        <SOLVERINFO>
+            <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
+            <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
+            <I PROPERTY="AdvectionForm" VALUE="Convective" />
+            <I PROPERTY="Projection" VALUE="Galerkin" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
+        </SOLVERINFO>
+
+        <PARAMETERS>
+            <P> TimeStep      = 0.001 </P>
+            <P> NumSteps      = 10 </P>
+            <P> IO_CheckSteps = 10    </P>
+            <P> IO_InfoSteps  = 10    </P>
+            <P> Kinvis        = 1   </P>
+        </PARAMETERS>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> v </V>
+            <V ID="2"> w </V>
+            <V ID="3"> p </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>  <!-- Inlet -->
+            <B ID="1"> C[6] </B>    <!-- Outlet -->
+            <B ID="2"> C[2] </B>    <!-- Wall -->
+            <B ID="3"> C[3] </B>    <!-- Wall left -->
+            <B ID="4"> C[4] </B>    <!-- Wall -->
+            <B ID="5"> C[5] </B>    <!-- Wall right -->
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="y*(1-y)" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="1">
+                <N VAR="u" VALUE="0" />
+                <N VAR="v" VALUE="0" />
+                <N VAR="w" VALUE="0" />
+                <D VAR="p" VALUE="0" />
+            </REGION>
+            <REGION REF="2">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="0" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="3">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="y*(1-y)" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="4">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="0" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="5">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="y*(1-y)" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="0" />
+            <E VAR="w" VALUE="y*(1-y)" />
+            <E VAR="p" VALUE="-2*Kinvis*(z-1)" />
+        </FUNCTION>
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="0" />
+            <E VAR="w" VALUE="y*(1-y)" />
+            <E VAR="p" VALUE="-2*Kinvis*(z-1)" />
+        </FUNCTION>
+    </CONDITIONS>
+</NEKTAR>

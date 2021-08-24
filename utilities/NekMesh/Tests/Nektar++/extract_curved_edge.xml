@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="3" SPACE="3">
+        <VERTEX>
+            <V ID="0">1.00000000e+00 5.00000000e-01 0.00000000e+00</V>
+            <V ID="1">0.00000000e+00 0.00000000e+00 0.00000000e+00</V>
+            <V ID="2">1.00000000e+00 0.00000000e+00 0.00000000e+00</V>
+            <V ID="3">0.00000000e+00 5.00000000e-01 0.00000000e+00</V>
+            <V ID="4">1.00000000e+00 1.00000000e+00 0.00000000e+00</V>
+            <V ID="5">0.00000000e+00 1.00000000e+00 0.00000000e+00</V>
+            <V ID="6">1.00000000e+00 5.00000000e-01 1.00000000e-01</V>
+            <V ID="7">0.00000000e+00 0.00000000e+00 1.00000000e-01</V>
+            <V ID="8">1.00000000e+00 0.00000000e+00 1.00000000e-01</V>
+            <V ID="9">0.00000000e+00 5.00000000e-01 1.00000000e-01</V>
+            <V ID="10">1.00000000e+00 1.00000000e+00 1.00000000e-01</V>
+            <V ID="11">0.00000000e+00 1.00000000e+00 1.00000000e-01</V>
+        </VERTEX>
+        <EDGE>
+            <E ID="0">1 2</E>
+            <E ID="1">2 0</E>
+            <E ID="2">0 3</E>
+            <E ID="3">3 1</E>
+            <E ID="4">1 7</E>
+            <E ID="5">2 8</E>
+            <E ID="6">0 6</E>
+            <E ID="7">3 9</E>
+            <E ID="8">7 8</E>
+            <E ID="9">8 6</E>
+            <E ID="10">6 9</E>
+            <E ID="11">9 7</E>
+            <E ID="12">9 11</E>
+            <E ID="13">6 11</E>
+            <E ID="14">0 5</E>
+            <E ID="15">3 5</E>
+            <E ID="16">11 5</E>
+            <E ID="17">11 10</E>
+            <E ID="18">6 10</E>
+            <E ID="19">0 4</E>
+            <E ID="20">5 4</E>
+            <E ID="21">10 4</E>
+        </EDGE>
+        <FACE>
+            <T ID="6">10 13 12</T>
+            <T ID="8">2 14 15</T>
+            <T ID="10">13 18 17</T>
+            <T ID="12">14 19 20</T>
+            <Q ID="0">0 1 2 3</Q>
+            <Q ID="1">0 5 8 4</Q>
+            <Q ID="2">1 6 9 5</Q>
+            <Q ID="3">2 6 10 7</Q>
+            <Q ID="4">3 7 11 4</Q>
+            <Q ID="5">8 9 10 11</Q>
+            <Q ID="7">6 14 16 13</Q>
+            <Q ID="9">7 15 16 12</Q>
+            <Q ID="11">6 19 21 18</Q>
+            <Q ID="13">16 20 21 17</Q>
+        </FACE>
+        <ELEMENT>
+            <H ID="0">0 1 2 3 4 5 </H>
+            <R ID="1">3 6 7 8 9 </R>
+            <R ID="2">7 10 11 12 13 </R>
+        </ELEMENT>
+        <CURVED>
+            <E ID="0" EDGEID="8" NUMPOINTS="5" TYPE="GaussLobattoLegendre">0.00000000e+00 0.00000000e+00 1.00000000e-01   1.72673165e-01 -5.71428571e-02 1.00000000e-01   5.00000000e-01 -1.00000000e-01 1.00000000e-01   8.27326835e-01 -5.71428571e-02 1.00000000e-01   1.00000000e+00 0.00000000e+00 1.00000000e-01   </E>
+            <E ID="1" EDGEID="0" NUMPOINTS="5" TYPE="GaussLobattoLegendre">0.00000000e+00 0.00000000e+00 0.00000000e+00   1.72673165e-01 -5.71428571e-02 0.00000000e+00   5.00000000e-01 -1.00000000e-01 0.00000000e+00   8.27326835e-01 -5.71428571e-02 0.00000000e+00   1.00000000e+00 0.00000000e+00 0.00000000e+00   </E>
+        </CURVED>
+        <COMPOSITE>
+            <C ID="1"> F[13] </C>
+            <C ID="2"> F[11,2] </C>
+            <C ID="3"> F[1] </C>
+            <C ID="4"> F[9,4] </C>
+            <C ID="100"> H[0] </C>
+            <C ID="111"> R[1-2] </C>
+            <C ID="113"> F[12,8,0] </C>
+            <C ID="114"> F[10,6,5] </C>
+        </COMPOSITE>
+        <DOMAIN> C[100,111] </DOMAIN>
+    </GEOMETRY>
+    <Metadata>
+        <Provenance>
+            <GitBranch>refs/heads/fix/NekMesh-extrude</GitBranch>
+            <GitSHA1>2731b244bc727d96fa6767ac623e4f7a58c4eb9a</GitSHA1>
+            <Hostname>gcastigl</Hostname>
+            <NektarVersion>4.5.0</NektarVersion>
+            <Timestamp>06-Feb-2019 10:26:56</Timestamp>
+        </Provenance>
+        <NekMeshCommandLine>-m extrude:layers=1:length=0.1 square_curved.xml square_curved_3D.xml:xml:uncompress </NekMeshCommandLine>
+    </Metadata>
+    <EXPANSIONS>
+        <E COMPOSITE="C[100]" NUMMODES="4" TYPE="MODIFIED" FIELDS="u" />
+        <E COMPOSITE="C[111]" NUMMODES="4" TYPE="MODIFIED" FIELDS="u" />
+    </EXPANSIONS>
+</NEKTAR>

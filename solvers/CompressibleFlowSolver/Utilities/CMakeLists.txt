@@ -1,0 +1,7 @@
+ADD_SOLVER_UTILITY(ExtractSurface2DCFS CompressibleFlowSolver SOURCES ExtractSurface2DCFS.cpp)
+ADD_SOLVER_UTILITY(ExtractSurface3DCFS CompressibleFlowSolver SOURCES ExtractSurface3DCFS.cpp)
+ADD_SOLVER_UTILITY(CompressibleBL CompressibleFlowSolver SOURCES CompressibleBL.cpp)
+IF(NEKTAR_USE_LIKWID)
+    ADD_SOLVER_UTILITY(TimeRoeKernel CompressibleFlowSolver SOURCES TimeRoeKernel.cpp USELIBRARY)
+    ADD_SOLVER_UTILITY(TimeRiemann CompressibleFlowSolver SOURCES TimeRiemann.cpp USELIBRARY)
+ENDIF(NEKTAR_USE_LIKWID)

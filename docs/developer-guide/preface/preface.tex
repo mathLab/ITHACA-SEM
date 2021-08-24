@@ -1,0 +1,119 @@
+% Preface
+\chapter{Preface}
+ 
+Like with any software project, people want to know it origins:  what motivated it, what and who drove it, and what
+constrained it.  \nek{} officially started as a project idea in 2004 in Salt Lake City, UT, USA, and we registered
+the first commit to SVN in 2006.  The basic backstory is as follows:  Mike Kirby (University of Utah) and Spencer
+Sherwin (Imperial College London) had both studied under George Karniadakis.  Though Mike and Spencer did
+not overlap in terms of their studies (Spencer was a Princeton graduate while Mike was a Brown graduate), they
+both worked on \emph{Nektar}, a \shp{} element code supervised by George.  George's research group has
+had a long history of involvement in various software projects, e.g. PRISM (which has continued its existence
+under Professor Hugh Blackburn at Monash University) and \emph{Nektar}.  
+Spencer and George initiated the \emph{Nektar} code with triangular (2D) and
+tetrahedral (3D) \shp{} elements in the early 1990s, and the code grew and evolved with additions
+by Dr. Igor Lomtev,  Dr. Tim Warburton, Dr. Mike Kirby, etc., all under the PhD advisor direction of George.  Spencer
+graduated from Princeton under George's supervision in 1995 and went on to Imperial College London 
+as a faculty member; Mike graduated from Brown under George's supervision in 2002 and went on to the
+University of Utah in 2002.  In 2004, Mike and Spencer teamed up to re-write \emph{Nektar} in light of modern
+{\em C++} programming practices and in light of what had been learned in the decade or so since its foundation.
+
+What were the observations that motivated \nek{}?  The first observation was that \emph{Nektar}'s origin
+was triangular and tetrahedral \shp{} elements as applied to incompressible fluid mechanics 
+problems (i.e., the incompressible Navier-Stokes equations).  These ideas were extended to 
+the compressible Navier-Stokes by Lomtev and the two parallel paths joined and extended into
+what is often called Hybrid \emph{Nektar} by Tim Warburton. Hybrid \emph{Nektar} (referred to as \emph{Nektar} from
+here on out) used the {\em C++} programming paradigm to facilitate hybrid elements:  triangles and
+quadrilaterals in 2D and tetrahedra, hexahedra, prisms and pyramids in 3D.   In addition, Warburton
+structured the code in a way that allowed extension to the Arbitrary Lagrangian Eulerian (ALE) formulation
+within \emph{Nektar}, as well as various other features such as the \emph{Nektar} Magneto-Hydrodynamics (MHD) solver.
+Mike was mentored (as a student) by Warburton and continued the expansion of \emph{Nektar} (e.g. compressible
+ALE solver, fluid-structure interaction capabilities, etc.).  The expansion of \emph{Nektar}'s capabilities, under
+the direction of George Karniadakis, continues to this day (e.g., \emph{Stress-Nektar}).
+The upside of this expansion was that \emph{Nektar} could
+be expanded and used for solving more and more engineering problems; the downside, in our opinion, 
+was that continually expanding and extending
+\emph{Nektar} without re-evaluating its fundamental design meant that some components became quite 
+cumbersome from the programming perspective.  
+
+The second observation that occurred was that \shp{} elements, as used within the incompressible
+fluid mechanics world, could be viewed as a special case of the broader set of high-order finite element methods
+as applied to various fluid and solid mechanics systems.  In fact, in a much wider context, these methods
+represent ways of discretizing various partial differential equations (PDEs) using their weak (variational) form.
+From this vantage point, one can see the commonality between strong-form methods such as spectral collocation
+and flux reconstruction, and weak-form methods such as traditional finite elements, spectral elements, and
+even discontinuous Galerkin methods.  
+During the 1990s, it became more and more apparent that there was a broader context and a broader
+community for discussing and disseminating the ideas surrounding high-order finite elements, and 
+correspondingly a fruitful environment for cross-pollination of ideas and programming practices.
+
+With all this in mind, Mike and Spencer set out to re-architect \emph{Nektar} from the ground up, and in homage
+to its {\em C++} core, this new software suite was called \nek{}.  \nek{} 
+is an open-source software framework designed to support the development
+of high-performance scalable solvers for partial differential equations using
+the \shp{} element method. High-order methods are gaining prominence in
+several engineering and biomedical applications due to their improved accuracy
+over low-order techniques at reduced computational cost for a given number of degrees of freedom. However,
+their proliferation is often limited by their complexity, which makes
+these methods challenging to implement and use. \nek{} is an initiative to
+overcome this limitation by encapsulating the mathematical complexities of the underlying method within an
+efficient {\em C++} framework, making the techniques more accessible to the broader 
+scientific and industrial communities.  Given the commonalities and connections between various strong-form
+and weak-form methods and their implementations, we use the term \shp methods to refer to the entire family of
+methods, from traditional FEM to discontinuous Galerkin (dG) to Flux Reconstruction (FR) and beyond.
+
+% %
+The software supports a variety of discretization techniques and implementation
+strategies, supporting methods research as well as application-focused
+computation, and the multi-layered structure of the framework allows the user to
+embrace as much or as little of the complexity as they need. The
+libraries capture the mathematical constructs of \shp{} element methods,
+while the associated collection of pre-written PDE solvers provides
+out-of-the-box application-level functionality and a template for users who wish to develop
+solutions for addressing questions in their own scientific domains.
+
+%%
+After five years of laying the groundwork for \nek{}, Dr. Chris Cantwell and Dr. David Moxey joined
+Spencer's group at ICL.  Their involvement in the project has greatly impacted the structure and
+capabilities of \nek{}, and has played a significant role in its success.  In 2017, we formalized
+our Development Team structure.  Kirby and Sherwin as Founders, along with Cantwell and Moxey,
+form the key Project Leaders. We established the following roles within the \nek{} community:
+
+\begin{itemize}
+\item \underline{User}: Individuals or teams who use \nek{} as part of their research and who may interact with the community through the mailing list but do not directly contribute code.
+%
+\item \underline{Contributor}: Individuals or teams who use \nek{} as part of their work but also contribute modifications back into the code which arise as a direct consequence of their research.
+%
+\item \underline{Developer}: Individuals who use \nek{} for their research, and make code contributions which not only benefit their own research goals but also benefits the wider needs of the \nek{} community. Such contributions typically benefit multiple application domains, and developers will make the extra effort to generalize new functionality beyond their own needs. They also fix bugs, identified by others, in areas of the code with which they are familiar.
+%
+\item \underline{Senior Developer}: Senior Developers are involved in the development of \nek{} beyond their individual research area and interact in more of a transcendent way, making contributions widely across the codebase.  Senior developers are entrusted with the tasks of reviewing and merging contributions made by others and maintaining the integrity of the code.
+%
+\item \underline{Project Leader}: These individuals meet all the requirements of Senior Developers but in addition direct how \nek{} evolves in terms of applications, solvers, library and educational outreach.
+\end{itemize}
+
+This developer's guide, like most of \nek{}, is not due to one sole person but an army of people each with different talents, skills and motivations.  As we conclude this preface, we will now provide a short biography for the four editors of this volume, and also provide a listing of all the people who have contributed to this document.
+
+\paragraph{Robert M. (Mike) Kirby}: Prof. Mike Kirby is a Professor and the Associate Director of the School of Computing at the University of Utah.
+
+\paragraph{Spencer J. Sherwin}: Prof. Spencer Sherwin is a Professor of Computational Fluid Mechanics in the Department of Aeronautics at Imperial
+College London (UK).
+
+\paragraph{Chris D. Cantwell}: Dr. Chris Cantwell is a Senior Lecturer in Aeronautics in the Department of Aeronautics at Imperial College London (UK).
+
+\paragraph{David Moxey}: Dr. David Moxey is a Senior Lecturer in Engineering in the College of Engineering, Mathematics and Physical Sciences
+at the University of Exeter (UK).
+
+\paragraph{Contributors}:  The thank all the various participants in the \nek{} Project who have contributed to this document\footnote{Affiliation information is in reference to where the person was employed at the time of their contribution.}:  Dr. Peter Vos (ICL) and Mr. Dav de St. Germain (Utah).
+
+To see the full team and other current details about \nek{}, visit our \href{http://www.nektar.info}{website}. \\
+
+ We hope that you find this developer's guide of 
+use to you, that you find \nek{} helpful to your educational or industrial pursuits, and that like us, you will actively want to engage and contribute
+back  to the \nek{} community.
+
+Mike Kirby \\
+Spencer Sherwin \\
+Chris Cantwell \\
+David Moxey \\
+
+
+  

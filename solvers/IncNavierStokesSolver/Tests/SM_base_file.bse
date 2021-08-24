@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <Metadata>
+        <Provenance>
+            <GitBranch>refs/heads/fix/single-mode</GitBranch>
+            <GitSHA1>b999dcb33b02d9e5d084d652847724306bdab956</GitSHA1>
+            <Hostname>cc-x250</Hostname>
+            <NektarVersion>4.4.0</NektarVersion>
+            <Timestamp>02-May-2016 11:11:25</Timestamp>
+        </Provenance>
+        <Kinvis>1</Kinvis>
+        <SessionName0>SM_base_file_baseflow.xml</SessionName0>
+        <Time>0</Time>
+        <TimeStep>0.001</TimeStep>
+    </Metadata>
+    <ELEMENTS FIELDS="u,v,w,p" SHAPE="Quadrilateral" BASIS="Modified_A,Modified_A" NUMMODESPERDIR="UNIORDER:7,7" ID="0-3" COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJzTe/kfCN7bP2AAgQ/2T9YKVp98m2a7iq969+PVjrblP2bPeCySaTuF8df6E5eD9+4W6lWV3BRle+YrRN+WvxBaXKvcafmKKluFlSt2vYuK3dtQ1aBXx5tha67H9bPhkOLeJreXgSq/nWyXp6alpV0M3CtjYmzMf67K9hjQ1pXTZ+zN3VJzTtiy2FZ29apVT3Jm7d20f/X+7MTSvTZLCmwfTOzeG5brxKA3J3nvipgp78yD7PfG18vP3ZJbatsTsr/fICV4708ZCe60NwW2l3gZjfY8Cd0rdZnT/9cH7b1ad8+e9X+caTshMOpy84ESW/5li8yNC4tt3ZJXC4Url+9d+8yUca9Irm1VSdiL9abBtmx3DfoL+Fv3VrikBVtHx+y1dJhrmtVotXeSJ9OdvwFBto3LpkSGC6nZ2n3/rX9/hf3e066lbJ/2Ctm2R/1cGxQYtjd+oVvsDo1s2zkufPOncITbinkEvVlQPmVv8tyNWaovY2yTJ9hZmR8s3du/7WRtwpkw29pF604ZnW3cqzcaD6PxMBoPo/EwGg+j8TAaD6PxMBoPo/EwGg+j8TAaD6PxMBoPo/EwROOBYRSMglEwCkbBKMACABNr3CUA</ELEMENTS>
+</NEKTAR>

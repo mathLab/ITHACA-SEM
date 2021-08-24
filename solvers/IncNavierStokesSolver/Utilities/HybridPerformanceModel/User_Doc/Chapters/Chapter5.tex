@@ -1,0 +1,400 @@
+% Chapter 3 
+
+\chapter{\code{functions\_main.py}} % Main chapter title
+
+\label{Chapter5} % For referencing the chapter elsewhere, use \ref{Chapter1} 
+
+%----------------------------------------------------------------------------------------
+Here we discuss the third party tools which are used to run the communication part of the model.
+
+%----------------------------------------------------------------------------------------
+\section{\code{Filename\_Generate}}
+This function provides all the file location details to the software.
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{Mesh}: A string containing the file name of the mesh.
+\item \code{Max\_N\_Z}: A string containing the filename of the data with the maximum value of \(N_Z\).
+\item \code{Conditions\_File}: A string containing the filename with the conditions.
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{Mesh\_File}: A string containing the full location of the mesh.
+\item \code{Input\_Nektar\_Max}: A string containing the full location of the maximum \(N_Z\) output file.
+\item \code{Conditions}: A string containing the full location of the conditions file.
+\item \code{Loc\_Serial\_Timing\_Files}: A string containing the location of where to find the serial timing files to produce the plots of the model versus data. Also additional timings for calibration.
+\item \code{Loc\_Parallel\_Timing\_Files}: A string containing the location of where to find the parallel timing files to produce the plots of the model versus data.
+\item \code{Benchmark\_PBS}: A string containing the full location of the benchmark \code{.pbs} script.
+\item \code{MPI\_Benchmark}: A string containing the full location of the MPI benchmark data.
+\item \code{Node\_Map}: A string containing the full location of the \code{.xml} output from the Portable Hardware Locality tool.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+
+\section{\code{PBS\_Job\_Parse}}
+This function can parse an input \code{.pbs} file to determine the number of nodes the user is using in their simulation. 
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{Input\_Filename}: A string containing the filename of the \code{.pbs} script the user will be using.
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{Num\_Node}: The number of nodes being used to perform the simulation.
+\item \code{Error}: Boolean, \code{True} if error is thrown.
+\item \code{Message}: String containing error message.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+
+\section{\code{Find\_Nektar\_Elements}}
+Function to find the total number of elements for the serial calibration.
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{Input\_Filename}: A string containing the filename of the mesh the user will be using.
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{element\_count}: The total element count.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+
+\section{\code{Find\_Nektar\_Serial\_Files}}
+Function to find the \code{.txt} files containing the serial timing data saved with the file name \code{output\_n.txt} where n is the value of \(N_Z\) for that given piece of data. 
+
+These should be placed in the file \code{Input/Serial\_Input/} or \code{Input/Parallel\_Input/} depending on whether user wants serial or parallel data to be analysed. 
+
+It takes the following inputs:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{Nektar\_Modes}: A list of integers containing the the values of \(N_Z\).
+\item \code{Timing\_Files}: A list of strings containing the file names.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+
+\section{\code{Parse\_Nektar\_Output}}
+Function to parse the input file of a Nektar++ \code{stdout} to find the timing information.
+
+These should be placed in the file \code{Input/Serial\_Input/}
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{Input\_Filename}: A string containing the filename of the Nektar output files the user wishes to parse.
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{Nektar\_Modes}: A list of integers containing the the values of \(N_Z\).
+\item \code{Timing\_Files}: A list of strings containing the file names.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+%----------------------------------------------------------------------------------------
+\section{\code{Parse\_Nektar\_CG\_Benchmark\_Output}}
+
+Function to parse CG information from the Nektar++ output file.
+
+These should be placed in the file \code{Input/Serial\_Input/}
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{Input\_Filename}: String containing the input filename of the \code{.txt} file which contains the CG iteration data. This string was generated in \code{Filename\_Generate}
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{Pressure}: Dictionary containing the pressure CG iteration counts for each plane number.
+\item \code{Velocity\_1}: Dictionary containing the velocity 1 CG iteration counts for each plane number.
+\item \code{Velocity\_2}: Dictionary containing the velocity 2 CG iteration counts for each plane number.
+\item \code{Velocity\_3}: Dictionary containing the velocity 3 CG iteration counts for each plane number.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+
+\section{\code{Find\_Hardware}}
+
+Function to parse the \code{.xml} file generated by the Portable Hardware Locality tool to find how cores are laid out on individual nodes.
+
+These should be placed in the file \code{Input/Benchmark/}
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{Input\_Filename}: String containing the input filename of the \code{.txt} file which contains the CG iteration data. This string was generated in \code{Filename\_Generate}
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{Num\_Core\_Per\_Node}: Integer containing the number of cores per node.
+\item \code{Num\_Core\_Per\_Socket}: Integer containing the number of cores per socket.
+\item \code{Num\_Sock\_Per\_Node}: Integer containing the number of sockets per node.
+\item \code{Error}: Boolean, \code{True} if error is thrown.
+\item \code{Message}: String containing error message.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{\code{Find\_Conditions}}
+
+Function to parse the conditions file from the \code{.xml} file containing the conditions.  
+
+These should be placed in the file \code{Input/Conditions}
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{Input\_Filename}: String containing the input filename of the \code{.txt} file which contains the conditions file for the simulation. This string was generated in \code{Filename\_Generate}
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{N\_Modes}: Integer containing the value for \(N_Z\).
+\item \code{P}: Integer containing the degree of the basis polynomial.
+\item \code{Error}: Boolean, \code{True} if error is thrown.
+\item \code{Message}: String containing error message.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+
+\section{\code{PBS\_Benchmark\_Parse}}
+Function to find number of processes from the \code{.pbs} file used during MPI Benchmarking.
+
+These should be placed in the file \code{Input/Benchmark/} with the name \code{Benchmark.pbs}
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{Input\_Filename}: String containing the filename for the \code{.pbs} file containing the script used to run the MPI benchmark tool. This filename is generated by \code{Filename\_Generate}
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{PROC\_BENCHMARK}: Integer containing number of processes used in the MPI Benchmark.
+\item \code{Error}: Boolean, \code{True} if error is thrown.
+\item \code{Message}: String containing error message.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+
+\section{\code{Parse\_Benchmark}}
+
+Function to parse the MPI Benchmark \code{.txt} file to find the bandwidths and latencies.
+
+These should be placed in the file \code{Input/Benchmark/} with the name \code{Benchmark.txt}
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{Input\_Filename}: String containing the filename for the \code{.txt} file containing the output of the MPI benchmark tool. This filename is generated by \code{Filename\_Generate}
+\item \code{PROC\_BENCHMARK}: Integer containing the number of processors used in the benchmark.
+\item \code{Num\_Core\_Per\_Socket}: Integer containing the number of cores per socket.
+\item \code{Num\_Sock\_Per\_Node}: Integer containing the number of cores per node.
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{BW\_Node\_To\_Node}: Float containing the bandwidth between two nodes.
+\item \code{LAT\_Node\_To\_Node}: Float containing the latency between two nodes.
+\item \code{BW\_Socket\_To\_Socket}: Float containing the bandwidth between two sockets on the same node.
+\item \code{LAT\_Socket\_To\_Socket}: Float containing the latency between two sockets on the same node.
+\item \code{BW\_Core\_To\_Core}: Float containing the bandwidth between two sockets on the same socket.
+\item \code{LAT\_Core\_To\_Core}: Float containing the latency between two sockets on the same socket.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{\code{Partition}}
+
+Function to run METIS to recover the distribution of elements across an input number of processes.
+
+The mesh should be located in \code{Input/Mesh/}
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{Input\_Filename}: String containing the filename and location for the user's mesh.This filename is generated by \code{Filename\_Generate}
+\item \code{PROC\_XY}: Integer containing the number of processes allocated to solving the elemental portion of the virtual topology. This is \(R_{XY}\) in the communication model.
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{Num\_Element\_Msg}: Lists containing the number of elements that each core needs to communicate. 
+\item \code{Num\_Elements}: List containing the number of elements assigned per core.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+
+\section{\code{Find\_Topologies}}
+
+Function to run find the various possible topologies for the total number of processors and planes.
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{PROC\_TOT}: Integer containing the total number of processes available.
+\item \code{Num\_Modes}: Integer containing the total number of planes.
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{PROC\_XY}: List of the possible \(R_{XY}\)
+\item \code{PROC\_Z}: List of the possible \(R_Z\)
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------

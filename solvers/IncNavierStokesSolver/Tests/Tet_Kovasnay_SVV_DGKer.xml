@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="3" SPACE="3">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx9jskRAyEQA9f37fV9JaP8s1AICsEvirILel6gpjUMA8/k52b982mT13cz9K05brcW2G8t0Y9WuD9aY3+06fyrnLbIrR3yaN/JS3JAbh2RR2Nzf+0/IbfOyKNLp7fMtdNbkhv61h1964F+9EQ/ejV57Xkjtz7Ioy+Fvj+a</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1lMV2QkEQBQkJIQFCPMTd3d3d3T3//xPZdC2oc5jNPV3c6e4ZXk8iUbzKpKyklFUuLZOvQhxfSj54pWL2p0vsr5IPXi3OysjHyqoffs8pD/3VlOg7r/3w2tC0eJ0456kXp06D9uNvVIy/SZy+mhPFi/tqEee+CqHcD/5Wcfxt8sHb1Qe8I7RCvFMx5+4K5Vz8f93i7OvRfvy9ivH3qX++g35xvoOB0KT8g+L4h+SDD4emxEfUH3xUMeceU8x3OR6aFZ8QJ9+kfPCpUO6B73s6NCc+o5g8s4qZh7nQjPi8OPkW5IMvys9cLakufFl54CuhefHV0Kz4WijvHnO7Ls7cbsgH3xRnrrfkg2+HNonviDP/u+LU2dN+/PuK8R+I09eh8vC+HKku/Fh54CeKeRdPxXmnzuSDnyumrwvV5ffLUM7DHF/Jz7xei+O/EWcub1UPfqf9vLP36gf+oJg6j4p5l5/UN/xZnHwv8sFf5ed9f1Nd+LvywD9CC+KfoVXiX+qD9+ZbnPn+UV34r2Ly/ylm7v8BYaAbvwAA</EDGE>
+        <FACE>
+            <T COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1lldXU1EQhSGIoSNGJUGEANGgAQsoKkW9oNIMwYqKCApSLFjBv+/LfA9+a11e9jqz954z5S5y6ur+/2sIrBfydyIwI8TXKJ3zwWekaw48Kb5RfFNgi/RgVjrOGZ1bpKtXvFX3UkdWPPq2wHbV0yq+Q/fal5WOeGdgl+Id4k8Fnk7x5aQD28Xj79L5jO4lnhOfVfxsIHPulh7+XGAhxZeXDuwWX1C8WfrzKfl6AtlrQXr4Jp3zOrN3fG0696YgfuZ7IbBfumJgn3j2kebrk64ohMc/oDj7os5B6Zj3kHBA+ouBJflKKboh8cQvKV4OzOtckp79DEvXI91l1YOO7+KK4uRjXhXFmR/5R5SnovioePZCXVdT7kF3Tfng8V+XvxhIPzd0D/WwzzHx3Md+xuUblO6mdMSp65Z47qOuCfnK0t1WPvd1R/WxV/x3dY/rmhRPXvqakr4sflp1smfqmhHPHsl3T/qK+PviubcY+CCQPqmXvhLx1Mvv9qx8M9LNKR88/oeqAx99PRLPffT1WL5Eunnlg8e/oPqpF/+i6k6kW1Kd3ENfy+Jd9xPpE/FV9UE91L0int9r8tXkW5JuVfng8T8VT1309Uy+RPzzQPZPv7wLXyjOO4t5v1Sc/PT9SnHmxftjTXp4/v+/1v3o2O8b5ec9w1zf6sz/d+5ZD2T+zJt317tA5peTbiOQedbEvw9kD+yLfjbFsw/625JvRboPgWuKs7eP4tkHe9uWryrdjvLB4/+k+tgb/t1A9kAe9rYnnrzsfV/6qviDwHXp2Mdn8eyT/XyRrybdV535frj/WyDfAe8g5nEont9dvovv0pfE/whkf5vifyrOu4U5/pIenv38DmT+W8r3R3H89H8UyHc4Iv2xeN41zPOv9MPi/wFeP13W</T>
+        </FACE>
+        <ELEMENT>
+            <A COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx11OlbjVEUhvEkRaRCDhJHRQ6lMkcD0mDOUUKDqKMMZWj693257w8919X58rves9+13r323mtXVe39HcBqPBj/1+AhrMW6feIOx/iRGK/Ho3gs8vq9BjyOjdgU8/HZPM14IvKexFPYgqdjvoXIfwbPovW1xPO5eN+6W9F6zXMeXY82vIAXsRjx/m/8JbRu16EdO7ATL6PrewW78Cpaj+tvvOtlXAndn2uR53rM0/3qxh68gb1oPX0xXozvuM/9eBNvofW7/7fxDt7Fe+j5MP4+luJ9938AH0Seh+h6DeIQWv8wFuJ5JPK4Dp6vR/gYn+Aoes6e4hiO4wS6z8ZP4rN433P8HF9EnpfouXyFr/ENTmFbPL+NPGW0H96h9U2j9499MYP233ucxWLEf4g46/a8fow8nrdPaJ9Z3xzOo33hOSzH+EJ8xz5bxM+4FPO1j7/gV1zGFbRPja/gbLxv/3/D1cizhvb1d/yBP9F6SvG/8a7bL7SP13EDre83eo/8Qev9i//QvjKuEuPW6b2zida7FXm9d7ZxB72ndvd5No91Ov//suswdAAA</A>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> A[0-47] </C>
+            <C ID="1"> F[0,19,34,49,64,83,94,109] </C>
+            <C ID="2"> F[1,4,10,13,65,68,74,78] </C>
+            <C ID="3"> F[69,72,75,81,95,97,102,105] </C>
+            <C ID="4"> F[50,52,57,61,110,112,115,117] </C>
+            <C ID="5"> F[20,23,27,29,53,56,58,63] </C>
+            <C ID="6"> F[14,30,45,60,77,91,106,118] </C>
+        </COMPOSITE>
+        <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="6" FIELDS="u,v,w,p" TYPE="MODIFIED" />
+    </EXPANSIONS>
+    <CONDITIONS>
+        <SOLVERINFO>
+          <I PROPERTY="SolverType"            VALUE="VelocityCorrectionScheme" />
+          <I PROPERTY="EQTYPE"                VALUE="UnsteadyNavierStokes" />
+          <I PROPERTY="AdvectionForm"         VALUE="Convective" />
+          <I PROPERTY="Projection"            VALUE="Continuous" />  
+          <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
+          <I PROPERTY="SpectralVanishingViscosity" VALUE="DGKernel" />
+          <I PROPERTY="SpectralHPDealiasing"   VALUE="True" />
+        </SOLVERINFO>
+        <PARAMETERS>
+          <P> TimeStep      = 0.005        </P>
+          <P> NumSteps      = 10 </P>
+          <P> IO_CheckSteps = 10    </P>
+          <P> IO_InfoSteps  = 1    </P>
+          <P> Kinvis        = 0.025        </P>
+          <P> MinSubSteps  = 1        </P>
+          <P> KovLam        = 0.5/Kinvis-sqrt(0.25/(Kinvis*Kinvis)+4*PI*PI) </P>
+        </PARAMETERS>
+        
+        <VARIABLES>
+          <V ID="0"> u </V>
+          <V ID="1"> v </V>
+          <V ID="2"> w </V>
+          <V ID="3"> p </V>
+        </VARIABLES>
+        
+        <BOUNDARYREGIONS>
+          <B ID="0"> C[1] </B>    <!-- Z = 0      -->
+          <B ID="1"> C[6] </B>    <!-- Z = 1      -->
+          <B ID="2"> C[2] </B>    <!-- Y = 0      -->
+          <B ID="3"> C[3] </B>    <!-- X = 1      -->
+          <B ID="4"> C[4] </B>    <!-- Y = 1     -->
+          <B ID="5"> C[5] </B>    <!-- X = 0      -->
+        </BOUNDARYREGIONS>
+        
+        <BOUNDARYCONDITIONS>
+          <REGION REF="0">
+            <D VAR="u" VALUE="(1-exp(KovLam*x)*cos(2*PI*y))" />
+            <D VAR="v" VALUE="(KovLam/(2*PI))*exp(KovLam*x)*sin(2*PI*y)" />
+            <D VAR="w" VALUE="0" />
+            <D VAR="p" VALUE="0.5*(1-exp(2*KovLam*x))" />
+          </REGION>
+          <REGION REF="1">
+            <D VAR="u" VALUE="(1-exp(KovLam*x)*cos(2*PI*y))" />
+            <D VAR="v" VALUE="(KovLam/(2*PI))*exp(KovLam*x)*sin(2*PI*y)" />
+            <D VAR="w" VALUE="0" />
+            <D VAR="p" VALUE="0.5*(1-exp(2*KovLam*x))" />
+          </REGION>
+          <REGION REF="2">
+            <D VAR="u" VALUE="(1-exp(KovLam*x)*cos(2*PI*y))" />
+            <D VAR="v" VALUE="(KovLam/(2*PI))*exp(KovLam*x)*sin(2*PI*y)" />
+            <D VAR="w" VALUE="0" />
+            <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+          </REGION>
+          <REGION REF="3">
+            <N VAR="u" USERDEFINEDTYPE="HOutflow" VALUE="Kinvis*KovLam*exp(KovLam*x)*cos(2*PI*y) + 0.5*(1-exp(2*KovLam*x)) + 0.5*(((1-exp(KovLam*x)*cos(2*PI*y))*(1-exp(KovLam*x)*cos(2*PI*y))+(KovLam/(2*PI)*exp(KovLam*x)*sin(2*PI*y))*(KovLam/(2*PI)*exp(KovLam*x)*sin(2*PI*y))))*(0.5*(1.0-tanh((1-exp(KovLam*x)*cos(2*PI*y))*20)))" />
+            <N VAR="v" USERDEFINEDTYPE="HOutflow" VALUE="-Kinvis*KovLam*KovLam/(2*PI)*exp(KovLam*x)*sin(2*PI*y)" />
+            <N VAR="w" USERDEFINEDTYPE="HOutflow" VALUE="0" />
+            <D VAR="p" USERDEFINEDTYPE="HOutflow" VALUE="0" />
+          </REGION>
+          <REGION REF="4">
+            <D VAR="u" VALUE="(1-exp(KovLam*x)*cos(2*PI*y))" />
+            <D VAR="v" VALUE="(KovLam/(2*PI))*exp(KovLam*x)*sin(2*PI*y)" />
+            <D VAR="w" VALUE="0" />
+            <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+          </REGION>
+          <REGION REF="5">
+            <D VAR="u" VALUE="(1-exp(KovLam*x)*cos(2*PI*y))" />
+            <D VAR="v" VALUE="(KovLam/(2*PI))*exp(KovLam*x)*sin(2*PI*y)" />
+            <D VAR="w" VALUE="0" />
+            <D VAR="p" VALUE="0.5*(1-exp(2*KovLam*x))" />
+          </REGION>
+        </BOUNDARYCONDITIONS>
+        
+        <FUNCTION NAME="ExactSolution">
+          <E VAR="u" VALUE="(1-exp(KovLam*x)*cos(2*PI*y))" />
+          <E VAR="v" VALUE="(KovLam/(2*PI))*exp(KovLam*x)*sin(2*PI*y)" />
+          <E VAR="w" VALUE="0" />
+          <E VAR="p" VALUE="0.5*(1-exp(2*KovLam*x))" />
+        </FUNCTION>
+        <FUNCTION NAME="InitialConditions">
+          <E VAR="u" VALUE="(1-exp(KovLam*x)*cos(2*PI*y))" />
+          <E VAR="v" VALUE="(KovLam/(2*PI))*exp(KovLam*x)*sin(2*PI*y)" />
+          <E VAR="w" VALUE="0" />
+          <E VAR="p" VALUE="0.5*(1-exp(2*KovLam*x))" />
+        </FUNCTION>
+    </CONDITIONS>
+     <FILTERS>
+      <FILTER TYPE="HistoryPoints">
+        <PARAM NAME="OutputFrequency">5</PARAM>
+        <PARAM NAME="Points"> 
+          0.5 0.5 0.0
+        </PARAM>
+      </FILTER>
+    </FILTERS>
+</NEKTAR>
+

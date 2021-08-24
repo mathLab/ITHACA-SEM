@@ -1,0 +1,413 @@
+\chapter{\code{class\_topology.py}} % Main chapter title
+
+\label{Chapter7} % For referencing the chapter elsewhere, use \ref{Chapter1} 
+
+%----------------------------------------------------------------------------------------
+Here we the implementation of the topology class.
+
+\section{\code{\_\_init\_\_}}
+The initialiser for the class.
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{PROC\_Z}: Integer containing the value for \(R_Z\)
+\item \code{PROC\_XY}: Integer containing the value for \(R_{XY}\)
+\item \code{Num\_Core\_Per\_Socket}: Integer containing the number of cores per socket.
+\item \code{Num\_Sock\_Per\_Node}: Integer containing the number of sockets per node.
+\item \code{Scheme}: String containing the name of the numerical scheme.
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+
+\section{\code{Print\_Hardware}}
+Output the hardware created by the class to a text file.
+
+It takes the following inputs:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item \code{.txt} file containing details of hardware layout in the given instance of the class.
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+
+\section{\code{Distribute\_Elements}}
+Distribute the elements.
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{Num\_Element\_Msg}:  Lists containing the number of elements that each core needs to communicate. 
+\item \code{Num\_Elements}: List containing the number of elements assigned per core.
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+
+\section{\code{Distribute\_Modes}}
+Distribute the planes.
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{Num\_Modes}:  Integer containing the total number of planes.
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+
+\section{\code{Hardware\_Constant}}
+Input the FLOPs to the topology.
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{Num\_Constants}:  Integer containing the number of constants used.
+\item \code{constants}: List of the constants.
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+
+\section{\code{Print\_Elements}}
+Produces an output file showing the element distribution.
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{Num\_Constants}:  Integer containing the number of constants used.
+\item \code{constants}: List of the constants.
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item \code{.txt} file giving the element distribution across the cores within the given instance of the topology class. 
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+
+\section{\code{Print\_Modes}}
+Produces an output file showing the plane distribution.
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{Num\_Constants}:  Integer containing the number of constants used.
+\item \code{constants}: List of the constants.
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item \code{.txt} file giving the plane distribution across the cores within the given instance of the topology class. 
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+
+\section{\code{CG\_Iterations}}
+Input the CG iteration data to the class instance.
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{Pressure}: Dictionary containing the pressure CG iteration counts for each plane number.
+\item \code{Velocity\_1}: Dictionary containing the velocity 1 CG iteration counts for each plane number.
+\item \code{Velocity\_2}: Dictionary containing the velocity 2 CG iteration counts for each plane number.
+\item \code{Velocity\_3}: Dictionary containing the velocity 3 CG iteration counts for each plane number.
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+
+\section{\code{Data\_Size}}
+Input the value for P in order to generate the data sizes.
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{P}: Integer containing the degree of the basis polynomial.
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{\code{Input\_Communication}}
+Input the hardware parameters for the given instance of the topology.
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{BW\_Node\_To\_Node}: Float containing the bandwidth between two nodes.
+\item \code{LAT\_Node\_To\_Node}: Float containing the latency between two nodes.
+\item \code{BW\_Socket\_To\_Socket}: Float containing the bandwidth between two sockets on the same node.
+\item \code{LAT\_Socket\_To\_Socket}: Float containing the latency between two sockets on the same node.
+\item \code{BW\_Core\_To\_Core}: Float containing the bandwidth between two sockets on the same socket.
+\item \code{LAT\_Core\_To\_Core}: Float containing the latency between two sockets on the same socket.
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{\code{Check\_Neighbour}}
+Check how two processes are related, same socket, node etc.
+
+It takes the following inputs:
+
+\begin{itemize}
+\item \code{core\_1}: Integer containing the process number.
+\item \code{core\_2}: Integer containing the process number.
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{1}: Value if on same socket.
+\item \code{2}: Value if on same node.
+\item \code{3}: Value if on different nodes.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+\section{\code{Communication\_Pairwise\_Exchange}}
+Compute the time taken to calculate the length of time taken to exchange element data using the pairwise algorithm.
+
+It takes the following inputs:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{comm\_max}: Float of time taken to exchange element data using the pairwise algorithm.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+
+\section{\code{Communication\_Allreduce}}
+Compute the time taken to calculate the length of time taken to perform the Allreduce step.
+It takes the following inputs:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{comm\_max}: Float of time taken to perform the Allreduce step.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+
+\section{\code{Communication\_Alltoall}}
+Compute the time taken to calculate the length of time taken to perform the Alltoall step.
+
+It takes the following inputs:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+It returns the following outputs:
+
+\begin{itemize}
+\item \code{comm\_max}: Float of time taken to perform the Alltoall step.
+\end{itemize}
+
+It sends the following to the \code{stdout}:
+
+\begin{itemize}
+\item None
+\end{itemize}
+
+Additional Output:
+\begin{itemize}
+\item None
+\end{itemize}
+
+%----------------------------------------------------------------------------------------

@@ -1,0 +1,132 @@
+\section{Coupling}
+
+Nektar++ Solvers can be run in parallel with third party applications and other Nektar++ solvers, where run-time data exchange is enabled by the coupling interface.
+The interface is configured in the \inltt{COUPLING} tag as
+\begin{lstlisting}[style=XMLStyle] 
+<COUPLING TYPE="[type]" NAME="[name]">
+    <I PROPERTY="SendSteps"         VALUE="1" />
+    <I PROPERTY="SendVariables"     VALUE="u0S,v0S" />
+    <I PROPERTY="ReceiveSteps"      VALUE="1" />
+    <I PROPERTY="ReceiveVariables"  VALUE="u0R,v0R" />
+    ...
+</COUPLING>
+\end{lstlisting}
+The coupling type may be any of the types described later in this section,
+while the name can be chosen arbitrarily.
+Inside each coupling block, the send and receive frequencies are defined by the \inltt{SendSteps}  and \inltt{ReceiveSteps} parameters, respectively.
+Which variables are to be sent or received is specified by the \inltt{SendVariables} and \inltt{ReceiveVariables}.
+By default, the send and receive frequencies is set to zero, which disables the corresponding exchange in this coupling.
+An empty \inltt{SendVariables} or \inltt{ReceiveVariables} list has the same effect.
+
+\begin{center}
+    \begin{tabularx}{0.99\textwidth}{lllX}
+        \toprule
+        \textbf{Option name} & \textbf{Required} & \textbf{Default} & 
+        \textbf{Description} \\
+        \midrule
+        \inltt{SendSteps}      & \xmark   & \texttt{0} &
+            Frequency (in steps) at which fields are sent. Sending is disabled if set to zero.\\
+        \inltt{SendVariables}      & \xmark   & \texttt{<empty>} &
+            Comma-separated list of sent variables. Sending is disabled if the list is empty.\\
+        \inltt{ReceiveSteps}      & \xmark   & \texttt{0} &
+            Frequency (in steps) at which fields are received. Receiving is disabled if set to zero.\\
+        \inltt{ReceiveVariables}      & \xmark   & \texttt{<empty>} &
+            Comma-separated list of received variables. Receiving is disabled if the list is empty.\\
+        \bottomrule
+    \end{tabularx}
+\end{center}
+
+
+
+\subsection{File}
+This coupling type allows the user to exchange fields at run time by reading from and writing to files.
+Besides the basic parameters which define the exchanged variables and the exchange frequency, the file coupling type requires the \inltt{SendFileName} and \inltt{ReceiveFunction} parameters to be set.
+The Coupling name is not used for this type and can be ignored.
+\begin{lstlisting}[style=XMLStyle] 
+<COUPLING NAME="coupling1" TYPE="File">
+    <I PROPERTY="SendSteps"         VALUE="1" />
+    <I PROPERTY="SendVariables"     VALUE="u0S,v0S" />
+    <I PROPERTY="SendFileName"      VALUE="Dummy0out_%14.8E.pts" />
+    <I PROPERTY="ReceiveSteps"      VALUE="1" />
+    <I PROPERTY="ReceiveVariables"  VALUE="u0R,v0R" />
+    <I PROPERTY="ReceiveFunction"   VALUE="CouplingIn" />
+</COUPLING>
+\end{lstlisting}
+\inltt{SendFileName} specifies a file name template to write the field data to. 
+Currently, only \inltt{.pts} files are supported and the file is only created once fully written, avoiding race conditions between sender and receiver.
+Receiving is implemented by evaluating a session function specified in the \inltt{ReceiveFunction} parameter.
+The coupling waits for the file given in the receive function to appear.
+
+\begin{center}
+    \begin{tabularx}{0.99\textwidth}{lllX}
+        \toprule
+        \textbf{Option name} & \textbf{Required} & \textbf{Default} & 
+        \textbf{Description} \\
+        \midrule
+        \inltt{SendFileName}      & (\cmark)   & - &
+        File name where the sent fields should be written to. Required if sending is enabled. Time dependent file names are supported.\\
+        \inltt{ReceiveFunction}      & (\cmark)   & - &
+        Function to evaluate to obtain the received fields.Required if receiving is enabled.\\
+        \bottomrule
+    \end{tabularx}
+\end{center}
+
+
+\subsection{Cwipi}
+
+\begin{notebox}
+    The Cwipi coupling is only available when Nektar++ is compiled with OpenMPI and CWIPI
+\end{notebox}
+The Cwipi coupling uses CWIPI\footnote{http://sites.onera.fr/cwipi/} to facilitate real time data exchange over MPI.
+See \cite{La18} for details.
+All data transfers are non-blocking to minimize the computational overhead.
+The interface must be enabled with the command line option \inltt{--cwipi} and a unique application name, e.g:\begin{lstlisting}[style=BashInputStyle] 
+DummySolver --cwipi 'Dummy1' Dummy_3DCubeCwipi_1.xml
+\end{lstlisting}
+CWIPI uses the names of the current application and the coupling to identify two peers in cosimulation setups.
+The name of the remote application must be provided by the \inltt{RemoteName} parameter.
+Unlike the File-type coupling, a linear interpolation in time is applied to the received fields if non-unity values are set for \inltt{ReceiveSteps}.
+\begin{lstlisting}[style=XMLStyle] 
+<COUPLING NAME="coupling1" TYPE="Cwipi">
+    <I PROPERTY="RemoteName"        VALUE="Dummy1" />
+    <I PROPERTY="SendSteps"         VALUE="1" />
+    <I PROPERTY="SendVariables"     VALUE="u0S,v0S" />
+    <I PROPERTY="SendMethod"        VALUE="Evaluate" />
+    <I PROPERTY="ReceiveSteps"      VALUE="1" />
+    <I PROPERTY="ReceiveVariables"  VALUE="u0R,v0R" />
+    <I PROPERTY="Oversample"        VALUE="5" />
+    <I PROPERTY="FilterWidth"       VALUE="10E-3" />
+    <I PROPERTY="NotLocMethod"      VALUE="Extrapolate" />
+</COUPLING>
+\end{lstlisting}
+
+Additional options which define the coupling include \inltt{SendMethod}, the method used to retrieve the physical values at the locations requested by the remote application.
+Available options are \inltt{NearestNeighbour}, \inltt{Shepard} and the default \inltt{Evaluate}.
+The last option directly evaluates the expansions using a backward transform, giving superior accuracy at acceptable computational cost.
+
+When using non-conforming domains, the current application might request values outside of the computational domain of the remote application.
+How to handle these not-located points is specified by the \inltt{NotLocMethod} parameter.
+When set to \inltt{keep}, the point value is not altered.
+With \inltt{Extrapolate}, the nearest neighbor value of the current application is used.
+Note that this can be very inefficient when using many MPI ranks.
+
+
+\begin{center}
+    \begin{tabularx}{0.99\textwidth}{lllX}
+        \toprule
+        \textbf{Option name} & \textbf{Required} & \textbf{Default} & 
+        \textbf{Description} \\
+        \midrule
+        \inltt{RemoteName}      & \cmark   & - &
+            Name of the remote application.\\
+        \inltt{SendMethod}      & \xmark   & \inltt{Evaluate} &
+            Specifies how to evaluate fields before sending. Available options are \inltt{NearestNeighbour}, \inltt{Shepard} and \inltt{Evaluate}.\\
+        \inltt{Oversample}      & \xmark   & 0 &
+            Receive fields at a higher (or lower) number of quadrature points before filtering to avoid aliasing.\\
+        \inltt{FilterWidth}      & \xmark   & 0 &
+            Apply a spatial filter of a given filter width to the received fields. Disabled when set to zero.\\
+        \inltt{NotLocMethod}      & \xmark   & \inltt{keep} &
+            Specifies how not located points in non-conformal domains are handled. Possible values are \inltt{keep} and \inltt{Extrapolate}.\\
+        \bottomrule
+    \end{tabularx}
+\end{center}

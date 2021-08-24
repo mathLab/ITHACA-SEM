@@ -1,0 +1,42 @@
+% Chapter 3 
+
+\chapter{Third Party Tools} % Main chapter title
+
+\label{Chapter4} % For referencing the chapter elsewhere, use \ref{Chapter1} 
+
+%----------------------------------------------------------------------------------------
+Here we discuss the third party tools which are used to run the communication part of the model.
+
+\section{Portable Hardware Locality}
+An important piece of the communication model is a three layer communication topology between processes. So cores on the same socket will have one latency and bandwidth, cores on the same node will have another and finally there will be a latency and bandwidth for inter-node communication. 
+
+In order to implement this model we will need to know how cores are arranged within a node. For this we made use of the Portable Hardware Locality tool which comes as part of the OpenMPI release. Within the software (in \code{functions\_main.py}) we have built around the model we parse the xml output file that the tool produces in order to determine the location of cores on the node.
+
+In order to use this tool correctly for use in the model please use the following command line entry:
+
+\code{lstopo node.xml}
+
+This output should then be placed in the file:
+
+\code{Input/Benchmark}
+
+\section{MPI Benchmarks}
+We make use of the Intel MPI Benchmark tool \cite{INTEL} to fill in the relevant bandwidths and latencies to the communication model. The benchmark works by grouping the cores into various sets and preforming all the basic MPI communications such as send and receive, Alltoall, Allreduce etc. Then it presents timings and bandwidths for each of these groups for different sized messages. 
+
+Based on our knowledge of the core layout from the Portable Hardware Locality tool we can work out which groups correspond to which level of our communication model. Having determined this we use the output data from the \code{Benchmarking Multi-Exchange} part of the tool to find the bandwidths and latencies for the different levels of communication. We choose this part of the output as it captures at the most basic level the pairwise communication between cores and thus is representative of the bandwidths and latencies we wish to capture.
+
+In order to use this tool correctly for use in the model please use the following command line entry:
+
+\code{mpiexec [Benchmark Install Folder]/src/IMB-MPI1 -multi 1 > Benchmark.txt}
+
+This output should then be placed in the file:
+
+\code{Input/Benchmark}
+
+\section{METIS}
+Finally in order to understand the distribution of elements from a given mesh across a given HPC system we must make use of METIS. This is inbuilt into \code{Nekmesh} which is the meshing library for Nektar++.
+
+We can run this partitioning feature on its own as part of our software by calling the \code{Nekmesh} utility to see how the elements of a given mesh will be distributed for an input number of cores. With this information we can now input into the model how many elements each core has present on it and, by parsing the element edge data output by METIS, we can determine which cores have elements neighbouring those on other cores. Thus when solving the CG piece of the model we know which cores need to communicate with each other and what data size they need to send to each other. This feature of the software is built into \code{Partition} which can be found in \code{functions\_main.py}
+
+
+

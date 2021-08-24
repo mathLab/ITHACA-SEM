@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="2" SPACE="2">
+        <VERTEX>
+            <V ID="0">0.00000000e+00 0.00000000e+00 0.00000000e+00</V>
+            <V ID="1">0.00000000e+00 1.00000000e+00 0.00000000e+00</V>
+            <V ID="2">1.00000000e+00 1.00000000e+00 0.00000000e+00</V>
+            <V ID="3">1.00000000e+00 0.00000000e+00 0.00000000e+00</V>
+            <V ID="4">2.00000000e+00 1.00000000e+00 0.00000000e+00</V>
+            <V ID="5">2.00000000e+00 0.00000000e+00 0.00000000e+00</V>
+            <V ID="6">3.00000000e+00 1.00000000e+00 0.00000000e+00</V>
+            <V ID="7">3.00000000e+00 0.00000000e+00 0.00000000e+00</V>
+            <V ID="8">4.00000000e+00 1.00000000e+00 0.00000000e+00</V>
+            <V ID="9">4.00000000e+00 0.00000000e+00 0.00000000e+00</V>
+            <V ID="10">5.00000000e+00 1.00000000e+00 0.00000000e+00</V>
+            <V ID="11">5.00000000e+00 0.00000000e+00 0.00000000e+00</V>
+            <V ID="12">6.00000000e+00 1.00000000e+00 0.00000000e+00</V>
+            <V ID="13">6.00000000e+00 0.00000000e+00 0.00000000e+00</V>
+            <V ID="14">7.00000000e+00 1.00000000e+00 0.00000000e+00</V>
+            <V ID="15">7.00000000e+00 0.00000000e+00 0.00000000e+00</V>
+            <V ID="16">8.00000000e+00 1.00000000e+00 0.00000000e+00</V>
+            <V ID="17">8.00000000e+00 0.00000000e+00 0.00000000e+00</V>
+            <V ID="18">9.00000000e+00 1.00000000e+00 0.00000000e+00</V>
+            <V ID="19">9.00000000e+00 0.00000000e+00 0.00000000e+00</V>
+            <V ID="20">1.00000000e+01 1.00000000e+00 0.00000000e+00</V>
+            <V ID="21">1.00000000e+01 0.00000000e+00 0.00000000e+00</V>
+        </VERTEX>
+        <EDGE>
+            <E ID="0">    3  0   </E>
+            <E ID="1">    2  3   </E>
+            <E ID="2">    1  2   </E>
+            <E ID="3">    0  1   </E>
+            <E ID="4">    5  3   </E>
+            <E ID="5">    4  5   </E>
+            <E ID="6">    2  4   </E>
+            <E ID="7">    7  5   </E>
+            <E ID="8">    6  7   </E>
+            <E ID="9">    4  6   </E>
+            <E ID="10">    9  7   </E>
+            <E ID="11">    8  9   </E>
+            <E ID="12">    6  8   </E>
+            <E ID="13">   11  9   </E>
+            <E ID="14">   10  11   </E>
+            <E ID="15">    8  10   </E>
+            <E ID="16">   13  11   </E>
+            <E ID="17">   12  13   </E>
+            <E ID="18">   10  12   </E>
+            <E ID="19">   15  13   </E>
+            <E ID="20">   14  15   </E>
+            <E ID="21">   12  14   </E>
+            <E ID="22">   17  15   </E>
+            <E ID="23">   16  17   </E>
+            <E ID="24">   14  16   </E>
+            <E ID="25">   19  17   </E>
+            <E ID="26">   18  19   </E>
+            <E ID="27">   16  18   </E>
+            <E ID="28">   21  19   </E>
+            <E ID="29">   20  21   </E>
+            <E ID="30">   18  20   </E>
+        </EDGE>
+        <ELEMENT>
+            <Q ID="0">    0     1     2     3 </Q>
+            <Q ID="1">    4     5     6     1 </Q>
+            <Q ID="2">    7     8     9     5 </Q>
+            <Q ID="3">   10    11    12     8 </Q>
+            <Q ID="4">   13    14    15    11 </Q>
+            <Q ID="5">   16    17    18    14 </Q>
+            <Q ID="6">   19    20    21    17 </Q>
+            <Q ID="7">   22    23    24    20 </Q>
+            <Q ID="8">   25    26    27    23 </Q>
+            <Q ID="9">   28    29    30    26 </Q>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="1"> E[3] </C>
+            <C ID="2"> E[29] </C>
+            <C ID="3"> E[2,6,9,12,15,18,21,24,27,30,28,25,22,19,16,13,10,7,4,0] </C>
+            <C ID="0"> Q[0-9] </C>
+        </COMPOSITE>
+    <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+    <EXPANSIONS>
+    <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="p" TYPE="MODIFIED"/>
+    <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="u" TYPE="MODIFIED"/>
+    <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="v" TYPE="MODIFIED"/>
+    </EXPANSIONS>
+  <CONDITIONS>
+    <SOLVERINFO>
+      <I PROPERTY="EQType"                VALUE="APE"                 />
+      <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+      <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
+      <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler"/>
+      <I PROPERTY="UpwindType"            VALUE="Upwind"              />
+    </SOLVERINFO>
+    <PARAMETERS>
+      <P> TimeStep      = 0.00002           </P>
+      <P> NumSteps      = 500               </P>
+      <P> FinTime       = TimeStep*NumSteps </P>
+      <P> IO_CheckSteps = 500             </P>
+      <P> IO_InfoSteps  = 100               </P>
+      <P> Gravity       = 1.0               </P> <!-- Not used for APE -->
+      <P> Rho0          = 1.204             </P> <!-- Incompressible density -->
+      <P> Gamma         = 1.4               </P> <!-- Ratio of specific heats -->
+      <P> Omega         = 1000              </P> <!-- Angular frequency -->
+      <P> Pinfinity     = 100000            </P> <!-- Ambient pressure -->
+    </PARAMETERS>
+    <VARIABLES>
+      <V ID="0"> p  </V>
+      <V ID="1"> u </V>
+      <V ID="2"> v </V>
+    </VARIABLES>
+    <BOUNDARYREGIONS>
+      <B ID="0"> C[1]  </B>
+      <B ID="1"> C[2,3]  </B>
+    </BOUNDARYREGIONS>
+    <BOUNDARYCONDITIONS>
+      <REGION REF="0"> <!-- Excitation at the inflow boundary -->
+        <D VAR="p" USERDEFINEDTYPE="TimeDependent" VALUE="100*(sin(Omega*t))^2" />
+        <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="100*((sin(Omega*t))^2)/Rho0/((Gamma*Pinfinity/Rho0)^0.5)" />
+        <D VAR="v" VALUE="0" />
+      </REGION>
+      <REGION REF="1"> <!-- Problem homogeneous in y-direction -->
+        <D VAR="p" USERDEFINEDTYPE="RiemannInvariantBC"/>
+        <D VAR="u" USERDEFINEDTYPE="RiemannInvariantBC"/>
+        <D VAR="v" USERDEFINEDTYPE="RiemannInvariantBC"/>
+      </REGION>
+    </BOUNDARYCONDITIONS>
+    <FUNCTION NAME="Baseflow"> <!-- Incompressible base flow -->
+      <E VAR="c0sq" VALUE="(1 + 0.25 * tanh(3*(x-5))) * 1.4 * Pinfinity / Rho0"/>
+      <E VAR="rho0" VALUE="Rho0"/>
+      <E VAR="u0"   VALUE="100" />
+      <E VAR="v0"   VALUE="0" />
+    </FUNCTION>
+    <FUNCTION NAME="ExactSolution"> <!-- Not really the exact solution -->
+      <E VAR="p" VALUE="0"/>
+      <E VAR="u" VALUE="0"/>
+      <E VAR="v" VALUE="0"/>
+    </FUNCTION>
+    <FUNCTION NAME="InitialConditions">
+      <E VAR="p" VALUE="0"/>
+      <E VAR="u" VALUE="0"/>
+      <E VAR="v" VALUE="0"/>
+    </FUNCTION>
+  </CONDITIONS>
+</NEKTAR>

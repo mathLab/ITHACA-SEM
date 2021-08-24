@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <Metadata>
+        <Provenance>
+            <GitBranch>refs/heads/fix/lagrange-interp</GitBranch>
+            <GitSHA1>9825170fede03c92e760e0c8d3a05d62722a3ee1</GitSHA1>
+            <Hostname>farringdon</Hostname>
+            <NektarVersion>4.5.0</NektarVersion>
+            <Timestamp>12-Apr-2017 11:34:55</Timestamp>
+        </Provenance>
+        <ChkFileNum>0</ChkFileNum>
+        <SessionName0>Helmholtz3D_Cube_BndFile.xml</SessionName0>
+    </Metadata>
+    <ELEMENTS FIELDS="u" SHAPE="Quadrilateral" BASIS="GLL_Lagrange,GLL_Lagrange" NUMMODESPERDIR="UNIORDER:9,9" ID="1,6,21,25" COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJytVv9P1HUYp9rUFUgydGxBIKzmjuMgYVPW4VOSt4qaLWlr2RcIIqYs+RKGxBk0cdRIZOObRoBjB8Q4Au6ApI++AQOUjm8icsDFCQ6kQBBamzYnHfe83v+B98t798Pz5fV6Pc/r+bi7bPzu0cO1Vt138yuU9mqcm99/y3Q8/4faWM8lGtXot56tmqerutj6f5unKXVu9up5t2HK/qmsy7DTTLOTpoDNiTOK2z8cb15b0agHVmgocm7125llKgw/meT+aJEsN4/WnT0zT5YH7ekF56ZpftuxDLvLMJlmt2/t2GYmL83S6Jb1CSUV9WW8W09hdOPDuzRw5Y1LFZpF+tKl1RB/Z4605sw9lrY/6b1w/f0KzyEK9g+M8tKb6K+EOUP00LiSj/5LUP93GR9+ILy9eoGKMsbP3Zq8TZG9noP7VyYp3TZljVVbyD1n6IW0+mYa7FB/7ffWlDII/H3oPx31yxF/6oTa1rVup85YVV20eYwO/3Lyrt3US9dFb3xBRgO1Hj5955BxVBkFf13AH4H+I1C/A/Gqvm5jXsoANUe4z4RaLpN3ncGj/WA1hS22LOXsa1Oywf8C+IsDfj36/wz12xCvq9G5Jj7XRJOqXX4eoUU0NtAf9fPxK4oZ+l0A/y+Bv4Fsxm9G/66ob0e8pzV6xh59guqTYyt1WxqVpOf3ZEbtmFBighprS167qXhtCljyj7crLapnRsaPdCvvehytfr1/TGna+L/UqYS46qwHvK8pwSqf3GJdqdY5ftlG7ePKk8y4RB7jEvd3OnEJhXGJDMYl/q514hKljEtkMS7xxEaeVwzKEeZZrDLPQsM8C8yJ+Jx5FlPMs9jHPIsbyLdpI0/VZe0C6y56WXehZt1FMOsuTKy78GXdxUXki2TexZNOYNe0Fp5D0clzKPQ8h+I8z6H4nudQdCPfR+jPCrzONE03tBm8F+Ir3gvRx3shjvFeiGLkC0R/McBrA3/OPCE92lLeU9HFeyr2854KC/Llob9A4E0Af2E8Z+KpjTx7bVpf9g2Rx74hmpEvFf2VA281+LNDD6nvo3XHL8DG+rvcE93KpelKR77Aie0/ejv60/nO6d934P3gi4yECgd/BW+vPn3LoUecPimkzKHv8Mib6nf8zWLzh56hL9YUKtLPEjBHyZgDK3QcgQ5p4LESPPgAh+xD+lkW+lxG32bg+AO4soDTDNynwIPEIf1sC3gLA49B4DUFPEvetdDBiHySB+ln7dAxB7oGQedS6J6CORhEvnT0J3mUfpaKuYrBnP2KucvFHJYgXzb6qwFeqYP0Mxv20Ia598EeKMgXgv52Aa8R/EkdpZ8p2LtI7OFvyCf3NB54PwF/09BDzoH0s+Jx9oEF5FtDfybgHQR/L0OPfOgr50j6kPOtqlWcb2If/3+2h9+k6/xa+/ntmOW3aEQr5/Bx5ZF+poVvl8s7wLgoDT7fAt+/zX5JH+MuHGRcJP3MiPgg3JVO3JlPcXcycYeycJdsuFOJzDNJP5tD/W7E78Ddg+6kwV3cjTt5AXfzNOtO0s/i0L+8ez2Iz8ddLsOdzsXdrsQdj+E5JOlnDcD/DfqH/9EZxCfiu+EiviPgT7SX94Kknz0AfxK/Cv3L+h2Ih19SA75zdvOekvSzQ+B/BvwZgL8C/Sejfgvic/Dd1cS+QVJ/qZ/kX/In8cv+ZX0ZDx+j/wFRsSyM</ELEMENTS>
+</NEKTAR>

@@ -1,0 +1,210 @@
+%
+\section{The Fundamental Data Structures within FieldUtils}
+
+This sections aim to provide a detailed description of the data structures within the \verb+FieldUtils+ directory and how they are used by FieldConvert. 
+
+
+\subsection{Overview of how modules work}
+A specific module is identified by a \verb+ModuleKey+, a type defined as a \verb+std::pair+ consisting of a \verb+ModuleType+ and \verb+std::string+. \verb+ModuleType+ is an enum that has members \verb+eInputModule+, \verb+eProcessModule+, and \verb+eOutputModule+, corresponding to whether it is an input, process, or output module respectively. The \verb+std::string+ is referred to in this document as the \textit{module string}. \footnote{A module may have multiple corresponding module strings} For example, for the \verb+InputFld+ module, the \verb+ModuleType+ is \verb+eInputModule+, and the module string is \verb+fld+. The instantiation of a particular module follows the factory pattern, with the \verb+ModuleKey+ and a shared pointer to a \verb+Field+ object passed as arguments to \verb+Module::GetModuleFactory().CreateInstance+. This shared pointer to the \verb+Field+ object is stored as a member variable of \verb+Module+ called \verb+m_f+.
+
+Some modules have configuration options, which are stored in the \verb+m_config+ member variable of \verb+Module+, which is a \verb+std::map+ with the key being a string holding the option name and the value being a \verb+ConfigOption+ object (described below). The configuration options for the input and output modules simply refer to the name of the input and output file respectively \verb+m_config+ is initialised in the module's constructor by calling the \verb+ConfigOption+ constructor, and its value is set by \verb+Module::RegisterConfig+. The \verb+Moduel::SetDefaults+ function sets default configuration options for those which have not been set.
+
+Each module has a function named \verb+Process+, whether defined in its own class definition or in that of its parent class, which implements the main functionality of the module. To \textit{run} a module refers to calling \verb+Process+. \texttt{Process} typically operates on member variables of \verb+m_f+.  Each module also has a certain priority, which dictates in what order it should be run in relation to other modules, which is captured by a member of the \verb+ModulePriority+ enum, defined in \inlsh{Module.h}. The available module priorities are \verb+eCreateGraph+, \verb+eCreateFieldData+, \verb+eModifyFieldData+, \verb+eCreateExp+, \verb+eFillExp+, \verb+eModifyExp+, \verb+eBndExtraction+, \verb+eCreatePts+,\verb+eConvertExpToPts+, \verb+eModifyPts+, and \verb+eOutput+.
+
+
+What follows is detailed description of the member variables and functions of \verb+Module+, \verb+InputModule+, \verb+ProcessModule+, and \verb+OutputModule+.
+
+\subsection{\texttt{Module}}
+
+\paragraph{Member variables}
+
+\begin{itemize}
+
+\item \verb+m_f+: a \verb+FieldSharedPtr+.
+
+\item \verb+m_config+ (protected): a \verb+std::map<std::string, ConfigOption>+ used to store the configuration option for the module.
+
+\end{itemize}
+
+\paragraph{Member functions}
+
+\begin{itemize}
+
+\item A constructor takes as an argument a \verb+FieldSharedPtr+, and sets \verb+m_f+ to it.
+
+\item The default constructor (protected) does nothing.
+
+\item Pure virtual \verb+Process(boost::program_options::variables_map)+ implements the main functionality of the derived class.
+
+\item Pure virtual \verb+GetModuleName()+ returns the name of the derived class.
+
+\item Pure virtual \verb+GetModuleDescription()+ returns a description of the functionality of the specific module represented by derived class.
+
+\item Virtual \verb+GetModulePriority()+ returns the \verb+ModulePriority+ of the derived class.
+
+\item \verb+RegisterConfig(std::string key, std::string value = "")+ looks for \verb+key+ in \verb+m_config+, and if it exists, sets the corresponding \verb+ConfigOption+ to have \verb+m_beenSet = true+, and \verb+m_value+ equal to \verb+1+ if it is a boolean option, and to \verb+value+ otherwise.
+
+\item \verb+PrintConfig()+ prints out all options for a module.
+
+\item  \verb+SetDefaults()+ sets \verb+m_value+ to the default value (defined in the respective module) if \verb+m_beenSet+ is false.
+
+
+\end{itemize}
+
+
+\subsection{\texttt{InputModule}}
+
+\paragraph{Member variables}
+
+\begin{itemize}
+
+\item \verb+m_allowedFiles+ (protected): \verb+std::set<std::string>+ describing the file types that are compatible with the module.
+
+\end{itemize}
+
+\paragraph{Member functions}
+
+\begin{itemize}
+
+\item A constructor takes as an argument a \verb+FieldSharedPtr+, and creates a pair in \verb+m_config+ with key \verb+"infile"+ and value a \verb+ConfigOption+ with \verb+m_isBool = false+, \verb+m_value = ""+, and \verb+m_desc = "Input filename."+.
+
+\item \verb+AddFile(std::string fileType, std::string fileName)+ checks to see if \verb+fileType+ is in \verb+m_allowedFiles+, and then adds \verb+fileName+ to \verb+m_f+'s \verb+m_inputfiles+ entry with key \verb+fileType+.
+
+\item \verb+GuessFormat(std::string fileName)+ attempts to guess the format of \verb+fileName+ using the characters in the file.
+
+\item \verb+PrintSummary()+ prints the amount of memory taken up by \verb+m_f->m_data+.
+
+\end{itemize}
+
+
+\subsection{\texttt{ProcessModule}}
+
+\paragraph{Member functions}
+
+\begin{itemize}
+
+\item The default constructor does nothing.
+
+\item A constructor takes as an argument a \verb+FieldSharedPtr+ and does nothing.
+
+\end{itemize}
+
+\subsection{\texttt{OutputModule}}
+
+\paragraph{Member variables}
+
+\begin{itemize}
+
+\item \verb+m_fldFile+ (protected): a \verb+std::ofstream+ corresponding with the file that data will be output to. 
+
+\end{itemize}
+
+\paragraph{Member functions}
+
+\begin{itemize}
+
+\item A constructor takes as an argument a \verb+FieldSharedPtr+, and creates a pair in \verb+m_config+ with key \verb+"outfile"+ and value a \verb+ConfigOption+ with \verb+m_isBool = false+, \verb+m_value = ""+, and \verb+m_desc = "Output filename."+.
+
+\item \verb+OpenStream()+ opens the output file specified by \verb+m_value+ in \verb+m_config+'s entry with key \verb+"outfile"+.
+
+\end{itemize}
+
+
+\subsection{\texttt{ConfigOption}}
+This struct is defined \inlsh{Module.h}. It represents the properties of a module option.
+
+\paragraph{Member variables}
+
+\begin{itemize}
+
+\item \verb+m_isBool+: a \verb+bool+ that is true if the option is a boolean (and so its value does not need to be specified).
+
+\item \verb+m_beenSet+: a \verb+bool+ that is true if the option has been set using \verb+Module::RegisterConfig+. If it is false, the default value will be put into \verb+m_value+.
+
+\item \verb+m_value+: a \verb+std::string+ that is the value of the option.
+
+\item \verb+defValue+: a \verb+std::string+ that is the default value of the option.
+
+\item \verb+m_desc+: a \verb+std::string+ that is the description of the option.
+
+\end{itemize}
+
+\paragraph{Member functions}
+
+\begin{itemize}
+
+\item The default constructor sets \verb+m_isBool+ and \verb+m_beenSet+ to false.
+
+\item A constructor sets \verb+m_isBool+, \verb+m_defValue+, \verb+m_desc+ from respective arguments bool \verb+isBool+, std::string \verb+defValue+, and std::string \verb+desc+, as well as setting \verb+m_beenSet+ to false.
+
+\end{itemize}
+
+\subsection{The \texttt{Field} struct}
+
+The \verb+Field+ struct is essentially a container to hold information about the field variables.
+
+\paragraph{Member variables}
+
+\begin{itemize}
+
+\item \verb+m_fielddef+: a \verb+std::vector+ of shared pointers to \verb+FieldDefinitions+ objects. The \verb+FieldDefinitions+ struct describes the format of binary field data, and contains parameters including the element shape type, the basis used and its order, and the field variable names.
+
+\item \verb+m_data+: a \verb+std::vector+ of \verb+std::vector<double>+s used to hold the field data.
+
+\item \verb+m_exp+: a \verb+std::vector+ of shared pointers to \verb+ExpList+ objects. The \verb+ExpList+ classes represent the expansion over the whole domain.
+
+\item \verb+m_variables+: a \verb+std::vector+ of \verb+std::string+s that holds field variable names.
+
+\item \verb+m_numHomogeneousDir+: an \verb+int+ that holds the number of homogeneous directions.
+
+\item \verb+m_declareExpansionAsContField+: a \verb+bool+ that sets the expansion to be continuous, corresponding to the \verb+ContField+ derived classes of \verb+ExpList+.
+
+\item \verb+m_declareExpansionAsDisContField+: a \verb+bool+ that sets the expansion to be discontinuous, corresponding to the \verb+DisContField+ derived classes of \verb+ExpList+.
+
+\item \verb+m_requireBoundaryExpansion+: a \verb+bool+ that determines whether the expansion is needed on the boundaries.
+
+\item \verb+m_useFFT+: a \verb+bool+ that determines whether to use a fast Fourier transform. 
+    
+\item \verb+m_comm+: a shared pointer to a \verb+Comm+ object that contains the MPI communicator.
+    
+\item \verb+m_session+: a shared pointer to a  \verb+SessionReader+ object, which stores information given in an XML session file.
+
+\item \verb+m_graph+: a shared pointer to a \verb+MeshGraph+ object, which stores the mesh.
+
+\item \verb+m_inputfiles+: a \verb+std::map+ with the key being a \verb+std::string+ holding the file type, and the value being a \verb+std::vector+ of \verb+std::string+s holding the names of the files with this type.
+
+\item \verb+m_writeBndFld+: a \verb+bool+ that determines if the field is written on the boundary.
+
+\item \verb+m_bndRegionsToWrite+: a \verb+std::vector+ of \verb+unsigned int+s that dictates which boundaries to write.  
+
+\item \verb+m_addNormals+: a \verb+bool+ that determines whether surface normals are output.
+
+\item \verb+m_fieldPts+: a shared pointer to a \verb+PtsField+ object.
+
+\item \verb+m_fieldMetaDataMap+: a shared pointer to a \verb+FieldMetaDataMap+ object, which stores field metadata.
+
+\item \verb+m_fld+ (private): a \verb+std::map+ with the key being a \verb+std::string+ holding a file type and the value being a shared pointer to a \verb+FieldIO+ object for this file type. The \verb+FieldIO+ class is used for file input/output.
+
+\end{itemize}
+
+\paragraph{Member functions}
+
+\begin{itemize}
+
+\item \verb+SetUpFirstExpList(int NumHomogeneousDir, bool fldfilegiven = false)+ returns a shared pointer to an \verb+ExpList+ object based on \verb+m_session+, \verb+m_graph+, and \verb+m_fielddef+.
+
+
+\item \verb+FieldIOForFile(std::string filename)+ constructs a shared pointer to a \verb+FieldIO+ object for the file named \verb+filename+ if there does not already exist an entry in \verb+m_fld+ corresponding to its file type. If one does exist, it is simply returned.
+
+\item \verb+AppendExpList(int NumHomogeneousDir, std::string var = "DefaultVar", bool NewField = false)+ returns a shared pointer to an \verb+ExpList+ object based on \verb+m_session+, \verb+m_graph+, \verb+m_fielddef+, and \verb+m_exp[0]+.
+
+\item \verb+ClearField()+ empties \verb+m_session+, \verb+m_graph+, \verb+fieldPts+, \verb+m_exp+, \verb+m_fielddef+, \verb+m_data+, and \verb+m_variables+.
+
+\item \verb+CreateExp(boost::program_options::variables_map &vm, bool newExp)+ populated \verb+m_exp+. If \verb+newExp+ is true, the expansion is created from scratch; if false, it is updated with new field data. 
+
+\item \verb+SetUpExp(boost::program_options::variables_map &vm)+ determines whether \verb+m_exp+ needs to be populated by calling \verb+CreateExp+, and if so, whether it needs to be created from scratch, or just updated with new field data.
+
+
+\end{itemize}
+
+

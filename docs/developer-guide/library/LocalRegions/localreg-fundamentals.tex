@@ -1,0 +1,5 @@
+%
+\section{The Fundamentals Behind LocalRegions}
+
+The idea behind local regions is strongly connected to that of standard regions, but from the top-down perspective.  As an example: in standard regions, we only had to consider one type of triangle, the one that is straight-sided, right-angled, and whose principle horizontal and vertical sides where aligned with the coordinate axes.  Of course, meshes of elements consist of elements that may are may not be right-angled, planar-sided, etc.  The starting point for us is the question of how to build build basis functions that exist of a {\em world-space} element -- that is, an element whose vertex positions lie in the engineering (PDE) coordinate system of interest.  Such an expansion is a local region.  In {\nek}, each local region {\em is-a} standard region and {\em has-a} spatial domain data structure.  The local region inherits common expansion methods from its standard region parent, and it uses its spatial domain information to specialize its operators to its local coordinate system.
+

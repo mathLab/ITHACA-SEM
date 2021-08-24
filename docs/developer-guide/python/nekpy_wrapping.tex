@@ -1,0 +1,256 @@
+\chapter{NekPy wrapping guide}
+
+This section attempts to outline some of the basic principles of the NekPy
+wrapper, which relies entirely on the excellent \texttt{Boost.Python} library. An
+extensive documentation is therefore beyond the scope of this document, but we
+highlight aspects that are important for the NekPy wrappers.
+
+In general, note that when things go wrong with \texttt{Boost.Python}, it'll be
+indicated either by an extensive compiler error, or a runtime error in the
+Python interpreter when you try to use your wrapper. Judicious use of Google is
+therefore recommended to track down these issues!
+
+You may also find the following resources useful:
+\begin{itemize}
+	\item The \texttt{Boost.Python} tutorial \cite{BoostPythonTutorial},
+	\item The \texttt{Boost.Python} entry on the Python wiki \cite{BoostPythonWikiEntry},
+	\item Examples on GitHub \cite{GitHubExamples},
+	\item The OpenStreetGraph cookbook \cite{OpenStreetGraphCookbook} and rationale 
+		for using manual wrapping \cite{ManualWrappingRationale} which served as a starting 
+		point for this project.
+\end{itemize}
+
+To demonstrate how to wrap classes, we'll refer to a number of existing parts of
+the code below.
+
+\section{Defining a library}
+
+First consider \texttt{LibUtilities}. An abbreviated version of the base file,
+\texttt{LibUtilities.cpp} has the following structure:
+
+\begin{lstlisting}[caption={Defining a library with Boost.Python}, label={lst:defining_a_library}, language=C++]
+#include <LibUtilities/Python/NekPyConfig.hpp>
+
+void export_Basis();
+void export_SessionReader();
+
+BOOST_PYTHON_MODULE(_LibUtilities)
+{
+    // Initialise Boost.NumPy.
+    np::initialize();
+
+    // Export classes.
+    export_Basis();
+    export_SessionReader();
+}
+\end{lstlisting}
+
+The \texttt{BOOST\_PYTHON\_MODULE(name)} macro allows us to define a Python module inside
+C++. Note that in this case, the leading underscore in the name
+(i.e. \texttt{\_LibUtilities}) is deliberate. To define the contents of the module, we
+call a number of functions that are prefixed by \texttt{export\_}, which will define one
+or more Python classes that live in this module. These Python classes correspond
+with our Nektar++ classes. We adopt this approach simply so that we can split up
+the different classes into different files, because it is not possible to call
+\texttt{BOOST\_PYTHON\_MODULE} more than once. These functions are defined in
+appropriately named files, for example \texttt{export\_Basis()} lives in the file 
+\path{LibUtilities/Python/Foundations/Basis.cpp}. This corresponds to the Nektar++ file 
+\path{LibUtilities/Foundations/Basis.cpp} and the classes defined therein.
+
+\section{Basic class wrapping}
+
+As a very basic example of wrapping a class, let's consider the \texttt{SessionReader}
+wrapper.
+
+\begin{lstlisting}[caption={Basic class wrapping with Boost.Python}, label={lst:basic_class_wrapping}, language=C++]
+void export_SessionReader()
+{
+    py::class_<SessionReader,
+           std::shared_ptr<SessionReader>,
+           boost::noncopyable>(
+               "SessionReader", py::no_init)
+
+        .def("CreateInstance", SessionReader_CreateInstance)
+        .staticmethod("CreateInstance")
+
+        .def("GetSessionName", &SessionReader::GetSessionName,
+             py::return_value_policy<py::copy_const_reference>())
+
+        .def("Finalise", &SessionReader::Finalise)
+        ;
+}
+\end{lstlisting}
+
+\subsection{\texttt{py::class\_<>}}
+
+This \texttt{Boost.Python} object defines a Python class in C++. It is templated, and
+in this case we have the following template arguments:
+
+\begin{itemize}
+	\item \texttt{SessionReader} is the class that will be wrapped
+	\item \texttt{std::shared\_ptr<SessionReader>} indicates that this object should be stored
+		inside a shared (or smart) pointer, which we frequently use throughout the
+  		library, as can be seen by the frequent use of \texttt{SessionReaderSharedPtr}
+	\item \texttt{boost::noncopyable} indicates that \texttt{Boost.Python} shouldn't try to
+  		automatically wrap the copy constructor of \texttt{SessionReader}. We add this here
+  		because of compiler errors due to subclasses used inside \texttt{SessionReader}, but
+  		generally, this should be used for abstract classes which can't be copied.
+\end{itemize}
+
+We then have two arguments:
+
+\begin{itemize}
+	\item \texttt{"SessionReader"} is the name of the class in Python.
+	\item \texttt{py::no\_init} indicates this object has no publically-accessible
+  		initialiser. This is because for \texttt{SessionReader}, we define a factory-type
+  		function called \texttt{CreateInstance} instead.
+\end{itemize}
+
+\subsection{Wrapping member functions}
+
+We then call the \texttt{.def} function on the \texttt{class\_<>}, which allows us to define
+member functions on our class. This is equivalent to \texttt{def}-ing a function in
+Python. \texttt{.def} has two required parameters, and one optional parameter:
+
+\begin{itemize}
+	\item The function name as a string, e.g. \texttt{"GetSessionName"}
+	\item A function pointer that defines the C++ function that will be called
+	\item An optional return policy, which we need to define when the C++ function
+  		returns a reference.
+\end{itemize}
+
+\texttt{Boost.Python} is very smart and can convert many Python objects to their
+equivalent C++ function arguments, and C++ return types of the function to their
+respective Python object. Many times therefore, one only needs to define the
+\texttt{.def()} call.
+
+However, there are some instances where we need to do some additional
+conversion, mask some C++ complexity from the Python interface, or deal with
+functions that return references. We describe ways to deal with this below.
+
+\subsubsection{Thin wrappers}
+
+Instead of defining a function pointer to a member of the C++ class, we can
+define a function pointer to a separate function that defines some extra
+functionality. This is called a \emph{thin wrapper}.
+
+As an example, consider the \texttt{CreateInstance} function. In C++ we pass this
+function the command line arguments in the usual \texttt{argc}, \texttt{argv} format. In
+Python, command line arguments are defined as a list of strings inside
+\texttt{sys.argv}. However, \texttt{Boost.Python} does not know how to convert this list to
+\texttt{argc, argv}, so we need some additional code.
+
+\begin{lstlisting}[caption={Thin wrapper example}, label={lst:thin_wrapper}, language=C++]
+SessionReaderSharedPtr SessionReader_CreateInstance(py::list &ns)
+{
+    // ... some code here that converts a Python list to the standard
+    // c/c++ (int argc, char **argv) format for command line arguments.
+    // Then use this to construct a SessionReader and return it.
+    SessionReaderSharedPtr sr = SessionReader::CreateInstance(argc, argv);
+    return sr;
+}
+\end{lstlisting}
+
+In Python, we can then simply call \texttt{session = SessionReader.CreateInstance(sys.argv)}.
+
+\subsubsection{Dealing with references}
+
+When dealing with functions in C++ that return references, e.g. \texttt{const NekDouble \&GetFactor()} 
+we need to supply an additional argument to \texttt{.def()}, since Python immutable
+types such as strings and integers cannot be passed by reference. For a full
+list of options, consult the \texttt{Boost.Python} guide. However a good rule of thumb
+is to use \texttt{copy\_const\_reference} as highlighted above, which will create a copy
+of the const reference and return this.
+
+\subsubsection{Dealing with \texttt{Array<OneD, >}}
+
+The \path{LibUtilities/Python/BasicUtils/SharedArray.cpp} file contains a number of functions that
+allow for the automatic conversion of Nektar++ \texttt{Array<OneD, >} storage to and
+from NumPy \texttt{ndarray} objects. This means that you can wrap functions that take
+these as parameters and return arrays very easily. However bear in mind the
+following caveats:
+
+\begin{itemize}
+  \item Any NumPy \texttt{ndarray} created from an \texttt{Array<OneD, >} (and
+  vice versa) will share their memory. Although this avoids expensive memory
+  copies, it means that changing the C++ array changes the contents of the NumPy
+  array (and vice versa).
+  \item Many functions in Nektar++ return Arrays through argument parameters. In
+  Python this is a very unnatural way to write functions. For example:
+  \begin{lstlisting}[language=Python]
+    # This is good
+    x, y, z = exp.GetCoords()
+    # This is bad
+    x, y, z = np.zeros(10), np.zeros(10), np.zeros(10)
+    exp.GetCoords(x,y,z)
+  \end{lstlisting}
+  Use thin wrappers to overcome this problem. For examples of how to do this,
+  particularly in returning tuples, consult the
+  \texttt{StdRegions/StdExpansion.cpp} wrapper which contains numerous examples.
+  \item \texttt{TwoD} and \texttt{ThreeD} arrays are not supported.
+\end{itemize}
+
+More information on the memory management and how the memory is shared can be
+found in Section~\ref{sec:nekpy:memory}.
+
+\subsection{Inheritance}
+
+Nektar++ makes heavy use of inheritance, which can be translated to Python quite
+easily using \texttt{Boost.Python}. For a good example of how to do this, you can
+examine the \texttt{StdRegions} wrapper for \texttt{StdExpansion} and its elements such as
+\texttt{StdQuadExp}. In a cut-down form, these look like the following:
+
+\begin{lstlisting}[caption={Inheritance with Boost.Python}, label={lst:inheritance}, language=C++]
+void export_StdExpansion()
+{
+    py::class_<StdExpansion,
+               std::shared_ptr<StdExpansion>,
+               boost::noncopyable>(
+                   "StdExpansion", py::no_init);
+}
+void export_StdQuadExp()
+{
+    py::class_<StdQuadExp, py::bases<StdExpansion>,
+               std::shared_ptr<StdQuadExp> >(
+                   "StdQuadExp", py::init<const LibUtilities::BasisKey&,
+                   const LibUtilities::BasisKey&>());
+}
+\end{lstlisting}
+
+Note the following:
+
+\begin{itemize}
+	\item \texttt{StdExpansion} is an abstract class, so it has no initialiser and is
+  		non-copyable.
+  	\item We use \texttt{py::bases<StdExpansion>} in the definition of \texttt{StdQuadExp} 
+  		to define its parent class. This does not necessarily need to include the full hierarchy
+  		of C++ inheritance: in \texttt{StdRegions} the inheritance graph for \texttt{StdQuadExp}
+  		looks like \texttt{StdExpansion -> StdExpansion2D -> StdQuadExp}. In the above wrapper, 
+  		we omit the StdExpansion2D call entirely.
+	\item \texttt{py::init<>} is used to show how to wrap a C++ constructor. This can accept
+  		any arguments for which you have either written explicit wrappers or
+  		\texttt{Boost.Python} already knows how to convert.
+\end{itemize}
+
+\subsection{Wrapping enums}
+
+Most Nektar++ enumerators come in the form:
+
+\begin{lstlisting}[language=C++]
+enum MyEnum {
+    eItemOne,
+    eItemTwo,
+    SIZE_MyEnum
+};
+static const char *MyEnumMap[] = {
+    "ItemOne"
+    "ItemTwo"
+    "ItemThree"
+};
+\end{lstlisting}
+
+To wrap this, you can use the \texttt{NEKPY\_WRAP\_ENUM} macro defined in
+\texttt{NekPyConfig.hpp}, which in this case can be used as 
+\texttt{NEKPY\_WRAP\_ENUM(MyEnum, MyEnumMap)}. Note that if instead of 
+\texttt{const char *} the map is defined as a \texttt{const std::string}, 
+you can use the \texttt{NEKPY\_WRAP\_ENUM\_STRING} macro.

@@ -1,0 +1,167 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{verbatim}
+
+%opening
+\title{User Guide - NektarROM}
+\author{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This guide explains functionality added with NektarROM to Nektar++. These are 
+parametric model reduction routines and a few examples showing the usage.
+Some familiarity with the underlying PDE-solver Nektar++ is assumed. 
+\end{abstract}
+
+\section{Installation and Testing}
+
+It is integrated in Nektar++ and the 'make test' routine also covers the main
+reduced order model (ROM) functionality.
+
+\section{Scope of Added Functionality}
+
+The ROM is activated by using in the session file
+
+\begin{verbatim}
+<I PROPERTY="EQTYPE" VALUE="SteadyOseen" />
+<I PROPERTY="SolverType" VALUE="CoupledLinearisedNS_ROM" />
+\end{verbatim}
+
+\section{Using NektarROM}
+
+The session file supports additional parameters for the IncNavierStokes module.
+These are
+
+\subsection{parameter\_space\_dimension}
+
+\noindent type: int
+
+\noindent default: 1
+
+\noindent explanation: dimension of parameter space
+
+\subsection{number\_of\_snapshots}
+
+\noindent type: int
+
+\noindent default: has to be set
+
+\noindent explanation: number of snapshots for the offline sampling
+
+
+\subsection{load\_snapshot\_data\_from\_files}
+
+\noindent type: bool
+
+\noindent default: has to be set
+
+\noindent explanation: if set to 0, then compute the snapshots, otherwise load from file, see
+\begin{verbatim}
+ solvers/IncNavierStokesSolver/Tests_ROM/Test_load_files
+\end{verbatim}
+for usage
+
+
+\subsection{param0}
+
+\noindent type: double
+
+\noindent default: has to be set
+
+\noindent explanation: the first parameter value in the parameter vector in case of only one parameter direction. Further paramters are numbered param1, param2, ... and so on
+
+\subsection{POD\_tolerance}
+
+\noindent type: double
+
+\noindent default: has to be set
+
+\noindent explanation: the percentage of singular values to take into account in the SVD/PCA/POD
+
+
+\subsection{debug\_mode}
+
+\noindent type: bool
+
+\noindent default: 1
+
+\noindent explanation: if '0' less verbose output
+
+\subsection{type\_para1}
+
+\noindent type: int
+
+\noindent default: has to be set
+
+\noindent explanation: if '0' the parameter is kinematic viscosity
+
+\subsection{do\_trafo\_check}
+
+\noindent type: bool
+
+\noindent default: 1
+
+\noindent explanation: do fixed point iterations on loaded snapshots until convergence
+
+   
+\subsection{use\_fine\_grid\_VV}
+
+\noindent type: bool
+
+\noindent default: 0
+
+\noindent explanation: sets whether a Verification and Validation (VV) snapshot set being used   
+
+\subsection{use\_fine\_grid\_VV\_and\_load\_ref}
+
+\noindent type: bool
+
+\noindent default: 1
+
+\noindent explanation: sets whether a Verification and Validation (VV) snapshot set is loaded from files 
+
+\subsection{use\_fine\_grid\_VV\_random}
+
+\noindent type: bool
+
+\noindent default: 0
+
+\noindent explanation: sets whether the Verification and Validation (VV) snapshot set is given at pre-defined parameter locations
+
+
+\subsection{VV\_param0\_dir0}
+
+\noindent type: double
+
+\noindent default: has to be set when use\_fine\_grid\_VV\_random
+
+\noindent explanation: the first parameter value in the Verification and Validation (VV) parameter vector in the first parameter direction. Further paramters are numbered VV\_param0\_dir1, VV\_param2\_dir0, ... and so on
+
+\subsection{fine\_grid\_dir0}
+
+\noindent type: int
+
+\noindent default: has to be set when use\_fine\_grid\_VV
+
+\noindent explanation: number of snapshots in the Verification and Validation (VV) snapshot set. 
+
+\subsection{number\_elem\_trafo}
+
+\noindent type: int
+
+\noindent default: 5
+
+\noindent explanation: number of affine terms when a geometric parameter is given. Additional the two inline functions in CoupledLinearisedNS\_ROM.h (Geo\_T and set\_elem\_trafo) need to be adjusted. 
+
+
+
+
+\section{Examples}
+
+See solvers/IncNavierStokesSolver/Tests\_ROM/single\_geometric\_parameter for an example showing parametric variation in geometry and a random test set.
+
+
+\end{document}

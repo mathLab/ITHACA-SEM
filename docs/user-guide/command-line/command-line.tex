@@ -1,0 +1,66 @@
+\chapter{Command-line Options}
+
+%\begin{lstlisting}
+%--verbose
+%\end{lstlisting}
+\lstinline[style=BashInputStyle]{--verbose}\\
+\hangindent=1.5cm
+Displays extra info.
+
+\lstinline[style=BashInputStyle]{--version}\\
+\hangindent=1.5cm
+Displays software version, and source control information if applicable.
+
+\lstinline[style=BashInputStyle]{--help}\\
+\hangindent=1.5cm
+Displays help information about the available command-line options for the executable.
+
+\lstinline[style=BashInputStyle]{--parameter [key]=[value]}\\
+\hangindent=1.5cm
+Override a parameter (or define a new one) specified in the XML file.
+
+\lstinline[style=BashInputStyle]{--solverinfo [key]=[value]}\\
+\hangindent=1.5cm
+Override a solverinfo (or define a new one) specified in the XML file.
+
+\lstinline[style=BashInputStyle]{--io-format [format]}\\
+\hangindent=1.5cm Determines the output format for writing \nekpp field files
+that are used to store, for example, checkpoint and solution field files. The
+default for \inlsh{format} is \inlsh{Xml}, which is an XML-based format, which
+is written as one file per process. If \nekpp is compiled with HDF5 support,
+then an alternative option is \inlsh{Hdf5}, which will write one file for all
+processes and can be more efficient for very large-scale parallel jobs.
+
+\lstinline[style=BashInputStyle]{--npx [int]}\\
+\hangindent=1.5cm
+When using a fully-Fourier expansion, specifies the number of processes to use in the x-coordinate direction.
+
+\lstinline[style=BashInputStyle]{--npy [int]}\\
+\hangindent=1.5cm
+\quad When using a fully-Fourier expansion or 3D expansion with two Fourier directions, specifies the number of processes to use in the y-coordinate direction.
+
+\lstinline[style=BashInputStyle]{--npz [int]}\\
+\hangindent=1.5cm
+When using Fourier expansions, specifies the number of processes to use in the z-coordinate direction.
+
+\lstinline[style=BashInputStyle]{--part-info}\\
+\hangindent=1.5cm
+Prints detailed information about the generated partitioning, such as number of
+elements, number of local degrees of freedom and the number of boundary degrees
+of freedom.
+
+\lstinline[style=BashInputStyle]{--part-only [int]}\\
+\hangindent=1.5cm
+Partition the mesh only into the specified number of partitions, write to file
+and exit. This can be used to pre-partition a very large mesh on a single
+high-memory node, prior to being executed on a multi-node cluster.
+
+\lstinline[style=BashInputStyle]{--use-metis}\\
+\hangindent=1.5cm
+Forces the use of METIS for mesh partitioning. Requires the
+\inltt{NEKTAR\_USE\_METIS} option to be set.
+
+\lstinline[style=BashInputStyle]{--use-scotch}\\
+\hangindent=1.5cm
+Forces the use of Scotch for mesh partitioning. If \nekpp{} is compiled with
+METIS support, the default is to use METIS.

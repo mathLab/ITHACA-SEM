@@ -1,0 +1,721 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+<EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u,v" TYPE="MODIFIED" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE" VALUE="SteadyOseen" />
+	    <I PROPERTY="SolverType" VALUE="CoupledLinearisedNS_ROM" /> 
+         <I PROPERTY="Projection" VALUE="Galerkin" />
+       </SOLVERINFO>
+
+        <PARAMETERS>
+            <P> Kinvis = 1       </P>
+            <P> parameter_space_dimension = 1      </P>
+            <P> parameter_space_tensor_grid = 1    </P>        
+            <P> load_snapshot_data_from_files = 1       </P>
+            <P> load_cO_snapshot_data_from_files = 0       </P>     <!--  converged_Oseen snapshots   -->
+      	    <P> do_trafo_check = 1       </P>  
+            <P> number_of_snapshots = 1       </P>
+            <P> ref_param_nu = 1       </P>
+            <P> number_of_snapshots_dir0 = 1       </P>
+	    <P> type_para1 = 1        </P>                          <!--  0=kin_visc, 1=geo   -->
+            <P> POD_tolerance = 1       </P>
+            <P> param0 = 1.0      </P> 
+            <P> param1 = 0.171794871795      </P> 
+            <P> param2 = 0.24358974359      </P> 
+            <P> param3 = 0.315384615385      </P> 
+            <P> param4 = 0.387179487179      </P> 
+            <P> param5 = 0.458974358974      </P> 
+            <P> param6 = 0.530769230769      </P> 
+            <P> param7 = 0.602564102564      </P> 
+            <P> param8 = 0.674358974359      </P> 
+            <P> param9 = 0.746153846154      </P> 
+            <P> param10 = 0.817948717949      </P> 
+            <P> param11 = 0.889743589744      </P> 
+            <P> param12 = 0.961538461538      </P> 
+            <P> param13 = 1.03333333333      </P> 
+            <P> param14 = 1.10512820513      </P> 
+            <P> param15 = 1.17692307692      </P> 
+            <P> param16 = 1.24871794872      </P> 
+            <P> param17 = 1.32051282051      </P> 
+            <P> param18 = 1.39230769231      </P> 
+            <P> param19 = 1.4641025641      </P> 
+            <P> param20 = 1.5358974359      </P> 
+            <P> param21 = 1.60769230769      </P> 
+            <P> param22 = 1.67948717949      </P> 
+            <P> param23 = 1.75128205128      </P> 
+            <P> param24 = 1.82307692308      </P> 
+            <P> param25 = 1.89487179487      </P> 
+            <P> param26 = 1.96666666667      </P> 
+            <P> param27 = 2.03846153846      </P> 
+            <P> param28 = 2.11025641026      </P> 
+            <P> param29 = 2.18205128205      </P> 
+            <P> param30 = 2.25384615385      </P> 
+            <P> param31 = 2.32564102564      </P> 
+            <P> param32 = 2.39743589744      </P> 
+            <P> param33 = 2.46923076923      </P> 
+            <P> param34 = 2.54102564103      </P> 
+            <P> param35 = 2.61282051282      </P> 
+            <P> param36 = 2.68461538462      </P> 
+            <P> param37 = 2.75641025641      </P> 
+            <P> param38 = 2.82820512821      </P> 
+            <P> param39 = 2.9      </P>
+            <P> VV_param0_dir0 = 0.8384633345487794      </P> 
+            <P> VV_param1_dir0 = 1.3133359745580306      </P> 
+            <P> VV_param2_dir0 = 1.5412511489830878      </P> 
+            <P> VV_param3_dir0 = 2.0437625880434576      </P> 
+            <P> VV_param4_dir0 = 2.594537322456389      </P> 
+            <P> VV_param5_dir0 = 1.6579538601767316      </P> 
+            <P> VV_param6_dir0 = 1.911955037068827      </P> 
+            <P> VV_param7_dir0 = 0.24769617182316517      </P> 
+            <P> VV_param8_dir0 = 0.48740334251505957      </P> 
+            <P> VV_param9_dir0 = 2.638792991341862      </P> 
+            <P> VV_param10_dir0 = 1.5751897811987028      </P> 
+            <P> VV_param11_dir0 = 1.609643676944369      </P> 
+            <P> VV_param12_dir0 = 0.31596334472790133      </P> 
+            <P> VV_param13_dir0 = 2.3519921617280057      </P> 
+            <P> VV_param14_dir0 = 1.6559255181700614      </P> 
+            <P> VV_param15_dir0 = 1.357883465264441      </P> 
+            <P> VV_param16_dir0 = 1.4398644094447663      </P> 
+            <P> VV_param17_dir0 = 1.2648078745674254      </P> 
+            <P> VV_param18_dir0 = 2.4693693447671383      </P> 
+            <P> VV_param19_dir0 = 2.0109450024273587      </P> 
+            <P> VV_param20_dir0 = 2.1930578318766796      </P> 
+            <P> VV_param21_dir0 = 1.7778749739971955      </P> 
+            <P> VV_param22_dir0 = 0.17896320891107803      </P> 
+            <P> VV_param23_dir0 = 1.8512295346921557      </P> 
+            <P> VV_param24_dir0 = 0.942824555434157      </P> 
+            <P> VV_param25_dir0 = 1.4205560826179944      </P> 
+            <P> VV_param26_dir0 = 1.8837005986762967      </P> 
+            <P> VV_param27_dir0 = 1.927993897975013      </P> 
+            <P> VV_param28_dir0 = 2.175050678778557      </P> 
+            <P> VV_param29_dir0 = 0.607304701683373      </P> 
+            <P> VV_param30_dir0 = 0.3706624424148517      </P> 
+            <P> VV_param31_dir0 = 1.5258212673968976      </P> 
+            <P> VV_param32_dir0 = 0.3655343259143963      </P> 
+            <P> VV_param33_dir0 = 2.3602505717273687      </P> 
+            <P> VV_param34_dir0 = 0.8922073297692827      </P> 
+            <P> VV_param35_dir0 = 2.4953397482210598      </P> 
+            <P> VV_param36_dir0 = 1.013910396332751      </P> 
+            <P> VV_param37_dir0 = 1.8214950665362943      </P> 
+            <P> VV_param38_dir0 = 2.0786276397266854      </P> 
+            <P> VV_param39_dir0 = 2.1466605463029826      </P> 
+	    <P> use_fine_grid_VV = 1       </P>
+     	    <P> use_fine_grid_VV_and_load_ref = 1       </P>
+     	    <P> use_fine_grid_VV_random = 1       </P>
+            <P> fine_grid_dir0 = 40       </P>
+            <P> qoi_dof = 1980       </P>
+            <P> use_LocROM = 0       </P>
+            <P> no_clusters = 8       </P>
+            <P> only_single_cluster = 1       </P>
+            <P> which_single_cluster = 2       </P>
+            <P> load_predef_cluster = 0       </P>
+            <P> use_overlap_p_space = 0       </P>
+     	    <P> overlap_POD_part = 10       </P>	
+    	    <P> number_elem_trafo = 5   </P>
+	    <P> debug_mode = 1   </P>
+	    <P> globally_connected = 2      </P>
+	    <P> compute_smaller_model_errs = 1      </P>
+<!--	    <P> elem_1 = {32,30,11,10,9,8,17,16,15,14,25,24,23,22}   	</P>   -->  <!-- find a nice solution for the element numberings and also the matrices   -->
+<!--        <P> elem_2 = {12, 28, 34, 13,21,20,18,19,26,27}   		</P>   -->  <!-- for development purposes, just hard-code the example, as it is convenient to have available in the code later   -->
+<!--	    <P> elem_3 = {29, 31}   	</P>   -->
+<!--	    <P> elem_4 = {33, 35}   	</P>   -->
+<!--	    <P> elem_5 = {0,1,2,3,4,5,6,7}   		</P>   -->
+        </PARAMETERS>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> v </V>
+      </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+            <B ID="2"> C[3] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">    <!-- Walls -->
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+              </REGION>
+            <REGION REF="1">    <!-- InFlow -->
+                <D VAR="u" VALUE="(y*(3-y))" />
+                <D VAR="v" VALUE="0" />
+                  </REGION>
+            <REGION REF="2">    <!-- OutFlow -->
+                <N VAR="u" VALUE="0" />
+                <N VAR="v" VALUE="0" />
+               </REGION>
+        </BOUNDARYCONDITIONS>
+
+      	 <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="0" />
+          </FUNCTION>  
+       <FUNCTION NAME="AdvectionVelocity">  <F FILE="xml_channel_narrowROM_0.fld" /> </FUNCTION> 
+
+
+	<FUNCTION NAME="TestSnap1">
+	      <F FILE="xml_channel_narrowROM_0.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap2">
+	      <F FILE="xml_channel_narrowROM_1.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap3">
+	      <F FILE="xml_channel_narrowROM_2.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap4">
+	      <F FILE="xml_channel_narrowROM_3.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap5">
+	      <F FILE="xml_channel_narrowROM_4.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap6">
+	      <F FILE="xml_channel_narrowROM_5.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap7">
+	      <F FILE="xml_channel_narrowROM_6.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap8">
+	      <F FILE="xml_channel_narrowROM_7.fld" />
+	</FUNCTION>  
+
+
+	<FUNCTION NAME="TestSnap9">
+	      <F FILE="xml_channel_narrowROM_8.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap10">
+	      <F FILE="xml_channel_narrowROM_9.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap11">
+	      <F FILE="xml_channel_narrowROM_10.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap12">
+	      <F FILE="xml_channel_narrowROM_11.fld" />
+	</FUNCTION>  
+
+
+	<FUNCTION NAME="TestSnap13">
+	      <F FILE="xml_channel_narrowROM_12.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap14">
+	      <F FILE="xml_channel_narrowROM_13.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap15">
+	      <F FILE="xml_channel_narrowROM_14.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap16">
+	      <F FILE="xml_channel_narrowROM_15.fld" />
+	</FUNCTION>  
+
+
+	<FUNCTION NAME="TestSnap17">
+	      <F FILE="xml_channel_narrowROM_16.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap18">
+	      <F FILE="xml_channel_narrowROM_17.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap19">
+	      <F FILE="xml_channel_narrowROM_18.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap20">
+	      <F FILE="xml_channel_narrowROM_19.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap21">
+	      <F FILE="xml_channel_narrowROM_20.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap22">
+	      <F FILE="xml_channel_narrowROM_21.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap23">
+	      <F FILE="xml_channel_narrowROM_22.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap24">
+	      <F FILE="xml_channel_narrowROM_23.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap25">
+	      <F FILE="xml_channel_narrowROM_24.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap26">
+	      <F FILE="xml_channel_narrowROM_25.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap27">
+	      <F FILE="xml_channel_narrowROM_26.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap28">
+	      <F FILE="xml_channel_narrowROM_27.fld" />
+	</FUNCTION>  
+
+
+	<FUNCTION NAME="TestSnap29">
+	      <F FILE="xml_channel_narrowROM_28.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap30">
+	      <F FILE="xml_channel_narrowROM_29.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap31">
+	      <F FILE="xml_channel_narrowROM_30.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap32">
+	      <F FILE="xml_channel_narrowROM_31.fld" />
+	</FUNCTION>  
+
+
+	<FUNCTION NAME="TestSnap33">
+	      <F FILE="xml_channel_narrowROM_32.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap34">
+	      <F FILE="xml_channel_narrowROM_33.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap35">
+	      <F FILE="xml_channel_narrowROM_34.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap36">
+	      <F FILE="xml_channel_narrowROM_35.fld" />
+	</FUNCTION>  
+
+
+	<FUNCTION NAME="TestSnap37">
+	      <F FILE="xml_channel_narrowROM_36.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap38">
+	      <F FILE="xml_channel_narrowROM_37.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap39">
+	      <F FILE="xml_channel_narrowROM_38.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap40">
+	      <F FILE="xml_channel_narrowROM_39.fld" />
+	</FUNCTION>  
+
+ <FUNCTION NAME="TestSnap_cO_1"> 
+<F FILE="link_to_data/Conv_Oseen_param0.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_2"> 
+<F FILE="link_to_data/Conv_Oseen_param1.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_3"> 
+<F FILE="link_to_data/Conv_Oseen_param2.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_4"> 
+<F FILE="link_to_data/Conv_Oseen_param3.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_5"> 
+<F FILE="link_to_data/Conv_Oseen_param4.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_6"> 
+<F FILE="link_to_data/Conv_Oseen_param5.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_7"> 
+<F FILE="link_to_data/Conv_Oseen_param6.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_8"> 
+<F FILE="link_to_data/Conv_Oseen_param7.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_9"> 
+<F FILE="link_to_data/Conv_Oseen_param8.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_10"> 
+<F FILE="link_to_data/Conv_Oseen_param9.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_11"> 
+<F FILE="link_to_data/Conv_Oseen_param10.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_12"> 
+<F FILE="link_to_data/Conv_Oseen_param11.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_13"> 
+<F FILE="link_to_data/Conv_Oseen_param12.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_14"> 
+<F FILE="link_to_data/Conv_Oseen_param13.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_15"> 
+<F FILE="link_to_data/Conv_Oseen_param14.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_16"> 
+<F FILE="link_to_data/Conv_Oseen_param15.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_17"> 
+<F FILE="link_to_data/Conv_Oseen_param16.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_18"> 
+<F FILE="link_to_data/Conv_Oseen_param17.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_19"> 
+<F FILE="link_to_data/Conv_Oseen_param18.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_20"> 
+<F FILE="link_to_data/Conv_Oseen_param19.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_21"> 
+<F FILE="link_to_data/Conv_Oseen_param20.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_22"> 
+<F FILE="link_to_data/Conv_Oseen_param21.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_23"> 
+<F FILE="link_to_data/Conv_Oseen_param22.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_24"> 
+<F FILE="link_to_data/Conv_Oseen_param23.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_25"> 
+<F FILE="link_to_data/Conv_Oseen_param24.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_26"> 
+<F FILE="link_to_data/Conv_Oseen_param25.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_27"> 
+<F FILE="link_to_data/Conv_Oseen_param26.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_28"> 
+<F FILE="link_to_data/Conv_Oseen_param27.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_29"> 
+<F FILE="link_to_data/Conv_Oseen_param28.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_30"> 
+<F FILE="link_to_data/Conv_Oseen_param29.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_31"> 
+<F FILE="link_to_data/Conv_Oseen_param30.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_32"> 
+<F FILE="link_to_data/Conv_Oseen_param31.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_33"> 
+<F FILE="link_to_data/Conv_Oseen_param32.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_34"> 
+<F FILE="link_to_data/Conv_Oseen_param33.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_35"> 
+<F FILE="link_to_data/Conv_Oseen_param34.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_36"> 
+<F FILE="link_to_data/Conv_Oseen_param35.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_37"> 
+<F FILE="link_to_data/Conv_Oseen_param36.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_38"> 
+<F FILE="link_to_data/Conv_Oseen_param37.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_39"> 
+<F FILE="link_to_data/Conv_Oseen_param38.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="TestSnap_cO_40"> 
+<F FILE="link_to_data/Conv_Oseen_param39.fld" /> 
+</FUNCTION> 
+
+
+ <FUNCTION NAME="VV1"> 
+<F FILE="VVs/xml_channel_narrowROM_0.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV2"> 
+<F FILE="VVs/xml_channel_narrowROM_1.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV3"> 
+<F FILE="VVs/xml_channel_narrowROM_2.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV4"> 
+<F FILE="VVs/xml_channel_narrowROM_3.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV5"> 
+<F FILE="VVs/xml_channel_narrowROM_4.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV6"> 
+<F FILE="VVs/xml_channel_narrowROM_5.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV7"> 
+<F FILE="VVs/xml_channel_narrowROM_6.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV8"> 
+<F FILE="VVs/xml_channel_narrowROM_7.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV9"> 
+<F FILE="VVs/xml_channel_narrowROM_8.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV10"> 
+<F FILE="VVs/xml_channel_narrowROM_9.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV11"> 
+<F FILE="VVs/xml_channel_narrowROM_10.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV12"> 
+<F FILE="VVs/xml_channel_narrowROM_11.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV13"> 
+<F FILE="VVs/xml_channel_narrowROM_12.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV14"> 
+<F FILE="VVs/xml_channel_narrowROM_13.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV15"> 
+<F FILE="VVs/xml_channel_narrowROM_14.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV16"> 
+<F FILE="VVs/xml_channel_narrowROM_15.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV17"> 
+<F FILE="VVs/xml_channel_narrowROM_16.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV18"> 
+<F FILE="VVs/xml_channel_narrowROM_17.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV19"> 
+<F FILE="VVs/xml_channel_narrowROM_18.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV20"> 
+<F FILE="VVs/xml_channel_narrowROM_19.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV21"> 
+<F FILE="VVs/xml_channel_narrowROM_20.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV22"> 
+<F FILE="VVs/xml_channel_narrowROM_21.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV23"> 
+<F FILE="VVs/xml_channel_narrowROM_22.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV24"> 
+<F FILE="VVs/xml_channel_narrowROM_23.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV25"> 
+<F FILE="VVs/xml_channel_narrowROM_24.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV26"> 
+<F FILE="VVs/xml_channel_narrowROM_25.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV27"> 
+<F FILE="VVs/xml_channel_narrowROM_26.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV28"> 
+<F FILE="VVs/xml_channel_narrowROM_27.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV29"> 
+<F FILE="VVs/xml_channel_narrowROM_28.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV30"> 
+<F FILE="VVs/xml_channel_narrowROM_29.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV31"> 
+<F FILE="VVs/xml_channel_narrowROM_30.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV32"> 
+<F FILE="VVs/xml_channel_narrowROM_31.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV33"> 
+<F FILE="VVs/xml_channel_narrowROM_32.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV34"> 
+<F FILE="VVs/xml_channel_narrowROM_33.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV35"> 
+<F FILE="VVs/xml_channel_narrowROM_34.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV36"> 
+<F FILE="VVs/xml_channel_narrowROM_35.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV37"> 
+<F FILE="VVs/xml_channel_narrowROM_36.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV38"> 
+<F FILE="VVs/xml_channel_narrowROM_37.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV39"> 
+<F FILE="VVs/xml_channel_narrowROM_38.fld" /> 
+</FUNCTION> 
+ <FUNCTION NAME="VV40"> 
+<F FILE="VVs/xml_channel_narrowROM_39.fld" /> 
+</FUNCTION> 
+
+</CONDITIONS>
+
+    <GEOMETRY DIM="2" SPACE="2" >
+
+        <VERTEX>
+            <V ID="0">  0.0  0.0  0.0 </V>
+            <V ID="1">  0.0  1.0  0.0 </V>
+            <V ID="2">  0.0  2.0  0.0 </V>
+            <V ID="3">  0.0  3.0  0.0 </V>
+            <V ID="4">  1.5  0.0  0.0 </V>
+            <V ID="5">  1.5 1.0  0.0 </V>
+            <V ID="6">  1.5  2.0 0.0 </V>
+            <V ID="7">  1.5  3.0  0.0 </V>
+            <V ID="8">  2.0  0.0  0.0 </V>
+            <V ID="9">  2.0  1.0  0.0 </V>
+            <V ID="10">  2.0  2.0 0.0 </V>
+            <V ID="11">  2.0  3.0  0.0 </V>
+            <V ID="12">  8.0  0.0  0.0 </V>
+            <V ID="13">  8.0  1.0  0.0 </V>
+            <V ID="14">  8.0  2.0  0.0 </V>
+            <V ID="15">  8.0  3.0  0.0 </V>
+            <V ID="16">  3.0  1.5  0.0 </V>
+            <V ID="17">  3.0  1.0  0.0 </V>
+            <V ID="18">  3.0  2.0  0.0 </V>
+            <V ID="19">  3.0  0.0  0.0 </V>
+            <V ID="20">  3.0  3.0  0.0 </V>
+            <V ID="21">  0.0  1.5  0.0 </V>
+            <V ID="22">  1.5  1.5  0.0 </V>
+            <V ID="23">  2.0  1.5  0.0 </V>
+            <V ID="24">  8.0  1.5  0.0 </V>
+            <V ID="25">  0.5  0.0  0.0 </V>
+            <V ID="26">  0.5  1.0  0.0 </V>
+            <V ID="27">  0.5  1.5  0.0 </V>
+            <V ID="28">  0.5  2.0  0.0 </V>
+            <V ID="29">  0.5  3.0  0.0 </V>
+        </VERTEX>
+<EDGE>
+            <E ID="0"> 0 25 </E>
+            <E ID="1"> 0 1 </E>
+            <E ID="2"> 1 26 </E>
+            <E ID="3"> 5 4 </E>
+            <E ID="4"> 1 21 </E>
+            <E ID="5"> 21 27 </E>
+            <E ID="6"> 22 5 </E>
+            <E ID="7"> 21 2 </E>
+            <E ID="8"> 2 28 </E>
+            <E ID="9"> 22 6 </E>
+            <E ID="10"> 2 3 </E>
+            <E ID="11"> 3 29 </E>
+            <E ID="12"> 7 6 </E>
+            <E ID="13"> 5 9 </E>
+            <E ID="14"> 22 23 </E>
+            <E ID="15"> 23 9 </E>
+            <E ID="16"> 6 10 </E>
+            <E ID="17"> 10 23 </E>
+            <E ID="18"> 8 19 </E>
+            <E ID="19"> 8 9 </E>
+            <E ID="20"> 9 17 </E>
+            <E ID="21"> 17 19 </E>
+            <E ID="22"> 23 16 </E>
+            <E ID="23"> 16 17 </E>
+            <E ID="24"> 10 18 </E>
+            <E ID="25"> 18 16 </E>
+            <E ID="26"> 10 11 </E>
+            <E ID="27"> 11 20 </E>
+            <E ID="28"> 20 18 </E>
+            <E ID="29"> 19 12 </E>
+            <E ID="30"> 17 13 </E>
+            <E ID="31"> 13 12 </E>
+            <E ID="32"> 16 24 </E>
+            <E ID="33"> 24 13 </E>
+            <E ID="34"> 18 14 </E>
+            <E ID="35"> 14 24 </E>
+            <E ID="36"> 20 15 </E>
+            <E ID="37"> 15 14 </E>
+            <E ID="38"> 25 4 </E>
+            <E ID="39"> 26 5 </E>
+            <E ID="40"> 28 6 </E>
+            <E ID="41"> 29 7 </E>
+            <E ID="42"> 27 22 </E>
+            <E ID="43"> 25 26 </E>
+            <E ID="44"> 26 27 </E>
+            <E ID="45"> 27 28 </E>
+            <E ID="46"> 28 29 </E>
+            <E ID="47"> 5 25 </E>
+            <E ID="48"> 5 27 </E>
+            <E ID="49"> 6 27 </E>
+            <E ID="50"> 6 29 </E>
+            <E ID="51"> 0 26 </E>
+            <E ID="52"> 21 26 </E>
+            <E ID="53"> 21 28 </E>
+            <E ID="54"> 3 28 </E>
+            <E ID="55"> 5 23 </E>
+            <E ID="56"> 6 23 </E>
+            <E ID="57"> 8 17 </E>
+            <E ID="58"> 23 17 </E>
+            <E ID="59"> 23 18 </E>
+            <E ID="60"> 11 18 </E>
+            <E ID="61"> 19 13 </E>
+            <E ID="62"> 16 13 </E>
+            <E ID="63"> 16 14 </E>
+            <E ID="64"> 20 14 </E>
+        </EDGE>
+<ELEMENT>
+            <T ID="0"> 0 43 51 </T>
+            <T ID="1"> 1 51 2 </T>
+            <T ID="2"> 5 52 44 </T>
+            <T ID="3"> 2 52 4 </T>
+            <T ID="4"> 5 45 53 </T>
+            <T ID="5"> 7 53 8 </T>
+            <T ID="6"> 11 54 46 </T>
+            <T ID="7"> 10 8 54  </T>
+            <T ID="8"> 15 55 13 </T>
+            <T ID="9"> 14 6 55  </T>
+            <T ID="10"> 17 16 56 </T>
+            <T ID="11"> 9 14 56  </T>
+            <T ID="12"> 21 57 18 </T>
+            <T ID="13"> 19 57 20 </T>
+            <T ID="14"> 20 58 15 </T>
+            <T ID="15"> 22 58 23 </T>
+            <T ID="16"> 25 59 22 </T>
+            <T ID="17"> 24 17 59  </T>
+            <T ID="18"> 24 60 26 </T>
+            <T ID="19"> 27 60 28 </T>
+            <T ID="20"> 29 31 61 </T>
+            <T ID="21"> 21 61 30 </T>
+            <T ID="22"> 23 30 62 </T>
+            <T ID="23"> 32 62 33 </T>
+            <T ID="24"> 32 35 63 </T>
+            <T ID="25"> 25 63 34 </T>
+            <T ID="26"> 28 34 64 </T>
+            <T ID="27"> 36 64 37 </T>
+            <T ID="28"> 38 3 47 </T>
+            <T ID="29"> 43 47 39 </T>
+            <T ID="30"> 42 48 6 </T>
+            <T ID="31"> 44 39 48 </T>
+            <T ID="32"> 42 9 49  </T>
+            <T ID="33"> 45 49 40 </T>
+            <T ID="34"> 41 50 12 </T>
+            <T ID="35"> 46 40 50 </T>
+	</ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> T[0-35] </C>
+            <C ID="1"> E[0,3,13,19,18,29,36,27,26,16,12,11,38,41] </C>        <!-- Walls -->
+            <C ID="2"> E[1,4,7,10] </C>                 <!-- Inflow -->
+            <C ID="3"> E[31,33,35,37] </C>                <!-- Outflow -->
+        </COMPOSITE>
+        <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+</NEKTAR>

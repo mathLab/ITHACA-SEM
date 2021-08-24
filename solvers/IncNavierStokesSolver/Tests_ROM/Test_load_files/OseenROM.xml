@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="4" FIELDS="u,v" TYPE="MODIFIED" />
+	<!--        <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="u,v,p" TYPE="MODIFIED" />     -->
+    </EXPANSIONS>
+
+    <CONDITIONS>
+        <SOLVERINFO>
+            <!-- <I PROPERTY="SolverType" VALUE="CoupledLinearisedNS" /> -->
+            <!-- <I PROPERTY="SolverType" VALUE="CoupledLinearisedNS" />  -->
+            <!-- <I PROPERTY="MappingImplicitPressure" VALUE="TRUE"/> -->
+            <!-- <I PROPERTY="EQTYPE" VALUE="SteadyStokes" /> -->
+            <I PROPERTY="EQTYPE" VALUE="SteadyOseen" />
+	    <I PROPERTY="SolverType" VALUE="CoupledLinearisedNS_ROM" />
+	    <!-- <I PROPERTY="GlobalSysSoln" VALUE="DirectFull" /> -->
+            <!--  <I PROPERTY="Driver" VALUE="SteadyState" />  doing some pseudo-time integration to compute steady state-->
+	    <!-- <I PROPERTY="MappingImplicitPressure" VALUE="TRUE"/>  Default = FALSE -->
+	    <!-- <I PROPERTY="MappingImplicitViscous" VALUE="TRUE"/> Default = FALSE -->
+            <!-- <I PROPERTY="AdvectionForm" VALUE="Convective" /> -->
+            <!-- <I PROPERTY="EvolutionOperator" VALUE="Nonlinear" />  -->
+            <I PROPERTY="Projection" VALUE="Galerkin" />
+            <!-- <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />-->
+        </SOLVERINFO>
+
+        <PARAMETERS>
+		<!--  The updated parameters are: X_tilde = 2.01704e+07 and Delta_tilde = 2.13066e+21   -->
+	    <P> ControlCoeff = 10 </P> 
+	    <!-- <P> FilterWidth = 2e+1 </P> -->
+            <P> TimeStep = 1e-4    </P>
+            <P> TOL = .005    </P>
+            <P> NumSteps = 1e6      </P>
+            <P> IO_CheckSteps = 1000       </P>
+            <P> IO_InfoSteps = 1000       </P>
+            <P> Kinvis = 10    </P>
+            <P> Kinvis_max = 123       </P>
+            <P> load_snapshot_data_from_files = 1       </P>
+            <P> number_of_snapshots = 4       </P>
+            <P> param0 = 0.1       </P>
+            <P> param1 = 0.5       </P>
+            <P> param2 = 1       </P>
+            <P> param3 = 10       </P>
+            <P> type_para1 = 0       </P>    <!-- 0=kin_visc, 1=geo   -->
+            <P> POD_tolerance = .9999       </P>
+	    <P> debug_mode = 0      </P>
+        </PARAMETERS>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> v </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+            <B ID="2"> C[3] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">    <!-- Walls -->
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+            </REGION>
+            <REGION REF="1">    <!-- InFlow -->
+                <!-- <D VAR="u" VALUE="(y*(1-y))" /> -->
+                <D VAR="u" VALUE="(y*(3-y))" />
+                <D VAR="v" VALUE="0" />
+            </REGION>
+            <REGION REF="2">    <!-- OutFlow -->
+                <N VAR="u" VALUE="0" />
+                <N VAR="v" VALUE="0" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+      	 <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="0" />
+            <E VAR="p" VALUE="0" />
+        </FUNCTION>  
+
+	<!--  <FUNCTION NAME="InitialConditions">
+		<F FILE="Test1_13_eig_0.fld" />
+	</FUNCTION> -->
+
+       <!--  <FUNCTION NAME="InitialConditions">
+		<F FILE="nn.fld" />
+	</FUNCTION>      -->
+
+
+         <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="y*(1-y)" />
+            <E VAR="v" VALUE="0" />
+            <E VAR="p" VALUE="0" />
+        </FUNCTION>  
+
+	<FUNCTION NAME="TestSnap1">
+	      <F FILE="OseenROM_sol0p1.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap2">
+	      <F FILE="OseenROM_sol0p5.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap3">
+	      <F FILE="OseenROM_sol1.fld" />
+	</FUNCTION>  
+
+	<FUNCTION NAME="TestSnap4">
+	      <F FILE="OseenROM_sol10.fld" />
+	</FUNCTION>  
+
+        <FUNCTION NAME="Mapping">
+            <E VAR="x" VALUE="x + sin(2*PI*t) * 0.05 * (exp(-( abs(x-0.5) + abs(y-0.5) ) ))" />
+            <E VAR="y" VALUE="y" />
+        </FUNCTION>
+        <FUNCTION NAME="MappingVel">
+            <E VAR="vx" VALUE="2*PI* cos(2*PI*t) * 0.05 * (exp(-( abs(x-0.5) + abs(y-0.5) ) ))" />
+            <E VAR="vy" VALUE="0.0" />
+        </FUNCTION>
+
+ 	 <FORCE TYPE="MovingBody">
+		<PARAM NAME="OutputFile">DragLift.frc</PARAM>
+		<PARAM NAME="OutputFrequency">10</PARAM>
+		<PARAM NAME="Boundary"> B[0] </PARAM>
+	</FORCE>    
+                    
+    <FUNCTION NAME="AdvectionVelocity">
+    <!--  <F FILE="Channel_1p5_TT.fld" /> -->
+      <E VAR="u" VALUE="0" />
+      <E VAR="v" VALUE="0" />
+    </FUNCTION> 
+
+    </CONDITIONS>
+
+    <GEOMETRY DIM="2" SPACE="2" >
+
+        <VERTEX>
+            <V ID="0">  0.0  0.0  0.0 </V>
+            <V ID="1">  0.0  1.0  0.0 </V>
+            <V ID="2">  0.0  2.0  0.0 </V>
+            <V ID="3">  0.0  3.0  0.0 </V>
+            <V ID="4">  1.5  0.0  0.0 </V>
+            <V ID="5">  1.5 0.75  0.0 </V>
+            <V ID="6">  1.5  2.25 0.0 </V>
+            <V ID="7">  1.5  3.0  0.0 </V>
+            <V ID="8">  2.0  0.0  0.0 </V>
+            <V ID="9">  2.0  0.75  0.0 </V>
+            <V ID="10">  2.0  2.25 0.0 </V>
+            <V ID="11">  2.0  3.0  0.0 </V>
+            <V ID="12">  8.0  0.0  0.0 </V>
+            <V ID="13">  8.0  0.75  0.0 </V>
+            <V ID="14">  8.0  2.25  0.0 </V>
+            <V ID="15">  8.0  3.0  0.0 </V>
+            <V ID="16">  3.0  1.5  0.0 </V>
+            <V ID="17">  3.0  0.75  0.0 </V>
+            <V ID="18">  3.0  2.25  0.0 </V>
+            <V ID="19">  3.0  0.0  0.0 </V>
+            <V ID="20">  3.0  3.0  0.0 </V>
+            <V ID="21">  0.0  1.5  0.0 </V>
+            <V ID="22">  1.5  1.5  0.0 </V>
+            <V ID="23">  2.0  1.5  0.0 </V>
+            <V ID="24">  8.0  1.5  0.0 </V>
+            <V ID="25">  0.5  0.0  0.0 </V>
+            <V ID="26">  0.5  1.0  0.0 </V>
+            <V ID="27">  0.5  1.5  0.0 </V>
+            <V ID="28">  0.5  2.0  0.0 </V>
+            <V ID="29">  0.5  3.0  0.0 </V>
+
+        </VERTEX>
+
+        <EDGE>
+            <E ID="0"> 0 25 </E>
+            <E ID="1"> 0 1 </E>
+            <E ID="2"> 1 26 </E>
+            <E ID="3"> 5 4 </E>
+            <E ID="4"> 1 21 </E>
+            <E ID="5"> 21 27 </E>
+            <E ID="6"> 22 5 </E>
+            <E ID="7"> 21 2 </E>
+            <E ID="8"> 2 28 </E>
+            <E ID="9"> 22 6 </E>
+            <E ID="10"> 2 3 </E>
+            <E ID="11"> 3 29 </E>
+            <E ID="12"> 7 6 </E>
+            <E ID="13"> 5 9 </E>
+            <E ID="14"> 22 23 </E>
+            <E ID="15"> 23 9 </E>
+            <E ID="16"> 6 10 </E>
+            <E ID="17"> 10 23 </E>
+            <E ID="18"> 8 19 </E>
+            <E ID="19"> 8 9 </E>
+            <E ID="20"> 9 17 </E>
+            <E ID="21"> 17 19 </E>
+            <E ID="22"> 23 16 </E>
+            <E ID="23"> 16 17 </E>
+            <E ID="24"> 10 18 </E>
+            <E ID="25"> 18 16 </E>
+            <E ID="26"> 10 11 </E>
+            <E ID="27"> 11 20 </E>
+            <E ID="28"> 20 18 </E>
+            <E ID="29"> 19 12 </E>
+            <E ID="30"> 17 13 </E>
+            <E ID="31"> 13 12 </E>
+            <E ID="32"> 16 24 </E>
+            <E ID="33"> 24 13 </E>
+            <E ID="34"> 18 14 </E>
+            <E ID="35"> 14 24 </E>
+            <E ID="36"> 20 15 </E>
+            <E ID="37"> 15 14 </E>
+
+            <E ID="38"> 25 4 </E>
+            <E ID="39"> 26 5 </E>
+            <E ID="40"> 28 6 </E>
+            <E ID="41"> 29 7 </E>
+            <E ID="42"> 27 22 </E>
+
+            <E ID="43"> 25 26 </E>
+            <E ID="44"> 26 27 </E>
+            <E ID="45"> 27 28 </E>
+            <E ID="46"> 28 29 </E>
+
+            <E ID="47"> 5 25 </E>
+            <E ID="48"> 5 27 </E>
+            <E ID="49"> 6 27 </E>
+            <E ID="50"> 6 29 </E>
+
+            <E ID="51"> 0 26 </E>
+            <E ID="52"> 21 26 </E>
+            <E ID="53"> 21 28 </E>
+            <E ID="54"> 3 28 </E>
+            <E ID="55"> 5 23 </E>
+            <E ID="56"> 6 23 </E>
+            <E ID="57"> 8 17 </E>
+            <E ID="58"> 23 17 </E>
+            <E ID="59"> 23 18 </E>
+            <E ID="60"> 11 18 </E>
+            <E ID="61"> 19 13 </E>
+            <E ID="62"> 16 13 </E>
+            <E ID="63"> 16 14 </E>
+            <E ID="64"> 20 14 </E>
+
+        </EDGE>
+
+        <ELEMENT>
+            <T ID="0"> 0 43 51 </T>
+            <T ID="1"> 1 51 2 </T>
+            <T ID="2"> 5 52 44 </T>
+            <T ID="3"> 2 52 4 </T>
+            <T ID="4"> 5 45 53 </T>
+            <T ID="5"> 7 53 8 </T>
+            <T ID="6"> 11 54 46 </T>
+            <T ID="7"> 10 8 54  </T>
+            <T ID="8"> 15 55 13 </T>
+            <T ID="9"> 14 6 55  </T>
+            <T ID="10"> 17 16 56 </T>
+            <T ID="11"> 9 14 56  </T>
+            <T ID="12"> 21 57 18 </T>
+            <T ID="13"> 19 57 20 </T>
+            <T ID="14"> 20 58 15 </T>
+            <T ID="15"> 22 58 23 </T>
+            <T ID="16"> 25 59 22 </T>
+            <T ID="17"> 24 17 59  </T>
+            <T ID="18"> 24 60 26 </T>
+            <T ID="19"> 27 60 28 </T>
+            <T ID="20"> 29 31 61 </T>
+            <T ID="21"> 21 61 30 </T>
+            <T ID="22"> 23 30 62 </T>
+            <T ID="23"> 32 62 33 </T>
+            <T ID="24"> 32 35 63 </T>
+            <T ID="25"> 25 63 34 </T>
+            <T ID="26"> 28 34 64 </T>
+            <T ID="27"> 36 64 37 </T>
+            <T ID="28"> 38 3 47 </T>
+            <T ID="29"> 43 47 39 </T>
+            <T ID="30"> 42 48 6 </T>
+            <T ID="31"> 44 39 48 </T>
+            <T ID="32"> 42 9 49  </T>
+            <T ID="33"> 45 49 40 </T>
+            <T ID="34"> 41 50 12 </T>
+            <T ID="35"> 46 40 50 </T>
+	</ELEMENT>
+
+
+
+        <COMPOSITE>
+            <C ID="0"> T[0-35] </C>
+            <C ID="1"> E[0,3,13,19,18,29,36,27,26,16,12,11,38,41] </C>        <!-- Walls -->
+            <C ID="2"> E[1,4,7,10] </C>                 <!-- Inflow -->
+            <C ID="3"> E[31,33,35,37] </C>                <!-- Outflow -->
+        </COMPOSITE>
+
+        <DOMAIN> C[0] </DOMAIN>
+
+    </GEOMETRY>
+
+ <!--
+   <FILTERS>   
+    <FILTER TYPE="Checkpoint">
+        <PARAM NAME="OutputFile">IntermediateFields_OPENUP</PARAM>
+        <PARAM NAME="OutputFrequency">1</PARAM>
+    </FILTER>
+   </FILTERS>    -->
+
+</NEKTAR>
+

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+
+    <CONDITIONS>
+
+      <SOLVERINFO>
+            <I PROPERTY="EQTYPE" VALUE="Helmholtz" />
+            <I PROPERTY="Projection" VALUE="Continuous" />
+            <I PROPERTY="GLOBALSYSSOLN"  VALUE="IterativeStaticCond" />
+      </SOLVERINFO>
+
+         
+      <PARAMETERS>
+        <P> Lambda = 1 </P> 
+        <P> IterativeSolverTolerance = 1e-8 </P> 
+      </PARAMETERS>
+      
+      <GLOBALSYSSOLNINFO>
+        <V VAR="u">
+          <I PROPERTY="GlobalSysSoln"    VALUE="IterativeStaticCond" />
+            <I PROPERTY="Preconditioner"   VALUE="LowEnergyBlock"/>
+        </V>
+      </GLOBALSYSSOLNINFO>
+      
+      <VARIABLES>
+        <V ID="0"> u </V>
+      </VARIABLES>
+      
+      <BOUNDARYREGIONS>
+        <B ID="0"> C[2]       </B>  <!-- X=0.1  !-->
+        <B ID="1"> C[3]       </B>  <!-- Y=0    !-->
+        <B ID="2"> C[4]       </B>  <!-- Z=0    !-->
+        <B ID="3"> C[5]       </B>  <!-- Y=0.1  !-->
+        <B ID="4"> C[6]       </B>  <!-- Z=0.1  !-->
+        <B ID="5"> C[7]       </B>  <!-- X=0    !-->
+      </BOUNDARYREGIONS>
+      
+      <BOUNDARYCONDITIONS>
+        <REGION REF="0">
+          <D VAR="u" VALUE="cos(PI*x)*cos(PI*z)*cos(2*PI*y/0.1)" />
+        </REGION>
+        <REGION REF="1">
+          <P VAR="u" VALUE="[3]" />
+        </REGION>
+        <REGION REF="2">
+          <D VAR="u" VALUE="cos(PI*x)*cos(PI*z)*cos(2*PI*y/0.1)" />
+        </REGION>
+        <REGION REF="3">
+          <P VAR="u" VALUE="[1]" />
+        </REGION>
+        <REGION REF="4">
+          <D VAR="u" VALUE="cos(PI*x)*cos(PI*z)*cos(2*PI*y/0.1)" />
+        </REGION>
+        <REGION REF="5">
+          <D VAR="u" VALUE="cos(PI*x)*cos(PI*z)*cos(2*PI*y/0.1)" />
+        </REGION>
+      </BOUNDARYCONDITIONS>
+        
+      <FUNCTION NAME="Forcing">
+        <E VAR="u" VALUE="-(Lambda+PI*PI*402)*cos(PI*x)*cos(PI*z)*cos(2*PI*y/0.1)" />
+      </FUNCTION>
+
+      <FUNCTION NAME="ExactSolution">
+        <E VAR="u" VALUE="cos(PI*x)*cos(PI*z)*cos(2*PI*y/0.1)" />
+      </FUNCTION>
+    </CONDITIONS>
+    
+    <EXPANSIONS>
+      <E COMPOSITE="C[0]" NUMMODES="5" TYPE="MODIFIED" FIELDS="u,v,w,p" />
+      <E COMPOSITE="C[1]" NUMMODES="5" TYPE="MODIFIED" FIELDS="u,v,w,p" />
+    </EXPANSIONS>
+    
+    <GEOMETRY DIM="3" SPACE="3">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx9lEkvQ2EUhq+h5nlqUdRcc801HixsbKzYEFZNpBKJH8CyCTZWVEiokJRIpI1FEwvrRsIvIPEPEAsLqaH37c099x5n8+V+z33e7zvnNlWUePX+VZiwqttKkroe+H8rSPE1kuDJOh4x8BQhP3DjPg7l7FKqkA9uEfLB03Tcb7h/uqIvfr8MwUd+puCDZ5neL5jIzxY4/BzTfM3PFTj8PNP5aX6+wOEXsO+DOcAvFOaGKhJ85BcLPngJmz8/v1Tg8MuEuaGsAodv4wKrcmEffgXrXz+HCFWy/vlqZ/fjvErI717dfl2du6FqIR+8RsgHd5j62nu1AodfZ5qv+fUCh9/A+tN/5wg1Chx+ky7fb5h/s8DhO9l35XNsETj8VrbP32sTOPx203xtfh0Ch9/J+uPz6xI4fBfLNfQpcPg9innB7xU4/D71+TLq6LY5Qol7P/rs828LZ9TPuHIYisVia6PgA+w8/jsdFOYP7laf9y2nrfM7AYM/xLh6/i34sNA3+Mi/8wnSqOBhHWPeY/+0xesKk/VlZvP964TG1X1vdMmrKMe0vvyw6PGc0/3H1uXK0xXxP0SeP8F49ufLsKciTEcO651v75omTX0/2ZwXrrKUAE0JfPZrbuP5x/8GBpl97wAA</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1mGd0lUUURZO8JCZgpMRYARNCAAVEBRURJYi9gKJYwN4Fe0EsSLEAdrB3EcQG2AuCvfeu2HsFUbELqH/O/pG9VvLnrNnfvWfu3HlvvnkpKmr6V9yMlkZLogVxxkXNPOeP/DL5w8uVR9wK8oVXNONbKX98W2hMfkvNC19RPtRRJR/4Ssqnjlbyh7dWPrxNUdM/6m4bLRGvjrJ+1rNytCBeo3z4KpqX9a0qH9a3muqnX6srH76G8unjmtFK8XbKh7dXnfS9Q7SF+FpR1sl+1EYL4nXKh3eMlut5fbRC8Z2i7DN1NUTZT+rqrHiedxHn89FVvvC15cvnYx35wrspH949Sv/5PPWIlouvG6UPfM56RqvE11M+fP0o/WXdG0TpL+vopXj8eise/w3lS/xG8iV+Y8XxPekjH/gm8uH701e+8E2VD+8XbaPnm0WrFb95lP3i+9lf9cMbVQ/f2wHRKvEtlA8fqPp4vqXqI36rKOcB3/+tNeb7vE20vfi28uH5duKcI9vLH76DfDkvdpQvfCflwwfJvzY6WPXAd5Y/584uqgc+RPnwXeXPObWb6oQPVd2cX7urHvgeyofvqXo47/ZSPfBh8uccHB6tE99b+fB9VA/n5r7RduL7RVkv5+n+0XrxA5QPP1Cc8/cgzQs/WPNyLh8iX/ihyocfFmW99ONw1U9/jojWRjn3RygfPlL5vA+OjNaJH6V8+NFR+sP745hoV/Fjo6yT98px0S7ixysffkKU/vAeOlH1wE+SP++nUdF68ZOVDx8d7aTnp0QbFH9qlL7x/jtNPvDT5cN7cUy0m/gZyoePjdI36hwXpY/UOV5xvHcnyAd+pnx4H58lX/jZyoefo3lZx0T5sK5JisNvsuLwPzfKPZz7wXnRgvj50TLxC8S5N1woH/hF0ZbiF0e5L+E/RWPipyqe+8cl0VLxS6OV4pfJH3656uf+cYXqh1+p+uBXRbl3Mc/VGhN/jerknnRttEL8OtUNv14+3JNukA/8RuXDp0WrxG+Ksi7mny7OumZEed/R15vF6cdMcXxukT/Pb9WYfbgtyn5xf7092lb8jmi1+CzNy/1ytuqGz4n2Eb9TnH7eFaXP3FPvjlaI36MxPvcqnnnvkz/8fvnAH4jWiD8YpW/sy0NR3u/0Y644+/JwlP3Cf160g+LnizPvI6qH3zOPRqvFH9OY/X1cY/yfiNJf6nxS9bOfT2ncGH062lf8GfnDn43Sf/bnuSj7yO+T5xUPf0H58Bej9I3faS9FW4m/LH/4K1F+19DXV8WJfy3q31evixP/huqk/29G+4m/FeXzxj68HeX+Rt47qhv+brRR/u9FuRfhv0Cc+PcVxz3rA435XHwozvwfRbkf4vexOD6fRNl3fD6N0l/q/Cw6QPzzKP3n/vWFxvTvS3H6+ZXmJf7rKPvO7/9vojXi32pMvd/Jn+ffqx7W9UOU/aLOhYrnPFgUZV/w+TFK/xuji6M9FP+TOPvzszg+v0RZF+tdEuX/EPj/Kl+e/6YxPr9H2Q98/ohyr6Y/f4rTn7+i3DPx+1uc+H+i3GOZd2mUPlDvMo3px3L5w/+NNoj/Jx8+J/xju6eeFxc39afOEsXjXxDHvzS8l3iZOPOWi+P/P6XiyGsA</EDGE>
+        <FACE>
+            <T COMPRESSED="B64Z-LittleEndian" BITSIZE="64">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</T>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJx1kOc713EUhiWjIrSNCO2ljZJEUWlHQ0N7yihpKGlK/7U39/PCfV1+b+7r9/3c55znnIKCxb9lsBAu1/+8l8AVsBgWqa5UXpH8lXAVLNOcUr1XwCq4Wn1SVymvXP2TZx3cANeqb/ZYL2+N5sTbpLwb1Tffa+FmWKM5yV0nr1p9k2cLbIIN8pOvUV695iTfVnnNyrFN87fDHZqf991wL9ylPKnbI2+n5idfCzwI9ytXch6Qt099s99h5Tik3PGOqt8R9U19q7xjyhPvOOyA7Zqf+hPy2jQ/9+qUd3KJPKdhD+zS/NyvW96pJfKclXdG83thHzwHz6tv3i/Cy7BfuVN3Sd4F5Yh3Dd6AV5U7c6/Lu6L3zLkJb8NBzQtvyRuA/fLuwvtwCGa/5Lkn745yJt9D+BgOw9wheR7Je6B56fcMvoBPYfZO/XN5T6Dv8Ep7vIRD+j4CR+EbmDsk51t5r2H2SZ4J+B6OQ9/rnbwxvYdT8BP8AHOf7PtR3qRyZd8v8j5D3+sb/A6/wtwnd5iRNw1zr+z3Q3Nn4bi83/Av/AVzr9T/kfcTTsr7p3xzes/3/+o3DxcANkRGmwAA</Q>
+        </FACE>
+        <ELEMENT>
+            <A COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxd13e8z1Ucx/H7I1J2kpF9cV17u1zjXns1rFKUpJSRVGYlNDSoaFitW7bSQFFaQmigYYtK0yorCfGH1+uP+/n983yc7zm/8z3f83mfP065pPO/nDgKR+O9WB7z4X14P47BClgozPcAjsXk8B7nG4fjsSLmwQfxIXwYK4X3OO4RnICVw7ofxcfwcUzBkmHdT+BErBLWOynM8ySmhvU+hU/jZKwa+qfgM/gsVsMiYdxz+DxWD+ueitPQ/amBxdB9mY4zsCbOxBfQ734Ra+FL6H69HP5fG18J/3ffsrAOlsVX8TWchXXR75uNc3Au1kP3fx7OR/e7PrqfC3Ahvo4N0P19I7xvETbEN8N8b+Hb2AiTw/h3cDGmobm2TktwKTbGd/E9dN+XYRO0btbfOi/HdLSe7+MH6L43xRX4IWbhR9gMP0br+gl+is3R+vt9K/EzbIHW1f1fhasxA9eE9X+O5iYTzcdaXIfrsWWY35xY1y+wFXrezYt1/RJbo3X/Cr9Gc9Mm9G/AjbgJ26Ln/Rv8Fr/Ddmj+rcv3uBnbo+fY/2/BrdgBzbXr24bbsSOaL+fZgTuxE5rzXfgD7sbOaO734I9o3a9Ac2NePSc/4ZXoOTD3vu9nvAqts7nfi7/g1WjOf8Xf0Fx3QfNr3n7HP7Ar/on7cD+a6254AA/iITTf3fEv/BsPh//3QPPtuo7gUbwGzZs5P4bH8Vo05//gCTTXPfFfPIn/oft5HZp38+L7TuH1aM7N72k8g73wfzS/ZzEpcZ7eNHeE8Qn6c+ANYf05eX4Bmusb0fNpnq13Lsb3oZ2btjkwnxfy/CbanidzmYf+i7Avzy+m7f7mpW1eb8Z8PDdX5jM/z/vR9py47gJYEG9Jyv68UCL7/Ob6VjSfhem/BM11fzT/vsd8F6F9G+1LaRdFc3wZ7dtpm99iPC+O5nYAmt8S9JfEy3Eg/ebZHJTC0jiIfvNovzkuQ3swbXPm+sxnWbyDx+Vol0dzYg6HMM7zab7Mif+/k37Pk3mqgMk4lP6K4XklNF93Ma4y7RSsgubybsal0q6K5s463sM482quqmF1HEa/565wmLcGDqffvNTEWmi9RzDOfNQO9a+DI8P31sV6WB+9X/ncfFj/Bug9y3o3DO9rhN73PE/mIC3sj/c1c239Gof6eM8yX6lhf5ug90fb6WEfm6L3O/ejWfjO5uh9rQXtjDCP+z6OcZlhnPvTEr3ftaLdOvS3Qe+d5iYtrLMten81/+lh3nbofbF9+L/f6fd5j+uQyL5Ov6sjeg82h87bKZH9/+cAILHwmgAA</A>
+            <R COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxd1MVCQ1EMRVFcixQoXlrc3d3d3d3d4feZ7DPgvMkapLnJlTQm5v8Xi3EYjwkWT8QkTMYUTLV1lJ+G6RjADKunLxOzMNvqa13VD2IO5mKe5aleCPOxAAtR+1P9IosXY4n1UYphLMMIRlHnpX7LsQIrsQp1ruq32urVYC3qvNVfHdZjg9XTvSi/EZuw2fIDFm/BVmzDdtS5R7EDO7HL8nX/2n839mAv9qHuSfX6cQAHLV/vaQiHcQRHcQyD9vtxnMBJnELdq/KncQZncQ71XrXePC7gIi6h3rXWW8YVXMU1DFl8HTdwE7dQ70z9beMO7lp/mh/1t4f7eICHqDlSvSM8xhM8Rc2f9nOG53iBl6j5VL9XFr/GG9ScqN9bvMN7fEDNnfp7xCd8tv7CFn/BV3zDd9T/hvr7wE/8sv4iFv+29X7wF/8AU3smtAAA</R>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> R[0-31] </C>
+            <C ID="1"> A[32-134] </C>
+            <C ID="2"> F[11,30,68,91,125,136,163,189,194,227,290,293] </C>
+            <C ID="3"> F[51,58,192,213,219,252,257,296,308,313,106,330-331,119] </C>
+            <C ID="4"> F[1,6,10,14,17,21,25,29,33,37,40,43,46,50,53,57] </C>
+            <C ID="5"> F[2,9,128,122,131,134,144,183,224-225,62,241,275,82] </C>
+            <C ID="6"> F[61,65,69,73,77,81,85,88,92,96,100,103,107,110,114,117] </C>
+            <C ID="7"> F[20,56,93,111,147-148,171,200,208,216,242,255,274,278,282,301,303,311,325,327] </C>
+        </COMPOSITE>
+        <DOMAIN> C[0,1] </DOMAIN>
+    </GEOMETRY>
+</NEKTAR>

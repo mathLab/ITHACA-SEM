@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="2" SPACE="2" PARTITION="3">
+        <VERTEX>
+            <V ID="14">-3.00000000e-01 -3.09016994e-01 0.00000000e+00</V>
+            <V ID="15">3.00000000e-01 -3.09016994e-01 0.00000000e+00</V>
+            <V ID="16">9.00000000e-01 -3.09016994e-01 0.00000000e+00</V>
+            <V ID="17">1.50000000e+00 -3.09016994e-01 0.00000000e+00</V>
+            <V ID="20">-3.00000000e-01 3.09016994e-01 0.00000000e+00</V>
+            <V ID="21">3.00000000e-01 3.09016994e-01 0.00000000e+00</V>
+            <V ID="22">9.00000000e-01 3.09016994e-01 0.00000000e+00</V>
+            <V ID="23">1.50000000e+00 3.09016994e-01 0.00000000e+00</V>
+            <V ID="27">3.00000000e-01 8.09016994e-01 0.00000000e+00</V>
+            <V ID="28">9.00000000e-01 8.09016994e-01 0.00000000e+00</V>
+            <V ID="29">1.50000000e+00 8.09016994e-01 0.00000000e+00</V>
+            <V ID="33">3.00000000e-01 1.00000000e+00 0.00000000e+00</V>
+            <V ID="34">9.00000000e-01 1.00000000e+00 0.00000000e+00</V>
+            <V ID="35">1.50000000e+00 1.00000000e+00 0.00000000e+00</V>
+        </VERTEX>
+        <EDGE>
+            <E ID="12">14 15</E>
+            <E ID="13">15 16</E>
+            <E ID="14">16 17</E>
+            <E ID="17">20 21</E>
+            <E ID="18">21 22</E>
+            <E ID="19">22 23</E>
+            <E ID="23">27 28</E>
+            <E ID="24">28 29</E>
+            <E ID="28">33 34</E>
+            <E ID="29">34 35</E>
+            <E ID="44">14 20</E>
+            <E ID="45">15 21</E>
+            <E ID="46">16 22</E>
+            <E ID="47">17 23</E>
+            <E ID="51">21 27</E>
+            <E ID="52">22 28</E>
+            <E ID="53">23 29</E>
+            <E ID="57">27 33</E>
+            <E ID="58">28 34</E>
+            <E ID="59">29 35</E>
+        </EDGE>
+        <ELEMENT>
+            <Q ID="12">12 45 17 44</Q>
+            <Q ID="13">13 46 18 45</Q>
+            <Q ID="14">14 47 19 46</Q>
+            <Q ID="18">18 52 23 51</Q>
+            <Q ID="19">19 53 24 52</Q>
+            <Q ID="23">23 58 28 57</Q>
+            <Q ID="24">24 59 29 58</Q>
+        </ELEMENT>
+        <CURVED />
+        <COMPOSITE>
+            <C ID="0"> Q[12-14,18-19,23-24] </C>
+            <C ID="2"> E[28-29] </C>
+            <C ID="4"> E[47,53,59] </C>
+        </COMPOSITE>
+        <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+    <CONDITIONS>
+        <PARAMETERS>
+            <P>TimeStep = 0.000001</P>
+            <P>NumSteps = 100</P>
+            <P>FinTime = TimeStep*NumSteps</P>
+            <P>IO_CheckSteps = 100000</P>
+            <P>IO_InfoSteps = 100000</P>
+        </PARAMETERS>
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE" VALUE="UnsteadyDiffusion" />
+            <I PROPERTY="Projection" VALUE="DisContinuous" />
+            <I PROPERTY="DiffusionType" VALUE="LDG" />
+            <I PROPERTY="DiffusionAdvancement" VALUE="Explicit" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
+        </SOLVERINFO>
+        <VARIABLES>
+            <V ID="0">u</V>
+            <V ID="1">v</V>
+        </VARIABLES>
+        <BOUNDARYREGIONS />
+        <BOUNDARYCONDITIONS />
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="0" />
+        </FUNCTION>
+    </CONDITIONS>
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u,v" TYPE="GLL_LAGRANGE_SEM" />
+    </EXPANSIONS>
+</NEKTAR>

@@ -1,0 +1,88 @@
+\chapter{Optimisation}
+
+One of the most frequently asked questions when performing almost any scientific
+computation is: how do I make my simulation faster? Or, equivalently, why is my
+simulation running so slowly?
+
+The spectral element method is no exception to this rule. The purpose of this
+chapter is to highlight some of the easiest parameters that can be tuned to
+attain optimum performance for a given simulation.
+
+Details are kept as untechnical as possible, but some background information on
+the underlying numerical methods is necessary in order to understand the various
+options available and the implications that they can have on your simulation.
+
+\section{Collections}
+The Collections library adds optimisations to perform certain elemental
+operations collectively by applying an operator using a matrix-matrix operation,
+rather than a sequence of matrix-vector multiplications. Certain operators
+benefit more than other from this treatment, so the following implementations
+are available:
+\begin{itemize}
+    \item StdMat: Perform operations using collated matrix-matrix type elemental
+        operation.
+    \item SumFac: Perform operation using collated matrix-matrix type sum
+        factorisation operations.
+    \item IterPerExp: Loop through elements, performing matrix-vector operation.
+    \item NoCollections: Use the original LocalRegions implementation to
+        perform the operation.
+\end{itemize}
+All configuration relating to Collections is given in the \inltt{COLLECTIONS}
+XML element within the \inltt{NEKTAR} XML element.
+
+\subsection{Default implementation}
+The default implementation for all operators may be chosen through setting the
+\inltt{DEFAULT} attribute of the \inltt{COLLECTIONS} XML element to one of
+\inltt{StdMat}, \inltt{SumFac}, \inltt{IterPerExp} or \inltt{NoCollection}. For
+example, the following uses the collated matrix-matrix type elemental operation
+for all operators and expansion orders:
+
+\begin{lstlisting}[style=XmlStyle]
+<COLLECTIONS DEFAULT="StdMat" />
+\end{lstlisting}
+
+\subsection{Auto-tuning}
+The choice of implementation for each operator, for the given mesh and
+expansion orders, can be selected automatically through 
+auto-tuning. To enable this, add the following to the \nekpp session
+file:
+
+\begin{lstlisting}[style=XmlStyle]
+<COLLECTIONS DEFAULT="auto" />
+\end{lstlisting}
+
+This will collate elements from the given mesh and given expansion orders,
+run and time each implementation strategy in turn, and select the fastest
+performing case. Note that the selections will be mesh- and order- specific.
+The selections made via auto-tuning are output if the \inlsh{--verbose}
+command-line switch is given.
+
+\subsection{Manual selection}
+The choice of implementation for each operator may be set manually within the
+\inltt{COLLECTIONS} tag as shown in the following example. Different implementations may be chosen for different element shapes and expansion orders.
+Specifying \inltt{*} for \inltt{ORDER} sets the default implementation for any
+expansion orders not explicity defined.
+\begin{lstlisting}[style=XmlStyle]
+<COLLECTIONS>
+    <OPERATOR TYPE="BwdTrans">
+        <ELEMENT TYPE="T" ORDER="*"   IMPTYPE="IterPerExp" />
+        <ELEMENT TYPE="T" ORDER="1-5" IMPTYPE="StdMat" />
+    </OPERATOR>
+    <OPERATOR TYPE="IProductWRTBase">
+        <ELEMENT TYPE="Q" ORDER="*"   IMPTYPE="SumFac" />
+    </OPERATOR>
+</COLLECTIONS>
+\end{lstlisting}
+
+Manual selection is intended to document the optimal selections on a given
+hardware platform after extensive prior testing, to avoid the need to run the
+auto-tuning for each run.
+
+\subsection{Collection size}
+The maximum number of elements within a single collection can be enforced using
+the \inltt{MAXSIZE} attribute.
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../user-guide"
+%%% End:

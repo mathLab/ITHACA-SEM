@@ -1,0 +1,79 @@
+\chapter{XML Session File}
+\label{s:xml}
+
+The Nektar++ native file format is compliant with XML version 1.0. The root
+element is NEKTAR which contains a number of other elements which describe
+configuration for different aspects of the simulation. The required elements are
+shown below:
+\begin{lstlisting}[style=XMLStyle]
+<NEKTAR>
+  <GEOMETRY>
+    ...
+  </GEOMETRY>
+  <EXPANSIONS>
+    ...
+  </EXPANSIONS>
+  <CONDITIONS>
+    ...
+  </CONDITIONS>
+  ...
+</NEKTAR>
+\end{lstlisting}
+The different sub-elements can be split across multiple files, however each
+file must have a top-level NEKTAR tag. For example, one might store the
+geometry information separate from the remaining configuration in two separate
+files as illustrated below:
+
+\inlsh{geometry.xml}
+\begin{lstlisting}[style=XMLStyle]
+<NEKTAR>
+  <GEOMETRY>
+    ...
+  </GEOMETRY>
+</NEKTAR>
+\end{lstlisting}
+
+\inlsh{conditions.xml}
+\begin{lstlisting}[style=XMLStyle]
+<NEKTAR>
+  <CONDITIONS>
+    ...
+  </CONDITIONS>
+  <EXPANSIONS>
+    ...
+  </EXPANSIONS>
+  ...
+</NEKTAR>
+\end{lstlisting}
+
+\begin{notebox}
+    When specifying multiple files, repeated first-level XML sub-elements are not merged.
+    The sub-elements from files appearing later in the list will, in general,
+    override those elements from earlier files.
+    \medskip
+    
+    For example, the \inlsh{NekMesh} utility will produce a default
+    \inltt{EXPANSIONS} element and blank \inltt{CONDITIONS} element. Specifying
+    a custom-written XML file containing these sections \emph{after} the
+    file produced by \inlsh{NekMesh} will override these defaults.
+
+    The exception to this rule is when an empty XML sub-element would override a
+    non-empty XML sub-element. In this case the empty XML sub-element will be
+    ignored. If the custom-written XML file containing \inltt{CONDITIONS} were
+    specified before the file produced by \inlsh{NekMesh}, the empty
+    \inltt{CONDITIONS} tag in the latter file would be ignored.
+\end{notebox}
+
+\input{xml/xml-geometry.tex}
+
+\input{xml/xml-expansions.tex}
+
+\input{xml/xml-conditions.tex}
+
+\input{xml/xml-filters.tex}
+
+\input{xml/xml-forcing.tex}
+
+\input{xml/xml-coupling.tex}
+
+\input{xml/xml-expressions.tex}

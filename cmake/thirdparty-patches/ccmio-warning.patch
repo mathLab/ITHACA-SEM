@@ -1,0 +1,90 @@
+--- libccmio/ccmioutility.c	2019-09-30 22:56:12.400753340 +0100
++++ libccmio/ccmioutility.c	2019-09-30 22:56:28.004901262 +0100
+@@ -35,7 +35,7 @@
+     #include <direct.h>
+     #include <io.h>
+     #define getcwd _getcwd
+-    #define mktemp _mktemp
++    #define mkstemp _mktemp
+ #else
+     #include <unistd.h>
+     #include <strings.h> /* for rindex() */
+@@ -222,7 +222,7 @@
+ 	basename[bytes++] = 'X';
+     basename[bytes] = '\0';
+     tmpFilename = strdup(basename);
+-    if (!mktemp(tmpFilename))
++    if (!mkstemp(tmpFilename))
+ 	return(*err = kCCMIOIOErr);
+ 
+     *err = CCMIOOpen(filename, kCCMIORead, &origRoot);
+@@ -246,7 +246,7 @@
+     if ((*err) == kCCMIONoErr)
+     {
+ 	moved = strdup(basename);
+-	if (!mktemp(moved))
++	if (!mkstemp(moved))
+ 	    goto error;
+ 	errno = 0;
+ 	rename(filename, moved);
+@@ -299,7 +299,6 @@
+       bytes = (char*)malloc(size);
+ 	if (!bytes)
+ 	{
+-	    free(dims);
+ 	    return(*err = kCCMIONoMemoryErr);
+ 	}
+ 	ADF_Read_All_Data(origNode.node, bytes, &adfErr);
+
+--- libccmio/ccmio.c	2006-06-30 19:00:17.000000000 +0100
++++ libccmio/ccmio.c	2020-05-27 15:58:48.000000000 +0100
+@@ -469,8 +469,10 @@
+ 	    if (type == kCCMIOField)
+ 		node = id.node;
+ #if kHasSNPrintf
+-	    snprintf(name, kCCMIOMaxStringLength, "%ss",
++	    int ret = snprintf(name, kCCMIOMaxStringLength, "%ss",
+ 		     gEntityNames[(int)type]);
++	    if (ret < 0)
++            abort();
+ #else
+ 	    sprintf(name, "%ss", gEntityNames[(int)type]);
+ #endif
+@@ -515,23 +517,32 @@
+ 
+ void MakeEntityName( CCMIOEntity type, int id, char *name )
+ {
++    int ret = 0;
+     if (type == kCCMIOInternalFaces || type == kCCMIOCells ||
+-	type == kCCMIOInterfaces || type == kCCMIORestart ||
+-	type == kCCMIORestartData || type == kCCMIOReferenceData ||
+-	type == kCCMIOModelConstants)
++        type == kCCMIOInterfaces || type == kCCMIORestart ||
++        type == kCCMIORestartData || type == kCCMIOReferenceData ||
++        type == kCCMIOModelConstants)
++	{
+ #if kHasSNPrintf
+-	snprintf(name, kCCMIOMaxStringLength, gEntityNames[(int)type]);
++	ret = snprintf(name, kCCMIOMaxStringLength,  "%s", gEntityNames[(int)type]);
++	if (ret < 0)
++	    abort();
+ #else
+ 	sprintf(name, gEntityNames[(int)type]);
+ #endif
++	}
+     else
++	{
+ #if kHasSNPrintf
+-	snprintf(name, kCCMIOMaxStringLength, "%s%c%d",
++	ret = snprintf(name, kCCMIOMaxStringLength, "%s%c%d",
+ 		 gEntityNames[(int)type], kEntityIDDelimiter, id);
++	if (ret < 0)
++	    abort();
+ #else
+ 	sprintf(name, "%s%c%d",
+ 		 gEntityNames[(int)type], kEntityIDDelimiter, id);
+ #endif
++	}
+     name[kCCMIOMaxStringLength] = '\0';
+ }
+ 

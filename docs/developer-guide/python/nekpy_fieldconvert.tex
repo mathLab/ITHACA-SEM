@@ -1,0 +1,43 @@
+\chapter{FieldConvert in NekPy}
+
+This chapter describes the FieldConvert utility in Python using the bindings
+and wrappers created for the \verb+FieldUtils+ library. For detailed
+instructions on how to use the interface please refer to the
+{\nek} User Guide section 5.5.
+
+\section{Idea and motivation}
+
+The primary objective is to allow the user to execute a sequence of
+commands from a Python script that implement the functionality of
+FieldConvert, thereby giving freedom to customise the order in which
+modules are used and which command line options are passed to them.
+One problem with FieldConvert is when the user wishes to perform the same
+task on many files; for example converting a number of .chk files to VTK
+format. To achieve this using FieldConvert, one must run a command like
+the following $n$ times for each individual file.
+
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m session.xml field_n.chk field_n.vtu
+\end{lstlisting}
+
+These .chk files represent the same fields, only at different moments in
+time, and so the mesh described in the session file is the same. For each
+file, an instance of \verb+Field+ is initialised and its member variables
+populated by the modules \verb+InputFld+, \verb+ProcessCreateExp+, and
+\verb+OutputVtk+. This is clearly computationally inefficient. In the Python
+implementation, we are able to initialise instances of these classes only
+once, and then for each file populate and clear the variables that differ.
+
+
+\subsection{Bindings}
+
+The bindings are stored within a directory named 'Python' in the
+\texttt{FieldUtils} directory.
+
+\begin{itemize}
+    \item \inlsh{FieldUtils.cpp} is responsible for
+		  exporting the \verb+FieldUtils+ Python library.
+    \item \inlsh{Field.cpp} contains bindings for the \verb+Field+ struct.
+    \item \inlsh{Module.cpp} contains bindings for \verb+Module+,
+	      \verb+InputModule+, and \verb+OutputModule+.
+\end{itemize}

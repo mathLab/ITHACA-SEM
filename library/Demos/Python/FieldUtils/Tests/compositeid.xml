@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="2" SPACE="2">
+        <VERTEX COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYMAPGFF4H+zR5ZmwyiPUMWM1FSHPgirhgK6SFas8Qj8bijQHhn52rPII/QDohwhH</VERTEX>
+        <EDGE COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAFjDhoJhw0Mw4aBljQzIHxWXHw2dD4MHvY0dTD1HGg8WHqONH4MPMAJmgAcgAA</EDGE>
+        <ELEMENT>
+            <Q COMPRESSED="B64Z-LittleEndian" BITSIZE="64">eJxjYEAFjFCaCUozo4mzQGlWKM2GQx87lOaA0pxo+gAJgAA3</Q>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> Q[0] </C>
+            <C ID="1"> Q[1] </C>
+            <C ID="2"> Q[2] </C>
+        </COMPOSITE>
+        <DOMAIN> C[0-2] </DOMAIN>
+    </GEOMETRY>
+    <EXPANSIONS>
+        <E COMPOSITE="C[0-2]" NUMMODES="3" TYPE="MODIFIED" FIELDS="u" />
+    </EXPANSIONS>
+    <CONDITIONS />
+</NEKTAR>

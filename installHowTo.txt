@@ -1,0 +1,20 @@
+
+
+Install HowTo for ITHACA-SEM
+
+github repository: https://github.com/mathLab/ITHACA-SEM
+contact: mhess@sissa.it
+
+1.) clone the repository 
+git clone git@github.com:mathLab/ITHACA-SEM.git
+
+2.) follow the Nektar++ routine 
+cd ITHACA-SEM
+mkdir build
+cd build
+cmake
+make
+make install
+
+
+

@@ -12,7 +12,7 @@ git clone git@github.com:mathLab/ITHACA-SEM.git
 cd ITHACA-SEM
 mkdir build
 cd build
-cmake
+cmake .. 
 make
 make install
 

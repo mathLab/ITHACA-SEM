@@ -41,7 +41,7 @@
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
-
+ 
 namespace Nektar
 {
     using namespace MultiRegions;
@@ -599,6 +599,49 @@ namespace Nektar
 		{
 			interp_traj_start = 1;
 		}
+		if (m_session->DefinesParameter("overwrite_with_interp_field")) 
+		{
+			overwrite_with_interp_field = m_session->GetParameter("overwrite_with_interp_field");	
+		}
+		else
+		{
+			overwrite_with_interp_field = 0;
+		}
+		if (m_session->DefinesParameter("overwrite_with_interp_field_and_diff")) 
+		{
+			overwrite_with_interp_field_and_diff = m_session->GetParameter("overwrite_with_interp_field_and_diff");	
+		}
+		else
+		{
+			overwrite_with_interp_field_and_diff = 0;
+		}
+		if (m_session->DefinesParameter("interp_traj_length")) 
+		{
+			interp_traj_length = m_session->GetParameter("interp_traj_length");	
+		}
+		else
+		{
+			interp_traj_length = 1;
+		}
+
+		if (m_session->DefinesParameter("interp_traj_mode_number")) 
+		{
+			interp_traj_mode_number = m_session->GetParameter("interp_traj_mode_number");	
+		}
+		else
+		{
+			interp_traj_mode_number = 1;
+		}
+
+
+		if (m_session->DefinesParameter("POD_collect_start")) 
+		{
+			POD_collect_start = m_session->GetParameter("POD_collect_start");	
+		}
+		else
+		{
+			POD_collect_start = 0;
+		}
 
 		if (m_session->DefinesParameter("max_time_samples")) 
 		{
@@ -803,7 +846,13 @@ namespace Nektar
 
 			if (ROM_stage == 3)
 			{
-				interp_traj_x = Eigen::MatrixXd::Zero(500, 5);
+				collect_interp_relative_L2_error = Array<OneD, NekDouble> (interp_traj_length);  
+				collect_interp_relative_Linf_error = Array<OneD, NekDouble> (interp_traj_length);  		
+			}
+
+			if (ROM_stage == 3)
+			{
+				interp_traj_x = Eigen::MatrixXd::Zero(interp_traj_length, interp_traj_mode_number);
 			    std::string interp_traj_txt = "interp_traj_x.txt";
 				const char* interp_traj_txt_t = interp_traj_txt.c_str();
 				ifstream myfile_interp_traj_txt_t (interp_traj_txt_t);
@@ -828,7 +877,7 @@ namespace Nektar
 
 			if (ROM_stage == 3)
 			{
-				interp_traj_y = Eigen::MatrixXd::Zero(500, 5);
+				interp_traj_y = Eigen::MatrixXd::Zero(interp_traj_length, interp_traj_mode_number);
 			    std::string interp_traj_txt = "interp_traj_y.txt";
 				const char* interp_traj_txt_t = interp_traj_txt.c_str();
 				ifstream myfile_interp_traj_txt_t (interp_traj_txt_t);
@@ -961,21 +1010,61 @@ namespace Nektar
 //			cout << "POD_modes_x.rows() " << POD_modes_x.rows() << endl;
 //			cout << "POD_modes_x.cols() " << POD_modes_x.cols() << endl;	
 			
-			Eigen::VectorXd reproj_x = interp_traj_x.row(interp_index) * POD_modes_x.leftCols(5).transpose() ;
-			Eigen::VectorXd reproj_y = interp_traj_y.row(interp_index) * POD_modes_y.leftCols(5).transpose() ;
+			Eigen::VectorXd reproj_x = interp_traj_x.row(interp_index) * POD_modes_x.leftCols(interp_traj_mode_number).transpose() ;
+			Eigen::VectorXd reproj_y = interp_traj_y.row(interp_index) * POD_modes_y.leftCols(interp_traj_mode_number).transpose() ;
 
-					
+			Array< OneD, NekDouble > current_phys_x = m_fields[0]->GetPhys();
+			Array< OneD, NekDouble > current_phys_y = m_fields[1]->GetPhys();
+			Array< OneD, NekDouble > conv_phys_x_reproj = Array< OneD, NekDouble > (m_fields[m_intVariables[0]]->GetNpoints());
+			Array< OneD, NekDouble > conv_phys_y_reproj = Array< OneD, NekDouble > (m_fields[m_intVariables[0]]->GetNpoints());
 
+			// reset reproj interpolated field as a Nektar array
+			for (int index_reproj = 0; index_reproj < m_fields[m_intVariables[0]]->GetNpoints(); ++index_reproj)
+			{
+				conv_phys_x_reproj[index_reproj] = reproj_x(index_reproj);
+				conv_phys_y_reproj[index_reproj] = reproj_y(index_reproj);
+			}
+
+			double relative_L2_error = L2norm_abs_error_ITHACA(conv_phys_x_reproj, conv_phys_y_reproj, current_phys_x, current_phys_y) / L2norm_ITHACA(current_phys_x, current_phys_y);
+			double relative_Linf_error = Linfnorm_abs_error_ITHACA(conv_phys_x_reproj, conv_phys_y_reproj, current_phys_x, current_phys_y) / Linfnorm_ITHACA(current_phys_x, current_phys_y);
+
+			cout << "relative_L2_error " << relative_L2_error << " at step " << step << endl;
+			cout << "relative_Linf_error " << relative_Linf_error << " at step " << step << endl;
+
+			collect_interp_relative_L2_error[interp_index] = relative_L2_error;
+			collect_interp_relative_Linf_error[interp_index] = relative_Linf_error;
 
 			// overwrite the field			
-			for (int k = 0; k < m_fields[m_intVariables[0]]->GetNpoints(); ++k)
-    	    {
-      	        m_fields[0]->SetPhys(k, reproj_x(k));
-       	        m_fields[1]->SetPhys(k, reproj_y(k));
-    	    }
-            m_fields[0]->FwdTrans_IterPerExp(m_fields[0]->GetPhys(), m_fields[0]->UpdateCoeffs());
-            m_fields[1]->FwdTrans_IterPerExp(m_fields[1]->GetPhys(), m_fields[1]->UpdateCoeffs());
-			cout << "overwriting field at step " << step << endl;
+			if (overwrite_with_interp_field && !(overwrite_with_interp_field_and_diff) )
+			{
+				for (int k = 0; k < m_fields[m_intVariables[0]]->GetNpoints(); ++k)
+	    	    {
+	      	        m_fields[0]->SetPhys(k, reproj_x(k));
+	       	        m_fields[1]->SetPhys(k, reproj_y(k));
+	    	    }
+	            m_fields[0]->FwdTrans_IterPerExp(m_fields[0]->GetPhys(), m_fields[0]->UpdateCoeffs());
+	            m_fields[1]->FwdTrans_IterPerExp(m_fields[1]->GetPhys(), m_fields[1]->UpdateCoeffs());
+				cout << "overwriting field at step " << step << endl;
+			}
+			if (overwrite_with_interp_field && (overwrite_with_interp_field_and_diff) )
+			{
+				Array< OneD, NekDouble > current_phys_x = m_fields[0]->GetPhys();
+				Array< OneD, NekDouble > current_phys_y = m_fields[1]->GetPhys();
+				for (int k = 0; k < m_fields[m_intVariables[0]]->GetNpoints(); ++k)
+	    	    {
+//					cout << "it is  current_phys_x[k] " << current_phys_x[k] << endl;
+//					cout << "it is  reproj_x(k) " << reproj_x(k) << endl;
+					double nnx = current_phys_x[k] - reproj_x(k);
+//					cout << "it is  nnx " << nnx << endl;
+					m_fields[0]->SetPhys(k, nnx);
+					double nny = current_phys_y[k] - reproj_y(k);
+	       	        m_fields[1]->SetPhys(k, nny);
+	    	    }
+	            m_fields[0]->FwdTrans_IterPerExp(m_fields[0]->GetPhys(), m_fields[0]->UpdateCoeffs());
+	            m_fields[1]->FwdTrans_IterPerExp(m_fields[1]->GetPhys(), m_fields[1]->UpdateCoeffs());
+				cout << "overwriting field and diff at step " << step << endl;
+			}
+
 		}
 
 
@@ -1108,8 +1197,8 @@ namespace Nektar
             	
             			// collect the fields from here
 		// if (!(step % 100))
-//                if (cos_angle < 0.99985)
-        if (cos_angle < 0.99)
+        if ((cos_angle < 0.99985) && (POD_collect_start <= step))
+//        if ((cos_angle < 0.99) && (POD_collect_start <= step))
 		{
 		    cout << "adding at step no. at VCS " << step << " out of a macimum of " << m_steps << " steps " << endl;
 		    cout << "current no_of_added_ones " << no_of_added_ones << endl;
@@ -1194,6 +1283,8 @@ namespace Nektar
 		        myfile_fields_TT_pod_x.close();
 		}
 		else std::cout << "Unable to open file";
+
+
 		
 		cum_rel_singular_values = Eigen::VectorXd::Zero(singular_vals_tt_y.rows());
 		for (int i = 0; i < singular_vals_tt_y.rows(); ++i)
@@ -1298,6 +1389,35 @@ namespace Nektar
 	    
 	    
 	    }
+
+	    if (ROM_stage == 3)
+	    {
+
+	            std::ofstream myfile_fields_TT_x_ROM ("collect_interp_relative_L2_error.txt");
+	            std::ofstream myfile_fields_TT_y_ROM ("collect_interp_relative_Linf_error.txt");
+            
+	        if (myfile_fields_TT_x_ROM.is_open())
+		    {
+				for(int n = 0; n < interp_traj_length; ++n)
+				{
+	                myfile_fields_TT_x_ROM << std::setprecision(17) << collect_interp_relative_L2_error[n] << " ";
+				}
+		        myfile_fields_TT_x_ROM.close();
+            }
+		    else std::cout << "Unable to open file";
+	    
+            if (myfile_fields_TT_y_ROM.is_open())
+		    {
+				for(int n = 0; n < interp_traj_length; ++n)
+				{
+                    myfile_fields_TT_y_ROM << std::setprecision(17) << collect_interp_relative_Linf_error[n] << " ";
+	            }
+		        myfile_fields_TT_y_ROM.close();
+	        }
+		    else std::cout << "Unable to open file";
+	    
+
+		}
 	    
 	    
 	}	
@@ -1699,4 +1819,61 @@ namespace Nektar
         }
 
     }
+
+    double VelocityCorrectionScheme_ROM::L2norm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y )
+    {
+	Array< OneD, NekDouble > x_difference(component1_x.size());
+	Array< OneD, NekDouble > y_difference(component1_y.size());
+	for (int i = 0; i < component1_y.size(); ++i)
+	{
+		x_difference[i] = component1_x[i] - component2_x[i];
+		y_difference[i] = component1_y[i] - component2_y[i];
+	}
+	double result = L2norm_ITHACA(x_difference, y_difference);
+	return result;
+    }
+
+    double VelocityCorrectionScheme_ROM::Linfnorm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y )
+    {
+	Array< OneD, NekDouble > x_difference(component1_x.size());
+	Array< OneD, NekDouble > y_difference(component1_y.size());
+	for (int i = 0; i < component1_y.size(); ++i)
+	{
+		x_difference[i] = component1_x[i] - component2_x[i];
+		y_difference[i] = component1_y[i] - component2_y[i];
+	}
+	double result = Linfnorm_ITHACA(x_difference, y_difference);
+	return result;
+    }    
+
+    double VelocityCorrectionScheme_ROM::L2norm_ITHACA( Array< OneD, NekDouble > component_x, Array< OneD, NekDouble > component_y )
+    {
+	// the input comes in phys coords
+        NekDouble L2norm = -1.0;
+//	cout << "m_NumQuadPointsError " << m_NumQuadPointsError << endl; // should be 0
+//	cout << "component_x.size() " << component_x.size() << endl; // should be nphys
+        if (m_NumQuadPointsError == 0)
+        {
+		double L2norm_x = m_fields[0]->L2(component_x);
+		double L2norm_y = m_fields[1]->L2(component_y);
+		L2norm = sqrt( L2norm_x*L2norm_x + L2norm_y*L2norm_y );
+        }
+	return L2norm;
+    }
+
+    double VelocityCorrectionScheme_ROM::Linfnorm_ITHACA( Array< OneD, NekDouble > component_x, Array< OneD, NekDouble > component_y )
+    {
+	// the input comes in phys coords
+        NekDouble Linfnorm = -1.0;
+//	cout << "m_NumQuadPointsError " << m_NumQuadPointsError << endl; // should be 0
+//	cout << "component_x.size() " << component_x.size() << endl; // should be nphys
+        if (m_NumQuadPointsError == 0)
+        {
+		double Linfnorm_x = m_fields[0]->L2(component_x);
+		double Linfnorm_y = m_fields[1]->L2(component_y);
+		Linfnorm = max(Linfnorm_x, Linfnorm_y);
+        }
+	return Linfnorm;
+    }
+
 } //end of namespace

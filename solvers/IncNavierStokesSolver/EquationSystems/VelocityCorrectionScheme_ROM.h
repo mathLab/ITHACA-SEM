@@ -111,6 +111,12 @@ namespace Nektar
             v_EvaluateAdvection_SetPressureBCs( inarray, outarray, time);
         }
 
+    double Linfnorm_ITHACA( Array< OneD, NekDouble > component_x, Array< OneD, NekDouble > component_y );
+    double L2norm_ITHACA( Array< OneD, NekDouble > component_x, Array< OneD, NekDouble > component_y );
+    double Linfnorm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y );
+    double L2norm_abs_error_ITHACA( Array< OneD, NekDouble > component1_x, Array< OneD, NekDouble > component1_y, Array< OneD, NekDouble > component2_x, Array< OneD, NekDouble > component2_y );
+
+
     protected:
         /// bool to identify if spectral vanishing viscosity is active.
         bool m_useHomo1DSpecVanVisc;
@@ -236,7 +242,7 @@ namespace Nektar
     Array<OneD, Array<OneD, NekDouble> > last_added_field; 
 	Eigen::MatrixXd POD_modes_x;
 	Eigen::MatrixXd POD_modes_y;
-	Eigen::MatrixXd interp_traj_x;
+	Eigen::MatrixXd interp_traj_x; 
 	Eigen::MatrixXd interp_traj_y;
     int globalNcoeff;
     int step;
@@ -246,7 +252,15 @@ namespace Nektar
     int ROM_size_x;
     int ROM_size_y;
 	int interp_traj_start;
+	int interp_traj_length;
+	int interp_traj_mode_number;
+	bool overwrite_with_interp_field;
+	bool overwrite_with_interp_field_and_diff;
+	int POD_collect_start;
 	int max_time_samples;
+	Array<OneD, NekDouble> collect_interp_relative_L2_error;  
+    Array<OneD, NekDouble> collect_interp_relative_Linf_error;  		
+
         
     };
 
